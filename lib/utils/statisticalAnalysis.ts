@@ -72,9 +72,10 @@ export function calculateStatistics(data: number[]): StatisticalSummary {
   const midLow = sorted[n / 2 - 1];
   const midHigh = sorted[n / 2];
   const midSingle = sorted[Math.floor(n / 2)];
-  const median = n % 2 === 0 && midLow !== undefined && midHigh !== undefined
-    ? (midLow + midHigh) / 2
-    : midSingle ?? 0;
+  const median =
+    n % 2 === 0 && midLow !== undefined && midHigh !== undefined
+      ? (midLow + midHigh) / 2
+      : (midSingle ?? 0);
 
   // Variance and Standard Deviation
   const squaredDiffs = data.map((val) => Math.pow(val - mean, 2));

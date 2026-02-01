@@ -140,7 +140,9 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Keyboard className="w-6 h-6 text-[var(--color-accent)]" />
-          <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Keyboard Shortcuts</h2>
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+            Keyboard Shortcuts
+          </h2>
         </div>
 
         <button
@@ -155,7 +157,9 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
       {/* Instructions */}
       <p className="text-[var(--color-text-muted)] text-sm mb-6">
         Click any shortcut button to rebind it. Press{' '}
-        <kbd className="px-2 py-1 bg-[var(--color-bg-secondary)] rounded border border-[var(--color-border)] text-xs">Escape</kbd>{' '}
+        <kbd className="px-2 py-1 bg-[var(--color-bg-secondary)] rounded border border-[var(--color-border)] text-xs">
+          Escape
+        </kbd>{' '}
         to cancel.
       </p>
 

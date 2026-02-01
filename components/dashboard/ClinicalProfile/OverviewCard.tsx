@@ -17,8 +17,12 @@ export const OverviewCard: React.FC<Props> = ({ overall, avgSessionLength }) => 
         <div className="flex items-center gap-3 text-[var(--color-text-secondary)]">
           <Target className="w-5 h-5 text-[var(--color-accent)]" />
           <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Accuracy</p>
-            <p className="text-2xl font-semibold text-[var(--color-text-primary)]">{accuracyPct}%</p>
+            <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+              Accuracy
+            </p>
+            <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
+              {accuracyPct}%
+            </p>
           </div>
         </div>
       </div>
@@ -26,7 +30,9 @@ export const OverviewCard: React.FC<Props> = ({ overall, avgSessionLength }) => 
         <div className="flex items-center gap-3 text-[var(--color-text-secondary)]">
           <Clock3 className="w-5 h-5 text-[var(--color-data-pass)]" />
           <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Avg Time / Q</p>
+            <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+              Avg Time / Q
+            </p>
             <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
               {avgTimeSec ? `${avgTimeSec}s` : '—'}
             </p>
@@ -37,7 +43,9 @@ export const OverviewCard: React.FC<Props> = ({ overall, avgSessionLength }) => 
         <div className="flex items-center gap-3 text-[var(--color-text-secondary)]">
           <Activity className="w-5 h-5 text-[var(--color-accent)]" />
           <div>
-            <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Avg Session</p>
+            <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+              Avg Session
+            </p>
             <p className="text-2xl font-semibold text-[var(--color-text-primary)]">
               {avgSessionLength ? `${Math.round(avgSessionLength)} min` : '—'}
             </p>

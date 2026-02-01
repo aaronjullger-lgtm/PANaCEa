@@ -28,8 +28,7 @@ export class ServerConfigError extends Error {
 export async function parseJsonOrThrow<T = unknown>(response: Response): Promise<T> {
   const contentType = response.headers.get('content-type') || '';
   const isJson =
-    contentType.includes('application/json') ||
-    contentType.includes('application/vnd.api+json');
+    contentType.includes('application/json') || contentType.includes('application/vnd.api+json');
 
   if (!isJson) {
     const status = response.status;

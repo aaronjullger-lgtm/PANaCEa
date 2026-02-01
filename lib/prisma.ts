@@ -65,7 +65,10 @@ NODE_ENV: ${process.env.NODE_ENV || 'undefined'}
 
   // Treat undefined NODE_ENV as development (default for local runs)
   // Also treat 'test' environment as development to use PG Adapter
-  const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || !process.env.NODE_ENV;
+  const isDevelopment =
+    process.env.NODE_ENV === 'development' ||
+    process.env.NODE_ENV === 'test' ||
+    !process.env.NODE_ENV;
   const logLevel = isDevelopment ? ['query', 'error', 'warn'] : ['error'];
 
   // LOCAL DEVELOPMENT & TESTING: Use PG Adapter to satisfy WASM engine requirements

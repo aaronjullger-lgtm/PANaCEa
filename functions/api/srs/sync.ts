@@ -65,7 +65,8 @@ export const onRequestPost = authenticatedEndpoint(SRSSyncSchema, async (context
                 dueDate: new Date(item.dueDate),
                 lastReviewed: new Date(item.lastReviewed),
                 quality: item.quality,
-                difficulty: item.difficulty !== undefined ? parseFloat(String(item.difficulty)) : undefined,
+                difficulty:
+                  item.difficulty !== undefined ? parseFloat(String(item.difficulty)) : undefined,
                 stabilityScore: item.stabilityScore,
                 fsrsStability: item.fsrsStability,
                 fsrsDifficulty: item.fsrsDifficulty,
@@ -91,7 +92,8 @@ export const onRequestPost = authenticatedEndpoint(SRSSyncSchema, async (context
               dueDate: new Date(item.dueDate),
               lastReviewed: new Date(item.lastReviewed),
               quality: item.quality,
-              difficulty: item.difficulty !== undefined ? parseFloat(String(item.difficulty)) : undefined,
+              difficulty:
+                item.difficulty !== undefined ? parseFloat(String(item.difficulty)) : undefined,
               stabilityScore: item.stabilityScore,
               fsrsStability: item.fsrsStability,
               fsrsDifficulty: item.fsrsDifficulty,

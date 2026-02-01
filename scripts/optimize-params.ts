@@ -1,14 +1,14 @@
 #!/usr/bin/env tsx
 /**
  * FSRS v6 Parameter Optimizer
- * 
+ *
  * This script reads user review history from the database and calculates
  * personalized FSRS parameters (21 weights) using L-BFGS optimization.
- * 
+ *
  * Usage:
  *   npm run optimize-params [userId]
  *   tsx scripts/optimize-params.ts [userId]
- * 
+ *
  * If no userId is provided, optimizes for all users with sufficient data.
  */
 
@@ -51,7 +51,7 @@ async function fetchUserReviewHistory(userId: string): Promise<ReviewSnapshot[]>
 
   // Flatten all review snapshots from all conditions
   const allSnapshots: ReviewSnapshot[] = [];
-  
+
   for (const record of userProgressRecords) {
     if (Array.isArray(record.reviewHistory)) {
       // Type assertion: Prisma returns Json but we know it's ReviewSnapshot[]
@@ -130,13 +130,13 @@ async function optimizeUserParams(userId: string): Promise<boolean> {
   console.log(`   Default Brier: ${result.defaultBrierScore.toFixed(4)}`);
   console.log(`   Improvement: ${(result.improvementOverDefault * 100).toFixed(2)}%`);
   console.log(`   Iterations: ${result.iterations}`);
-  
+
   if (result.systemModifiers) {
     console.log(`   System Modifiers: ${Object.keys(result.systemModifiers).length} systems`);
   }
 
   console.log(`\n📝 Optimized Parameters (w[0]-w[20]):`);
-  console.log(`   ${result.w.map(v => v.toFixed(4)).join(', ')}`);
+  console.log(`   ${result.w.map((v) => v.toFixed(4)).join(', ')}`);
 
   return true;
 }

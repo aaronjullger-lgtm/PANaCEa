@@ -16,11 +16,15 @@ interface Env {
   CACHE?: KVNamespace;
 }
 
-export async function onRequestPost(context: EventContext<Env, string, unknown>): Promise<Response> {
+export async function onRequestPost(
+  context: EventContext<Env, string, unknown>
+): Promise<Response> {
   return handleSaveToggle(context, true);
 }
 
-export async function onRequestDelete(context: EventContext<Env, string, unknown>): Promise<Response> {
+export async function onRequestDelete(
+  context: EventContext<Env, string, unknown>
+): Promise<Response> {
   return handleSaveToggle(context, false);
 }
 
@@ -32,7 +36,10 @@ async function handleSaveToggle(
 
   try {
     // Authenticate user
-    const authResult = await authenticateRequest(context.request as unknown as Request, context.env);
+    const authResult = await authenticateRequest(
+      context.request as unknown as Request,
+      context.env
+    );
     if (!authResult?.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,

@@ -398,15 +398,15 @@ function computeInsights(
       const currSession = recentSessions[i];
       if (prevSession && currSession) {
         const diff =
-          new Date(prevSession.startedAt).getTime() -
-          new Date(currSession.startedAt).getTime();
+          new Date(prevSession.startedAt).getTime() - new Date(currSession.startedAt).getTime();
         daysBetweenSessions.push(diff / (1000 * 60 * 60 * 24));
       }
     }
 
     const avgDaysBetween =
       daysBetweenSessions.length > 0
-        ? daysBetweenSessions.reduce((s: number, d: number) => s + d, 0) / daysBetweenSessions.length
+        ? daysBetweenSessions.reduce((s: number, d: number) => s + d, 0) /
+          daysBetweenSessions.length
         : 0;
     studyConsistency = avgDaysBetween <= 2 ? 'consistent' : 'sporadic';
   }

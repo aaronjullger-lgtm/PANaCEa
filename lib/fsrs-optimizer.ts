@@ -550,7 +550,7 @@ export function convertSnapshots(
     const prevIdx = i - 1;
     const prev = snapshots[prevIdx];
     const curr = snapshots[i];
-    
+
     if (!prev || !curr) continue;
 
     const prevDate = new Date(prev.date);

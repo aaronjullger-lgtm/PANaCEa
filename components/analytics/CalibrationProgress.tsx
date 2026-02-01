@@ -17,7 +17,7 @@ interface CalibrationProgressProps {
  * progress toward this calibration threshold.
  *
  * Phase 3 Milestone 4: Epistemic Uncertainty UI
- * 
+ *
  * DESIGN TOKENS: This component uses semantic tokens from lib/design-tokens.ts
  * - bg-data-pass (teal) for calibrated/success states
  * - bg-data-provisional (amber) for early/warning states
@@ -141,9 +141,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
           <div className="flex items-center justify-between mb-1">
             <h4
               className={`font-semibold ${
-                isCalibrated
-                  ? 'text-data-pass'
-                  : 'text-[var(--color-text-primary)]'
+                isCalibrated ? 'text-data-pass' : 'text-[var(--color-text-primary)]'
               }`}
             >
               {currentState.title}
@@ -188,9 +186,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
           {showDetails && (
             <p
               className={`text-sm ${
-                isCalibrated
-                  ? 'text-data-pass'
-                  : 'text-[var(--color-text-muted)]'
+                isCalibrated ? 'text-data-pass' : 'text-[var(--color-text-muted)]'
               }`}
             >
               {currentState.description}
@@ -209,9 +205,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
             <span className={current >= 40 ? 'text-[var(--color-accent)]' : ''}>
               40: Good predictions
             </span>
-            <span className={current >= 60 ? 'text-data-pass' : ''}>
-              60: Optimized
-            </span>
+            <span className={current >= 60 ? 'text-data-pass' : ''}>60: Optimized</span>
           </div>
         </div>
       )}

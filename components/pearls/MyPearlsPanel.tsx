@@ -220,20 +220,21 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
 
     // Update local state with proper defaults
     setPearls((prev) =>
-      prev.map((p): ClinicalPearl =>
-        p.id === currentPearl.id
-          ? {
-              ...p,
-              userInteraction: {
-                isSaved: p.userInteraction?.isSaved ?? false,
-                markedUseful: true,
-                viewedAt: p.userInteraction?.viewedAt,
-                notes: p.userInteraction?.notes,
-                nextReviewDate: p.userInteraction?.nextReviewDate,
-                mastered: true,
-              },
-            }
-          : p
+      prev.map(
+        (p): ClinicalPearl =>
+          p.id === currentPearl.id
+            ? {
+                ...p,
+                userInteraction: {
+                  isSaved: p.userInteraction?.isSaved ?? false,
+                  markedUseful: true,
+                  viewedAt: p.userInteraction?.viewedAt,
+                  notes: p.userInteraction?.notes,
+                  nextReviewDate: p.userInteraction?.nextReviewDate,
+                  mastered: true,
+                },
+              }
+            : p
       )
     );
 
@@ -266,20 +267,21 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
 
     // Update local state with proper defaults
     setPearls((prev) =>
-      prev.map((p): ClinicalPearl =>
-        p.id === currentPearl.id
-          ? {
-              ...p,
-              userInteraction: {
-                isSaved: p.userInteraction?.isSaved ?? false,
-                markedUseful: p.userInteraction?.markedUseful ?? false,
-                viewedAt: p.userInteraction?.viewedAt,
-                notes: p.userInteraction?.notes,
-                nextReviewDate: nextReview,
-                mastered: false,
-              },
-            }
-          : p
+      prev.map(
+        (p): ClinicalPearl =>
+          p.id === currentPearl.id
+            ? {
+                ...p,
+                userInteraction: {
+                  isSaved: p.userInteraction?.isSaved ?? false,
+                  markedUseful: p.userInteraction?.markedUseful ?? false,
+                  viewedAt: p.userInteraction?.viewedAt,
+                  notes: p.userInteraction?.notes,
+                  nextReviewDate: nextReview,
+                  mastered: false,
+                },
+              }
+            : p
       )
     );
 
@@ -297,20 +299,21 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
     const newSavedStatus = !currentPearl.userInteraction?.isSaved;
 
     setPearls((prev) =>
-      prev.map((p): ClinicalPearl =>
-        p.id === currentPearl.id
-          ? {
-              ...p,
-              userInteraction: {
-                isSaved: newSavedStatus,
-                markedUseful: p.userInteraction?.markedUseful ?? false,
-                viewedAt: p.userInteraction?.viewedAt,
-                notes: p.userInteraction?.notes,
-                nextReviewDate: p.userInteraction?.nextReviewDate,
-                mastered: p.userInteraction?.mastered,
-              },
-            }
-          : p
+      prev.map(
+        (p): ClinicalPearl =>
+          p.id === currentPearl.id
+            ? {
+                ...p,
+                userInteraction: {
+                  isSaved: newSavedStatus,
+                  markedUseful: p.userInteraction?.markedUseful ?? false,
+                  viewedAt: p.userInteraction?.viewedAt,
+                  notes: p.userInteraction?.notes,
+                  nextReviewDate: p.userInteraction?.nextReviewDate,
+                  mastered: p.userInteraction?.mastered,
+                },
+              }
+            : p
       )
     );
 
@@ -398,9 +401,7 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
           transition={{ duration: 0.5, ease: 'easeOut' }}
         >
           {/* Front of card */}
-          <div
-            className="flashcard-face absolute inset-0 rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-lg border border-[var(--color-border)] flex flex-col"
-          >
+          <div className="flashcard-face absolute inset-0 rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-lg border border-[var(--color-border)] flex flex-col">
             {/* Tags */}
             <div className="flex items-center gap-2 mb-4">
               <span className="px-2 py-1 bg-[var(--color-accent)]/10 text-[var(--color-accent)] rounded-full text-xs font-medium">
@@ -432,14 +433,10 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
           </div>
 
           {/* Back of card */}
-          <div
-            className="flashcard-face flashcard-back absolute inset-0 rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-lg border border-[var(--color-accent)]/30 flex flex-col overflow-auto"
-          >
+          <div className="flashcard-face flashcard-back absolute inset-0 rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-lg border border-[var(--color-accent)]/30 flex flex-col overflow-auto">
             <div className="flex items-center gap-2 mb-4">
               <Brain className="w-5 h-5 text-[var(--color-accent)]" />
-              <span className="font-semibold text-[var(--color-accent)]">
-                Explanation
-              </span>
+              <span className="font-semibold text-[var(--color-accent)]">Explanation</span>
             </div>
 
             <div className="flex-1 overflow-auto">
@@ -643,9 +640,7 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-6 overflow-auto">
-          {renderContent()}
-        </div>
+        <div className="flex-1 p-6 overflow-auto">{renderContent()}</div>
       </motion.div>
     </motion.div>
   );

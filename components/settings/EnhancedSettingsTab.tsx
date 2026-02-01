@@ -446,9 +446,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                     <div className="flex items-center gap-2">
                       <Award className="w-5 h-5 text-[var(--color-data-pass)]" />
                       <div>
-                        <p className="font-medium text-[var(--color-data-pass)]">
-                          PA-C Certified
-                        </p>
+                        <p className="font-medium text-[var(--color-data-pass)]">PA-C Certified</p>
                         <p className="text-xs text-[var(--color-data-pass)]">
                           PANRE-LA Simulator and recertification content enabled
                         </p>

@@ -102,7 +102,7 @@ export function getCircadianInsights(
   if (!firstHour) {
     return null;
   }
-  
+
   let bestHour = firstHour;
   let worstHour = firstHour;
   let totalAccuracy = 0;

@@ -264,7 +264,9 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-[var(--color-data-fail)] mb-2">Validation Errors</h3>
+                  <h3 className="font-semibold text-[var(--color-data-fail)] mb-2">
+                    Validation Errors
+                  </h3>
                   <ul className="list-disc list-inside text-sm text-[var(--color-data-fail)]/80 space-y-1">
                     {validationErrors.map((error, index) => (
                       <li key={index}>{error}</li>

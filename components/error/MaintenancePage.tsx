@@ -14,7 +14,7 @@ interface MaintenancePageProps {
 }
 
 export function MaintenancePage({
-  message = 'We\'re experiencing technical difficulties. Please try again in a few moments.',
+  message = "We're experiencing technical difficulties. Please try again in a few moments.",
   onRetry,
 }: MaintenancePageProps) {
   return (

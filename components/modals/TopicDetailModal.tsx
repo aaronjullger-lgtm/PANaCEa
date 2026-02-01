@@ -139,7 +139,9 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
         </button>
 
         {/* Header */}
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2 text-center">{systemLabel}</h2>
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2 text-center">
+          {systemLabel}
+        </h2>
 
         {/* System score */}
         <div className="text-center mb-4">
@@ -154,7 +156,9 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
 
         {/* Subcategories */}
         <div className="mt-4">
-          <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Subcategory mastery</h3>
+          <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
+            Subcategory mastery
+          </h3>
           {subcategoryStats.length === 0 ? (
             <p className="text-xs text-[var(--color-text-muted)]">
               No detailed data yet for this system. Answer a few more questions and come back.
@@ -174,7 +178,9 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
                   } transition-colors`}
                 >
                   <div className="flex justify-between items-center text-xs mb-1">
-                    <span className="font-semibold text-[var(--color-text-secondary)]">{sub.name}</span>
+                    <span className="font-semibold text-[var(--color-text-secondary)]">
+                      {sub.name}
+                    </span>
                     <span className="text-[var(--color-text-muted)]">
                       {sub.score.toFixed(0)}% ({sub.correct}/{sub.total})
                     </span>
@@ -206,7 +212,9 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
                     className="p-2 bg-[var(--color-bg-secondary)] rounded-md border border-[var(--color-border)]"
                   >
                     <div className="flex justify-between items-center text-xs mb-1">
-                      <span className="font-medium text-[var(--color-text-secondary)]">{c.name}</span>
+                      <span className="font-medium text-[var(--color-text-secondary)]">
+                        {c.name}
+                      </span>
                       <span className="text-[var(--color-text-muted)]">
                         {c.score.toFixed(0)}% ({c.correct}/{c.total})
                       </span>

@@ -50,7 +50,13 @@ export async function onRequestGet(context: {
     });
 
     if (!user || !canViewCMS(user.role as UserRole)) {
-      return createErrorResponse(request, 'Forbidden: Insufficient permissions', 403, undefined, env);
+      return createErrorResponse(
+        request,
+        'Forbidden: Insufficient permissions',
+        403,
+        undefined,
+        env
+      );
     }
 
     const content = await prisma.medicalContent.findUnique({
@@ -108,7 +114,13 @@ export async function onRequestPut(context: {
     });
 
     if (!user || !canEditContent(user.role as UserRole)) {
-      return createErrorResponse(request, 'Forbidden: Insufficient permissions', 403, undefined, env);
+      return createErrorResponse(
+        request,
+        'Forbidden: Insufficient permissions',
+        403,
+        undefined,
+        env
+      );
     }
 
     // Validate input with Zod schema

@@ -64,32 +64,39 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     const fourteenDaysAgo = new Date(now.getTime() - 14 * 86400000);
 
     // Use aggregation and bounded window instead of unbounded findMany
-    const [totalCount, correctCount, aggregates, systemGrouped, conditionGrouped, recentAttempts, questionsSeenCount] =
-      await Promise.all([
-        prisma.questionAttempt.count({ where: { userId } }),
-        prisma.questionAttempt.count({ where: { userId, wasCorrect: true } }),
-        prisma.questionAttempt.aggregate({
-          where: { userId },
-          _avg: { timeSpentMs: true, answerChangedCount: true },
-        }),
-        prisma.questionAttempt.groupBy({
-          by: ['system', 'wasCorrect'],
-          where: { userId, system: { not: null } },
-          _count: { id: true },
-        }),
-        prisma.questionAttempt.groupBy({
-          by: ['conditionId', 'wasCorrect'],
-          where: { userId, conditionId: { not: null } },
-          _count: { id: true },
-        }),
-        prisma.questionAttempt.findMany({
-          where: { userId, createdAt: { gte: ninetyDaysAgo } },
-          select: { wasCorrect: true, system: true, timeSpentMs: true, createdAt: true },
-          orderBy: { createdAt: 'desc' },
-          take: 5000,
-        }),
-        prisma.userQuestionSeen.count({ where: { userId } }),
-      ]);
+    const [
+      totalCount,
+      correctCount,
+      aggregates,
+      systemGrouped,
+      conditionGrouped,
+      recentAttempts,
+      questionsSeenCount,
+    ] = await Promise.all([
+      prisma.questionAttempt.count({ where: { userId } }),
+      prisma.questionAttempt.count({ where: { userId, wasCorrect: true } }),
+      prisma.questionAttempt.aggregate({
+        where: { userId },
+        _avg: { timeSpentMs: true, answerChangedCount: true },
+      }),
+      prisma.questionAttempt.groupBy({
+        by: ['system', 'wasCorrect'],
+        where: { userId, system: { not: null } },
+        _count: { id: true },
+      }),
+      prisma.questionAttempt.groupBy({
+        by: ['conditionId', 'wasCorrect'],
+        where: { userId, conditionId: { not: null } },
+        _count: { id: true },
+      }),
+      prisma.questionAttempt.findMany({
+        where: { userId, createdAt: { gte: ninetyDaysAgo } },
+        select: { wasCorrect: true, system: true, timeSpentMs: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        take: 5000,
+      }),
+      prisma.userQuestionSeen.count({ where: { userId } }),
+    ]);
 
     const totalAttempts = totalCount;
     const correctAttempts = correctCount;
@@ -109,7 +116,10 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
 
     // Build system counts from groupBy; add timing/lastAttempt from recentAttempts
     type SystemRow = { system: string | null; wasCorrect: boolean; _count: { id: number } };
-    const systemCountsMap = new Map<string, { total: number; correct: number; timeSum: number; timeN: number }>();
+    const systemCountsMap = new Map<
+      string,
+      { total: number; correct: number; timeSum: number; timeN: number }
+    >();
     for (const row of systemGrouped as SystemRow[]) {
       if (!row.system) continue;
       const norm = normalizeSystemName(row.system);
@@ -218,10 +228,15 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
 
     // Build condition stats from groupBy
     type CondRow = { conditionId: string | null; wasCorrect: boolean; _count: { id: number } };
-    const conditionCounts: Record<string, { total: number; correct: number; conditionId: string }> = {};
+    const conditionCounts: Record<string, { total: number; correct: number; conditionId: string }> =
+      {};
     for (const row of conditionGrouped as CondRow[]) {
       if (!row.conditionId) continue;
-      const c = conditionCounts[row.conditionId] || { total: 0, correct: 0, conditionId: row.conditionId };
+      const c = conditionCounts[row.conditionId] || {
+        total: 0,
+        correct: 0,
+        conditionId: row.conditionId,
+      };
       c.total += row._count.id;
       if (row.wasCorrect) c.correct += row._count.id;
       conditionCounts[row.conditionId] = c;

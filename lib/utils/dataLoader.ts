@@ -37,10 +37,7 @@ export async function loadDrugData(getToken?: () => Promise<string | null>): Pro
   }
 
   // Try /api/drugs/all first, fallback to /api/drugs when only root exists
-  const urls = [
-    getApiEndpoint(API_ENDPOINTS.DRUGS_ALL),
-    getApiEndpoint(API_ENDPOINTS.DRUGS),
-  ];
+  const urls = [getApiEndpoint(API_ENDPOINTS.DRUGS_ALL), getApiEndpoint(API_ENDPOINTS.DRUGS)];
 
   for (const apiUrl of urls) {
     try {
@@ -48,7 +45,7 @@ export async function loadDrugData(getToken?: () => Promise<string | null>): Pro
       if (!response.ok) continue;
 
       const raw = await parseJsonOrThrow(response);
-      const data = Array.isArray(raw) ? raw : raw?.data?.drugs ?? raw?.drugs ?? [];
+      const data = Array.isArray(raw) ? raw : (raw?.data?.drugs ?? raw?.drugs ?? []);
       dataCache.set(cacheKey, data);
       return data;
     } catch {
@@ -114,8 +111,12 @@ export async function loadConditionContent(getToken?: () => Promise<string | nul
     if (!contentType?.includes('application/json')) {
       warnBackendDownOnce();
     } else if (response.status === 503) {
-      const errorData = (await parseJsonOrThrow(response).catch(() => ({}))) as { message?: string };
-      console.error(`⚠ Database unavailable: ${errorData?.message || 'Cannot connect to database'}`);
+      const errorData = (await parseJsonOrThrow(response).catch(() => ({}))) as {
+        message?: string;
+      };
+      console.error(
+        `⚠ Database unavailable: ${errorData?.message || 'Cannot connect to database'}`
+      );
       console.error('Ensure DATABASE_URL is configured in .env');
     } else {
       console.error(`Database API returned status ${response.status} for ${apiUrl}`);

@@ -94,7 +94,9 @@ export interface StructuredRationale {
 /**
  * Type guard to check if rationale is structured
  */
-function isStructuredRationale(rationale: string | StructuredRationale): rationale is StructuredRationale {
+function isStructuredRationale(
+  rationale: string | StructuredRationale
+): rationale is StructuredRationale {
   return typeof rationale === 'object' && rationale !== null && 'whyCorrect' in rationale;
 }
 
@@ -179,7 +181,10 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   );
 
   // Compute compressed content (only used for legacy string rationale)
-  const coreRationale = useMemo(() => structured ? [] : compressExplanation(rationaleText), [structured, rationaleText]);
+  const coreRationale = useMemo(
+    () => (structured ? [] : compressExplanation(rationaleText)),
+    [structured, rationaleText]
+  );
   const buzzwords = useMemo(() => extractBuzzwords(rationaleText), [rationaleText]);
   const mnemonic = useMemo(() => generateMnemonicIfAvailable(condition), [condition]);
   const differentials = useMemo(
@@ -271,13 +276,17 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
       {/* Result Header */}
       <div
         className={`px-5 py-3 border-b border-[var(--color-border)] ${
-          isCorrect ? 'bg-sage-50 dark:bg-sage-900/20' : 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20'
+          isCorrect
+            ? 'bg-sage-50 dark:bg-sage-900/20'
+            : 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20'
         }`}
       >
         <div className="flex items-center justify-between">
           <span
             className={`font-bold text-lg flex items-center gap-2 ${
-              isCorrect ? 'text-sage-700 dark:text-sage-400' : 'text-dusty-rose-700 dark:text-dusty-rose-400'
+              isCorrect
+                ? 'text-sage-700 dark:text-sage-400'
+                : 'text-dusty-rose-700 dark:text-dusty-rose-400'
             }`}
           >
             {isCorrect ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
@@ -332,9 +341,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                   const key = `whyIncorrect${letter}` as keyof StructuredRationale;
                   const whyIncorrect = rationale[key];
                   if (!whyIncorrect || typeof whyIncorrect !== 'string') return null;
-                  
+
                   const isUserChoice = index === userAnswerIndex;
-                  
+
                   return (
                     <div
                       key={`option-${letter}`}
@@ -345,7 +354,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                       }`}
                     >
                       <div className="flex items-start gap-2">
-                        <span className={`font-semibold text-sm ${isUserChoice ? 'text-dusty-rose-600 dark:text-dusty-rose-400' : 'text-[var(--color-text-muted)]'}`}>
+                        <span
+                          className={`font-semibold text-sm ${isUserChoice ? 'text-dusty-rose-600 dark:text-dusty-rose-400' : 'text-[var(--color-text-muted)]'}`}
+                        >
                           {letter}.
                         </span>
                         <div className="flex-1">
@@ -395,7 +406,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                   key={index}
                   className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
                 >
-                  <span className="text-[var(--color-accent)] mt-1.5 flex-shrink-0 font-bold">-</span>
+                  <span className="text-[var(--color-accent)] mt-1.5 flex-shrink-0 font-bold">
+                    -
+                  </span>
                   <span>{renderFormattedText(point)}</span>
                 </li>
               ))}

@@ -1,20 +1,20 @@
 /**
  * Contrastive Drill Service
- * 
+ *
  * DDx Compare mode for distinguishing similar conditions.
  * Targets "Confusion Pairs" identified in user's review history.
- * 
+ *
  * CRITICAL SCHEMA NOTES:
  * - ContrastiveSet uses conditionIds: String[] (NOT FK relations)
  * - ConfusionPair uses count (NOT occurrences), realConditionId/mistakenForId
  * - MedicalContent has 'condition' field (NOT 'name')
  * - ContrastiveDrillAttempt has setId, correctAnswers, timeSpentMs
- * 
+ *
  * EDGE COMPATIBILITY:
  * - All functions accept a PrismaClient instance as parameter
  * - No module-level PrismaClient instantiation
  * - Works with both standard and edge Prisma clients
- * 
+ *
  * @module services/drill/contrastiveDrill.service
  */
 
@@ -74,7 +74,7 @@ export interface ContrastiveDrillOptions {
 
 /**
  * Get a batch of contrastive drill questions
- * 
+ *
  * @param options - Filtering options including prisma client
  * @returns Array of contrastive questions
  */
@@ -159,27 +159,29 @@ export async function getContrastiveDrillBatch(
 /**
  * Parse distinguishers from JSON format
  * Supports flexible N-condition format
- * 
+ *
  * @param distinguishersJson - Raw JSON from database
  * @param conditionCount - Number of conditions in the set
  * @returns Array of parsed distinguisher features
  */
-function parseDistinguishers(distinguishersJson: any, conditionCount: number): DistinguisherFeature[] {
+function parseDistinguishers(
+  distinguishersJson: any,
+  conditionCount: number
+): DistinguisherFeature[] {
   try {
     if (!distinguishersJson) {
       return [];
     }
 
-    const parsed = typeof distinguishersJson === 'string'
-      ? JSON.parse(distinguishersJson)
-      : distinguishersJson;
+    const parsed =
+      typeof distinguishersJson === 'string' ? JSON.parse(distinguishersJson) : distinguishersJson;
 
     const features: DistinguisherFeature[] = [];
 
     // Support flexible format: {"condition1": [...], "condition2": [...], ...}
     // OR indexed format: {"0": [...], "1": [...], ...}
     Object.keys(parsed).forEach((key) => {
-      const conditionIndex = key.startsWith('condition') 
+      const conditionIndex = key.startsWith('condition')
         ? parseInt(key.replace('condition', '')) - 1 // condition1 -> index 0
         : parseInt(key); // Direct index
 
@@ -204,7 +206,7 @@ function parseDistinguishers(distinguishersJson: any, conditionCount: number): D
 
 /**
  * Get personalized contrastive sets based on user's confusion history
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param count - Number of sets to return
@@ -220,7 +222,8 @@ async function getPersonalizedContrastiveSets(
     const confusionPairs = await prisma.confusionPair.findMany({
       where: {
         userId,
-        count: { // NOT 'occurrences'
+        count: {
+          // NOT 'occurrences'
           gte: 2, // At least 2 confusions
         },
       },
@@ -230,7 +233,7 @@ async function getPersonalizedContrastiveSets(
       take: count,
       select: {
         realConditionId: true, // NOT 'condition1Id'
-        mistakenForId: true,   // NOT 'condition2Id'
+        mistakenForId: true, // NOT 'condition2Id'
       },
     });
 
@@ -265,11 +268,7 @@ async function getPersonalizedContrastiveSets(
         }
 
         // Otherwise, create a basic one
-        return await createBasicContrastiveSet(
-          prisma,
-          pair.realConditionId,
-          pair.mistakenForId
-        );
+        return await createBasicContrastiveSet(prisma, pair.realConditionId, pair.mistakenForId);
       })
     );
 
@@ -283,7 +282,7 @@ async function getPersonalizedContrastiveSets(
 /**
  * Create a basic contrastive set for two conditions
  * (Fallback when no pre-defined set exists)
- * 
+ *
  * @param prisma - Prisma client instance
  * @param conditionId1 - First condition ID
  * @param conditionId2 - Second condition ID
@@ -323,11 +322,13 @@ async function createBasicContrastiveSet(
 
     // Create a basic distinguisher structure using array indices
     const distinguishers = {
-      "0": [ // Index-based (0 = first condition)
+      '0': [
+        // Index-based (0 = first condition)
         `Classic presentation for ${condition1.condition}`,
         'Key diagnostic feature',
       ],
-      "1": [ // Index-based (1 = second condition)
+      '1': [
+        // Index-based (1 = second condition)
         `Classic presentation for ${condition2.condition}`,
         'Key diagnostic feature',
       ],
@@ -353,7 +354,7 @@ async function createBasicContrastiveSet(
 
 /**
  * Log a contrastive drill attempt
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param setId - Contrastive set ID
@@ -386,7 +387,7 @@ export async function logContrastiveDrillAttempt(
 
 /**
  * Get contrastive drill statistics for a user
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @returns Drill statistics
@@ -397,8 +398,8 @@ export async function getContrastiveDrillStats(prisma: PrismaLike, userId: strin
       where: { userId },
       select: {
         correctAnswers: true, // NOT 'wasCorrect'
-        timeSpentMs: true,     // NOT 'responseTimeMs'
-        completedAt: true,     // NOT 'createdAt'
+        timeSpentMs: true, // NOT 'responseTimeMs'
+        completedAt: true, // NOT 'createdAt'
       },
       orderBy: {
         completedAt: 'desc',
@@ -406,11 +407,11 @@ export async function getContrastiveDrillStats(prisma: PrismaLike, userId: strin
     });
 
     const totalAttempts = attempts.length;
-    
+
     // Calculate average correct answers per attempt
     const totalCorrect = attempts.reduce((sum, a) => sum + a.correctAnswers, 0);
     const avgCorrectPerAttempt = totalAttempts > 0 ? totalCorrect / totalAttempts : 0;
-    
+
     // Calculate average response time
     const avgResponseTime =
       attempts.reduce((sum, a) => sum + (a.timeSpentMs || 0), 0) / totalAttempts || 0;

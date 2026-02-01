@@ -17,15 +17,9 @@ import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
 import { deriveImplicitRating } from '../implicit-metrics';
-import {
-  buildCircadianContext,
-  applyCircadianModifier,
-} from '../circadian';
+import { buildCircadianContext, applyCircadianModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
-import {
-  applyAttemptToUserStatistics,
-  updateTimingAggregates,
-} from './userStatisticsService';
+import { applyAttemptToUserStatistics, updateTimingAggregates } from './userStatisticsService';
 
 /** Question data structure from PreGeneratedQuestion.questionData field */
 export interface QuestionData {
@@ -351,8 +345,7 @@ export async function submitDrillReview(
         stability: typeof fsrsCardData.stability === 'number' ? fsrsCardData.stability : 0,
         difficulty: typeof fsrsCardData.difficulty === 'number' ? fsrsCardData.difficulty : 0,
         state: typeof fsrsCardData.state === 'number' ? fsrsCardData.state : 0,
-        elapsed_days:
-          typeof fsrsCardData.elapsed_days === 'number' ? fsrsCardData.elapsed_days : 0,
+        elapsed_days: typeof fsrsCardData.elapsed_days === 'number' ? fsrsCardData.elapsed_days : 0,
         scheduled_days:
           typeof fsrsCardData.scheduled_days === 'number' ? fsrsCardData.scheduled_days : 0,
         reps: typeof fsrsCardData.reps === 'number' ? fsrsCardData.reps : 0,

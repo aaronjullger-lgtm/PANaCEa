@@ -35,21 +35,15 @@ export interface ToastApi {
   warning: (message: string, options?: ToastOptions | number) => string;
   info: (message: string, options?: ToastOptions | number) => string;
   /** Low-level: add toast with full options */
-  add: (
-    message: string,
-    variant: ToastVariant,
-    options?: ToastOptions
-  ) => string;
+  add: (message: string, variant: ToastVariant, options?: ToastOptions) => string;
 }
 
-type AddToastFn = (
-  toast: {
-    message: string;
-    variant: ToastVariant;
-    duration?: number;
-    action?: { label: string; onClick: () => void };
-  }
-) => string;
+type AddToastFn = (toast: {
+  message: string;
+  variant: ToastVariant;
+  duration?: number;
+  action?: { label: string; onClick: () => void };
+}) => string;
 
 let impl: AddToastFn | null = null;
 
@@ -64,9 +58,10 @@ export function registerToast(fn: AddToastFn): () => void {
   };
 }
 
-function normalizeOptions(
-  opts?: ToastOptions | number
-): { duration?: number; action?: ToastOptions['action'] } {
+function normalizeOptions(opts?: ToastOptions | number): {
+  duration?: number;
+  action?: ToastOptions['action'];
+} {
   if (opts == null) return {};
   if (typeof opts === 'number') return { duration: opts };
   return opts;

@@ -182,9 +182,17 @@ export function getEnvVar<T extends boolean>(
  */
 export function withEnvValidation<E extends Record<string, unknown>>(
   required: EnvRequirement | readonly string[] | string[],
-  handler: (context: { env: E; request: Request; params: Record<string, string> }) => Promise<Response>
+  handler: (context: {
+    env: E;
+    request: Request;
+    params: Record<string, string>;
+  }) => Promise<Response>
 ) {
-  return async (context: { env: E; request: Request; params: Record<string, string> }): Promise<Response> => {
+  return async (context: {
+    env: E;
+    request: Request;
+    params: Record<string, string>;
+  }): Promise<Response> => {
     try {
       validateFunctionEnv(context.env as Record<string, unknown>, required);
       return await handler(context);

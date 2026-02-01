@@ -731,9 +731,7 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
             </div>
           </div>
           <div className="p-4 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)]">
-            <div className="text-sm text-[var(--color-text-muted)] mb-1">
-              Questions Answered
-            </div>
+            <div className="text-sm text-[var(--color-text-muted)] mb-1">Questions Answered</div>
             <div className="text-2xl font-bold text-[var(--color-text-primary)]">
               {summaryStats.total}
             </div>

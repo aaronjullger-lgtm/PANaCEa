@@ -22,28 +22,28 @@ import { withAccelerate } from '@prisma/extension-accelerate';
 
 /**
  * Prisma Accelerate Cache Strategy Configuration
- * 
+ *
  * Use these presets for common query patterns:
  * - STATIC: Content that rarely changes (conditions, medical content) - 1 hour cache, 24h SWR
  * - QUESTIONS: Pre-generated questions - 5 min cache, 1h SWR (rotates frequently)
  * - USER_DATA: User-specific data - 1 min cache, 5 min SWR (changes often)
  * - REALTIME: No caching (sync operations, writes)
- * 
+ *
  * @see https://www.prisma.io/docs/accelerate/caching
  */
 export const CACHE_STRATEGY = {
   /** Static content: conditions, medical content, anatomy data - rarely changes */
   STATIC: { cacheStrategy: { ttl: 3600, swr: 86400 } }, // 1h cache, 24h stale-while-revalidate
-  
+
   /** Question pool: rotates but doesn't change frequently */
   QUESTIONS: { cacheStrategy: { ttl: 300, swr: 3600 } }, // 5min cache, 1h SWR
-  
+
   /** User-specific data: SRS items, saved questions */
   USER_DATA: { cacheStrategy: { ttl: 60, swr: 300 } }, // 1min cache, 5min SWR
-  
+
   /** Lists and aggregates: system lists, counts */
   AGGREGATE: { cacheStrategy: { ttl: 1800, swr: 7200 } }, // 30min cache, 2h SWR
-  
+
   /** No caching - for sync operations and writes */
   REALTIME: {},
 } as const;
@@ -63,7 +63,6 @@ type DatabaseUrlInput =
 // Global singleton cache per isolate (keyed by normalized DATABASE_URL)
 // Reduces connection churn when multiple handlers run in the same isolate.
 declare global {
-   
   var __EDGE_PRISMA__: Map<string, EdgePrismaClient> | undefined;
 }
 
@@ -117,7 +116,8 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
     );
   }
 
-  const isAccelerateUrl = databaseUrl.startsWith('prisma://') || databaseUrl.startsWith('prisma+postgres://');
+  const isAccelerateUrl =
+    databaseUrl.startsWith('prisma://') || databaseUrl.startsWith('prisma+postgres://');
   const isPostgresUrl =
     databaseUrl.startsWith('postgresql://') || databaseUrl.startsWith('postgres://');
 

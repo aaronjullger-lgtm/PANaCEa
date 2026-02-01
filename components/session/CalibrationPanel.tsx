@@ -86,21 +86,24 @@ function getStateColors(state: string): {
         bg: 'bg-muted-amber-50 dark:bg-muted-amber-900/20',
         border: 'border-muted-amber-200 dark:border-muted-amber-800',
         text: 'text-muted-amber-700 dark:text-muted-amber-300',
-        badge: 'bg-muted-amber-100 text-muted-amber-800 dark:bg-muted-amber-800 dark:text-muted-amber-200',
+        badge:
+          'bg-muted-amber-100 text-muted-amber-800 dark:bg-muted-amber-800 dark:text-muted-amber-200',
       };
     case 'underconfident':
       return {
         bg: 'bg-steel-blue-50 dark:bg-steel-blue-900/20',
         border: 'border-steel-blue-200 dark:border-steel-blue-800',
         text: 'text-steel-blue-700 dark:text-steel-blue-300',
-        badge: 'bg-steel-blue-100 text-steel-blue-800 dark:bg-steel-blue-800 dark:text-steel-blue-200',
+        badge:
+          'bg-steel-blue-100 text-steel-blue-800 dark:bg-steel-blue-800 dark:text-steel-blue-200',
       };
     case 'fluctuating':
       return {
         bg: 'bg-muted-amber-50 dark:bg-muted-amber-900/20',
         border: 'border-muted-amber-200 dark:border-muted-amber-800',
         text: 'text-muted-amber-700 dark:text-muted-amber-300',
-        badge: 'bg-muted-amber-100 text-muted-amber-800 dark:bg-muted-amber-800 dark:text-muted-amber-200',
+        badge:
+          'bg-muted-amber-100 text-muted-amber-800 dark:bg-muted-amber-800 dark:text-muted-amber-200',
       };
     default:
       return {
@@ -423,7 +426,9 @@ export function CalibrationPanel({
         {/* Recommendation */}
         <div className="flex items-start gap-2 p-3 rounded-lg bg-deep-plum-50 dark:bg-deep-plum-900/20 border border-deep-plum-200 dark:border-deep-plum-800">
           <Info className="w-4 h-4 text-deep-plum-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-deep-plum-700 dark:text-deep-plum-300">{summary.recommendation}</p>
+          <p className="text-sm text-deep-plum-700 dark:text-deep-plum-300">
+            {summary.recommendation}
+          </p>
         </div>
 
         {/* Explainer */}

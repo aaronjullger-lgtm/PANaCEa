@@ -162,13 +162,11 @@ class GlobalErrorBoundary extends Component<Props, State> {
 
       // Server/config errors: show MaintenancePage instead of generic error
       const { error } = this.state;
-      if (error?.name === 'ServerConfigError' || error?.message?.includes('Server configuration error')) {
-        return (
-          <MaintenancePage
-            message={error.message}
-            onRetry={this.handleRetry}
-          />
-        );
+      if (
+        error?.name === 'ServerConfigError' ||
+        error?.message?.includes('Server configuration error')
+      ) {
+        return <MaintenancePage message={error.message} onRetry={this.handleRetry} />;
       }
 
       const { errorInfo, showDetails, errorId } = this.state;

@@ -44,8 +44,7 @@ Provide ONLY the hint sentence, no additional commentary.`,
     }
 
     const data = await response.json();
-    const hint =
-      typeof data === 'string' ? data : (data.data?.text ?? data.text) ?? '';
+    const hint = typeof data === 'string' ? data : (data.data?.text ?? data.text ?? '');
     return hint.trim();
   } catch (error) {
     console.error('Error generating Socratic hint:', error);

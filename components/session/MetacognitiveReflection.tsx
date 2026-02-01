@@ -305,7 +305,9 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                       </button>
                     ))
                   ) : (
-                    <p className="text-[var(--color-text-muted)] italic">Great job! No missed topics to review.</p>
+                    <p className="text-[var(--color-text-muted)] italic">
+                      Great job! No missed topics to review.
+                    </p>
                   )}
                 </div>
               </motion.div>
@@ -322,7 +324,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
             Skip reflection
           </button>
 
-            <button
+          <button
             onClick={handleNext}
             disabled={!canProceed()}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${

@@ -1,9 +1,9 @@
 /**
  * Advanced User Analytics Engine (STUB)
- * 
+ *
  * NOTE: This is a stub implementation to support intelligentQuestionService.ts
  * TODO: Implement full analytics engine with actual user data tracking
- * 
+ *
  * Purpose: Analyze user behavior, cognitive state, and learning patterns
  * to provide adaptive question targeting and session optimization.
  */
@@ -94,7 +94,7 @@ export interface QuestionTargeting {
 
 /**
  * Get current cognitive state (STUB)
- * 
+ *
  * Returns baseline cognitive state. In production, this should:
  * - Track session duration and infer fatigue
  * - Monitor response times and hesitation patterns
@@ -114,7 +114,7 @@ export function getCognitiveState(): CognitiveState {
 
 /**
  * Get learning velocity metrics (STUB)
- * 
+ *
  * Returns baseline velocity. In production, this should:
  * - Calculate actual questions per hour from recent session data
  * - Track accuracy trends over sliding windows
@@ -133,13 +133,13 @@ export function getLearningVelocity(): LearningVelocity {
 
 /**
  * Generate question targeting based on analytics (STUB)
- * 
+ *
  * Returns baseline targeting. In production, this should:
  * - Analyze system mastery profiles to identify weak areas
  * - Consider cognitive state for difficulty adjustment
  * - Factor in learning velocity for pacing
  * - Use recent performance to prioritize review topics
- * 
+ *
  * @param systemMastery - Current mastery levels per system
  * @param cognitive - Current cognitive state
  * @param velocity - Current learning velocity
@@ -210,7 +210,7 @@ export function generateQuestionTargeting(
 
 /**
  * Calculate system mastery from user progress data (STUB)
- * 
+ *
  * In production, this should query actual user progress data
  * and calculate mastery levels based on FSRS stability and accuracy.
  */
@@ -222,7 +222,7 @@ export function calculateSystemMastery(userId: string): SystemMasteryProfile[] {
 
 /**
  * Update cognitive state based on new session data (STUB)
- * 
+ *
  * In production, this should:
  * - Track session duration and update fatigue
  * - Monitor response patterns and update attention

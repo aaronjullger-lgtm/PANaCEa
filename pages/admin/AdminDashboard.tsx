@@ -69,35 +69,32 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const [statsError, setStatsError] = useState<string | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
 
-  const fetchStats = useCallback(
-    async (token: string | null) => {
-      if (!token) return;
-      setStatsError(null);
-      setStatsLoading(true);
-      try {
-        const statsResponse = await fetch('/api/admin/stats', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const res = await statsResponse.json();
+  const fetchStats = useCallback(async (token: string | null) => {
+    if (!token) return;
+    setStatsError(null);
+    setStatsLoading(true);
+    try {
+      const statsResponse = await fetch('/api/admin/stats', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const res = await statsResponse.json();
 
-        // API returns { success, data: { totalUsers, activeUsersToday, ... } }
-        const statsData = res?.data ?? {};
-        setStats({
-          totalUsers: statsData.totalUsers ?? 0,
-          activeUsers: statsData.activeUsersToday ?? 0,
-          totalQuestions: statsData.totalStudySessions ?? 0,
-          avgAccuracy: statsData.averageAccuracy ?? 0,
-          pendingFlags: statsData.pendingFlags ?? 0,
-        });
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load stats';
-        setStatsError(message);
-      } finally {
-        setStatsLoading(false);
-      }
-    },
-    []
-  );
+      // API returns { success, data: { totalUsers, activeUsersToday, ... } }
+      const statsData = res?.data ?? {};
+      setStats({
+        totalUsers: statsData.totalUsers ?? 0,
+        activeUsers: statsData.activeUsersToday ?? 0,
+        totalQuestions: statsData.totalStudySessions ?? 0,
+        avgAccuracy: statsData.averageAccuracy ?? 0,
+        pendingFlags: statsData.pendingFlags ?? 0,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load stats';
+      setStatsError(message);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -249,7 +246,13 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
                 aria-label="Close admin dashboard"
               >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

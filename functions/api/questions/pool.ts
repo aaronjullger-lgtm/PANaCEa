@@ -7,7 +7,11 @@
 import { z } from 'zod';
 import { selectByPanceDistribution, fisherYatesShuffle } from '../../../lib/poolSelection';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, CACHE_STRATEGY } from '../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  CACHE_STRATEGY,
+} from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
   getFromCache,
@@ -144,133 +148,131 @@ export const onRequestGet = authenticatedEndpoint(
     const logger = createEndpointLogger('/api/questions/pool');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  try {
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { id: true, role: true },
-    });
+    try {
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true, role: true },
+      });
 
-    if (!user) {
-      return {
-        data: { error: 'User not found', message: 'Your user account has not been synced yet.' },
-        status: 404,
-      };
-    }
-
-    const userId = user.id;
-    const system = validated.system || null;
-    const category = validated.category || null;
-    const difficulty = validated.difficulty || null;
-    const count = validated.count
-      ? Number.parseInt(validated.count, 10)
-      : DEFAULT_FETCH_COUNT;
-    const mode = validated.mode || null;
-
-    // ADMIN CURATION MODE
-    if (mode === 'curation') {
-      if (!['ADMIN', 'SUPERADMIN'].includes(user.role)) {
-        return { data: { error: 'Admin access required' }, status: 403 };
+      if (!user) {
+        return {
+          data: { error: 'User not found', message: 'Your user account has not been synced yet.' },
+          status: 404,
+        };
       }
 
-      const curationWhere: Record<string, unknown> = {};
-      if (system) curationWhere.system = system;
-      if (difficulty) curationWhere.difficulty = difficulty;
+      const userId = user.id;
+      const system = validated.system || null;
+      const category = validated.category || null;
+      const difficulty = validated.difficulty || null;
+      const count = validated.count ? Number.parseInt(validated.count, 10) : DEFAULT_FETCH_COUNT;
+      const mode = validated.mode || null;
 
-      const curationQuestions = await prisma.preGeneratedQuestion.findMany({
-        where: curationWhere,
-        orderBy: { generatedAt: 'desc' },
-        take: 100,
+      // ADMIN CURATION MODE
+      if (mode === 'curation') {
+        if (!['ADMIN', 'SUPERADMIN'].includes(user.role)) {
+          return { data: { error: 'Admin access required' }, status: 403 };
+        }
+
+        const curationWhere: Record<string, unknown> = {};
+        if (system) curationWhere.system = system;
+        if (difficulty) curationWhere.difficulty = difficulty;
+
+        const curationQuestions = await prisma.preGeneratedQuestion.findMany({
+          where: curationWhere,
+          orderBy: { generatedAt: 'desc' },
+          take: 100,
+        });
+
+        logger.info('Admin fetched curation questions', {
+          userId: auth.userId,
+          count: curationQuestions.length,
+        });
+        return { data: curationQuestions };
+      }
+
+      // Get questions user has already seen
+      const seenQuestionIds = await prisma.userQuestionSeen.findMany({
+        where: { userId },
+        select: { questionId: true },
       });
-
-      logger.info('Admin fetched curation questions', {
-        userId: auth.userId,
-        count: curationQuestions.length,
-      });
-      return { data: curationQuestions };
-    }
-
-    // Get questions user has already seen
-    const seenQuestionIds = await prisma.userQuestionSeen.findMany({
-      where: { userId },
-      select: { questionId: true },
-    });
-    const seenIds = new Set<string>(
-      seenQuestionIds.map((q: { questionId: string }) => q.questionId)
-    );
-
-    // Check cache
-    const cacheKey = getQuestionPoolCacheKey({
-      system: system ?? undefined,
-      category: category ?? undefined,
-      difficulty: difficulty ?? undefined,
-    });
-    let cachedPool: PreGeneratedQuestionRecord[] | null = null;
-
-    if (isKVAvailable((env as { CACHE?: KVNamespace }).CACHE)) {
-      cachedPool = await getFromCache((env as { CACHE: KVNamespace }).CACHE, cacheKey);
-    }
-
-    // Get from pre-generated pool
-    const poolQuestions = await getFromPreGeneratedPool(
-      prisma,
-      userId,
-      seenIds,
-      { count, system, category, difficulty },
-      cachedPool
-    );
-    let questions = poolQuestions.questions;
-    const poolAvailable = poolQuestions.remaining;
-
-    // If pool insufficient, supplement from main Question table
-    if (questions.length < count) {
-      const needed = count - questions.length;
-      const mainQuestions = await getFromMainTable(prisma, userId, seenIds, {
-        count: needed,
-        system,
-        category,
-        difficulty,
-      });
-      questions = [...questions, ...mainQuestions];
-    }
-
-    const needsGeneration = poolAvailable < POOL_LOW_THRESHOLD;
-
-    // Cache the pool questions if available
-    if (
-      isKVAvailable((env as { CACHE?: KVNamespace }).CACHE) &&
-      !cachedPool &&
-      poolQuestions.rawQuestions
-    ) {
-      await setInCache(
-        (env as { CACHE: KVNamespace }).CACHE,
-        cacheKey,
-        poolQuestions.rawQuestions,
-        CACHE_CONFIG.TTL.QUESTION_POOL
+      const seenIds = new Set<string>(
+        seenQuestionIds.map((q: { questionId: string }) => q.questionId)
       );
+
+      // Check cache
+      const cacheKey = getQuestionPoolCacheKey({
+        system: system ?? undefined,
+        category: category ?? undefined,
+        difficulty: difficulty ?? undefined,
+      });
+      let cachedPool: PreGeneratedQuestionRecord[] | null = null;
+
+      if (isKVAvailable((env as { CACHE?: KVNamespace }).CACHE)) {
+        cachedPool = await getFromCache((env as { CACHE: KVNamespace }).CACHE, cacheKey);
+      }
+
+      // Get from pre-generated pool
+      const poolQuestions = await getFromPreGeneratedPool(
+        prisma,
+        userId,
+        seenIds,
+        { count, system, category, difficulty },
+        cachedPool
+      );
+      let questions = poolQuestions.questions;
+      const poolAvailable = poolQuestions.remaining;
+
+      // If pool insufficient, supplement from main Question table
+      if (questions.length < count) {
+        const needed = count - questions.length;
+        const mainQuestions = await getFromMainTable(prisma, userId, seenIds, {
+          count: needed,
+          system,
+          category,
+          difficulty,
+        });
+        questions = [...questions, ...mainQuestions];
+      }
+
+      const needsGeneration = poolAvailable < POOL_LOW_THRESHOLD;
+
+      // Cache the pool questions if available
+      if (
+        isKVAvailable((env as { CACHE?: KVNamespace }).CACHE) &&
+        !cachedPool &&
+        poolQuestions.rawQuestions
+      ) {
+        await setInCache(
+          (env as { CACHE: KVNamespace }).CACHE,
+          cacheKey,
+          poolQuestions.rawQuestions,
+          CACHE_CONFIG.TTL.QUESTION_POOL
+        );
+      }
+
+      logger.info('Fetched pool questions', {
+        userId: auth.userId,
+        count: questions.length,
+        poolAvailable,
+      });
+
+      return {
+        data: {
+          questions,
+          poolStatus: { available: poolAvailable, needsGeneration, threshold: POOL_LOW_THRESHOLD },
+        },
+        headers: { 'X-Cache': cachedPool ? 'HIT' : 'MISS' },
+      };
+    } catch (error) {
+      logger.error('Error fetching pool questions', {
+        error: error instanceof Error ? error.message : String(error),
+        userId: auth.userId,
+      });
+      throw new Error('Failed to fetch pool questions');
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-
-    logger.info('Fetched pool questions', {
-      userId: auth.userId,
-      count: questions.length,
-      poolAvailable,
-    });
-
-    return {
-      data: {
-        questions,
-        poolStatus: { available: poolAvailable, needsGeneration, threshold: POOL_LOW_THRESHOLD },
-      },
-      headers: { 'X-Cache': cachedPool ? 'HIT' : 'MISS' },
-    };
-  } catch (error) {
-    logger.error('Error fetching pool questions', {
-      error: error instanceof Error ? error.message : String(error),
-      userId: auth.userId,
-    });
-    throw new Error('Failed to fetch pool questions');
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
   },
   { source: 'query' }
 );
@@ -367,12 +369,12 @@ async function getFromPreGeneratedPool(
 
   // Filter out seen questions
   const unseenQuestions = preGenQuestions.filter((q) => !seenIds.has(q.id));
-  
+
   // Shuffle all questions first
   const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
-  
+
   let selectedQuestions: PreGeneratedQuestionRecord[];
-  
+
   if (system) {
     // If specific system requested, just take from shuffled pool
     selectedQuestions = shuffledQuestions.slice(0, count);
@@ -391,8 +393,10 @@ async function getFromPreGeneratedPool(
 
     // Skip questions with missing or empty options
     if (optionsArr.length === 0) {
-      console.warn(`[Pool] Skipping question ${q.id} - no options found in questionData:`, 
-        Object.keys(data));
+      console.warn(
+        `[Pool] Skipping question ${q.id} - no options found in questionData:`,
+        Object.keys(data)
+      );
       continue;
     }
 
@@ -462,11 +466,11 @@ async function getFromMainTable(
   }
 ): Promise<PoolQuestionOutput[]> {
   const { count, system, category, difficulty } = options;
-  
+
   // Fetch more questions than needed for PANCE-weighted selection
   const fetchMultiplier = system ? 5 : 20;
   const fetchCount = count * fetchMultiplier;
-  
+
   const where: Record<string, unknown> = {};
   if (system) where.system = system;
   if (difficulty) where.difficulty = difficulty;
@@ -491,12 +495,12 @@ async function getFromMainTable(
 
   // Filter out seen questions
   const unseenQuestions = questions.filter((q: MainQuestionRecord) => !seenIds.has(q.id));
-  
+
   // Shuffle all questions first
   const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
-  
+
   // Select questions - use PANCE distribution if no specific system
-  const selectedQuestions = system 
+  const selectedQuestions = system
     ? shuffledQuestions.slice(0, count)
     : selectByPanceDistribution(shuffledQuestions, count);
 
@@ -512,9 +516,9 @@ async function getFromMainTable(
       // Object format: { A: "Option A", B: "Option B", ... }
       const optionsObj = q.options as Record<string, string>;
       const sortedKeys = Object.keys(optionsObj).sort((a, b) => a.localeCompare(b)); // A, B, C, D, E
-      optionsArray = sortedKeys.map(key => optionsObj[key]);
+      optionsArray = sortedKeys.map((key) => optionsObj[key]);
     }
-    
+
     // Skip questions with no valid options
     if (optionsArray.length === 0) {
       console.warn(`[Pool] Skipping main question ${q.id} - no valid options`);

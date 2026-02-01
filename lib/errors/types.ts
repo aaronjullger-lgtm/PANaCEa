@@ -1,6 +1,6 @@
 /**
  * Structured Error Types for Production Error Handling
- * 
+ *
  * Provides type-safe error classes with categorization, retry metadata,
  * and context for production monitoring via Sentry.
  */
@@ -185,13 +185,7 @@ export class AuthorizationError extends AppError {
     public readonly resource?: string,
     context?: Record<string, unknown>
   ) {
-    super(
-      message,
-      'authorization',
-      'warning',
-      false,
-      { ...context, resource }
-    );
+    super(message, 'authorization', 'warning', false, { ...context, resource });
     this.name = 'AuthorizationError';
   }
 }
@@ -325,12 +319,7 @@ export function toAppError(error: unknown): AppError {
     });
   }
 
-  return new AppError(
-    String(error),
-    'unknown',
-    'error',
-    false
-  );
+  return new AppError(String(error), 'unknown', 'error', false);
 }
 
 /**

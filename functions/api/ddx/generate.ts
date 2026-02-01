@@ -120,41 +120,45 @@ Return a single, valid JSON object with the following structure, and no other te
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(GenerateDdxSchema, async (context) => {
-  const { env, auth, validated } = context;
-  const logger = createEndpointLogger('/api/ddx/generate');
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestGet = authenticatedEndpoint(
+  GenerateDdxSchema,
+  async (context) => {
+    const { env, auth, validated } = context;
+    const logger = createEndpointLogger('/api/ddx/generate');
+    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
-  try {
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const topic = validated.topic;
+      const topic = validated.topic;
 
-    logger.info('Generating DDx problem', {
-      userId: auth.userId,
-      topic,
-    });
+      logger.info('Generating DDx problem', {
+        userId: auth.userId,
+        topic,
+      });
 
-    const ddxProblem = await generateDdxProblem(prisma, topic);
+      const ddxProblem = await generateDdxProblem(prisma, topic);
 
-    logger.info('DDx problem generated successfully', {
-      userId: auth.userId,
-      topic,
-      correctDiagnosis: ddxProblem.correctDiagnosis,
-      diagnosesCount: ddxProblem.diagnoses.length,
-    });
+      logger.info('DDx problem generated successfully', {
+        userId: auth.userId,
+        topic,
+        correctDiagnosis: ddxProblem.correctDiagnosis,
+        diagnosesCount: ddxProblem.diagnoses.length,
+      });
 
-    return {
-      data: ddxProblem,
-    };
-  } catch (error) {
-    logger.error('Error generating DDx problem', {
-      error: error instanceof Error ? error.message : String(error),
-      userId: auth.userId,
-      topic: validated.topic,
-    });
-    throw new Error('Failed to generate DDx problem');
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-}, { source: 'query' });
+      return {
+        data: ddxProblem,
+      };
+    } catch (error) {
+      logger.error('Error generating DDx problem', {
+        error: error instanceof Error ? error.message : String(error),
+        userId: auth.userId,
+        topic: validated.topic,
+      });
+      throw new Error('Failed to generate DDx problem');
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  },
+  { source: 'query' }
+);

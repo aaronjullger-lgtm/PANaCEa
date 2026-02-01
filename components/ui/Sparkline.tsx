@@ -52,17 +52,12 @@ export function Sparkline({
   referenceRange,
 }: SparklineProps) {
   // Defensive: sanitize data - filter out NaN, Infinity, and convert all values to numbers
-  const sanitizedData = (data ?? [])
-    .map((v) => Number(v))
-    .filter((v) => Number.isFinite(v));
+  const sanitizedData = (data ?? []).map((v) => Number(v)).filter((v) => Number.isFinite(v));
 
   // Return loading skeleton if no valid data
   if (sanitizedData.length === 0) {
     return (
-      <div
-        className={`inline-flex items-center ${className}`}
-        style={{ width, height }}
-      >
+      <div className={`inline-flex items-center ${className}`} style={{ width, height }}>
         <div className="w-full h-full bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
       </div>
     );
@@ -222,16 +217,11 @@ export function SparklineBar({
   barGap = 1,
 }: SparklineBarProps) {
   // Defensive: sanitize data - filter out NaN, Infinity, and convert all values to numbers
-  const sanitizedData = (data ?? [])
-    .map((v) => Number(v))
-    .filter((v) => Number.isFinite(v));
+  const sanitizedData = (data ?? []).map((v) => Number(v)).filter((v) => Number.isFinite(v));
 
   if (sanitizedData.length === 0) {
     return (
-      <div
-        className={`sparkline-bar ${className}`}
-        style={{ width, height }}
-      >
+      <div className={`sparkline-bar ${className}`} style={{ width, height }}>
         <div className="w-full h-full bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
       </div>
     );

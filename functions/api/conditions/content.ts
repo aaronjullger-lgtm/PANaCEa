@@ -6,7 +6,11 @@
  */
 
 import { publicEndpoint, withCors } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, CACHE_STRATEGY } from '../_shared/prisma-edge';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  CACHE_STRATEGY,
+} from '../_shared/prisma-edge';
 import { z } from 'zod';
 
 // Flattened schema for query params

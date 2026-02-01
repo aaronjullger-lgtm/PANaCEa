@@ -1472,27 +1472,27 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
         return false;
       }
 
-    // Update the queue with the ordered test
-    setQueue((prev) => {
-      const newQueue = [...prev];
-      const caseAtIndex = newQueue[currentIndex];
-      
-      if (!caseAtIndex) {
-        console.warn(`Cannot order test: no case at index ${currentIndex}`);
-        return prev;
-      }
-      
-      const updatedCase = { ...caseAtIndex };
+      // Update the queue with the ordered test
+      setQueue((prev) => {
+        const newQueue = [...prev];
+        const caseAtIndex = newQueue[currentIndex];
 
-      // Add to panels
-      updatedCase.panels = [...updatedCase.panels, testPanel];
+        if (!caseAtIndex) {
+          console.warn(`Cannot order test: no case at index ${currentIndex}`);
+          return prev;
+        }
 
-      // Track ordered tests
-      updatedCase.orderedTests = [...(updatedCase.orderedTests || []), testName];
+        const updatedCase = { ...caseAtIndex };
 
-      newQueue[currentIndex] = updatedCase;
-      return newQueue;
-    });
+        // Add to panels
+        updatedCase.panels = [...updatedCase.panels, testPanel];
+
+        // Track ordered tests
+        updatedCase.orderedTests = [...(updatedCase.orderedTests || []), testName];
+
+        newQueue[currentIndex] = updatedCase;
+        return newQueue;
+      });
 
       return true;
     },

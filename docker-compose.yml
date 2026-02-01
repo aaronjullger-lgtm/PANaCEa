@@ -29,12 +29,12 @@ services:
       POSTGRES_PASSWORD: panacea_dev
       POSTGRES_DB: panacea_dev
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - panacea_postgres_data:/var/lib/postgresql/data
       - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U panacea -d panacea_dev"]
+      test: ['CMD-SHELL', 'pg_isready -U panacea -d panacea_dev']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -48,16 +48,16 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@panacea.local
       PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
-      - "5050:80"
+      - '5050:80'
     volumes:
       - panacea_pgadmin_data:/var/lib/pgadmin
     depends_on:
       db:
         condition: service_healthy
     profiles:
-      - tools  # Only start with: docker-compose --profile tools up
+      - tools # Only start with: docker-compose --profile tools up
 
   # Development server (optional - use when you want containerized dev)
   # Uncomment to run the full stack in Docker

@@ -17,12 +17,17 @@ interface Env {
   CACHE?: KVNamespace;
 }
 
-export async function onRequestPost(context: EventContext<Env, string, unknown>): Promise<Response> {
+export async function onRequestPost(
+  context: EventContext<Env, string, unknown>
+): Promise<Response> {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
   try {
     // Authenticate user
-    const authResult = await authenticateRequest(context.request as unknown as Request, context.env);
+    const authResult = await authenticateRequest(
+      context.request as unknown as Request,
+      context.env
+    );
     if (!authResult?.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -60,45 +65,52 @@ export async function onRequestPost(context: EventContext<Env, string, unknown>)
     // Parse optional notes from request body
     let notes: string | undefined;
     try {
-      const body = await context.request.json() as { notes?: string };
+      const body = (await context.request.json()) as { notes?: string };
       notes = body?.notes;
     } catch {
       // No body or invalid JSON, that's fine
     }
 
     // Use transaction to ensure atomicity
-    await prisma.$transaction(async (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => {
-      // Upsert user pearl interaction
-      await tx.userPearl.upsert({
-        where: {
-          userId_pearlId: {
+    await prisma.$transaction(
+      async (
+        tx: Omit<
+          PrismaClient,
+          '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+        >
+      ) => {
+        // Upsert user pearl interaction
+        await tx.userPearl.upsert({
+          where: {
+            userId_pearlId: {
+              userId,
+              pearlId,
+            },
+          },
+          update: {
+            markedUseful: true,
+            viewedAt: new Date(),
+            notes: notes || undefined,
+          },
+          create: {
+            id: uuidv4(),
             userId,
             pearlId,
+            markedUseful: true,
+            viewedAt: new Date(),
+            notes: notes || undefined,
           },
-        },
-        update: {
-          markedUseful: true,
-          viewedAt: new Date(),
-          notes: notes || undefined,
-        },
-        create: {
-          id: uuidv4(),
-          userId,
-          pearlId,
-          markedUseful: true,
-          viewedAt: new Date(),
-          notes: notes || undefined,
-        },
-      });
+        });
 
-      // Increment global useful votes
-      await tx.clinicalPearl.update({
-        where: { id: pearlId },
-        data: {
-          usefulVotes: { increment: 1 },
-        },
-      });
-    });
+        // Increment global useful votes
+        await tx.clinicalPearl.update({
+          where: { id: pearlId },
+          data: {
+            usefulVotes: { increment: 1 },
+          },
+        });
+      }
+    );
 
     return new Response(
       JSON.stringify({

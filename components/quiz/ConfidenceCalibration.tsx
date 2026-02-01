@@ -42,13 +42,15 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
       value: 'very_sure',
       label: 'Very Sure',
       shortLabel: 'Sure',
-      color: 'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]/30 text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/20',
+      color:
+        'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]/30 text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/20',
     },
     {
       value: 'somewhat_sure',
       label: 'Somewhat Sure',
       shortLabel: 'Maybe',
-      color: 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/30 text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/20',
+      color:
+        'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/30 text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/20',
     },
     {
       value: 'guessing',
@@ -164,7 +166,11 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
     if (accuracy > expected.max) {
       return { icon: TrendingUp, color: 'text-[var(--color-accent)]', label: 'Underconfident' };
     }
-    return { icon: TrendingDown, color: 'text-[var(--color-data-provisional)]', label: 'Overconfident' };
+    return {
+      icon: TrendingDown,
+      color: 'text-[var(--color-data-provisional)]',
+      label: 'Overconfident',
+    };
   };
 
   return (

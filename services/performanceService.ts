@@ -134,9 +134,7 @@ export function getHierarchicalStats(): SystemStats[] {
 
   // Only count ALL-topics sessions (all questions are now PANCE-level by default):
   //  - focus === "all"
-  const filtered = all.filter(
-    (r) => r.focus === 'all' && r.system && r.system !== 'OTHER'
-  );
+  const filtered = all.filter((r) => r.focus === 'all' && r.system && r.system !== 'OTHER');
 
   // system → subcategory → condition → aggregate
   const systemMap = new Map<SystemCode, SystemStats>();

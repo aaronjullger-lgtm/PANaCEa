@@ -52,7 +52,7 @@ function levenshteinDistance(a: string, b: string): number {
     const currentRow = dp[i];
     const prevRow = dp[i - 1];
     if (!currentRow || !prevRow) continue;
-    
+
     for (let j = 1; j <= n; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
       const deletion = (prevRow[j] ?? Infinity) + 1;

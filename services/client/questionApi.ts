@@ -1,9 +1,9 @@
 /**
  * Client-Safe Question API Wrappers
- * 
+ *
  * These functions use fetch() to call API endpoints instead of
  * importing server-side services that contain @prisma/client.
- * 
+ *
  * This prevents Prisma from being bundled into client-side code.
  */
 
@@ -61,7 +61,7 @@ export async function getQuestionClient(
 
     if (data.questions && data.questions.length > 0) {
       const q = data.questions[0];
-      
+
       // Transform PreGeneratedQuestion to Question format
       const question: Question = {
         id: q.id,
@@ -77,7 +77,7 @@ export async function getQuestionClient(
         difficulty: q.difficulty,
         pearls: [],
       };
-      
+
       return question;
     }
 

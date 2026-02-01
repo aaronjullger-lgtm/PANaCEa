@@ -153,9 +153,7 @@ export const RotationSelector: React.FC<RotationSelectorProps> = ({
                     option.id === currentRotation ? 'bg-[var(--color-accent)]/10' : ''
                   }`}
                 >
-                  <div className="font-medium text-[var(--color-text-primary)]">
-                    {option.label}
-                  </div>
+                  <div className="font-medium text-[var(--color-text-primary)]">{option.label}</div>
                   <div className="text-xs text-[var(--color-text-muted)] mt-1">
                     {option.description}
                   </div>

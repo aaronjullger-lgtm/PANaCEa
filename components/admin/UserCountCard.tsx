@@ -99,9 +99,7 @@ export function UserCountCard() {
             <RefreshCw className="w-5 h-5" />
           </button>
         </div>
-        <p className="text-lg font-semibold text-[var(--color-text-primary)] mb-1">
-          —
-        </p>
+        <p className="text-lg font-semibold text-[var(--color-text-primary)] mb-1">—</p>
         <p className="text-sm text-data-fail mb-2">Users</p>
         <p className="text-xs text-[var(--color-text-muted)]">{error}</p>
       </div>
@@ -126,18 +124,14 @@ export function UserCountCard() {
           className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-50"
           aria-label="Refresh count"
         >
-          <RefreshCw
-            className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`}
-          />
+          <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
       <p className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums mb-1">
         {count.toLocaleString()}
       </p>
       <p className="text-sm text-[var(--color-text-muted)] mb-1">Users</p>
-      <p className="text-xs text-[var(--color-text-muted)]">
-        {formatTimestamp(data?.timestamp)}
-      </p>
+      <p className="text-xs text-[var(--color-text-muted)]">{formatTimestamp(data?.timestamp)}</p>
     </div>
   );
 }

@@ -19,30 +19,30 @@ interface DDxDrillSessionProps {
 }
 
 const QUESTION_TYPE_LABELS = {
-  mustNotMiss: { 
-    label: 'Must Not Miss', 
-    icon: AlertTriangle, 
-    className: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]' 
+  mustNotMiss: {
+    label: 'Must Not Miss',
+    icon: AlertTriangle,
+    className: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
   },
-  mostCommon: { 
-    label: 'Most Common', 
-    icon: Activity, 
-    className: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]' 
+  mostCommon: {
+    label: 'Most Common',
+    icon: Activity,
+    className: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]',
   },
-  distinguishing: { 
-    label: 'Distinguishing Feature', 
-    icon: Target, 
-    className: 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]' 
+  distinguishing: {
+    label: 'Distinguishing Feature',
+    icon: Target,
+    className: 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]',
   },
-  redFlag: { 
-    label: 'Red Flag', 
-    icon: AlertTriangle, 
-    className: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]' 
+  redFlag: {
+    label: 'Red Flag',
+    icon: AlertTriangle,
+    className: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
   },
-  workup: { 
-    label: 'Workup', 
-    icon: Stethoscope, 
-    className: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]' 
+  workup: {
+    label: 'Workup',
+    icon: Stethoscope,
+    className: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
   },
 };
 

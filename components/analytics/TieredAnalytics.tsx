@@ -67,9 +67,7 @@ const QuickGlance: React.FC<QuickGlanceProps> = ({
     {/* Recent Accuracy */}
     <div className="p-4 rounded-xl bg-gradient-to-br from-[var(--color-data-pass)]/10 to-[var(--color-data-pass)]/20 dark:from-[var(--color-data-pass)]/10 dark:to-[var(--color-data-pass)]/20 border border-[var(--color-border)] text-center">
       <Target className="w-6 h-6 mx-auto mb-2 text-[var(--color-data-pass)]" />
-      <div className="text-3xl font-bold text-[var(--color-data-pass)]">
-        {recentAccuracy}%
-      </div>
+      <div className="text-3xl font-bold text-[var(--color-data-pass)]">{recentAccuracy}%</div>
       <div className="text-xs text-[var(--color-data-pass)] font-medium">Last 50 Q's</div>
     </div>
 
@@ -222,9 +220,7 @@ const DeepDive: React.FC<DeepDiveProps> = ({
     <div className="p-4 rounded-xl bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 border border-[var(--color-border)]">
       <div className="flex items-center gap-2 mb-3">
         <Brain className="w-5 h-5 text-[var(--color-accent)]" />
-        <h3 className="font-semibold text-[var(--color-text-primary)]">
-          Memory Science (FSRS)
-        </h3>
+        <h3 className="font-semibold text-[var(--color-text-primary)]">Memory Science (FSRS)</h3>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -241,15 +237,11 @@ const DeepDive: React.FC<DeepDiveProps> = ({
           <div className="text-xs text-[var(--color-text-muted)]">Difficulty</div>
         </div>
         <div className="text-center p-3 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
-          <div className="text-2xl font-bold text-[var(--color-accent)]">
-            {retentionRate}%
-          </div>
+          <div className="text-2xl font-bold text-[var(--color-accent)]">{retentionRate}%</div>
           <div className="text-xs text-[var(--color-text-muted)]">Retention</div>
         </div>
         <div className="text-center p-3 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
-          <div className="text-2xl font-bold text-[var(--color-accent)]">
-            {optimalReviewTime}
-          </div>
+          <div className="text-2xl font-bold text-[var(--color-accent)]">{optimalReviewTime}</div>
           <div className="text-xs text-[var(--color-text-muted)]">Best Time</div>
         </div>
       </div>
@@ -262,9 +254,7 @@ const DeepDive: React.FC<DeepDiveProps> = ({
       </h4>
       <div className="grid grid-cols-4 gap-2">
         <div className="text-center p-2 rounded-lg bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20">
-          <div className="text-lg font-bold text-[var(--color-accent)]">
-            {learningState.new}
-          </div>
+          <div className="text-lg font-bold text-[var(--color-accent)]">{learningState.new}</div>
           <div className="text-[10px] text-[var(--color-text-muted)]">New</div>
         </div>
         <div className="text-center p-2 rounded-lg bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/20">

@@ -59,11 +59,7 @@ export function SetupRequiredPage({ message = DEFAULT_MESSAGE }: SetupRequiredPa
               onClick={copyCommand}
               className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--color-border)] hover:bg-[var(--color-bg-primary)] rounded-lg font-mono text-sm w-fit transition-colors"
             >
-              {copied ? (
-                <Check className="w-4 h-4 text-green-500" />
-              ) : (
-                <Copy className="w-4 h-4" />
-              )}
+              {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
               {copied ? 'Copied!' : 'Copy: cp env.example .env'}
             </button>
           </div>

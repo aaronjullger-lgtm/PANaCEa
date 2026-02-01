@@ -12,7 +12,14 @@
  * - Accessible (ARIA live regions)
  */
 
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { registerToast } from '@/lib/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';

@@ -22,7 +22,9 @@ export function normalizeOptionsToArray(options: unknown): string[] {
   if (typeof options === 'object' && options !== null) {
     const optionsObj = options as Record<string, string>;
     const sortedKeys = Object.keys(optionsObj).sort((a, b) => a.localeCompare(b)); // A, B, C, D, E
-    return sortedKeys.map((key) => optionsObj[key]).filter((val): val is string => typeof val === 'string');
+    return sortedKeys
+      .map((key) => optionsObj[key])
+      .filter((val): val is string => typeof val === 'string');
   }
 
   // String format - try to parse as JSON

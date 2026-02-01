@@ -168,10 +168,7 @@ export function SystemMasteryMap({
         <div className="h-8 w-48 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
         <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
           {Array.from({ length: 15 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-24 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse"
-            />
+            <div key={i} className="h-24 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse" />
           ))}
         </div>
       </div>

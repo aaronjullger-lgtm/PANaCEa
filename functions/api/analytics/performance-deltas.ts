@@ -218,7 +218,7 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
       stack: error instanceof Error ? error.stack : undefined,
       userId: auth.userId,
     });
-    
+
     // Return safe defaults instead of crashing
     return {
       data: {

@@ -226,28 +226,28 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       {
         insights: {
           hasData: true,
-        period: `Last ${periodDays} days`,
-        summary: {
-          totalQuestions,
-          accuracy: Math.round(accuracy),
-          trend: trendDirection,
-          trendChange: Math.round(trend),
-        },
-        weakAreas: weakAreas.slice(0, 5),
-        strongAreas: strongAreas.slice(0, 3),
-        recommendations,
-        timeOptimization: {
-          avgSeconds: Math.round(avgTimePerQuestion),
-          message: timeOptimization,
-        },
-        systemBreakdown: Object.entries(systemPerformance)
-          .map(([system, data]: [string, any]) => ({
-            system,
-            total: data.total,
-            correct: data.correct,
-            accuracy: Math.round(data.accuracy),
-          }))
-          .sort((a: any, b: any) => b.total - a.total),
+          period: `Last ${periodDays} days`,
+          summary: {
+            totalQuestions,
+            accuracy: Math.round(accuracy),
+            trend: trendDirection,
+            trendChange: Math.round(trend),
+          },
+          weakAreas: weakAreas.slice(0, 5),
+          strongAreas: strongAreas.slice(0, 3),
+          recommendations,
+          timeOptimization: {
+            avgSeconds: Math.round(avgTimePerQuestion),
+            message: timeOptimization,
+          },
+          systemBreakdown: Object.entries(systemPerformance)
+            .map(([system, data]: [string, any]) => ({
+              system,
+              total: data.total,
+              correct: data.correct,
+              accuracy: Math.round(data.accuracy),
+            }))
+            .sort((a: any, b: any) => b.total - a.total),
         },
       },
       200,

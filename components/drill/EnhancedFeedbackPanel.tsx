@@ -305,7 +305,9 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
                                         .slice(0, 3)
                                         .map((point: string, i: number) => (
                                           <li key={i} className="flex items-start gap-2">
-                                            <span className="text-[var(--color-accent)] mt-1">•</span>
+                                            <span className="text-[var(--color-accent)] mt-1">
+                                              •
+                                            </span>
                                             <span>{point}</span>
                                           </li>
                                         ))}

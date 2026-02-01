@@ -253,9 +253,7 @@ export function DrillSetup({
           <div className="bg-[var(--color-accent)]/10 rounded-xl p-4 border border-[var(--color-accent)]/30">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
-              <span className="font-bold text-[var(--color-accent)]">
-                PANCE-Level Questions
-              </span>
+              <span className="font-bold text-[var(--color-accent)]">PANCE-Level Questions</span>
             </div>
             <p className="text-sm text-[var(--color-text-secondary)]">
               All questions are calibrated to match real PANCE exam difficulty for optimal

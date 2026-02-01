@@ -872,9 +872,8 @@ export async function generateUserFriendlyStats(): Promise<UserFriendlyStats> {
         ? Math.round((helpfulChanges / (helpfulChanges + harmfulChanges)) * 100) || null
         : null;
 
-    shouldTrustFirstInstinct = firstInstinctAccuracy !== null 
-      ? firstInstinctAccuracy > last7DaysAccuracy - 5 
-      : null;
+    shouldTrustFirstInstinct =
+      firstInstinctAccuracy !== null ? firstInstinctAccuracy > last7DaysAccuracy - 5 : null;
   }
 
   // Circadian patterns (only if enough data)

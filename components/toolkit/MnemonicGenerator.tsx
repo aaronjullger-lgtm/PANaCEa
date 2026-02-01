@@ -254,10 +254,10 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
             {/* Loading State */}
             {isGenerating && (
               <div className="flex items-center justify-center py-8">
-              <div className="flex items-center gap-3">
-                <RefreshCw className="w-5 h-5 text-[var(--color-accent)] animate-spin" />
-                <span className="text-[var(--color-text-muted)]">Generating mnemonic...</span>
-              </div>
+                <div className="flex items-center gap-3">
+                  <RefreshCw className="w-5 h-5 text-[var(--color-accent)] animate-spin" />
+                  <span className="text-[var(--color-text-muted)]">Generating mnemonic...</span>
+                </div>
               </div>
             )}
 

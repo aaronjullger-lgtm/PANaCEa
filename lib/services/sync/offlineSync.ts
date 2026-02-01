@@ -14,12 +14,7 @@ const DEBUG_OFFLINE_SYNC = false;
 
 export interface SyncOperation {
   id: string;
-  operation:
-    | 'save_progress'
-    | 'submit_quiz'
-    | 'update_settings'
-    | 'flag_question'
-    | 'srs_submit';
+  operation: 'save_progress' | 'submit_quiz' | 'update_settings' | 'flag_question' | 'srs_submit';
   data: any;
   timestamp: number;
   attempts: number;

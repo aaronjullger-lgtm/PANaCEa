@@ -24,8 +24,20 @@ import { prisma, disconnect } from './_shared/db';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 const SYSTEMS = [
-  'CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO',
-  'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU',
+  'CV',
+  'PULM',
+  'GI',
+  'NEURO',
+  'MSK',
+  'DERM',
+  'HEME',
+  'ENDO',
+  'HEENT',
+  'RENAL',
+  'REPRO',
+  'PSYCH',
+  'ID',
+  'GU',
 ];
 
 const QUESTIONS_PER_CONDITION = 3;
@@ -91,7 +103,7 @@ async function getConditionsForSystem(system: string): Promise<ConditionInfo[]> 
     treatment: mc.treatment || undefined,
     diagnostics: mc.diagnostics || undefined,
     pathophysiology: mc.pathophysiology || undefined,
-    buzzwords: mc.buzzwords as string[] || undefined,
+    buzzwords: (mc.buzzwords as string[]) || undefined,
   }));
 }
 
@@ -100,16 +112,16 @@ async function getConditionsForSystem(system: string): Promise<ConditionInfo[]> 
  */
 function robustJsonParse(jsonString: string): any {
   let cleaned = jsonString.trim();
-  
+
   // Remove markdown code blocks
   if (cleaned.startsWith('```json')) cleaned = cleaned.slice(7);
   else if (cleaned.startsWith('```')) cleaned = cleaned.slice(3);
   if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3);
   cleaned = cleaned.trim();
-  
+
   // Remove trailing commas
   cleaned = cleaned.replace(/,(?=\s*?([\]}]))/g, '$1');
-  
+
   // Fix common HTML-table newline issues
   cleaned = cleaned.replace(/>\s*\n\s*</g, '><');
 
@@ -135,8 +147,12 @@ async function generateQuestionsV2(
     condition.diagnostics ? `Diagnostics: ${condition.diagnostics.slice(0, 400)}` : '',
     condition.treatment ? `Treatment: ${condition.treatment.slice(0, 400)}` : '',
     condition.pathophysiology ? `Pathophysiology: ${condition.pathophysiology.slice(0, 300)}` : '',
-    condition.buzzwords?.length ? `Key Features (DO NOT USE DIRECTLY - describe instead): ${condition.buzzwords.join(', ')}` : '',
-  ].filter(Boolean).join('\n\n');
+    condition.buzzwords?.length
+      ? `Key Features (DO NOT USE DIRECTLY - describe instead): ${condition.buzzwords.join(', ')}`
+      : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
 
   const prompt = `You are a Senior Medical Board Question Writer for the PANCE. Generate ${count} unique PANCE-style questions about "${condition.name}" (${condition.system} system - ${condition.subcategory}).
 
@@ -199,17 +215,19 @@ Return ONLY a JSON array with this exact structure (no markdown, no prose):
       return [];
     }
 
-    return questions.filter(
-      (q: any) =>
-        q.question &&
-        Array.isArray(q.options) &&
-        q.options.length === 4 &&
-        typeof q.correctAnswerIndex === 'number' &&
-        q.explanation
-    ).map((q: any) => ({
-      ...q,
-      conditionName: condition.name,
-    }));
+    return questions
+      .filter(
+        (q: any) =>
+          q.question &&
+          Array.isArray(q.options) &&
+          q.options.length === 4 &&
+          typeof q.correctAnswerIndex === 'number' &&
+          q.explanation
+      )
+      .map((q: any) => ({
+        ...q,
+        conditionName: condition.name,
+      }));
   } catch (error: any) {
     console.error(`    Gemini error: ${error.message}`);
     return [];
@@ -233,11 +251,11 @@ async function main() {
   console.log('═'.repeat(70));
   console.log('🔄 Question Pool Regeneration V2 - "Describe, Don\'t Diagnose"');
   console.log('═'.repeat(70));
-  
+
   if (clearFirst) {
     console.log('\n⚠️  This will DELETE all existing questions and regenerate them.');
     console.log('   Press Ctrl+C within 5 seconds to cancel...\n');
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
   }
 
   // Get current stats
@@ -325,7 +343,7 @@ async function main() {
       }
 
       // Rate limiting
-      await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_MS));
+      await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_MS));
     }
 
     if (addMode && totalGenerated >= addCount) break;

@@ -71,13 +71,13 @@ export const FSRSOptimizer: React.FC = () => {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-start justify-between">
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <Brain className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="font-semibold text-[var(--color-text-primary)]">
-            FSRS Algorithm Optimizer
-          </h3>
-        </div>
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Brain className="w-5 h-5 text-[var(--color-accent)]" />
+            <h3 className="font-semibold text-[var(--color-text-primary)]">
+              FSRS Algorithm Optimizer
+            </h3>
+          </div>
           <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
             Personalizes your spacing algorithm based on your memory patterns. Default parameters
             are 20-30% less efficient than optimized ones.
@@ -138,7 +138,9 @@ export const FSRSOptimizer: React.FC = () => {
           <div className="flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-[var(--color-data-pass)] flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-[var(--color-data-pass)] mb-2">Optimization Complete!</p>
+              <p className="text-sm font-medium text-[var(--color-data-pass)] mb-2">
+                Optimization Complete!
+              </p>
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <div className="text-[var(--color-text-secondary)]">Efficiency Gain</div>
@@ -170,7 +172,9 @@ export const FSRSOptimizer: React.FC = () => {
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-[var(--color-data-fail)] mb-1">Optimization Failed</p>
+              <p className="text-sm font-medium text-[var(--color-data-fail)] mb-1">
+                Optimization Failed
+              </p>
               <p className="text-xs text-[var(--color-text-secondary)]">{error}</p>
             </div>
           </div>

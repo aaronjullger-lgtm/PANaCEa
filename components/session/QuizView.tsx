@@ -420,7 +420,15 @@ const QuizView: React.FC<QuizViewProps> = ({
     } finally {
       setIsGeneratingQuestion(false);
     }
-  }, [shouldEndlesslyReplenish, sessionSettings, growthAreas, setParentQueue, setError, getToken, isGeneratingQuestion]);
+  }, [
+    shouldEndlesslyReplenish,
+    sessionSettings,
+    growthAreas,
+    setParentQueue,
+    setError,
+    getToken,
+    isGeneratingQuestion,
+  ]);
 
   // Proactive replenishment - trigger when queue drops below threshold
   useEffect(() => {
@@ -758,7 +766,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       topic: currentQuestion.topic,
     });
 
-      // Update SRS schedule (if user is authenticated)
+    // Update SRS schedule (if user is authenticated)
     if (user?.id && currentQuestion.id) {
       // Submit review to API endpoint (replaces legacy updateReviewOutcome)
       // This syncs FSRS data to server, creates QuestionAttempt, updates UserProgress
@@ -788,7 +796,7 @@ const QuizView: React.FC<QuizViewProps> = ({
             }
 
             const result = await response.json();
-            
+
             // Map API response to legacy SRSScheduleResult format for backward compatibility
             setSrsResult({
               nextReview: new Date(Date.now() + 24 * 60 * 60 * 1000), // Placeholder
@@ -961,7 +969,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     try {
       const userAnswer = currentQuestion.options[selectedAnswerIndex] ?? '';
       const correctAnswer = currentQuestion.options[currentQuestion.correctAnswerIndex] ?? '';
-      
+
       // Build prompt for alternate explanation
       const prompt = `You are a clinical educator helping a PA student understand why they got a question wrong.
 
@@ -982,7 +990,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
       // Use streaming API from geminiService
       const { callGeminiStream } = await import('@/services/domain/geminiService');
-      
+
       try {
         for await (const chunk of callGeminiStream('gemini-2.0-flash-exp', prompt, 0.7)) {
           // Append each chunk as it arrives
@@ -1088,9 +1096,18 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               </div>
               <div className="space-y-3">
                 <div className="h-5 bg-[var(--color-bg-secondary)] rounded w-[95%] animate-pulse" />
-                <div className="h-5 bg-[var(--color-bg-secondary)] rounded w-[88%] animate-pulse" style={{ animationDelay: '0.1s' }} />
-                <div className="h-5 bg-[var(--color-bg-secondary)] rounded w-[92%] animate-pulse" style={{ animationDelay: '0.2s' }} />
-                <div className="h-5 bg-[var(--color-bg-secondary)] rounded w-[60%] animate-pulse" style={{ animationDelay: '0.3s' }} />
+                <div
+                  className="h-5 bg-[var(--color-bg-secondary)] rounded w-[88%] animate-pulse"
+                  style={{ animationDelay: '0.1s' }}
+                />
+                <div
+                  className="h-5 bg-[var(--color-bg-secondary)] rounded w-[92%] animate-pulse"
+                  style={{ animationDelay: '0.2s' }}
+                />
+                <div
+                  className="h-5 bg-[var(--color-bg-secondary)] rounded w-[60%] animate-pulse"
+                  style={{ animationDelay: '0.3s' }}
+                />
               </div>
               <div className="pt-4 border-t border-[var(--color-border)]">
                 <div className="h-5 bg-[var(--color-bg-secondary)] rounded w-[75%] animate-pulse" />
@@ -1119,9 +1136,18 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             {/* Progress hint */}
             <div className="flex items-center justify-center gap-2 mt-8 text-sm text-[var(--color-text-muted)]">
               <div className="flex gap-1">
-                <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce" style={{ animationDelay: '0s' }} />
-                <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce" style={{ animationDelay: '0.2s' }} />
-                <span className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce" style={{ animationDelay: '0.4s' }} />
+                <span
+                  className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce"
+                  style={{ animationDelay: '0s' }}
+                />
+                <span
+                  className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce"
+                  style={{ animationDelay: '0.2s' }}
+                />
+                <span
+                  className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-bounce"
+                  style={{ animationDelay: '0.4s' }}
+                />
               </div>
               <span>Curating high-yield content</span>
             </div>
@@ -1282,22 +1308,22 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               transition={{ duration: 0.25, ease: 'easeOut' }}
             >
               {/* Sprint 10: Trust Badge for question source; Beta badge when from staging */}
-            <div className="flex items-center gap-2 mb-2">
-              <TrustBadge
-                source={currentQuestion.source}
-                fromStaging={currentQuestion.fromStaging}
-                size="sm"
-              />
-            </div>
-            {currentQuestion.imageUrl && (
-              <div className="mb-4 rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-                <img
-                  src={currentQuestion.imageUrl}
-                  alt="Clinical image for question"
-                  className="w-full max-h-[320px] object-contain"
+              <div className="flex items-center gap-2 mb-2">
+                <TrustBadge
+                  source={currentQuestion.source}
+                  fromStaging={currentQuestion.fromStaging}
+                  size="sm"
                 />
               </div>
-            )}
+              {currentQuestion.imageUrl && (
+                <div className="mb-4 rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                  <img
+                    src={currentQuestion.imageUrl}
+                    alt="Clinical image for question"
+                    className="w-full max-h-[320px] object-contain"
+                  />
+                </div>
+              )}
               <QuestionDisplay
                 text={
                   useSplitPane && currentQuestion.vignette
@@ -1311,170 +1337,174 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             </motion.div>
           </AnimatePresence>
 
-      {/* ANSWER OPTIONS */}
-      <div className="space-y-3 mt-6">
-        {(currentQuestion.options || []).map((option, index) => {
-          const isCorrect = index === currentQuestion.correctAnswerIndex;
-          const isSelected = index === selectedAnswerIndex;
+          {/* ANSWER OPTIONS */}
+          <div className="space-y-3 mt-6">
+            {(currentQuestion.options || []).map((option, index) => {
+              const isCorrect = index === currentQuestion.correctAnswerIndex;
+              const isSelected = index === selectedAnswerIndex;
 
-          return (
-            <AnswerChoice
-              key={index}
-              ref={(el) => {
-                optionButtonsRef.current[index] = el;
-              }}
-              text={option}
-              index={index}
-              isSelected={isSelected}
-              isCorrect={isCorrect}
-              isAnswered={isAnswered}
-              isEliminated={eliminatedAnswers.has(index)}
-              onSelect={handleOptionClick}
-              onToggleEliminate={handleToggleEliminate}
-              fontSizeAdjustment={fontSizeAdjustment}
-            />
-          );
-        })}
-      </div>
+              return (
+                <AnswerChoice
+                  key={index}
+                  ref={(el) => {
+                    optionButtonsRef.current[index] = el;
+                  }}
+                  text={option}
+                  index={index}
+                  isSelected={isSelected}
+                  isCorrect={isCorrect}
+                  isAnswered={isAnswered}
+                  isEliminated={eliminatedAnswers.has(index)}
+                  onSelect={handleOptionClick}
+                  onToggleEliminate={handleToggleEliminate}
+                  fontSizeAdjustment={fontSizeAdjustment}
+                />
+              );
+            })}
+          </div>
 
-      {/* SUBMIT BUTTON - Only show when answer is selected but not yet submitted */}
-      {!isAnswered && selectedAnswerIndex !== null && (
-        <div className="mt-6 text-center animate-fade-in space-y-4">
-          <button onClick={handleSubmitAnswer} className="btn-glass px-8 py-3">
-            Submit Answer
-          </button>
-          <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-            Press{' '}
-            <kbd className="px-2 py-1 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded text-xs font-mono">
-              Enter
-            </kbd>{' '}
-            to submit
-          </p>
-        </div>
-      )}
+          {/* SUBMIT BUTTON - Only show when answer is selected but not yet submitted */}
+          {!isAnswered && selectedAnswerIndex !== null && (
+            <div className="mt-6 text-center animate-fade-in space-y-4">
+              <button onClick={handleSubmitAnswer} className="btn-glass px-8 py-3">
+                Submit Answer
+              </button>
+              <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+                Press{' '}
+                <kbd className="px-2 py-1 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded text-xs font-mono">
+                  Enter
+                </kbd>{' '}
+                to submit
+              </p>
+            </div>
+          )}
 
-      {/* FEEDBACK / RATIONALE */}
-      {isAnswered && (
-        <div className="mt-6 animate-fade-in space-y-4">
-          {topicStats && (
-            <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg">
-              <div className="flex justify-between items-center mb-1 text-sm">
-                <span className="font-semibold text-[var(--color-text-secondary)]">
-                  {currentQuestion.topic}
-                </span>
-                <span className="font-medium text-[var(--color-text-muted)]">
-                  {topicStats.score.toFixed(0)}% ({topicStats.correct}/{topicStats.total})
-                </span>
-              </div>
-              <div className="w-full bg-[var(--color-bg-secondary)] rounded-full h-2.5">
+          {/* FEEDBACK / RATIONALE */}
+          {isAnswered && (
+            <div className="mt-6 animate-fade-in space-y-4">
+              {topicStats && (
+                <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg">
+                  <div className="flex justify-between items-center mb-1 text-sm">
+                    <span className="font-semibold text-[var(--color-text-secondary)]">
+                      {currentQuestion.topic}
+                    </span>
+                    <span className="font-medium text-[var(--color-text-muted)]">
+                      {topicStats.score.toFixed(0)}% ({topicStats.correct}/{topicStats.total})
+                    </span>
+                  </div>
+                  <div className="w-full bg-[var(--color-bg-secondary)] rounded-full h-2.5">
+                    <div
+                      className={`h-2.5 rounded-full ${getBarColor(
+                        topicStats.score
+                      )} transition-all duration-500 ease-out`}
+                      style={{ width: `${topicStats.score}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg feedback-content">
+                {/* Error Tagger - Only show when incorrect */}
+                {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
+                  <div className="mb-4 pb-4 border-b border-[var(--color-border)]">
+                    <ErrorTagger onTagError={updateLastPerformanceErrorTag} />
+                  </div>
+                )}
+
+                <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
+                  Rationale
+                </h3>
                 <div
-                  className={`h-2.5 rounded-full ${getBarColor(
-                    topicStats.score
-                  )} transition-all duration-500 ease-out`}
-                  style={{ width: `${topicStats.score}%` }}
-                ></div>
+                  className="text-[var(--color-text-secondary)] leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: currentQuestion.rationale }}
+                />
+
+                {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
+                  <div className="mt-4">
+                    <button
+                      onClick={handleExplainDifferently}
+                      disabled={isExplainerLoading}
+                      className="btn-glass px-4 py-2 text-sm"
+                    >
+                      {isExplainerLoading ? 'Thinking...' : 'Explain this differently'}
+                    </button>
+                  </div>
+                )}
+
+                {isExplainerLoading && (
+                  <div className="mt-4 flex items-center space-x-2 text-[var(--color-text-secondary)]">
+                    <div className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"></div>
+                    <div
+                      className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"
+                      style={{ animationDelay: '0.2s' }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"
+                      style={{ animationDelay: '0.4s' }}
+                    ></div>
+                    <span className="text-sm">Generating new explanation...</span>
+                  </div>
+                )}
+
+                {alternateRationale && !isExplainerLoading && (
+                  <div className="mt-4 pt-4 border-t border-[var(--color-border)] animate-fade-in">
+                    <h4 className="font-bold text-md mb-2 text-[var(--color-text-primary)]">
+                      Alternate Explanation
+                    </h4>
+                    <p className="text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
+                      {alternateRationale}
+                    </p>
+                  </div>
+                )}
+
+                {/* Clinical Pearls Section */}
+                {currentQuestion.pearls && currentQuestion.pearls.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+                    <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
+                      Key Pearls: {currentQuestion.condition}
+                    </h3>
+                    <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
+                      {currentQuestion.pearls.map((pearl, index) => (
+                        <li key={index} dangerouslySetInnerHTML={{ __html: pearl }} />
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+                  <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
+                    My Notes
+                  </h3>
+                  <textarea
+                    value={localNote}
+                    onChange={handleNoteChange}
+                    placeholder="Type your notes here... They will be saved automatically."
+                    className="w-full p-2 border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
+                    rows={3}
+                  />
+                </div>
               </div>
             </div>
           )}
 
-          <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg feedback-content">
-            {/* Error Tagger - Only show when incorrect */}
-            {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
-              <div className="mb-4 pb-4 border-b border-[var(--color-border)]">
-                <ErrorTagger onTagError={updateLastPerformanceErrorTag} />
-              </div>
-            )}
-
-            <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">Rationale</h3>
-            <div
-              className="text-[var(--color-text-secondary)] leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: currentQuestion.rationale }}
-            />
-
-            {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
-              <div className="mt-4">
-                <button
-                  onClick={handleExplainDifferently}
-                  disabled={isExplainerLoading}
-                  className="btn-glass px-4 py-2 text-sm"
-                >
-                  {isExplainerLoading ? 'Thinking...' : 'Explain this differently'}
-                </button>
-              </div>
-            )}
-
-            {isExplainerLoading && (
-              <div className="mt-4 flex items-center space-x-2 text-[var(--color-text-secondary)]">
-                <div className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"></div>
-                <div
-                  className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"
-                  style={{ animationDelay: '0.2s' }}
-                ></div>
-                <div
-                  className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"
-                  style={{ animationDelay: '0.4s' }}
-                ></div>
-                <span className="text-sm">Generating new explanation...</span>
-              </div>
-            )}
-
-            {alternateRationale && !isExplainerLoading && (
-              <div className="mt-4 pt-4 border-t border-[var(--color-border)] animate-fade-in">
-                <h4 className="font-bold text-md mb-2 text-[var(--color-text-primary)]">
-                  Alternate Explanation
-                </h4>
-                <p className="text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
-                  {alternateRationale}
-                </p>
-              </div>
-            )}
-
-            {/* Clinical Pearls Section */}
-            {currentQuestion.pearls && currentQuestion.pearls.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
-                <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
-                  Key Pearls: {currentQuestion.condition}
-                </h3>
-                <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
-                  {currentQuestion.pearls.map((pearl, index) => (
-                    <li key={index} dangerouslySetInnerHTML={{ __html: pearl }} />
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
-              <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">My Notes</h3>
-              <textarea
-                value={localNote}
-                onChange={handleNoteChange}
-                placeholder="Type your notes here... They will be saved automatically."
-                className="w-full p-2 border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
-                rows={3}
-              />
+          {isAnswered && (
+            <div className="mt-4 text-center">
+              <button
+                ref={nextButtonRef}
+                onClick={() => {
+                  try {
+                    showNextQuestion();
+                  } catch (error) {
+                    console.error('Error in Next Question button click:', error);
+                    setError('Failed to proceed to next question. Please refresh the page.');
+                  }
+                }}
+                className="px-8 py-3 btn-glass font-bold rounded-lg"
+              >
+                Next Question
+              </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {isAnswered && (
-        <div className="mt-4 text-center">
-          <button
-            ref={nextButtonRef}
-            onClick={() => {
-              try {
-                showNextQuestion();
-              } catch (error) {
-                console.error('Error in Next Question button click:', error);
-                setError('Failed to proceed to next question. Please refresh the page.');
-              }
-            }}
-            className="px-8 py-3 btn-glass font-bold rounded-lg"
-          >
-            Next Question
-          </button>
-        </div>
-      )}
+          )}
         </SplitPaneDrillLayout>
       </div>
 

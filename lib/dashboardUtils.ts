@@ -92,7 +92,7 @@ export function calculateStreaks(records: { isCorrect: boolean }[]): {
   for (let i = records.length - 1; i >= 0; i--) {
     const record = records[i];
     if (!record) continue;
-    
+
     if (record.isCorrect) {
       tempStreak++;
       const nextRecord = records[i + 1];

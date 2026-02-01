@@ -19,11 +19,7 @@
 import { z } from 'zod';
 import { authenticateRequest } from './auth';
 import { getCorsHeaders, handleCorsPreflightSecure } from './cors';
-import {
-  validateFunctionEnv,
-  MissingEnvError,
-  type EnvRequirement,
-} from './env-validation';
+import { validateFunctionEnv, MissingEnvError, type EnvRequirement } from './env-validation';
 import { logger } from './secureLogger';
 import { enforcePayloadSize, validateSchema } from './zodSchemas';
 import { createEdgePrismaClient, safePrismaDisconnect } from './prisma-edge';
@@ -118,7 +114,11 @@ export function withMiddleware<TContext extends CloudflareContext>(
       return toResponse(result, context.request, requestId);
     } catch (error) {
       logger.error('Middleware chain error', error);
-      return toResponse({ status: 500, error: 'Internal server error' }, context.request, requestId);
+      return toResponse(
+        { status: 500, error: 'Internal server error' },
+        context.request,
+        requestId
+      );
     }
   };
 }

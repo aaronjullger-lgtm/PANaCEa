@@ -218,9 +218,12 @@ const PANCEPredictionBadge: React.FC<{
   prediction: ReturnType<typeof predictPANCEScore>;
 }> = ({ prediction }) => {
   const getStatusColor = () => {
-    if (prediction.predictedScore >= 450) return 'from-[var(--color-success)] to-[var(--color-accent)]';
-    if (prediction.predictedScore >= 400) return 'from-[var(--color-accent)] to-[var(--color-accent)]/70';
-    if (prediction.predictedScore >= 350) return 'from-[var(--color-warning)] to-[var(--color-warning)]/70';
+    if (prediction.predictedScore >= 450)
+      return 'from-[var(--color-success)] to-[var(--color-accent)]';
+    if (prediction.predictedScore >= 400)
+      return 'from-[var(--color-accent)] to-[var(--color-accent)]/70';
+    if (prediction.predictedScore >= 350)
+      return 'from-[var(--color-warning)] to-[var(--color-warning)]/70';
     return 'from-[var(--color-error)] to-[var(--color-error)]/70';
   };
 

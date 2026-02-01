@@ -24,18 +24,22 @@ const router = Router();
 // Medical Wordle
 // ============================================================================
 
-router.get('/wordle/daily', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const payload = await getDailyWordForUser(req.auth!.userId);
-    res.json(payload);
-  } catch (error) {
-    if (error instanceof WordleServiceError) {
-      return res.status(400).json({ error: error.message });
+router.get(
+  '/wordle/daily',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const payload = await getDailyWordForUser(req.auth!.userId);
+      res.json(payload);
+    } catch (error) {
+      if (error instanceof WordleServiceError) {
+        return res.status(400).json({ error: error.message });
+      }
+      console.error('Error fetching Wordle daily word:', error);
+      res.status(500).json({ error: 'Failed to load Wordle challenge' });
     }
-    console.error('Error fetching Wordle daily word:', error);
-    res.status(500).json({ error: 'Failed to load Wordle challenge' });
   }
-});
+);
 
 router.post(
   '/wordle/guess',
@@ -60,81 +64,85 @@ router.post(
 // Grand Rounds Daily Challenge
 // ============================================================================
 
-router.get('/grand-rounds/today', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    if (!process.env.DATABASE_URL) {
-      return res.status(503).json({ error: 'Database not configured' });
-    }
+router.get(
+  '/grand-rounds/today',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ error: 'Database not configured' });
+      }
 
-    const userId = req.auth!.userId;
+      const userId = req.auth!.userId;
 
-    const user = await prisma.user.findUnique({ where: { clerkId: userId } });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+      const user = await prisma.user.findUnique({ where: { clerkId: userId } });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
 
-    const { getOrCreateDailyChallenge, getUserAttemptForChallenge } =
-      await import('../lib/services/grandRoundsService');
-
-    const challenge = await getOrCreateDailyChallenge();
-    const existingAttempt = await getUserAttemptForChallenge(user.id, challenge.id);
-
-    if (existingAttempt) {
-      const { calculatePercentile, getRankingForChallenge } =
+      const { getOrCreateDailyChallenge, getUserAttemptForChallenge } =
         await import('../lib/services/grandRoundsService');
 
-      const percentile = await calculatePercentile(challenge.id, existingAttempt.score);
-      const ranking = await getRankingForChallenge(
-        challenge.id,
-        existingAttempt.score,
-        existingAttempt.timeSpentMs
-      );
-      const totalQuestions = challenge.questionIds.length;
-      const correctCount = Math.floor(existingAttempt.score / 20);
+      const challenge = await getOrCreateDailyChallenge();
+      const existingAttempt = await getUserAttemptForChallenge(user.id, challenge.id);
 
-      return res.json({
-        status: 'completed',
-        stats: {
-          score: existingAttempt.score,
-          correctCount,
-          totalQuestions,
-          timeSpentMs: existingAttempt.timeSpentMs,
-          percentile,
-          ranking,
+      if (existingAttempt) {
+        const { calculatePercentile, getRankingForChallenge } =
+          await import('../lib/services/grandRoundsService');
+
+        const percentile = await calculatePercentile(challenge.id, existingAttempt.score);
+        const ranking = await getRankingForChallenge(
+          challenge.id,
+          existingAttempt.score,
+          existingAttempt.timeSpentMs
+        );
+        const totalQuestions = challenge.questionIds.length;
+        const correctCount = Math.floor(existingAttempt.score / 20);
+
+        return res.json({
+          status: 'completed',
+          stats: {
+            score: existingAttempt.score,
+            correctCount,
+            totalQuestions,
+            timeSpentMs: existingAttempt.timeSpentMs,
+            percentile,
+            ranking,
+          },
+        });
+      }
+
+      const questions = await prisma.question.findMany({
+        where: {
+          id: { in: challenge.questionIds },
+        },
+        select: {
+          id: true,
+          vignette: true,
+          question: true,
+          options: true,
+          system: true,
+          difficulty: true,
         },
       });
+
+      // Normalize options for each question
+      const normalizedQuestions = questions.map((q) => ({
+        ...q,
+        options: normalizeOptionsToArray(q.options),
+      }));
+
+      return res.json({
+        status: 'active',
+        challengeId: challenge.id,
+        questions: normalizedQuestions,
+      });
+    } catch (error) {
+      console.error('Error fetching Grand Rounds challenge:', error);
+      res.status(500).json({ error: 'Failed to fetch challenge' });
     }
-
-    const questions = await prisma.question.findMany({
-      where: {
-        id: { in: challenge.questionIds },
-      },
-      select: {
-        id: true,
-        vignette: true,
-        question: true,
-        options: true,
-        system: true,
-        difficulty: true,
-      },
-    });
-
-    // Normalize options for each question
-    const normalizedQuestions = questions.map((q) => ({
-      ...q,
-      options: normalizeOptionsToArray(q.options),
-    }));
-
-    return res.json({
-      status: 'active',
-      challengeId: challenge.id,
-      questions: normalizedQuestions,
-    });
-  } catch (error) {
-    console.error('Error fetching Grand Rounds challenge:', error);
-    res.status(500).json({ error: 'Failed to fetch challenge' });
   }
-});
+);
 
 router.post(
   '/grand-rounds/submit',

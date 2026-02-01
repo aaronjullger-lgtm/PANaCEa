@@ -253,9 +253,7 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
 
       {/* Instructions */}
       <div className="p-4 bg-[var(--color-accent)]/10 rounded-lg border border-[var(--color-accent)]/30">
-        <h3 className="text-sm font-semibold text-[var(--color-accent)] mb-2">
-          How to Embed:
-        </h3>
+        <h3 className="text-sm font-semibold text-[var(--color-accent)] mb-2">How to Embed:</h3>
         <div className="space-y-2">
           <div className="p-2 bg-[var(--color-data-provisional)]/10 rounded border border-[var(--color-data-provisional)]/30 mb-2">
             <p className="text-xs font-medium text-[var(--color-data-provisional)] flex items-start gap-1.5">
@@ -276,9 +274,7 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
             </ol>
           </div>
           <div>
-            <p className="text-xs font-medium text-[var(--color-accent)] mb-1">
-              Obsidian:
-            </p>
+            <p className="text-xs font-medium text-[var(--color-accent)] mb-1">Obsidian:</p>
             <ol className="text-xs text-[var(--color-accent)] space-y-0.5 list-decimal list-inside pl-2">
               <li>Replace YOUR_USER_ID in the code with your user ID</li>
               <li>Switch to Obsidian embed format above</li>

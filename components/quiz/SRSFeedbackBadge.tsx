@@ -126,12 +126,8 @@ export function SRSFeedbackBadge({ result, isCorrect }: SRSFeedbackBadgeProps) {
         transition={{ delay: 0.1 }}
         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${qualityInfo.badgeClass}`}
       >
-        <span className={qualityInfo.iconClass}>
-          {qualityInfo.icon}
-        </span>
-        <span className={`text-xs font-semibold ${qualityInfo.textClass}`}>
-          {qualityInfo.text}
-        </span>
+        <span className={qualityInfo.iconClass}>{qualityInfo.icon}</span>
+        <span className={`text-xs font-semibold ${qualityInfo.textClass}`}>{qualityInfo.text}</span>
       </motion.div>
 
       {/* Streak bonus indicator */}

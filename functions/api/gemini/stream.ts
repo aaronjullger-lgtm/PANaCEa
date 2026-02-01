@@ -67,18 +67,20 @@ function geminiErrorFromResponse(
   geminiUrl: string
 ): AppError {
   if (statusCode === 429) {
-    return new RateLimitError(
-      'Gemini API rate limit exceeded',
-      60,
-      { service: 'gemini', endpoint: geminiUrl, statusCode, response: errorText }
-    );
+    return new RateLimitError('Gemini API rate limit exceeded', 60, {
+      service: 'gemini',
+      endpoint: geminiUrl,
+      statusCode,
+      response: errorText,
+    });
   }
   if (statusCode === 408) {
-    return new TimeoutError(
-      'Gemini API request timed out',
-      30000,
-      { service: 'gemini', endpoint: geminiUrl, statusCode, response: errorText }
-    );
+    return new TimeoutError('Gemini API request timed out', 30000, {
+      service: 'gemini',
+      endpoint: geminiUrl,
+      statusCode,
+      response: errorText,
+    });
   }
   if (statusCode >= 500) {
     return new ExternalServiceError(
@@ -88,12 +90,9 @@ function geminiErrorFromResponse(
       { endpoint: geminiUrl, response: errorText }
     );
   }
-  return new ApiError(
-    `Gemini API error: ${statusCode}`,
-    statusCode,
-    geminiUrl,
-    { response: errorText }
-  );
+  return new ApiError(`Gemini API error: ${statusCode}`, statusCode, geminiUrl, {
+    response: errorText,
+  });
 }
 
 /**
@@ -126,9 +125,7 @@ async function processGeminiStream(
         try {
           const data = JSON.parse(jsonStr);
           const text =
-            data.candidates?.[0]?.content?.parts?.[0]?.text ||
-            data.candidates?.[0]?.output ||
-            '';
+            data.candidates?.[0]?.content?.parts?.[0]?.text || data.candidates?.[0]?.output || '';
           if (text) {
             chunksReceived++;
             await writer.write(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
@@ -255,12 +252,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     try {
       body = JSON.parse(rawBody);
     } catch {
-      const validationError = new ValidationError(
-        'Invalid JSON body',
-        'body',
-        undefined,
-        { endpoint: '/api/gemini/stream' }
-      );
+      const validationError = new ValidationError('Invalid JSON body', 'body', undefined, {
+        endpoint: '/api/gemini/stream',
+      });
       addBreadcrumb('Invalid JSON in stream request', 'gemini-stream', 'warning');
       logError(validationError, { endpoint: '/api/gemini/stream' });
       return errorToResponse(validationError, corsHeaders);
@@ -271,15 +265,10 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
 
     const parsed = geminiStreamRequestSchema.safeParse(body);
     if (!parsed.success) {
-      const issues = parsed.error.issues
-        .map((i) => `${i.path.join('.')}: ${i.message}`)
-        .join('; ');
-      const validationError = new ValidationError(
-        `Validation failed: ${issues}`,
-        'body',
-        body,
-        { issues: parsed.error.issues }
-      );
+      const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
+      const validationError = new ValidationError(`Validation failed: ${issues}`, 'body', body, {
+        issues: parsed.error.issues,
+      });
       addBreadcrumb('Stream request validation failed', 'gemini-stream', 'warning', {
         issues: issues.slice(0, 200),
       });
@@ -337,17 +326,17 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
           originalError: fetchError instanceof Error ? fetchError.message : String(fetchError),
         }
       );
-      
+
       addBreadcrumb('Network error calling Gemini', 'gemini-stream', 'error', {
         error: fetchError instanceof Error ? fetchError.message : String(fetchError),
       });
-      
+
       logError(networkError, {
         endpoint: '/api/gemini/stream',
         modelName,
         promptLength: prompt.length,
       });
-      
+
       return errorToResponse(networkError);
     }
 
@@ -356,7 +345,12 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       const errorText = await geminiResponse.text();
       const statusCode = geminiResponse.status;
       const apiError = geminiErrorFromResponse(statusCode, errorText, geminiUrl);
-      addBreadcrumb('Gemini API error response', 'gemini-stream', statusCode >= 500 ? 'error' : 'warning', { statusCode });
+      addBreadcrumb(
+        'Gemini API error response',
+        'gemini-stream',
+        statusCode >= 500 ? 'error' : 'warning',
+        { statusCode }
+      );
       logError(apiError, {
         endpoint: '/api/gemini/stream',
         modelName,
@@ -376,14 +370,14 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         200,
         { endpoint: geminiUrlRedacted }
       );
-      
+
       addBreadcrumb('No stream from Gemini', 'gemini-stream', 'error');
-      
+
       logError(serviceError, {
         endpoint: '/api/gemini/stream',
         modelName,
       });
-      
+
       return errorToResponse(serviceError);
     }
 
@@ -408,21 +402,16 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     // Catch-all for unexpected errors
     const appError = isAppError(error)
       ? error
-      : new ExternalServiceError(
-          'Unexpected error in streaming endpoint',
-          'gemini',
-          undefined,
-          {
-            error: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
-          }
-        );
-    
+      : new ExternalServiceError('Unexpected error in streaming endpoint', 'gemini', undefined, {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+
     addBreadcrumb('Unexpected streaming error', 'gemini-stream', 'error', {
       errorType: error instanceof Error ? error.name : typeof error,
       errorMessage: error instanceof Error ? error.message : String(error),
     });
-    
+
     logError(appError, {
       endpoint: '/api/gemini/stream',
       unexpected: true,

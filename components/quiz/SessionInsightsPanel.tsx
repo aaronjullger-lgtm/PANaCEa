@@ -57,7 +57,9 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
         </div>
         <div className="flex items-center gap-2">
           {!isExpanded && (
-            <span className="text-xs text-action-muted">{distributionSummary.totalQuestions} Qs</span>
+            <span className="text-xs text-action-muted">
+              {distributionSummary.totalQuestions} Qs
+            </span>
           )}
           {isExpanded ? (
             <ChevronUp className="w-4 h-4 text-action-muted" />

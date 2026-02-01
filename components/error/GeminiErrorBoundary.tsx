@@ -253,12 +253,10 @@ export class GeminiErrorBoundary extends Component<
 
     // Add breadcrumb for retry attempts
     if (this.state.retryCount > 0) {
-      logBreadcrumb(
-        `Gemini retry attempt ${this.state.retryCount}`,
-        'retry',
-        'info',
-        { errorType, retryCount: this.state.retryCount }
-      );
+      logBreadcrumb(`Gemini retry attempt ${this.state.retryCount}`, 'retry', 'info', {
+        errorType,
+        retryCount: this.state.retryCount,
+      });
     }
   }
 

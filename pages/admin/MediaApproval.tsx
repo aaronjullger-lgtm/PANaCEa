@@ -401,7 +401,9 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[var(--color-text-muted)] mb-1">Approval Rate</p>
-                <p className="text-3xl font-bold text-[var(--color-accent)]">{stats.approvalRate}%</p>
+                <p className="text-3xl font-bold text-[var(--color-accent)]">
+                  {stats.approvalRate}%
+                </p>
               </div>
               <TrendingUp className="w-8 h-8 text-[var(--color-accent)]" />
             </div>

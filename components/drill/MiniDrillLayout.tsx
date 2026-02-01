@@ -220,11 +220,9 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
 
   if (isAnswered) {
     if (isCorrect === true) {
-      buttonClasses +=
-        ' bg-data-pass/10 border-data-pass text-data-pass';
+      buttonClasses += ' bg-data-pass/10 border-data-pass text-data-pass';
     } else if (isSelected) {
-      buttonClasses +=
-        ' bg-data-fail/10 border-data-fail text-data-fail';
+      buttonClasses += ' bg-data-fail/10 border-data-fail text-data-fail';
     } else {
       buttonClasses +=
         ' bg-[var(--color-bg-tertiary)] border-[var(--color-border)] text-[var(--color-text-muted)] opacity-60';
@@ -303,9 +301,7 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div className="flex-1">
-            <div
-              className={`text-lg font-bold ${isCorrect ? 'text-data-pass' : 'text-data-fail'}`}
-            >
+            <div className={`text-lg font-bold ${isCorrect ? 'text-data-pass' : 'text-data-fail'}`}>
               {isCorrect ? 'Correct!' : 'Incorrect'}
             </div>
             {!isCorrect && correctAnswer && (

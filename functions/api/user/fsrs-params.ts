@@ -251,7 +251,13 @@ export async function onRequestPost(context: {
     // Check if we have enough data
     const optimizationStatus = canOptimize(allSnapshots.length);
     if (!optimizationStatus.canOptimize) {
-      return createErrorResponse(request, optimizationStatus.message, 400, 'INSUFFICIENT_DATA', env);
+      return createErrorResponse(
+        request,
+        optimizationStatus.message,
+        400,
+        'INSUFFICIENT_DATA',
+        env
+      );
     }
 
     // Check if re-optimization is needed (unless forced)

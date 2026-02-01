@@ -58,11 +58,7 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   }, [theme]);
 
-  return (
-    <ThemeContextInstance.Provider value={value}>
-      {children}
-    </ThemeContextInstance.Provider>
-  );
+  return <ThemeContextInstance.Provider value={value}>{children}</ThemeContextInstance.Provider>;
 }
 
 export function useTheme(): ThemeContextValue {

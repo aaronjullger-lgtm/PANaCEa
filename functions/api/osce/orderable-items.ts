@@ -341,188 +341,191 @@ export const onRequestGet = publicEndpoint(
     try {
       const { category, search, bundles } = validated || {};
 
-    if (bundles === 'true') {
-      return { data: { bundles: ORDER_BUNDLES } };
-    }
-
-    const items: OrderableItemResponse[] = [];
-
-    if (!category || category === 'labs') {
-      const labs = await prisma.labTest.findMany({
-        where: search
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { category: { contains: search, mode: 'insensitive' } },
-              ],
-            }
-          : undefined,
-        select: {
-          id: true,
-          name: true,
-          category: true,
-          isHighYield: true,
-          panceYield: true,
-          whenToOrder: true,
-          turnaroundTime: true,
-        },
-        take: 100,
-        orderBy: [{ isHighYield: 'desc' }, { panceYield: 'desc' }, { name: 'asc' }],
-      });
-      for (const lab of labs) {
-        items.push({
-          id: lab.id,
-          name: lab.name,
-          category: 'labs',
-          subcategory: lab.category,
-          costTier: estimateCostTier('labs'),
-          turnaroundMinutes: lab.turnaroundTime
-            ? parseInt(lab.turnaroundTime) || 60
-            : estimateTurnaround('labs', lab.name),
-          isHighYield: lab.isHighYield,
-          panceYield: lab.panceYield,
-          indications: lab.whenToOrder,
-          contraindications: [],
-        });
+      if (bundles === 'true') {
+        return { data: { bundles: ORDER_BUNDLES } };
       }
-    }
 
-    if (!category || category === 'imaging') {
-      const imaging = await prisma.imagingStudy.findMany({
-        where: search
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { modality: { contains: search, mode: 'insensitive' } },
-                { bodyRegion: { contains: search, mode: 'insensitive' } },
-              ],
-            }
-          : undefined,
-        select: {
-          id: true,
-          name: true,
-          modality: true,
-          bodyRegion: true,
-          isHighYield: true,
-          panceYield: true,
-          indications: true,
-          contraindications: true,
-        },
-        take: 100,
-        orderBy: [{ isHighYield: 'desc' }, { panceYield: 'desc' }, { name: 'asc' }],
-      });
-      for (const img of imaging) {
-        items.push({
-          id: img.id,
-          name: img.name,
-          category: 'imaging',
-          subcategory: img.modality,
-          costTier: estimateCostTier('imaging', img.modality),
-          turnaroundMinutes: estimateTurnaround('imaging', img.name, img.modality),
-          isHighYield: img.isHighYield,
-          panceYield: img.panceYield,
-          indications: img.indications,
-          contraindications: img.contraindications,
+      const items: OrderableItemResponse[] = [];
+
+      if (!category || category === 'labs') {
+        const labs = await prisma.labTest.findMany({
+          where: search
+            ? {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { category: { contains: search, mode: 'insensitive' } },
+                ],
+              }
+            : undefined,
+          select: {
+            id: true,
+            name: true,
+            category: true,
+            isHighYield: true,
+            panceYield: true,
+            whenToOrder: true,
+            turnaroundTime: true,
+          },
+          take: 100,
+          orderBy: [{ isHighYield: 'desc' }, { panceYield: 'desc' }, { name: 'asc' }],
         });
+        for (const lab of labs) {
+          items.push({
+            id: lab.id,
+            name: lab.name,
+            category: 'labs',
+            subcategory: lab.category,
+            costTier: estimateCostTier('labs'),
+            turnaroundMinutes: lab.turnaroundTime
+              ? parseInt(lab.turnaroundTime) || 60
+              : estimateTurnaround('labs', lab.name),
+            isHighYield: lab.isHighYield,
+            panceYield: lab.panceYield,
+            indications: lab.whenToOrder,
+            contraindications: [],
+          });
+        }
       }
-    }
 
-    if (!category || category === 'procedures') {
-      const procedures = await prisma.procedure.findMany({
-        where: search
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { category: { contains: search, mode: 'insensitive' } },
-              ],
-            }
-          : undefined,
-        select: {
-          id: true,
-          name: true,
-          displayName: true,
-          category: true,
-          isHighYield: true,
-          panceYield: true,
-          indications: true,
-          absoluteContraindications: true,
-          relativeContraindications: true,
-        },
-        take: 100,
-        orderBy: [{ isHighYield: 'desc' }, { panceYield: 'desc' }, { name: 'asc' }],
-      });
-      for (const proc of procedures) {
-        items.push({
-          id: proc.id,
-          name: proc.displayName || proc.name,
-          category: 'procedures',
-          subcategory: proc.category,
-          costTier: estimateCostTier('procedures'),
-          turnaroundMinutes: estimateTurnaround('procedures', proc.name),
-          isHighYield: proc.isHighYield,
-          panceYield: proc.panceYield,
-          indications: proc.indications,
-          contraindications: [...proc.absoluteContraindications, ...proc.relativeContraindications],
+      if (!category || category === 'imaging') {
+        const imaging = await prisma.imagingStudy.findMany({
+          where: search
+            ? {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { modality: { contains: search, mode: 'insensitive' } },
+                  { bodyRegion: { contains: search, mode: 'insensitive' } },
+                ],
+              }
+            : undefined,
+          select: {
+            id: true,
+            name: true,
+            modality: true,
+            bodyRegion: true,
+            isHighYield: true,
+            panceYield: true,
+            indications: true,
+            contraindications: true,
+          },
+          take: 100,
+          orderBy: [{ isHighYield: 'desc' }, { panceYield: 'desc' }, { name: 'asc' }],
         });
+        for (const img of imaging) {
+          items.push({
+            id: img.id,
+            name: img.name,
+            category: 'imaging',
+            subcategory: img.modality,
+            costTier: estimateCostTier('imaging', img.modality),
+            turnaroundMinutes: estimateTurnaround('imaging', img.name, img.modality),
+            isHighYield: img.isHighYield,
+            panceYield: img.panceYield,
+            indications: img.indications,
+            contraindications: img.contraindications,
+          });
+        }
       }
-    }
 
-    if (!category || category === 'medications') {
-      const drugs = await prisma.drug.findMany({
-        where: search
-          ? {
-              OR: [
-                { genericName: { contains: search, mode: 'insensitive' } },
-                { brandName: { contains: search, mode: 'insensitive' } },
-                { drugClass: { hasSome: [search] } },
-              ],
-            }
-          : undefined,
-        select: {
-          id: true,
-          genericName: true,
-          brandName: true,
-          drugClass: true,
-          isHighYield: true,
-          panceYield: true,
-          indications: true,
-          contraindications: true,
-          isFirstLine: true,
-        },
-        take: 100,
-        orderBy: [
-          { isFirstLine: 'desc' },
-          { isHighYield: 'desc' },
-          { panceYield: 'desc' },
-          { genericName: 'asc' },
-        ],
-      });
-      for (const drug of drugs) {
-        items.push({
-          id: drug.id,
-          name: drug.brandName ? `${drug.genericName} (${drug.brandName})` : drug.genericName,
-          category: 'medications',
-          subcategory: drug.drugClass[0] || 'Other',
-          costTier: estimateCostTier('medications'),
-          turnaroundMinutes: 15,
-          isHighYield: drug.isHighYield,
-          panceYield: drug.panceYield,
-          indications: drug.indications,
-          contraindications: drug.contraindications,
+      if (!category || category === 'procedures') {
+        const procedures = await prisma.procedure.findMany({
+          where: search
+            ? {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { category: { contains: search, mode: 'insensitive' } },
+                ],
+              }
+            : undefined,
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+            category: true,
+            isHighYield: true,
+            panceYield: true,
+            indications: true,
+            absoluteContraindications: true,
+            relativeContraindications: true,
+          },
+          take: 100,
+          orderBy: [{ isHighYield: 'desc' }, { panceYield: 'desc' }, { name: 'asc' }],
         });
+        for (const proc of procedures) {
+          items.push({
+            id: proc.id,
+            name: proc.displayName || proc.name,
+            category: 'procedures',
+            subcategory: proc.category,
+            costTier: estimateCostTier('procedures'),
+            turnaroundMinutes: estimateTurnaround('procedures', proc.name),
+            isHighYield: proc.isHighYield,
+            panceYield: proc.panceYield,
+            indications: proc.indications,
+            contraindications: [
+              ...proc.absoluteContraindications,
+              ...proc.relativeContraindications,
+            ],
+          });
+        }
       }
-    }
 
-    logger.info('Fetched orderable items', { count: items.length, category, search });
-    return { data: { items, bundles: ORDER_BUNDLES, total: items.length } };
-  } catch (error) {
-    logger.error('Error fetching orderable items', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw new Error('Failed to fetch orderable items');
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
+      if (!category || category === 'medications') {
+        const drugs = await prisma.drug.findMany({
+          where: search
+            ? {
+                OR: [
+                  { genericName: { contains: search, mode: 'insensitive' } },
+                  { brandName: { contains: search, mode: 'insensitive' } },
+                  { drugClass: { hasSome: [search] } },
+                ],
+              }
+            : undefined,
+          select: {
+            id: true,
+            genericName: true,
+            brandName: true,
+            drugClass: true,
+            isHighYield: true,
+            panceYield: true,
+            indications: true,
+            contraindications: true,
+            isFirstLine: true,
+          },
+          take: 100,
+          orderBy: [
+            { isFirstLine: 'desc' },
+            { isHighYield: 'desc' },
+            { panceYield: 'desc' },
+            { genericName: 'asc' },
+          ],
+        });
+        for (const drug of drugs) {
+          items.push({
+            id: drug.id,
+            name: drug.brandName ? `${drug.genericName} (${drug.brandName})` : drug.genericName,
+            category: 'medications',
+            subcategory: drug.drugClass[0] || 'Other',
+            costTier: estimateCostTier('medications'),
+            turnaroundMinutes: 15,
+            isHighYield: drug.isHighYield,
+            panceYield: drug.panceYield,
+            indications: drug.indications,
+            contraindications: drug.contraindications,
+          });
+        }
+      }
+
+      logger.info('Fetched orderable items', { count: items.length, category, search });
+      return { data: { items, bundles: ORDER_BUNDLES, total: items.length } };
+    } catch (error) {
+      logger.error('Error fetching orderable items', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw new Error('Failed to fetch orderable items');
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   },
   { source: 'query' }
 );

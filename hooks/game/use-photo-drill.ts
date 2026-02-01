@@ -1,11 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { submitDrillResult } from '@/services/core';
-import {
-  recordDrillSession,
-  getRecommendedDifficulty,
-  type DrillType,
-} from '@/services/analytics';
+import { recordDrillSession, getRecommendedDifficulty, type DrillType } from '@/services/analytics';
 
 // Static fallbacks used in tests/offline mode (database-first in production)
 export const MASTER_CONDITION_LIST: string[] = [
@@ -110,15 +106,15 @@ export function generateRandomCase(
 ): PhotoCase {
   const pool =
     category && category !== 'random' ? CATEGORY_DIAGNOSES[category] : MASTER_CONDITION_LIST;
-  
+
   // Ensure we have a valid pool with at least one diagnosis
   if (pool.length === 0) {
     throw new Error('No diagnoses available for category');
   }
-  
+
   const randomIndex = Math.floor(Math.random() * pool.length);
   const correctDiagnosis = pool[randomIndex] ?? MASTER_CONDITION_LIST[0] ?? 'Unknown Condition';
-  
+
   const distractors = pool
     .filter((d) => d !== correctDiagnosis)
     .sort(() => Math.random() - 0.5)
@@ -540,9 +536,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
 
       const questionsAttempted = sessionData.questionsAttempted ?? 0;
       const correctAnswers = sessionData.correctAnswers ?? 0;
-      const accuracy = questionsAttempted > 0 
-        ? (correctAnswers / questionsAttempted) * 100 
-        : 0;
+      const accuracy = questionsAttempted > 0 ? (correctAnswers / questionsAttempted) * 100 : 0;
 
       recordDrillSession({
         drillType,

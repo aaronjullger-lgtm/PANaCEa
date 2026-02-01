@@ -174,9 +174,7 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({
         <div className="p-5 rounded-xl border border-[var(--color-data-pass)]/30 bg-[var(--color-data-pass)]/10">
           <div className="flex items-center gap-2 mb-3">
             <Stethoscope className="w-5 h-5 text-[var(--color-data-pass)]" />
-            <h4 className="font-semibold text-[var(--color-text-primary)]">
-              First-Line Treatment
-            </h4>
+            <h4 className="font-semibold text-[var(--color-text-primary)]">First-Line Treatment</h4>
           </div>
           <p className="text-[var(--color-text-secondary)]">{content.first_line_rx}</p>
         </div>
@@ -296,9 +294,7 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({
         <div className="p-5 rounded-xl border border-[var(--color-data-pass)]/30 bg-[var(--color-data-pass)]/10">
           <div className="flex items-center gap-2 mb-3">
             <Stethoscope className="w-5 h-5 text-[var(--color-data-pass)]" />
-            <h4 className="font-semibold text-[var(--color-text-primary)]">
-              First-Line Treatment
-            </h4>
+            <h4 className="font-semibold text-[var(--color-text-primary)]">First-Line Treatment</h4>
           </div>
           <p className="text-[var(--color-text-secondary)]">{content.first_line_rx}</p>
         </div>

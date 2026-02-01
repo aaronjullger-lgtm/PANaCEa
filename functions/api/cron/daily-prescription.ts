@@ -51,7 +51,11 @@ export async function onRequestPost(context: any) {
     const activeUserIds = activeUsers.map((u) => u.id);
     if (activeUserIds.length === 0) {
       return new Response(
-        JSON.stringify({ success: true, prescriptionsGenerated: 0, timestamp: new Date().toISOString() }),
+        JSON.stringify({
+          success: true,
+          prescriptionsGenerated: 0,
+          timestamp: new Date().toISOString(),
+        }),
         { headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -67,7 +71,13 @@ export async function onRequestPost(context: any) {
     const [allProgress, allAttempts] = await Promise.all([
       prisma.userProgress.findMany({
         where: { userId: { in: activeUserIds } },
-        select: { userId: true, stability: true, retrievability: true, system: true, dueDate: true },
+        select: {
+          userId: true,
+          stability: true,
+          retrievability: true,
+          system: true,
+          dueDate: true,
+        },
       }) as Promise<ProgressRecord[]>,
       prisma.questionAttempt.findMany({
         where: {

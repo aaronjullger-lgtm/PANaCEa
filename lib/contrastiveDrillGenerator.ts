@@ -1,6 +1,6 @@
 /**
  * Contrastive Drill Generator
- * 
+ *
  * Generates clinical vignettes for contrastive learning drills
  * where students must distinguish between similar conditions.
  */

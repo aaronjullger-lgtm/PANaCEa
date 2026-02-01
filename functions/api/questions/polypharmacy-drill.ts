@@ -217,61 +217,65 @@ const PolypharmacyDrillSchema = z.object({
  */
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(PolypharmacyDrillSchema, async (context) => {
-  const { env, auth, validated } = context;
-  const logger = createEndpointLogger('/api/questions/polypharmacy-drill');
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(
+  PolypharmacyDrillSchema,
+  async (context) => {
+    const { env, auth, validated } = context;
+    const logger = createEndpointLogger('/api/questions/polypharmacy-drill');
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  try {
-    const count = Math.min(parseInt(validated.count || '1', 10), 5); // Max 5 cases
-    const difficulty = (validated.difficulty || 'medium') as 'easy' | 'medium' | 'hard';
+    try {
+      const count = Math.min(parseInt(validated.count || '1', 10), 5); // Max 5 cases
+      const difficulty = (validated.difficulty || 'medium') as 'easy' | 'medium' | 'hard';
 
-    // Query drug registry for case generation
-    const drugs = await prisma.drug.findMany({
-      where: {
-        drugClass: { isEmpty: false },
-      },
-      select: {
-        genericName: true,
-        drugClass: true,
-        sideEffects: true,
-        interactions: true,
-      },
-      take: 100, // Get a good variety of drugs
-    });
+      // Query drug registry for case generation
+      const drugs = await prisma.drug.findMany({
+        where: {
+          drugClass: { isEmpty: false },
+        },
+        select: {
+          genericName: true,
+          drugClass: true,
+          sideEffects: true,
+          interactions: true,
+        },
+        take: 100, // Get a good variety of drugs
+      });
 
-    if (drugs.length === 0) {
-      logger.error('No drugs available in database', { userId: auth.userId });
-      throw new Error('No drugs available in database. Run: npm run sync:all');
-    }
-
-    // Generate cases
-    const cases: PolypharmacyCase[] = [];
-    const scenarios = [...DEPRESCRIBING_SCENARIOS].sort(() => Math.random() - 0.5);
-
-    for (let i = 0; i < count; i++) {
-      const scenario = scenarios[i % scenarios.length];
-      if (scenario) {
-        cases.push(generatePolypharmacyCase(scenario, drugs, difficulty));
+      if (drugs.length === 0) {
+        logger.error('No drugs available in database', { userId: auth.userId });
+        throw new Error('No drugs available in database. Run: npm run sync:all');
       }
+
+      // Generate cases
+      const cases: PolypharmacyCase[] = [];
+      const scenarios = [...DEPRESCRIBING_SCENARIOS].sort(() => Math.random() - 0.5);
+
+      for (let i = 0; i < count; i++) {
+        const scenario = scenarios[i % scenarios.length];
+        if (scenario) {
+          cases.push(generatePolypharmacyCase(scenario, drugs, difficulty));
+        }
+      }
+
+      logger.info('Polypharmacy cases generated', {
+        userId: auth.userId,
+        count,
+        difficulty,
+      });
+
+      return {
+        data: { cases },
+      };
+    } catch (error) {
+      logger.error('Error in polypharmacy-drill endpoint', {
+        error: error instanceof Error ? error.message : String(error),
+        userId: auth.userId,
+      });
+      throw new Error('Failed to generate polypharmacy cases');
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-
-    logger.info('Polypharmacy cases generated', {
-      userId: auth.userId,
-      count,
-      difficulty,
-    });
-
-    return {
-      data: { cases },
-    };
-  } catch (error) {
-    logger.error('Error in polypharmacy-drill endpoint', {
-      error: error instanceof Error ? error.message : String(error),
-      userId: auth.userId,
-    });
-    throw new Error('Failed to generate polypharmacy cases');
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-}, { source: 'query' });
+  },
+  { source: 'query' }
+);

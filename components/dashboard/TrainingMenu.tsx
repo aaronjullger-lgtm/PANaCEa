@@ -531,7 +531,9 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     return (
       <section key={key} id={`section-${key}`} className="space-y-3 scroll-mt-4">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)]">{title}</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-[var(--color-text-primary)]">
+            {title}
+          </h2>
           <p className="text-sm text-[var(--color-text-muted)] hidden sm:block">{description}</p>
         </div>
 
@@ -602,7 +604,17 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             icon={Brain}
             stats={[
               { label: 'Questions', value: '120+', icon: Target },
-              { label: 'Mode', value: focus === 'all' ? 'All Topics' : focus === 'growth' ? 'Growth Areas' : focus === 'flagged' ? 'Flagged' : 'Due Today' },
+              {
+                label: 'Mode',
+                value:
+                  focus === 'all'
+                    ? 'All Topics'
+                    : focus === 'growth'
+                      ? 'Growth Areas'
+                      : focus === 'flagged'
+                        ? 'Flagged'
+                        : 'Due Today',
+              },
               { label: 'Algorithm', value: 'FSRS', icon: TrendingUp },
             ]}
             buttonText="Start Session"
@@ -652,7 +664,9 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         {/* No Results Message */}
         {searchQuery && filteredModes.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-[var(--color-text-muted)]">No modes found matching "{searchQuery}"</p>
+            <p className="text-[var(--color-text-muted)]">
+              No modes found matching "{searchQuery}"
+            </p>
           </div>
         )}
       </div>

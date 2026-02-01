@@ -119,9 +119,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
         </button>
 
         <div className="text-center">
-          <h1 className="text-lg font-bold text-[var(--color-text-primary)]">
-            {guideline.name}
-          </h1>
+          <h1 className="text-lg font-bold text-[var(--color-text-primary)]">{guideline.name}</h1>
           <p className="text-xs text-[var(--color-text-muted)]">
             Case {currentVignetteIndex + 1} of {totalVignettes}
           </p>
@@ -165,9 +163,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                     <div className="text-sm text-[var(--color-text-muted)]">Total</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-[var(--color-accent)]">
-                      {accuracy}%
-                    </div>
+                    <div className="text-4xl font-bold text-[var(--color-accent)]">{accuracy}%</div>
                     <div className="text-sm text-[var(--color-text-muted)]">Accuracy</div>
                   </div>
                 </div>

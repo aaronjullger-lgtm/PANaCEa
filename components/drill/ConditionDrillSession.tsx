@@ -102,8 +102,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
   const drillTitle = initialSystem
     ? `${initialSystem} Drill`
     : initialSubcategory
-    ? `${initialSubcategory} Drill`
-    : 'Condition Drill';
+      ? `${initialSubcategory} Drill`
+      : 'Condition Drill';
 
   // Handler that records selection for implicit metrics then submits
   const handleAnswerSelect = (index: number) => {
@@ -136,7 +136,9 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
           </button>
           <div className="flex items-center gap-2">
             <Layers className="w-5 h-5 text-[var(--color-accent)]" />
-            <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">{drillTitle}</h1>
+            <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">
+              {drillTitle}
+            </h1>
           </div>
           <div className="w-12 sm:w-16" />
         </header>

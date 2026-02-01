@@ -16,43 +16,47 @@ const DrugSearchSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = publicEndpoint(DrugSearchSchema, async (context) => {
-  const { env, validated } = context;
-  const logger = createEndpointLogger('/api/drugs/search');
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestGet = publicEndpoint(
+  DrugSearchSchema,
+  async (context) => {
+    const { env, validated } = context;
+    const logger = createEndpointLogger('/api/drugs/search');
+    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
-  try {
-    const query = validated.q;
+    try {
+      const query = validated.q;
 
-    if (!query) {
-      return { data: [] };
+      if (!query) {
+        return { data: [] };
+      }
+
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+      const drugs = await prisma.drug.findMany({
+        where: {
+          OR: [
+            { genericName: { contains: query, mode: 'insensitive' } },
+            { brandName: { contains: query, mode: 'insensitive' } },
+          ],
+        },
+        take: 20,
+      });
+
+      logger.info('Drug search completed', {
+        query: query.substring(0, 50),
+        resultCount: drugs.length,
+      });
+
+      return { data: drugs };
+    } catch (error) {
+      logger.error('Drug search error', {
+        error: error instanceof Error ? error.message : String(error),
+        query: validated.q?.substring(0, 50),
+      });
+      throw new Error('Failed to search drugs');
+    } finally {
+      await safePrismaDisconnect(prisma);
     }
-
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-    const drugs = await prisma.drug.findMany({
-      where: {
-        OR: [
-          { genericName: { contains: query, mode: 'insensitive' } },
-          { brandName: { contains: query, mode: 'insensitive' } },
-        ],
-      },
-      take: 20,
-    });
-
-    logger.info('Drug search completed', {
-      query: query.substring(0, 50),
-      resultCount: drugs.length,
-    });
-
-    return { data: drugs };
-  } catch (error) {
-    logger.error('Drug search error', {
-      error: error instanceof Error ? error.message : String(error),
-      query: validated.q?.substring(0, 50),
-    });
-    throw new Error('Failed to search drugs');
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-}, { source: 'query' });
+  },
+  { source: 'query' }
+);

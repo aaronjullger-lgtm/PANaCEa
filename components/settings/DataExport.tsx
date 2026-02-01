@@ -353,7 +353,9 @@ export const DataExport: React.FC = () => {
           <div>
             <p
               className={`text-sm font-medium ${
-                exportStatus.type === 'success' ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'
+                exportStatus.type === 'success'
+                  ? 'text-[var(--color-data-pass)]'
+                  : 'text-[var(--color-data-fail)]'
               }`}
             >
               {exportStatus.message}

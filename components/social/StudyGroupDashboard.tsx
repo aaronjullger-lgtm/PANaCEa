@@ -176,7 +176,9 @@ export default function StudyGroupDashboard() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">Social Learning</h1>
+        <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
+          Social Learning
+        </h1>
         <p className="text-[var(--color-text-secondary)]">
           Collaborate with peers and track your progress.
         </p>
@@ -222,7 +224,9 @@ export default function StudyGroupDashboard() {
                 <div className="w-12 h-12 bg-[var(--color-bg-secondary)] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Plus className="w-6 h-6 text-[var(--color-accent)]" />
                 </div>
-                <h3 className="font-semibold text-lg mb-1 text-[var(--color-text-primary)]">Create a Group</h3>
+                <h3 className="font-semibold text-lg mb-1 text-[var(--color-text-primary)]">
+                  Create a Group
+                </h3>
                 <p className="text-sm text-[var(--color-text-muted)]">Start a new study circle</p>
               </div>
 
@@ -234,7 +238,9 @@ export default function StudyGroupDashboard() {
                 <div className="w-12 h-12 bg-[var(--color-bg-secondary)] rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Users className="w-6 h-6 text-[var(--color-accent)]" />
                 </div>
-                <h3 className="font-semibold text-lg mb-1 text-[var(--color-text-primary)]">Join a Group</h3>
+                <h3 className="font-semibold text-lg mb-1 text-[var(--color-text-primary)]">
+                  Join a Group
+                </h3>
                 <p className="text-sm text-[var(--color-text-muted)]">Enter a code to join</p>
               </div>
             </div>
@@ -310,7 +316,9 @@ export default function StudyGroupDashboard() {
                     className="bg-[var(--color-bg-primary)] p-4 rounded-xl border border-[var(--color-border)] flex justify-between items-center"
                   >
                     <div>
-                      <h4 className="font-semibold text-lg text-[var(--color-text-primary)]">{group.name}</h4>
+                      <h4 className="font-semibold text-lg text-[var(--color-text-primary)]">
+                        {group.name}
+                      </h4>
                       <p className="text-sm text-[var(--color-text-muted)]">
                         {group.memberCount} members • {group.role === 'admin' ? 'Admin' : 'Member'}
                       </p>
@@ -453,10 +461,14 @@ export default function StudyGroupDashboard() {
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm p-4">
           <div className="bg-[var(--color-bg-primary)] rounded-xl shadow-xl border border-[var(--color-border)] max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4 text-[var(--color-text-primary)]">Create Study Group</h3>
+            <h3 className="text-xl font-bold mb-4 text-[var(--color-text-primary)]">
+              Create Study Group
+            </h3>
             <form onSubmit={handleCreateGroup}>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1 text-[var(--color-text-primary)]">Group Name</label>
+                <label className="block text-sm font-medium mb-1 text-[var(--color-text-primary)]">
+                  Group Name
+                </label>
                 <input
                   type="text"
                   required
@@ -467,7 +479,9 @@ export default function StudyGroupDashboard() {
                 />
               </div>
               <div className="mb-6">
-                <label className="block text-sm font-medium mb-1 text-[var(--color-text-primary)]">Description (Optional)</label>
+                <label className="block text-sm font-medium mb-1 text-[var(--color-text-primary)]">
+                  Description (Optional)
+                </label>
                 <textarea
                   value={groupDesc}
                   onChange={(e) => setGroupDesc(e.target.value)}
@@ -506,10 +520,14 @@ export default function StudyGroupDashboard() {
       {showJoinModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm p-4">
           <div className="bg-[var(--color-bg-primary)] rounded-xl shadow-xl border border-[var(--color-border)] max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4 text-[var(--color-text-primary)]">Join Study Group</h3>
+            <h3 className="text-xl font-bold mb-4 text-[var(--color-text-primary)]">
+              Join Study Group
+            </h3>
             <form onSubmit={handleJoinGroup}>
               <div className="mb-6">
-                <label className="block text-sm font-medium mb-1 text-[var(--color-text-primary)]">Group Code</label>
+                <label className="block text-sm font-medium mb-1 text-[var(--color-text-primary)]">
+                  Group Code
+                </label>
                 <input
                   type="text"
                   required

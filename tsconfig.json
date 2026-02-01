@@ -49,5 +49,13 @@
     "*.ts",
     "*.tsx"
   ],
-  "exclude": ["node_modules", "dist", ".wrangler", "routes/**/*", "scripts/deprecated/**/*"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".wrangler",
+    "routes/**/*",
+    "scripts/deprecated/**/*",
+    "**/*.old.*",
+    "**/*-Example.*"
+  ]
 }

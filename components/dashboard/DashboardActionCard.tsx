@@ -54,7 +54,10 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
   const renderPattern = () => {
     if (backgroundPattern === 'dots') {
       return (
-        <svg className="absolute inset-0 w-full h-full opacity-30" xmlns="http://www.w3.org/2000/svg">
+        <svg
+          className="absolute inset-0 w-full h-full opacity-30"
+          xmlns="http://www.w3.org/2000/svg"
+        >
           <defs>
             <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
               <circle
@@ -72,7 +75,10 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
     }
     if (backgroundPattern === 'grid') {
       return (
-        <svg className="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
+        <svg
+          className="absolute inset-0 w-full h-full opacity-20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
           <defs>
             <pattern id="grid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
               <path
@@ -128,9 +134,7 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
                 {title}
               </h3>
               {subtitle && (
-                <p className="text-sm font-medium text-[var(--color-text-muted)]">
-                  {subtitle}
-                </p>
+                <p className="text-sm font-medium text-[var(--color-text-muted)]">{subtitle}</p>
               )}
             </div>
           </div>
@@ -154,9 +158,7 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
                     animation: pulse-glow 2s ease-in-out infinite;
                   }
                 `}</style>
-                <div className="pulse-badge">
-                  {badge}
-                </div>
+                <div className="pulse-badge">{badge}</div>
               </div>
             </div>
           )}
@@ -164,25 +166,23 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
 
         {/* Description */}
         {description && (
-          <p className="mb-6 text-[var(--color-text-secondary)] leading-relaxed">
-            {description}
-          </p>
+          <p className="mb-6 text-[var(--color-text-secondary)] leading-relaxed">{description}</p>
         )}
 
         {/* Timer Display */}
         {showTimer && timerText && (
           <div className="mb-6 flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 w-fit">
-            <svg 
-              className="w-4 h-4 text-[var(--color-data-provisional)]" 
-              fill="none" 
-              viewBox="0 0 24 24" 
+            <svg
+              className="w-4 h-4 text-[var(--color-data-provisional)]"
+              fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
             <span className="text-sm font-medium text-[var(--color-data-provisional)]">
@@ -204,9 +204,7 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
                              p-4 backdrop-blur-sm transition-colors hover:bg-[var(--color-bg-tertiary)]/90"
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    {StatIcon && (
-                      <StatIcon className="h-4 w-4 text-[var(--color-text-muted)]" />
-                    )}
+                    {StatIcon && <StatIcon className="h-4 w-4 text-[var(--color-text-muted)]" />}
                     <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
                       {stat.label}
                     </p>

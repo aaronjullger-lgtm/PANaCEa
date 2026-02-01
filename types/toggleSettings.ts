@@ -13,13 +13,13 @@
 export interface ContentDifficultySettings {
   /** Show only core PANCE blueprint content (excludes advanced pathology) */
   coreOnly: boolean;
-  
+
   /** Include advanced content (rare conditions, complex mechanisms) */
   advancedContent: boolean;
-  
+
   /** Filter to high-yield topics only (commonly tested concepts) */
   highYieldOnly: boolean;
-  
+
   /** Prioritize first-line treatment questions (vs. second/third-line) */
   firstLineOnly: boolean;
 }
@@ -31,16 +31,16 @@ export interface ContentDifficultySettings {
 export interface QuestionFormatSettings {
   /** Vignette style: 'standard' | 'brief' | 'detailed' */
   vignetteStyle: 'standard' | 'brief' | 'detailed';
-  
+
   /** Include images in questions (X-rays, CT scans, dermpath) */
   imageIntegration: boolean;
-  
+
   /** Lab value display: 'interpreted' | 'raw' | 'both' */
   labValueDisplay: 'interpreted' | 'raw' | 'both';
-  
+
   /** Show vital signs in questions */
   showVitals: boolean;
-  
+
   /** Include multimedia (audio for heart/lung sounds) */
   multimediaEnabled: boolean;
 }
@@ -52,19 +52,19 @@ export interface QuestionFormatSettings {
 export interface FeedbackSettings {
   /** Show immediate feedback after each answer */
   immediateFeedback: boolean;
-  
+
   /** Explanation depth: 'brief' | 'standard' | 'comprehensive' */
   explanationDepth: 'brief' | 'standard' | 'comprehensive';
-  
+
   /** Enable spaced repetition algorithm (FSRS) */
   spacedRepetition: boolean;
-  
+
   /** Auto-advance to next question after viewing explanation */
   autoAdvance: boolean;
-  
+
   /** Show clinical pearls with explanations */
   showPearls: boolean;
-  
+
   /** Display related concepts and differential diagnoses */
   showRelatedConcepts: boolean;
 }
@@ -76,19 +76,19 @@ export interface FeedbackSettings {
 export interface PerformanceTrackingSettings {
   /** Track and display answer streaks */
   streakTracking: boolean;
-  
+
   /** Show detailed analytics on dashboard */
   detailedAnalytics: boolean;
-  
+
   /** Enable progress notifications */
   progressNotifications: boolean;
-  
+
   /** Show real-time performance trends */
   realtimeTrends: boolean;
-  
+
   /** Display system-by-system breakdown */
   systemBreakdown: boolean;
-  
+
   /** Show longitudinal progress over time */
   longitudinalView: boolean;
 }
@@ -155,10 +155,16 @@ export function loadToggleSettings(): ToggleSettings {
       const parsed = JSON.parse(saved) as ToggleSettings;
       // Merge with defaults to ensure all properties exist
       return {
-        contentDifficulty: { ...DEFAULT_TOGGLE_SETTINGS.contentDifficulty, ...parsed.contentDifficulty },
+        contentDifficulty: {
+          ...DEFAULT_TOGGLE_SETTINGS.contentDifficulty,
+          ...parsed.contentDifficulty,
+        },
         questionFormat: { ...DEFAULT_TOGGLE_SETTINGS.questionFormat, ...parsed.questionFormat },
         feedback: { ...DEFAULT_TOGGLE_SETTINGS.feedback, ...parsed.feedback },
-        performanceTracking: { ...DEFAULT_TOGGLE_SETTINGS.performanceTracking, ...parsed.performanceTracking },
+        performanceTracking: {
+          ...DEFAULT_TOGGLE_SETTINGS.performanceTracking,
+          ...parsed.performanceTracking,
+        },
       };
     }
   } catch (error) {

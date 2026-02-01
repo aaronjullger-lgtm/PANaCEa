@@ -59,31 +59,20 @@ export default function WeaknessCheatsheetExporter({
   };
 
   return (
-    <div
-      data-theme={theme}
-      className="rounded-xl p-4 bg-[var(--color-bg-secondary)]"
-    >
+    <div data-theme={theme} className="rounded-xl p-4 bg-[var(--color-bg-secondary)]">
       <div className="flex items-center gap-2 mb-3">
         <FileText className="w-5 h-5 text-[var(--color-accent)]" />
-        <h3
-          className="font-medium text-[var(--color-text-primary)]"
-        >
-          Weakness Study Guide
-        </h3>
+        <h3 className="font-medium text-[var(--color-text-primary)]">Weakness Study Guide</h3>
       </div>
 
-      <p
-        className="text-xs mb-4 text-[var(--color-text-muted)]"
-      >
+      <p className="text-xs mb-4 text-[var(--color-text-muted)]">
         Generate a professional PDF study guide based on questions you've missed. Perfect for
         focused review and cramming sessions.
       </p>
 
       {/* Time Period Selector */}
       <div className="mb-4">
-        <label
-          className="block text-sm font-medium mb-2 text-[var(--color-text-primary)]"
-        >
+        <label className="block text-sm font-medium mb-2 text-[var(--color-text-primary)]">
           Time Period
         </label>
         <div className="flex gap-2">
@@ -105,17 +94,11 @@ export default function WeaknessCheatsheetExporter({
 
       {/* Summary */}
       {summary.totalWeaknesses > 0 ? (
-        <div
-          className="p-3 rounded-lg mb-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30"
-        >
+        <div className="p-3 rounded-lg mb-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30">
           <div className="flex items-start gap-2">
-            <AlertCircle
-              className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]"
-            />
+            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
             <div>
-              <p
-                className="text-sm font-medium mb-1 text-[var(--color-text-primary)]"
-              >
+              <p className="text-sm font-medium mb-1 text-[var(--color-text-primary)]">
                 Found {summary.totalWeaknesses} area{summary.totalWeaknesses > 1 ? 's' : ''} to
                 review
               </p>
@@ -132,9 +115,7 @@ export default function WeaknessCheatsheetExporter({
                   </span>
                 ))}
                 {summary.systems.length > 3 && (
-                  <span
-                    className="text-xs px-2 py-1 rounded bg-[var(--color-accent)]/15 text-[var(--color-accent)]"
-                  >
+                  <span className="text-xs px-2 py-1 rounded bg-[var(--color-accent)]/15 text-[var(--color-accent)]">
                     +{summary.systems.length - 3} more
                   </span>
                 )}
@@ -143,12 +124,8 @@ export default function WeaknessCheatsheetExporter({
           </div>
         </div>
       ) : (
-        <div
-          className="p-3 rounded-lg mb-4 text-center bg-slate-100 dark:bg-[var(--color-success)]/10 border border-slate-200 dark:border-[var(--color-success)]/30"
-        >
-          <Check
-            className="w-6 h-6 mx-auto mb-2 text-slate-600 dark:text-[var(--color-success)]"
-          />
+        <div className="p-3 rounded-lg mb-4 text-center bg-slate-100 dark:bg-[var(--color-success)]/10 border border-slate-200 dark:border-[var(--color-success)]/30">
+          <Check className="w-6 h-6 mx-auto mb-2 text-slate-600 dark:text-[var(--color-success)]" />
           <p className="text-sm text-slate-800 dark:text-[var(--color-text-primary)]">
             No significant weaknesses in the last {days} days!
           </p>
@@ -187,9 +164,7 @@ export default function WeaknessCheatsheetExporter({
         )}
       </button>
 
-      <p
-        className="text-xs mt-2 text-center text-[var(--color-text-muted)]"
-      >
+      <p className="text-xs mt-2 text-center text-[var(--color-text-muted)]">
         Opens in new window for printing to PDF
       </p>
     </div>

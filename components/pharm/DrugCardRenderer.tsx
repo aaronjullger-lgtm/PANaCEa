@@ -148,11 +148,7 @@ export default function DrugCardRenderer({
                   <div className="flex items-center gap-3">
                     {getSystemIcon(effect.system)}
                     <div>
-                      <p
-                        className="font-medium text-[var(--color-text-primary)]"
-                      >
-                        {effect.name}
-                      </p>
+                      <p className="font-medium text-[var(--color-text-primary)]">{effect.name}</p>
                       <p className="text-xs text-[var(--color-text-muted)]">
                         {effect.system} • {effect.severity}
                       </p>
@@ -194,12 +190,8 @@ export default function DrugCardRenderer({
                 key={idx}
                 className="flex items-start gap-2 p-2 rounded bg-[var(--color-data-provisional)]/10"
               >
-                <AlertTriangle
-                  className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-data-provisional)]"
-                />
-                <span className="text-sm text-[var(--color-text-secondary)]">
-                  {interaction}
-                </span>
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-data-provisional)]" />
+                <span className="text-sm text-[var(--color-text-secondary)]">{interaction}</span>
               </li>
             ))}
           </ul>
@@ -232,12 +224,8 @@ export default function DrugCardRenderer({
                 key={idx}
                 className="flex items-start gap-2 p-3 rounded-lg bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30"
               >
-                <Gem
-                  className="w-5 h-5 flex-shrink-0 text-[var(--color-data-provisional)]"
-                />
-                <span className="text-sm text-[var(--color-text-secondary)]">
-                  {pearl}
-                </span>
+                <Gem className="w-5 h-5 flex-shrink-0 text-[var(--color-data-provisional)]" />
+                <span className="text-sm text-[var(--color-text-secondary)]">{pearl}</span>
               </li>
             ))}
           </ul>
@@ -277,13 +265,9 @@ function Section({
       >
         <div className="flex items-center gap-3">
           <span className="text-[var(--color-accent)]">{icon}</span>
-          <h3 className="font-semibold text-[var(--color-text-primary)]">
-            {title}
-          </h3>
+          <h3 className="font-semibold text-[var(--color-text-primary)]">{title}</h3>
           {badge !== undefined && (
-            <span
-              className="text-xs px-2 py-1 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
-            >
+            <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
               {badge}
             </span>
           )}
@@ -386,7 +370,10 @@ function renderVisualization(effect: SideEffect, theme: 'light' | 'dark'): React
           <svg
             viewBox="0 0 400 100"
             className="w-full h-20"
-            style={{ filter: 'drop-shadow(0 2px 4px color-mix(in srgb, var(--color-text-muted) 20%, transparent))' }}
+            style={{
+              filter:
+                'drop-shadow(0 2px 4px color-mix(in srgb, var(--color-text-muted) 20%, transparent))',
+            }}
           >
             {/* Baseline */}
             <line
@@ -451,9 +438,7 @@ function renderVisualization(effect: SideEffect, theme: 'light' | 'dark'): React
   return (
     <div className={`p-4 rounded-lg ${bgClass} text-center`}>
       <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-[var(--color-data-provisional)]" />
-      <p className="text-xs text-[var(--color-text-secondary)]">
-        Monitor closely for this effect
-      </p>
+      <p className="text-xs text-[var(--color-text-secondary)]">Monitor closely for this effect</p>
     </div>
   );
 }

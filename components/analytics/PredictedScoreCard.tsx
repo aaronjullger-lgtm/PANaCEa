@@ -368,10 +368,7 @@ export function PredictedScoreCard({
               </p>
               <div className="space-y-1">
                 {prediction.strengths.slice(0, 3).map((s, i) => (
-                  <div
-                    key={i}
-                    className="text-sm text-[var(--color-text-secondary)] capitalize"
-                  >
+                  <div key={i} className="text-sm text-[var(--color-text-secondary)] capitalize">
                     {s.replace(/_/g, ' ')}
                   </div>
                 ))}

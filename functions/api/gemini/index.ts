@@ -1,7 +1,7 @@
 /**
  * API Endpoint: /api/gemini
  * POST: Non-streaming Gemini AI proxy endpoint
- * 
+ *
  * This endpoint handles synchronous (non-streaming) requests to the Gemini API.
  * For streaming responses, use /api/gemini/stream instead.
  */
@@ -129,7 +129,7 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
     }
 
     // Parse response
-    const responseData = await geminiResponse.json() as {
+    const responseData = (await geminiResponse.json()) as {
       candidates?: Array<{
         content?: {
           parts?: Array<{ text?: string }>;
@@ -151,7 +151,7 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
 
     // Extract generated text
     const generatedText = responseData.candidates?.[0]?.content?.parts?.[0]?.text;
-    
+
     if (!generatedText) {
       console.error('[Gemini] No text in response:', responseData);
       return {

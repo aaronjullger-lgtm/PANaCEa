@@ -404,8 +404,7 @@ export async function callGeminiText(
       }
 
       const data = await response.json();
-      const text =
-        typeof data === 'string' ? data : (data.data?.text ?? data.text);
+      const text = typeof data === 'string' ? data : (data.data?.text ?? data.text);
 
       if (!text || !text.trim()) {
         throw new Error('Empty response from Gemini');
@@ -443,13 +442,13 @@ export async function callGeminiText(
 /**
  * Streaming version of callGeminiText for progressive rendering
  * Uses Server-Sent Events (SSE) for real-time text chunks
- * 
+ *
  * @param modelName - Gemini model to use (default: gemini-2.5-flash)
  * @param prompt - The prompt to send to Gemini
  * @param temperature - Temperature parameter (default: 0.8)
  * @param options - Streaming options with callbacks
  * @returns Promise that resolves with complete text
- * 
+ *
  * @example
  * ```typescript
  * await callGeminiTextStreaming('gemini-2.5-flash', prompt, 0.8, {
@@ -472,21 +471,27 @@ export async function callGeminiTextStreaming(
 ): Promise<string> {
   // Input validation
   if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
-    const error = new Error('[callGeminiTextStreaming] Prompt is required and must be a non-empty string');
+    const error = new Error(
+      '[callGeminiTextStreaming] Prompt is required and must be a non-empty string'
+    );
     console.error(error.message);
     options.onError?.(error);
     throw error;
   }
 
   if (typeof modelName !== 'string' || modelName.trim().length === 0) {
-    const error = new Error('[callGeminiTextStreaming] Model name is required and must be a non-empty string');
+    const error = new Error(
+      '[callGeminiTextStreaming] Model name is required and must be a non-empty string'
+    );
     console.error(error.message);
     options.onError?.(error);
     throw error;
   }
 
   if (typeof temperature !== 'number' || temperature < 0 || temperature > 2) {
-    const error = new Error('[callGeminiTextStreaming] Temperature must be a number between 0 and 2');
+    const error = new Error(
+      '[callGeminiTextStreaming] Temperature must be a number between 0 and 2'
+    );
     console.error(error.message);
     options.onError?.(error);
     throw error;
@@ -494,7 +499,7 @@ export async function callGeminiTextStreaming(
 
   const isTestEnv =
     typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
-  
+
   if (isTestEnv) {
     console.log('[callGeminiTextStreaming] Running in test mode, using mock response');
     // Mock behavior for tests: simulate streaming
@@ -505,12 +510,12 @@ export async function callGeminiTextStreaming(
     const preview = prompt.replace(/\s+/g, ' ').trim();
     const mockText = `[Gemini mock ${hash}] ${preview}`;
     const finalText = mockText.length < 40 ? mockText.padEnd(40, '.') : mockText;
-    
+
     // Simulate chunks
     const chunks = finalText.match(/.{1,10}/g) || [finalText];
     for (const chunk of chunks) {
       options.onChunk?.(chunk);
-      await new Promise(resolve => setTimeout(resolve, 10)); // Simulate latency
+      await new Promise((resolve) => setTimeout(resolve, 10)); // Simulate latency
     }
     options.onComplete?.(finalText);
     return finalText;
@@ -518,7 +523,7 @@ export async function callGeminiTextStreaming(
 
   try {
     console.log(`[callGeminiTextStreaming] Starting streaming request with model: ${modelName}`);
-    
+
     // Dynamic import to avoid circular dependency
     // Type assertion for the imported module
     type StreamingClientModule = {
@@ -536,9 +541,9 @@ export async function callGeminiTextStreaming(
     };
 
     let streamingModule: StreamingClientModule;
-    
+
     try {
-      streamingModule = await import('@/lib/utils/streamingClient') as StreamingClientModule;
+      streamingModule = (await import('@/lib/utils/streamingClient')) as StreamingClientModule;
     } catch (importError) {
       const error = new Error(
         `[callGeminiTextStreaming] Failed to load streaming client module: ${importError instanceof Error ? importError.message : String(importError)}`
@@ -549,13 +554,18 @@ export async function callGeminiTextStreaming(
     }
 
     // Validate that the imported function exists
-    if (!streamingModule.streamGeminiText || typeof streamingModule.streamGeminiText !== 'function') {
-      const error = new Error('[callGeminiTextStreaming] streamGeminiText function not found in streaming client module');
+    if (
+      !streamingModule.streamGeminiText ||
+      typeof streamingModule.streamGeminiText !== 'function'
+    ) {
+      const error = new Error(
+        '[callGeminiTextStreaming] streamGeminiText function not found in streaming client module'
+      );
       console.error(error.message);
       options.onError?.(error);
       throw error;
     }
-    
+
     const result = await streamingModule.streamGeminiText(prompt, {
       modelName,
       temperature,
@@ -575,7 +585,7 @@ export async function callGeminiTextStreaming(
       name: err.name,
       stack: err.stack,
     });
-    
+
     // Ensure error callback is invoked
     options.onError?.(err);
     throw err;
@@ -585,13 +595,13 @@ export async function callGeminiTextStreaming(
 /**
  * Create a cancellable streaming request
  * Returns an object with the promise and an abort function
- * 
+ *
  * @example
  * ```typescript
  * const { promise, abort } = createCancellableGeminiStream(prompt, {
  *   onChunk: (chunk) => setPartialText(prev => prev + chunk)
  * });
- * 
+ *
  * // Later, if user clicks "Stop"
  * abort();
  * ```
@@ -607,7 +617,7 @@ export function createCancellableGeminiStream(
   } = {}
 ) {
   const abortController = new AbortController();
-  
+
   return {
     promise: callGeminiTextStreaming(modelName, prompt, temperature, {
       ...options,
@@ -789,10 +799,10 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
       chosenConditionDef = buildConditionDefinition(meta);
 
       // Load database content via API (browser-safe)
-        try {
-          const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
-            await import('../conditionContentService');
-          const dbContent = await fetchConditionContent(settings.conditionName);
+      try {
+        const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } =
+          await import('../conditionContentService');
+        const dbContent = await fetchConditionContent(settings.conditionName);
 
         if (dbContent && hasCompleteContent(dbContent)) {
           conditionRegistryNotes = buildDatabaseContext(dbContent);

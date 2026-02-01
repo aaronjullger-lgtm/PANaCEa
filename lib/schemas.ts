@@ -79,12 +79,12 @@ export type OrganSystem = z.infer<typeof OrganSystemSchema>;
  * Session type enum
  */
 export const SessionTypeSchema = z.enum([
-  'MAIN',           // Standard study session
-  'RAPID_REVIEW',   // Quick review of due cards
-  'DEEP_LEARNING',  // Extended learning mode
+  'MAIN', // Standard study session
+  'RAPID_REVIEW', // Quick review of due cards
+  'DEEP_LEARNING', // Extended learning mode
   'EXAM_SIMULATION', // Timed exam practice
-  'CUSTOM',         // Custom session with specific settings
-  'CRAM',           // Cram mode (excluded from SRS stats)
+  'CUSTOM', // Custom session with specific settings
+  'CRAM', // Cram mode (excluded from SRS stats)
 ]);
 
 export type SessionType = z.infer<typeof SessionTypeSchema>;
@@ -228,10 +228,15 @@ export const SessionAnalyticsSchema = z.object({
   correctAnswers: z.coerce.number().int().min(0).default(0),
   accuracy: z.coerce.number().min(0).max(100).default(0),
   totalTimeMs: z.coerce.number().int().min(0).default(0),
-  systemBreakdown: z.record(OrganSystemSchema, z.object({
-    correct: z.number().int().min(0),
-    total: z.number().int().min(0),
-  })).optional(),
+  systemBreakdown: z
+    .record(
+      OrganSystemSchema,
+      z.object({
+        correct: z.number().int().min(0),
+        total: z.number().int().min(0),
+      })
+    )
+    .optional(),
 });
 
 export type SessionAnalytics = z.infer<typeof SessionAnalyticsSchema>;
@@ -243,11 +248,7 @@ export type SessionAnalytics = z.infer<typeof SessionAnalyticsSchema>;
 /**
  * Validate and parse with helpful error messages
  */
-export function validateSchema<T>(
-  schema: z.ZodSchema<T>,
-  data: unknown,
-  context?: string
-): T {
+export function validateSchema<T>(schema: z.ZodSchema<T>, data: unknown, context?: string): T {
   const result = schema.safeParse(data);
 
   if (result.success) {
@@ -264,10 +265,7 @@ export function validateSchema<T>(
 /**
  * Safe parse that returns null on failure (for optional validation)
  */
-export function safeParseSchema<T>(
-  schema: z.ZodSchema<T>,
-  data: unknown
-): T | null {
+export function safeParseSchema<T>(schema: z.ZodSchema<T>, data: unknown): T | null {
   const result = schema.safeParse(data);
   return result.success ? result.data : null;
 }
@@ -276,6 +274,4 @@ export function safeParseSchema<T>(
 // TYPE EXPORTS (for convenience)
 // ============================================================================
 
-export type {
-  z,
-};
+export type { z };

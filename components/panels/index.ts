@@ -1,6 +1,6 @@
 /**
  * Panel Components
- * 
+ *
  * Centralized exports for sidebar and panel components
  */
 

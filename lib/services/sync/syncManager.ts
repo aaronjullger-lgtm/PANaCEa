@@ -138,7 +138,9 @@ class SyncManager {
   // ANSWER MANAGEMENT
   // ===========================================================================
 
-  public queueAnswer(answer: Omit<OfflineAnswer, 'id' | 'timestamp' | 'synced' | 'syncAttempts'>): string {
+  public queueAnswer(
+    answer: Omit<OfflineAnswer, 'id' | 'timestamp' | 'synced' | 'syncAttempts'>
+  ): string {
     const id = `answer-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const offlineAnswer: OfflineAnswer = {
       ...answer,
@@ -201,7 +203,9 @@ class SyncManager {
 
     // Try immediate sync if online
     if (this.isOnline()) {
-      this.syncPearlActions().catch((err) => console.error('[SyncManager] Immediate sync failed:', err));
+      this.syncPearlActions().catch((err) =>
+        console.error('[SyncManager] Immediate sync failed:', err)
+      );
     }
 
     return id;
@@ -331,10 +335,10 @@ class SyncManager {
           action.action === 'view'
             ? `/api/pearls/${action.pearlId}/view`
             : action.action === 'mark_mastered'
-            ? `/api/pearls/${action.pearlId}/mastered`
-            : action.action === 'review_later'
-            ? `/api/pearls/${action.pearlId}/schedule`
-            : `/api/pearls/${action.pearlId}/save`;
+              ? `/api/pearls/${action.pearlId}/mastered`
+              : action.action === 'review_later'
+                ? `/api/pearls/${action.pearlId}/schedule`
+                : `/api/pearls/${action.pearlId}/save`;
 
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -375,7 +379,10 @@ class SyncManager {
     }
 
     // Exponential backoff: 30s, 60s, 120s, max 5 minutes
-    const retryDelay = Math.min(30000 * Math.pow(2, this.getStatus().pendingAnswers > 0 ? 1 : 0), 300000);
+    const retryDelay = Math.min(
+      30000 * Math.pow(2, this.getStatus().pendingAnswers > 0 ? 1 : 0),
+      300000
+    );
 
     this.syncRetryTimeout = setTimeout(() => {
       if (this.isOnline()) {

@@ -213,7 +213,7 @@ export function extractPauses(events: KeystrokeEvent[]): PauseEvent[] {
     const curr = keydowns[i];
     const prev = keydowns[i - 1];
     if (!curr || !prev) continue;
-    
+
     const duration = curr.timestamp - prev.timestamp;
 
     // Only track significant pauses (> physical threshold)
@@ -252,7 +252,7 @@ export function extractBursts(events: KeystrokeEvent[]): BurstSegment[] {
     const curr = keydowns[i];
     const prev = keydowns[i - 1];
     if (!curr || !prev) continue;
-    
+
     const iki = curr.timestamp - prev.timestamp;
 
     if (iki < BURST_IKI_THRESHOLD) {
@@ -268,7 +268,8 @@ export function extractBursts(events: KeystrokeEvent[]): BurstSegment[] {
           startPosition: burstStartKey.position,
           endPosition: prevKey.position,
           length: burstContent.length,
-          avgIKI: burstIKIs.length > 0 ? burstIKIs.reduce((a, b) => a + b, 0) / burstIKIs.length : 0,
+          avgIKI:
+            burstIKIs.length > 0 ? burstIKIs.reduce((a, b) => a + b, 0) / burstIKIs.length : 0,
           content: burstContent,
           startTimestamp: burstStartKey.timestamp,
         });

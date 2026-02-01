@@ -42,8 +42,7 @@ export function AuthButton({ isSyncing, lastSyncTime, syncError }: AuthButtonPro
         <UserButton
           appearance={{
             elements: {
-              avatarBox:
-                'w-12 h-12 ring-1 ring-[var(--color-border)] bg-[var(--color-bg-primary)]',
+              avatarBox: 'w-12 h-12 ring-1 ring-[var(--color-border)] bg-[var(--color-bg-primary)]',
               avatarImage: 'dark:brightness-110',
             },
           }}

@@ -66,15 +66,11 @@ export class ErrorBoundary extends Component<Props, State> {
 
     // Convert to structured error
     const appError = isChunkLoadError
-      ? new NetworkError(
-          'Failed to load application module (stale cache)',
-          undefined,
-          {
-            errorName: error.name,
-            originalMessage: error.message,
-            componentStack: errorInfo.componentStack,
-          }
-        )
+      ? new NetworkError('Failed to load application module (stale cache)', undefined, {
+          errorName: error.name,
+          originalMessage: error.message,
+          componentStack: errorInfo.componentStack,
+        })
       : toAppError(error);
 
     // Log with structured error system

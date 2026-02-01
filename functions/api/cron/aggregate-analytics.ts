@@ -71,8 +71,13 @@ export async function onRequestPost(context: any) {
     log.info('Starting analytics aggregation', { date: yesterday.toISOString() });
 
     // Single query for all attempts in the date range (avoids N+1)
-    type AttemptRow = { userId: string; wasCorrect: boolean; timeSpentMs: number | null; system: string | null };
-    const attempts = await prisma.questionAttempt.findMany({
+    type AttemptRow = {
+      userId: string;
+      wasCorrect: boolean;
+      timeSpentMs: number | null;
+      system: string | null;
+    };
+    const attempts = (await prisma.questionAttempt.findMany({
       where: {
         createdAt: { gte: yesterday, lt: today },
       },
@@ -82,7 +87,7 @@ export async function onRequestPost(context: any) {
         timeSpentMs: true,
         system: true,
       },
-    }) as AttemptRow[];
+    })) as AttemptRow[];
 
     // Aggregate per user in memory
     const perUser = new Map<

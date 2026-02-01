@@ -413,9 +413,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <div className="p-2 rounded-lg bg-data-provisional/10">
                   <AlertCircle className="w-5 h-5 text-data-provisional" />
                 </div>
-                <h3 className="font-bold text-data-provisional">
-                  Focus Areas - Highest Impact
-                </h3>
+                <h3 className="font-bold text-data-provisional">Focus Areas - Highest Impact</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {userStats.stats.weakAreas.slice(0, 3).map((area) => (
@@ -489,17 +487,17 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     {userStats.stats.recentPerformance.trend === 'stable' && '➡️'}
                   </div>
                   <p className="text-lg font-semibold text-action-primary mb-2">
-                    {userStats.stats.recentPerformance.trend === 'improving' &&
-                      'Trending Upward'}
-                    {userStats.stats.recentPerformance.trend === 'declining' &&
-                      'Needs Focus'}
-                    {userStats.stats.recentPerformance.trend === 'stable' && (() => {
-                      const last7 = userStats.stats.recentPerformance.last7Days.accuracy ?? 0;
-                      const prev7 = userStats.stats.recentPerformance.previous7Days.accuracy ?? 0;
-                      const delta = last7 - prev7;
-                      const deltaStr = delta > 0 ? `+${delta.toFixed(1)}%` : `${delta.toFixed(1)}%`;
-                      return deltaStr;
-                    })()}
+                    {userStats.stats.recentPerformance.trend === 'improving' && 'Trending Upward'}
+                    {userStats.stats.recentPerformance.trend === 'declining' && 'Needs Focus'}
+                    {userStats.stats.recentPerformance.trend === 'stable' &&
+                      (() => {
+                        const last7 = userStats.stats.recentPerformance.last7Days.accuracy ?? 0;
+                        const prev7 = userStats.stats.recentPerformance.previous7Days.accuracy ?? 0;
+                        const delta = last7 - prev7;
+                        const deltaStr =
+                          delta > 0 ? `+${delta.toFixed(1)}%` : `${delta.toFixed(1)}%`;
+                        return deltaStr;
+                      })()}
                   </p>
                   <p className="text-sm text-action-muted text-center max-w-xs">
                     Last 7 days: {userStats.stats.recentPerformance.last7Days.accuracy}% (
@@ -533,7 +531,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             ) : stabilityLoading ? (
               <SkeletonLoader width="100%" height="320" />
             ) : stabilityTrendData.length === 0 ? (
-              <EmptyLineChart message="Complete questions to track memory stability growth" height={320} />
+              <EmptyLineChart
+                message="Complete questions to track memory stability growth"
+                height={320}
+              />
             ) : (
               <>
                 <ResponsiveContainer width="100%" height={320}>
@@ -619,7 +620,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             ) : (
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={timeData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgb(226 232 240)" className="dark:[stroke:var(--color-border)]" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgb(226 232 240)"
+                    className="dark:[stroke:var(--color-border)]"
+                  />
                   <XAxis
                     dataKey="system"
                     tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}

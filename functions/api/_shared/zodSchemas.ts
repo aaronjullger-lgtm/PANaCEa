@@ -588,7 +588,10 @@ export function createValidator<T>(schema: z.ZodSchema<T>) {
 export const geminiStreamRequestSchema = z
   .object({
     modelName: z.string().min(1).max(64).default('gemini-2.5-flash'),
-    prompt: z.string().min(1, 'Prompt is required').max(128 * 1024, 'Prompt too long'),
+    prompt: z
+      .string()
+      .min(1, 'Prompt is required')
+      .max(128 * 1024, 'Prompt too long'),
     temperature: z.number().min(0).max(2).default(0.8),
   })
   .strict();
@@ -624,9 +627,7 @@ function utf8ByteLength(str: string): number {
 
 export function validatePayloadSize(payload: string | object): boolean {
   const size =
-    typeof payload === 'string'
-      ? utf8ByteLength(payload)
-      : utf8ByteLength(JSON.stringify(payload));
+    typeof payload === 'string' ? utf8ByteLength(payload) : utf8ByteLength(JSON.stringify(payload));
 
   return size <= MAX_PAYLOAD_SIZE;
 }

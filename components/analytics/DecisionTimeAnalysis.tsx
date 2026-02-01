@@ -143,9 +143,7 @@ export default function DecisionTimeAnalysis({
 
   if (stats.length === 0) {
     return (
-      <div
-        className="rounded-lg p-6 text-center bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]"
-      >
+      <div className="rounded-lg p-6 text-center bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]">
         <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
         <p className="text-sm">
           No timing data available yet. Time tracking will begin with your next study session.
@@ -175,14 +173,10 @@ export default function DecisionTimeAnalysis({
             <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h4
-                    className="font-semibold text-[var(--color-text-primary)]"
-                  >
+                  <h4 className="font-semibold text-[var(--color-text-primary)]">
                     {stat.systemName}
                   </h4>
-                  <span
-                    className="text-xs px-2 py-1 rounded bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
-                  >
+                  <span className="text-xs px-2 py-1 rounded bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
                     {stat.totalQuestions} questions
                   </span>
                 </div>
@@ -226,12 +220,8 @@ export default function DecisionTimeAnalysis({
             </div>
 
             {/* AI Insight */}
-            <div
-              className="flex items-start gap-2 p-3 rounded-md bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30"
-            >
-              <Brain
-                className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]"
-              />
+            <div className="flex items-start gap-2 p-3 rounded-md bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30">
+              <Brain className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
               <p className="text-sm text-[var(--color-text-primary)]">
                 <span className="font-semibold">AI Insight: </span>
                 {stat.insight}
@@ -242,14 +232,10 @@ export default function DecisionTimeAnalysis({
       </div>
 
       {/* Summary Statistics */}
-      <div
-        className="mt-6 p-4 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]"
-      >
+      <div className="mt-6 p-4 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
         <div className="flex items-center gap-2 mb-2">
           <AlertCircle className="w-5 h-5 text-[var(--color-accent)]" />
-          <h4 className="font-semibold text-[var(--color-text-primary)]">
-            Key Takeaway
-          </h4>
+          <h4 className="font-semibold text-[var(--color-text-primary)]">Key Takeaway</h4>
         </div>
         <p className="text-sm text-[var(--color-text-secondary)]">
           Median decision time: <span className="font-bold">{formatTime(medianTime ?? 0)}</span>.

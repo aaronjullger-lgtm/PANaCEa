@@ -114,15 +114,12 @@ export function predictPANaCEaScore(
   // Bayesian adjustment: pull toward population mean if low sample size
   const RELIABLE_N = 360; // PANCE has 360 questions
   const sampleSizeWeight = Math.min(1, totalQuestions / RELIABLE_N);
-  const bayesianAccuracy =
-    weightedAccuracy * sampleSizeWeight + 0.75 * (1 - sampleSizeWeight);
+  const bayesianAccuracy = weightedAccuracy * sampleSizeWeight + 0.75 * (1 - sampleSizeWeight);
 
   // Convert accuracy to PANCE score
   // Linear scaling: 60% accuracy → 350 (passing), 75% → 490 (mean), 90% → 650+
   const SCALING_FACTOR = 600;
-  const predictedScore = Math.round(
-    PANCE_MEAN + (bayesianAccuracy - 0.75) * SCALING_FACTOR
-  );
+  const predictedScore = Math.round(PANCE_MEAN + (bayesianAccuracy - 0.75) * SCALING_FACTOR);
 
   // Clamp to valid range
   const clampedScore = Math.max(PANCE_MIN, Math.min(PANCE_MAX, predictedScore));
@@ -134,8 +131,7 @@ export function predictPANaCEaScore(
 
   const denominator = 1 + (z * z) / n;
   const center = (p + (z * z) / (2 * n)) / denominator;
-  const margin =
-    (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / denominator;
+  const margin = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / denominator;
 
   const lowerBound = Math.max(
     PANCE_MIN,
@@ -185,9 +181,7 @@ export function predictPANaCEaScore(
     .filter((p) => p.questionsAttempted < 30)
     .map((p) => p.system);
   if (insufficientPractice.length > 0) {
-    recommendedFocus.push(
-      `Increase practice in: ${insufficientPractice.slice(0, 3).join(', ')}`
-    );
+    recommendedFocus.push(`Increase practice in: ${insufficientPractice.slice(0, 3).join(', ')}`);
   }
 
   // Check for declining trends
@@ -195,9 +189,7 @@ export function predictPANaCEaScore(
     .filter((p) => p.trend === 'declining' && p.questionsAttempted >= 20)
     .map((p) => p.system);
   if (decliningTrends.length > 0) {
-    recommendedFocus.push(
-      `Review fundamentals for: ${decliningTrends.slice(0, 2).join(', ')}`
-    );
+    recommendedFocus.push(`Review fundamentals for: ${decliningTrends.slice(0, 2).join(', ')}`);
   }
 
   return {
@@ -222,9 +214,7 @@ export function predictPANaCEaScore(
  * Fetches user's system performance data from the API.
  * Uses ReviewLog data aggregated by organ system.
  */
-export async function fetchUserSystemPerformance(
-  token: string
-): Promise<SystemPerformance[]> {
+export async function fetchUserSystemPerformance(token: string): Promise<SystemPerformance[]> {
   try {
     const response = await fetchWithAuth(API_ENDPOINTS.SYSTEM_PERFORMANCE, token);
 
@@ -243,9 +233,7 @@ export async function fetchUserSystemPerformance(
 /**
  * Fetches complete PANCE score prediction with system performance.
  */
-export async function fetchPANaCEaPrediction(
-  token: string
-): Promise<PANaCEaScorePrediction> {
+export async function fetchPANaCEaPrediction(token: string): Promise<PANaCEaScorePrediction> {
   const systemPerformance = await fetchUserSystemPerformance(token);
   return predictPANaCEaScore(systemPerformance);
 }
@@ -254,8 +242,6 @@ export async function fetchPANaCEaPrediction(
  * Client-side prediction using cached system performance data.
  * Use this when you already have system performance data to avoid API call.
  */
-export function predictFromCache(
-  systemPerformance: SystemPerformance[]
-): PANaCEaScorePrediction {
+export function predictFromCache(systemPerformance: SystemPerformance[]): PANaCEaScorePrediction {
   return predictPANaCEaScore(systemPerformance);
 }

@@ -59,16 +59,45 @@ export function BodyMapWidget({
   return (
     <div className={className}>
       <div className="relative w-full max-w-[280px] mx-auto">
-        <svg
-          viewBox="0 0 100 100"
-          className="w-full h-auto"
-          style={{ minHeight: 200 }}
-        >
+        <svg viewBox="0 0 100 100" className="w-full h-auto" style={{ minHeight: 200 }}>
           {/* Simple body outline (front view silhouette) */}
-          <ellipse cx="50" cy="15" rx="12" ry="8" fill="var(--color-bg-tertiary)" stroke="var(--color-border)" strokeWidth="1" />
-          <ellipse cx="50" cy="32" rx="18" ry="14" fill="var(--color-bg-tertiary)" stroke="var(--color-border)" strokeWidth="1" />
-          <ellipse cx="50" cy="55" rx="16" ry="18" fill="var(--color-bg-tertiary)" stroke="var(--color-border)" strokeWidth="1" />
-          <rect x="42" y="68" width="16" height="20" rx="4" fill="var(--color-bg-tertiary)" stroke="var(--color-border)" strokeWidth="1" />
+          <ellipse
+            cx="50"
+            cy="15"
+            rx="12"
+            ry="8"
+            fill="var(--color-bg-tertiary)"
+            stroke="var(--color-border)"
+            strokeWidth="1"
+          />
+          <ellipse
+            cx="50"
+            cy="32"
+            rx="18"
+            ry="14"
+            fill="var(--color-bg-tertiary)"
+            stroke="var(--color-border)"
+            strokeWidth="1"
+          />
+          <ellipse
+            cx="50"
+            cy="55"
+            rx="16"
+            ry="18"
+            fill="var(--color-bg-tertiary)"
+            stroke="var(--color-border)"
+            strokeWidth="1"
+          />
+          <rect
+            x="42"
+            y="68"
+            width="16"
+            height="20"
+            rx="4"
+            fill="var(--color-bg-tertiary)"
+            stroke="var(--color-border)"
+            strokeWidth="1"
+          />
 
           {/* System region dots */}
           {systemsWithData.map(([system, stats]) => {

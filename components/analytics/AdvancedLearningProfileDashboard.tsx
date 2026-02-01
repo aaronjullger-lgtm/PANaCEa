@@ -727,9 +727,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                         <span className="text-xl">
                           {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '✓'}
                         </span>
-                        <span className="font-medium text-data-pass">
-                          {system}
-                        </span>
+                        <span className="font-medium text-data-pass">{system}</span>
                       </div>
                     </div>
                   ))}
@@ -751,9 +749,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                       className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-data-provisional/30 group hover:border-data-provisional transition-colors cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-data-provisional">
-                          {system}
-                        </span>
+                        <span className="font-medium text-data-provisional">{system}</span>
                         <ChevronRight className="w-4 h-4 text-data-provisional group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
@@ -765,10 +761,10 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
             {/* Time of Day Performance */}
             {timeOfDayStats.length > 0 && (
               <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-[var(--color-border)]">
-                  <h3 className="text-lg font-semibold text-[var(--color-text-secondary)] mb-6 flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-[var(--color-accent)]" />
-                    Performance by Time of Day
-                  </h3>
+                <h3 className="text-lg font-semibold text-[var(--color-text-secondary)] mb-6 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-[var(--color-accent)]" />
+                  Performance by Time of Day
+                </h3>
                 <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
                   {timeOfDayStats.map((stat) => (
                     <div
@@ -827,9 +823,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                       className="flex items-start gap-3 bg-[var(--color-bg-primary)]/70 rounded-lg p-3"
                     >
                       <Sparkles className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0 mt-0.5" />
-                      <span className="text-[var(--color-text-secondary)]">
-                        {insight}
-                      </span>
+                      <span className="text-[var(--color-text-secondary)]">{insight}</span>
                     </li>
                   ))}
                 </ul>
@@ -854,9 +848,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                           {i + 1}
                         </span>
                       </div>
-                      <span className="text-[var(--color-text-secondary)] flex-1">
-                        {rec}
-                      </span>
+                      <span className="text-[var(--color-text-secondary)] flex-1">{rec}</span>
                       <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-1 transition-transform" />
                     </div>
                   ))}
@@ -885,9 +877,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                   <div className="p-2 rounded-lg bg-[var(--color-bg-tertiary)]">
                     <Brain className="w-5 h-5 text-[var(--color-accent)]" />
                   </div>
-                  <span className="font-semibold text-[var(--color-text-primary)]">
-                    Flow Mode
-                  </span>
+                  <span className="font-semibold text-[var(--color-text-primary)]">Flow Mode</span>
                 </div>
                 <p className="text-sm text-[var(--color-text-muted)]">
                   Adaptive difficulty to maximize learning efficiency
@@ -984,8 +974,7 @@ const PatternInsight: React.FC<{
   quality: 'excellent' | 'good' | 'needs-work' | 'info';
 }> = ({ label, value, description, quality }) => {
   const qualityStyles = {
-    excellent:
-      'bg-data-pass/10 text-data-pass border-data-pass/30',
+    excellent: 'bg-data-pass/10 text-data-pass border-data-pass/30',
     good: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] border-[var(--color-border)]',
     'needs-work':
       'bg-muted-amber-100 dark:bg-muted-amber-900/40 text-muted-amber-700 dark:text-muted-amber-300 border-muted-amber-200 dark:border-muted-amber-800',

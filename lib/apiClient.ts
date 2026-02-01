@@ -23,7 +23,9 @@ export async function fetchWithAuth(
   token: string,
   init?: RequestInit
 ): Promise<Response> {
-  const url = pathOrKey.startsWith('/') ? `${getApiBaseUrl()}${pathOrKey}` : getApiEndpoint(pathOrKey);
+  const url = pathOrKey.startsWith('/')
+    ? `${getApiBaseUrl()}${pathOrKey}`
+    : getApiEndpoint(pathOrKey);
   return fetch(url, {
     ...init,
     headers: {

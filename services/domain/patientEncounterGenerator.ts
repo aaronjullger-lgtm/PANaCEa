@@ -320,18 +320,29 @@ function extractIdealWorkup(data: ConditionData): string[] {
 
   if (data.diagnostics?.labs) {
     workup.push(
-      ...data.diagnostics.labs.slice(0, 3).map((lab) => lab.replace(/\*\*/g, '').split(':')[0]).filter((s): s is string => !!s)
+      ...data.diagnostics.labs
+        .slice(0, 3)
+        .map((lab) => lab.replace(/\*\*/g, '').split(':')[0])
+        .filter((s): s is string => !!s)
     );
   }
 
   if (data.diagnostics?.imaging) {
     workup.push(
-      ...data.diagnostics.imaging.slice(0, 2).map((img) => img.replace(/\*\*/g, '').split(':')[0]).filter((s): s is string => !!s)
+      ...data.diagnostics.imaging
+        .slice(0, 2)
+        .map((img) => img.replace(/\*\*/g, '').split(':')[0])
+        .filter((s): s is string => !!s)
     );
   }
 
   if (data.treatment) {
-    workup.push(...data.treatment.slice(0, 2).map((tx) => tx.replace(/\*\*/g, '').split('.')[0]).filter((s): s is string => !!s));
+    workup.push(
+      ...data.treatment
+        .slice(0, 2)
+        .map((tx) => tx.replace(/\*\*/g, '').split('.')[0])
+        .filter((s): s is string => !!s)
+    );
   }
 
   return workup.length > 0
@@ -538,16 +549,16 @@ function getSuitableConditionsFromContent(conditionContent: Record<string, unkno
 export async function generatePatientEncounterFromCondition(): Promise<PatientEncounterCase> {
   const conditionContent = await getConditionContent();
   const suitableConditions = await getSuitableConditionsFromContent(conditionContent);
-  
+
   if (suitableConditions.length === 0) {
     throw new Error('No suitable conditions found in database');
   }
-  
+
   const conditionKey = suitableConditions[Math.floor(Math.random() * suitableConditions.length)];
   if (!conditionKey) {
     throw new Error('Failed to select a condition');
   }
-  
+
   const data = (conditionContent as Record<string, ConditionData>)[conditionKey] ?? {};
 
   const sex: 'M' | 'F' = Math.random() > 0.5 ? 'M' : 'F';

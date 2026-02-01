@@ -142,9 +142,7 @@ export const QuestionPerformanceDashboard: React.FC = () => {
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-1">
               <Target className="w-4 h-4 text-[var(--color-text-muted)]" />
-              <span className="text-xs font-medium text-[var(--color-text-muted)]">
-                Analyzed
-              </span>
+              <span className="text-xs font-medium text-[var(--color-text-muted)]">Analyzed</span>
             </div>
             <p className="text-2xl font-bold text-[var(--color-text-primary)]">
               {summary.totalQuestionsAnalyzed}
@@ -153,13 +151,9 @@ export const QuestionPerformanceDashboard: React.FC = () => {
           <div className="bg-[var(--color-accent)]/10 rounded-xl p-4 border border-[var(--color-accent)]/20">
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="w-4 h-4 text-[var(--color-accent)]" />
-              <span className="text-xs font-medium text-[var(--color-accent)]">
-                Avg Accuracy
-              </span>
+              <span className="text-xs font-medium text-[var(--color-accent)]">Avg Accuracy</span>
             </div>
-            <p className="text-2xl font-bold text-[var(--color-accent)]">
-              {summary.avgAccuracy}%
-            </p>
+            <p className="text-2xl font-bold text-[var(--color-accent)]">{summary.avgAccuracy}%</p>
           </div>
           <div className="bg-[var(--color-data-fail)]/10 rounded-xl p-4 border border-[var(--color-data-fail)]/20">
             <div className="flex items-center gap-2 mb-1">

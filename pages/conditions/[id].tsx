@@ -199,9 +199,7 @@ const ConditionPage: React.FC = () => {
       {error && !loading && (
         <div className="text-center py-12">
           <div className="bg-data-fail/10 border border-data-fail/30 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-data-fail mb-2">
-              Content Not Available
-            </h2>
+            <h2 className="text-xl font-semibold text-data-fail mb-2">Content Not Available</h2>
             <p className="text-data-fail">{error}</p>
           </div>
         </div>
@@ -227,7 +225,9 @@ const ConditionPage: React.FC = () => {
               )}
             </div>
 
-            <h1 className="text-4xl font-bold text-[var(--color-text-primary)] mb-2">{displayName}</h1>
+            <h1 className="text-4xl font-bold text-[var(--color-text-primary)] mb-2">
+              {displayName}
+            </h1>
 
             {conditionMeta?.aliases && conditionMeta.aliases.length > 0 && (
               <p className="text-sm text-[var(--color-text-muted)]">
@@ -321,7 +321,7 @@ const ConditionPage: React.FC = () => {
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                        className="border-t border-[var(--color-border)]"
+                      className="border-t border-[var(--color-border)]"
                     >
                       <div className="px-6 py-4 condition-content">
                         <FormattedSection content={section.content} />

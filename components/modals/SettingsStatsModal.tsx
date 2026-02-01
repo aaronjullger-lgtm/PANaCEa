@@ -595,9 +595,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   };
 
   // Toggle handlers for Feedback
-  const handleToggleFeedback = (
-    setting: Exclude<keyof FeedbackSettings, 'explanationDepth'>
-  ) => {
+  const handleToggleFeedback = (setting: Exclude<keyof FeedbackSettings, 'explanationDepth'>) => {
     setToggleSettings((prev) => {
       const updated: ToggleSettings = {
         ...prev,
@@ -1108,9 +1106,15 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       />
                     ) : (
                       <div className="flex flex-col items-center justify-center">
-                        <div className="text-4xl font-bold text-[var(--color-text-muted)] mb-2">--</div>
-                        <div className="text-xs text-[var(--color-text-muted)]">Overall Accuracy</div>
-                        <div className="text-xs text-[var(--color-text-muted)] mt-1 italic">No data yet</div>
+                        <div className="text-4xl font-bold text-[var(--color-text-muted)] mb-2">
+                          --
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)]">
+                          Overall Accuracy
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-1 italic">
+                          No data yet
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1278,9 +1282,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Download className="w-5 h-5 text-[var(--color-accent)]" />
-                    <h3 className="font-bold text-[var(--color-text-primary)]">
-                      Export Your Data
-                    </h3>
+                    <h3 className="font-bold text-[var(--color-text-primary)]">Export Your Data</h3>
                   </div>
                   <p className="text-xs text-[var(--color-text-muted)] mb-4">
                     Download your performance data in CSV or JSON format.
@@ -1430,9 +1432,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Question Format Settings */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="mb-3">
-                    <h3 className="font-bold text-[var(--color-text-primary)]">
-                      Question Format
-                    </h3>
+                    <h3 className="font-bold text-[var(--color-text-primary)]">Question Format</h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
                       Customize how questions are presented and displayed.
                     </p>
@@ -1850,9 +1850,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="font-bold text-[var(--color-text-primary)]">
-                        Study Systems
-                      </h3>
+                      <h3 className="font-bold text-[var(--color-text-primary)]">Study Systems</h3>
                       <p className="text-xs text-[var(--color-text-muted)] mt-1">
                         Select which systems you want to study. Questions will only be generated
                         from enabled systems.
@@ -2406,7 +2404,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         }`}
                       >
                         <Trash2 className="w-4 h-4 inline-block mr-1" />
-                        {confirmClear === 'performance' && clearConfirmText === 'DELETE' ? 'Confirm Clear' : 'Clear Data…'}
+                        {confirmClear === 'performance' && clearConfirmText === 'DELETE'
+                          ? 'Confirm Clear'
+                          : 'Clear Data…'}
                       </button>
                     </div>
 

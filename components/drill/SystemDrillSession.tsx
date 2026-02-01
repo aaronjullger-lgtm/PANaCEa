@@ -170,13 +170,12 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
   useEffect(() => {
     if (!initialSystem) return;
     const normalized = initialSystem.trim();
-    const match =
-      SYSTEM_OPTIONS.find(
-        (o) =>
-          o.id === normalized ||
-          o.id === normalized.toUpperCase() ||
-          o.name.toLowerCase() === normalized.toLowerCase()
-      );
+    const match = SYSTEM_OPTIONS.find(
+      (o) =>
+        o.id === normalized ||
+        o.id === normalized.toUpperCase() ||
+        o.name.toLowerCase() === normalized.toLowerCase()
+    );
     if (match) {
       setSelectedSystem(match.id);
       setShowLanding(true);

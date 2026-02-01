@@ -1,9 +1,9 @@
 /**
  * Comparison Generator Service
- * 
+ *
  * Uses Gemini AI to generate distinguishing feature comparison tables
  * for commonly confused medical conditions.
- * 
+ *
  * @architecture Edge-Compatible: Uses fetch API, no Node.js dependencies
  */
 

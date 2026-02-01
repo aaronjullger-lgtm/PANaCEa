@@ -118,7 +118,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
             <TrendingUp className="w-4 h-4" /> Recent Accuracy
           </div>
           <div className="text-3xl font-bold text-[var(--color-text-primary)] mt-3">
-            {(trendData?.at(-1)?.accuracy ?? 0)}%
+            {trendData?.at(-1)?.accuracy ?? 0}%
           </div>
           <p className="text-sm text-[var(--color-text-muted)]">Last {trendData.length} sessions</p>
         </div>
@@ -179,36 +179,36 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
             <ResponsiveContainer width="100%" height={320}>
               <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis 
-                  dataKey="label" 
+                <XAxis
+                  dataKey="label"
                   tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                  label={{ 
-                    value: 'Last 10 Sessions', 
-                    position: 'insideBottom', 
+                  label={{
+                    value: 'Last 10 Sessions',
+                    position: 'insideBottom',
                     offset: -5,
-                    style: { fill: 'var(--color-text-muted)', fontSize: 12 }
+                    style: { fill: 'var(--color-text-muted)', fontSize: 12 },
                   }}
                 />
                 <YAxis
                   yAxisId="left"
                   tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                   domain={[0, 100]}
-                  label={{ 
-                    value: 'Accuracy %', 
-                    angle: -90, 
+                  label={{
+                    value: 'Accuracy %',
+                    angle: -90,
                     position: 'insideLeft',
-                    style: { fill: 'var(--color-text-muted)', fontSize: 12 }
+                    style: { fill: 'var(--color-text-muted)', fontSize: 12 },
                   }}
                 />
                 <YAxis
                   yAxisId="right"
                   orientation="right"
                   tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                  label={{ 
-                    value: 'Seconds/Q', 
-                    angle: 90, 
+                  label={{
+                    value: 'Seconds/Q',
+                    angle: 90,
                     position: 'insideRight',
-                    style: { fill: 'var(--color-text-muted)', fontSize: 12 }
+                    style: { fill: 'var(--color-text-muted)', fontSize: 12 },
                   }}
                 />
                 <Tooltip />

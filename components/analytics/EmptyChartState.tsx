@@ -133,7 +133,17 @@ const chartPlaceholders: Record<ChartType, React.ReactNode> = {
   ),
   generic: (
     <svg viewBox="0 0 400 200" className="w-full h-full opacity-[0.06]">
-      <rect x="50" y="50" width="300" height="120" rx="8" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+      <rect
+        x="50"
+        y="50"
+        width="300"
+        height="120"
+        rx="8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        opacity="0.3"
+      />
       <circle cx="200" cy="110" r="40" fill="currentColor" opacity="0.2" />
     </svg>
   ),
@@ -158,7 +168,7 @@ export const EmptyChartState: React.FC<EmptyChartStateProps> = ({
       {/* Chart placeholder outline */}
       <div className="relative w-full h-full flex items-center justify-center">
         {chartPlaceholders[chartType]}
-        
+
         {/* Centered content overlay */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
           {showIcon && (
@@ -177,32 +187,24 @@ export const EmptyChartState: React.FC<EmptyChartStateProps> = ({
  * Specific empty state variants for common use cases
  */
 
-export const EmptyLineChart: React.FC<{ message?: string; height?: number }> = ({ 
-  message = 'Complete questions to see performance trends', 
-  height 
-}) => (
-  <EmptyChartState chartType="line" message={message} height={height} />
-);
+export const EmptyLineChart: React.FC<{ message?: string; height?: number }> = ({
+  message = 'Complete questions to see performance trends',
+  height,
+}) => <EmptyChartState chartType="line" message={message} height={height} />;
 
-export const EmptyBarChart: React.FC<{ message?: string; height?: number }> = ({ 
-  message = 'Data will appear once you start reviewing', 
-  height 
-}) => (
-  <EmptyChartState chartType="bar" message={message} height={height} />
-);
+export const EmptyBarChart: React.FC<{ message?: string; height?: number }> = ({
+  message = 'Data will appear once you start reviewing',
+  height,
+}) => <EmptyChartState chartType="bar" message={message} height={height} />;
 
-export const EmptyRadarChart: React.FC<{ message?: string; height?: number }> = ({ 
-  message = 'Complete questions across multiple systems', 
-  height 
-}) => (
-  <EmptyChartState chartType="radar" message={message} height={height} />
-);
+export const EmptyRadarChart: React.FC<{ message?: string; height?: number }> = ({
+  message = 'Complete questions across multiple systems',
+  height,
+}) => <EmptyChartState chartType="radar" message={message} height={height} />;
 
-export const EmptyHeatmap: React.FC<{ message?: string; height?: number }> = ({ 
-  message = 'Your activity will appear here', 
-  height 
-}) => (
-  <EmptyChartState chartType="heatmap" message={message} height={height} />
-);
+export const EmptyHeatmap: React.FC<{ message?: string; height?: number }> = ({
+  message = 'Your activity will appear here',
+  height,
+}) => <EmptyChartState chartType="heatmap" message={message} height={height} />;
 
 export default EmptyChartState;

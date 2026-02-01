@@ -678,9 +678,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Virtual OSCE</h1>
-                <p className="text-sm text-slate-400">
-                  Interactive Patient Interviews
-                </p>
+                <p className="text-sm text-slate-400">Interactive Patient Interviews</p>
               </div>
             </div>
             {onExit && (
@@ -703,9 +701,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           >
             {/* Hero Section */}
             <div className="text-center space-y-4 mb-12">
-              <h2 className="text-4xl font-bold text-white">
-                Virtual Patient Encounter
-              </h2>
+              <h2 className="text-4xl font-bold text-white">Virtual Patient Encounter</h2>
               <p className="text-xl text-slate-400 max-w-2xl mx-auto">
                 Practice clinical reasoning in a realistic patient interview simulation. Gather
                 history, perform exams, order tests, and make your diagnosis.
@@ -771,9 +767,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* How It Works Card */}
             <div className="bg-slate-900 rounded-2xl p-8 border border-slate-800 shadow-lg space-y-6">
-              <h3 className="text-2xl font-semibold text-white">
-                Encounter Flow
-              </h3>
+              <h3 className="text-2xl font-semibold text-white">Encounter Flow</h3>
 
               <div className="space-y-5">
                 {[
@@ -889,7 +883,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   animate={{ opacity: 1, y: 0 }}
                   className="max-w-md mx-auto p-4 bg-dusty-rose-50 dark:bg-dusty-rose-950/30 border border-dusty-rose-200 dark:border-dusty-rose-800 rounded-xl"
                 >
-                  <p className="text-sm text-dusty-rose-700 dark:text-dusty-rose-300">{loadError}</p>
+                  <p className="text-sm text-dusty-rose-700 dark:text-dusty-rose-300">
+                    {loadError}
+                  </p>
                   <button
                     onClick={() => setLoadError(null)}
                     className="mt-2 text-xs text-dusty-rose-600 dark:text-dusty-rose-400 hover:underline"
@@ -923,10 +919,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <div>
                 <h1 className="text-xl font-bold text-white">Virtual OSCE</h1>
                 <p className="text-sm text-slate-400">
-                  Phase:{' '}
-                  <span className="font-semibold text-slate-300 uppercase">
-                    {phase}
-                  </span>
+                  Phase: <span className="font-semibold text-slate-300 uppercase">{phase}</span>
                 </p>
               </div>
             </div>
@@ -1000,7 +993,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               {isFidelityModeActive && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5">
                   <Shield className="w-3.5 h-3.5 text-slate-500" />
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Fidelity</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                    Fidelity
+                  </span>
                 </div>
               )}
               <button
@@ -1120,7 +1115,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                             </span>
                             <div className="flex items-baseline gap-2 mt-1">
                               <span className="text-3xl font-mono font-bold text-white tabular-nums">
-                                {Math.round(currentVitals.sbp ?? 0)}/{Math.round(currentVitals.dbp ?? 0)}
+                                {Math.round(currentVitals.sbp ?? 0)}/
+                                {Math.round(currentVitals.dbp ?? 0)}
                               </span>
                               <span className="text-sm font-mono text-slate-400">mmHg</span>
                             </div>
@@ -1221,9 +1217,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.1 }}
                   className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-white">
-                    Ask a Question
-                  </h3>
+                  <h3 className="text-lg font-semibold mb-4 text-white">Ask a Question</h3>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -1265,9 +1259,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.1 }}
                   className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-white">
-                    Perform Physical Exam
-                  </h3>
+                  <h3 className="text-lg font-semibold mb-4 text-white">Perform Physical Exam</h3>
                   <p className="text-sm text-slate-400 mb-3">
                     Describe the maneuver you want to perform (e.g., "Auscultate heart", "Palpate
                     abdomen").
@@ -1284,27 +1276,27 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-transparent shadow-sm"
                       autoComplete="off"
                     />
-                <button
-                  onClick={() => setShowRapportMeter(!showRapportMeter)}
-                  className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
-                  title="Toggle Rapport Meter"
-                >
-                  <Heart className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setShowExamPanel(!showExamPanel)}
-                  className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
-                  title="Toggle Physical Exam Panel"
-                >
-                  <StethoscopeIcon className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setShowOrderPanel(!showOrderPanel)}
-                  className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
-                  title="Toggle Order Panel"
-                >
-                  <ClipboardList className="w-4 h-4" />
-                </button>
+                    <button
+                      onClick={() => setShowRapportMeter(!showRapportMeter)}
+                      className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
+                      title="Toggle Rapport Meter"
+                    >
+                      <Heart className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setShowExamPanel(!showExamPanel)}
+                      className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
+                      title="Toggle Physical Exam Panel"
+                    >
+                      <StethoscopeIcon className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setShowOrderPanel(!showOrderPanel)}
+                      className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
+                      title="Toggle Order Panel"
+                    >
+                      <ClipboardList className="w-4 h-4" />
+                    </button>
                   </div>
                 </motion.div>
               )}
@@ -1317,9 +1309,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.1 }}
                   className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-white">
-                    Order Diagnostics
-                  </h3>
+                  <h3 className="text-lg font-semibold mb-4 text-white">Order Diagnostics</h3>
                   <p className="text-sm text-slate-400 mb-3">
                     Order labs or imaging (e.g., "CBC", "Chest X-Ray").
                   </p>
@@ -1368,9 +1358,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.2 }}
                   className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-white">
-                    Final Diagnosis
-                  </h3>
+                  <h3 className="text-lg font-semibold mb-4 text-white">Final Diagnosis</h3>
                   <input
                     type="text"
                     value={userDiagnosis}
@@ -1409,9 +1397,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md space-y-4"
                 >
                   <div>
-                    <h3 className="text-lg font-semibold mb-4 text-white">
-                      Treatment Plan
-                    </h3>
+                    <h3 className="text-lg font-semibold mb-4 text-white">Treatment Plan</h3>
                     <p className="text-sm text-slate-400 mb-3">
                       Outline your management plan (medications, disposition, follow-up).
                     </p>
@@ -1430,9 +1416,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
                         Treatment Feedback
                       </p>
-                      <p className="text-sm text-slate-400">
-                        {treatmentFeedback.feedback}
-                      </p>
+                      <p className="text-sm text-slate-400">{treatmentFeedback.feedback}</p>
                     </div>
                   )}
 
@@ -1499,9 +1483,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-slate-950 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md h-[600px] flex flex-col"
               >
-                <h3 className="text-lg font-semibold mb-4 text-white">
-                  Encounter Log
-                </h3>
+                <h3 className="text-lg font-semibold mb-4 text-white">Encounter Log</h3>
 
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                   {/* History Log */}
@@ -1513,9 +1495,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">
                         <MessageSquare className="w-3 h-3" /> History
                       </div>
-                      <p className="text-white font-semibold">
-                        Q: {q.questionText}
-                      </p>
+                      <p className="text-white font-semibold">Q: {q.questionText}</p>
                       <p className="text-slate-400 text-sm pl-4 border-l-2 border-slate-800 whitespace-pre-wrap">
                         A: {getTranslatedText(q.response)}
                       </p>
@@ -1531,9 +1511,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">
                         <Stethoscope className="w-3 h-3" /> Physical Exam
                       </div>
-                      <p className="text-white font-semibold">
-                        Exam: {f.maneuver}
-                      </p>
+                      <p className="text-white font-semibold">Exam: {f.maneuver}</p>
                       <p className="text-slate-400 text-sm pl-4 border-l-2 border-slate-700 whitespace-pre-wrap">
                         Finding: {f.finding}
                       </p>
@@ -1569,9 +1547,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                             </div>
                           )}
                         </div>
-                        <p className="text-white font-semibold">
-                          Order: {r.testName}
-                        </p>
+                        <p className="text-white font-semibold">Order: {r.testName}</p>
                         <p className="text-white text-sm pl-4 border-l-2 border-slate-700 whitespace-pre-wrap font-mono">
                           Result: {r.result}
                         </p>
@@ -1591,9 +1567,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">
                         <CheckCircle className="w-3 h-3" /> Diagnosis
                       </div>
-                      <p className="text-white font-semibold">
-                        Dx: {userDiagnosis}
-                      </p>
+                      <p className="text-white font-semibold">Dx: {userDiagnosis}</p>
                       <p className="text-slate-400 text-sm pl-4 border-l-2 border-slate-700 whitespace-pre-wrap">
                         {diagnosisFeedback.feedback}
                       </p>
@@ -1774,9 +1748,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             transition={{ delay: 0.1 }}
             className="bg-slate-900 rounded-xl p-6 border border-slate-800 shadow-md"
           >
-            <h3 className="text-xl font-semibold mb-4 text-white">
-              Clinical Competencies
-            </h3>
+            <h3 className="text-xl font-semibold mb-4 text-white">Clinical Competencies</h3>
             <div className="grid md:grid-cols-2 gap-4">
               {[
                 {
@@ -1803,16 +1775,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 const percentage = ((item.score ?? 0) / 10) * 100;
                 const Icon = item.icon;
                 return (
-                  <div
-                    key={idx}
-                    className="bg-slate-950 rounded-lg p-4 border border-slate-800"
-                  >
+                  <div key={idx} className="bg-slate-950 rounded-lg p-4 border border-slate-800">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <Icon className="w-5 h-5 text-slate-400" />
-                        <span className="font-semibold text-white">
-                          {item.label}
-                        </span>
+                        <span className="font-semibold text-white">{item.label}</span>
                       </div>
                       <span className={`text-2xl font-bold ${getScoreColor(percentage)}`}>
                         {item.score}/10
@@ -1850,18 +1817,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <User className="w-6 h-6 text-slate-400" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-white">
-                  Your Preceptor's Feedback
-                </h3>
-                <p className="text-sm text-slate-400">
-                  Clinical reasoning assessment
-                </p>
+                <h3 className="text-xl font-semibold text-white">Your Preceptor's Feedback</h3>
+                <p className="text-sm text-slate-400">Clinical reasoning assessment</p>
               </div>
             </div>
             <div className="bg-slate-950 rounded-lg p-5 border border-slate-800">
-              <p className="text-white leading-relaxed italic">
-                "{preceptorFeedback.feedback}"
-              </p>
+              <p className="text-white leading-relaxed italic">"{preceptorFeedback.feedback}"</p>
             </div>
           </motion.div>
 
@@ -1879,10 +1840,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 </h3>
                 <ul className="space-y-2">
                   {preceptorFeedback.strengths.map((strength, idx) => (
-                    <li
-                      key={idx}
-                      className="flex items-start gap-2 text-sm text-slate-300"
-                    >
+                    <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
                       <span className="text-slate-500 mt-0.5">•</span>
                       <span>{strength}</span>
                     </li>
@@ -1903,10 +1861,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 </h3>
                 <ul className="space-y-2">
                   {preceptorFeedback.areasForImprovement.map((area, idx) => (
-                    <li
-                      key={idx}
-                      className="flex items-start gap-2 text-sm text-slate-300"
-                    >
+                    <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
                       <span className="text-slate-500 mt-0.5">•</span>
                       <span>{area}</span>
                     </li>
@@ -1960,10 +1915,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </p>
               <div className="grid sm:grid-cols-2 gap-2">
                 {preceptorFeedback.differentialDiagnosis.map((dx, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-slate-950 rounded-lg p-3 border border-slate-800"
-                  >
+                  <div key={idx} className="bg-slate-950 rounded-lg p-3 border border-slate-800">
                     <span className="font-semibold text-slate-300">{dx}</span>
                   </div>
                 ))}
@@ -2120,9 +2072,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             <div className="bg-slate-900 rounded-lg p-4 border border-slate-800">
               <p className="text-sm text-slate-400 mb-1">Correct Diagnosis:</p>
-              <p className="text-lg font-semibold text-white">
-                {currentCase.correctDiagnosis}
-              </p>
+              <p className="text-lg font-semibold text-white">{currentCase.correctDiagnosis}</p>
             </div>
           </motion.div>
 

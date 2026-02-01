@@ -30,21 +30,21 @@ interface SystemComparisonProps {
 
 // Using "Stormy Slate" semantic design tokens for organ system colors
 const SYSTEM_COLORS: Record<string, string> = {
-  CV: 'bg-data-fail',           // Cardiovascular - critical system (11% blueprint)
-  PULM: 'bg-action-blue-500',   // Pulmonary - primary system (9% blueprint)
-  GI: 'bg-data-provisional',    // GI - developing focus
+  CV: 'bg-data-fail', // Cardiovascular - critical system (11% blueprint)
+  PULM: 'bg-action-blue-500', // Pulmonary - primary system (9% blueprint)
+  GI: 'bg-data-provisional', // GI - developing focus
   NEURO: 'bg-slate-violet-500', // Neurology
-  MSK: 'bg-muted-amber-500',    // Musculoskeletal - needs work indicator
-  DERM: 'bg-slate-pink-500',    // Dermatology
-  HEME: 'bg-slate-rose-500',    // Hematology
-  ENDO: 'bg-slate-teal-500',    // Endocrine
+  MSK: 'bg-muted-amber-500', // Musculoskeletal - needs work indicator
+  DERM: 'bg-slate-pink-500', // Dermatology
+  HEME: 'bg-slate-rose-500', // Hematology
+  ENDO: 'bg-slate-teal-500', // Endocrine
   HEENT: 'bg-slate-indigo-500', // Head & Neck
-  RENAL: 'bg-action-blue-600',  // Renal
-  REPRO: 'bg-slate-fuchsia-500',// Reproductive
+  RENAL: 'bg-action-blue-600', // Renal
+  REPRO: 'bg-slate-fuchsia-500', // Reproductive
   PSYCH: 'bg-slate-violet-600', // Psychiatry
-  ID: 'bg-data-pass',           // Infectious Disease - mastered indicator
-  GU: 'bg-slate-cyan-500',      // Genitourinary
-  PRO: 'bg-slate-500',          // Professional Practice
+  ID: 'bg-data-pass', // Infectious Disease - mastered indicator
+  GU: 'bg-slate-cyan-500', // Genitourinary
+  PRO: 'bg-slate-500', // Professional Practice
 };
 
 const SYSTEM_NAMES: Record<string, string> = {

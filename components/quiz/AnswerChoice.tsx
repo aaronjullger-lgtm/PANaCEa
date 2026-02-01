@@ -84,9 +84,11 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
     } else if (isAnswered) {
       // After answering states
       if (isCorrect) {
-        buttonClasses += ' !bg-[var(--color-data-pass)] !text-white !border-transparent font-bold shadow-md';
+        buttonClasses +=
+          ' !bg-[var(--color-data-pass)] !text-white !border-transparent font-bold shadow-md';
       } else if (isSelected) {
-        buttonClasses += ' !bg-[var(--color-data-fail)] !text-white !border-transparent font-bold shadow-md';
+        buttonClasses +=
+          ' !bg-[var(--color-data-fail)] !text-white !border-transparent font-bold shadow-md';
         animationClass = 'animate-shake';
       } else {
         buttonClasses +=

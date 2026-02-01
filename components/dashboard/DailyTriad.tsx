@@ -29,11 +29,7 @@ function BuzzwordPills({ buzzwords }: { buzzwords: string[] }) {
   return (
     <div className="flex flex-wrap gap-2 mt-3">
       {pills.map((word) => (
-        <span
-          key={word}
-          className="text-xs text-[var(--color-text-muted)]"
-          aria-hidden
-        >
+        <span key={word} className="text-xs text-[var(--color-text-muted)]" aria-hidden>
           {word}
         </span>
       ))}
@@ -58,8 +54,12 @@ function ErrorCard({ onRetry }: { onRetry: () => void }) {
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-data-fail)]">The Daily Triad</p>
-          <h3 className="text-lg font-semibold mt-2 text-[var(--color-text-primary)]">Unable to load</h3>
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-data-fail)]">
+            The Daily Triad
+          </p>
+          <h3 className="text-lg font-semibold mt-2 text-[var(--color-text-primary)]">
+            Unable to load
+          </h3>
           <p className="text-sm text-[var(--color-text-secondary)] mt-1">
             We couldn't fetch a gold standard or clinical pearl. Try again in a moment.
           </p>
@@ -114,12 +114,16 @@ export default function DailyTriadCard() {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-text-muted)]">The Daily Triad</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-[var(--color-text-muted)]">
+            The Daily Triad
+          </p>
           <h3 className="text-xl font-semibold flex items-center gap-2 text-[var(--color-text-primary)]">
             <Sparkles className="w-5 h-5 text-[var(--color-data-provisional)]" />
             {data.condition}
           </h3>
-          <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{data.highlight}</p>
+          <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+            {data.highlight}
+          </p>
         </div>
         <TriadBadge type={data.type} />
       </div>
@@ -146,7 +150,9 @@ export default function DailyTriadCard() {
       <BuzzwordPills buzzwords={data.buzzwords} />
 
       <div className="mt-5 flex items-center justify-between gap-2">
-        <p className="text-xs text-[var(--color-text-muted)]">Source: {data.source.toUpperCase()}</p>
+        <p className="text-xs text-[var(--color-text-muted)]">
+          Source: {data.source.toUpperCase()}
+        </p>
         <div className="flex items-center gap-2">
           <button
             onClick={handleMarkReviewed}

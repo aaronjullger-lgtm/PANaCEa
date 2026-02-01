@@ -38,7 +38,7 @@ export function useReducedMotion(): boolean {
         }
       };
     }
-    
+
     // No-op cleanup for browsers that don't support either method
     return undefined;
   }, []);

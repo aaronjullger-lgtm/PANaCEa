@@ -200,14 +200,30 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
   // Get grade/rating
   const getGrade = (accuracy: number) => {
     if (accuracy >= 90)
-      return { grade: 'A', color: 'text-[var(--color-data-pass)]', bg: 'bg-[var(--color-data-pass)]/10' };
+      return {
+        grade: 'A',
+        color: 'text-[var(--color-data-pass)]',
+        bg: 'bg-[var(--color-data-pass)]/10',
+      };
     if (accuracy >= 80)
       return { grade: 'B', color: 'text-[var(--color-accent)]', bg: 'bg-[var(--color-accent)]/10' };
     if (accuracy >= 70)
-      return { grade: 'C', color: 'text-[var(--color-data-provisional)]', bg: 'bg-[var(--color-data-provisional)]/10' };
+      return {
+        grade: 'C',
+        color: 'text-[var(--color-data-provisional)]',
+        bg: 'bg-[var(--color-data-provisional)]/10',
+      };
     if (accuracy >= 60)
-      return { grade: 'D', color: 'text-[var(--color-data-provisional)]', bg: 'bg-[var(--color-data-provisional)]/15' };
-    return { grade: 'F', color: 'text-[var(--color-data-fail)]', bg: 'bg-[var(--color-data-fail)]/10' };
+      return {
+        grade: 'D',
+        color: 'text-[var(--color-data-provisional)]',
+        bg: 'bg-[var(--color-data-provisional)]/15',
+      };
+    return {
+      grade: 'F',
+      color: 'text-[var(--color-data-fail)]',
+      bg: 'bg-[var(--color-data-fail)]/10',
+    };
   };
 
   const grade = getGrade(overallStats.accuracy);
@@ -302,9 +318,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         className="w-full max-w-2xl max-h-[90vh] bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)]"
       >
         {/* Header with Grade */}
-        <div
-          className={`${grade.bg} p-6 text-center border-b border-[var(--color-border)]`}
-        >
+        <div className={`${grade.bg} p-6 text-center border-b border-[var(--color-border)]`}>
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -313,20 +327,20 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           >
             <Trophy className={`w-16 h-16 mx-auto ${grade.color}`} />
           </motion.div>
-            <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
             Session Complete!
           </h2>
-            <div className="flex items-center justify-center gap-4">
-              <div className={`text-5xl font-bold ${grade.color}`}>{grade.grade}</div>
-              <div className="text-left">
-                <div className="text-3xl font-bold text-[var(--color-text-primary)]">
-                  {overallStats.accuracy}%
-                </div>
-                <div className="text-sm text-[var(--color-text-secondary)]">
-                  {overallStats.correct}/{overallStats.total} correct
-                </div>
+          <div className="flex items-center justify-center gap-4">
+            <div className={`text-5xl font-bold ${grade.color}`}>{grade.grade}</div>
+            <div className="text-left">
+              <div className="text-3xl font-bold text-[var(--color-text-primary)]">
+                {overallStats.accuracy}%
+              </div>
+              <div className="text-sm text-[var(--color-text-secondary)]">
+                {overallStats.correct}/{overallStats.total} correct
               </div>
             </div>
+          </div>
           {/* Sync status indicator */}
           {syncStatus && (
             <div className="mt-3 flex items-center justify-center gap-1.5 text-xs">
@@ -478,7 +492,9 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             <div className="mb-6 p-4 bg-[var(--color-data-provisional)]/10 rounded-xl border border-[var(--color-data-provisional)]/30">
               <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle className="w-5 h-5 text-[var(--color-data-provisional)]" />
-                <span className="font-medium text-[var(--color-data-provisional)]">Focus Areas</span>
+                <span className="font-medium text-[var(--color-data-provisional)]">
+                  Focus Areas
+                </span>
               </div>
               <p className="text-sm text-[var(--color-data-provisional)]">
                 {weakAreas.map((w) => w.name).join(', ')} — consider reviewing these topics
@@ -491,9 +507,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             <div className="mb-6 p-4 bg-[var(--color-data-pass)]/10 rounded-xl border border-[var(--color-data-pass)]/30">
               <div className="flex items-center gap-2 mb-2">
                 <Award className="w-5 h-5 text-[var(--color-data-pass)]" />
-                <span className="font-medium text-[var(--color-data-pass)]">
-                  Strong Areas
-                </span>
+                <span className="font-medium text-[var(--color-data-pass)]">Strong Areas</span>
               </div>
               <p className="text-sm text-[var(--color-data-pass)]">
                 {strongAreas.map((s) => s.name).join(', ')}
@@ -507,9 +521,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             <div className="mb-6 p-4 bg-[var(--color-accent)]/10 rounded-xl border border-[var(--color-accent)]/30">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
-                <span className="font-medium text-[var(--color-accent)]">
-                  Test-Taking Insights
-                </span>
+                <span className="font-medium text-[var(--color-accent)]">Test-Taking Insights</span>
               </div>
               <ul className="space-y-2">
                 {patternAnalysis.overallInsights.slice(0, 3).map((insight, i) => (

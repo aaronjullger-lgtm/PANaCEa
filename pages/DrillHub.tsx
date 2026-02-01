@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ImageIcon, 
-  GitCompare, 
-  Trophy, 
-  Timer, 
-  Target, 
+import {
+  ImageIcon,
+  GitCompare,
+  Trophy,
+  Timer,
+  Target,
   TrendingUp,
   Calendar,
   Brain,
@@ -13,21 +13,21 @@ import {
   Award,
   BarChart3,
   ArrowRight,
-  Lock
+  Lock,
 } from 'lucide-react';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 
 /**
  * DrillHub - Central navigation for all drill modes
- * 
+ *
  * Features:
  * - Photo Drill (Dermatology/Radiology rapid fire)
  * - DDx Compare (Contrastive learning)
  * - Daily Wordle (Medical terminology)
  * - Drill statistics dashboard
  * - Achievement tracking
- * 
+ *
  * Architectural Constraints:
  * - All stats are isolated (isMainSession = false)
  * - Database-first (no static content)
@@ -101,16 +101,19 @@ export default function DrillHub(): JSX.Element {
       color: 'from-[var(--color-accent)] to-[var(--color-accent)]/70',
       route: '/drill/photo',
       isAvailable: true,
-      stats: overview ? {
-        totalAttempts: overview.recentActivity
-          .filter(a => a.drillType === 'photo_drill')
-          .reduce((sum, a) => sum + a.attempts, 0),
-        accuracy: overview.recentActivity
-          .filter(a => a.drillType === 'photo_drill')
-          .reduce((sum, a) => sum + a.accuracy, 0) / 
-          overview.recentActivity.filter(a => a.drillType === 'photo_drill').length || 0,
-        avgTimeMs: 3200, // TODO: Calculate from actual data
-      } : undefined,
+      stats: overview
+        ? {
+            totalAttempts: overview.recentActivity
+              .filter((a) => a.drillType === 'photo_drill')
+              .reduce((sum, a) => sum + a.attempts, 0),
+            accuracy:
+              overview.recentActivity
+                .filter((a) => a.drillType === 'photo_drill')
+                .reduce((sum, a) => sum + a.accuracy, 0) /
+                overview.recentActivity.filter((a) => a.drillType === 'photo_drill').length || 0,
+            avgTimeMs: 3200, // TODO: Calculate from actual data
+          }
+        : undefined,
     },
     {
       id: 'ddx-compare',
@@ -120,16 +123,20 @@ export default function DrillHub(): JSX.Element {
       color: 'from-data-provisional to-data-provisional/70',
       route: '/drill/contrastive',
       isAvailable: true,
-      stats: overview ? {
-        totalAttempts: overview.recentActivity
-          .filter(a => a.drillType === 'contrastive_drill')
-          .reduce((sum, a) => sum + a.attempts, 0),
-        accuracy: overview.recentActivity
-          .filter(a => a.drillType === 'contrastive_drill')
-          .reduce((sum, a) => sum + a.accuracy, 0) / 
-          overview.recentActivity.filter(a => a.drillType === 'contrastive_drill').length || 0,
-        avgTimeMs: 45000, // TODO: Calculate from actual data
-      } : undefined,
+      stats: overview
+        ? {
+            totalAttempts: overview.recentActivity
+              .filter((a) => a.drillType === 'contrastive_drill')
+              .reduce((sum, a) => sum + a.attempts, 0),
+            accuracy:
+              overview.recentActivity
+                .filter((a) => a.drillType === 'contrastive_drill')
+                .reduce((sum, a) => sum + a.accuracy, 0) /
+                overview.recentActivity.filter((a) => a.drillType === 'contrastive_drill').length ||
+              0,
+            avgTimeMs: 45000, // TODO: Calculate from actual data
+          }
+        : undefined,
     },
     {
       id: 'daily-wordle',
@@ -169,7 +176,6 @@ export default function DrillHub(): JSX.Element {
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] p-6">
       <div className="max-w-7xl mx-auto">
-        
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -201,7 +207,9 @@ export default function DrillHub(): JSX.Element {
                 <Trophy className="w-6 h-6 text-data-provisional" />
                 <span className="text-[var(--color-text-muted)] text-sm">Total Sessions</span>
               </div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)]">{overview.totalSessions}</p>
+              <p className="text-3xl font-bold text-[var(--color-text-primary)]">
+                {overview.totalSessions}
+              </p>
             </div>
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
@@ -219,7 +227,9 @@ export default function DrillHub(): JSX.Element {
                 <TrendingUp className="w-6 h-6 text-[var(--color-accent)]" />
                 <span className="text-[var(--color-text-muted)] text-sm">Current Streak</span>
               </div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)]">{overview.currentStreak} days</p>
+              <p className="text-3xl font-bold text-[var(--color-text-primary)]">
+                {overview.currentStreak} days
+              </p>
             </div>
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
@@ -227,7 +237,9 @@ export default function DrillHub(): JSX.Element {
                 <Award className="w-6 h-6 text-data-provisional" />
                 <span className="text-[var(--color-text-muted)] text-sm">Best Streak</span>
               </div>
-              <p className="text-3xl font-bold text-[var(--color-text-primary)]">{overview.bestStreak} days</p>
+              <p className="text-3xl font-bold text-[var(--color-text-primary)]">
+                {overview.bestStreak} days
+              </p>
             </div>
           </motion.div>
         )}
@@ -243,9 +255,12 @@ export default function DrillHub(): JSX.Element {
               whileHover={{ scale: mode.isAvailable ? 1.02 : 1 }}
               className={`
                 relative rounded-2xl p-8 border-2 transition-all duration-300
-                ${mode.isAvailable 
-                  ? 'bg-gradient-to-br ' + mode.color + ' border-transparent cursor-pointer hover:shadow-2xl' 
-                  : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] opacity-60'
+                ${
+                  mode.isAvailable
+                    ? 'bg-gradient-to-br ' +
+                      mode.color +
+                      ' border-transparent cursor-pointer hover:shadow-2xl'
+                    : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] opacity-60'
                 }
               `}
               onClick={() => mode.isAvailable && startDrill(mode)}
@@ -267,7 +282,9 @@ export default function DrillHub(): JSX.Element {
               </div>
 
               {/* Mode Info */}
-              <h3 className="text-2xl font-bold text-[var(--color-text-inverse)] mb-2">{mode.name}</h3>
+              <h3 className="text-2xl font-bold text-[var(--color-text-inverse)] mb-2">
+                {mode.name}
+              </h3>
               <p className="text-[var(--color-text-inverse)]/90 text-sm mb-6">{mode.description}</p>
 
               {/* Stats */}
@@ -286,8 +303,7 @@ export default function DrillHub(): JSX.Element {
                     <span className="font-bold">
                       {mode.stats.avgTimeMs >= 60000
                         ? `${(mode.stats.avgTimeMs / 60000).toFixed(1)}m`
-                        : `${(mode.stats.avgTimeMs / 1000).toFixed(1)}s`
-                      }
+                        : `${(mode.stats.avgTimeMs / 1000).toFixed(1)}s`}
                     </span>
                   </div>
                 </div>
@@ -329,7 +345,9 @@ export default function DrillHub(): JSX.Element {
           >
             <div className="flex items-center gap-3 mb-6">
               <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
-              <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Recent Activity</h2>
+              <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                Recent Activity
+              </h2>
             </div>
 
             <div className="space-y-4">
@@ -373,17 +391,19 @@ export default function DrillHub(): JSX.Element {
           <div className="flex items-start gap-3">
             <Brain className="w-6 h-6 text-[var(--color-accent)] flex-shrink-0 mt-1" />
             <div>
-              <h3 className="text-[var(--color-text-primary)] font-bold mb-2">How Drill Modes Work</h3>
+              <h3 className="text-[var(--color-text-primary)] font-bold mb-2">
+                How Drill Modes Work
+              </h3>
               <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
-                Drill modes are designed for rapid active recall training. Unlike your main study sessions,
-                drill attempts are <strong>statistically isolated</strong> and do not affect your FSRS v6 
-                optimization or Rolling 360 stats. This allows you to practice freely without worrying about 
-                "polluting" your spaced repetition algorithm with rapid-fire attempts.
+                Drill modes are designed for rapid active recall training. Unlike your main study
+                sessions, drill attempts are <strong>statistically isolated</strong> and do not
+                affect your FSRS v6 optimization or Rolling 360 stats. This allows you to practice
+                freely without worrying about "polluting" your spaced repetition algorithm with
+                rapid-fire attempts.
               </p>
             </div>
           </div>
         </motion.div>
-
       </div>
     </div>
   );

@@ -1,15 +1,15 @@
 /**
  * Cloudflare Function: Get Contrastive Drill Batch
- * 
+ *
  * Returns a batch of DDx comparison questions from ContrastiveSet table
- * 
+ *
  * Endpoint: GET /api/drill/contrastive-batch
  * Query Params:
  * - system: Optional organ system filter
  * - difficulty: Optional difficulty filter
  * - count: Number of questions (default 10)
  * - personalized: Use user's confusion pairs (default false)
- * 
+ *
  * @module functions/api/drill/contrastive-batch
  */
 
@@ -25,10 +25,10 @@ export async function onRequestGet(context: any) {
     // Authenticate
     const authContext = await authenticateRequest(request, env);
     if (!authContext) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     const userId = authContext.userId;
 
@@ -44,10 +44,10 @@ export async function onRequestGet(context: any) {
 
     // Validate count
     if (count < 1 || count > 50) {
-      return new Response(
-        JSON.stringify({ error: 'Count must be between 1 and 50' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Count must be between 1 and 50' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Get drill batch - pass prisma client
@@ -59,14 +59,13 @@ export async function onRequestGet(context: any) {
       count,
     });
 
-    return new Response(
-      JSON.stringify(questions),
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify(questions), {
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error fetching contrastive drill batch:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Failed to fetch contrastive drill batch',
         details: error instanceof Error ? error.message : 'Unknown error',
       }),

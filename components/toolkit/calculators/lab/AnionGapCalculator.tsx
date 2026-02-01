@@ -206,7 +206,9 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
                     {item.letter}
                   </div>
                   <div className="min-w-0">
-                    <div className="font-semibold text-[var(--color-text-primary)]">{item.cause}</div>
+                    <div className="font-semibold text-[var(--color-text-primary)]">
+                      {item.cause}
+                    </div>
                     <div className="text-xs text-[var(--color-text-muted)]">{item.details}</div>
                   </div>
                 </div>

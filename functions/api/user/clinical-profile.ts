@@ -56,21 +56,22 @@ export const onRequestGet = authenticatedEndpoint(z.object({}), async (context) 
 
     // Calculate overall metrics
     const overall = {
-      accuracy:
-        stats.totalQuestions > 0 ? stats.correctAnswers / stats.totalQuestions : 0,
+      accuracy: stats.totalQuestions > 0 ? stats.correctAnswers / stats.totalQuestions : 0,
       totalQuestions: stats.totalQuestions,
       avgTime: stats.avgTimePerQuestion,
     };
 
     // Parse system breakdown
     const systemStatsData = (stats.systemStats as any) || {};
-    const systemBreakdown = Object.entries(systemStatsData).map(([system, data]: [string, any]) => ({
-      system,
-      accuracy: data.accuracy || 0,
-      total: data.total || 0,
-      correct: data.correct || 0,
-      avgTimeMs: data.avgTimeMs || null,
-    }));
+    const systemBreakdown = Object.entries(systemStatsData).map(
+      ([system, data]: [string, any]) => ({
+        system,
+        accuracy: data.accuracy || 0,
+        total: data.total || 0,
+        correct: data.correct || 0,
+        avgTimeMs: data.avgTimeMs || null,
+      })
+    );
 
     // Parse diagnosis bias
     const diagnosisBiasData = (stats.diagnosisBias as any) || {};

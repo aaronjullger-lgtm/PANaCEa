@@ -43,8 +43,8 @@ export type TrainingModeId =
   | 'polypharmacy_puzzle'
   | 'physiology_drill'
   | 'anatomy_review'
-  | 'medical_wordle'   // Future mode - not yet in MODE_REGISTRY
-  | 'cram_mode'        // Future mode - not yet in MODE_REGISTRY
+  | 'medical_wordle' // Future mode - not yet in MODE_REGISTRY
+  | 'cram_mode' // Future mode - not yet in MODE_REGISTRY
   | 'radiology_scroll'; // Future mode - not yet in MODE_REGISTRY
 
 /**

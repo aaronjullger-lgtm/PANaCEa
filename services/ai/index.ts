@@ -122,10 +122,7 @@ export {
 } from './geminiService';
 
 // Re-export condition service functions (from ../conditionService.ts)
-export {
-  getConditionsBySystem,
-  getAllConditions,
-} from '../conditionService';
+export { getConditionsBySystem, getAllConditions } from '../conditionService';
 
 // Export CoachingService functions and types
 export {

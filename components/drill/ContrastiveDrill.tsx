@@ -56,9 +56,7 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
 
   if (isLoadingQuestion && !currentQuestion) {
     return (
-      <div className="p-8 text-center text-[var(--color-text-muted)]">
-        Generating scenario...
-      </div>
+      <div className="p-8 text-center text-[var(--color-text-muted)]">Generating scenario...</div>
     );
   }
 
@@ -95,8 +93,7 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
           const isWrongSelection = hasAnswered && isSelected && !lastResult?.isCorrect;
 
           // Use design system colors: data-pass, data-fail, and accent
-          let bgClass =
-            'bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)]';
+          let bgClass = 'bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)]';
           let borderClass = 'border-[var(--color-border)]';
 
           if (hasAnswered) {

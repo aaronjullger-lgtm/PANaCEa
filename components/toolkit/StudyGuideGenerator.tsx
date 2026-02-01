@@ -402,7 +402,9 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
                 className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
               />
               <div className="flex-1">
-                <div className="font-medium text-[var(--color-text-primary)]">Include Rationale</div>
+                <div className="font-medium text-[var(--color-text-primary)]">
+                  Include Rationale
+                </div>
                 <div className="text-sm text-[var(--color-text-muted)]">
                   Detailed explanations for each question
                 </div>

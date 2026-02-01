@@ -742,9 +742,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                   </p>
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-800 dark:text-slate-50 mb-1">
-                    Anion Gap:
-                  </p>
+                  <p className="font-semibold text-slate-800 dark:text-slate-50 mb-1">Anion Gap:</p>
                   <p className="font-mono text-xs text-slate-600 dark:text-slate-300">
                     Na - (Cl + HCO₃)
                   </p>

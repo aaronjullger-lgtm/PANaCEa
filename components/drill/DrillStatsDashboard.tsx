@@ -112,7 +112,8 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
   const getDifficultyBadge = (difficulty: 'easy' | 'medium' | 'hard') => {
     const colors = {
       easy: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] dark:bg-[var(--color-data-pass)]/20',
-      medium: 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/20',
+      medium:
+        'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/20',
       hard: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)] dark:bg-[var(--color-data-fail)]/20',
     };
     return (

@@ -471,11 +471,7 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
               </Section>
 
               {/* Section 2: Administration */}
-              <Section
-                title="Administration & Dosing"
-                icon={Droplet}
-                accentColor="text-sage-400"
-              >
+              <Section title="Administration & Dosing" icon={Droplet} accentColor="text-sage-400">
                 <ListField
                   label="Routes of Administration"
                   value={drug.routesOfAdmin}
@@ -538,7 +534,9 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                     <div className="p-3 rounded-lg bg-action-blue/10 border border-action-blue/30">
                       <div className="flex items-center gap-2 mb-2">
                         <Droplet className="w-4 h-4 text-action-blue" />
-                        <h5 className="text-xs font-semibold text-action-blue uppercase">Lactation</h5>
+                        <h5 className="text-xs font-semibold text-action-blue uppercase">
+                          Lactation
+                        </h5>
                       </div>
                       {drug.lactationSafety && (
                         <p className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
@@ -558,9 +556,7 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                     <div className="p-3 rounded-lg bg-sage-500/10 border border-sage-500/30">
                       <div className="flex items-center gap-2 mb-2">
                         <Baby className="w-4 h-4 text-sage-400" />
-                        <h5 className="text-xs font-semibold text-sage-400 uppercase">
-                          Pediatric
-                        </h5>
+                        <h5 className="text-xs font-semibold text-sage-400 uppercase">Pediatric</h5>
                       </div>
                       <TextField label="Dosing" value={drug.pediatricDosing} />
                       <TextField label="Notes" value={drug.pediatricNotes} />
@@ -589,7 +585,11 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
 
               {/* Section 5: Test-Taking Tips */}
               {(drug.testQuestionTips.length > 0 || drug.commonMistakes.length > 0) && (
-                <Section title="Test-Taking Strategy" icon={FileText} accentColor="text-data-provisional">
+                <Section
+                  title="Test-Taking Strategy"
+                  icon={FileText}
+                  accentColor="text-data-provisional"
+                >
                   {drug.testQuestionTips.length > 0 && (
                     <div className="space-y-2">
                       <h5 className="text-xs font-semibold text-data-provisional uppercase tracking-wide">
@@ -630,7 +630,11 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
               )}
 
               {/* Section 6: Additional Information */}
-              <Section title="Additional Information" icon={FileText} accentColor="text-[var(--color-text-secondary)]">
+              <Section
+                title="Additional Information"
+                icon={FileText}
+                accentColor="text-[var(--color-text-secondary)]"
+              >
                 <TextField label="Clinical Notes" value={drug.clinicalNotes} />
                 <ListField label="Alternative Names / Aliases" value={drug.aliases} color="blue" />
                 {drug.genericAvailable && (

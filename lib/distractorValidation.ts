@@ -153,8 +153,11 @@ export function validateDistractors(question: QuestionForValidation): Distractor
   const questionEndsWithAn = /\ban$/i.test(question.question);
 
   if (questionEndsWithA || questionEndsWithAn) {
-    const startsWithVowel = (opt: string | undefined) => opt ? /^[aeiou]/i.test(opt.trim()) : false;
-    const vowelOptions = options.filter((opt): opt is string => opt !== undefined && startsWithVowel(opt));
+    const startsWithVowel = (opt: string | undefined) =>
+      opt ? /^[aeiou]/i.test(opt.trim()) : false;
+    const vowelOptions = options.filter(
+      (opt): opt is string => opt !== undefined && startsWithVowel(opt)
+    );
 
     if (vowelOptions.length === 1 && correctOption && startsWithVowel(correctOption)) {
       issues.push('Grammatical article ("a"/"an") reveals correct answer');
@@ -165,7 +168,7 @@ export function validateDistractors(question: QuestionForValidation): Distractor
 
   // RULE 8: Avoid overly specific vs. overly general distractors
   // Correct answer should not be the only specific or only general option
-  const hasNumbers = (opt: string | undefined) => opt ? /\d+/.test(opt) : false;
+  const hasNumbers = (opt: string | undefined) => (opt ? /\d+/.test(opt) : false);
   const hasUnits = (opt: string | undefined) =>
     opt ? /(mg|mcg|ml|units|days|hours|minutes|weeks|months|years)/i.test(opt) : false;
 

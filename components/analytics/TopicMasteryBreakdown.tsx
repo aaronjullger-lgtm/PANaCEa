@@ -164,15 +164,15 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
             <div className="text-sm">
               {weakTopics.length > 0 && (
                 <p className="text-amber-800 dark:text-amber-200">
-                  <strong>{weakTopics.length} topic{weakTopics.length > 1 ? 's' : ''}</strong> need
-                  focused practice:{' '}
-                  {weakTopics.map((t) => t.label).join(', ')}
+                  <strong>
+                    {weakTopics.length} topic{weakTopics.length > 1 ? 's' : ''}
+                  </strong>{' '}
+                  need focused practice: {weakTopics.map((t) => t.label).join(', ')}
                 </p>
               )}
               {untestedTopics.length > 0 && (
                 <p className="text-amber-700 dark:text-amber-300 mt-1">
-                  {untestedTopics.length} topic{untestedTopics.length > 1 ? 's' : ''} not yet
-                  tested
+                  {untestedTopics.length} topic{untestedTopics.length > 1 ? 's' : ''} not yet tested
                 </p>
               )}
             </div>

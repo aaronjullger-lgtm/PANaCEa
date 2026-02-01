@@ -24,7 +24,7 @@ function prismaExcludePlugin(): Plugin {
       if (importer && importer.includes('/functions/')) {
         return null;
       }
-      
+
       // Intercept @prisma/client and related packages
       if (prismaPatterns.some((p) => source === p || source.includes(p))) {
         return { id: 'virtual:prisma-stub', moduleSideEffects: false };
@@ -66,7 +66,11 @@ function prismaExcludePlugin(): Plugin {
 
       // Check if the file contains Prisma imports
       const hasPrismaImport = prismaPatterns.some(
-        (p) => code.includes(`from '${p}'`) || code.includes(`from "${p}"`) || code.includes(`import('${p}')`) || code.includes(`import("${p}")`)
+        (p) =>
+          code.includes(`from '${p}'`) ||
+          code.includes(`from "${p}"`) ||
+          code.includes(`import('${p}')`) ||
+          code.includes(`import("${p}")`)
       );
 
       if (hasPrismaImport) {
@@ -76,7 +80,7 @@ function prismaExcludePlugin(): Plugin {
 
         for (const pattern of prismaPatterns) {
           const escapedPattern = pattern.replace('/', '\\/').replace('.', '\\.');
-          
+
           // Replace static imports with unique variable names
           transformed = transformed.replace(
             new RegExp(`import\\s*{[^}]*}\\s*from\\s*['"]${escapedPattern}['"]`, 'g'),

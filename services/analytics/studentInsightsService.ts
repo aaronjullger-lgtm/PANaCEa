@@ -83,7 +83,8 @@ export function formatInsightMessage(insights: StudentInsights): string {
   }
 
   const { accuracy, trend, trendChange } = insights.summary;
-  const trendLabel = trend === 'improving' ? 'Improving' : trend === 'declining' ? 'Declining' : 'Stable';
+  const trendLabel =
+    trend === 'improving' ? 'Improving' : trend === 'declining' ? 'Declining' : 'Stable';
 
   let message = `[${trendLabel}] Your accuracy is ${accuracy}% `;
 

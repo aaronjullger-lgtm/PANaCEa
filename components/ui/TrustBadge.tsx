@@ -1,7 +1,7 @@
 /**
  * TrustBadge.tsx
  * Sprint 10 Task 3: Trust Badges for Question Source
- * 
+ *
  * Displays a badge indicating whether a question is:
  * - Verified Content (from database cache) - Shield icon
  * - AI Generated (live from Gemini fallback) - Sparkle icon

@@ -45,9 +45,10 @@ const SyncSRSItemSchema = z.object({
   dueDate: z.string(),
   lastReviewed: z.string(),
   quality: z.number().int().min(0).max(5),
-  difficulty: z.union([z.string(), z.number()]).optional().transform(val => 
-    val !== undefined ? String(val) : undefined
-  ),
+  difficulty: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((val) => (val !== undefined ? String(val) : undefined)),
   stabilityScore: z.number().optional(),
   updatedAt: z.string().optional(),
 });
@@ -98,7 +99,8 @@ const INITIAL_RETRY_DELAY_MS = 500;
  * Check if an error is a transient Accelerate connection error that can be retried
  */
 function isTransientAccelerateError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  const message =
+    error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
   return (
     message.includes('unable to connect to the accelerate api') ||
     message.includes('network') ||
@@ -119,26 +121,29 @@ async function withRetry<T>(
   log: ReturnType<typeof createEndpointLogger>
 ): Promise<T> {
   let lastError: unknown;
-  
+
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       return await operation();
     } catch (error) {
       lastError = error;
-      
+
       if (!isTransientAccelerateError(error) || attempt === MAX_RETRIES) {
         throw error;
       }
-      
+
       const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
-      log.warn(`${operationName} failed (attempt ${attempt}/${MAX_RETRIES}), retrying in ${delay}ms`, {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      
-      await new Promise(resolve => setTimeout(resolve, delay));
+      log.warn(
+        `${operationName} failed (attempt ${attempt}/${MAX_RETRIES}), retrying in ${delay}ms`,
+        {
+          error: error instanceof Error ? error.message : String(error),
+        }
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
-  
+
   throw lastError;
 }
 
@@ -234,7 +239,10 @@ export const onRequestGet = authenticatedEndpoint(
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      log.error('Sync GET failed', { error: errorMessage, stack: error instanceof Error ? error.stack : undefined });
+      log.error('Sync GET failed', {
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       return { status: 500, error: `Sync GET failed: ${errorMessage}` };
     } finally {
       await safePrismaDisconnect(prisma);
@@ -279,7 +287,7 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
     // 1. Insert PerformanceRecords using createMany with skipDuplicates
     // This is efficient because performance records are insert-only (no updates needed)
     if (payload.performanceRecords?.length) {
-      const recordsToInsert = payload.performanceRecords.map(record => ({
+      const recordsToInsert = payload.performanceRecords.map((record) => ({
         id: record.id || crypto.randomUUID(),
         userId: internalUserId,
         topic: record.topic,
@@ -298,10 +306,11 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       const batches = chunk(recordsToInsert, BATCH_SIZE);
       for (const batch of batches) {
         await withRetry(
-          () => prisma!.performanceRecord.createMany({
-            data: batch,
-            skipDuplicates: true, // Ignore records that already exist
-          }),
+          () =>
+            prisma!.performanceRecord.createMany({
+              data: batch,
+              skipDuplicates: true, // Ignore records that already exist
+            }),
           'performanceRecords createMany',
           log
         );
@@ -312,22 +321,23 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
     // This avoids per-item conflict resolution queries
     if (payload.srsItems?.length) {
       // Get all question IDs being synced
-      const questionIds = payload.srsItems.map(item => item.questionId);
-      
+      const questionIds = payload.srsItems.map((item) => item.questionId);
+
       // Delete existing records for these question IDs (single query)
       await withRetry(
-        () => prisma!.sRSItem.deleteMany({
-          where: {
-            userId: internalUserId,
-            questionId: { in: questionIds },
-          },
-        }),
+        () =>
+          prisma!.sRSItem.deleteMany({
+            where: {
+              userId: internalUserId,
+              questionId: { in: questionIds },
+            },
+          }),
         'srsItems deleteMany',
         log
       );
 
       // Insert all items fresh (single createMany per batch)
-      const itemsToInsert = payload.srsItems.map(item => ({
+      const itemsToInsert = payload.srsItems.map((item) => ({
         id: crypto.randomUUID(),
         userId: internalUserId,
         questionId: item.questionId,
@@ -337,7 +347,8 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
         dueDate: new Date(item.dueDate),
         lastReviewed: new Date(item.lastReviewed),
         quality: item.quality,
-        difficulty: item.difficulty !== undefined ? Number.parseFloat(String(item.difficulty)) : null,
+        difficulty:
+          item.difficulty !== undefined ? Number.parseFloat(String(item.difficulty)) : null,
         stabilityScore: item.stabilityScore ?? null,
         updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
       }));
@@ -345,10 +356,11 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       const batches = chunk(itemsToInsert, BATCH_SIZE);
       for (const batch of batches) {
         await withRetry(
-          () => prisma!.sRSItem.createMany({
-            data: batch,
-            skipDuplicates: true,
-          }),
+          () =>
+            prisma!.sRSItem.createMany({
+              data: batch,
+              skipDuplicates: true,
+            }),
           'srsItems createMany',
           log
         );
@@ -359,31 +371,32 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
     if (payload.savedQuestions?.length) {
       // Build the composite keys for deletion
       const keysToDelete = payload.savedQuestions
-        .filter(item => {
+        .filter((item) => {
           const questionText = item.questionText || item.question || '';
           return questionText.length > 0; // Only process items with content
         })
-        .map(item => ({
+        .map((item) => ({
           questionId: item.questionId || item.id || '',
           type: item.type,
         }))
-        .filter(k => k.questionId); // Filter out empty IDs
+        .filter((k) => k.questionId); // Filter out empty IDs
 
       if (keysToDelete.length > 0) {
         // Delete existing records for these question IDs and types
         // Prisma doesn't support deleteMany with composite keys, so we use OR conditions
-        const deleteConditions = keysToDelete.map(k => ({
+        const deleteConditions = keysToDelete.map((k) => ({
           userId: internalUserId,
           questionId: k.questionId,
           type: k.type,
         }));
 
         await withRetry(
-          () => prisma!.savedQuestion.deleteMany({
-            where: {
-              OR: deleteConditions,
-            },
-          }),
+          () =>
+            prisma!.savedQuestion.deleteMany({
+              where: {
+                OR: deleteConditions,
+              },
+            }),
           'savedQuestions deleteMany',
           log
         );
@@ -391,12 +404,13 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
 
       // Insert all items fresh
       const itemsToInsert = payload.savedQuestions
-        .map(item => {
+        .map((item) => {
           const questionId = item.questionId || item.id || crypto.randomUUID();
           const questionText = item.questionText || item.question || '';
-          const correctAnswer = item.correctAnswer || 
-            (item.options && item.correctAnswerIndex !== undefined 
-              ? item.options[item.correctAnswerIndex] 
+          const correctAnswer =
+            item.correctAnswer ||
+            (item.options && item.correctAnswerIndex !== undefined
+              ? item.options[item.correctAnswerIndex]
               : '');
           const explanation = item.explanation || item.rationale || '';
           const topic = item.topic || item.condition || '';
@@ -425,10 +439,11 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
         const batches = chunk(itemsToInsert, BATCH_SIZE);
         for (const batch of batches) {
           await withRetry(
-            () => prisma!.savedQuestion.createMany({
-              data: batch,
-              skipDuplicates: true,
-            }),
+            () =>
+              prisma!.savedQuestion.createMany({
+                data: batch,
+                skipDuplicates: true,
+              }),
             'savedQuestions createMany',
             log
           );
@@ -438,17 +453,18 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
 
     // Fetch updated data with retry (3 queries in parallel)
     const [performanceRecords, srsItems, savedQuestions] = await withRetry(
-      () => Promise.all([
-        prisma!.performanceRecord.findMany({
-          where: { userId: internalUserId },
-        }),
-        prisma!.sRSItem.findMany({
-          where: { userId: internalUserId },
-        }),
-        prisma!.savedQuestion.findMany({
-          where: { userId: internalUserId },
-        }),
-      ]),
+      () =>
+        Promise.all([
+          prisma!.performanceRecord.findMany({
+            where: { userId: internalUserId },
+          }),
+          prisma!.sRSItem.findMany({
+            where: { userId: internalUserId },
+          }),
+          prisma!.savedQuestion.findMany({
+            where: { userId: internalUserId },
+          }),
+        ]),
       'fetchUpdatedData',
       log
     );
@@ -476,7 +492,10 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    log.error('Sync POST failed', { error: errorMessage, stack: error instanceof Error ? error.stack : undefined });
+    log.error('Sync POST failed', {
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return { status: 500, error: `Sync POST failed: ${errorMessage}` };
   } finally {
     await safePrismaDisconnect(prisma);

@@ -72,17 +72,10 @@ export const dailyTriadService = dailyTriadServiceModule;
 export const confusionService = confusionServiceModule;
 
 // Named exports from lab case service
-export {
-  fetchLabCases,
-  getCachedDiagnoses,
-} from './labCaseService';
+export { fetchLabCases, getCachedDiagnoses } from './labCaseService';
 
 // Named exports from daily triad service
-export {
-  fetchDailyTriad,
-  markTriadReviewed,
-  type DailyTriad,
-} from './dailyTriadService';
+export { fetchDailyTriad, markTriadReviewed, type DailyTriad } from './dailyTriadService';
 
 // Named exports from confusion service
 export {
@@ -220,10 +213,7 @@ export const smartPause = smartPauseServiceModule;
 export const studyGroup = studyGroupServiceModule;
 
 // Named exports from medical spanish service
-export {
-  translateToSpanish,
-  type SpanishMode,
-} from './medicalSpanishService';
+export { translateToSpanish, type SpanishMode } from './medicalSpanishService';
 
 // ============================================================================
 // TYPE EXPORTS (StudySessionPlan already exported above from adaptiveFSRSService)

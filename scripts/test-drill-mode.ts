@@ -1,11 +1,11 @@
 /**
  * Test Drill Mode - Statistical Isolation Verification
- * 
+ *
  * This script verifies that drill attempts do NOT affect:
  * 1. UserRolling360Stats (main exam statistics)
  * 2. FSRS weight optimization
  * 3. ReviewLog MAIN session counts
- * 
+ *
  * Run with: npx tsx scripts/test-drill-mode.ts
  */
 

@@ -362,8 +362,7 @@ export function createReferenceService(getToken: () => Promise<string | null>) {
           `/api/reference/ecg?query=${encodeURIComponent(query)}`,
           getToken
         ),
-      getById: (id: string) =>
-        fetchWithAuth<ECGPattern>(`/api/reference/ecg/${id}`, getToken),
+      getById: (id: string) => fetchWithAuth<ECGPattern>(`/api/reference/ecg/${id}`, getToken),
     },
 
     // ========================================

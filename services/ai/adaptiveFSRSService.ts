@@ -66,7 +66,10 @@ export function getAdaptiveFSRS(
   }
 
   // Estimate retention using simplified FSRS formula
-  const estimatedRetention = Math.min(0.95, 0.9 / Math.pow(1 + daysUntilReview / currentStability, 0.5));
+  const estimatedRetention = Math.min(
+    0.95,
+    0.9 / Math.pow(1 + daysUntilReview / currentStability, 0.5)
+  );
 
   return {
     scheduledReviewTime,
@@ -97,10 +100,7 @@ export function generateAdaptiveStudyPlan(
 
   // Prioritize reviews, then new cards
   const reviewQuestions = Math.min(reviewCardsDue, Math.floor(estimatedQuestionsInTime * 0.6));
-  const newQuestions = Math.min(
-    newCardsAvailable,
-    estimatedQuestionsInTime - reviewQuestions
-  );
+  const newQuestions = Math.min(newCardsAvailable, estimatedQuestionsInTime - reviewQuestions);
 
   const totalQuestions = reviewQuestions + newQuestions;
 

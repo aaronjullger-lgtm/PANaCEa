@@ -75,9 +75,7 @@ export function selectByPanceDistribution<T extends { system: string | null }>(
   const selected: T[] = [];
 
   while (selected.length < count) {
-    const available = systemWeights.filter(
-      (sw) => sw.index < bySystem[sw.system].length
-    );
+    const available = systemWeights.filter((sw) => sw.index < bySystem[sw.system].length);
     if (available.length === 0) break;
 
     const totalWeight = available.reduce((sum, sw) => sum + sw.weight, 0);

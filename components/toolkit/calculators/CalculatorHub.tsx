@@ -169,7 +169,11 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
   };
 
   if (selectedCalculator) {
-    return <div className="min-h-screen bg-[var(--color-bg-primary)] p-4 md:p-6">{renderCalculator()}</div>;
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-primary)] p-4 md:p-6">
+        {renderCalculator()}
+      </div>
+    );
   }
 
   return (
@@ -207,7 +211,9 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
                 onClick={() => setActiveCategory(tab.id)}
                 className="relative px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 text-[var(--color-text-primary)] hover:opacity-90 transition-colors flex items-center gap-2 text-sm font-semibold whitespace-nowrap"
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`} />
+                <Icon
+                  className={`w-4 h-4 ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}
+                />
                 <span>{tab.label}</span>
                 <span className="text-xs text-[var(--color-text-muted)]">({count})</span>
                 {isActive && (
@@ -233,7 +239,9 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
           >
             {filteredCalculators.length === 0 ? (
               <div className="col-span-full text-center py-16">
-                <p className="text-[var(--color-text-muted)]">No calculators found matching your search</p>
+                <p className="text-[var(--color-text-muted)]">
+                  No calculators found matching your search
+                </p>
                 <button
                   onClick={() => {
                     setSearchQuery('');
@@ -264,7 +272,9 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
                         <h3 className="text-lg font-bold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] transition-colors mb-1">
                           {calc.name}
                         </h3>
-                        <p className="text-sm text-[var(--color-text-muted)] mb-2">{calc.description}</p>
+                        <p className="text-sm text-[var(--color-text-muted)] mb-2">
+                          {calc.description}
+                        </p>
                         {calc.formula && (
                           <p className="text-xs text-[var(--color-text-muted)] font-mono bg-[var(--color-bg-primary)]/50 px-2 py-1 rounded">
                             {calc.formula}

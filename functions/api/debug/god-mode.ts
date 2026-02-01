@@ -28,15 +28,21 @@ interface CloudflareContext {
 async function requireAdmin(context: CloudflareContext): Promise<Response | null> {
   const auth = await authenticateRequest(context.request, context.env);
   if (!auth) {
-    return new Response(
-      JSON.stringify({ ok: false, error: 'Authentication required' }),
-      { status: 401, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ ok: false, error: 'Authentication required' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const { env } = context;
-  const adminIds = env.ADMIN_USER_IDS?.split(',').map((id) => id.trim()).filter(Boolean) ?? [];
-  const superadminIds = env.SUPERADMIN_USER_IDS?.split(',').map((id) => id.trim()).filter(Boolean) ?? [];
+  const adminIds =
+    env.ADMIN_USER_IDS?.split(',')
+      .map((id) => id.trim())
+      .filter(Boolean) ?? [];
+  const superadminIds =
+    env.SUPERADMIN_USER_IDS?.split(',')
+      .map((id) => id.trim())
+      .filter(Boolean) ?? [];
 
   if (superadminIds.includes(auth.userId) || adminIds.includes(auth.userId)) {
     return null;
@@ -58,10 +64,10 @@ async function requireAdmin(context: CloudflareContext): Promise<Response | null
     }
   }
 
-  return new Response(
-    JSON.stringify({ ok: false, error: 'Admin access required' }),
-    { status: 403, headers: { 'Content-Type': 'application/json' } }
-  );
+  return new Response(JSON.stringify({ ok: false, error: 'Admin access required' }), {
+    status: 403,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
 
 export async function onRequestGet(context: CloudflareContext): Promise<Response> {

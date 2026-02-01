@@ -61,10 +61,26 @@ const FLAG_TYPE_LABELS: Record<string, string> = {
 };
 
 const PRIORITY_CONFIG = {
-  critical: { label: 'Critical', color: 'text-[var(--color-data-fail)]', bgColor: 'bg-[var(--color-bg-error)]' },
-  high: { label: 'High', color: 'text-[var(--color-data-provisional)]', bgColor: 'bg-[var(--color-data-provisional)]/10' },
-  medium: { label: 'Medium', color: 'text-[var(--color-data-provisional)]', bgColor: 'bg-[var(--color-data-provisional)]/10' },
-  low: { label: 'Low', color: 'text-[var(--color-data-pass)]', bgColor: 'bg-[var(--color-data-pass)]/10' },
+  critical: {
+    label: 'Critical',
+    color: 'text-[var(--color-data-fail)]',
+    bgColor: 'bg-[var(--color-bg-error)]',
+  },
+  high: {
+    label: 'High',
+    color: 'text-[var(--color-data-provisional)]',
+    bgColor: 'bg-[var(--color-data-provisional)]/10',
+  },
+  medium: {
+    label: 'Medium',
+    color: 'text-[var(--color-data-provisional)]',
+    bgColor: 'bg-[var(--color-data-provisional)]/10',
+  },
+  low: {
+    label: 'Low',
+    color: 'text-[var(--color-data-pass)]',
+    bgColor: 'bg-[var(--color-data-pass)]/10',
+  },
 } as const;
 
 type PriorityKey = keyof typeof PRIORITY_CONFIG;
@@ -233,7 +249,9 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
             <Flag className="w-6 h-6 text-[var(--color-data-fail)]" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Flagged Questions</h2>
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+              Flagged Questions
+            </h2>
             <p className="text-sm text-[var(--color-text-muted)]">
               Review and resolve user-reported issues
             </p>
@@ -266,9 +284,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
           <div className="bg-[var(--color-accent)]/10 rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2">
               <RefreshCw className="w-5 h-5 text-[var(--color-accent)]" />
-              <span className="text-sm font-medium text-[var(--color-accent)]">
-                In Review
-              </span>
+              <span className="text-sm font-medium text-[var(--color-accent)]">In Review</span>
             </div>
             <p className="text-2xl font-bold text-[var(--color-text-primary)] mt-1">
               {stats.inReview}
@@ -286,9 +302,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
             <div className="flex items-center gap-2">
               <XCircle className="w-5 h-5 text-[var(--color-text-muted)]" />
-              <span className="text-sm font-medium text-[var(--color-text-muted)]">
-                Dismissed
-              </span>
+              <span className="text-sm font-medium text-[var(--color-text-muted)]">Dismissed</span>
             </div>
             <p className="text-2xl font-bold text-[var(--color-text-primary)] mt-1">
               {stats.dismissed}
@@ -298,7 +312,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
       )}
 
       {/* Filters */}
-        <div className="flex flex-wrap gap-4 items-center bg-[var(--color-bg-secondary)] rounded-xl p-4">
+      <div className="flex flex-wrap gap-4 items-center bg-[var(--color-bg-secondary)] rounded-xl p-4">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-[var(--color-text-muted)]" />
           <span className="text-sm font-medium text-[var(--color-text-secondary)]">Filters:</span>

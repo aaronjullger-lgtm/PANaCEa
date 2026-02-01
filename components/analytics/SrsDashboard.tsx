@@ -135,9 +135,7 @@ const SrsDashboard = () => {
           </p>
         </div>
         <div className="p-4 bg-[var(--color-bg-primary)] rounded-xl shadow">
-          <h3 className="text-sm font-medium text-[var(--color-text-muted)]">
-            Reviews Due Today
-          </h3>
+          <h3 className="text-sm font-medium text-[var(--color-text-muted)]">Reviews Due Today</h3>
           <p className="text-3xl font-bold text-[var(--color-text-primary)]">
             {analytics.upcomingReviews}
           </p>

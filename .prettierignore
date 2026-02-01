@@ -3,3 +3,8 @@ node_modules
 playwright-report
 *.min.js
 *.generated.*
+.cline
+.kiro
+.github
+*.md
+!README.md

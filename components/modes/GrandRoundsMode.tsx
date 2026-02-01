@@ -378,12 +378,16 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             </div>
 
             <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold text-muted-amber-500">{completedStats.percentile}%</div>
+              <div className="text-4xl font-bold text-muted-amber-500">
+                {completedStats.percentile}%
+              </div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Percentile</div>
             </div>
 
             <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold text-muted-amber-500">#{completedStats.ranking}</div>
+              <div className="text-4xl font-bold text-muted-amber-500">
+                #{completedStats.ranking}
+              </div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Global Rank</div>
             </div>
           </div>
@@ -712,7 +716,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               transition={{ delay: 0.3 }}
               className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
             >
-              <div className="text-4xl font-bold text-muted-amber-500">{completedStats.percentile}%</div>
+              <div className="text-4xl font-bold text-muted-amber-500">
+                {completedStats.percentile}%
+              </div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Percentile</div>
             </motion.div>
 
@@ -722,7 +728,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               transition={{ delay: 0.4 }}
               className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
             >
-              <div className="text-4xl font-bold text-muted-amber-500">#{completedStats.ranking}</div>
+              <div className="text-4xl font-bold text-muted-amber-500">
+                #{completedStats.ranking}
+              </div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Global Rank</div>
             </motion.div>
           </div>

@@ -255,7 +255,9 @@ export function InteractiveDiagram({
             <button
               onClick={() => setShowLabels(!showLabels)}
               className={`p-2 rounded-lg ${
-                showLabels ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
+                showLabels
+                  ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]'
+                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
               }`}
               title={showLabels ? 'Hide Labels' : 'Show Labels'}
             >
@@ -479,7 +481,9 @@ export function InteractiveDiagram({
                         <p className="font-medium text-[var(--color-text-primary)]">
                           {lastResult.isCorrect ? 'Correct!' : 'Not quite...'}
                         </p>
-                        <p className="text-sm text-[var(--color-text-muted)]">{currentLabel.name}</p>
+                        <p className="text-sm text-[var(--color-text-muted)]">
+                          {currentLabel.name}
+                        </p>
                       </div>
                     </div>
                     <button
@@ -548,7 +552,9 @@ export function InteractiveDiagram({
                     {selectedLabel.name}
                   </h4>
                   {selectedLabel.layer && (
-                    <span className="text-xs text-[var(--color-text-muted)]">{selectedLabel.layer}</span>
+                    <span className="text-xs text-[var(--color-text-muted)]">
+                      {selectedLabel.layer}
+                    </span>
                   )}
                 </div>
 
@@ -591,7 +597,9 @@ export function InteractiveDiagram({
             ) : (
               <div className="text-center py-8">
                 <HelpCircle className="h-8 w-8 mx-auto text-[var(--color-text-muted)] mb-2" />
-                <p className="text-sm text-[var(--color-text-muted)]">Click on a label pin to view details</p>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  Click on a label pin to view details
+                </p>
               </div>
             )}
 

@@ -1,7 +1,7 @@
 /**
  * usePhysiology.ts
  * Sprint 10 Task 1 & 2: Physiology Engine with Jitter + Stress Response
- * 
+ *
  * A lightweight hook that provides:
  * 1. Base vital signs with realistic ±3bpm jitter (every second)
  * 2. Stress response triggered by sensitive question keywords
@@ -13,21 +13,53 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // Sensitive keywords that trigger stress response (emergency/critical diagnoses)
 const STRESS_KEYWORDS = [
   // Emergency conditions
-  'emergency', 'stat', 'critical', 'code blue', 'arrest', 'resuscitate',
+  'emergency',
+  'stat',
+  'critical',
+  'code blue',
+  'arrest',
+  'resuscitate',
   // Life-threatening diagnoses
-  'myocardial infarction', 'mi', 'heart attack', 'stroke', 'cva',
-  'pulmonary embolism', 'pe', 'sepsis', 'septic', 'anaphylaxis',
-  'tension pneumothorax', 'aortic dissection', 'hemorrhage', 'shock',
-  'meningitis', 'encephalitis', 'intubation', 'ventilator',
+  'myocardial infarction',
+  'mi',
+  'heart attack',
+  'stroke',
+  'cva',
+  'pulmonary embolism',
+  'pe',
+  'sepsis',
+  'septic',
+  'anaphylaxis',
+  'tension pneumothorax',
+  'aortic dissection',
+  'hemorrhage',
+  'shock',
+  'meningitis',
+  'encephalitis',
+  'intubation',
+  'ventilator',
   // Cancer/terminal
-  'malignant', 'metastatic', 'terminal', 'prognosis poor',
+  'malignant',
+  'metastatic',
+  'terminal',
+  'prognosis poor',
   // Pediatric emergency
-  'child abuse', 'pediatric emergency', 'neonatal', 'apgar',
+  'child abuse',
+  'pediatric emergency',
+  'neonatal',
+  'apgar',
   // Psychiatric emergency
-  'suicide', 'suicidal', 'overdose', 'toxicity',
+  'suicide',
+  'suicidal',
+  'overdose',
+  'toxicity',
   // Other high-stakes
-  'ectopic pregnancy', 'placental abruption', 'eclampsia',
-  'diabetic ketoacidosis', 'dka', 'status epilepticus',
+  'ectopic pregnancy',
+  'placental abruption',
+  'eclampsia',
+  'diabetic ketoacidosis',
+  'dka',
+  'status epilepticus',
 ];
 
 export interface PhysiologyState {
@@ -123,26 +155,11 @@ export function usePhysiology(options: UsePhysiologyOptions = {}): UsePhysiology
       const stressRRBoost = Math.round(newStressLevel * 4);
 
       // Apply jitter to stress-adjusted values
-      const newHR = clamp(
-        baseHeartRate + stressHRBoost + jitter(jitterRange),
-        50, 180
-      );
-      const newSBP = clamp(
-        baseSystolic + stressSBPBoost + jitter(2),
-        80, 200
-      );
-      const newDBP = clamp(
-        baseDiastolic + stressDBPBoost + jitter(2),
-        50, 120
-      );
-      const newRR = clamp(
-        baseRR + stressRRBoost + jitter(1),
-        10, 30
-      );
-      const newO2 = clamp(
-        baseO2 + jitter(1),
-        88, 100
-      );
+      const newHR = clamp(baseHeartRate + stressHRBoost + jitter(jitterRange), 50, 180);
+      const newSBP = clamp(baseSystolic + stressSBPBoost + jitter(2), 80, 200);
+      const newDBP = clamp(baseDiastolic + stressDBPBoost + jitter(2), 50, 120);
+      const newRR = clamp(baseRR + stressRRBoost + jitter(1), 10, 30);
+      const newO2 = clamp(baseO2 + jitter(1), 88, 100);
 
       return {
         heartRate: newHR,
@@ -162,7 +179,7 @@ export function usePhysiology(options: UsePhysiologyOptions = {}): UsePhysiology
    */
   const triggerStressResponse = useCallback((intensity = 0.7) => {
     stressLevelRef.current = clamp(intensity, 0, 1);
-    
+
     // Immediate visual spike
     setVitals((current) => ({
       ...current,
@@ -177,13 +194,16 @@ export function usePhysiology(options: UsePhysiologyOptions = {}): UsePhysiology
    * Check text for stress keywords and trigger response if found
    * Returns true if stress was triggered
    */
-  const checkTextForStress = useCallback((text: string): boolean => {
-    if (detectStressKeywords(text)) {
-      triggerStressResponse(0.6); // Moderate stress for question detection
-      return true;
-    }
-    return false;
-  }, [triggerStressResponse]);
+  const checkTextForStress = useCallback(
+    (text: string): boolean => {
+      if (detectStressKeywords(text)) {
+        triggerStressResponse(0.6); // Moderate stress for question detection
+        return true;
+      }
+      return false;
+    },
+    [triggerStressResponse]
+  );
 
   /**
    * Reset vitals to baseline immediately

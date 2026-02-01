@@ -12,9 +12,15 @@ export const RapidRecallDrill = lazy(() => import('../components/drill/recall/Ra
 export const DDxCompareDrill = lazy(() => import('../components/drill/ddx/DDxCompareDrill'));
 export const MiniLabDrillSession = lazy(() => import('../components/drill/MiniLabDrillSession'));
 export const PharmDrillSession = lazy(() => import('../components/drill/PharmDrillSession'));
-export const FirstLineDrillSession = lazy(() => import('../components/drill/FirstLineDrillSession'));
-export const ConditionDrillSession = lazy(() => import('../components/drill/ConditionDrillSession'));
-export const GuidelineDrillSession = lazy(() => import('../components/drill/GuidelineDrillSession'));
+export const FirstLineDrillSession = lazy(
+  () => import('../components/drill/FirstLineDrillSession')
+);
+export const ConditionDrillSession = lazy(
+  () => import('../components/drill/ConditionDrillSession')
+);
+export const GuidelineDrillSession = lazy(
+  () => import('../components/drill/GuidelineDrillSession')
+);
 export const SystemDrillSession = lazy(() => import('../components/drill/SystemDrillSession'));
 export const PharmacologyDrillSession = lazy(
   () => import('../components/drill/PharmacologyDrillSession')
@@ -22,8 +28,12 @@ export const PharmacologyDrillSession = lazy(
 export const SubcategoryDrillSession = lazy(
   () => import('../components/drill/SubcategoryDrillSession')
 );
-export const VentilatorDrillSession = lazy(() => import('../components/drill/VentilatorDrillSession'));
-export const PhysiologyDrillSession = lazy(() => import('../components/drill/PhysiologyDrillSession'));
+export const VentilatorDrillSession = lazy(
+  () => import('../components/drill/VentilatorDrillSession')
+);
+export const PhysiologyDrillSession = lazy(
+  () => import('../components/drill/PhysiologyDrillSession')
+);
 export const AnatomyDrillSession = lazy(() => import('../components/drill/AnatomyDrillSession'));
 export const ECGDrillSession = lazy(() => import('../components/drill/ECGDrillSession'));
 export const DermDrillSession = lazy(() => import('../components/drill/DermDrillSession'));

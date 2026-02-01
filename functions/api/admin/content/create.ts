@@ -44,7 +44,13 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     });
 
     if (!user || !canEditContent(user.role as UserRole)) {
-      return createErrorResponse(request, 'Forbidden: Insufficient permissions', 403, undefined, env);
+      return createErrorResponse(
+        request,
+        'Forbidden: Insufficient permissions',
+        403,
+        undefined,
+        env
+      );
     }
 
     // Validate input with Zod schema

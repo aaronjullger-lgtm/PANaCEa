@@ -276,39 +276,27 @@ export default function LongitudinalProgressDashboard({
         <div className="rounded-lg p-4 bg-[var(--color-accent)] bg-opacity-10">
           <div className="flex items-center gap-2 mb-2">
             <Target className="w-4 h-4 text-[var(--color-accent)]" />
-            <span
-              className="text-xs font-medium text-[var(--color-text-primary)]"
-            >
+            <span className="text-xs font-medium text-[var(--color-text-primary)]">
               Current Mastery
             </span>
           </div>
-          <p
-            className="text-2xl font-bold text-[var(--color-accent)]"
-          >
-            {currentMastery}
-          </p>
+          <p className="text-2xl font-bold text-[var(--color-accent)]">{currentMastery}</p>
         </div>
 
         <div className="rounded-lg p-4 bg-[var(--color-data-pass)] bg-opacity-10">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp
               className={`w-4 h-4 ${
-                improvement >= 0
-                  ? 'text-[var(--color-data-pass)]'
-                  : 'text-[var(--color-data-fail)]'
+                improvement >= 0 ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'
               }`}
             />
-            <span
-              className="text-xs font-medium text-[var(--color-text-primary)]"
-            >
+            <span className="text-xs font-medium text-[var(--color-text-primary)]">
               Improvement
             </span>
           </div>
           <p
             className={`text-2xl font-bold ${
-              improvement >= 0
-                ? 'text-[var(--color-data-pass)]'
-                : 'text-[var(--color-data-fail)]'
+              improvement >= 0 ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'
             }`}
           >
             {improvement >= 0 ? '+' : ''}
@@ -319,17 +307,11 @@ export default function LongitudinalProgressDashboard({
         <div className="rounded-lg p-4 bg-[var(--color-accent)] bg-opacity-10">
           <div className="flex items-center gap-2 mb-2">
             <Award className="w-4 h-4 text-[var(--color-accent)]" />
-            <span
-              className="text-xs font-medium text-[var(--color-text-primary)]"
-            >
+            <span className="text-xs font-medium text-[var(--color-text-primary)]">
               Total Questions
             </span>
           </div>
-          <p
-            className="text-2xl font-bold text-[var(--color-accent)]"
-          >
-            {totalQuestions}
-          </p>
+          <p className="text-2xl font-bold text-[var(--color-accent)]">{totalQuestions}</p>
         </div>
       </div>
 
@@ -364,15 +346,11 @@ export default function LongitudinalProgressDashboard({
                 const points = phases.map((phase, i) => {
                   const x = padding.left + (phases.length > 1 ? i * step : width / 2);
                   const y =
-                    padding.top +
-                    height -
-                    ((phase.masteryScore - minScore) / range) * height;
+                    padding.top + height - ((phase.masteryScore - minScore) / range) * height;
                   return { x, y, phase };
                 });
                 const linePath =
-                  points.length > 0
-                    ? `M ${points.map((p) => `${p.x},${p.y}`).join(' L ')}`
-                    : '';
+                  points.length > 0 ? `M ${points.map((p) => `${p.x},${p.y}`).join(' L ')}` : '';
                 const areaPath =
                   points.length > 1
                     ? `M ${padding.left},${padding.top + height} L ${points.map((p) => `${p.x},${p.y}`).join(' L ')} L ${padding.left + width},${padding.top + height} Z`
@@ -380,13 +358,7 @@ export default function LongitudinalProgressDashboard({
 
                 return (
                   <>
-                    {areaPath && (
-                      <path
-                        d={areaPath}
-                        fill="url(#sparklineGradient)"
-                        aria-hidden
-                      />
-                    )}
+                    {areaPath && <path d={areaPath} fill="url(#sparklineGradient)" aria-hidden />}
                     {linePath && (
                       <motion.path
                         d={linePath}

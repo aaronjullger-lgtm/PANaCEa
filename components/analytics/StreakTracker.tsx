@@ -112,9 +112,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
       <div className="border-t border-[var(--color-border)] pt-4">
         <div className="flex items-center gap-2 mb-3">
           <Calendar className="w-4 h-4 text-[var(--color-text-muted)]" />
-          <span className="text-sm font-medium text-[var(--color-text-primary)]">
-            Last 7 Days
-          </span>
+          <span className="text-sm font-medium text-[var(--color-text-primary)]">Last 7 Days</span>
         </div>
 
         <div className="grid grid-cols-7 gap-2">

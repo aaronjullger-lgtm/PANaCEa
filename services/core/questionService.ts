@@ -417,15 +417,11 @@ export default {
   ) => (await import('../ai/intelligentQuestionService')).getIntelligentQuestions(...args),
 
   // Adaptive algorithms - wrapped to avoid top-level await
-  calculateAdaptiveState: async (
-    ...args: Parameters<typeof calcAdaptiveStateFn>
-  ) => {
+  calculateAdaptiveState: async (...args: Parameters<typeof calcAdaptiveStateFn>) => {
     const mod = await import('../ai/adaptiveQuestionEngine');
     return mod.calculateAdaptiveState(...args);
   },
-  selectOptimalQuestions: async (
-    ...args: Parameters<typeof selectOptimalQuestionsFn>
-  ) => {
+  selectOptimalQuestions: async (...args: Parameters<typeof selectOptimalQuestionsFn>) => {
     const mod = await import('../ai/adaptiveQuestionEngine');
     return mod.selectOptimalQuestions(...args);
   },

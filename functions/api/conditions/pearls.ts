@@ -136,8 +136,8 @@ export const onRequestGet = authenticatedEndpoint(
         }
 
         const content = medicalContent.content as Record<string, any> | null;
-        const pearls = Array.isArray(content?.pearls) 
-          ? content.pearls 
+        const pearls = Array.isArray(content?.pearls)
+          ? content.pearls
           : Array.isArray(content?.clinicalPearls)
             ? content.clinicalPearls
             : [];
@@ -171,8 +171,8 @@ export const onRequestGet = authenticatedEndpoint(
 
         for (const condition of conditions) {
           const content = condition.content as Record<string, any> | null;
-          const pearls = Array.isArray(content?.pearls) 
-            ? content.pearls 
+          const pearls = Array.isArray(content?.pearls)
+            ? content.pearls
             : Array.isArray(content?.clinicalPearls)
               ? content.clinicalPearls
               : [];

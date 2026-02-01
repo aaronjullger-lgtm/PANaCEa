@@ -82,7 +82,6 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
 
         setShortcuts(mergedShortcuts);
-        console.log('[ShortcutContext] Loaded custom shortcuts from localStorage');
       }
     } catch (error) {
       console.error('[ShortcutContext] Failed to load shortcuts from localStorage:', error);
@@ -98,7 +97,6 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // Save to localStorage
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        console.log(`[ShortcutContext] Updated ${action} to '${newKey}'`);
       } catch (error) {
         console.error('[ShortcutContext] Failed to save shortcuts to localStorage:', error);
       }
@@ -113,7 +111,6 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     try {
       localStorage.removeItem(STORAGE_KEY);
-      console.log('[ShortcutContext] Reset shortcuts to defaults');
     } catch (error) {
       console.error('[ShortcutContext] Failed to reset shortcuts:', error);
     }

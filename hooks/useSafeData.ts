@@ -71,10 +71,7 @@ export interface SafeStringResult {
 /**
  * Safe access to any value with a fallback
  */
-export function useSafeData<T>(
-  value: T | null | undefined,
-  fallback: T
-): SafeDataResult<T> {
+export function useSafeData<T>(value: T | null | undefined, fallback: T): SafeDataResult<T> {
   return useMemo(() => {
     const isNullish = value === null || value === undefined;
     return {
@@ -162,10 +159,7 @@ export function useSafeNumber(
 /**
  * Safe access to strings - handles null, undefined, non-strings
  */
-export function useSafeString(
-  value: unknown,
-  fallback: string = ''
-): SafeStringResult {
+export function useSafeString(value: unknown, fallback: string = ''): SafeStringResult {
   return useMemo(() => {
     const wasNullish = value === null || value === undefined;
     const safeString = wasNullish ? fallback : String(value);
@@ -194,10 +188,7 @@ export function safeValue<T>(value: T | null | undefined, fallback: T): T {
 /**
  * Non-hook version: safe array
  */
-export function safeArray<T>(
-  value: T[] | null | undefined,
-  fallback: T[] = []
-): T[] {
+export function safeArray<T>(value: T[] | null | undefined, fallback: T[] = []): T[] {
   return Array.isArray(value) ? value : fallback;
 }
 
@@ -244,11 +235,7 @@ export function safeGet<T, K extends keyof T>(
 /**
  * Non-hook version: safe deep property access
  */
-export function safeDeepGet<T>(
-  obj: unknown,
-  path: string,
-  fallback: T
-): T {
+export function safeDeepGet<T>(obj: unknown, path: string, fallback: T): T {
   const keys = path.split('.');
   let current: unknown = obj;
 
@@ -262,7 +249,7 @@ export function safeDeepGet<T>(
     current = (current as Record<string, unknown>)[key];
   }
 
-  return (current === undefined || current === null) ? fallback : (current as T);
+  return current === undefined || current === null ? fallback : (current as T);
 }
 
 // ============================================================================
@@ -272,11 +259,7 @@ export function safeDeepGet<T>(
 /**
  * Safe percentage calculation (prevents NaN from division by zero)
  */
-export function safePercentage(
-  value: number,
-  total: number,
-  decimals: number = 1
-): number {
+export function safePercentage(value: number, total: number, decimals: number = 1): number {
   if (!Number.isFinite(value) || !Number.isFinite(total) || total === 0) {
     return 0;
   }
@@ -292,7 +275,7 @@ export function safeChartData(
   defaultValue: number = 0
 ): number[] {
   if (!Array.isArray(data)) return [];
-  
+
   return data.map((item) => {
     if (typeof item === 'number' && Number.isFinite(item)) {
       return item;

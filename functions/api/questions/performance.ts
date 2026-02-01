@@ -78,7 +78,9 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
     });
 
     type QuestionData = (typeof questions)[number];
-    const questionMap = new Map<string, QuestionData>(questions.map((q: QuestionData) => [q.id, q]));
+    const questionMap = new Map<string, QuestionData>(
+      questions.map((q: QuestionData) => [q.id, q])
+    );
 
     // Combine all data
     const performanceData = rawStats.map((stat) => {

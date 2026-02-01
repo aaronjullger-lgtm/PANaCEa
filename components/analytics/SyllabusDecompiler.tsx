@@ -141,14 +141,9 @@ export default function SyllabusDecompiler({
   };
 
   return (
-    <div
-      className="rounded-xl p-6 bg-[var(--color-bg-primary)]"
-      data-theme={theme}
-    >
+    <div className="rounded-xl p-6 bg-[var(--color-bg-primary)]" data-theme={theme}>
       <div className="flex items-center gap-2 mb-4">
-        <Sparkles
-          className="w-6 h-6 text-[var(--color-accent)]"
-        />
+        <Sparkles className="w-6 h-6 text-[var(--color-accent)]" />
         <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
           AI Syllabus Decompiler
         </h3>
@@ -180,9 +175,7 @@ export default function SyllabusDecompiler({
 
           <label htmlFor="syllabus-upload" className="cursor-pointer flex flex-col items-center">
             <Upload className="w-12 h-12 mb-3 text-[var(--color-text-muted)]" />
-            <p
-              className="text-sm font-medium mb-1 text-[var(--color-text-secondary)]"
-            >
+            <p className="text-sm font-medium mb-1 text-[var(--color-text-secondary)]">
               Click to upload or drag and drop
             </p>
             <p className="text-xs text-[var(--color-text-muted)]">
@@ -205,29 +198,19 @@ export default function SyllabusDecompiler({
         </div>
       ) : uploadState === 'uploading' || uploadState === 'processing' ? (
         <div className="rounded-lg p-8 text-center bg-[var(--color-bg-secondary)]">
-          <Loader2
-            className="w-12 h-12 mx-auto mb-3 animate-spin text-[var(--color-accent)]"
-          />
-          <p
-            className="text-sm font-medium mb-1 text-[var(--color-text-primary)]"
-          >
+          <Loader2 className="w-12 h-12 mx-auto mb-3 animate-spin text-[var(--color-accent)]" />
+          <p className="text-sm font-medium mb-1 text-[var(--color-text-primary)]">
             {uploadState === 'uploading' ? 'Uploading...' : 'Analyzing syllabus...'}
           </p>
-          <p className="text-xs text-[var(--color-text-muted)]">
-            {fileName}
-          </p>
+          <p className="text-xs text-[var(--color-text-muted)]">{fileName}</p>
         </div>
       ) : (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Success State */}
           <div className="rounded-lg p-6 mb-4 bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30">
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle
-                className="w-5 h-5 text-[var(--color-data-pass)]"
-              />
-              <p
-                className="font-medium text-[var(--color-data-pass)]"
-              >
+              <CheckCircle className="w-5 h-5 text-[var(--color-data-pass)]" />
+              <p className="font-medium text-[var(--color-data-pass)]">
                 Syllabus Analyzed Successfully!
               </p>
             </div>
@@ -247,11 +230,7 @@ export default function SyllabusDecompiler({
                 className="rounded-lg p-4 bg-[var(--color-bg-secondary)]"
               >
                 <div className="flex items-start justify-between mb-2">
-                  <h4
-                    className="font-semibold text-[var(--color-text-primary)]"
-                  >
-                    {tag.topic}
-                  </h4>
+                  <h4 className="font-semibold text-[var(--color-text-primary)]">{tag.topic}</h4>
                   <span
                     className={`text-xs px-2 py-1 rounded ${
                       tag.priority === 'high'
@@ -265,9 +244,7 @@ export default function SyllabusDecompiler({
                   </span>
                 </div>
                 {tag.examSection && (
-                  <p
-                    className="text-xs mb-2 text-[var(--color-text-muted)]"
-                  >
+                  <p className="text-xs mb-2 text-[var(--color-text-muted)]">
                     Exam Section: {tag.examSection}
                   </p>
                 )}
@@ -296,12 +273,7 @@ export default function SyllabusDecompiler({
             >
               Download Tags
             </PrimaryButton>
-            <PrimaryButton
-              variant="ghost"
-              size="sm"
-              onClick={handleReset}
-              icon={X}
-            >
+            <PrimaryButton variant="ghost" size="sm" onClick={handleReset} icon={X}>
               Reset
             </PrimaryButton>
           </div>

@@ -328,15 +328,15 @@ export function SystemTriageHeatmap({
       <div className={cn('', className)}>
         {/* Summary Header */}
         <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--color-border)]">
-          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
-            System Triage
-          </h3>
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">System Triage</h3>
           <div className="flex gap-3 text-xs">
             {statusCounts.critical > 0 && (
               <span className="text-[var(--color-data-fail)]">🔴 {statusCounts.critical}</span>
             )}
             {statusCounts.at_risk > 0 && (
-              <span className="text-[var(--color-data-provisional)]">🟡 {statusCounts.at_risk}</span>
+              <span className="text-[var(--color-data-provisional)]">
+                🟡 {statusCounts.at_risk}
+              </span>
             )}
             {statusCounts.stable > 0 && (
               <span className="text-[var(--color-data-pass)]">🟢 {statusCounts.stable}</span>
@@ -361,16 +361,24 @@ export function SystemTriageHeatmap({
         </h3>
         <div className="flex gap-3 text-xs">
           {statusCounts.critical > 0 && (
-            <span className="text-[var(--color-data-fail)] font-medium">🔴 {statusCounts.critical} Critical</span>
+            <span className="text-[var(--color-data-fail)] font-medium">
+              🔴 {statusCounts.critical} Critical
+            </span>
           )}
           {statusCounts.at_risk > 0 && (
-            <span className="text-[var(--color-data-provisional)] font-medium">🟡 {statusCounts.at_risk} At Risk</span>
+            <span className="text-[var(--color-data-provisional)] font-medium">
+              🟡 {statusCounts.at_risk} At Risk
+            </span>
           )}
           {statusCounts.stable > 0 && (
-            <span className="text-[var(--color-data-pass)] font-medium">🟢 {statusCounts.stable} Stable</span>
+            <span className="text-[var(--color-data-pass)] font-medium">
+              🟢 {statusCounts.stable} Stable
+            </span>
           )}
           {statusCounts.mastered > 0 && (
-            <span className="text-[var(--color-accent)] font-medium">🔵 {statusCounts.mastered} Mastered</span>
+            <span className="text-[var(--color-accent)] font-medium">
+              🔵 {statusCounts.mastered} Mastered
+            </span>
           )}
         </div>
       </div>

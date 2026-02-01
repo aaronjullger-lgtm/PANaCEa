@@ -144,7 +144,11 @@ type ApiDrug = {
  * Map API Drug to DrugEntry format
  */
 function mapDrugToEntry(drug: ApiDrug): DrugEntry {
-  const drugClassArr = Array.isArray(drug.drugClass) ? drug.drugClass : drug.drugClass ? [drug.drugClass] : [];
+  const drugClassArr = Array.isArray(drug.drugClass)
+    ? drug.drugClass
+    : drug.drugClass
+      ? [drug.drugClass]
+      : [];
   const mainClass = drugClassArr[0];
   const subClass = drugClassArr[1];
   return {

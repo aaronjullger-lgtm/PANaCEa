@@ -7,8 +7,10 @@ interface TopicBarChartProps {
 
 const TopicBarChart: React.FC<TopicBarChartProps> = ({ topicScores }) => {
   const getBarColor = (score: number): string => {
-    if (score < 75) return 'bg-gradient-to-r from-[var(--color-data-fail)] to-[var(--color-data-fail)]';
-    if (score < 85) return 'bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]';
+    if (score < 75)
+      return 'bg-gradient-to-r from-[var(--color-data-fail)] to-[var(--color-data-fail)]';
+    if (score < 85)
+      return 'bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]';
     return 'bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)]';
   };
 

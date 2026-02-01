@@ -88,9 +88,7 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({ refres
             <p className="text-sm font-medium text-[var(--color-text-primary)]">
               {pauseAnalysis.message}
             </p>
-            <p className="text-xs text-action-muted mt-1">
-              {pauseAnalysis.encouragement}
-            </p>
+            <p className="text-xs text-action-muted mt-1">{pauseAnalysis.encouragement}</p>
           </div>
           <button
             onClick={handleDismiss}

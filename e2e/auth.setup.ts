@@ -27,7 +27,7 @@ const authFile = path.join(__dirname, '../playwright/.auth/user.json');
 setup('authenticate with Clerk', async ({ page }) => {
   // Increase timeout to 2 minutes for manual login
   setup.setTimeout(120000);
-  
+
   console.log('🔐 Starting authentication setup...');
   console.log(`⏱️  Test timeout set to: ${120000}ms (2 minutes)`);
   console.log(`📁 Auth file path: ${authFile}`);
@@ -49,18 +49,22 @@ setup('authenticate with Clerk', async ({ page }) => {
     // Check if already authenticated (user might be logged in from previous session)
     console.log('🔍 Checking if already authenticated...');
     console.log('🔎 Looking for selector: text=/Dashboard|Quiz|Start Session/');
-    
+
     const checkStartTime = Date.now();
     const isAuthenticated = await page
       .locator('text=/Dashboard|Quiz|Start Session/')
       .first()
       .isVisible({ timeout: 5000 })
       .catch((error) => {
-        console.log(`⚠️  Auth check failed after ${Date.now() - checkStartTime}ms: ${error.message}`);
+        console.log(
+          `⚠️  Auth check failed after ${Date.now() - checkStartTime}ms: ${error.message}`
+        );
         return false;
       });
     const checkEndTime = Date.now();
-    console.log(`🔍 Auth check completed in ${checkEndTime - checkStartTime}ms, result: ${isAuthenticated}`);
+    console.log(
+      `🔍 Auth check completed in ${checkEndTime - checkStartTime}ms, result: ${isAuthenticated}`
+    );
 
     if (isAuthenticated) {
       console.log('✅ Already authenticated! Saving session...');
@@ -74,7 +78,7 @@ setup('authenticate with Clerk', async ({ page }) => {
       // Look for indicators that user is logged in (adjust these selectors based on your app)
       console.log('⏳ Starting waitForSelector with 120s timeout...');
       const waitStartTime = Date.now();
-      
+
       await page
         .waitForSelector('text=/Dashboard|Quiz|Start Session/', {
           timeout: 120000, // 2 minutes for manual login

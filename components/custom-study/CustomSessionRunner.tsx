@@ -190,10 +190,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
           </div>
         </div>
 
-        <button
-          onClick={onEnd}
-          className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)]"
-        >
+        <button onClick={onEnd} className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)]">
           <X className="w-5 h-5 text-[var(--color-text-muted)]" />
         </button>
       </div>

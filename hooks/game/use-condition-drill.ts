@@ -498,11 +498,7 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
             const correctAnswer = currentQuestion.options[currentQuestion.correctAnswerIndex] ?? '';
             const userAnswer = currentQuestion.options[answerIndex] ?? '';
             module
-              .getSocraticHint(
-                currentQuestion.question,
-                correctAnswer,
-                userAnswer
-              )
+              .getSocraticHint(currentQuestion.question, correctAnswer, userAnswer)
               .then((hint) => {
                 setSocraticHint(hint);
                 setIsLoadingHint(false);

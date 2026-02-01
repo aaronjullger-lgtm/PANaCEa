@@ -113,7 +113,7 @@ const GlassPanel: React.FC<{
  */
 function formatRationale(text: string): string[] {
   if (!text || typeof text !== 'string') return [];
-  
+
   // If already has HTML structure, extract paragraphs
   if (text.includes('<p>') || text.includes('<li>')) {
     // Extract text content, split by closing tags
@@ -122,12 +122,12 @@ function formatRationale(text: string): string[] {
       .replace(/<\/li>/gi, '\n')
       .replace(/<[^>]*>/g, '')
       .trim();
-    return stripped.split(/\n\n+/).filter(p => p.trim().length > 0);
+    return stripped.split(/\n\n+/).filter((p) => p.trim().length > 0);
   }
-  
+
   // Split by common delimiters
   const paragraphs: string[] = [];
-  
+
   // Check for numbered points (1. 2. 3. or 1) 2) 3))
   if (/\d+[\.\)]\s/.test(text)) {
     const points = text.split(/(?=\d+[\.\)]\s)/);
@@ -139,7 +139,7 @@ function formatRationale(text: string): string[] {
     }
     return paragraphs;
   }
-  
+
   // Check for bullet-like patterns (• - *)
   if (/^[\•\-\*]\s/m.test(text)) {
     const points = text.split(/(?=[\•\-\*]\s)/);
@@ -151,12 +151,12 @@ function formatRationale(text: string): string[] {
     }
     return paragraphs;
   }
-  
+
   // Split by double newlines first
   if (text.includes('\n\n')) {
-    return text.split(/\n\n+/).filter(p => p.trim().length > 0);
+    return text.split(/\n\n+/).filter((p) => p.trim().length > 0);
   }
-  
+
   // Split long text by sentences (aim for ~2-3 sentences per paragraph)
   const sentences = text.split(/(?<=[.!?])\s+/);
   if (sentences.length > 3) {
@@ -173,7 +173,7 @@ function formatRationale(text: string): string[] {
     }
     return paragraphs;
   }
-  
+
   // Return as single paragraph if short
   return [text.trim()];
 }
@@ -440,9 +440,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
         {buzzwords.length > 0 && (
           <section className="mb-6">
             <SectionHeader icon={<AlertCircle className="w-5 h-5" />} title="Buzzwords & Clues" />
-            <p className="text-sm text-[var(--color-text-secondary)]">
-              {buzzwords.join(' · ')}
-            </p>
+            <p className="text-sm text-[var(--color-text-secondary)]">{buzzwords.join(' · ')}</p>
           </section>
         )}
 
@@ -591,7 +589,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
                     <ClinicalSkeleton variant="compact" lines={4} />
                   </div>
                 )}
-                
+
                 {/* Show streaming response as it arrives */}
                 {tutorResponse && (
                   <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">

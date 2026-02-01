@@ -220,7 +220,10 @@ export function MediaApprovalDashboard() {
               <AlertCircle className="w-5 h-5" />
               <span>{error}</span>
             </div>
-            <button onClick={() => setError(null)} className="text-[var(--color-data-fail)] hover:opacity-80">
+            <button
+              onClick={() => setError(null)}
+              className="text-[var(--color-data-fail)] hover:opacity-80"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -265,7 +268,9 @@ export function MediaApprovalDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[var(--color-text-secondary)] mb-1">Pending</p>
-                <p className="text-3xl font-bold text-[var(--color-data-provisional)]">{stats.pending}</p>
+                <p className="text-3xl font-bold text-[var(--color-data-provisional)]">
+                  {stats.pending}
+                </p>
               </div>
               <AlertCircle className="w-8 h-8 text-[var(--color-data-provisional)]" />
             </div>
@@ -295,7 +300,9 @@ export function MediaApprovalDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-[var(--color-text-secondary)] mb-1">Approval Rate</p>
-                <p className="text-3xl font-bold text-[var(--color-accent)]">{stats.approvalRate}%</p>
+                <p className="text-3xl font-bold text-[var(--color-accent)]">
+                  {stats.approvalRate}%
+                </p>
               </div>
               <TrendingUp className="w-8 h-8 text-[var(--color-accent)]" />
             </div>
@@ -422,7 +429,9 @@ export function MediaApprovalDashboard() {
           <div className="bg-[var(--color-bg-primary)] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Media Details</h2>
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                  Media Details
+                </h2>
                 <button
                   onClick={() => setSelectedMedia(null)}
                   className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
@@ -457,7 +466,9 @@ export function MediaApprovalDashboard() {
               {/* AI Analysis */}
               {selectedMedia.aiMetadata?.assessment?.aiAnalysis && (
                 <div className="mb-6">
-                  <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">AI Analysis</h3>
+                  <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">
+                    AI Analysis
+                  </h3>
                   <p className="text-[var(--color-text-secondary)] mb-3">
                     {selectedMedia.aiMetadata.assessment.aiAnalysis.description}
                   </p>
@@ -489,7 +500,9 @@ export function MediaApprovalDashboard() {
                 <>
                   {selectedMedia.aiMetadata.assessment.issues.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">Issues</h3>
+                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">
+                        Issues
+                      </h3>
                       <ul className="list-disc list-inside text-[var(--color-data-fail)]">
                         {selectedMedia.aiMetadata.assessment.issues.map((issue, idx) => (
                           <li key={idx}>{issue}</li>
@@ -539,7 +552,9 @@ export function MediaApprovalDashboard() {
       {showRejectionModal && selectedMedia && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-[var(--color-bg-primary)] rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">Reject Media</h2>
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
+              Reject Media
+            </h2>
             <p className="text-[var(--color-text-secondary)] mb-4">
               Please provide a reason for rejection:
             </p>
@@ -669,7 +684,9 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-[var(--color-bg-primary)] rounded-lg max-w-lg w-full p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Upload Medical Image</h2>
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+            Upload Medical Image
+          </h2>
           <button
             onClick={onClose}
             className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
@@ -707,7 +724,9 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
               />
               <div className="text-left">
                 <p className="text-sm font-medium text-[var(--color-text-primary)]">{file.name}</p>
-                <p className="text-xs text-[var(--color-text-muted)]">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                </p>
                 <button
                   onClick={() => setFile(null)}
                   className="text-xs text-[var(--color-data-fail)] hover:opacity-80 mt-1"
@@ -719,7 +738,9 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           ) : (
             <>
               <Upload className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-3" />
-              <p className="text-[var(--color-text-secondary)] mb-2">Drag & drop an image here, or</p>
+              <p className="text-[var(--color-text-secondary)] mb-2">
+                Drag & drop an image here, or
+              </p>
               <label className="cursor-pointer text-[var(--color-accent)] hover:opacity-90">
                 browse files
                 <input

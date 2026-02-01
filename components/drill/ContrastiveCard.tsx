@@ -1,9 +1,9 @@
 /**
  * Contrastive Card Component
- * 
+ *
  * DDx Compare mode with drag-and-drop interface for distinguishing similar conditions.
  * Targets user's confusion pairs for focused practice.
- * 
+ *
  * @component
  */
 
@@ -23,7 +23,10 @@ import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-ki
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Check, X, GripVertical, ArrowRight } from 'lucide-react';
-import { ContrastiveQuestion, DistinguisherFeature } from '@/services/drill/contrastiveDrill.service';
+import {
+  ContrastiveQuestion,
+  DistinguisherFeature,
+} from '@/services/drill/contrastiveDrill.service';
 
 interface ContrastiveCardProps {
   question: ContrastiveQuestion;
@@ -37,13 +40,9 @@ interface FeatureItemProps {
 }
 
 const FeatureItem: React.FC<FeatureItemProps> = ({ feature, isDragging, isAssigned }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: feature.id });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: feature.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -69,10 +68,7 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ feature, isDragging, isAssign
   );
 };
 
-export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
-  question,
-  onAnswer,
-}) => {
+export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({ question, onAnswer }) => {
   const [startTime] = useState<number>(Date.now());
   const [unassignedFeatures, setUnassignedFeatures] = useState<DistinguisherFeature[]>([]);
   const [condition1Features, setCondition1Features] = useState<DistinguisherFeature[]>([]);
@@ -172,7 +168,9 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
     if (!isSubmitted) return '';
 
     const isCorrect = assigned === feature.belongsTo;
-    return isCorrect ? 'border-[var(--color-data-pass)] bg-[var(--color-data-pass)]/10' : 'border-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10';
+    return isCorrect
+      ? 'border-[var(--color-data-pass)] bg-[var(--color-data-pass)]/10'
+      : 'border-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10';
   };
 
   return (
@@ -190,7 +188,9 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
       {/* Presenting Symptom */}
       <div className="bg-[var(--color-bg-secondary)] border-2 border-[var(--color-accent)]/30 rounded-xl p-4 mb-6 text-center">
         <span className="text-sm font-medium text-[var(--color-accent)]">Presenting Symptom:</span>
-        <p className="text-lg font-semibold text-[var(--color-text-primary)] mt-1">{question.symptom}</p>
+        <p className="text-lg font-semibold text-[var(--color-text-primary)] mt-1">
+          {question.symptom}
+        </p>
       </div>
 
       <DndContext
@@ -298,9 +298,11 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
           {activeId ? (
             <div className="p-3 rounded-lg border-2 border-[var(--color-accent)] bg-[var(--color-bg-primary)] shadow-xl">
               <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                {[...unassignedFeatures, ...condition1Features, ...condition2Features].find(
-                  (f) => f.id === activeId
-                )?.text}
+                {
+                  [...unassignedFeatures, ...condition1Features, ...condition2Features].find(
+                    (f) => f.id === activeId
+                  )?.text
+                }
               </span>
             </div>
           ) : null}
@@ -340,12 +342,16 @@ export const ContrastiveCard: React.FC<ContrastiveCardProps> = ({
               {result.correct === result.total ? (
                 <>
                   <Check className="w-6 h-6" />
-                  <span>Perfect! {result.correct}/{result.total} correct</span>
+                  <span>
+                    Perfect! {result.correct}/{result.total} correct
+                  </span>
                 </>
               ) : (
                 <>
                   <X className="w-6 h-6" />
-                  <span>{result.correct}/{result.total} correct - Review highlighted features</span>
+                  <span>
+                    {result.correct}/{result.total} correct - Review highlighted features
+                  </span>
                 </>
               )}
             </motion.div>

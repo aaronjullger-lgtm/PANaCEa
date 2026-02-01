@@ -14,7 +14,9 @@ export function ContrastiveComparisonTable({
 }: ComparisonProps) {
   return (
     <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4 mt-4">
-      <h3 className="text-lg font-semibold mb-2 text-[var(--color-text-primary)]">✓ Correct! {targetCondition}</h3>
+      <h3 className="text-lg font-semibold mb-2 text-[var(--color-text-primary)]">
+        ✓ Correct! {targetCondition}
+      </h3>
 
       <div className="mb-4">
         <h4 className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">

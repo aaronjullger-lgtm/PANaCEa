@@ -1,9 +1,9 @@
 /**
  * Semantic Color Mapping Utility
- * 
+ *
  * This utility provides mappings from raw Tailwind colors to semantic design tokens
  * to help enforce the "Glass & Gradient" design system.
- * 
+ *
  * @see docs/DESIGN_SYSTEM.md for full design system documentation
  */
 
@@ -22,19 +22,19 @@ export const SEMANTIC_TOKENS = {
     secondary: 'var(--color-bg-secondary)', // Card backgrounds
     tertiary: 'var(--color-bg-tertiary)', // Subtle backgrounds
   },
-  
+
   // Text colors
   text: {
     primary: 'var(--color-text-primary)', // Main text
     secondary: 'var(--color-text-secondary)', // Subdued text
     muted: 'var(--color-text-muted)', // Very subtle text
   },
-  
+
   // Border colors
   border: {
     default: 'var(--color-border)', // Standard borders
   },
-  
+
   // Action colors
   action: {
     primary: 'var(--color-accent)', // Primary action color
@@ -153,36 +153,55 @@ export function getGradientClasses(variant: 'primary' | 'success' | 'warning' | 
  */
 export const FORBIDDEN_RAW_COLORS = [
   // Blue variants (use semantic tokens or standard gradients instead)
-  legacyKey('bg', 'blue', '500'), legacyKey('bg', 'blue', '600'), legacyKey('bg', 'blue', '700'),
-  legacyKey('text', 'blue', '500'), legacyKey('text', 'blue', '600'), legacyKey('text', 'blue', '700'),
-  legacyKey('border', 'blue', '500'), legacyKey('border', 'blue', '600'),
-  
+  legacyKey('bg', 'blue', '500'),
+  legacyKey('bg', 'blue', '600'),
+  legacyKey('bg', 'blue', '700'),
+  legacyKey('text', 'blue', '500'),
+  legacyKey('text', 'blue', '600'),
+  legacyKey('text', 'blue', '700'),
+  legacyKey('border', 'blue', '500'),
+  legacyKey('border', 'blue', '600'),
+
   // Orange variants (use amber-orange gradients for warnings)
-  legacyKey('bg', 'orange', '500'), legacyKey('bg', 'orange', '600'),
-  legacyKey('text', 'orange', '500'), legacyKey('text', 'orange', '600'),
-  
+  legacyKey('bg', 'orange', '500'),
+  legacyKey('bg', 'orange', '600'),
+  legacyKey('text', 'orange', '500'),
+  legacyKey('text', 'orange', '600'),
+
   // Indigo variants (use in gradients only, not as solid colors)
-  legacyKey('bg', 'indigo', '500'), legacyKey('bg', 'indigo', '600'),
-  legacyKey('text', 'indigo', '500'), legacyKey('text', 'indigo', '600'),
-  
+  legacyKey('bg', 'indigo', '500'),
+  legacyKey('bg', 'indigo', '600'),
+  legacyKey('text', 'indigo', '500'),
+  legacyKey('text', 'indigo', '600'),
+
   // Green variants (use emerald-green gradients for success)
-  legacyKey('bg', 'green', '500'), legacyKey('bg', 'green', '600'),
-  legacyKey('text', 'green', '500'), legacyKey('text', 'green', '600'),
-  
+  legacyKey('bg', 'green', '500'),
+  legacyKey('bg', 'green', '600'),
+  legacyKey('text', 'green', '500'),
+  legacyKey('text', 'green', '600'),
+
   // Red/Rose variants (use red-rose gradients for danger)
-  legacyKey('bg', 'red', '500'), legacyKey('bg', 'red', '600'),
-  legacyKey('text', 'red', '500'), legacyKey('text', 'red', '600'),
-  
+  legacyKey('bg', 'red', '500'),
+  legacyKey('bg', 'red', '600'),
+  legacyKey('text', 'red', '500'),
+  legacyKey('text', 'red', '600'),
+
   // Slate variants (use semantic tokens)
-  legacyKey('bg', 'slate', '100'), legacyKey('bg', 'slate', '200'), legacyKey('bg', 'slate', '800'), legacyKey('bg', 'slate', '900'),
-  legacyKey('text', 'slate', '500'), legacyKey('text', 'slate', '600'), legacyKey('text', 'slate', '700'), legacyKey('text', 'slate', '900'),
+  legacyKey('bg', 'slate', '100'),
+  legacyKey('bg', 'slate', '200'),
+  legacyKey('bg', 'slate', '800'),
+  legacyKey('bg', 'slate', '900'),
+  legacyKey('text', 'slate', '500'),
+  legacyKey('text', 'slate', '600'),
+  legacyKey('text', 'slate', '700'),
+  legacyKey('text', 'slate', '900'),
 ] as const;
 
 /**
  * Check if a class string contains forbidden raw colors
  */
 export function containsForbiddenColors(classString: string): boolean {
-  return FORBIDDEN_RAW_COLORS.some(color => classString.includes(color));
+  return FORBIDDEN_RAW_COLORS.some((color) => classString.includes(color));
 }
 
 /**
@@ -198,19 +217,19 @@ export function suggestSemanticReplacement(rawColor: string): string | null {
 
 /**
  * Example usage:
- * 
+ *
  * // ❌ BEFORE (Raw Tailwind colors)
  * <div className="bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] border-[var(--color-border)]">
- * 
+ *
  * // ✅ AFTER (Semantic tokens)
  * <div className={`${getSurfaceColor('secondary')} ${getTextColor('primary')} border-[var(--color-border)]`}>
- * 
+ *
  * // OR using inline styles:
  * <div className="bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] border-[var(--color-border)]">
- * 
+ *
  * // For gradients:
  * <button className={getGradientClasses('primary')}>Click me</button>
- * 
+ *
  * // Validation:
  * const classes = "bg-[var(--color-accent)] text-[var(--color-text-inverse)]";
  * if (containsForbiddenColors(classes)) {

@@ -1,8 +1,8 @@
 /**
  * Cloudflare Function: Log Drill Attempt
- * 
+ *
  * Logs a drill attempt with statistical isolation (isMainSession = false)
- * 
+ *
  * Endpoint: POST /api/drill/log-attempt
  * Body:
  * {
@@ -13,7 +13,7 @@
  *   responseTimeMs: number;
  *   metadata?: Record<string, any>;
  * }
- * 
+ *
  * @module functions/api/drill/log-attempt
  */
 
@@ -28,32 +28,25 @@ export async function onRequestPost(context: any) {
   try {
     // Create edge Prisma client
     prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
+
     // Authenticate
     const authContext = await authenticateRequest(request, env);
     if (!authContext) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     const userId = authContext.userId;
 
     // Parse body
     const body = await request.json();
-    const {
-      questionId,
-      conditionId,
-      drillType,
-      wasCorrect,
-      responseTimeMs,
-      metadata,
-    } = body;
+    const { questionId, conditionId, drillType, wasCorrect, responseTimeMs, metadata } = body;
 
     // Validate required fields
     if (!drillType || typeof wasCorrect !== 'boolean' || typeof responseTimeMs !== 'number') {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: 'Missing required fields: drillType, wasCorrect, responseTimeMs',
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -64,7 +57,7 @@ export async function onRequestPost(context: any) {
     const validDrillTypes = ['photo_drill', 'contrastive_drill', 'rapid_recall', 'wordle'];
     if (!validDrillTypes.includes(drillType)) {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: `Invalid drillType. Must be one of: ${validDrillTypes.join(', ')}`,
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -85,7 +78,7 @@ export async function onRequestPost(context: any) {
     const attempt = await logDrillAttempt(prisma, attemptData);
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         attemptId: attempt.id,
         isMainSession: false, // Confirm statistical isolation
@@ -95,7 +88,7 @@ export async function onRequestPost(context: any) {
   } catch (error) {
     console.error('Error logging drill attempt:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Failed to log drill attempt',
         details: error instanceof Error ? error.message : 'Unknown error',
       }),

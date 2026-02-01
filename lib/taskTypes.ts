@@ -1,6 +1,6 @@
 /**
  * Task Types for Sub-Topic SRS Tracking
- * 
+ *
  * Each condition can have separate FSRS tracks for different task types,
  * allowing users to master different aspects of a condition independently.
  */

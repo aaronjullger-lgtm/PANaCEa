@@ -298,9 +298,7 @@ const PredictiveAlert: React.FC<{
       <div className="flex items-center gap-3">
         <AlertTriangle className="w-6 h-6 text-[var(--color-data-provisional)]" />
         <div>
-          <h3 className="font-semibold text-[var(--color-text-primary)]">
-            ⚠️ Memory Decay Alert
-          </h3>
+          <h3 className="font-semibold text-[var(--color-text-primary)]">⚠️ Memory Decay Alert</h3>
           <p className="text-sm text-[var(--color-text-muted)]">
             {criticalCount > 0 && (
               <span className="text-[var(--color-data-fail)] font-medium">

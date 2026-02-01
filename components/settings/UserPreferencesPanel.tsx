@@ -24,9 +24,7 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({ preferences
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-4">
         <Settings className="w-5 h-5 text-[var(--color-text-muted)]" />
-        <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
-          Learning Preferences
-        </h3>
+        <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Learning Preferences</h3>
       </div>
 
       {/* Unit System */}

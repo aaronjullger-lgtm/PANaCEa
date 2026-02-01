@@ -93,9 +93,7 @@ export const DailyPearlWidget: React.FC<DailyPearlWidgetProps> = ({
       <div className="px-4 py-3 bg-[var(--color-accent)]/10 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Gem className="w-4 h-4 text-[var(--color-accent)]" />
-          <span className="text-sm font-semibold text-[var(--color-accent)]">
-            Daily Pearl
-          </span>
+          <span className="text-sm font-semibold text-[var(--color-accent)]">Daily Pearl</span>
           <Sparkles className="w-3 h-3 text-data-provisional" />
         </div>
         <span className="text-xs text-[var(--color-accent)] bg-[var(--color-accent)]/15 px-2 py-0.5 rounded-full">
@@ -116,9 +114,7 @@ export const DailyPearlWidget: React.FC<DailyPearlWidgetProps> = ({
           onClick={onExpandClick}
           className="w-full px-4 py-2.5 bg-[var(--color-accent)]/10 hover:bg-[var(--color-accent)]/20 transition-colors flex items-center justify-center gap-2 group"
         >
-          <span className="text-xs font-medium text-[var(--color-accent)]">
-            View All Pearls
-          </span>
+          <span className="text-xs font-medium text-[var(--color-accent)]">View All Pearls</span>
           <ChevronRight className="w-4 h-4 text-[var(--color-accent)] group-hover:translate-x-1 transition-transform" />
         </button>
       )}

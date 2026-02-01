@@ -68,9 +68,12 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
 
   const getDifficultyBadge = () => {
     const colors = {
-      intermediate: 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/30',
-      advanced: 'bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)] border-[var(--color-text-muted)]/30',
-      expert: 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/30',
+      intermediate:
+        'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/30',
+      advanced:
+        'bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)] border-[var(--color-text-muted)]/30',
+      expert:
+        'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/30',
     };
     return (
       <span
@@ -122,7 +125,9 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
             <Trophy className="w-4 h-4 text-[var(--color-text-muted)]" />
           </div>
           <div className="text-left">
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">Grand Rounds:</span>
+            <span className="text-sm font-medium text-[var(--color-text-primary)]">
+              Grand Rounds:
+            </span>
             <span className="text-sm text-[var(--color-text-muted)] ml-2">{challengeTopic}</span>
           </div>
           {userStatus === 'completed' && (

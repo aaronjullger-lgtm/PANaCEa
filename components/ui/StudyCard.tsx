@@ -46,9 +46,7 @@ export const StudyCard: React.FC<StudyCardProps> = ({
   children,
 }) => {
   // Theme-aware styles using CSS variables
-  const cardBg = isActive
-    ? 'bg-[var(--color-accent)]/10'
-    : 'bg-[var(--color-bg-primary)]';
+  const cardBg = isActive ? 'bg-[var(--color-accent)]/10' : 'bg-[var(--color-bg-primary)]';
 
   const cardBorder = isActive
     ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/30'
@@ -91,11 +89,7 @@ export const StudyCard: React.FC<StudyCardProps> = ({
             className={`
               text-lg 
               font-bold 
-              ${
-                isActive
-                  ? 'text-[var(--color-accent)]'
-                  : 'text-[var(--color-text-primary)]'
-              }
+              ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-primary)]'}
             `}
           >
             {title}
@@ -112,9 +106,7 @@ export const StudyCard: React.FC<StudyCardProps> = ({
 
       {/* Subtitle */}
       {subtitle && (
-        <p className="text-sm text-[var(--color-text-secondary)] mb-3 line-clamp-2">
-          {subtitle}
-        </p>
+        <p className="text-sm text-[var(--color-text-secondary)] mb-3 line-clamp-2">{subtitle}</p>
       )}
 
       {/* Custom children content */}

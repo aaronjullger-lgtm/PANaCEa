@@ -220,7 +220,7 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
 
         {/* Empty State */}
         {contentItems.length === 0 && (
-            <div className="text-sm text-[var(--color-text-muted)] italic flex items-center gap-2">
+          <div className="text-sm text-[var(--color-text-muted)] italic flex items-center gap-2">
             <ChevronRight className="w-4 h-4" />
             Click to view full details
           </div>

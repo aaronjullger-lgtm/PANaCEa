@@ -53,7 +53,13 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     });
 
     if (!user || !canViewCMS(user.role as UserRole)) {
-      return createErrorResponse(request, 'Forbidden: Insufficient permissions', 403, undefined, env);
+      return createErrorResponse(
+        request,
+        'Forbidden: Insufficient permissions',
+        403,
+        undefined,
+        env
+      );
     }
 
     const url = new URL(request.url);
@@ -108,13 +114,13 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       request,
       {
         logs,
-      pagination: {
-        limit,
-        offset,
-        total,
-        hasMore: offset + logs.length < total,
+        pagination: {
+          limit,
+          offset,
+          total,
+          hasMore: offset + logs.length < total,
+        },
       },
-    },
       200,
       0,
       env

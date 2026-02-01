@@ -1,9 +1,9 @@
 /**
  * Consolidate Condition Hierarchy Script
- * 
+ *
  * Links related medical conditions into parent-child hierarchies
  * based on condition-families.json configuration.
- * 
+ *
  * Run: npx tsx scripts/db/consolidate-condition-hierarchy.ts
  */
 
@@ -120,12 +120,7 @@ async function consolidateHierarchy() {
     if (family.subtypes) {
       console.log(`  Linking ${family.subtypes.length} subtypes...`);
       for (const subtype of family.subtypes) {
-        const linked = await linkCondition(
-          subtype,
-          parent.id,
-          'subtype',
-          family.canonicalName
-        );
+        const linked = await linkCondition(subtype, parent.id, 'subtype', family.canonicalName);
         if (linked) totalLinked++;
       }
     }

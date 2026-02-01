@@ -377,7 +377,7 @@ export async function getQuestionAuditTrail(questionId: string): Promise<
     for (let i = 0; i < history.versions.length; i++) {
       const current = history.versions[i];
       if (!current) continue;
-      
+
       let changeCount = 0;
 
       // Compare with previous version to count changes

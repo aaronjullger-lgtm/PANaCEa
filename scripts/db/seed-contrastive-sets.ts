@@ -1,9 +1,9 @@
 /**
  * Seed Contrastive Sets Script
- * 
+ *
  * Populates the ContrastiveSet table with pre-defined symptom→condition mappings
  * for contrastive learning drills.
- * 
+ *
  * Run: npx tsx scripts/db/seed-contrastive-sets.ts
  */
 

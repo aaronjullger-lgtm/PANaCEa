@@ -102,10 +102,10 @@ const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudy
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-[var(--color-data-provisional)]">#{index + 1}</span>
-                  <h4 className="font-semibold text-[var(--color-text-primary)]">
-                    {system.name}
-                  </h4>
+                  <span className="text-lg font-bold text-[var(--color-data-provisional)]">
+                    #{index + 1}
+                  </span>
+                  <h4 className="font-semibold text-[var(--color-text-primary)]">{system.name}</h4>
                 </div>
                 <p className="text-sm text-[var(--color-text-secondary)] mt-1">
                   +{Math.round(system.topPerformerGap)}% to reach Top 10%
@@ -164,7 +164,9 @@ const CustomTooltip = ({ active, payload }: any) => {
         <div className="border-t border-[var(--color-border)] pt-2 mt-2">
           <div className="flex items-center justify-between gap-4">
             <span className="text-[var(--color-text-secondary)]">Gap to Close:</span>
-            <span className="font-bold text-[var(--color-data-provisional)]">+{Math.round(data.topPerformerGap)}%</span>
+            <span className="font-bold text-[var(--color-data-provisional)]">
+              +{Math.round(data.topPerformerGap)}%
+            </span>
           </div>
         </div>
       </div>
@@ -216,7 +218,7 @@ export const GapAnalysisDashboard: React.FC = () => {
       }
 
       const result: PerformanceDeltasResponse = await response.json();
-      
+
       if (!result || typeof result !== 'object') {
         throw new Error('Invalid response format');
       }
@@ -356,7 +358,9 @@ export const GapAnalysisDashboard: React.FC = () => {
               <Trophy className="w-5 h-5 text-[var(--color-data-provisional)]" />
               <span className="text-sm text-[var(--color-text-secondary)]">Overall Percentile</span>
             </div>
-            <p className="text-2xl font-bold text-[var(--color-text-primary)]">{data.overallPercentile}%</p>
+            <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+              {data.overallPercentile}%
+            </p>
           </motion.div>
 
           <motion.div
@@ -369,7 +373,9 @@ export const GapAnalysisDashboard: React.FC = () => {
               <Target className="w-5 h-5 text-[var(--color-accent)]" />
               <span className="text-sm text-[var(--color-text-secondary)]">Systems Analyzed</span>
             </div>
-            <p className="text-2xl font-bold text-[var(--color-text-primary)]">{data.systems.length}</p>
+            <p className="text-2xl font-bold text-[var(--color-text-primary)]">
+              {data.systems.length}
+            </p>
           </motion.div>
 
           <motion.div
@@ -380,7 +386,9 @@ export const GapAnalysisDashboard: React.FC = () => {
           >
             <div className="flex items-center gap-2 mb-1">
               <AlertCircle className="w-5 h-5 text-[var(--color-data-provisional)]" />
-              <span className="text-sm text-[var(--color-text-secondary)]">High Priority Areas</span>
+              <span className="text-sm text-[var(--color-text-secondary)]">
+                High Priority Areas
+              </span>
             </div>
             <p className="text-2xl font-bold text-[var(--color-text-primary)]">
               {

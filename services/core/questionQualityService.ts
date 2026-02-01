@@ -11,7 +11,7 @@ function simpleHash(str: string): string {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32bit integer
   }
   // Convert to hex and pad to ensure consistent length
@@ -20,7 +20,7 @@ function simpleHash(str: string): string {
   let hash2 = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash2 = ((hash2 << 7) - hash2) + char;
+    hash2 = (hash2 << 7) - hash2 + char;
     hash2 = hash2 & hash2;
   }
   return hex + Math.abs(hash2).toString(16).padStart(8, '0');

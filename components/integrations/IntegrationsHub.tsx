@@ -152,7 +152,9 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
         {/* Feature Comparison */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="p-4 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
-            <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">Why Anki?</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+              Why Anki?
+            </h3>
             <p className="text-xs text-[var(--color-text-secondary)]">
               Spaced repetition is proven to boost long-term retention. Export only what you missed
               to focus your review time efficiently.

@@ -55,10 +55,7 @@ describe('selectByPanceDistribution', () => {
   });
 
   it('returns full pool when count >= pool length', () => {
-    const pool = [
-      makeQuestion('1', 'CV'),
-      makeQuestion('2', 'PULM'),
-    ];
+    const pool = [makeQuestion('1', 'CV'), makeQuestion('2', 'PULM')];
     expect(selectByPanceDistribution(pool, 5)).toHaveLength(2);
     expect(selectByPanceDistribution(pool, 2)).toHaveLength(2);
   });

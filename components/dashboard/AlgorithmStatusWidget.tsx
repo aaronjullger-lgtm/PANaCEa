@@ -64,8 +64,8 @@ const AlgorithmStatusWidget: React.FC<AlgorithmStatusWidgetProps> = ({
             <Sparkles className="w-4 h-4 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
             <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
               Algorithm adjusted for{' '}
-              <span className="font-semibold text-[var(--color-accent)]">{reason}</span> based
-              on recent drift.
+              <span className="font-semibold text-[var(--color-accent)]">{reason}</span> based on
+              recent drift.
               {adjustment === 'tighten' ? ' Intervals tightened.' : ' Intervals relaxed.'}
             </p>
           </div>

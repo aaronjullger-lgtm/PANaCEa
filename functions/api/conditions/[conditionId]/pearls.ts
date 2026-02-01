@@ -22,11 +22,11 @@ export const onRequestGet = authenticatedEndpoint(
 
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
-      
+
       // Use validated.conditionId from params schema validation
       // Decode in case it was URL encoded
       const conditionId = decodeURIComponent(validated.conditionId);
-      
+
       console.log('[pearls] Fetching pearls for conditionId:', conditionId);
 
       // Try to find by ID first, then by slug/identifier
@@ -56,11 +56,12 @@ export const onRequestGet = authenticatedEndpoint(
 
       // Extract pearls from content JSONB field (handle null content)
       const content = medicalContent.content as Record<string, unknown> | null;
-      const pearls = content && Array.isArray(content.clinicalPearls)
-        ? (content.clinicalPearls as string[])
-        : (content && Array.isArray(content.pearls))
-          ? (content.pearls as string[])
-          : [];
+      const pearls =
+        content && Array.isArray(content.clinicalPearls)
+          ? (content.clinicalPearls as string[])
+          : content && Array.isArray(content.pearls)
+            ? (content.pearls as string[])
+            : [];
 
       console.log('[pearls] Found', pearls.length, 'pearls');
       return { data: { pearls } };

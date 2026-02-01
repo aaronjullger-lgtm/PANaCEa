@@ -12,18 +12,18 @@ interface SectionHeaderProps {
 
 /**
  * SectionHeader - Standardized section header component
- * 
+ *
  * Design System:
  * - Consistent spacing: mt-8 mb-4
  * - Icon sizing: w-5 h-5
  * - Color variants: brand (indigo/purple) or accent (yellow/amber)
  * - Semantic tokens only (per .clinerules)
- * 
+ *
  * @example
  * ```tsx
- * <SectionHeader 
- *   title="Recommended Actions" 
- *   icon={Lightbulb} 
+ * <SectionHeader
+ *   title="Recommended Actions"
+ *   icon={Lightbulb}
  *   variant="accent"
  *   action={<Button>View All</Button>}
  * />
@@ -37,9 +37,7 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   className = '',
 }) => {
   const iconColorClass =
-    variant === 'brand'
-      ? 'text-[var(--color-accent)]'
-      : 'text-[var(--color-data-provisional)]';
+    variant === 'brand' ? 'text-[var(--color-accent)]' : 'text-[var(--color-data-provisional)]';
 
   return (
     <motion.div
@@ -54,16 +52,10 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
             <Icon className="w-5 h-5" aria-hidden="true" />
           </div>
         )}
-        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
-          {title}
-        </h2>
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h2>
       </div>
-      
-      {action && (
-        <div className="flex-shrink-0">
-          {action}
-        </div>
-      )}
+
+      {action && <div className="flex-shrink-0">{action}</div>}
     </motion.div>
   );
 };

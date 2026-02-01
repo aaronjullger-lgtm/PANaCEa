@@ -87,9 +87,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
         className="bg-surface-primary rounded-2xl shadow-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-bold text-action-primary mb-2">
-          New Study Session
-        </h2>
+        <h2 className="text-2xl font-bold text-action-primary mb-2">New Study Session</h2>
 
         {!isCustomizing ? (
           <>
@@ -117,7 +115,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
         ) : (
           <>
             <p className="text-slate-500 dark:text-slate-400 mb-6">Customize your practice quiz.</p>
-            
+
             {/* System Selection */}
             <div className="mb-6">
               <label className="flex items-center gap-2 text-sm font-semibold text-action-primary mb-2">
@@ -137,8 +135,8 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
                 ))}
               </select>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                {selectedSystem 
-                  ? `Practice questions exclusively from ${selectedSystem}` 
+                {selectedSystem
+                  ? `Practice questions exclusively from ${selectedSystem}`
                   : 'Questions will follow official NCCPA 2025 Blueprint distribution'}
               </p>
             </div>

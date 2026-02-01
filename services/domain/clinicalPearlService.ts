@@ -86,7 +86,7 @@ The pearl should be:
 
     try {
       const parsed = JSON.parse(sanitized);
-      
+
       // Validate parsed structure
       if (!parsed.pearlText || typeof parsed.pearlText !== 'string') {
         console.error('[extractPearlFromExplanation] Invalid pearlText in response');

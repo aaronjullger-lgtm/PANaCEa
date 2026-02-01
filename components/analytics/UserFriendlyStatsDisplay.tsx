@@ -265,7 +265,9 @@ const ReadinessGauge: React.FC<{
             {hasData ? getLabel(safeScore) : 'Waiting for first session'}
           </p>
           <p className="text-sm text-text-muted mt-1">
-            {hasData ? `${safePassProb}% estimated pass probability` : 'Complete questions to see readiness'}
+            {hasData
+              ? `${safePassProb}% estimated pass probability`
+              : 'Complete questions to see readiness'}
           </p>
           {hasData && (
             <div className="mt-3">
@@ -403,10 +405,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
       100,
       Math.max(0, Math.round(overall.accuracy * 0.7 + (overall.currentStreak / 30) * 30))
     );
-    const passProbability = Math.min(
-      100,
-      Math.max(0, Math.round((overall.accuracy - 40) * 1.67))
-    );
+    const passProbability = Math.min(100, Math.max(0, Math.round((overall.accuracy - 40) * 1.67)));
 
     // Calculate predicted PANCE score (200-800 scale)
     const predictedScore = Math.min(800, Math.max(200, 200 + overall.accuracy * 6));
@@ -429,15 +428,18 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
 
     // Calculate questions per hour
     const questionsPerHour =
-      overall.avgTimeMs && overall.avgTimeMs > 0
-        ? Math.round(3600000 / overall.avgTimeMs)
-        : 0;
+      overall.avgTimeMs && overall.avgTimeMs > 0 ? Math.round(3600000 / overall.avgTimeMs) : 0;
 
     // Transform systems for display
     const systemsArray = Object.entries(bySystems).map(([system, stats]) => ({
       system,
       mastery: stats.accuracy,
-      trend: stats.trend === 'improving' ? 'improving' : stats.trend === 'declining' ? 'declining' : 'neutral' as const,
+      trend:
+        stats.trend === 'improving'
+          ? 'improving'
+          : stats.trend === 'declining'
+            ? 'declining'
+            : ('neutral' as const),
       total: stats.total,
     }));
 
@@ -646,7 +648,9 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
 
               <div className="bg-surface-card border border-border-subtle rounded-xl p-4 text-center">
                 <Timer className="w-5 h-5 mx-auto text-text-muted mb-2" />
-                <p className="text-lg font-bold text-text-primary">{displayData.totalStudyHours}h</p>
+                <p className="text-lg font-bold text-text-primary">
+                  {displayData.totalStudyHours}h
+                </p>
                 <p className="text-xs text-text-muted">total study time</p>
               </div>
 
@@ -717,7 +721,9 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-text-secondary">Recent Accuracy</span>
                       <span className="font-medium text-text-primary">
-                        {userStats.stats.recentPerformance.last7Days.accuracy ?? displayData.accuracyLifetime}%
+                        {userStats.stats.recentPerformance.last7Days.accuracy ??
+                          displayData.accuracyLifetime}
+                        %
                       </span>
                     </div>
                     {userStats.stats.recentPerformance.trend !== 'insufficient_data' && (

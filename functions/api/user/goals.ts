@@ -68,52 +68,56 @@ export const onRequestOptions = withCors();
 /**
  * GET - List user's goals with optional filtering
  */
-export const onRequestGet = authenticatedEndpoint(GoalListSchema, async (context) => {
-  const { env, auth, validated } = context;
-  const logger = createEndpointLogger('/api/user/goals');
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(
+  GoalListSchema,
+  async (context) => {
+    const { env, auth, validated } = context;
+    const logger = createEndpointLogger('/api/user/goals');
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  try {
-    logger.addContext({ userId: auth.userId });
+    try {
+      logger.addContext({ userId: auth.userId });
 
-    // Parse query params
-    const status = validated.status;
-    const goalType = validated.goalType;
-    const limit = validated.limit ? parseInt(validated.limit) : 50;
+      // Parse query params
+      const status = validated.status;
+      const goalType = validated.goalType;
+      const limit = validated.limit ? parseInt(validated.limit) : 50;
 
-    // Build where clause
-    const where: any = { userId: auth.userId };
-    if (status) where.status = status;
-    if (goalType) where.goalType = goalType;
+      // Build where clause
+      const where: any = { userId: auth.userId };
+      if (status) where.status = status;
+      if (goalType) where.goalType = goalType;
 
-    // Fetch goals
-    const goals = await prisma.userGoal.findMany({
-      where,
-      orderBy: [
-        { status: 'asc' }, // Active first
-        { createdAt: 'desc' },
-      ],
-      take: Math.min(limit, 100),
-    });
+      // Fetch goals
+      const goals = await prisma.userGoal.findMany({
+        where,
+        orderBy: [
+          { status: 'asc' }, // Active first
+          { createdAt: 'desc' },
+        ],
+        take: Math.min(limit, 100),
+      });
 
-    logger.info('Goals fetched', { count: goals.length, status, goalType });
+      logger.info('Goals fetched', { count: goals.length, status, goalType });
 
-    return {
-      data: {
-        success: true,
-        goals,
-        count: goals.length,
-      },
-    };
-  } catch (error) {
-    logger.error('Error fetching goals', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw new Error('Failed to fetch goals');
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-}, { source: 'query' });
+      return {
+        data: {
+          success: true,
+          goals,
+          count: goals.length,
+        },
+      };
+    } catch (error) {
+      logger.error('Error fetching goals', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw new Error('Failed to fetch goals');
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  },
+  { source: 'query' }
+);
 
 /**
  * POST - Create a new goal

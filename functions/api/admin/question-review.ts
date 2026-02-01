@@ -44,132 +44,134 @@ export const onRequestOptions = withCors();
 /**
  * GET - List questions for review
  */
-export const onRequestGet = authenticatedEndpoint(GetQuerySchema, async (context) => {
-  const { env, auth, validated } = context;
-  const logger = createEndpointLogger('/api/admin/question-review');
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(
+  GetQuerySchema,
+  async (context) => {
+    const { env, auth, validated } = context;
+    const logger = createEndpointLogger('/api/admin/question-review');
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-  try {
-    // Check if user is admin or content_creator
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { role: true, id: true },
-    });
+    try {
+      // Check if user is admin or content_creator
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { role: true, id: true },
+      });
 
-    if (!user || (!isAdmin(user.role as UserRole) && user.role !== 'content_creator')) {
-      logger.warn('Non-admin attempted to access question review', {
-        userId: auth.userId,
-        role: user?.role,
+      if (!user || (!isAdmin(user.role as UserRole) && user.role !== 'content_creator')) {
+        logger.warn('Non-admin attempted to access question review', {
+          userId: auth.userId,
+          role: user?.role,
+        });
+
+        return {
+          data: { error: 'Admin access required' },
+          status: 403,
+        };
+      }
+
+      // Parse query parameters with defaults
+      const validationStatus = validated.validationStatus || 'pending';
+      const system = validated.system;
+      const minQualityScore = validated.minQualityScore
+        ? parseFloat(validated.minQualityScore)
+        : undefined;
+      const maxFlagRate = validated.maxFlagRate ? parseFloat(validated.maxFlagRate) : undefined;
+      const limit = validated.limit ? parseInt(validated.limit) : 50;
+      const offset = validated.offset ? parseInt(validated.offset) : 0;
+      const sortBy = validated.sortBy || 'generatedAt';
+      const sortOrder = validated.sortOrder || 'desc';
+
+      // Build where clause
+      const where: any = {
+        validationStatus,
+      };
+
+      if (system) where.system = system;
+      if (minQualityScore !== undefined) {
+        where.qualityScore = { gte: minQualityScore };
+      }
+      if (maxFlagRate !== undefined) {
+        where.flagRate = { lte: maxFlagRate };
+      }
+
+      // Query questions with condition details
+      const [questions, totalCount] = await Promise.all([
+        prisma.preGeneratedQuestion.findMany({
+          where,
+          select: {
+            id: true,
+            questionType: true,
+            system: true,
+            conditionId: true,
+            difficulty: true,
+            questionData: true,
+            generatedAt: true,
+            qualityScore: true,
+            conditionAccuracy: true,
+            contentRelevance: true,
+            distracorQuality: true,
+            validationStatus: true,
+            validationNotes: true,
+            validatedAt: true,
+            validatedBy: true,
+            timesServed: true,
+            timesCorrect: true,
+            timesIncorrect: true,
+            flagCount: true,
+            flagRate: true,
+            Condition: {
+              select: {
+                id: true,
+                name: true,
+                system: true,
+                panceYield: true,
+              },
+            },
+          },
+          orderBy: { [sortBy]: sortOrder },
+          take: limit,
+          skip: offset,
+        }),
+        prisma.preGeneratedQuestion.count({ where }),
+      ]);
+
+      // Calculate pagination metadata
+      const hasMore = totalCount > offset + limit;
+      const pages = Math.ceil(totalCount / limit);
+
+      logger.info('Questions retrieved for review', {
+        userId: user.id,
+        validationStatus,
+        count: questions.length,
+        total: totalCount,
       });
 
       return {
-        data: { error: 'Admin access required' },
-        status: 403,
-      };
-    }
-
-    // Parse query parameters with defaults
-    const validationStatus = validated.validationStatus || 'pending';
-    const system = validated.system;
-    const minQualityScore = validated.minQualityScore
-      ? parseFloat(validated.minQualityScore)
-      : undefined;
-    const maxFlagRate = validated.maxFlagRate
-      ? parseFloat(validated.maxFlagRate)
-      : undefined;
-    const limit = validated.limit ? parseInt(validated.limit) : 50;
-    const offset = validated.offset ? parseInt(validated.offset) : 0;
-    const sortBy = validated.sortBy || 'generatedAt';
-    const sortOrder = validated.sortOrder || 'desc';
-
-    // Build where clause
-    const where: any = {
-      validationStatus,
-    };
-
-    if (system) where.system = system;
-    if (minQualityScore !== undefined) {
-      where.qualityScore = { gte: minQualityScore };
-    }
-    if (maxFlagRate !== undefined) {
-      where.flagRate = { lte: maxFlagRate };
-    }
-
-    // Query questions with condition details
-    const [questions, totalCount] = await Promise.all([
-      prisma.preGeneratedQuestion.findMany({
-        where,
-        select: {
-          id: true,
-          questionType: true,
-          system: true,
-          conditionId: true,
-          difficulty: true,
-          questionData: true,
-          generatedAt: true,
-          qualityScore: true,
-          conditionAccuracy: true,
-          contentRelevance: true,
-          distracorQuality: true,
-          validationStatus: true,
-          validationNotes: true,
-          validatedAt: true,
-          validatedBy: true,
-          timesServed: true,
-          timesCorrect: true,
-          timesIncorrect: true,
-          flagCount: true,
-          flagRate: true,
-          Condition: {
-            select: {
-              id: true,
-              name: true,
-              system: true,
-              panceYield: true,
-            },
+        data: {
+          success: true,
+          data: questions,
+          pagination: {
+            total: totalCount,
+            limit,
+            offset,
+            hasMore,
+            pages,
           },
         },
-        orderBy: { [sortBy]: sortOrder },
-        take: limit,
-        skip: offset,
-      }),
-      prisma.preGeneratedQuestion.count({ where }),
-    ]);
-
-    // Calculate pagination metadata
-    const hasMore = totalCount > offset + limit;
-    const pages = Math.ceil(totalCount / limit);
-
-    logger.info('Questions retrieved for review', {
-      userId: user.id,
-      validationStatus,
-      count: questions.length,
-      total: totalCount,
-    });
-
-    return {
-      data: {
-        success: true,
-        data: questions,
-        pagination: {
-          total: totalCount,
-          limit,
-          offset,
-          hasMore,
-          pages,
-        },
-      },
-    };
-  } catch (error) {
-    logger.error('Error fetching questions for review', {
-      error: error instanceof Error ? error.message : String(error),
-      userId: auth.userId,
-    });
-    throw new Error('Failed to fetch questions for review');
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-}, { source: 'query' });
+      };
+    } catch (error) {
+      logger.error('Error fetching questions for review', {
+        error: error instanceof Error ? error.message : String(error),
+        userId: auth.userId,
+      });
+      throw new Error('Failed to fetch questions for review');
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  },
+  { source: 'query' }
+);
 
 /**
  * POST - Update question validation status

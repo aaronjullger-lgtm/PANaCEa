@@ -36,7 +36,8 @@ const levelConfig: Record<
     icon: Flame,
     color: 'text-[var(--color-data-provisional)]',
     bgColor: 'bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/30',
-    borderColor: 'border-[var(--color-data-provisional)]/30 dark:border-[var(--color-data-provisional)]/80',
+    borderColor:
+      'border-[var(--color-data-provisional)]/30 dark:border-[var(--color-data-provisional)]/80',
     label: 'On Fire',
   },
   rising: {
@@ -57,7 +58,8 @@ const levelConfig: Record<
     icon: TrendingDown,
     color: 'text-[var(--color-data-provisional)]',
     bgColor: 'bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/30',
-    borderColor: 'border-[var(--color-data-provisional)]/30 dark:border-[var(--color-data-provisional)]/80',
+    borderColor:
+      'border-[var(--color-data-provisional)]/30 dark:border-[var(--color-data-provisional)]/80',
     label: 'Cooling',
   },
   cold: {
@@ -151,7 +153,11 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
             <span>{momentum.recentAccuracy}% recent</span>
             {momentum.speedTrend !== 'consistent' && (
               <span
-                className={momentum.speedTrend === 'faster' ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'}
+                className={
+                  momentum.speedTrend === 'faster'
+                    ? 'text-[var(--color-data-pass)]'
+                    : 'text-[var(--color-data-provisional)]'
+                }
               >
                 {momentum.speedTrend === 'faster' ? '↗ Faster' : '↘ Slower'}
               </span>
@@ -169,7 +175,9 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
             exit={{ opacity: 0, height: 0 }}
             className="px-3 py-2 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/80 rounded-lg"
           >
-            <p className="text-xs text-[var(--color-accent)] dark:text-[var(--color-accent)]/90">💡 {momentum.recommendation}</p>
+            <p className="text-xs text-[var(--color-accent)] dark:text-[var(--color-accent)]/90">
+              💡 {momentum.recommendation}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>

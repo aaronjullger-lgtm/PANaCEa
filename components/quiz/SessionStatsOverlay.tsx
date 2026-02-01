@@ -162,9 +162,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
                 <PieChart
                   className={`w-4 h-4 ${summary.distributionScore >= 80 ? 'text-[var(--color-data-pass)]' : summary.distributionScore >= 60 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
                 />
-                <span className="text-xs text-action-muted">
-                  {summary.distributionScore}
-                </span>
+                <span className="text-xs text-action-muted">{summary.distributionScore}</span>
               </div>
             )}
           </div>

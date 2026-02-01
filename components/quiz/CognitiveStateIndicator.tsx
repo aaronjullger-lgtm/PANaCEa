@@ -125,7 +125,7 @@ interface MetricBarProps {
 const MetricBar: React.FC<MetricBarProps> = ({ label, value, color, inverted }) => {
   // For inverted metrics, lower is better
   const displayValue = inverted ? 100 - value : value;
-  
+
   // Map color names to semantic tokens
   const colorMap: Record<string, string> = {
     blue: 'bg-[var(--color-accent)]',
@@ -133,7 +133,7 @@ const MetricBar: React.FC<MetricBarProps> = ({ label, value, color, inverted }) 
     orange: 'bg-[var(--color-data-provisional)]',
     red: 'bg-[var(--color-data-fail)]',
   };
-  
+
   const barColor = inverted
     ? value > 60
       ? 'bg-[var(--color-data-fail)]'

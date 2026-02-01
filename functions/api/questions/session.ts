@@ -42,36 +42,39 @@ export const onRequestGet = authenticatedEndpoint(
       });
 
       if (!user) {
-        return { data: { error: 'User not found', message: 'Account not synced yet.' }, status: 404 };
+        return {
+          data: { error: 'User not found', message: 'Account not synced yet.' },
+          status: 404,
+        };
       }
 
-    const count = Math.min(parseInt(validated?.count || '10', 10), 50);
-    const system = validated?.system || undefined;
-    const mode = (validated?.mode || 'standard') as SessionQuestionRequest['mode'];
+      const count = Math.min(parseInt(validated?.count || '10', 10), 50);
+      const system = validated?.system || undefined;
+      const mode = (validated?.mode || 'standard') as SessionQuestionRequest['mode'];
 
-    const sessionService = new SessionService(env.DATABASE_URL, env);
-    const result = await sessionService.getSessionQuestions({
-      userId: user.id,
-      count,
-      system,
-      mode,
-    });
+      const sessionService = new SessionService(env.DATABASE_URL, env);
+      const result = await sessionService.getSessionQuestions({
+        userId: user.id,
+        count,
+        system,
+        mode,
+      });
 
-    logger.info('Session questions fetched (GET)', {
-      userId: auth.userId,
-      count: result.questions?.length || 0,
-    });
+      logger.info('Session questions fetched (GET)', {
+        userId: auth.userId,
+        count: result.questions?.length || 0,
+      });
 
-    return { data: result };
-  } catch (error) {
-    logger.error('Error fetching session questions', {
-      error: error instanceof Error ? error.message : String(error),
-      userId: auth.userId,
-    });
-    throw new Error('Failed to fetch session questions');
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
+      return { data: result };
+    } catch (error) {
+      logger.error('Error fetching session questions', {
+        error: error instanceof Error ? error.message : String(error),
+        userId: auth.userId,
+      });
+      throw new Error('Failed to fetch session questions');
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
   },
   { source: 'query' }
 );

@@ -1,14 +1,14 @@
 /**
  * Cloudflare Function: Get Photo Drill Batch
- * 
+ *
  * Returns a batch of photo drill questions from MediaAsset table
- * 
+ *
  * Endpoint: GET /api/drill/photo-batch
  * Query Params:
  * - system: Optional organ system filter
  * - difficulty: Optional difficulty filter
  * - count: Number of questions (default 10)
- * 
+ *
  * @module functions/api/drill/photo-batch
  */
 
@@ -23,14 +23,14 @@ export async function onRequestGet(context: any) {
   try {
     // Create edge Prisma client
     prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
+
     // Authenticate
     const authContext = await authenticateRequest(request, env);
     if (!authContext) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     const userId = authContext.userId;
 
@@ -42,10 +42,10 @@ export async function onRequestGet(context: any) {
 
     // Validate count
     if (count < 1 || count > 50) {
-      return new Response(
-        JSON.stringify({ error: 'Count must be between 1 and 50' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Count must be between 1 and 50' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Get drill batch
@@ -56,14 +56,13 @@ export async function onRequestGet(context: any) {
       count,
     });
 
-    return new Response(
-      JSON.stringify(questions),
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify(questions), {
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error fetching photo drill batch:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Failed to fetch photo drill batch',
         details: error instanceof Error ? error.message : 'Unknown error',
       }),

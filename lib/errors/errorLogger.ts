@@ -1,9 +1,9 @@
 /**
  * Edge-Compatible Error Logging Service
- * 
+ *
  * Production-grade error logging with Sentry integration.
  * Works in both browser and Cloudflare Pages Functions (Edge Runtime).
- * 
+ *
  * Features:
  * - Structured error logging with metadata
  * - Sentry integration for production monitoring
@@ -187,10 +187,10 @@ function getEnvironmentMetadata(): Record<string, unknown> {
 
 /**
  * Main error logging function
- * 
+ *
  * @param error - Error to log (AppError, Error, or unknown)
  * @param context - Additional context for debugging
- * 
+ *
  * @example
  * ```typescript
  * try {
@@ -229,17 +229,21 @@ export function logError(error: unknown, context?: Record<string, unknown>): voi
 
   // Log to console in development
   if (import.meta.env.DEV) {
-    const consoleMethod = appError.severity === 'fatal' || appError.severity === 'error' 
-      ? console.error 
-      : appError.severity === 'warning' 
-      ? console.warn 
-      : console.log;
+    const consoleMethod =
+      appError.severity === 'fatal' || appError.severity === 'error'
+        ? console.error
+        : appError.severity === 'warning'
+          ? console.warn
+          : console.log;
 
     consoleMethod(
       `[${appError.category.toUpperCase()}] ${appError.message}`,
-      '\nError ID:', appError.errorId,
-      '\nContext:', logEntry.context,
-      '\nStack:', appError.stack
+      '\nError ID:',
+      appError.errorId,
+      '\nContext:',
+      logEntry.context,
+      '\nStack:',
+      appError.stack
     );
   }
 
@@ -269,12 +273,12 @@ export function logError(error: unknown, context?: Record<string, unknown>): voi
       const errorLog = sessionStorage.getItem('panacea_error_log');
       const errors = errorLog ? JSON.parse(errorLog) : [];
       errors.push(logEntry);
-      
+
       // Keep last 20 errors
       if (errors.length > 20) {
         errors.shift();
       }
-      
+
       sessionStorage.setItem('panacea_error_log', JSON.stringify(errors));
     } catch {
       // Ignore sessionStorage errors
@@ -284,7 +288,7 @@ export function logError(error: unknown, context?: Record<string, unknown>): voi
 
 /**
  * Log error with additional context and automatic breadcrumb
- * 
+ *
  * @example
  * ```typescript
  * logErrorWithContext(error, 'fetchUserData', { userId: '123' });

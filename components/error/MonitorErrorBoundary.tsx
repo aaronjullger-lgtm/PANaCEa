@@ -64,7 +64,9 @@ function MonitorMalfunctionFallback({
       </motion.div>
 
       {/* Main error message */}
-      <h3 className="text-[var(--color-data-fail)] font-mono text-lg font-bold mb-2">MONITOR MALFUNCTION</h3>
+      <h3 className="text-[var(--color-data-fail)] font-mono text-lg font-bold mb-2">
+        MONITOR MALFUNCTION
+      </h3>
 
       <p className="text-[var(--color-text-muted)] font-mono text-sm text-center mb-4">
         Vital signs display offline.
@@ -118,8 +120,12 @@ function MinimalFallback({ onReboot }: { onReboot: () => void }) {
   return (
     <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-data-fail)]/40 p-6 min-h-[200px] flex flex-col items-center justify-center">
       <div className="text-[var(--color-data-fail)] text-4xl mb-4">⚠️</div>
-      <h3 className="text-[var(--color-data-fail)] font-mono text-lg font-bold mb-2">MONITOR OFFLINE</h3>
-      <p className="text-[var(--color-text-muted)] text-sm text-center mb-4">Display error - click to retry</p>
+      <h3 className="text-[var(--color-data-fail)] font-mono text-lg font-bold mb-2">
+        MONITOR OFFLINE
+      </h3>
+      <p className="text-[var(--color-text-muted)] text-sm text-center mb-4">
+        Display error - click to retry
+      </p>
       <button
         onClick={onReboot}
         className="px-4 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] 
@@ -214,7 +220,9 @@ export function withMonitorErrorBoundary<P extends object>(
     </MonitorErrorBoundary>
   );
 
-  WithMonitorError.displayName = displayName || `WithMonitorError(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`;
+  WithMonitorError.displayName =
+    displayName ||
+    `WithMonitorError(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`;
 
   return WithMonitorError;
 }

@@ -305,9 +305,7 @@ export function CohortLeaderboard({
                         {entry.displayName}
                       </span>
                       {isCurrentUser && (
-                        <span className="ml-2 text-xs text-[var(--color-accent)]">
-                          (You)
-                        </span>
+                        <span className="ml-2 text-xs text-[var(--color-accent)]">(You)</span>
                       )}
                     </div>
                   </div>
@@ -315,16 +313,16 @@ export function CohortLeaderboard({
 
                 {/* Stats */}
                 <div className="flex items-center gap-4">
-                {/* Trend */}
-                <div
-                  className={`flex items-center gap-1 ${
-                    entry.trend === 'up'
-                      ? 'text-[var(--color-data-pass)]'
-                      : entry.trend === 'down'
-                        ? 'text-[var(--color-data-fail)]'
-                        : 'text-[var(--color-text-muted)]'
-                  }`}
-                >
+                  {/* Trend */}
+                  <div
+                    className={`flex items-center gap-1 ${
+                      entry.trend === 'up'
+                        ? 'text-[var(--color-data-pass)]'
+                        : entry.trend === 'down'
+                          ? 'text-[var(--color-data-fail)]'
+                          : 'text-[var(--color-text-muted)]'
+                    }`}
+                  >
                     {entry.trend === 'up' && <ChevronUp className="h-4 w-4" />}
                     {entry.trend === 'down' && <ChevronDown className="h-4 w-4" />}
                     {entry.trend === 'stable' && <Minus className="h-4 w-4" />}
@@ -374,7 +372,9 @@ export function CohortLeaderboard({
                           <p className="text-xs text-[var(--color-text-muted)]">Accuracy</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-2xl font-bold text-[var(--color-data-provisional)]">{entry.streak}</p>
+                          <p className="text-2xl font-bold text-[var(--color-data-provisional)]">
+                            {entry.streak}
+                          </p>
                           <p className="text-xs text-[var(--color-text-muted)]">Day Streak</p>
                         </div>
                       </div>

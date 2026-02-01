@@ -139,7 +139,8 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
                       {set.symptom}
                     </h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {Object.keys(set.distinguishers).length} conditions · {set.system || 'Multi-system'}
+                      {Object.keys(set.distinguishers).length} conditions ·{' '}
+                      {set.system || 'Multi-system'}
                       {set.highYield && (
                         <span className="ml-2 px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full">
                           High Yield

@@ -1,10 +1,4 @@
-export type ButtonVariant =
-  | 'primary'
-  | 'secondary'
-  | 'success'
-  | 'warning'
-  | 'danger'
-  | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'ghost';
 
 export const buttonVariantStyles: Record<ButtonVariant, string> = {
   primary:
@@ -17,6 +11,5 @@ export const buttonVariantStyles: Record<ButtonVariant, string> = {
     'bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] text-[var(--color-text-inverse)] hover:from-[var(--color-data-provisional)]/90 hover:to-[var(--color-data-provisional)]/90 shadow-sm',
   danger:
     'bg-gradient-to-r from-[var(--color-data-fail)] to-[var(--color-data-fail)] text-[var(--color-text-inverse)] hover:from-[var(--color-data-fail)]/90 hover:to-[var(--color-data-fail)]/90 shadow-sm',
-  ghost:
-    'bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
+  ghost: 'bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
 };

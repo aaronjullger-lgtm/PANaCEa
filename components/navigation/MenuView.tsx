@@ -23,13 +23,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useIsMobile } from '@/lib/utils/responsive';
-import type {
-  PerformanceRecord,
-  SessionSettings,
-  Question,
-  TopicStats,
-  SystemCode,
-} from '@/types';
+import type { PerformanceRecord, SessionSettings, Question, TopicStats, SystemCode } from '@/types';
 import TrainingMenu from '@/components/dashboard/TrainingMenu';
 import ProgressRing from '@/components/ui/ProgressRing';
 import TopicHeatmap from '@/components/analytics/TopicHeatmap';
@@ -64,11 +58,7 @@ import type {
   SystemMasterySummary,
   ErrorTagCount,
 } from '@/components/ProgressDashboard';
-import {
-  calculateAccuracy,
-  calculateDayStreak,
-  loadWidgetPreferences,
-} from '@/lib/dashboardUtils';
+import { calculateAccuracy, calculateDayStreak, loadWidgetPreferences } from '@/lib/dashboardUtils';
 import { getTimeBasedGreeting } from '@/lib/utils/timeUtils';
 import type { ErrorTag } from '@/types';
 
@@ -113,7 +103,9 @@ interface MenuViewProps {
   /** Callback for navigating to gap analysis dashboard */
   onNavigateToGapAnalysis?: () => void;
   /** Callback for navigating to simulation page */
-  onNavigateToSimulation?: (settings?: { initialFocus?: 'all' | 'growth' | 'flagged' | 'due' }) => void;
+  onNavigateToSimulation?: (settings?: {
+    initialFocus?: 'all' | 'growth' | 'flagged' | 'due';
+  }) => void;
   isSyncing?: boolean;
   lastSyncTime?: number | null;
   syncError?: string | null;

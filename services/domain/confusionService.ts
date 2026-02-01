@@ -1,10 +1,10 @@
 /**
  * Confusion Analysis Service
- * 
+ *
  * Tracks which conditions users most frequently confuse with each other.
  * Supports the "Confusion Matrix" analytics feature that helps identify
  * knowledge gaps and similar-presentation conditions.
- * 
+ *
  * @architecture Database-First: All confusion data stored in PostgreSQL
  * @integration Used by components/analytics/ConfusionMatrix.tsx
  */
@@ -72,10 +72,7 @@ export async function fetchUserConfusions(
   options: { limit: number }
 ): Promise<{ pairs: UserConfusionPairSummary[] }> {
   const headers = getAuthHeaders(token);
-  const response = await fetch(
-    `/api/user/confusion?limit=${options.limit}`,
-    { headers }
-  );
+  const response = await fetch(`/api/user/confusion?limit=${options.limit}`, { headers });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch confusion pairs: ${response.statusText}`);
@@ -90,24 +87,18 @@ export async function fetchUserConfusions(
  * @param ids - Array of two condition IDs [correctId, selectedId]
  * @param token - Optional authentication token
  */
-export async function generateComparison(
-  ids: string[],
-  token?: string
-): Promise<any> {
+export async function generateComparison(ids: string[], token?: string): Promise<any> {
   if (ids.length < 2) {
     throw new Error('Two condition IDs required for comparison');
   }
 
   const headers = token ? getAuthHeaders(token) : {};
-  const response = await fetch(
-    `/api/ddx/comparison?correctId=${ids[0]}&selectedId=${ids[1]}`,
-    { headers }
-  );
+  const response = await fetch(`/api/ddx/comparison?correctId=${ids[0]}&selectedId=${ids[1]}`, {
+    headers,
+  });
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to generate comparison: ${response.statusText}`
-    );
+    throw new Error(`Failed to generate comparison: ${response.statusText}`);
   }
 
   const data = await response.json();
@@ -146,9 +137,7 @@ export async function fetchConditionComparison(
   );
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to fetch condition comparison: ${response.statusText}`
-    );
+    throw new Error(`Failed to fetch condition comparison: ${response.statusText}`);
   }
 
   return response.json();
@@ -198,14 +187,17 @@ export function formatFieldValue(value: string | string[]): string {
 export function groupFieldsByCategory(
   fields: ComparisonField[]
 ): Record<string, ComparisonField[]> {
-  return fields.reduce((acc, field) => {
-    const category = field.category || 'General';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(field);
-    return acc;
-  }, {} as Record<string, ComparisonField[]>);
+  return fields.reduce(
+    (acc, field) => {
+      const category = field.category || 'General';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(field);
+      return acc;
+    },
+    {} as Record<string, ComparisonField[]>
+  );
 }
 
 /**

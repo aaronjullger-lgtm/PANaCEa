@@ -102,7 +102,6 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
    **Production**: Cloudflare Pages serves both static assets and API via `functions/api/`. No Express in production.
 
    **Local dev** – choose one:
-
    - **`npm run dev:all`** – Express backend (port 3001) + Vite frontend (port 3000). Quick for local testing.
    - **`npm run dev:wrangler`** – Cloudflare Pages Functions + Vite. Matches production (recommended before deploy).
 
@@ -150,18 +149,18 @@ For production deployment to Cloudflare Pages:
 
 ## 📜 Available Scripts
 
-| Command                      | Description                                                         |
-| ---------------------------- | ------------------------------------------------------------------- |
-| `npm run dev:all`            | Express + Vite (local dev)                                          |
-| `npm run dev:wrangler`       | Cloudflare Functions + Vite (production parity, recommended)        |
-| `npm run dev:server`         | Express backend only                                                |
-| `npm run dev`                | Frontend only (proxies /api to Express if running)                  |
-| `npm run build`              | Build frontend for production                 |
-| `npm run build:server`       | Build backend for production                  |
-| `npm test`                   | Run test suite                                |
-| `npm run db:studio`          | Open Prisma Studio (database GUI)             |
-| `npm run migrate:production` | Run database migrations                       |
-| `npm run orchestrate:full`   | Run automated content pipeline                |
+| Command                      | Description                                                  |
+| ---------------------------- | ------------------------------------------------------------ |
+| `npm run dev:all`            | Express + Vite (local dev)                                   |
+| `npm run dev:wrangler`       | Cloudflare Functions + Vite (production parity, recommended) |
+| `npm run dev:server`         | Express backend only                                         |
+| `npm run dev`                | Frontend only (proxies /api to Express if running)           |
+| `npm run build`              | Build frontend for production                                |
+| `npm run build:server`       | Build backend for production                                 |
+| `npm test`                   | Run test suite                                               |
+| `npm run db:studio`          | Open Prisma Studio (database GUI)                            |
+| `npm run migrate:production` | Run database migrations                                      |
+| `npm run orchestrate:full`   | Run automated content pipeline                               |
 
 ---
 

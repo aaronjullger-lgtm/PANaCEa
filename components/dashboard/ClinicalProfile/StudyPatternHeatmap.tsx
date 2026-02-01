@@ -12,7 +12,9 @@ export const StudyPatternHeatmap: React.FC<Props> = ({ peakHours }) => {
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Peak Study Hours</p>
+        <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+          Peak Study Hours
+        </p>
         <span className="text-xs text-[var(--color-text-muted)]">Top 3</span>
       </div>
       <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 text-xs text-[var(--color-text-muted)]">

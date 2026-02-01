@@ -73,78 +73,86 @@ router.post('/fetch', async (req: Request, res: Response): Promise<void> => {
 });
 
 // Question Query Route (Authenticated No-Repeat)
-router.post('/query', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const { system, difficulty, limit = 10 } = req.body;
+router.post(
+  '/query',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const { system, difficulty, limit = 10 } = req.body;
 
-    if (!process.env.DATABASE_URL) {
-      return res.json({ success: true, questions: [] });
+      if (!process.env.DATABASE_URL) {
+        return res.json({ success: true, questions: [] });
+      }
+
+      const { getQuestionsWithNoRepeat } = await import('../services/core/noRepeatService');
+      const userId = req.auth!.userId;
+
+      const result = await getQuestionsWithNoRepeat(userId, { system, difficulty }, limit);
+
+      res.json({ success: true, questions: result.questions });
+    } catch (error) {
+      console.error('Error querying questions:', error);
+      res.status(500).json({ error: 'Failed to query questions' });
     }
-
-    const { getQuestionsWithNoRepeat } = await import('../services/core/noRepeatService');
-    const userId = req.auth!.userId;
-
-    const result = await getQuestionsWithNoRepeat(userId, { system, difficulty }, limit);
-
-    res.json({ success: true, questions: result.questions });
-  } catch (error) {
-    console.error('Error querying questions:', error);
-    res.status(500).json({ error: 'Failed to query questions' });
   }
-});
+);
 
 // Batch fetch questions by ID
-router.post('/batch', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const { ids } = req.body;
+router.post(
+  '/batch',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const { ids } = req.body;
 
-    if (!ids || !Array.isArray(ids)) {
-      return res.status(400).json({ error: 'Invalid request: ids array required' });
-    }
+      if (!ids || !Array.isArray(ids)) {
+        return res.status(400).json({ error: 'Invalid request: ids array required' });
+      }
 
-    if (process.env.DATABASE_URL) {
-      const questions = await prisma.preGeneratedQuestion.findMany({
-        where: {
-          id: { in: ids },
-        },
+      if (process.env.DATABASE_URL) {
+        const questions = await prisma.preGeneratedQuestion.findMany({
+          where: {
+            id: { in: ids },
+          },
+        });
+
+        // Map to frontend Question format
+        const mappedQuestions = questions.map((q) => {
+          const qData = q.questionData as any;
+          return {
+            id: q.id,
+            question: qData?.question || qData?.text || 'Question text missing',
+            options: qData?.options || [],
+            correctAnswer: qData?.correctAnswer || '',
+            explanation: qData?.explanation || '',
+            system: q.system || undefined,
+            difficulty: q.difficulty || 'medium',
+            type: q.questionType || 'mcq',
+          };
+        });
+
+        return res.json({ success: true, questions: mappedQuestions });
+      }
+
+      // Mock response if no DB
+      return res.json({
+        success: true,
+        questions: ids.map((id) => ({
+          id,
+          question: `Mock Question for ID ${id}`,
+          options: ['Option A', 'Option B', 'Option C', 'Option D'],
+          correctAnswer: 'Option A',
+          explanation: 'This is a mock explanation because the database is not connected.',
+          system: 'General',
+          difficulty: 'medium',
+        })),
       });
-
-      // Map to frontend Question format
-      const mappedQuestions = questions.map((q) => {
-        const qData = q.questionData as any;
-        return {
-          id: q.id,
-          question: qData?.question || qData?.text || 'Question text missing',
-          options: qData?.options || [],
-          correctAnswer: qData?.correctAnswer || '',
-          explanation: qData?.explanation || '',
-          system: q.system || undefined,
-          difficulty: q.difficulty || 'medium',
-          type: q.questionType || 'mcq',
-        };
-      });
-
-      return res.json({ success: true, questions: mappedQuestions });
+    } catch (error) {
+      console.error('Error fetching batch questions:', error);
+      res.status(500).json({ error: 'Failed to fetch questions' });
     }
-
-    // Mock response if no DB
-    return res.json({
-      success: true,
-      questions: ids.map((id) => ({
-        id,
-        question: `Mock Question for ID ${id}`,
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctAnswer: 'Option A',
-        explanation: 'This is a mock explanation because the database is not connected.',
-        system: 'General',
-        difficulty: 'medium',
-      })),
-    });
-  } catch (error) {
-    console.error('Error fetching batch questions:', error);
-    res.status(500).json({ error: 'Failed to fetch questions' });
   }
-});
+);
 
 // Get no-repeat questions (Task 109)
 router.post(
@@ -458,7 +466,9 @@ router.get('/pool', async (req: Request, res: Response): Promise<void> => {
       });
       questions = fallbackQs.map((q) => {
         const opts = q.options || [];
-        const correctIdx = opts.findIndex((o) => o === q.correctAnswer || o.includes(q.correctAnswer));
+        const correctIdx = opts.findIndex(
+          (o) => o === q.correctAnswer || o.includes(q.correctAnswer)
+        );
         const letter = correctIdx >= 0 ? letters[correctIdx] : 'A';
         return {
           id: q.id,
@@ -618,21 +628,25 @@ router.post(
 
 // Seeds Management (Tasks 111)
 
-router.post('/seeds', validateRequired(['seedData']), async (req: Request, res: Response): Promise<void> => {
-  try {
-    if (!process.env.DATABASE_URL) {
-      return res.status(503).json({ success: false, error: 'Database not configured' });
+router.post(
+  '/seeds',
+  validateRequired(['seedData']),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ success: false, error: 'Database not configured' });
+      }
+
+      const { createQuestionSeed } = await import('../services/core/questionSeedService');
+      const seed = await createQuestionSeed(req.body.seedData);
+
+      res.json({ success: true, seed });
+    } catch (error) {
+      console.error('Failed to create question seed:', error);
+      res.status(500).json({ success: false, error: 'Failed to create question seed' });
     }
-
-    const { createQuestionSeed } = await import('../services/core/questionSeedService');
-    const seed = await createQuestionSeed(req.body.seedData);
-
-    res.json({ success: true, seed });
-  } catch (error) {
-    console.error('Failed to create question seed:', error);
-    res.status(500).json({ success: false, error: 'Failed to create question seed' });
   }
-});
+);
 
 router.get('/seeds/:id/assemble', async (req: Request, res: Response): Promise<void> => {
   try {

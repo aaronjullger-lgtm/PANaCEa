@@ -125,7 +125,9 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
             </div>
           </div>
           <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
-            <div className="text-sm text-[var(--color-text-secondary)] mb-1">Current Proficiency</div>
+            <div className="text-sm text-[var(--color-text-secondary)] mb-1">
+              Current Proficiency
+            </div>
             <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
               {proficiencyData.currentProficiency}%
             </div>

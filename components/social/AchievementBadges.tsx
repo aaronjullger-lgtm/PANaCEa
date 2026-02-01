@@ -314,7 +314,9 @@ export function AchievementBadges({
                     className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} ${tierColors.text}`}
                   />
                 ) : (
-                  <Lock className={`${compact ? 'h-5 w-5' : 'h-6 w-6'} text-[var(--color-text-muted)]`} />
+                  <Lock
+                    className={`${compact ? 'h-5 w-5' : 'h-6 w-6'} text-[var(--color-text-muted)]`}
+                  />
                 )}
               </div>
 

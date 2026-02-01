@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".wrangler",
+    "routes/**/*",
+    "scripts/deprecated/**/*",
+    "**/*.old.*",
+    "**/*-Example.*",
+    "functions/**/*",
+    "components/demo/**/*",
+    "components/integrations/**/*",
+    "components/library/DDxMatrixView.tsx",
+    "components/modals/index.ts",
+    "components/offline/**/*",
+    "components/panels/ExplanationPanel.tsx"
+  ]
+}

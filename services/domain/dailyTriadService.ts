@@ -1,9 +1,9 @@
 /**
  * Daily Triad Service
- * 
+ *
  * Provides one "Gold Standard" or "Clinical Pearl" condition per day.
  * Helps users build systematic knowledge by focusing on high-yield content.
- * 
+ *
  * @architecture Database-First: Triads stored in PostgreSQL, rotated daily
  * @integration Used by components/dashboard/DailyTriad.tsx
  */
@@ -44,12 +44,12 @@ export interface DailyTriad {
 
 /**
  * Fetch today's daily triad
- * 
+ *
  * The server rotates triads based on:
  * 1. User's weakest organ systems (personalized)
  * 2. High-yield PANCE content
  * 3. Daily rotation to ensure variety
- * 
+ *
  * @returns Promise resolving to today's DailyTriad
  * @throws Error if fetch fails
  */
@@ -66,7 +66,7 @@ export async function fetchDailyTriad(): Promise<DailyTriad> {
 
 /**
  * Fetch daily triad with authentication (for personalized selection)
- * 
+ *
  * @param token - Authentication token
  * @returns Promise resolving to personalized DailyTriad
  */
@@ -87,7 +87,7 @@ export async function fetchPersonalizedTriad(token: string): Promise<DailyTriad>
 
 /**
  * Mark today's triad as reviewed
- * 
+ *
  * @param token - Authentication token
  * @returns Promise resolving when review is logged
  */

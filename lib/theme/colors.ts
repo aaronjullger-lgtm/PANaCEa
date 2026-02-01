@@ -125,11 +125,11 @@ export function getStatusColors(status: keyof typeof statusColors) {
 export const gradients = {
   primary: 'bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)]',
   success: 'bg-gradient-to-br from-[var(--color-data-pass)] to-[var(--color-data-pass)]',
-  warning: 'bg-gradient-to-br from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]',
+  warning:
+    'bg-gradient-to-br from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]',
   error: 'bg-gradient-to-br from-[var(--color-data-fail)] to-[var(--color-data-fail)]',
   info: 'bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)]',
-  subtle:
-    'bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]',
+  subtle: 'bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]',
 };
 
 /**

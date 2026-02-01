@@ -59,7 +59,14 @@ interface QuickStatProps {
   delay?: number;
 }
 
-const QuickStat: React.FC<QuickStatProps> = ({ icon, label, value, trend, accentColor, delay = 0 }) => (
+const QuickStat: React.FC<QuickStatProps> = ({
+  icon,
+  label,
+  value,
+  trend,
+  accentColor,
+  delay = 0,
+}) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -67,24 +74,32 @@ const QuickStat: React.FC<QuickStatProps> = ({ icon, label, value, trend, accent
     className="group relative bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 shadow-sm hover:shadow-lg hover:border-[var(--color-accent)]/30 transition-all duration-300"
   >
     {/* Gradient accent line */}
-    <div className={`absolute top-0 left-6 right-6 h-0.5 ${accentColor} rounded-full opacity-60 group-hover:opacity-100 transition-opacity`} />
-    
+    <div
+      className={`absolute top-0 left-6 right-6 h-0.5 ${accentColor} rounded-full opacity-60 group-hover:opacity-100 transition-opacity`}
+    />
+
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <div className={`p-3 rounded-xl ${accentColor.replace('bg-gradient-to-r', 'bg-opacity-15')} bg-[var(--color-bg-secondary)]/40`}>
+        <div
+          className={`p-3 rounded-xl ${accentColor.replace('bg-gradient-to-r', 'bg-opacity-15')} bg-[var(--color-bg-secondary)]/40`}
+        >
           {icon}
         </div>
         <div>
           <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-0.5">{label}</p>
-          <p className="text-2xl font-bold text-[var(--color-text-primary)] tracking-tight">{value}</p>
+          <p className="text-2xl font-bold text-[var(--color-text-primary)] tracking-tight">
+            {value}
+          </p>
         </div>
       </div>
       {trend && (
-        <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
-          trend.isPositive 
-            ? 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)]' 
-            : 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)]'
-        }`}>
+        <div
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+            trend.isPositive
+              ? 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)]'
+              : 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)]'
+          }`}
+        >
           <TrendingUp className={`w-3 h-3 ${!trend.isPositive && 'rotate-180'}`} />
           {trend.value}%
         </div>
@@ -172,7 +187,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   if (error || !data) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] flex items-center justify-center">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center bg-[var(--color-bg-primary)] rounded-2xl p-8 shadow-lg border border-[var(--color-border)]"
@@ -180,8 +195,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-data-fail)]/20 flex items-center justify-center">
             <Zap className="w-8 h-8 text-[var(--color-data-fail)]" />
           </div>
-          <p className="text-[var(--color-text-primary)] font-semibold mb-2">Failed to load dashboard</p>
-          <p className="text-[var(--color-text-secondary)] text-sm mb-4">Unable to retrieve your study data</p>
+          <p className="text-[var(--color-text-primary)] font-semibold mb-2">
+            Failed to load dashboard
+          </p>
+          <p className="text-[var(--color-text-secondary)] text-sm mb-4">
+            Unable to retrieve your study data
+          </p>
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white font-medium rounded-xl transition-colors"
@@ -213,9 +232,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
-                {getGreeting()}, <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] bg-clip-text text-transparent">{user?.firstName || 'Student'}</span>
+                {getGreeting()},{' '}
+                <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] bg-clip-text text-transparent">
+                  {user?.firstName || 'Student'}
+                </span>
               </h1>
-              <p className="text-[var(--color-text-secondary)] text-sm md:text-base">Your cognitive command center — let's make progress today.</p>
+              <p className="text-[var(--color-text-secondary)] text-sm md:text-base">
+                Your cognitive command center — let's make progress today.
+              </p>
             </div>
           </div>
         </motion.div>
@@ -286,7 +310,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 </p>
               </div>
             </div>
-            
+
             {data.dueCount > 0 && (
               <>
                 {/* Progress indicator */}
@@ -300,7 +324,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                     />
                   </div>
                 </div>
-                
+
                 <button
                   onClick={() => handleNavigation('/study/smart-review')}
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] font-semibold rounded-xl shadow-lg shadow-[var(--color-accent)]/25 hover:shadow-xl hover:shadow-[var(--color-accent)]/30 transition-all duration-300 group-hover:scale-[1.02]"
@@ -310,11 +334,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 </button>
               </>
             )}
-            
+
             {data.dueCount === 0 && (
               <div className="text-center py-4 bg-[var(--color-data-pass)]/10 rounded-xl border border-[var(--color-data-pass)]/30">
                 <Sparkles className="w-8 h-8 text-[var(--color-data-pass)] mx-auto mb-2" />
-                <p className="text-sm text-[var(--color-data-pass)] font-medium">You're up to date!</p>
+                <p className="text-sm text-[var(--color-data-pass)] font-medium">
+                  You're up to date!
+                </p>
               </div>
             )}
           </motion.div>
@@ -339,8 +365,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45, duration: 0.4 }}
         >
-          <SectionHeader 
-            title="Memory Health" 
+          <SectionHeader
+            title="Memory Health"
             subtitle="Track your retention and stability over time"
             icon={<TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />}
           />
@@ -363,8 +389,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55, duration: 0.4 }}
         >
-          <SectionHeader 
-            title="Daily Practice" 
+          <SectionHeader
+            title="Daily Practice"
             subtitle="Quick drills to sharpen your skills"
             icon={<Zap className="w-5 h-5 text-[var(--color-accent)]" />}
           />
@@ -376,7 +402,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             >
               {/* Gradient accent */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)] opacity-0 group-hover:opacity-100 transition-opacity" />
-              
+
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2.5 bg-gradient-to-br from-[var(--color-data-pass)] to-[var(--color-data-pass)] rounded-xl shadow-lg shadow-[var(--color-data-pass)]/20">
                   <Sparkles className="w-5 h-5 text-[var(--color-text-inverse)]" />
@@ -401,7 +427,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             >
               {/* Gradient accent */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] opacity-0 group-hover:opacity-100 transition-opacity" />
-              
+
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2.5 bg-gradient-to-br from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] rounded-xl shadow-lg shadow-[var(--color-data-provisional)]/20">
                   <Clock className="w-5 h-5 text-[var(--color-text-inverse)]" />

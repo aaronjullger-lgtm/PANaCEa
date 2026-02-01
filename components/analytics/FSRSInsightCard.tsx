@@ -136,9 +136,7 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
           )}
 
           {!isDue && (
-            <span className="text-xs text-[var(--color-text-muted)]">
-              Due in {daysUntilDue}d
-            </span>
+            <span className="text-xs text-[var(--color-text-muted)]">Due in {daysUntilDue}d</span>
           )}
         </div>
       </div>
@@ -197,7 +195,9 @@ export const FSRSInsightCard: React.FC<FSRSInsightCardProps> = ({
           {stabilityTrend !== 0 && (
             <p
               className={`text-xs ${
-                stabilityTrend > 0 ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'
+                stabilityTrend > 0
+                  ? 'text-[var(--color-text-primary)]'
+                  : 'text-[var(--color-text-muted)]'
               }`}
             >
               {stabilityTrend > 0 ? '+' : ''}

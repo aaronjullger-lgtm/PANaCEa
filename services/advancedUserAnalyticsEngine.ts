@@ -885,10 +885,11 @@ function generateInsights(
   }
 
   // System-specific insights
-  const systemsWithData = systems.filter(s => s.questionsSeen >= 10);
-  const weakestSystem = systemsWithData.length > 0
-    ? systemsWithData.reduce((a, b) => (a.masteryLevel < b.masteryLevel ? a : b))
-    : null;
+  const systemsWithData = systems.filter((s) => s.questionsSeen >= 10);
+  const weakestSystem =
+    systemsWithData.length > 0
+      ? systemsWithData.reduce((a, b) => (a.masteryLevel < b.masteryLevel ? a : b))
+      : null;
 
   if (weakestSystem && weakestSystem.masteryLevel < 50) {
     insights.push({
@@ -903,9 +904,10 @@ function generateInsights(
     });
   }
 
-  const strongestSystem = systemsWithData.length > 0
-    ? systemsWithData.reduce((a, b) => (a.masteryLevel > b.masteryLevel ? a : b))
-    : null;
+  const strongestSystem =
+    systemsWithData.length > 0
+      ? systemsWithData.reduce((a, b) => (a.masteryLevel > b.masteryLevel ? a : b))
+      : null;
 
   if (strongestSystem && strongestSystem.masteryLevel > 85) {
     insights.push({

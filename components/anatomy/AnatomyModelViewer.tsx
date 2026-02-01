@@ -77,7 +77,9 @@ const Model3DPlaceholder: React.FC<{
 
         {/* Structure indicators */}
         <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-center">
-          <p className="text-xs text-[var(--color-text-muted)]">{model.structures.length} structures available</p>
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {model.structures.length} structures available
+          </p>
         </div>
       </div>
 
@@ -202,7 +204,9 @@ const CitationPanel: React.FC<{
 
       <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
         <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
-          <span className="px-1.5 py-0.5 bg-[var(--color-bg-tertiary)]/50 rounded">{model.citation.license}</span>
+          <span className="px-1.5 py-0.5 bg-[var(--color-bg-tertiary)]/50 rounded">
+            {model.citation.license}
+          </span>
           <a
             href={model.citation.url}
             target="_blank"
@@ -341,14 +345,19 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
         <div className="text-center">
           <Info className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-3" />
           <p className="text-[var(--color-text-muted)]">{error || 'No model selected'}</p>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1">Select an anatomy model to view</p>
+          <p className="text-sm text-[var(--color-text-muted)] mt-1">
+            Select an anatomy model to view
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className={`bg-[var(--color-bg-primary)] rounded-xl overflow-hidden ${className}`}>
+    <div
+      ref={containerRef}
+      className={`bg-[var(--color-bg-primary)] rounded-xl overflow-hidden ${className}`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
         <div>
@@ -472,10 +481,15 @@ export const AnatomyModelViewer: React.FC<AnatomyModelViewerProps> = ({
       {model.clinicalRelevance && model.clinicalRelevance.length > 0 && (
         <div className="px-4 pb-4">
           <div className="bg-[var(--color-bg-secondary)]/50 rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Clinical Relevance</h3>
+            <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">
+              Clinical Relevance
+            </h3>
             <ul className="space-y-1">
               {model.clinicalRelevance.map((item, idx) => (
-                <li key={idx} className="text-xs text-[var(--color-text-muted)] flex items-start gap-2">
+                <li
+                  key={idx}
+                  className="text-xs text-[var(--color-text-muted)] flex items-start gap-2"
+                >
                   <span className="text-[var(--color-data-pass)] mt-0.5">•</span>
                   {item}
                 </li>

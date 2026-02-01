@@ -168,7 +168,11 @@ export function ExamCountdown({ examDate, onSetDate, onHide }: ExamCountdownProp
               animate={{ width: `${Math.max(0, 100 - (daysUntil / 90) * 100)}%` }}
               transition={{ duration: 1, delay: 0.5 }}
               className={`h-full ${
-                daysUntil <= 14 ? 'bg-[var(--color-data-fail)]' : daysUntil <= 30 ? 'bg-[var(--color-data-provisional)]' : 'bg-[var(--color-data-provisional)]'
+                daysUntil <= 14
+                  ? 'bg-[var(--color-data-fail)]'
+                  : daysUntil <= 30
+                    ? 'bg-[var(--color-data-provisional)]'
+                    : 'bg-[var(--color-data-provisional)]'
               }`}
             />
           </div>
@@ -210,9 +214,12 @@ export function ExamCountdownBadge({ examDate }: { examDate: Date | null }) {
   }
 
   const getColor = () => {
-    if (daysUntil <= 14) return 'text-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10 border-[var(--color-data-fail)]/20';
-    if (daysUntil <= 30) return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/20';
-    if (daysUntil <= 60) return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/20';
+    if (daysUntil <= 14)
+      return 'text-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10 border-[var(--color-data-fail)]/20';
+    if (daysUntil <= 30)
+      return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/20';
+    if (daysUntil <= 60)
+      return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/20';
     return 'text-[var(--color-accent)] bg-[var(--color-accent)]/10 border-[var(--color-accent)]/20';
   };
 

@@ -121,15 +121,11 @@ export const PerformanceTrendChart: React.FC<PerformanceTrendChartProps> = ({
         </div>
         <div className="bg-[var(--color-success)]/10 rounded-lg p-3">
           <p className="text-xs text-[var(--color-success)] font-medium">Avg Accuracy</p>
-          <p className="text-xl font-bold text-[var(--color-text-primary)]">
-            {stats.avgAccuracy}%
-          </p>
+          <p className="text-xl font-bold text-[var(--color-text-primary)]">{stats.avgAccuracy}%</p>
         </div>
         <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-3">
           <p className="text-xs text-[var(--color-text-muted)] font-medium">Active Days</p>
-          <p className="text-xl font-bold text-[var(--color-text-primary)]">
-            {stats.activeDays}
-          </p>
+          <p className="text-xl font-bold text-[var(--color-text-primary)]">{stats.activeDays}</p>
         </div>
         <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-3">
           <p className="text-xs text-[var(--color-text-muted)] font-medium">Trend</p>

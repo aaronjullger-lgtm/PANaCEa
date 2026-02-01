@@ -112,10 +112,14 @@ export class ReviewService {
     }
 
     const questionConditionMap = new Map<string, QuestionConditionInfo>(
-      originalQuestions.map((q: { id: string; conditionId: string | null; condition: string | null; system: string }) => [
-        q.id,
-        { conditionId: q.conditionId, condition: q.condition, system: q.system },
-      ])
+      originalQuestions.map(
+        (q: {
+          id: string;
+          conditionId: string | null;
+          condition: string | null;
+          system: string;
+        }) => [q.id, { conditionId: q.conditionId, condition: q.condition, system: q.system }]
+      )
     );
 
     const seenHistory = await this.prisma.userQuestionSeen.findMany({
@@ -151,11 +155,12 @@ export class ReviewService {
         },
         take: 5, // Get up to 5 candidates
       });
-      
+
       // Randomly select one from the candidates
-      const freshFromPool = poolCandidates.length > 0 
-        ? poolCandidates[Math.floor(Math.random() * poolCandidates.length)]
-        : null;
+      const freshFromPool =
+        poolCandidates.length > 0
+          ? poolCandidates[Math.floor(Math.random() * poolCandidates.length)]
+          : null;
 
       if (freshFromPool) {
         const data = freshFromPool.questionData as Record<string, unknown>;
@@ -197,10 +202,11 @@ export class ReviewService {
         },
         take: 5,
       })) as DBQuestion[];
-      
-      const freshFromMain = mainCandidates.length > 0
-        ? mainCandidates[Math.floor(Math.random() * mainCandidates.length)]
-        : null;
+
+      const freshFromMain =
+        mainCandidates.length > 0
+          ? mainCandidates[Math.floor(Math.random() * mainCandidates.length)]
+          : null;
 
       if (freshFromMain) {
         const daysOverdue = Math.max(
@@ -229,7 +235,9 @@ export class ReviewService {
         continue;
       }
 
-      const fallbackQuestion = originalQuestions.find((q: { id: string }) => q.id === srsItem.questionId);
+      const fallbackQuestion = originalQuestions.find(
+        (q: { id: string }) => q.id === srsItem.questionId
+      );
       if (fallbackQuestion) {
         const fullQuestion = (await this.prisma.question.findUnique({
           where: { id: fallbackQuestion.id },

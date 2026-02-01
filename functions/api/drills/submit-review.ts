@@ -109,7 +109,13 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
 
     const question = await prisma.preGeneratedQuestion.findUnique({
       where: { id: questionId },
-      select: { id: true, questionData: true, conditionId: true, medicalContentId: true, system: true },
+      select: {
+        id: true,
+        questionData: true,
+        conditionId: true,
+        medicalContentId: true,
+        system: true,
+      },
     });
 
     if (!question) {

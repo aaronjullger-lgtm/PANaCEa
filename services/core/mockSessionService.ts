@@ -218,22 +218,24 @@ export async function fetchSessionQuestions(
   const questions = generateMockQuestions(count);
 
   // Filter by system if specified
-  const filteredQuestions = settings.focus && settings.focus !== 'all'
-    ? questions.filter((q) => {
-        const systemMap: Record<string, string> = {
-          cardiology: 'CARDIOVASCULAR',
-          pulmonology: 'PULMONARY',
-          gastroenterology: 'GASTROINTESTINAL',
-          neurology: 'NEUROLOGICAL',
-          psychiatry: 'PSYCHIATRY',
-        };
-        return q.system === systemMap[settings.focus || ''] || !systemMap[settings.focus || ''];
-      })
-    : questions;
+  const filteredQuestions =
+    settings.focus && settings.focus !== 'all'
+      ? questions.filter((q) => {
+          const systemMap: Record<string, string> = {
+            cardiology: 'CARDIOVASCULAR',
+            pulmonology: 'PULMONARY',
+            gastroenterology: 'GASTROINTESTINAL',
+            neurology: 'NEUROLOGICAL',
+            psychiatry: 'PSYCHIATRY',
+          };
+          return q.system === systemMap[settings.focus || ''] || !systemMap[settings.focus || ''];
+        })
+      : questions;
 
   const systemDistribution: Record<string, number> = {};
   filteredQuestions.forEach((q) => {
-    systemDistribution[q.system || 'UNKNOWN'] = (systemDistribution[q.system || 'UNKNOWN'] || 0) + 1;
+    systemDistribution[q.system || 'UNKNOWN'] =
+      (systemDistribution[q.system || 'UNKNOWN'] || 0) + 1;
   });
 
   console.log('[MockService] Returning', filteredQuestions.length, 'mock questions');

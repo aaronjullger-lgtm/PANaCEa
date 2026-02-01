@@ -1,9 +1,9 @@
 /**
  * Photo Drill Card Component
- * 
+ *
  * High-intensity rapid-fire image recognition UI.
  * Features lazy loading, blur hash preview, and instant feedback.
- * 
+ *
  * @component
  */
 
@@ -58,8 +58,9 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
   };
 
   const getOptionClassName = (option: string) => {
-    const baseClasses = 'p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-105';
-    
+    const baseClasses =
+      'p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer hover:scale-105';
+
     if (!selectedAnswer) {
       return `${baseClasses} border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-bg-tertiary)]`;
     }

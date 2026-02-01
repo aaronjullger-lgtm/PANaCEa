@@ -32,7 +32,7 @@ export async function onRequestPost(context: any) {
       console.warn('[Sentry Tunnel] Empty envelope body received');
       return new Response(JSON.stringify({ error: 'Empty envelope body' }), {
         status: 400,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
@@ -47,7 +47,7 @@ export async function onRequestPost(context: any) {
       console.warn('[Sentry Tunnel] Invalid envelope format - no lines');
       return new Response(JSON.stringify({ error: 'Invalid envelope format' }), {
         status: 400,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
@@ -59,10 +59,13 @@ export async function onRequestPost(context: any) {
     try {
       header = JSON.parse(pieces[0]);
     } catch (e) {
-      console.warn('[Sentry Tunnel] Failed to parse envelope header:', pieces[0]?.substring(0, 100));
+      console.warn(
+        '[Sentry Tunnel] Failed to parse envelope header:',
+        pieces[0]?.substring(0, 100)
+      );
       return new Response(JSON.stringify({ error: 'Failed to parse envelope header' }), {
         status: 400,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
@@ -78,7 +81,7 @@ export async function onRequestPost(context: any) {
     }
 
     let projectId = SENTRY_PROJECT_ID;
-    
+
     if (dsn) {
       // Parse DSN URL to extract project ID
       let dsnUrl: URL;
@@ -88,7 +91,7 @@ export async function onRequestPost(context: any) {
         console.warn('[Sentry Tunnel] Invalid DSN format:', dsn?.substring(0, 50));
         return new Response(JSON.stringify({ error: 'Invalid DSN format' }), {
           status: 400,
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
           },
@@ -103,7 +106,7 @@ export async function onRequestPost(context: any) {
         console.warn(`[Sentry Tunnel] Rejected envelope with wrong project ID: ${projectId}`);
         return new Response(JSON.stringify({ error: 'Invalid project ID' }), {
           status: 403,
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
           },

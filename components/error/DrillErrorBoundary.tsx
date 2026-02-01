@@ -140,7 +140,9 @@ function ApiErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) 
 
       {error && import.meta.env.DEV && (
         <details className="mt-6 text-left w-full max-w-md">
-          <summary className="text-sm text-clinical-slate-500 cursor-pointer">Technical Details</summary>
+          <summary className="text-sm text-clinical-slate-500 cursor-pointer">
+            Technical Details
+          </summary>
           <pre className="mt-2 p-3 bg-clinical-slate-100 dark:bg-clinical-slate-800 rounded text-xs overflow-auto">
             {error.message}
           </pre>
@@ -308,7 +310,9 @@ function UnknownErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackPro
 
       {error && import.meta.env.DEV && (
         <details className="mt-6 text-left w-full max-w-md">
-          <summary className="text-sm text-clinical-slate-500 cursor-pointer">Technical Details</summary>
+          <summary className="text-sm text-clinical-slate-500 cursor-pointer">
+            Technical Details
+          </summary>
           <pre className="mt-2 p-3 bg-clinical-slate-100 dark:bg-clinical-slate-800 rounded text-xs overflow-auto">
             {error.message}
             {'\n\n'}

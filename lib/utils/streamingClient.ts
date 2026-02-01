@@ -33,11 +33,11 @@ export interface StreamOptions {
 
 /**
  * Stream Gemini text response with progressive chunks
- * 
+ *
  * @param prompt - The prompt to send to Gemini
  * @param options - Streaming options and callbacks
  * @returns Promise that resolves with the complete text when streaming finishes
- * 
+ *
  * @example
  * ```typescript
  * const fullText = await streamGeminiText(
@@ -160,8 +160,7 @@ export async function streamGeminiText(
 
     return accumulatedText;
   } catch (error) {
-    const streamError =
-      error instanceof Error ? error : new Error('Unknown streaming error');
+    const streamError = error instanceof Error ? error : new Error('Unknown streaming error');
 
     // Call error callback
     onError?.(streamError);
@@ -173,11 +172,11 @@ export async function streamGeminiText(
 /**
  * Helper function to create a cancellable streaming request
  * Returns the promise and an abort function
- * 
+ *
  * @example
  * ```typescript
  * const { promise, abort } = createCancellableStream(prompt, options);
- * 
+ *
  * // Later, to cancel:
  * abort();
  * ```
@@ -204,16 +203,16 @@ export function createCancellableStream(
 
 /**
  * React-friendly hook-style wrapper (can be used directly or as reference for custom hooks)
- * 
+ *
  * @example
  * ```typescript
  * const [text, setText] = useState('');
  * const [isStreaming, setIsStreaming] = useState(false);
- * 
+ *
  * const handleStream = async () => {
  *   setIsStreaming(true);
  *   setText('');
- *   
+ *
  *   await streamGeminiText(prompt, {
  *     onChunk: (chunk) => setText(prev => prev + chunk),
  *     onComplete: () => setIsStreaming(false),

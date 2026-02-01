@@ -27,7 +27,10 @@ export async function onRequestGet(context: EventContext<Env, string, unknown>):
     // Try to authenticate (optional for daily pearl)
     let userId: string | null = null;
     try {
-      const authResult = await authenticateRequest(context.request as unknown as Request, context.env);
+      const authResult = await authenticateRequest(
+        context.request as unknown as Request,
+        context.env
+      );
       if (authResult?.userId) {
         userId = authResult.userId;
       }

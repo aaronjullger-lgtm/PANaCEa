@@ -168,7 +168,9 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
         <div className="flex items-center gap-3">
           <span className="text-4xl">{chronotypeInfo.emoji}</span>
           <div>
-            <h3 className="font-semibold text-[var(--color-text-primary)]">{chronotypeInfo.label}</h3>
+            <h3 className="font-semibold text-[var(--color-text-primary)]">
+              {chronotypeInfo.label}
+            </h3>
             <p className="text-sm text-[var(--color-text-secondary)]">
               {chronotypeInfo.description}
             </p>
@@ -226,7 +228,9 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
         <button
           onClick={handleIrregularToggle}
           className={`relative w-12 h-6 rounded-full transition-colors ${
-            preferences.irregularSchedule ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-bg-tertiary)]'
+            preferences.irregularSchedule
+              ? 'bg-[var(--color-accent)]'
+              : 'bg-[var(--color-bg-tertiary)]'
           }`}
         >
           <span

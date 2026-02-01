@@ -83,9 +83,14 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
 
   switch (questionType) {
     case 'mustNotMiss': {
-      const correctAnswer = ddx.mustNotMiss[Math.floor(Math.random() * ddx.mustNotMiss.length)] ?? '';
+      const correctAnswer =
+        ddx.mustNotMiss[Math.floor(Math.random() * ddx.mustNotMiss.length)] ?? '';
       const distractors = getDistractorDiagnoses(correctAnswer, ddx, allDDx, 3);
-      const options = shuffleArray([correctAnswer, ...distractors].filter((x): x is string => typeof x === 'string' && x !== ''));
+      const options = shuffleArray(
+        [correctAnswer, ...distractors].filter(
+          (x): x is string => typeof x === 'string' && x !== ''
+        )
+      );
 
       return {
         id: `${ddx.id}-mnm-${Date.now()}`,
@@ -105,7 +110,11 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
       const correctAnswer = mostCommon[Math.floor(Math.random() * mostCommon.length)] ?? '';
       if (!correctAnswer) return null;
       const distractors = getDistractorDiagnoses(correctAnswer, ddx, allDDx, 3);
-      const options = shuffleArray([correctAnswer, ...distractors].filter((x): x is string => typeof x === 'string' && x !== ''));
+      const options = shuffleArray(
+        [correctAnswer, ...distractors].filter(
+          (x): x is string => typeof x === 'string' && x !== ''
+        )
+      );
 
       return {
         id: `${ddx.id}-mc-${Date.now()}`,
@@ -168,7 +177,11 @@ function generateDDxQuestion(ddx: DDxData, allDDx: DDxData[]): DDxQuestion | nul
         )
         .slice(0, 3);
 
-      const options = shuffleArray([correctAnswer, ...distractors].filter((x): x is string => typeof x === 'string' && x !== ''));
+      const options = shuffleArray(
+        [correctAnswer, ...distractors].filter(
+          (x): x is string => typeof x === 'string' && x !== ''
+        )
+      );
 
       return {
         id: `${ddx.id}-rf-${Date.now()}`,

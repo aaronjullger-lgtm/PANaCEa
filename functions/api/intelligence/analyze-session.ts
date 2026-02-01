@@ -641,16 +641,18 @@ export const onRequestPost = authenticatedEndpoint(
         errorClassifications.push(classification);
       }
 
-  // Calculate error distribution
-  const errorDistribution: Record<string, number> = {};
-  for (const err of errorClassifications) {
-    errorDistribution[err.errorType] = (errorDistribution[err.errorType] || 0) + 1;
-  }
+      // Calculate error distribution
+      const errorDistribution: Record<string, number> = {};
+      for (const err of errorClassifications) {
+        errorDistribution[err.errorType] = (errorDistribution[err.errorType] || 0) + 1;
+      }
 
-  // Find dominant error type
-  const sortedErrors = Object.entries(errorDistribution).sort(([, a], [, b]) => (b ?? 0) - (a ?? 0));
-  const topError = sortedErrors[0];
-  const dominantErrorType = topError?.[0] ?? 'none';
+      // Find dominant error type
+      const sortedErrors = Object.entries(errorDistribution).sort(
+        ([, a], [, b]) => (b ?? 0) - (a ?? 0)
+      );
+      const topError = sortedErrors[0];
+      const dominantErrorType = topError?.[0] ?? 'none';
 
       // Calculate cognitive state
       const cognitiveState = calculateCognitiveState(attempts);
@@ -727,9 +729,11 @@ export const onRequestPost = authenticatedEndpoint(
             e.errorType === ERROR_TYPES.INCOMPLETE_LEARNING
         )
         .map((e) => {
-          const matchingAttempt = attempts.find((a: SessionAttempt) => a.conditionId === e.conceptId);
+          const matchingAttempt = attempts.find(
+            (a: SessionAttempt) => a.conditionId === e.conceptId
+          );
           const system = matchingAttempt?.system ?? 'unknown';
-          
+
           return {
             conceptId: e.conceptId,
             conceptName: e.conceptId.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
@@ -787,15 +791,17 @@ export const onRequestPost = authenticatedEndpoint(
               id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
               userId: internalUserId,
               startedAt: new Date(sessionStartTime),
-            endedAt: new Date(sessionEndTime),
-            totalQuestions: attempts.length,
-            correctAnswers: totalCorrect,
-            accuracy: totalCorrect / attempts.length,
-            totalTimeMs: sessionEndTime - sessionStartTime,
-            avgTimePerQuestion: Math.round(avgResponseTime),
-            systemsCovered: [...new Set(attempts.map((a) => a.system).filter(Boolean))] as string[],
-            mode,
-          },
+              endedAt: new Date(sessionEndTime),
+              totalQuestions: attempts.length,
+              correctAnswers: totalCorrect,
+              accuracy: totalCorrect / attempts.length,
+              totalTimeMs: sessionEndTime - sessionStartTime,
+              avgTimePerQuestion: Math.round(avgResponseTime),
+              systemsCovered: [
+                ...new Set(attempts.map((a) => a.system).filter(Boolean)),
+              ] as string[],
+              mode,
+            },
           });
           log.info('Session analytics saved', {
             sessionScore,

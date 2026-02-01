@@ -120,7 +120,7 @@ function SystemRow({
   const fullName =
     ABBREVIATION_TO_TOPIC_MAP[system as keyof typeof ABBREVIATION_TO_TOPIC_MAP] || system;
   const accuracyColor =
-      stats.accuracy >= 80
+    stats.accuracy >= 80
       ? 'text-data-pass'
       : stats.accuracy >= 60
         ? 'text-muted-amber'

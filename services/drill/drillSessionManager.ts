@@ -1,11 +1,11 @@
 /**
  * Drill Session Manager
- * 
+ *
  * Handles session logging for all drill modes with strict statistical isolation.
  * CRITICAL: All drill attempts use isMainSession = false to prevent FSRS contamination.
- * 
+ *
  * Edge-compatible: All functions accept a Prisma client parameter.
- * 
+ *
  * @module services/drill/drillSessionManager
  */
 
@@ -60,9 +60,9 @@ export interface DrillOverview {
 
 /**
  * Log a drill attempt with statistical isolation
- * 
+ *
  * CRITICAL: Sets isMainSession = false to prevent FSRS weight updates
- * 
+ *
  * @param prisma - Prisma client instance
  * @param data - Drill attempt data
  * @returns Created attempt record
@@ -107,7 +107,7 @@ export async function logDrillAttempt(prisma: PrismaLike, data: DrillAttemptData
 
 /**
  * Create a new drill session
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param drillType - Type of drill
@@ -141,7 +141,7 @@ export async function createDrillSession(
 
 /**
  * Complete a drill session and calculate stats
- * 
+ *
  * @param prisma - Prisma client instance
  * @param sessionId - Session ID
  * @param questionCount - Number of questions attempted
@@ -156,7 +156,7 @@ export async function completeDrillSession(
 ) {
   try {
     const endedAt = new Date();
-    
+
     const session = await prisma.studySession.update({
       where: { id: sessionId },
       data: {
@@ -176,7 +176,7 @@ export async function completeDrillSession(
 
 /**
  * Get drill session statistics for a user
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param drillType - Optional filter by drill type
@@ -254,7 +254,7 @@ export async function getDrillSessionStats(
 
 /**
  * Verify statistical isolation - ensure drill attempts don't affect main stats
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @returns Verification report
@@ -286,21 +286,14 @@ export async function verifyStatisticalIsolation(prisma: PrismaLike, userId: str
     const mainReviews = await prisma.reviewLog.count({
       where: {
         userId,
-        OR: [
-          { review_type: 'real' },
-          { sessionType: 'MAIN' },
-        ],
+        OR: [{ review_type: 'real' }, { sessionType: 'MAIN' }],
       },
     });
 
     const drillReviews = await prisma.reviewLog.count({
       where: {
         userId,
-        OR: [
-          { review_type: 'cram' },
-          { sessionType: 'CRAM' },
-          { sessionType: 'RAPID_RECALL' },
-        ],
+        OR: [{ review_type: 'cram' }, { sessionType: 'CRAM' }, { sessionType: 'RAPID_RECALL' }],
       },
     });
 
@@ -324,7 +317,7 @@ export async function verifyStatisticalIsolation(prisma: PrismaLike, userId: str
 
 /**
  * Get drill performance by system
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @param drillType - Drill type
@@ -352,17 +345,20 @@ export async function getDrillPerformanceBySystem(
     });
 
     // Group by system (placeholder - would need condition lookup for accurate system mapping)
-    const systemStats: Record<string, {
-      total: number;
-      correct: number;
-      accuracy: number;
-    }> = {};
+    const systemStats: Record<
+      string,
+      {
+        total: number;
+        correct: number;
+        accuracy: number;
+      }
+    > = {};
 
     attempts.forEach((attempt) => {
       // Since we can't include MedicalContent, use a default system
       // In production, this would need to look up the condition via conditionId
       const system = 'Unknown';
-      
+
       if (!systemStats[system]) {
         systemStats[system] = {
           total: 0,
@@ -395,9 +391,9 @@ export async function getDrillPerformanceBySystem(
 
 /**
  * Get drill overview for DrillHub dashboard
- * 
+ *
  * Aggregates all drill activity for a user
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @returns Drill overview statistics
@@ -427,11 +423,11 @@ export async function getDrillOverview(prisma: PrismaLike, userId: string): Prom
     });
 
     // Calculate overall accuracy
-    const correctAttempts = attempts.filter(a => a.wasCorrect).length;
+    const correctAttempts = attempts.filter((a) => a.wasCorrect).length;
     const overallAccuracy = attempts.length > 0 ? correctAttempts / attempts.length : 0;
 
     // Calculate streaks (days with at least one drill session)
-    const sessionDates = sessions.map(s => s.startedAt.toISOString().split('T')[0]);
+    const sessionDates = sessions.map((s) => s.startedAt.toISOString().split('T')[0]);
     const uniqueDates = [...new Set(sessionDates)].sort().reverse();
 
     let currentStreak = 0;
@@ -460,11 +456,13 @@ export async function getDrillOverview(prisma: PrismaLike, userId: string): Prom
         // Safe array access with explicit bounds check
         const prevDateStr = uniqueDates[i - 1] as string;
         const currDateStr = uniqueDates[i] as string;
-        
+
         const prevDate = new Date(prevDateStr);
         const currDate = new Date(currDateStr);
-        const diffDays = Math.floor((prevDate.getTime() - currDate.getTime()) / (1000 * 60 * 60 * 24));
-        
+        const diffDays = Math.floor(
+          (prevDate.getTime() - currDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
         if (diffDays === 1) {
           tempStreak++;
         } else {
@@ -478,7 +476,7 @@ export async function getDrillOverview(prisma: PrismaLike, userId: string): Prom
     // Group recent activity by date and drill type
     const recentActivity: Record<string, Record<string, { correct: number; total: number }>> = {};
 
-    attempts.slice(0, 100).forEach(attempt => {
+    attempts.slice(0, 100).forEach((attempt) => {
       const date = attempt.createdAt.toISOString().split('T')[0];
       const drillType = attempt.questionType || 'unknown';
 
@@ -486,14 +484,14 @@ export async function getDrillOverview(prisma: PrismaLike, userId: string): Prom
       if (!recentActivity[date]) {
         recentActivity[date] = {};
       }
-      
+
       // Type-safe access to date object
       const dateObj = recentActivity[date];
       if (!dateObj) return; // Extra safety check
-      
+
       // Get or initialize drill type entry - safe pattern that satisfies TypeScript
       const stats = dateObj[drillType] || (dateObj[drillType] = { correct: 0, total: 0 });
-      
+
       // Update stats - we know stats exists now
       stats.total++;
       if (attempt.wasCorrect) {
@@ -506,7 +504,7 @@ export async function getDrillOverview(prisma: PrismaLike, userId: string): Prom
       .flatMap(([date, drillTypes]) => {
         // Explicit null/undefined check with type narrowing
         if (drillTypes === null || drillTypes === undefined) return [];
-        
+
         // Map entries to activity records
         const activities = Object.entries(drillTypes).map(([drillType, stats]) => {
           // Defensive stats check (should never happen, but satisfies TypeScript)
@@ -518,7 +516,7 @@ export async function getDrillOverview(prisma: PrismaLike, userId: string): Prom
             attempts: safeStats.total,
           };
         });
-        
+
         return activities;
       })
       .sort((a, b) => b.date.localeCompare(a.date));
@@ -536,4 +534,3 @@ export async function getDrillOverview(prisma: PrismaLike, userId: string): Prom
     throw error;
   }
 }
-

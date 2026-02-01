@@ -15,14 +15,14 @@ interface ErrorBoundaryState {
 
 /**
  * ErrorBoundary - Catch React errors and prevent full-page crashes
- * 
+ *
  * Usage:
  * ```tsx
  * <ErrorBoundary>
  *   <MyComponent />
  * </ErrorBoundary>
  * ```
- * 
+ *
  * With custom fallback:
  * ```tsx
  * <ErrorBoundary fallback={<CustomErrorUI />}>

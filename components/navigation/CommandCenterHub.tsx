@@ -92,7 +92,9 @@ interface CommandCenterHubProps {
   onNavigateToGapAnalysis: () => void;
   onNavigateToClinicalProfile?: () => void;
   onNavigateToIntegrations?: () => void;
-  onNavigateToSimulation?: (settings?: { initialFocus?: 'all' | 'growth' | 'flagged' | 'due' }) => void;
+  onNavigateToSimulation?: (settings?: {
+    initialFocus?: 'all' | 'growth' | 'flagged' | 'due';
+  }) => void;
   onNavigateToReference?: () => void;
   onNavigateToCustomStudy?: () => void;
   /** Opens Pearl Deck (Rapid Review - saved pearls only) */
@@ -243,9 +245,7 @@ const CoreAdaptiveHero: React.FC<{
             Start Session
           </PrimaryButton>
           {enabledSystemsLabel && (
-            <span className="text-xs text-[var(--color-text-muted)]">
-              {enabledSystemsLabel}
-            </span>
+            <span className="text-xs text-[var(--color-text-muted)]">{enabledSystemsLabel}</span>
           )}
         </div>
       </div>
@@ -328,7 +328,7 @@ const QuickStatsBar: React.FC<{
       ].map((stat, i) => {
         const isDueCard = stat.label === 'Due for Review';
         const hasDueItems = isDueCard && dueCount > 0;
-        
+
         return (
           <motion.div
             key={stat.label}
@@ -403,7 +403,7 @@ const ModeCard: React.FC<{
       transition={{ duration: 0.2, ease: 'easeOut' }}
       onClick={onSelect}
       disabled={mode.isComingSoon}
-        className={`
+      className={`
         w-full text-left p-4 rounded-xl border transition-all duration-200 group
         focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
         ${
@@ -428,9 +428,7 @@ const ModeCard: React.FC<{
               </span>
             )}
           </div>
-          <p className="text-sm text-[var(--color-text-muted)] line-clamp-1">
-            {mode.description}
-          </p>
+          <p className="text-sm text-[var(--color-text-muted)] line-clamp-1">{mode.description}</p>
           {mode.estimatedMinutes && (
             <div className="flex items-center gap-1.5 mt-2 text-xs text-[var(--color-text-muted)]">
               <Timer className="w-3 h-3" />
@@ -488,10 +486,7 @@ function ResidencyCockpitSection({
   onNavigateToDrillWithSystem: (modeId: string, system: string) => void;
 }) {
   const { stats, isLoading } = useRolling360Stats();
-  const weakestSet = useMemo(
-    () => new Set(stats?.weakestSystems ?? []),
-    [stats?.weakestSystems]
-  );
+  const weakestSet = useMemo(() => new Set(stats?.weakestSystems ?? []), [stats?.weakestSystems]);
   const weakestSystem = stats?.weakestSystems?.[0] ?? null;
   const hasData = (stats?.totalInWindow ?? 0) >= 5;
   const systemsWithData = Object.entries(stats?.systemStats ?? {}).filter(([, s]) => s.total >= 2);
@@ -740,7 +735,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       <RecommendationFeed onNavigateToDrill={handleNavigateToDrillModeWithSettings} />
 
       {/* Residency Cockpit: Study by System (body map / system grid from Rolling 360) */}
-      {onNavigateToDrillWithSystem && <ResidencyCockpitSection onNavigateToDrillWithSystem={onNavigateToDrillWithSystem} />}
+      {onNavigateToDrillWithSystem && (
+        <ResidencyCockpitSection onNavigateToDrillWithSystem={onNavigateToDrillWithSystem} />
+      )}
 
       {/* Grand Rounds - Daily Challenge (Standalone) */}
       <GrandRoundsBanner
@@ -749,35 +746,37 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       />
 
       {/* Current Curriculum - Elevated for Didactic users */}
-      {careerStage === 'student' && enabledSystems.size > 0 && enabledSystems.size < Object.keys(ABBREVIATION_TO_TOPIC_MAP).length && (
-        <motion.div
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-[var(--color-accent)]/10">
-              <Layers className="w-5 h-5 text-[var(--color-accent)]" />
+      {careerStage === 'student' &&
+        enabledSystems.size > 0 &&
+        enabledSystems.size < Object.keys(ABBREVIATION_TO_TOPIC_MAP).length && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[var(--color-accent)]/10">
+                <Layers className="w-5 h-5 text-[var(--color-accent)]" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[var(--color-text-primary)]">Current Curriculum</h3>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  Testing: {Array.from(enabledSystems).slice(0, 6).join(', ')}
+                  {enabledSystems.size > 6 ? ` +${enabledSystems.size - 6} more` : ''}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold text-[var(--color-text-primary)]">Current Curriculum</h3>
-              <p className="text-sm text-[var(--color-text-muted)]">
-                Testing: {Array.from(enabledSystems).slice(0, 6).join(', ')}
-                {enabledSystems.size > 6 ? ` +${enabledSystems.size - 6} more` : ''}
-              </p>
-            </div>
-          </div>
-          {onOpenSettings && (
-            <button
-              type="button"
-              onClick={onOpenSettings}
-              className="text-sm font-medium text-[var(--color-accent)] hover:underline self-start sm:self-center"
-            >
-              Change
-            </button>
-          )}
-        </motion.div>
-      )}
+            {onOpenSettings && (
+              <button
+                type="button"
+                onClick={onOpenSettings}
+                className="text-sm font-medium text-[var(--color-accent)] hover:underline self-start sm:self-center"
+              >
+                Change
+              </button>
+            )}
+          </motion.div>
+        )}
 
       {/* Core Adaptive - THE MAIN EVENT */}
       <CoreAdaptiveHero
@@ -809,7 +808,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   </span>
                 </div>
                 <p className="text-sm text-[var(--color-text-secondary)] mb-3">
-                  Build targeted sessions: choose specific organ systems, focus areas, and customize difficulty
+                  Build targeted sessions: choose specific organ systems, focus areas, and customize
+                  difficulty
                 </p>
                 <div className="flex items-center gap-4">
                   <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
@@ -876,7 +876,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       <div className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/95 backdrop-blur border-b border-gray-200 dark:border-slate-700 -mx-4 px-4 pb-4 mb-6">
         <div className="mb-4">
           <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Study Tools</h2>
-          <p className="text-sm text-[var(--color-text-muted)]">Choose your training mode or explore clinical resources</p>
+          <p className="text-sm text-[var(--color-text-muted)]">
+            Choose your training mode or explore clinical resources
+          </p>
         </div>
 
         {/* Tab Navigation - Underline Style */}
@@ -1152,9 +1154,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       <Target className="w-6 h-6 text-[var(--color-text-secondary)]" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-[var(--color-text-primary)]">
-                        Gap Analysis
-                      </h4>
+                      <h4 className="font-bold text-[var(--color-text-primary)]">Gap Analysis</h4>
                       <p className="text-sm text-[var(--color-text-muted)] mt-1">
                         Identify high-yield focus areas
                       </p>
@@ -1195,9 +1195,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   {growthAreas.map((area) => (
                     <button
                       key={area}
-                    onClick={() =>
-                      onStartSession({ focus: 'topic', topic: area })
-                    }
+                      onClick={() => onStartSession({ focus: 'topic', topic: area })}
                       className="px-4 py-2 bg-data-provisional/10 dark:bg-data-provisional/5 border border-data-provisional/30 dark:border-data-provisional/20 text-muted-amber rounded-lg hover:bg-data-provisional/20 dark:hover:bg-data-provisional/10 transition-colors"
                     >
                       {area}

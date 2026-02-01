@@ -1,9 +1,9 @@
 /**
  * ClinicalSkeleton Component
- * 
+ *
  * Professional skeleton loader for latency masking during AI streaming.
  * Implements the "Stormy Slate" aesthetic with semantic tokens.
- * 
+ *
  * Usage:
  * - Default: Full clinical text block skeleton
  * - Compact: Smaller variant for answer options
@@ -110,7 +110,7 @@ export default ClinicalSkeleton;
 
 /**
  * StreamingSkeleton - Skeleton that fades out as content streams in
- * 
+ *
  * Usage: Wrap this around streaming content
  */
 export const StreamingSkeleton: React.FC<{

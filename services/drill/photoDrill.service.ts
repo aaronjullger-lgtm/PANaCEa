@@ -1,11 +1,11 @@
 /**
  * Photo Drill Service
- * 
+ *
  * High-intensity rapid-fire image recognition for Dermatology and Radiology.
  * Implements strict statistical isolation - drill attempts do NOT affect FSRS weights.
- * 
+ *
  * Edge-compatible: All functions accept a Prisma client parameter.
- * 
+ *
  * @module services/drill/photoDrill.service
  */
 
@@ -52,7 +52,7 @@ export interface PhotoDrillBatchOptions {
 
 /**
  * Get a batch of photo drill questions
- * 
+ *
  * @param options - Filtering options for the drill batch
  * @returns Array of photo drill questions with distractors
  */
@@ -122,19 +122,18 @@ export async function getPhotoDrillBatch(
 
     // Generate questions with distractors
     const questions: PhotoDrillQuestion[] = [];
-    
+
     for (const asset of mediaAssets) {
       const correctCondition = asset.Condition || asset.MedicalContent;
-      
+
       // Skip assets without condition link or null imageUrl
       if (!correctCondition || !asset.originalUrl) {
         continue;
       }
 
       // Handle union type: Condition has 'name', MedicalContent has 'condition'
-      const correctAnswer = 'name' in correctCondition 
-        ? correctCondition.name 
-        : correctCondition.condition;
+      const correctAnswer =
+        'name' in correctCondition ? correctCondition.name : correctCondition.condition;
       const conditionSystem = 'system' in correctCondition ? correctCondition.system : undefined;
 
       // Generate 3 distractors from the same system
@@ -167,7 +166,7 @@ export async function getPhotoDrillBatch(
 
 /**
  * Generate distractor conditions for a photo drill question
- * 
+ *
  * @param prisma - Prisma client instance
  * @param correctConditionId - ID of the correct condition
  * @param system - Organ system to pull distractors from
@@ -229,7 +228,7 @@ async function generateDistractors(
 
 /**
  * Get statistics for photo drill mode (isolated from main stats)
- * 
+ *
  * @param prisma - Prisma client instance
  * @param userId - User ID
  * @returns Photo drill statistics
@@ -273,4 +272,3 @@ export async function getPhotoDrillStats(prisma: PrismaLike, userId: string) {
     };
   }
 }
-

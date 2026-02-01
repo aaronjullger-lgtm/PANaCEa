@@ -122,9 +122,7 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: i * 0.02, duration: 0.15 }}
               className={`flex-1 min-w-[4px] max-w-[12px] h-6 rounded-sm ${
-                record.isCorrect
-                  ? 'bg-[var(--color-data-pass)]'
-                  : 'bg-[var(--color-data-fail)]'
+                record.isCorrect ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]'
               }`}
               title={`Q${performanceData.length - displayData.length + i + 1}: ${record.isCorrect ? 'Correct' : 'Incorrect'} - ${record.topic || 'Unknown'}`}
             />

@@ -63,7 +63,9 @@ export function AppSidebar({ className }: AppSidebarProps) {
                         <Icon
                           className={cn(
                             'w-5 h-5 transition-colors',
-                            isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'
+                            isActive
+                              ? 'text-[var(--color-accent)]'
+                              : 'text-[var(--color-text-muted)]'
                           )}
                         />
                         <span className="text-sm font-medium">{item.label}</span>

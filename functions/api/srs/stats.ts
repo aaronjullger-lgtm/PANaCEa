@@ -47,7 +47,9 @@ export const onRequestGet = authenticatedEndpoint(SRSStatsSchema, async (context
     const retentionRate =
       recentAttempts.length > 0
         ? Math.round(
-            (recentAttempts.filter((a: AttemptItem) => a.isCorrect).length / recentAttempts.length) * 100
+            (recentAttempts.filter((a: AttemptItem) => a.isCorrect).length /
+              recentAttempts.length) *
+              100
           )
         : 0;
 

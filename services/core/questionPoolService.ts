@@ -233,7 +233,7 @@ async function getFromMainTable(
   for (const q of questions) {
     if (availableQuestions.length >= count) break;
     if (seenIds.has(q.id)) continue;
-    
+
     // Normalize options from object or array format
     const normalizedOptions = normalizeOptionsToArray(q.options);
     if (normalizedOptions.length === 0) {

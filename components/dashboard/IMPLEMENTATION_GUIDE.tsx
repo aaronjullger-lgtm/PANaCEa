@@ -1,6 +1,6 @@
 /**
  * IMPLEMENTATION GUIDE: Unified DashboardActionCard
- * 
+ *
  * This guide shows how to replace the existing three different card styles
  * (Orange/Flat Core PANCE, Stormy Slate Grand Rounds, and any Blue/Glow OSCE cards)
  * with the new unified DashboardActionCard component.
@@ -25,7 +25,10 @@ import { DashboardActionCard } from '@/components/dashboard/DashboardActionCard'
 // </div>
 
 // AFTER:
-export const CorePANCECard = ({ onStartSession, recommendedSystem }: {
+export const CorePANCECard = ({
+  onStartSession,
+  recommendedSystem,
+}: {
   onStartSession: () => void;
   recommendedSystem?: string;
 }) => (
@@ -35,7 +38,7 @@ export const CorePANCECard = ({ onStartSession, recommendedSystem }: {
     description={
       recommendedSystem
         ? `AI-recommended focus: ${recommendedSystem}. Adaptive FSRS-powered session.`
-        : "Full-spectrum adaptive questions powered by FSRS algorithm."
+        : 'Full-spectrum adaptive questions powered by FSRS algorithm.'
     }
     icon={Brain}
     stats={[
@@ -58,7 +61,10 @@ export const CorePANCECard = ({ onStartSession, recommendedSystem }: {
 // </div>
 
 // AFTER:
-export const GrandRoundsCard = ({ onStartChallenge, todaysQuestionCount }: {
+export const GrandRoundsCard = ({
+  onStartChallenge,
+  todaysQuestionCount,
+}: {
   onStartChallenge: () => void;
   todaysQuestionCount?: number;
 }) => (
@@ -88,7 +94,10 @@ export const GrandRoundsCard = ({ onStartChallenge, todaysQuestionCount }: {
 // ============================================================================
 // This card should use the most premium styling with the vibrant gradient button
 
-export const VirtualOSCECard = ({ onStartEncounter, isUnlocked }: {
+export const VirtualOSCECard = ({
+  onStartEncounter,
+  isUnlocked,
+}: {
   onStartEncounter: () => void;
   isUnlocked?: boolean;
 }) => (
@@ -102,7 +111,7 @@ export const VirtualOSCECard = ({ onStartEncounter, isUnlocked }: {
       { label: 'Skills', value: '4 Domains' },
       { label: 'Feedback', value: 'AI Preceptor' },
     ]}
-    buttonText={isUnlocked ? "Start Virtual OSCE" : "Unlock Premium"}
+    buttonText={isUnlocked ? 'Start Virtual OSCE' : 'Unlock Premium'}
     onAction={onStartEncounter}
     disabled={!isUnlocked}
     variant="premium"
@@ -140,22 +149,13 @@ export const UnifiedTrainingMenuCards = ({
   return (
     <div className="space-y-6 mb-8">
       {/* Core PANCE - Primary comprehensive session */}
-      <CorePANCECard 
-        onStartSession={onStartCore}
-        recommendedSystem={recommendedSystem}
-      />
+      <CorePANCECard onStartSession={onStartCore} recommendedSystem={recommendedSystem} />
 
       {/* Grand Rounds - Daily competitive challenge */}
-      <GrandRoundsCard 
-        onStartChallenge={onStartGrandRounds}
-        todaysQuestionCount={20}
-      />
+      <GrandRoundsCard onStartChallenge={onStartGrandRounds} todaysQuestionCount={20} />
 
       {/* Virtual OSCE - Premium interactive encounters */}
-      <VirtualOSCECard 
-        onStartEncounter={onStartOSCE}
-        isUnlocked={isOSCEUnlocked}
-      />
+      <VirtualOSCECard onStartEncounter={onStartOSCE} isUnlocked={isOSCEUnlocked} />
     </div>
   );
 };

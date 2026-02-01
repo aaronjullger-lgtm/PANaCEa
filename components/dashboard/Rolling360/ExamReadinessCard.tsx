@@ -326,7 +326,9 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
           animate={{ scale: 1, opacity: 1 }}
           className="inline-block"
         >
-          <span className={`text-6xl font-bold ${isPassing ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}>
+          <span
+            className={`text-6xl font-bold ${isPassing ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}
+          >
             {stats.predictedScore || '---'}
           </span>
           <span className="text-xl text-[var(--color-text-muted)] ml-2">/800</span>
@@ -384,7 +386,9 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
           <span className="text-[var(--color-text-muted)]">Blueprint Match</span>
           <span
             className={`font-semibold ${
-              stats.blueprintAdherence >= 0.85 ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'
+              stats.blueprintAdherence >= 0.85
+                ? 'text-[var(--color-data-pass)]'
+                : 'text-[var(--color-data-provisional)]'
             }`}
           >
             {(stats.blueprintAdherence * 100).toFixed(0)}%
@@ -436,7 +440,9 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
       <div
         className={`bg-[var(--color-bg-secondary)]/60 backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-data-fail)]/30 ${className}`}
       >
-        <p className="text-[var(--color-data-fail)] text-center">Failed to load exam readiness data</p>
+        <p className="text-[var(--color-data-fail)] text-center">
+          Failed to load exam readiness data
+        </p>
       </div>
     );
   }

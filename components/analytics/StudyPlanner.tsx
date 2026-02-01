@@ -99,13 +99,19 @@ const MetricCard: React.FC<{
   trend?: 'up' | 'down' | 'neutral';
 }> = ({ label, value, subtext, trend }) => (
   <div className="bg-[var(--color-bg-card)] rounded-lg p-4 border border-[var(--color-border)]">
-    <div className="text-xs text-[var(--color-text-tertiary)] uppercase tracking-wide mb-1">{label}</div>
+    <div className="text-xs text-[var(--color-text-tertiary)] uppercase tracking-wide mb-1">
+      {label}
+    </div>
     <div className="flex items-baseline gap-2">
       <span className="text-2xl font-semibold text-[var(--color-text-primary)]">{value}</span>
       {trend && (
         <span
           className={`text-sm ${
-            trend === 'up' ? 'text-[var(--color-data-pass)]' : trend === 'down' ? 'text-[var(--color-data-fail)]' : 'text-[var(--color-text-tertiary)]'
+            trend === 'up'
+              ? 'text-[var(--color-data-pass)]'
+              : trend === 'down'
+                ? 'text-[var(--color-data-fail)]'
+                : 'text-[var(--color-text-tertiary)]'
           }`}
         >
           {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'}
@@ -153,7 +159,9 @@ const EfficiencyGauge: React.FC<{
         <div className="absolute bottom-0 left-1/2 w-3 h-3 bg-[var(--color-text-primary)] rounded-full -translate-x-1/2 translate-y-1/2" />
       </div>
       <div className="text-sm text-[var(--color-text-secondary)] mt-2">{label}</div>
-      <div className="text-lg font-semibold text-[var(--color-text-primary)]">{percentage.toFixed(0)}%</div>
+      <div className="text-lg font-semibold text-[var(--color-text-primary)]">
+        {percentage.toFixed(0)}%
+      </div>
     </div>
   );
 };
@@ -286,7 +294,9 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
             <div className="text-3xl font-bold text-[var(--color-text-primary)]">
               {Math.round(selectedRetention * 100)}%
             </div>
-            <div className="text-sm text-[var(--color-text-tertiary)]">{retentionToLabel(selectedRetention)}</div>
+            <div className="text-sm text-[var(--color-text-tertiary)]">
+              {retentionToLabel(selectedRetention)}
+            </div>
           </div>
 
           <button
@@ -422,7 +432,9 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
       {/* Advanced options */}
       {showAdvanced && (
         <div className="border-t border-[var(--color-border)] pt-4 mt-4">
-          <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">Advanced Details</h3>
+          <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
+            Advanced Details
+          </h3>
           <div className="text-xs text-[var(--color-text-tertiary)] space-y-1 font-mono bg-[var(--color-bg-card)] p-3 rounded-lg">
             <div>Optimal R: {cmrrResult.optimalRetention.toFixed(3)}</div>
             <div>Efficiency Ratio: {cmrrResult.efficiencyRatio}</div>

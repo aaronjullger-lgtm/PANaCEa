@@ -1,11 +1,11 @@
 /**
  * Environment Variable Loader
- * 
+ *
  * This module MUST be imported FIRST in any script that needs DATABASE_URL
  * or other environment variables. Due to JavaScript import hoisting, all
  * imports execute in order of appearance, so this ensures dotenv.config()
  * runs before any module that depends on process.env.
- * 
+ *
  * Usage in scripts:
  *   import './env-loader';  // <-- Import FIRST, before any other imports
  *   import { prisma } from '../lib/prisma';
