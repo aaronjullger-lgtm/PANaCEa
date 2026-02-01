@@ -144,12 +144,12 @@ export default function WeaknessCheatsheetExporter({
         </div>
       ) : (
         <div
-          className="p-3 rounded-lg mb-4 text-center bg-[var(--color-success)]/10 border border-[var(--color-success)]/30"
+          className="p-3 rounded-lg mb-4 text-center bg-slate-100 dark:bg-[var(--color-success)]/10 border border-slate-200 dark:border-[var(--color-success)]/30"
         >
           <Check
-            className="w-6 h-6 mx-auto mb-2 text-[var(--color-success)]"
+            className="w-6 h-6 mx-auto mb-2 text-slate-600 dark:text-[var(--color-success)]"
           />
-          <p className="text-sm text-[var(--color-text-primary)]">
+          <p className="text-sm text-slate-800 dark:text-[var(--color-text-primary)]">
             No significant weaknesses in the last {days} days!
           </p>
         </div>

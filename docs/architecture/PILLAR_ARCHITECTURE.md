@@ -362,6 +362,16 @@ All pillars must be mobile-responsive:
 
 ---
 
+## PWA and Offline
+
+PWA offline is supported for the **study queue and SRS sync**:
+
+- **Due queue**: TanStack Query persists the SRS due queue (e.g. from GET `/api/srs/due`) in IndexedDB. When offline, the app shows the last cached due items so users can continue reviewing.
+- **Offline answers**: When the user submits an SRS review while offline, the payload is queued locally. When connectivity returns, the queue is flushed to POST `/api/srs/sync` and POST `/api/srs/submit` as appropriate, and the due cache is refreshed.
+- **Source of truth**: PostgreSQL remains the source of truth after sync; conflict handling is server-authoritative. Only the SRS due subset and queued operations are cached—full condition content is not claimed as offline-capable.
+
+---
+
 ## Future Enhancements
 
 1. **Command Center**

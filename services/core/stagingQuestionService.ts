@@ -120,7 +120,11 @@ Respond with JSON only:
 `;
 
       const result = await model.generateContent(prompt);
-      const response = result.response.text();
+      const responseObj = result?.response;
+      if (!responseObj?.text) {
+        throw new Error('Invalid or empty AI response');
+      }
+      const response = responseObj.text();
       const sanitized = response.replace(/```json|```/g, '').trim();
       const json = JSON.parse(sanitized);
 

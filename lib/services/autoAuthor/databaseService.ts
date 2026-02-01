@@ -9,8 +9,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import type { GeneratedConditionContent, AutoAuthorStats } from './types';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 export interface MissingContentCondition {
   id: string;

@@ -6,7 +6,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 // Thresholds for triggering batch generation
 const THRESHOLDS = {

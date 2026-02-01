@@ -211,7 +211,7 @@ export function getCurrentQuestion(): Question | null {
     return null; // Increment complete
   }
 
-  return state.currentQuestions[state.currentQuestionIndex];
+  return state.currentQuestions[state.currentQuestionIndex] ?? null;
 }
 
 /**

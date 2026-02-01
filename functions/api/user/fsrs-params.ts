@@ -14,6 +14,7 @@ import {
   createSuccessResponse,
   handleCorsOptions,
 } from '../_shared/auth';
+import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import type { CloudflareEnv } from '../_shared/types';
 import {
   runFullOptimization,
@@ -81,10 +82,17 @@ export async function onRequestGet(context: {
 }): Promise<Response> {
   const { request, env } = context;
 
+  try {
+    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
+  } catch (e) {
+    if (e instanceof MissingEnvError) return e.toResponse();
+    throw e;
+  }
+
   // Authenticate
   const auth = await authenticateRequest(request, env);
   if (!auth) {
-    return createErrorResponse('Unauthorized', 401, 'AUTH_REQUIRED');
+    return createErrorResponse(request, 'Unauthorized', 401, 'AUTH_REQUIRED', env);
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -131,7 +139,7 @@ export async function onRequestGet(context: {
         message: optimizationStatus.message,
       };
 
-      return createSuccessResponse(response, 200, 60); // Cache for 60 seconds
+      return createSuccessResponse(request, response, 200, 60, env); // Cache for 60 seconds
     }
 
     // Return default parameters
@@ -151,13 +159,15 @@ export async function onRequestGet(context: {
       message: optimizationStatus.message,
     };
 
-    return createSuccessResponse(response, 200, 60);
+    return createSuccessResponse(request, response, 200, 60, env);
   } catch (error) {
     console.error('[FSRS-Params] GET error:', error);
     return createErrorResponse(
+      request,
       error instanceof Error ? error.message : 'Failed to fetch FSRS parameters',
       500,
-      'FETCH_ERROR'
+      'FETCH_ERROR',
+      env
     );
   } finally {
     await safePrismaDisconnect(prisma);
@@ -173,6 +183,13 @@ export async function onRequestPost(context: {
   env: CloudflareEnv;
 }): Promise<Response> {
   const { request, env } = context;
+
+  try {
+    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
+  } catch (e) {
+    if (e instanceof MissingEnvError) return e.toResponse();
+    throw e;
+  }
 
   // Authenticate
   const auth = await authenticateRequest(request, env);
@@ -234,7 +251,7 @@ export async function onRequestPost(context: {
     // Check if we have enough data
     const optimizationStatus = canOptimize(allSnapshots.length);
     if (!optimizationStatus.canOptimize) {
-      return createErrorResponse(optimizationStatus.message, 400, 'INSUFFICIENT_DATA');
+      return createErrorResponse(request, optimizationStatus.message, 400, 'INSUFFICIENT_DATA', env);
     }
 
     // Check if re-optimization is needed (unless forced)
@@ -253,6 +270,7 @@ export async function onRequestPost(context: {
         // Skip if optimized recently (< 24h) and few new reviews (< 50)
         if (hoursSinceOptimization < 24 && reviewsSinceOptimization < 50) {
           return createSuccessResponse(
+            request,
             {
               success: false,
               skipped: true,
@@ -265,7 +283,9 @@ export async function onRequestPost(context: {
                 improvementOverDefault: existingParams.improvementOverDefault,
               },
             },
-            200
+            200,
+            0,
+            env
           );
         }
       }
@@ -297,9 +317,11 @@ export async function onRequestPost(context: {
     if (!validation.valid) {
       console.error('[FSRS-Params] Invalid parameters produced:', validation.errors);
       return createErrorResponse(
+        request,
         'Optimization produced invalid parameters: ' + validation.errors.join(', '),
         500,
-        'INVALID_PARAMS'
+        'INVALID_PARAMS',
+        env
       );
     }
 
@@ -341,18 +363,23 @@ export async function onRequestPost(context: {
     };
 
     return createSuccessResponse(
+      request,
       {
         ...result,
         optimizationTimeMs: optimizationTime,
       },
-      200
+      200,
+      0,
+      env
     );
   } catch (error) {
     console.error('[FSRS-Params] POST error:', error);
     return createErrorResponse(
+      request,
       error instanceof Error ? error.message : 'Optimization failed',
       500,
-      'OPTIMIZATION_ERROR'
+      'OPTIMIZATION_ERROR',
+      env
     );
   } finally {
     await safePrismaDisconnect(prisma);

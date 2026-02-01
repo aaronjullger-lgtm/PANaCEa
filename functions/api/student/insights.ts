@@ -20,6 +20,8 @@ import {
   handleCorsOptions,
   type Env,
 } from '../_shared/auth';
+import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
+import { isAdmin, type UserRole } from '../_shared/rbac';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 // Type for PerformanceRecord from Prisma query
@@ -35,25 +37,52 @@ interface PerformanceRecordResult {
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
+  try {
+    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
+  } catch (e) {
+    if (e instanceof MissingEnvError) return e.toResponse();
+    throw e;
+  }
+
   if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
+    return handleCorsOptions(context);
   }
 
   const authContext = await authenticateRequest(request, env);
   if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
+    return createErrorResponse(request, 'Unauthorized', 401, undefined, env);
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     const url = new URL(request.url);
-    const userId = url.searchParams.get('userId');
+    const requestedUserId = url.searchParams.get('userId');
     const period = url.searchParams.get('period') || '30d';
 
-    if (!userId) {
-      return createErrorResponse('Missing userId parameter', 400);
+    if (!requestedUserId) {
+      return createErrorResponse(request, 'Missing userId parameter', 400, undefined, env);
     }
+
+    // Resolve authenticated user's DB id and enforce: only own insights unless admin
+    const authUser = await prisma.user.findUnique({
+      where: { clerkId: authContext.clerkId },
+      select: { id: true, role: true },
+    });
+    if (!authUser) {
+      return createErrorResponse(request, 'User not found', 403, undefined, env);
+    }
+    const mayViewOther = isAdmin((authUser.role as UserRole) ?? 'user');
+    if (requestedUserId !== authUser.id && !mayViewOther) {
+      return createErrorResponse(
+        request,
+        'Forbidden: you may only request insights for your own user',
+        403,
+        undefined,
+        env
+      );
+    }
+    const userId = requestedUserId;
 
     // Calculate date range
     const now = new Date();
@@ -70,7 +99,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     });
 
     if (records.length === 0) {
-      return createSuccessResponse({
+      return createSuccessResponse(request, {
         insights: {
           message: 'No activity in this period. Start studying to get personalized insights!',
           hasData: false,
@@ -192,9 +221,11 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
           ? "You're fast! Make sure you're reading questions carefully"
           : 'Your pace is excellent for exam-like conditions';
 
-    return createSuccessResponse({
-      insights: {
-        hasData: true,
+    return createSuccessResponse(
+      request,
+      {
+        insights: {
+          hasData: true,
         period: `Last ${periodDays} days`,
         summary: {
           totalQuestions,
@@ -217,11 +248,15 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
             accuracy: Math.round(data.accuracy),
           }))
           .sort((a: any, b: any) => b.total - a.total),
+        },
       },
-    });
+      200,
+      0,
+      env
+    );
   } catch (error: any) {
     console.error('Error generating student insights:', error);
-    return createErrorResponse('Failed to generate insights', 500);
+    return createErrorResponse(request, 'Failed to generate insights', 500, undefined, env);
   } finally {
     await safePrismaDisconnect(prisma);
   }

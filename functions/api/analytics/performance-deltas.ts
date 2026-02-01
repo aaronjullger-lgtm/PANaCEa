@@ -8,6 +8,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveUserId } from '../_shared/user-resolver';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 // NCCPA Blueprint Systems
@@ -88,12 +89,8 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { id: true },
-    });
-
-    if (!user) {
+    const userId = await resolveUserId(prisma, auth.userId);
+    if (!userId) {
       logger.warn('User not found', { clerkId: auth.userId });
       return {
         data: {
@@ -107,13 +104,13 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
 
     // Get user's question attempts grouped by system
     const attempts = await prisma.questionAttempt.findMany({
-      where: { userId: user.id },
-      select: { isCorrect: true, system: true },
+      where: { userId },
+      select: { wasCorrect: true, system: true },
     });
 
     // Return empty state for new users (not an error)
     if (attempts.length === 0) {
-      logger.info('New user with no attempts', { userId: user.id });
+      logger.info('New user with no attempts', { userId });
       return {
         data: {
           success: true,
@@ -129,7 +126,7 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
       const system = attempt.system || 'UNKNOWN';
       userStats[system] ??= { correct: 0, total: 0 };
       userStats[system].total++;
-      if (attempt.isCorrect) userStats[system].correct++;
+      if (attempt.wasCorrect) userStats[system].correct++;
     }
 
     // Try to get platform-wide stats for cohort benchmarks

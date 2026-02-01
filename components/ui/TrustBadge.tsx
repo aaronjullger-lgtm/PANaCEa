@@ -12,10 +12,12 @@ import { motion } from 'framer-motion';
 import { Shield, Sparkles, CheckCircle2 } from 'lucide-react';
 
 // Accept string to be flexible with Question type's source field
-export type QuestionSource = 'database' | 'ai_fallback' | 'pool' | string | undefined;
+export type QuestionSource = 'database' | 'ai_fallback' | 'pool' | 'staging' | string | undefined;
 
 interface TrustBadgeProps {
   source: QuestionSource;
+  /** When true, show "Beta / Peer Review" badge (staging lake) */
+  fromStaging?: boolean;
   showLabel?: boolean;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
@@ -44,11 +46,36 @@ const sizeClasses = {
 
 export const TrustBadge: React.FC<TrustBadgeProps> = ({
   source,
+  fromStaging = false,
   showLabel = true,
   size = 'sm',
   className = '',
 }) => {
   const sizes = sizeClasses[size];
+
+  // Staging lake: beta / peer review (not yet fully vetted)
+  if (fromStaging || source === 'staging') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+        className={`
+          inline-flex items-center ${sizes.gap} ${sizes.padding}
+          bg-amber-500/10
+          text-amber-600 dark:text-amber-400
+          border border-amber-500/30
+          rounded-full font-medium
+          ${className}
+        `}
+        title="This question is in peer review / beta"
+        aria-label="Beta / Peer Review"
+      >
+        <CheckCircle2 className={sizes.icon} aria-hidden="true" />
+        {showLabel && <span className={sizes.text}>Beta / Peer Review</span>}
+      </motion.div>
+    );
+  }
 
   // Treat 'database' and 'pool' as verified sources (from curated question bank)
   if (source === 'database' || source === 'pool') {

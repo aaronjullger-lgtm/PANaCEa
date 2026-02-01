@@ -34,7 +34,7 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 ### 🛠️ Tech Stack
 
 - **Frontend**: React 19, TypeScript, Vite, TailwindCSS, Framer Motion
-- **Backend**: Express.js, Node.js
+- **Backend**: Cloudflare Pages Functions (production); Express (local dev only)
 - **Database**: PostgreSQL with Prisma ORM
 - **AI**: Google Gemini API
 - **Authentication**: Clerk
@@ -71,7 +71,7 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 3. **Set up environment variables**
 
    ```bash
-   cp .env.example .env
+   cp env.example .env
    ```
 
    Edit `.env` and configure:
@@ -99,7 +99,12 @@ PANaCEa is a comprehensive medical education platform designed specifically for 
 
 5. **Start the development servers**
 
-   **⚠️ CRITICAL**: You must run BOTH frontend and backend servers
+   **Production**: Cloudflare Pages serves both static assets and API via `functions/api/`. No Express in production.
+
+   **Local dev** – choose one:
+
+   - **`npm run dev:all`** – Express backend (port 3001) + Vite frontend (port 3000). Quick for local testing.
+   - **`npm run dev:wrangler`** – Cloudflare Pages Functions + Vite. Matches production (recommended before deploy).
 
    ```bash
    npm run dev:all
@@ -145,11 +150,12 @@ For production deployment to Cloudflare Pages:
 
 ## 📜 Available Scripts
 
-| Command                      | Description                                   |
-| ---------------------------- | --------------------------------------------- |
-| `npm run dev:all`            | Start both frontend and backend (recommended) |
-| `npm run dev:server`         | Start backend only                            |
-| `npm run dev`                | Start frontend only                           |
+| Command                      | Description                                                         |
+| ---------------------------- | ------------------------------------------------------------------- |
+| `npm run dev:all`            | Express + Vite (local dev)                                          |
+| `npm run dev:wrangler`       | Cloudflare Functions + Vite (production parity, recommended)        |
+| `npm run dev:server`         | Express backend only                                                |
+| `npm run dev`                | Frontend only (proxies /api to Express if running)                  |
 | `npm run build`              | Build frontend for production                 |
 | `npm run build:server`       | Build backend for production                  |
 | `npm test`                   | Run test suite                                |

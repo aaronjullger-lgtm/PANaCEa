@@ -12,6 +12,11 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
+        teko: ['Teko', 'sans-serif'],
+      },
       colors: {
         // ============================================
         // ACTION BLUE - Primary Action Color System
@@ -34,6 +39,12 @@ export default {
         'clinical-navy': '#0F172A', // Deep Royal Navy for dark mode backgrounds
         'clinical-white': '#F8FAFC', // Sanitarium White for light mode
         'clinical-blue': '#0284C7', // Cerulean Blue for primary actions
+        // Circadian theme: slate-950 for night shift (Medical/Night Shift vibe)
+        'slate-950': '#020617',
+        // Semantic colors for clinical clarity
+        'clinical-pearl': '#F59E0B', // Amber/Gold - key takeaways, pearls
+        critical: '#F43F5E', // Rose - urgent, critical findings
+        stable: '#10B981', // Emerald - stable, reassuring
         'clinical-slate': {
           50: '#F8FAFC',
           100: '#F1F5F9',
@@ -140,6 +151,7 @@ export default {
         // ============================================
         surface: {
           primary: '#0f172a', // Slate 900 (Deep Navy)
+          'primary-night': '#020617', // Slate 950 - Medical/Night Shift
           secondary: '#1e293b', // Slate 800
           glass: 'rgba(30, 41, 59, 0.5)', // Slate 800 @ 50%
           elevated: 'rgba(51, 65, 85, 0.6)', // Slate 700 @ 60%
@@ -179,5 +191,23 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      addUtilities({
+        '.exam-mode': {
+          '--color-bg-primary': '#ffffff',
+          '--color-bg-secondary': '#f8fafc',
+          '--color-bg-tertiary': '#f1f5f9',
+          '--color-text-primary': '#0f172a',
+          '--color-text-secondary': '#334155',
+          '--color-text-muted': '#64748b',
+          '--color-border': '#e2e8f0',
+          '--color-accent': '#0f172a',
+          '--color-accent-hover': '#1e293b',
+          filter: 'grayscale(100%) contrast(1.12)',
+          colorScheme: 'light',
+        },
+      });
+    },
+  ],
 };

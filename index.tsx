@@ -4,11 +4,14 @@ import './polyfills/cjs-shim';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { queryClient, persister } from './lib/queryClient';
 import App from './App';
 import './index.css';
 import { AuthProvider } from './components/auth/AuthProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ShortcutProvider } from './src/context/ShortcutContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 // Initialize error tracking asynchronously only in production to avoid dev DSN access
 if (import.meta.env.PROD) {
@@ -33,11 +36,21 @@ root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <AuthProvider>
-        <ShortcutProvider>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
-        </ShortcutProvider>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{
+            persister,
+            maxAge: 1000 * 60 * 60 * 12, // 12 hours - due queue available offline
+          }}
+        >
+          <ShortcutProvider>
+            <BrowserRouter>
+              <ThemeProvider>
+                <App />
+              </ThemeProvider>
+            </BrowserRouter>
+          </ShortcutProvider>
+        </PersistQueryClientProvider>
       </AuthProvider>
     </ErrorBoundary>
   </React.StrictMode>

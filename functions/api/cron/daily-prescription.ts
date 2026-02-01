@@ -46,81 +46,86 @@ export async function onRequestPost(context: any) {
       where: {
         lastActiveAt: { gte: weekAgo },
       },
-      select: {
-        id: true,
-        email: true,
-      },
+      select: { id: true, email: true },
     });
+    const activeUserIds = activeUsers.map((u) => u.id);
+    if (activeUserIds.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, prescriptionsGenerated: 0, timestamp: new Date().toISOString() }),
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
+    // Batch: all progress for active users; all attempts for active users in window
+    type ProgressRecord = {
+      userId: string;
+      stability: number | null;
+      retrievability: number | null;
+      system: string | null;
+      dueDate: Date | null;
+    };
+    const [allProgress, allAttempts] = await Promise.all([
+      prisma.userProgress.findMany({
+        where: { userId: { in: activeUserIds } },
+        select: { userId: true, stability: true, retrievability: true, system: true, dueDate: true },
+      }) as Promise<ProgressRecord[]>,
+      prisma.questionAttempt.findMany({
+        where: {
+          userId: { in: activeUserIds },
+          createdAt: { gte: weekAgo },
+        },
+        select: { userId: true, system: true, wasCorrect: true },
+      }),
+    ]);
+
+    // Key progress by userId; sort by stability asc per user and take 20
+    const progressByUser = new Map<string, ProgressRecord[]>();
+    for (const p of allProgress) {
+      const list = progressByUser.get(p.userId) ?? [];
+      list.push(p);
+      progressByUser.set(p.userId, list);
+    }
+    for (const [uid, list] of progressByUser) {
+      list.sort((a, b) => (a.stability ?? 0) - (b.stability ?? 0));
+      progressByUser.set(uid, list.slice(0, 20));
+    }
+    const attemptsByUser = new Map<string, { system: string | null; wasCorrect: boolean }[]>();
+    for (const a of allAttempts) {
+      const list = attemptsByUser.get(a.userId) ?? [];
+      list.push(a);
+      attemptsByUser.set(a.userId, list);
+    }
+
+    const now = new Date();
     let prescriptionsGenerated = 0;
 
     for (const user of activeUsers) {
-      // Get user's progress data
-      const progress = await prisma.userProgress.findMany({
-        where: { userId: user.id },
-        orderBy: { stability: 'asc' }, // Weakest first
-        take: 20,
-      });
+      const progress = progressByUser.get(user.id) ?? [];
+      const recentAttempts = attemptsByUser.get(user.id) ?? [];
 
-      // Get recent performance
-      const recentAttempts = await prisma.questionAttempt.findMany({
-        where: {
-          userId: user.id,
-          createdAt: { gte: weekAgo },
-        },
-        select: {
-          system: true,
-          isCorrect: true,
-        },
-      });
-
-      // Calculate weak systems
       const systemPerformance: Record<string, { correct: number; total: number }> = {};
       for (const attempt of recentAttempts) {
         if (!attempt.system) continue;
         const sys = attempt.system;
-        if (!systemPerformance[sys]) {
-          systemPerformance[sys] = { correct: 0, total: 0 };
-        }
+        systemPerformance[sys] ??= { correct: 0, total: 0 };
         systemPerformance[sys].total++;
-        if (attempt.isCorrect) {
-          systemPerformance[sys].correct++;
-        }
+        if (attempt.wasCorrect) systemPerformance[sys].correct++;
       }
 
-      // Find weak systems (accuracy < 70%)
       const weakSystems = Object.entries(systemPerformance)
         .filter(([_, stats]) => stats.total >= 5 && stats.correct / stats.total < 0.7)
         .map(([system]) => system)
         .slice(0, 5);
 
-      type ProgressRecord = {
-        stability: number | null;
-        retrievability: number | null;
-        system: string | null;
-        dueDate: Date | null;
-      };
-      // Find low stability items from FSRS
       const lowStabilityItems = progress
-        .filter((p: ProgressRecord) => (p.stability ?? 0) < 2 || (p.retrievability ?? 1) < 0.8)
-        .map((p: ProgressRecord) => p.system)
-        .filter((s: string | null): s is string => Boolean(s));
+        .filter((p) => (p.stability ?? 0) < 2 || (p.retrievability ?? 1) < 0.8)
+        .map((p) => p.system)
+        .filter(Boolean) as string[];
 
-      // Combine for focus areas
       const focusSystems = [...new Set([...weakSystems, ...lowStabilityItems])].slice(0, 3);
+      const adjustedQuestions = Math.min(30, 20);
+      const dueCards = progress.filter((p) => !p.dueDate || new Date(p.dueDate) <= now).length;
 
-      // Calculate recommended question count based on streak
-      const baseQuestions = 20;
-      const adjustedQuestions = Math.min(30, baseQuestions);
-
-      // Calculate due cards from FSRS
-      const dueCards = progress.filter((p: ProgressRecord) => {
-        if (!p.dueDate) return true;
-        return new Date(p.dueDate) <= new Date();
-      }).length;
-
-      // Store prescription (we'll create a simple entry in SessionAnalytics for now)
-      // In production, you might have a DailyPrescription table
       await prisma.auditLog.create({
         data: {
           action: 'DAILY_PRESCRIPTION_GENERATED',
@@ -128,7 +133,7 @@ export async function onRequestPost(context: any) {
           entityId: user.id,
           details: {
             userId: user.id,
-            date: new Date().toISOString().split('T')[0],
+            date: now.toISOString().split('T')[0],
             weakSystems,
             focusSystems,
             recommendedQuestions: adjustedQuestions,
@@ -137,7 +142,6 @@ export async function onRequestPost(context: any) {
           },
         },
       });
-
       prescriptionsGenerated++;
     }
 

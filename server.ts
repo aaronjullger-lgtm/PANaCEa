@@ -29,7 +29,7 @@ config();
 import { sanitizeBody } from './lib/middleware/validation';
 import { prisma } from './lib/prisma';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { createRequestLogger } from './lib/logging/structuredLogger';
 import { validateEnvironment } from './lib/config/environment';
 import { performHealthCheck, getHealthStatusCode } from './lib/services/healthCheck';
@@ -114,8 +114,9 @@ const API_LIMITER = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: { error: 'Too many requests, please try again later.' },
   keyGenerator: (req: Request & { user?: { id: string } }) => {
-    // Use user ID if authenticated, otherwise fall back to IP address
-    return req.user?.id || req.ip || 'unknown';
+    // Use user ID if authenticated; otherwise use IP with IPv6-safe key (see ERR_ERL_KEY_GEN_IPV6)
+    if (req.user?.id) return req.user.id;
+    return req.ip ? ipKeyGenerator(req.ip) : 'unknown';
   },
   skip: (req) => {
     // Skip rate limiting for health checks and options
@@ -162,7 +163,7 @@ app.get('/health', async (req: Request, res: Response) => {
 });
 
 // Start Server
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   // Check DB connection for startup log
   let dbStatus = '❌ Disconnected';
   try {
@@ -196,4 +197,20 @@ app.listen(PORT, async () => {
 ║ Note: No catch-all handler - Frontend served by Vite (port 3000) ║
 ╚════════════════════════════════════════════════════════════════╝
   `);
+});
+
+server.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`
+🚨 Port ${PORT} is already in use. Free it before starting the API server:
+
+  lsof -i :${PORT}
+  kill <PID>
+
+Or stop any other process using port ${PORT}, then run \`npm run dev:all\` again.
+`);
+  } else {
+    console.error('Server error:', err);
+  }
+  process.exit(1);
 });

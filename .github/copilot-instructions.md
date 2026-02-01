@@ -14,6 +14,7 @@ PANaCEa Copilot Guide (concise, ~20-50 lines)
 - DB workflow: `npm run db:migrate:dev` to create/apply locally; `npm run db:migrate:deploy` or `npm run migrate:production` to apply; `npm run db:studio` to inspect. Supabase should use Transaction pooling.
 - Testing: Vitest for unit tests (run `vitest`), Playwright for e2e (`playwright.config.ts` in e2e/). `npm run health-check` for content validation. Run both servers before manual end-to-end checks.
 - Import patterns: Absolute imports with '@' (repo root) or '@src' (src/). Prefer named exports. Async functions for API calls.
+- Lib locations: `lib/` (root) = server/shared logic (db, auth, services, FSRS, utils). `src/lib/` = frontend-only (search, markdown). Do not put server/Prisma code in `src/lib/`.
 - CSP: `public/_headers` contains strict allowlists (Clerk, Turnstile, Supabase, Gemini). Update before adding new origins.
 - Common pitfalls: missing DB (empty content), forgetting `onRequest*` exports in Functions, skipping Svix verification on Clerk webhooks, bundling Prisma into client, or using static JSON fallbacks.
 - Helpful references: `MASTER_DOCUMENTATION.md`, `CLOUDFLARE_FUNCTIONS_GUIDE.md`, `DATABASE_IMPLEMENTATION.md`, `HYBRID_CONTENT_ENGINE.md`, `ADMIN_CMS_IMPLEMENTATION.md`, `PRODUCTION_DEPLOYMENT_CHECKLIST.md`.

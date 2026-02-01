@@ -15,10 +15,10 @@ interface ShortcutItem {
 
 const SHORTCUTS: ShortcutItem[] = [
   // Quiz shortcuts
-  { keys: ['A'], description: 'Select answer option A', category: 'quiz' },
-  { keys: ['B'], description: 'Select answer option B', category: 'quiz' },
-  { keys: ['C'], description: 'Select answer option C', category: 'quiz' },
-  { keys: ['D'], description: 'Select answer option D', category: 'quiz' },
+  { keys: ['A'], description: 'Answer A', category: 'quiz' },
+  { keys: ['B'], description: 'Answer B', category: 'quiz' },
+  { keys: ['C'], description: 'Answer C', category: 'quiz' },
+  { keys: ['D'], description: 'Answer D', category: 'quiz' },
   { keys: ['Space'], description: 'Toggle explanation after selection', category: 'quiz' },
   { keys: ['Enter'], description: 'Proceed to next question', category: 'quiz' },
   { keys: ['Esc'], description: 'Return to dashboard', category: 'quiz' },

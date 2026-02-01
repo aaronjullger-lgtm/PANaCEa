@@ -1,7 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { getPrismaClient } from '../db';
-
-const getPrisma = () => getPrismaClient();
+import { prisma } from '../prisma';
 
 export async function createStudyGroup(userId: string, name: string, description?: string) {
   const prisma = getPrisma();
@@ -33,8 +31,6 @@ export async function createStudyGroup(userId: string, name: string, description
 }
 
 export async function joinStudyGroup(userId: string, code: string) {
-  const prisma = getPrisma();
-
   const group = await prisma.studyGroup.findUnique({
     where: { code },
   });
@@ -96,8 +92,6 @@ export async function getLeaderboard(
   period: 'weekly' | 'monthly' | 'all_time' = 'weekly',
   groupId?: string
 ) {
-  const prisma = getPrisma();
-
   // For now, we'll just return the top users based on accuracy or questions answered
   // In a real implementation, we'd query the Leaderboard/LeaderboardEntry tables
   // But since we don't have a background job populating those yet, let's query User stats directly

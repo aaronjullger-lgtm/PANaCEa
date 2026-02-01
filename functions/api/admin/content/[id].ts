@@ -12,6 +12,7 @@ import {
   handleCorsOptions,
   type Env,
 } from '../../_shared/auth';
+import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { canViewCMS, canEditContent, isAdmin, type UserRole } from '../../_shared/rbac';
 import { updateContent } from '../../../../lib/services/cms/contentService';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
@@ -24,13 +25,20 @@ export async function onRequestGet(context: {
 }) {
   const { request, env, params } = context;
 
+  try {
+    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
+  } catch (e) {
+    if (e instanceof MissingEnvError) return e.toResponse();
+    throw e;
+  }
+
   if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
+    return handleCorsOptions(context);
   }
 
   const authContext = await authenticateRequest(request, env);
   if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
+    return createErrorResponse(request, 'Unauthorized', 401, undefined, env);
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -42,7 +50,7 @@ export async function onRequestGet(context: {
     });
 
     if (!user || !canViewCMS(user.role as UserRole)) {
-      return createErrorResponse('Forbidden: Insufficient permissions', 403);
+      return createErrorResponse(request, 'Forbidden: Insufficient permissions', 403, undefined, env);
     }
 
     const content = await prisma.medicalContent.findUnique({
@@ -56,13 +64,13 @@ export async function onRequestGet(context: {
     });
 
     if (!content) {
-      return createErrorResponse('Content not found', 404);
+      return createErrorResponse(request, 'Content not found', 404, undefined, env);
     }
 
-    return createSuccessResponse(content);
+    return createSuccessResponse(request, content, 200, 0, env);
   } catch (error: any) {
     console.error('Error fetching content:', error);
-    return createErrorResponse('Failed to fetch content', 500);
+    return createErrorResponse(request, 'Failed to fetch content', 500, undefined, env);
   } finally {
     await safePrismaDisconnect(prisma);
   }
@@ -75,13 +83,20 @@ export async function onRequestPut(context: {
 }) {
   const { request, env, params } = context;
 
+  try {
+    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
+  } catch (e) {
+    if (e instanceof MissingEnvError) return e.toResponse();
+    throw e;
+  }
+
   if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
+    return handleCorsOptions(context);
   }
 
   const authContext = await authenticateRequest(request, env);
   if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
+    return createErrorResponse(request, 'Unauthorized', 401, undefined, env);
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -93,7 +108,7 @@ export async function onRequestPut(context: {
     });
 
     if (!user || !canEditContent(user.role as UserRole)) {
-      return createErrorResponse('Forbidden: Insufficient permissions', 403);
+      return createErrorResponse(request, 'Forbidden: Insufficient permissions', 403, undefined, env);
     }
 
     // Validate input with Zod schema
@@ -137,13 +152,20 @@ export async function onRequestDelete(context: {
 }) {
   const { request, env, params } = context;
 
+  try {
+    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
+  } catch (e) {
+    if (e instanceof MissingEnvError) return e.toResponse();
+    throw e;
+  }
+
   if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
+    return handleCorsOptions(context);
   }
 
   const authContext = await authenticateRequest(request, env);
   if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
+    return createErrorResponse(request, 'Unauthorized', 401, undefined, env);
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -155,7 +177,13 @@ export async function onRequestDelete(context: {
     });
 
     if (!user || !isAdmin(user.role as UserRole)) {
-      return createErrorResponse('Forbidden: Only admins can delete content', 403);
+      return createErrorResponse(
+        request,
+        'Forbidden: Only admins can delete content',
+        403,
+        undefined,
+        env
+      );
     }
 
     // Soft delete by archiving
@@ -167,10 +195,10 @@ export async function onRequestDelete(context: {
       },
     });
 
-    return createSuccessResponse({ success: true, content: updated });
+    return createSuccessResponse(request, { success: true, content: updated }, 200, 0, env);
   } catch (error: any) {
     console.error('Error deleting content:', error);
-    return createErrorResponse('Failed to delete content', 500);
+    return createErrorResponse(request, 'Failed to delete content', 500, undefined, env);
   } finally {
     await safePrismaDisconnect(prisma);
   }

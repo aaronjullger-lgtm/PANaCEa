@@ -19,6 +19,8 @@ import {
   handleCorsOptions,
   type Env,
 } from '../../_shared/auth';
+import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
+import { getCorsHeaders, getCorsConfig } from '../../_shared/cors';
 import { canViewCMS, type UserRole } from '../../_shared/rbac';
 import { exportAuditLogsToCsv } from '../../../../lib/services/cms/auditLogger';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
@@ -26,13 +28,20 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/pris
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
+  try {
+    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
+  } catch (e) {
+    if (e instanceof MissingEnvError) return e.toResponse();
+    throw e;
+  }
+
   if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
+    return handleCorsOptions(context);
   }
 
   const authContext = await authenticateRequest(request, env);
   if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
+    return createErrorResponse(request, 'Unauthorized', 401, undefined, env);
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -44,7 +53,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     });
 
     if (!user || !canViewCMS(user.role as UserRole)) {
-      return createErrorResponse('Forbidden: Insufficient permissions', 403);
+      return createErrorResponse(request, 'Forbidden: Insufficient permissions', 403, undefined, env);
     }
 
     const url = new URL(request.url);
@@ -83,29 +92,36 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     // Return CSV format if requested
     if (format === 'csv') {
       const csv = exportAuditLogsToCsv(logs);
+      const corsHeaders = getCorsHeaders(request, getCorsConfig(env)) || {};
       return new Response(csv, {
         status: 200,
         headers: {
           'Content-Type': 'text/csv',
           'Content-Disposition': 'attachment; filename="audit-log.csv"',
-          'Access-Control-Allow-Origin': '*',
+          ...corsHeaders,
         },
       });
     }
 
     // Return JSON format
-    return createSuccessResponse({
-      logs,
+    return createSuccessResponse(
+      request,
+      {
+        logs,
       pagination: {
         limit,
         offset,
         total,
         hasMore: offset + logs.length < total,
       },
-    });
+    },
+      200,
+      0,
+      env
+    );
   } catch (error: any) {
     console.error('Error fetching audit logs:', error);
-    return createErrorResponse('Failed to fetch audit logs', 500);
+    return createErrorResponse(request, 'Failed to fetch audit logs', 500, undefined, env);
   } finally {
     await safePrismaDisconnect(prisma);
   }

@@ -40,7 +40,6 @@ jobs:
 
       - name: Run Unit Tests
         run: npm test
-        continue-on-error: true
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

@@ -1235,10 +1235,17 @@ export async function fetchNextVariantCard(): Promise<VariantNextResponse | null
 /**
  * Submit an SRS review using the variant-aware Second Chance API.
  * This updates both SRSItem and UserTopicProgress, and triggers variant generation on incorrect answers.
+ * When offline, the payload is queued and synced when connectivity returns (PWA offline support).
  */
 export async function submitVariantReview(
   payload: VariantSubmitPayload
 ): Promise<VariantSubmitResponse | null> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    const { queueOperation } = await import('./sync/offlineSync');
+    queueOperation('srs_submit', payload);
+    return { success: true };
+  }
+
   try {
     const response = await fetch('/api/srs/submit', {
       method: 'POST',

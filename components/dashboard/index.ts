@@ -13,5 +13,4 @@ export { RetentionWidget } from './RetentionWidget';
 
 // New UX-enhanced components (Phase 14)
 export { GrandRoundsHero } from './GrandRoundsHero';
-export { default as TrainingMenuTiered } from './TrainingMenuTiered';
 export { GapAnalysisDashboard } from './GapAnalysisDashboard';

@@ -5,6 +5,8 @@
  * across all CloudFlare Pages Functions endpoints.
  */
 
+import { getCorsHeaders } from './cors';
+
 // Use generic types to avoid Cloudflare vs Web API Response conflicts
 type GenericPagesFunction = (context: any) => Response | Promise<Response>;
 type GenericEventContext = {
@@ -272,6 +274,7 @@ export function withErrorHandler(
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-Request-ID': requestId,
+        ...(getCorsHeaders(request) || {}),
       };
 
       if (err instanceof RateLimitError && err.details?.retryAfter) {

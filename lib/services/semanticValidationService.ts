@@ -1,6 +1,8 @@
 // lib/services/semanticValidationService.ts
 // Semantic validation for short-answer drills with caching and AI fallback
 
+import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
+
 interface SemanticValidationResult {
   isEquivalent: boolean;
   viaModel: boolean; // true when AI judge was used
@@ -62,7 +64,7 @@ class SemanticValidationService {
       }
 
       const data: any = await response.json();
-      const raw = typeof data === 'string' ? data : data.text;
+      const raw = typeof data === 'string' ? data : (data.data?.text ?? data.text);
       const verdict = (raw || '').toString().trim().toUpperCase();
       const isYes = verdict === 'YES';
       this.cache.set(cacheKey, isYes);

@@ -197,14 +197,20 @@ export const onRequestPost = withMiddleware(
         userId: context.auth.userId,
       });
 
-      return createSuccessResponse({
-        id: mediaAsset.id,
-        filename: mediaAsset.filename,
-        url: publicUrl,
-        category,
-        approvalStatus: 'pending',
-        message: 'Media uploaded successfully. Pending approval.',
-      });
+      return createSuccessResponse(
+        context.request,
+        {
+          id: mediaAsset.id,
+          filename: mediaAsset.filename,
+          url: publicUrl,
+          category,
+          approvalStatus: 'pending',
+          message: 'Media uploaded successfully. Pending approval.',
+        },
+        200,
+        0,
+        context.env
+      );
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -273,12 +279,18 @@ export const onRequestGet = withMiddleware(
         userId: context.auth.userId,
       });
 
-      return createSuccessResponse({
-        media,
-        total,
-        limit: typeof limit === 'number' ? limit : 50,
-        offset: typeof offset === 'number' ? offset : 0,
-      });
+      return createSuccessResponse(
+        context.request,
+        {
+          media,
+          total,
+          limit: typeof limit === 'number' ? limit : 50,
+          offset: typeof offset === 'number' ? offset : 0,
+        },
+        200,
+        0,
+        context.env
+      );
     } finally {
       await safePrismaDisconnect(prisma);
     }

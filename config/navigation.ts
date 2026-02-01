@@ -47,7 +47,9 @@ export const ICON_MAP: Record<string, LucideIcon> = {
 };
 /**
  * Universal Medical Companion - Main Navigation Configuration
- * Strict structure for Hub Pages navigation
+ * Used by AppSidebar (components/layout/AppSidebar.tsx).
+ * Note: AppSidebar is not currently mounted; these paths are not wired to App view state.
+ * If using these links, sync pathname to view in App.tsx or use in-app callbacks.
  */
 export const NAVIGATION_CONFIG: NavigationCategory[] = [
   {

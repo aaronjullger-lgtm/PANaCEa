@@ -1,161 +1,163 @@
-import {
-  authenticatedEndpoint,
-  publicEndpoint,
-  withMiddleware,
-  withAuth,
-  withValidation,
-  withCors,
-  withErrorHandling,
-} from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { updateTimingAggregates } from '../../../lib/services/userStatisticsService';
-import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
-interface Env {
-  DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
-}
-
-// Define Zod schemas for request validation
-const SessionCreateSchema = z.object({
-  sessionType: z.string().optional(),
-  systemsTargeted: z.array(z.string()).optional(),
-  mode: z.string().optional(),
-  focus: z.string().optional(),
-  difficulty: z.string().optional(),
+const SessionStartSchema = z.object({
+  body: z.object({
+    sessionType: z.enum(['mixed', 'focused', 'review']).default('mixed'),
+    systemsTargeted: z.array(z.string()).optional().default([]),
+  }),
 });
 
 const SessionUpdateSchema = z.object({
-  // Accept any string format for sessionId (some clients use `session-timestamp-random` format)
-  sessionId: z.string().min(1),
-  action: z.enum(['end', 'update']).optional(),
-  questionsAnswered: z.number().int().min(0).optional(),
-  correctAnswers: z.number().int().min(0).optional(),
-  totalTimeMs: z.number().int().min(0).optional(),
-  systemsTargeted: z.array(z.string()).optional(),
-  sessionType: z.string().optional(),
+  body: z.object({
+    sessionId: z.string().min(1),
+    action: z.enum(['end', 'update']),
+    questionsAnswered: z.number().int().min(0).optional(),
+    correctCount: z.number().int().min(0).optional(),
+  }),
 });
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(SessionCreateSchema, async (context) => {
+/**
+ * POST /api/user/session
+ * Start a new study session
+ */
+export const onRequestPost = authenticatedEndpoint(SessionStartSchema, async (context) => {
   const { env, auth, validated } = context;
-  const logger = createEndpointLogger('/api/user/session');
+  const logger = createEndpointLogger('/api/user/session [POST]');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { sessionType, systemsTargeted = [], mode, focus, difficulty } = validated;
+    const { sessionType, systemsTargeted } = validated.body;
 
+    // Get user's internal ID
+    const user = await prisma.user.findUnique({
+      where: { clerkId: auth.userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return { status: 404, error: 'User not found' };
+    }
+
+    // Create new session
     const session = await prisma.studySession.create({
       data: {
-        userId: auth.userId,
+        userId: user.id,
         sessionType,
         systemsTargeted,
-        systemsCovered: systemsTargeted,
-        mode,
-        focus,
-        difficulty,
+        startedAt: new Date(),
       },
     });
 
+    logger.info('Study session started', {
+      userId: user.id,
+      sessionId: session.id,
+      sessionType,
+    });
+
     return {
-      data: { sessionId: session.id },
-      status: 201,
+      data: {
+        success: true,
+        session: {
+          id: session.id,
+          sessionType: session.sessionType,
+          startedAt: session.startedAt.toISOString(),
+        },
+      },
     };
   } catch (error) {
-    logger.error('Failed to start session', error);
-    return {
-      status: 500,
-      error: 'Failed to start session',
-    };
+    logger.error('Failed to start study session', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    return { status: 500, error: 'Failed to start study session' };
   } finally {
     await safePrismaDisconnect(prisma);
   }
 });
 
+/**
+ * PATCH /api/user/session
+ * Update or end a study session
+ */
 export const onRequestPatch = authenticatedEndpoint(SessionUpdateSchema, async (context) => {
   const { env, auth, validated } = context;
-  const logger = createEndpointLogger('/api/user/session');
+  const logger = createEndpointLogger('/api/user/session [PATCH]');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const {
-      sessionId,
-      action,
-      questionsAnswered,
-      correctAnswers,
-      totalTimeMs,
-      systemsTargeted,
-      sessionType,
-    } = validated;
+    const { sessionId, action, questionsAnswered, correctCount } = validated.body;
 
-    const session = await prisma.studySession.findUnique({ where: { id: sessionId } });
-    if (!session || session.userId !== auth.userId) {
-      return {
-        status: 404,
-        error: 'Session not found',
-      };
+    // Get user's internal ID
+    const user = await prisma.user.findUnique({
+      where: { clerkId: auth.userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return { status: 404, error: 'User not found' };
     }
 
-    const data: Record<string, any> = {};
-    if (Array.isArray(systemsTargeted)) {
-      data.systemsTargeted = systemsTargeted;
-      data.systemsCovered = systemsTargeted;
-    }
-    if (sessionType) data.sessionType = sessionType;
+    // Verify session belongs to user
+    const session = await prisma.studySession.findFirst({
+      where: {
+        id: sessionId,
+        userId: user.id,
+      },
+    });
 
-    if (typeof questionsAnswered === 'number') {
-      data.totalQuestions = questionsAnswered;
+    if (!session) {
+      return { status: 404, error: 'Session not found' };
     }
-    if (typeof correctAnswers === 'number') {
-      data.correctAnswers = correctAnswers;
-    }
-    if (
-      typeof questionsAnswered === 'number' &&
-      typeof correctAnswers === 'number' &&
-      questionsAnswered > 0
-    ) {
-      data.accuracy = correctAnswers / questionsAnswered;
-    }
-    if (typeof totalTimeMs === 'number') {
-      data.totalTimeMs = totalTimeMs;
-      data.avgTimePerQuestion = questionsAnswered
-        ? Math.round(totalTimeMs / Math.max(questionsAnswered, 1))
-        : session.avgTimePerQuestion;
-    }
+
+    // Build update data
+    const updateData: any = {};
 
     if (action === 'end') {
-      const endedAt = new Date();
-      data.endedAt = endedAt;
-      if (!data.totalTimeMs) {
-        const duration = endedAt.getTime() - new Date(session.startedAt).getTime();
-        data.totalTimeMs = duration > 0 ? duration : 0;
-        data.avgTimePerQuestion = questionsAnswered
-          ? Math.round(data.totalTimeMs / Math.max(questionsAnswered, 1))
-          : data.avgTimePerQuestion;
-      }
+      updateData.endedAt = new Date();
     }
 
-    const updated = await prisma.studySession.update({
+    if (typeof questionsAnswered === 'number') {
+      updateData.questionsAnswered = questionsAnswered;
+    }
+
+    if (typeof correctCount === 'number') {
+      updateData.correctCount = correctCount;
+    }
+
+    // Update session
+    const updatedSession = await prisma.studySession.update({
       where: { id: sessionId },
-      data,
+      data: updateData,
     });
 
-    await updateTimingAggregates(prisma as any, auth.userId, {
-      refreshAvgSessionLength: true,
-      refreshPeakHours: true,
+    logger.info(`Study session ${action === 'end' ? 'ended' : 'updated'}`, {
+      userId: user.id,
+      sessionId: session.id,
+      questionsAnswered: updatedSession.questionsAnswered,
     });
 
     return {
-      data: { sessionId: updated.id, endedAt: updated.endedAt },
+      data: {
+        success: true,
+        session: {
+          id: updatedSession.id,
+          questionsAnswered: updatedSession.questionsAnswered,
+          correctCount: updatedSession.correctCount,
+          endedAt: updatedSession.endedAt?.toISOString() || null,
+        },
+      },
     };
   } catch (error) {
-    logger.error('Failed to update session', error);
-    return {
-      status: 500,
-      error: 'Failed to update session',
-    };
+    logger.error('Failed to update study session', {
+      error: error instanceof Error ? error.message : String(error),
+      userId: auth.userId,
+    });
+    return { status: 500, error: 'Failed to update study session' };
   } finally {
     await safePrismaDisconnect(prisma);
   }

@@ -1,110 +1,174 @@
-import 'dotenv/config';
-import { Pool } from 'pg';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+/**
+ * Consolidate Condition Hierarchy Script
+ * 
+ * Links related medical conditions into parent-child hierarchies
+ * based on condition-families.json configuration.
+ * 
+ * Run: npx tsx scripts/db/consolidate-condition-hierarchy.ts
+ */
 
-const pool = new Pool({
-  connectionString: process.env.DIRECT_DATABASE_URL,
-});
+import { PrismaClient } from '@prisma/client';
+import * as fs from 'fs';
+import * as path from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Path to the families JSON file
-const FAMILIES_PATH = path.join(process.cwd(), 'data', 'condition-families.json');
+const prisma = new PrismaClient();
 
 interface ConditionFamily {
+  canonicalName: string;
+  parent: string;
   subtypes?: string[];
   complications?: string[];
   manifestations?: string[];
-  variants?: string[];
 }
 
-async function consolidateHierarchy() {
-  console.log('Starting condition hierarchy consolidation (using pg)...');
-  const client = await pool.connect();
+interface ConditionFamiliesData {
+  conditionFamilies: ConditionFamily[];
+}
+
+async function findConditionByName(name: string) {
+  // Try exact match first
+  let condition = await prisma.medicalContent.findFirst({
+    where: {
+      condition: {
+        equals: name,
+        mode: 'insensitive',
+      },
+    },
+    select: { id: true, condition: true, conditionId: true },
+  });
+
+  if (condition) return condition;
+
+  // Try partial match
+  condition = await prisma.medicalContent.findFirst({
+    where: {
+      condition: {
+        contains: name,
+        mode: 'insensitive',
+      },
+    },
+    select: { id: true, condition: true, conditionId: true },
+  });
+
+  return condition;
+}
+
+async function linkCondition(
+  childName: string,
+  parentId: string,
+  relationshipType: string,
+  canonicalName: string
+) {
+  const child = await findConditionByName(childName);
+
+  if (!child) {
+    console.log(`⚠️  Child condition not found: ${childName}`);
+    return false;
+  }
 
   try {
-    const familiesData = fs.readFileSync(FAMILIES_PATH, 'utf-8');
-    const families: Record<string, ConditionFamily> = JSON.parse(familiesData);
-
-    await client.query('BEGIN');
-
-    for (const [parentName, family] of Object.entries(families)) {
-      console.log(`Processing family: ${parentName}`);
-
-      // 1. Find the parent condition
-      // Try exact match first
-      let res = await client.query(
-        'SELECT id, condition FROM "MedicalContent" WHERE lower(condition) = lower($1)',
-        [parentName]
-      );
-
-      // If not found, try contains
-      if (res.rows.length === 0) {
-        res = await client.query(
-          'SELECT id, condition FROM "MedicalContent" WHERE condition ILIKE $1',
-          [`%${parentName}%`]
-        );
-      }
-
-      if (res.rows.length === 0) {
-        console.warn(`⚠️ Parent condition not found: "${parentName}". Skipping family.`);
-        continue;
-      }
-
-      const parent = res.rows[0];
-      console.log(`Found parent: ${parent.condition} (${parent.id})`);
-
-      // Update parent canonical name
-      await client.query('UPDATE "MedicalContent" SET "canonicalName" = $1 WHERE id = $2', [
-        parentName,
-        parent.id,
-      ]);
-
-      // Helper to link children
-      const linkChildren = async (children: string[], type: string) => {
-        for (const childName of children) {
-          const childRes = await client.query(
-            'SELECT id, condition, "parentId" FROM "MedicalContent" WHERE lower(condition) = lower($1)',
-            [childName]
-          );
-
-          if (childRes.rows.length > 0) {
-            const child = childRes.rows[0];
-
-            if (child.parentId && child.parentId !== parent.id) {
-              console.warn(`  ⚠️ Child "${childName}" already has a different parent. Skipping.`);
-              continue;
-            }
-
-            console.log(`  Linking ${type}: ${child.condition} -> ${parent.condition}`);
-            await client.query(
-              'UPDATE "MedicalContent" SET "parentId" = $1, "relationshipType" = $2, "canonicalName" = $3 WHERE id = $4',
-              [parent.id, type, parentName, child.id]
-            );
-          } else {
-            console.warn(`  Has child listed but not found in DB: "${childName}"`);
-          }
-        }
-      };
-
-      if (family.subtypes) await linkChildren(family.subtypes, 'subtype');
-      if (family.complications) await linkChildren(family.complications, 'complication');
-      if (family.manifestations) await linkChildren(family.manifestations, 'manifestation');
-      if (family.variants) await linkChildren(family.variants, 'variant');
-    }
-
-    await client.query('COMMIT');
-    console.log('Hierarchy consolidation complete!');
+    await prisma.medicalContent.update({
+      where: { id: child.id },
+      data: {
+        parentId,
+        relationshipType,
+        canonicalName,
+      },
+    });
+    console.log(`✓ Linked ${childName} → parent (${relationshipType})`);
+    return true;
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error consolidating hierarchy:', error);
-  } finally {
-    client.release();
-    await pool.end();
+    console.error(`✗ Failed to link ${childName}:`, error);
+    return false;
   }
 }
 
-consolidateHierarchy();
+async function consolidateHierarchy() {
+  console.log('🏥 Consolidating Condition Hierarchies\n');
+
+  // Load condition families
+  const dataPath = path.join(process.cwd(), 'data', 'condition-families.json');
+  const data: ConditionFamiliesData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+
+  let totalLinked = 0;
+  let totalFamilies = 0;
+
+  for (const family of data.conditionFamilies) {
+    console.log(`\n📋 Processing family: ${family.canonicalName}`);
+    totalFamilies++;
+
+    // Find or create parent condition
+    let parent = await findConditionByName(family.parent);
+
+    if (!parent) {
+      console.log(`⚠️  Parent condition "${family.parent}" not found, skipping family`);
+      continue;
+    }
+
+    // Update parent with canonical name
+    await prisma.medicalContent.update({
+      where: { id: parent.id },
+      data: {
+        canonicalName: family.canonicalName,
+        relationshipType: null, // Parent has no relationship type
+      },
+    });
+
+    console.log(`✓ Parent: ${parent.condition} (${parent.id})`);
+
+    // Link subtypes
+    if (family.subtypes) {
+      console.log(`  Linking ${family.subtypes.length} subtypes...`);
+      for (const subtype of family.subtypes) {
+        const linked = await linkCondition(
+          subtype,
+          parent.id,
+          'subtype',
+          family.canonicalName
+        );
+        if (linked) totalLinked++;
+      }
+    }
+
+    // Link complications
+    if (family.complications) {
+      console.log(`  Linking ${family.complications.length} complications...`);
+      for (const complication of family.complications) {
+        const linked = await linkCondition(
+          complication,
+          parent.id,
+          'complication',
+          family.canonicalName
+        );
+        if (linked) totalLinked++;
+      }
+    }
+
+    // Link manifestations
+    if (family.manifestations) {
+      console.log(`  Linking ${family.manifestations.length} manifestations...`);
+      for (const manifestation of family.manifestations) {
+        const linked = await linkCondition(
+          manifestation,
+          parent.id,
+          'manifestation',
+          family.canonicalName
+        );
+        if (linked) totalLinked++;
+      }
+    }
+  }
+
+  console.log(`\n✅ Consolidation complete!`);
+  console.log(`   Families processed: ${totalFamilies}`);
+  console.log(`   Conditions linked: ${totalLinked}`);
+}
+
+consolidateHierarchy()
+  .catch((error) => {
+    console.error('❌ Error consolidating hierarchies:', error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

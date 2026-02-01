@@ -21,7 +21,20 @@
       content="PANCE, Physician Assistant, PA exam, medical education, NCCPA, exam preparation, spaced repetition, clinical training"
     />
     <meta name="author" content="PANaCEa" />
-    <meta name="theme-color" content="#1F283A" />
+    <meta name="theme-color" content="#1F283A" id="meta-theme-color" />
+
+    <!-- Apply theme before first paint to prevent FOUC and match saved/system preference -->
+    <script>
+      (function () {
+        var stored = localStorage.getItem('pance-ai-theme');
+        var dark = stored === 'dark' || (stored !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        var root = document.documentElement;
+        if (dark) root.classList.add('dark');
+        else root.classList.remove('dark');
+        var meta = document.getElementById('meta-theme-color');
+        if (meta) meta.setAttribute('content', dark ? '#101729' : '#e9ecf1');
+      })();
+    </script>
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -105,8 +118,8 @@
       }
 
       .dark {
-        /* Dark mode - Deep navy sophistication */
-        --color-bg-primary: #101729;
+        /* Dark mode - Slate-950 Medical/Night Shift vibe */
+        --color-bg-primary: #020617;
         --color-bg-secondary: #1f283a;
         --color-bg-tertiary: #364154;
         --color-text-primary: #e9ecf1;
@@ -309,6 +322,13 @@
         color: #1a1410;
         font-weight: 700;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Light mode: solid amber, no muddy gradient */
+      html:not(.dark) .gold-achievement {
+        background: rgb(251 191 36);
+        background-size: auto;
+        animation: gold-glow-pulse 2s ease-in-out infinite;
       }
 
       .dark .gold-achievement {

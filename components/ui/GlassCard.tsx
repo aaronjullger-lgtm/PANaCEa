@@ -63,9 +63,10 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   ...props
 }) => {
   const styles = variantStyles[variant];
+  const baseLift = 'shadow-md dark:shadow-none';
   const hoverStyles = hoverable
-    ? 'hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-300'
-    : '';
+    ? `${baseLift} hover:shadow-lg dark:hover:shadow-black/20 transition-all duration-300`
+    : baseLift;
   const paddingStyles = noPadding ? '' : 'p-6';
 
   return (

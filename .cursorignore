@@ -1,0 +1,70 @@
+# Dependencies & Locks (Massive noise)
+node_modules/
+package-lock.json
+bun.lockb
+yarn.lock
+pnpm-lock.yaml
+
+# Build Artifacts
+.wrangler/
+dist/
+build/
+.next/
+.output/
+dist-server/
+*.tsbuildinfo
+
+# Logs & Temp
+*.log
+npm-debug.log*
+upload-log-*.txt
+delete-log.txt
+typecheck-*.txt
+nohup.out
+*.tmp
+*.temp
+
+# Large/Binary Assets
+public/images/
+*.svg
+*.png
+*.jpg
+*.pdf
+*.mp4
+*.webp
+*.gif
+*.ico
+*.woff
+*.woff2
+
+# Generated Data (AI shouldn't read these, it should generate them)
+src/conditionContent.generated.json
+src/data/labCases.json
+prisma/migrations/migration_lock.toml
+
+# Packed/Generated context (huge, stale — don't index as source)
+codebase.md
+repomix-output.xml
+architecture_context.md
+
+# Env & secrets (never in context)
+.env
+.env.*
+.env.local
+.env.production
+
+# Test/coverage output
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Git (no need to index internals)
+.git/
+
+# OS & editor cruft
+.DS_Store
+.idea/
+*.swp
+*.swo

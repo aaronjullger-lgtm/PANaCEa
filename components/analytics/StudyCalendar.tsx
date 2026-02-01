@@ -24,6 +24,7 @@ import {
   Flame,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   BarChart2,
   Settings,
 } from 'lucide-react';

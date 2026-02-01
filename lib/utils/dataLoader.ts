@@ -1,7 +1,18 @@
 import { getApiEndpoint, API_ENDPOINTS } from './apiConfig';
+import { parseJsonOrThrow } from './safeJsonResponse';
 
 // Cache to store loaded data
 const dataCache = new Map<string, any>();
+
+/** Log "backend not running" once per session to avoid console spam when API is down. */
+let backendDownWarned = false;
+function warnBackendDownOnce(): void {
+  if (backendDownWarned) return;
+  backendDownWarned = true;
+  console.warn(
+    '⚠ API backend not available. For full data, run: npm run dev:all (or npm run dev:server + npm run dev)'
+  );
+}
 
 /**
  * Lazily load drug data when needed.
@@ -37,11 +48,18 @@ export async function loadDrugData(getToken?: () => Promise<string | null>): Pro
   const response = await fetch(apiUrl, { headers });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `Failed to load drugs from database: ${response.status}`);
+    try {
+      const errorData = await parseJsonOrThrow<{ error?: string }>(response);
+      throw new Error(
+        errorData?.error || `Failed to load drugs from database: ${response.status}`
+      );
+    } catch (err) {
+      if (err instanceof Error && err.name === 'ServerConfigError') throw err;
+      throw new Error(`Failed to load drugs from database: ${response.status}`);
+    }
   }
 
-  const data = await response.json();
+  const data = await parseJsonOrThrow(response);
   dataCache.set(cacheKey, data);
   return data;
 }
@@ -82,7 +100,7 @@ export async function loadConditionContent(getToken?: () => Promise<string | nul
 
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      const data = await response.json();
+      const data = await parseJsonOrThrow(response);
       dataCache.set(cacheKey, data);
       console.log(
         `✓ Loaded condition content from database (${Object.keys(data).length} conditions)`
@@ -94,27 +112,24 @@ export async function loadConditionContent(getToken?: () => Promise<string | nul
     const contentType = response.headers.get('content-type');
 
     if (!contentType?.includes('application/json')) {
-      console.warn(`⚠ Database API returned ${contentType || 'unknown'} instead of JSON`);
-      console.warn('This usually means the backend server is not running.');
-      console.warn('Start with: npm run dev:all (or npm run dev:server + npm run dev)');
+      warnBackendDownOnce();
     } else if (response.status === 503) {
-      const errorData = await response.json();
-      console.error(`⚠ Database unavailable: ${errorData.message || 'Cannot connect to database'}`);
+      const errorData = (await parseJsonOrThrow(response).catch(() => ({}))) as { message?: string };
+      console.error(`⚠ Database unavailable: ${errorData?.message || 'Cannot connect to database'}`);
       console.error('Ensure DATABASE_URL is configured in .env');
     } else {
       console.error(`Database API returned status ${response.status} for ${apiUrl}`);
     }
   } catch (error) {
-    console.error(`✗ Failed to load condition content from database API (${apiUrl}):`, error);
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      console.error('Network error - backend server may not be running');
-      console.error('Start with: npm run dev:all (or npm run dev:server + npm run dev)');
+      warnBackendDownOnce();
+    } else {
+      console.error(`✗ Failed to load condition content (${apiUrl}):`, error);
     }
   }
 
   // Return empty object to prevent app crashes - no static fallback
-  // Application requires database to be properly configured for full functionality
-  console.warn('⚠ Returning empty dataset - condition content will not be available');
+  warnBackendDownOnce();
   return {};
 }
 
@@ -152,7 +167,7 @@ export async function loadLabCases(getToken?: () => Promise<string | null>): Pro
 
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      const responseData = await response.json();
+      const responseData = await parseJsonOrThrow(response);
       // Handle wrapped response format { success: true, data: [...] }
       const data = responseData?.data ?? responseData;
       const cases = Array.isArray(data) ? data : [];
@@ -161,18 +176,15 @@ export async function loadLabCases(getToken?: () => Promise<string | null>): Pro
       return cases;
     }
 
-    // Log warning for non-JSON responses
     const contentType = response.headers.get('content-type');
     if (!contentType?.includes('application/json')) {
-      console.warn('Lab cases endpoint returned non-JSON response (backend not running)');
+      warnBackendDownOnce();
     }
-  } catch (error) {
-    console.warn('Failed to load lab cases from API - this is optional content:', error);
+  } catch {
+    warnBackendDownOnce();
   }
 
   // Return empty array as graceful fallback
-  // Lab cases are optional and generated content, not critical for core functionality
-  console.info('ℹ Lab cases not available (backend may not be running)');
   const emptyData: any[] = [];
   dataCache.set(cacheKey, emptyData);
   return emptyData;

@@ -14,7 +14,12 @@ const DEBUG_OFFLINE_SYNC = false;
 
 export interface SyncOperation {
   id: string;
-  operation: 'save_progress' | 'submit_quiz' | 'update_settings' | 'flag_question';
+  operation:
+    | 'save_progress'
+    | 'submit_quiz'
+    | 'update_settings'
+    | 'flag_question'
+    | 'srs_submit';
   data: any;
   timestamp: number;
   attempts: number;
@@ -214,6 +219,8 @@ function getEndpointForOperation(operation: SyncOperation['operation']): string 
       return getApiEndpoint('/api/user/settings');
     case 'flag_question':
       return getApiEndpoint('/api/analytics/flag');
+    case 'srs_submit':
+      return getApiEndpoint(API_ENDPOINTS.SRS_SUBMIT);
     default:
       throw new Error(`Unknown operation: ${operation}`);
   }

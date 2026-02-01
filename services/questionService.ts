@@ -7,6 +7,7 @@
  */
 
 import type { Question, SessionSettings } from '../types';
+import { parseJsonOrThrow } from '../lib/utils/safeJsonResponse';
 
 // Pool status tracking
 let lastPoolCheck = 0;
@@ -23,6 +24,7 @@ interface PoolQuestion {
   id: string;
   vignette?: string;
   question: string;
+  imageUrl?: string;
   options: string[];
   correctAnswer: string;
   explanation: string;
@@ -66,9 +68,12 @@ function convertPoolQuestion(poolQ: PoolQuestion): Question | null {
   // Use conditionId if available, otherwise generate from condition name
   const conditionId = poolQ.conditionId || condition.toLowerCase().replace(/\s+/g, '-');
 
+  const questionText = poolQ.vignette ? `${poolQ.vignette}\n\n${poolQ.question}` : poolQ.question;
   return {
     id: poolQ.id,
-    question: poolQ.vignette ? `${poolQ.vignette}\n\n${poolQ.question}` : poolQ.question,
+    vignette: poolQ.vignette || undefined,
+    question: questionText,
+    imageUrl: poolQ.imageUrl,
     options: poolQ.options.map((opt) =>
       // Remove letter prefix if present (e.g., "A. Option" -> "Option")
       opt.replace(/^[A-D]\.\s*/, '')
@@ -80,6 +85,7 @@ function convertPoolQuestion(poolQ: PoolQuestion): Question | null {
     condition,
     pearls: undefined, // Will be loaded on-demand from medicalContent
     source: poolQ.source === 'pool' ? 'database-pool' : 'database-main',
+    fromStaging: poolQ.fromStaging,
   } as Question;
 }
 
@@ -225,10 +231,16 @@ async function fetchFromPool(
   const response = await fetch(`/api/questions/pool?${params}`, { headers });
 
   if (!response.ok) {
-    throw new Error(`Pool API error: ${response.status}`);
+    try {
+      const errData = await parseJsonOrThrow<{ error?: string }>(response);
+      throw new Error(errData?.error || `Pool API error: ${response.status}`);
+    } catch (err) {
+      if (err instanceof Error && err.name === 'ServerConfigError') throw err;
+      throw new Error(`Pool API error: ${response.status}`);
+    }
   }
 
-  const data = (await response.json()) as {
+  const data = (await parseJsonOrThrow(response)) as {
     questions: PoolQuestion[];
     poolStatus: PoolStatus;
   };
@@ -304,7 +316,7 @@ async function checkAndReplenishPool(
     };
     const response = await fetch('/api/questions/pool-status', { headers });
     if (response.ok) {
-      const data = (await response.json()) as {
+      const data = (await parseJsonOrThrow(response)) as {
         health: { needsGeneration: boolean; threshold: number };
         pool: { available: number };
       };

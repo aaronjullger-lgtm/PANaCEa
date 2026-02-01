@@ -80,6 +80,7 @@ export {
 // Named exports from daily triad service
 export {
   fetchDailyTriad,
+  markTriadReviewed,
   type DailyTriad,
 } from './dailyTriadService';
 
@@ -225,13 +226,8 @@ export {
 } from './medicalSpanishService';
 
 // ============================================================================
-// TYPE EXPORTS
+// TYPE EXPORTS (StudySessionPlan already exported above from adaptiveFSRSService)
 // ============================================================================
-
-// Export common types for consumer convenience
-export type {
-  StudySessionPlan,
-} from './adaptiveFSRSService';
 
 // ============================================================================
 // USAGE GUIDE

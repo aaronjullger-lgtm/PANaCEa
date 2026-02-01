@@ -23,6 +23,7 @@ export const API_ENDPOINTS = {
   SESSIONS: '/api/sessions',
   REVIEWS: '/api/reviews',
   SYNC: '/api/sync',
+  SRS_SUBMIT: '/api/srs/submit',
   RECOMMENDATIONS: '/api/recommendations',
   SUBMIT_REVIEW: '/api/drills/submit-review',
   USER_STATS: '/api/user/stats',

@@ -250,6 +250,57 @@ export const StatCardSkeleton: React.FC<{ className?: string }> = ({ className =
 };
 
 /**
+ * QuickStatsBarSkeleton - Matches CommandCenterHub QuickStatsBar layout
+ * 4 stat cards in grid (2 cols mobile, 4 cols desktop)
+ */
+export const QuickStatsBarSkeleton: React.FC<{ className?: string }> = ({ className = '' }) => {
+  return (
+    <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 ${className}`}>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]"
+        >
+          <Skeleton width={40} height={40} radius="lg" className="flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <Skeleton height="1.25rem" width="60%" className="mb-1" />
+            <Skeleton height="0.75rem" width="40%" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/**
+ * UserStatsOverviewSkeleton - Matches UserFriendlyStatsDisplay overview layout
+ */
+export const UserStatsOverviewSkeleton: React.FC<{ className?: string }> = ({ className = '' }) => {
+  return (
+    <div className={`space-y-6 ${className}`}>
+      {/* Readiness gauge skeleton */}
+      <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
+        <Skeleton height="1rem" width="40%" className="mb-4" />
+        <div className="flex gap-6">
+          <Skeleton width={96} height={96} radius="full" />
+          <div className="flex-1 space-y-3">
+            <Skeleton height="1.5rem" width="60%" />
+            <Skeleton height="1rem" width="80%" />
+            <Skeleton height="0.5rem" width="100%" />
+          </div>
+        </div>
+      </div>
+      {/* Stats grid skeleton */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <StatCardSkeleton key={i} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/**
  * TableSkeleton - Loading state for data tables
  */
 export const TableSkeleton: React.FC<{

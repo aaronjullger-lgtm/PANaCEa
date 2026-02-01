@@ -5,6 +5,7 @@
  */
 
 import { z } from 'zod';
+import { selectByPanceDistribution } from '../../../lib/poolSelection';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect, CACHE_STRATEGY } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -21,6 +22,8 @@ import type { KVNamespace } from '@cloudflare/workers-types';
 interface QuestionDataJson {
   vignette?: string;
   question?: string;
+  imageUrl?: string;
+  mediaId?: string;
   options?: string[];
   answers?: string[];
   choices?: string[];
@@ -58,6 +61,8 @@ interface PoolQuestionOutput {
   tags?: string[];
   conditionId?: string | null;
   source: 'pool' | 'main';
+  /** True when question is from staging lake (beta/peer review) */
+  fromStaging?: boolean;
 }
 
 interface MainQuestionRecord {
@@ -70,120 +75,6 @@ interface MainQuestionRecord {
   system: string | null;
   difficulty: string | null;
   tags: string[];
-}
-
-/**
- * Fisher-Yates shuffle algorithm for unbiased randomization
- */
-function fisherYatesShuffle<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const temp = shuffled[i] as T;
-    shuffled[i] = shuffled[j] as T;
-    shuffled[j] = temp;
-  }
-  return shuffled;
-}
-
-// Official PANCE Content Blueprint Percentages (2024)
-// Used for weighted question selection when no specific system is requested
-const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = {
-  CV: 11,       // Cardiovascular
-  PULM: 9,      // Pulmonary
-  GI: 8,        // GI/Nutrition
-  MSK: 8,       // Musculoskeletal
-  ID: 7,        // Infectious Disease
-  NEURO: 7,     // Neurology
-  PSYCH: 7,     // Psychiatry
-  REPRO: 7,     // Reproductive
-  ENDO: 6,      // Endocrine
-  HEENT: 6,     // HEENT
-  PRO: 6,       // Professional Practice
-  HEME: 5,      // Hematology
-  RENAL: 5,     // Renal
-  DERM: 4,      // Dermatology
-  GU: 4,        // Genitourinary
-};
-
-/**
- * Select questions from a pool following PANCE distribution percentages
- * Uses weighted random selection to properly handle fractional allocations
- * Over 360 questions, this will match PANCE blueprint distribution
- */
-function selectByPanceDistribution<T extends { system: string | null }>(
-  pool: T[],
-  count: number
-): T[] {
-  if (pool.length === 0) return [];
-  if (pool.length <= count) return pool;
-  
-  // Group questions by system
-  const bySystem: Record<string, T[]> = {};
-  for (const q of pool) {
-    const sys = q.system || 'General';
-    bySystem[sys] ??= [];
-    bySystem[sys].push(q);
-  }
-  
-  // Shuffle each system's questions for randomness within system
-  for (const sys of Object.keys(bySystem)) {
-    bySystem[sys] = fisherYatesShuffle(bySystem[sys]);
-  }
-  
-  // Build weighted selection array based on PANCE percentages
-  // Each system gets weight proportional to its PANCE percentage
-  const systemWeights: { system: string; weight: number; index: number }[] = [];
-  const totalPercent = Object.values(PANCE_SYSTEM_PERCENTAGES).reduce((a, b) => a + b, 0);
-  
-  for (const sys of Object.keys(bySystem)) {
-    const pancePercent = PANCE_SYSTEM_PERCENTAGES[sys] || 3; // Default 3% for unknown
-    systemWeights.push({ 
-      system: sys, 
-      weight: pancePercent / totalPercent,
-      index: 0 // Track how many we've taken from this system
-    });
-  }
-  
-  // Select questions using weighted random selection
-  const selected: T[] = [];
-  
-  while (selected.length < count) {
-    // Filter to systems that still have questions available
-    const available = systemWeights.filter(
-      sw => sw.index < bySystem[sw.system].length
-    );
-    
-    if (available.length === 0) break;
-    
-    // Calculate total weight of available systems
-    const totalWeight = available.reduce((sum, sw) => sum + sw.weight, 0);
-    
-    // Weighted random selection
-    let random = Math.random() * totalWeight;
-    let chosen: typeof available[0] | null = null;
-    
-    for (const sw of available) {
-      random -= sw.weight;
-      if (random <= 0) {
-        chosen = sw;
-        break;
-      }
-    }
-    
-    // Fallback to first available if rounding issues
-    if (!chosen) chosen = available[0];
-    
-    // Add question from chosen system
-    const question = bySystem[chosen.system][chosen.index];
-    if (question) {
-      selected.push(question);
-      chosen.index++;
-    }
-  }
-  
-  // Final shuffle to interleave (weighted selection already varied, but this ensures no patterns)
-  return fisherYatesShuffle(selected);
 }
 
 /**
@@ -525,6 +416,7 @@ async function getFromPreGeneratedPool(
       id: q.id,
       vignette: data.vignette,
       question: data.question,
+      imageUrl: data.imageUrl,
       options: optionsArr,
       correctAnswer: correctAnswer || 'A',
       explanation: data.explanation,
@@ -533,6 +425,7 @@ async function getFromPreGeneratedPool(
       tags: data.tags,
       conditionId: q.conditionId,
       source: 'pool',
+      fromStaging: q.questionType === 'staging',
     });
     toMarkUsed.push(q.id);
   }
@@ -638,6 +531,7 @@ async function getFromMainTable(
       difficulty: q.difficulty || 'medium',
       tags: q.tags,
       source: 'main',
+      fromStaging: false,
     });
     toRecord.push(q.id);
   }

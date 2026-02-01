@@ -12,7 +12,7 @@ export const chartTheme = {
    * Grid styling for CartesianGrid components
    */
   grid: {
-    stroke: 'var(--color-border)',
+    stroke: 'var(--color-border-light)', // Lighter than border - reduces visual vibration
     strokeDasharray: '3 3',
   },
 

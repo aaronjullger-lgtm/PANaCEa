@@ -144,6 +144,16 @@ export interface ECGPattern {
   panceYield?: number;
 }
 
+export interface ImagingStudy {
+  id: string;
+  name: string;
+  modality: string;
+  bodyRegion?: string;
+  description?: string;
+  indications?: string[];
+  contraindications?: string[];
+}
+
 export interface VitalSignRange {
   id: string;
   name: string;
@@ -345,6 +355,24 @@ export function createReferenceService(getToken: () => Promise<string | null>) {
       getAll: (category?: string) =>
         fetchWithAuth<ECGPattern[]>(
           `/api/reference/ecg${category ? `?category=${encodeURIComponent(category)}` : ''}`,
+          getToken
+        ),
+      search: (query: string) =>
+        fetchWithAuth<ECGPattern[]>(
+          `/api/reference/ecg?query=${encodeURIComponent(query)}`,
+          getToken
+        ),
+      getById: (id: string) =>
+        fetchWithAuth<ECGPattern>(`/api/reference/ecg/${id}`, getToken),
+    },
+
+    // ========================================
+    // IMAGING STUDIES
+    // ========================================
+    imaging: {
+      getAll: (modality?: string) =>
+        fetchWithAuth<ImagingStudy[]>(
+          `/api/reference/imaging${modality ? `?modality=${encodeURIComponent(modality)}` : ''}`,
           getToken
         ),
     },

@@ -5,7 +5,7 @@ import { getApiEndpoint, API_ENDPOINTS } from '../../lib/utils/apiConfig';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import Loader from '../Loader';
+import Loader from '../loading/Loader';
 
 const DdxTrainer = () => {
   const [problem, setProblem] = useState<DdxProblem | null>(null);

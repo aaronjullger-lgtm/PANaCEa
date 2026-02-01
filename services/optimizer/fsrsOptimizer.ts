@@ -129,6 +129,8 @@ export async function getOptimizationStatus(userId: string): Promise<{
   lastOptimized?: Date;
   parameters?: number[];
   recordCount?: number;
+  canOptimize?: boolean;
+  reviewsNeeded?: number;
 }> {
   const response = await fetch(`/api/user/fsrs-params`);
 
@@ -136,12 +138,15 @@ export async function getOptimizationStatus(userId: string): Promise<{
     throw new Error(`Failed to get optimization status: ${response.statusText}`);
   }
 
-  const data = await response.json();
+  const body = await response.json();
+  const data = body?.data ?? body;
 
   return {
-    isOptimized: !data.params.isDefault,
-    lastOptimized: data.params.lastOptimizedAt ? new Date(data.params.lastOptimizedAt) : undefined,
-    parameters: data.params.w,
-    recordCount: data.params.sampleSize,
+    isOptimized: !data.isDefault,
+    lastOptimized: data.params?.lastOptimizedAt ? new Date(data.params.lastOptimizedAt) : undefined,
+    parameters: data.params?.w,
+    recordCount: data.params?.sampleSize,
+    canOptimize: data.canOptimize ?? true,
+    reviewsNeeded: data.reviewsNeeded ?? 0,
   };
 }

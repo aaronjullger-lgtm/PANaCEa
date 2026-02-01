@@ -20,6 +20,7 @@ import {
   safePrismaDisconnect,
   EdgePrismaClient,
 } from '../_shared/prisma-edge';
+import { resolveUserId } from '../_shared/user-resolver';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
 
@@ -777,13 +778,15 @@ export const onRequestPost = authenticatedEndpoint(
       // Determine next session focus
       const nextSessionFocus = determineNextSessionFocus(accuracyBySystem, errorClassifications);
 
-      // Save session analytics to database (optional)
+      // Save session analytics to database (optional) — use internal user id from Clerk
       try {
-        await prisma.studySession.create({
-          data: {
-            id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-            userId: auth.userId,
-            startedAt: new Date(sessionStartTime),
+        const internalUserId = await resolveUserId(prisma, auth.userId);
+        if (internalUserId) {
+          await prisma.studySession.create({
+            data: {
+              id: `session_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+              userId: internalUserId,
+              startedAt: new Date(sessionStartTime),
             endedAt: new Date(sessionEndTime),
             totalQuestions: attempts.length,
             correctAnswers: totalCorrect,
@@ -793,13 +796,13 @@ export const onRequestPost = authenticatedEndpoint(
             systemsCovered: [...new Set(attempts.map((a) => a.system).filter(Boolean))] as string[],
             mode,
           },
-        });
-
-        log.info('Session analytics saved', {
-          sessionScore,
-          totalQuestions: attempts.length,
-          correctCount: totalCorrect,
-        });
+          });
+          log.info('Session analytics saved', {
+            sessionScore,
+            totalQuestions: attempts.length,
+            correctCount: totalCorrect,
+          });
+        }
       } catch (dbError: any) {
         log.warn('Failed to save session to database', { error: dbError.message });
         // Continue with analysis even if DB save fails

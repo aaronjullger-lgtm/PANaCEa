@@ -3,6 +3,7 @@ import conditionRegistry from '@/config/conditionRegistry';
 
 // Import and re-export type from client-safe types file
 // This prevents client code from importing this server-only service just to get the type
+import type { ConditionData } from '../../types/medical-content';
 export type { ConditionData } from '../../types/medical-content';
 
 function hasDatabase(): boolean {

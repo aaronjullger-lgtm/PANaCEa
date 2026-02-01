@@ -163,12 +163,13 @@ async function testReviewLogSessionType() {
       data: {
         userId: testUser.id,
         sessionType: 'CRAM', // Non-MAIN session
-        grade: 3,
+        review_type: 'cram',
+        rating: 3, // Algorithm field (was grade)
         state: 2,
         stability: 10.0,
         difficulty: 5.0,
         wasCorrect: true,
-        reviewedAt: new Date(),
+        review_date: new Date(), // Algorithm field (was reviewedAt)
       },
     });
 

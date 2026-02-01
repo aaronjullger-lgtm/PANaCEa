@@ -79,7 +79,7 @@ export const onRequestGet = withMiddleware(
         userId: context.auth.userId,
       });
 
-      return createSuccessResponse(media);
+      return createSuccessResponse(context.request, media, 200, 0, context.env);
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -156,10 +156,16 @@ export const onRequestPut = withMiddleware(
         userId: context.auth.userId,
       });
 
-      return createSuccessResponse({
-        id: updatedMedia.id,
-        message: 'Media updated successfully',
-      });
+      return createSuccessResponse(
+        context.request,
+        {
+          id: updatedMedia.id,
+          message: 'Media updated successfully',
+        },
+        200,
+        0,
+        context.env
+      );
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -260,10 +266,16 @@ export const onRequestDelete = withMiddleware(
         userId: context.auth.userId,
       });
 
-      return createSuccessResponse({
-        id,
-        message: 'Media deleted successfully',
-      });
+      return createSuccessResponse(
+        context.request,
+        {
+          id,
+          message: 'Media deleted successfully',
+        },
+        200,
+        0,
+        context.env
+      );
     } finally {
       await safePrismaDisconnect(prisma);
     }

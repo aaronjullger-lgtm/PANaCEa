@@ -11,16 +11,16 @@
  * ============================================================================
  */
 
-import { Router } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { prisma } from '../lib/prisma';
 
 const router = Router();
 
 /**
- * GET /api/drugs
- * Get all drugs or filtered by limit
+ * GET /api/drugs or /api/drugs/all
+ * Get all drugs or filtered by limit (same handler for CF parity)
  */
-router.get('/', async (req, res) => {
+const getAllDrugs = async (req: Request, res: Response) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
 
@@ -29,6 +29,7 @@ router.get('/', async (req, res) => {
       orderBy: { genericName: 'asc' },
     });
 
+    res.setHeader('Cache-Control', 'public, max-age=60');
     res.json(drugs);
   } catch (error) {
     console.error('Error fetching drugs:', error);
@@ -37,7 +38,10 @@ router.get('/', async (req, res) => {
       details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+};
+
+router.get('/', getAllDrugs);
+router.get('/all', getAllDrugs);
 
 /**
  * GET /api/drugs/random

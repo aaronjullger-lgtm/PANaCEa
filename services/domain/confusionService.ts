@@ -73,7 +73,7 @@ export async function fetchUserConfusions(
 ): Promise<{ pairs: UserConfusionPairSummary[] }> {
   const headers = getAuthHeaders(token);
   const response = await fetch(
-    `/api/analytics/confusion-pairs?limit=${options.limit}`,
+    `/api/user/confusion?limit=${options.limit}`,
     { headers }
   );
 
@@ -81,33 +81,37 @@ export async function fetchUserConfusions(
     throw new Error(`Failed to fetch confusion pairs: ${response.statusText}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  return { pairs: data.data?.pairs || [] };
 }
 
 /**
- * Prefetch comparison data for selected confusion pairs
- * @param ids - Array of confusion pair IDs
+ * Generate comparison data between two confused conditions
+ * @param ids - Array of two condition IDs [correctId, selectedId]
  * @param token - Optional authentication token
  */
 export async function generateComparison(
   ids: string[],
   token?: string
-): Promise<void> {
+): Promise<any> {
+  if (ids.length < 2) {
+    throw new Error('Two condition IDs required for comparison');
+  }
+
   const headers = token ? getAuthHeaders(token) : {};
-  const response = await fetch('/api/analytics/generate-comparison', {
-    method: 'POST',
-    headers: {
-      ...headers,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ ids }),
-  });
+  const response = await fetch(
+    `/api/ddx/comparison?correctId=${ids[0]}&selectedId=${ids[1]}`,
+    { headers }
+  );
 
   if (!response.ok) {
     throw new Error(
       `Failed to generate comparison: ${response.statusText}`
     );
   }
+
+  const data = await response.json();
+  return data.data?.comparison;
 }
 
 /**

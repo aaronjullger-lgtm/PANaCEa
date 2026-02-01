@@ -49,9 +49,16 @@ export const onRequestGet = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
-      const userId = context.auth.userId;
       const now = new Date();
       const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      const userId = await resolveUserId(prisma, context.auth.userId);
+      if (!userId) {
+        return {
+          status: 404,
+          data: { error: 'User not found - must be synced from Clerk webhook first' },
+        };
+      }
 
       // Fetch user progress data
       const progressData = await prisma.userProgress.findMany({
@@ -74,8 +81,8 @@ export const onRequestGet = authenticatedEndpoint(
         },
       });
 
-      // Fetch recent session analytics for trend data
-      const recentSessions = await prisma.sessionAnalytics.findMany({
+      // Fetch recent study sessions for trend data (StudySession has startedAt, totalQuestions, correctAnswers)
+      const recentSessions = await prisma.studySession.findMany({
         where: {
           userId,
           startedAt: { gte: sevenDaysAgo },

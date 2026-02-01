@@ -282,19 +282,25 @@ export async function verifyStatisticalIsolation(prisma: PrismaLike, userId: str
       where: { userId },
     });
 
-    // Check ReviewLog - count all reviews for this user
-    // Note: sessionType is on StudySession, not ReviewLog
+    // Check ReviewLog - MAIN sessions (real reviews) vs CRAM/RAPID_RECALL (drill sessions)
     const mainReviews = await prisma.reviewLog.count({
       where: {
         userId,
-        // ReviewLog doesn't have sessionType - this is tracked via StudySession
+        OR: [
+          { review_type: 'real' },
+          { sessionType: 'MAIN' },
+        ],
       },
     });
 
     const drillReviews = await prisma.reviewLog.count({
       where: {
         userId,
-        // ReviewLog doesn't have sessionType - this is tracked via StudySession
+        OR: [
+          { review_type: 'cram' },
+          { sessionType: 'CRAM' },
+          { sessionType: 'RAPID_RECALL' },
+        ],
       },
     });
 

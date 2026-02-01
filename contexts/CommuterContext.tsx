@@ -20,6 +20,7 @@ import React, {
   useCallback,
   ReactNode,
 } from 'react';
+import { toast } from '@/lib/toast';
 
 // Web Speech API types are defined in types/speech.d.ts
 
@@ -177,6 +178,7 @@ export function CommuterProvider({ children }: { children: ReactNode }) {
 
   const updateSettings = useCallback((updates: Partial<CommuterSettings>) => {
     setSettings((prev) => ({ ...prev, ...updates }));
+    toast.success('Changes saved');
   }, []);
 
   // Speech synthesis

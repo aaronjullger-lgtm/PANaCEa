@@ -14,19 +14,27 @@ import {
   handleCorsOptions,
   type Env,
 } from '../../_shared/auth';
+import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { canViewCMS, type UserRole } from '../../_shared/rbac';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
+  try {
+    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
+  } catch (e) {
+    if (e instanceof MissingEnvError) return e.toResponse();
+    throw e;
+  }
+
   if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
+    return handleCorsOptions(context);
   }
 
   const authContext = await authenticateRequest(request, env);
   if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
+    return createErrorResponse(request, 'Unauthorized', 401, undefined, env);
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -38,7 +46,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     });
 
     if (!user || !canViewCMS(user.role as UserRole)) {
-      return createErrorResponse('Forbidden: Insufficient permissions', 403);
+      return createErrorResponse(request, 'Forbidden: Insufficient permissions', 403, undefined, env);
     }
 
     const url = new URL(request.url);
@@ -52,10 +60,10 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       });
 
       if (!report) {
-        return createErrorResponse('No health reports found', 404);
+        return createErrorResponse(request, 'No health reports found', 404, undefined, env);
       }
 
-      return createSuccessResponse(report);
+      return createSuccessResponse(request, report, 200, 0, env);
     } else {
       // Get multiple reports
       const reports = await prisma.contentHealthReport.findMany({
@@ -63,14 +71,20 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
         take: limit,
       });
 
-      return createSuccessResponse({
-        reports,
-        count: reports.length,
-      });
+      return createSuccessResponse(
+        request,
+        {
+          reports,
+          count: reports.length,
+        },
+        200,
+        0,
+        env
+      );
     }
   } catch (error: any) {
     console.error('Error fetching health reports:', error);
-    return createErrorResponse('Failed to fetch health reports', 500);
+    return createErrorResponse(request, 'Failed to fetch health reports', 500, undefined, env);
   } finally {
     await safePrismaDisconnect(prisma);
   }

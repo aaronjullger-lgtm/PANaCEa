@@ -1,5 +1,8 @@
 /**
  * ImagingDrillSession - Dedicated radiology review drill
+ *
+ * Loads reference content from /api/reference/imaging via related-content API
+ * for "Related reference" links in feedback (imaging studies metadata).
  */
 
 import React, { useEffect } from 'react';
@@ -8,13 +11,18 @@ import { usePhotoDrill } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
-import { Image, X, ArrowRight, RotateCcw } from 'lucide-react';
+import { EnhancedFeedbackPanel } from '@/components/drill/EnhancedFeedbackPanel';
+import { Image, X, RotateCcw } from 'lucide-react';
 
 interface ImagingDrillSessionProps {
   onExit?: () => void;
+  onNavigateToReference?: (type: string, id: string) => void;
 }
 
-const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({ onExit }) => {
+const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({
+  onExit,
+  onNavigateToReference,
+}) => {
   const {
     currentCase,
     score,
@@ -45,7 +53,11 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({ onExit }) => 
     startSession('radiology');
   };
 
-  if (status === 'landing') {
+  const handleDeepDive = (type: string, id: string) => {
+    onNavigateToReference?.(type, id);
+  };
+
+  if (status === 'menu') {
     return (
       <DrillLandingPage
         title="Radiology Review"
@@ -73,6 +85,7 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({ onExit }) => 
             <button
               onClick={onExit}
               className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors"
+              aria-label="Exit"
             >
               <X className="w-5 h-5" />
             </button>
@@ -101,46 +114,18 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({ onExit }) => 
           </motion.div>
         )}
         {status === 'feedback' && currentCase && (
-          <motion.div
-            key="feedback"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`p-4 ${isCorrect ? 'bg-emerald-100 dark:bg-emerald-950/50 border-t-2 border-emerald-500' : 'bg-red-100 dark:bg-red-950/50 border-t-2 border-red-500'}`}
-          >
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <div
-                    className={`text-lg font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}
-                  >
-                    {isCorrect ? 'Correct!' : 'Incorrect'}
-                  </div>
-                  {!isCorrect && (
-                    <div className="text-sm text-[var(--color-text-secondary)] mt-1">
-                      Correct answer:{' '}
-                      <span className="font-semibold text-[var(--color-text-primary)]">
-                        {currentCase.correctDiagnosis}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={nextCase}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${isCorrect ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'}`}
-                >
-                  Next Image <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-              {currentCase.explanation && (
-                <div className="text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] rounded-lg p-3">
-                  <span className="font-medium text-[var(--color-text-primary)]">
-                    Explanation:{' '}
-                  </span>
-                  {currentCase.explanation}
-                </div>
-              )}
-            </div>
-          </motion.div>
+          <EnhancedFeedbackPanel
+            isCorrect={isCorrect || false}
+            correctAnswer={currentCase.correctDiagnosis}
+            userAnswer={userAnswer}
+            explanation={currentCase.explanation || 'Review the imaging findings carefully.'}
+            onNext={nextCase}
+            nextLabel="Next Image"
+            category="imaging"
+            tags={[currentCase.correctDiagnosis, currentCase.category || 'radiology']}
+            relatedConceptId={currentCase.correctDiagnosis}
+            onDeepDive={handleDeepDive}
+          />
         )}
       </AnimatePresence>
     );
@@ -169,7 +154,17 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({ onExit }) => 
                   Clinical Context
                 </h3>
                 <p className="text-[var(--color-text-primary)]">
-                  {String(currentCase.clinicalContext)}
+                  {typeof currentCase.clinicalContext === 'string'
+                    ? currentCase.clinicalContext
+                    : (() => {
+                        const ctx = currentCase.clinicalContext as {
+                          age?: number;
+                          sex?: 'M' | 'F';
+                          chiefComplaint?: string;
+                          history?: string;
+                        };
+                        return `${ctx.age ?? '?'}yo ${ctx.sex === 'M' ? 'Male' : 'Female'} - ${ctx.chiefComplaint ?? ''}. ${ctx.history ?? ''}`;
+                      })()}
                 </p>
               </div>
             )}

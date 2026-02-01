@@ -12,7 +12,8 @@
  * - Accessible (ARIA live regions)
  */
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { registerToast } from '@/lib/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 
@@ -167,6 +168,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     info,
     showToast,
   };
+
+  // Wire imperative toast API (callable from anywhere)
+  useEffect(() => {
+    const unregister = registerToast((t) =>
+      addToast({ message: t.message, variant: t.variant, duration: t.duration, action: t.action })
+    );
+    return unregister;
+  }, [addToast]);
 
   return (
     <ToastContext.Provider value={value}>

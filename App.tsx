@@ -1,7 +1,61 @@
 // App.tsx
-import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, Suspense } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Keyboard, X } from 'lucide-react';
+import { Settings, X, Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ROUTES } from './config/routes';
+import {
+  type View,
+  pageVariants,
+  DRILL_MODE_IDS,
+} from './config/appViews';
+import {
+  QuizView,
+  MenuView,
+  PhotoDrillSession,
+  RapidRecallDrill,
+  DDxCompareDrill,
+  MiniLabDrillSession,
+  PharmDrillSession,
+  FirstLineDrillSession,
+  ConditionDrillSession,
+  GuidelineDrillSession,
+  SystemDrillSession,
+  PharmacologyDrillSession,
+  SubcategoryDrillSession,
+  VentilatorDrillSession,
+  PhysiologyDrillSession,
+  AnatomyDrillSession,
+  ECGDrillSession,
+  DermDrillSession,
+  ImagingDrillSession,
+  FluidElectrolyteMode,
+  AntibioticMode,
+  PatientEncounterMode,
+  CodeBlueSpeedMode,
+  GrandRoundsMode,
+  IntegrationsHub,
+  SettingsStatsModal,
+  KeyboardShortcutsModal,
+  PANRELASimulator,
+  CommandPalette,
+  UserProfileModal,
+  MediaApproval,
+  StudyGroupDashboard,
+  ToolkitHub,
+  GapAnalysisDashboard,
+  CommandCenterHub,
+  TrainingMenu,
+  SimulationPage,
+  CommandCenterPage,
+  ClinicalReferenceLibrary,
+  CustomStudyMode,
+  QuestionCurationPanel,
+  ClinicalProfileDashboard,
+  AdminDashboard,
+  MyPearlsPanel,
+} from './config/lazyComponents';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { Toaster } from 'sonner';
 import Loader from './components/loading/Loader';
@@ -25,133 +79,32 @@ import type {
   UserProfile,
 } from './types';
 import { hasCompletedOnboarding, saveUserProfile, getExamLabel } from './services/analytics';
-import type { TrainingModeId } from './config/training-modes';
 import { CommuterProvider } from './contexts/CommuterContext';
 import { ToastProvider } from './contexts/ToastContext';
-import {
-  KeyboardShortcutsProvider,
-  useKeyboardShortcuts,
-} from './contexts/KeyboardShortcutsContext';
-
-// Lazy load components for better performance
-const QuizView = lazy(() => import('./components/session/QuizView'));
-const MenuView = lazy(() => import('./components/navigation/MenuView'));
-const PhotoDrillSession = lazy(() => import('./components/session/PhotoDrillSession'));
-const RapidRecallDrill = lazy(() => import('./components/drill/recall/RapidRecallDrill'));
-const DDxCompareDrill = lazy(() => import('./components/drill/ddx/DDxCompareDrill'));
-const MiniLabDrillSession = lazy(() => import('./components/drill/MiniLabDrillSession'));
-const PharmDrillSession = lazy(() => import('./components/drill/PharmDrillSession'));
-const FirstLineDrillSession = lazy(() => import('./components/drill/FirstLineDrillSession'));
-const ConditionDrillSession = lazy(() => import('./components/drill/ConditionDrillSession'));
-const GuidelineDrillSession = lazy(() => import('./components/drill/GuidelineDrillSession'));
-const SystemDrillSession = lazy(() => import('./components/drill/SystemDrillSession'));
-const PharmacologyDrillSession = lazy(() => import('./components/drill/PharmacologyDrillSession'));
-const SubcategoryDrillSession = lazy(() => import('./components/drill/SubcategoryDrillSession'));
-const VentilatorDrillSession = lazy(() => import('./components/drill/VentilatorDrillSession'));
-const PhysiologyDrillSession = lazy(() => import('./components/drill/PhysiologyDrillSession'));
-const AnatomyDrillSession = lazy(() => import('./components/drill/AnatomyDrillSession'));
-const ECGDrillSession = lazy(() => import('./components/drill/ECGDrillSession'));
-const DermDrillSession = lazy(() => import('./components/drill/DermDrillSession'));
-const ImagingDrillSession = lazy(() => import('./components/drill/ImagingDrillSession'));
-const FluidElectrolyteMode = lazy(() => import('./components/modes/FluidElectrolyteMode'));
-const AntibioticMode = lazy(() => import('./components/modes/AntibioticMode'));
-const PatientEncounterMode = lazy(() => import('./components/modes/PatientEncounterMode'));
-const CodeBlueSpeedMode = lazy(() => import('./components/modes/CodeBlueSpeedMode'));
-const GrandRoundsMode = lazy(() => import('./components/modes/GrandRoundsMode'));
-const IntegrationsHub = lazy(() => import('./components/integrations/IntegrationsHub'));
-const SettingsStatsModal = lazy(() => import('./components/modals/SettingsStatsModal'));
-const KeyboardShortcutsModal = lazy(() => import('./components/modals/KeyboardShortcutsModal'));
-const PANRELASimulator = lazy(() => import('./components/lifelong-learning/PANRELASimulator'));
-const CommandPalette = lazy(() => import('./components/navigation/CommandPalette'));
-const UserProfileModal = lazy(() => import('./components/onboarding/UserProfileModal'));
-const MediaApproval = lazy(() => import('./pages/admin/MediaApproval'));
-const StudyGroupDashboard = lazy(() => import('./components/social/StudyGroupDashboard'));
-const ToolkitHub = lazy(() => import('./components/toolkit/ToolkitHub'));
-const GapAnalysisDashboard = lazy(() => import('./components/dashboard/GapAnalysisDashboard'));
-const CommandCenterHub = lazy(() => import('./components/navigation/CommandCenterHub'));
-const TrainingMenu = lazy(() => import('./components/dashboard/TrainingMenu'));
-const SimulationPage = lazy(() =>
-  import('./pages/SimulationPage').then((m) => ({ default: m.SimulationPage }))
-);
-const CommandCenterPage = lazy(() =>
-  import('./pages/CommandCenterPage').then((m) => ({ default: m.CommandCenterPage }))
-);
-const ClinicalReferenceLibrary = lazy(
-  () => import('./components/library/ClinicalReferenceLibrary')
-);
-const CustomStudyMode = lazy(() => import('./components/modes/CustomStudyMode'));
-const QuestionCurationPanel = lazy(() => import('./components/admin/QuestionCurationPanel'));
-const ClinicalProfileDashboard = lazy(
-  () => import('./components/dashboard/ClinicalProfile/ClinicalProfileDashboard')
-);
-
-// Non-lazy components that should always be available
 import { OfflineSyncIndicator } from './components/offline/OfflineSyncIndicator';
 
-const PERFORMANCE_KEY = 'panceai_performance_v2';
-const MISSED_KEY = 'panceai_missed_v2';
-const FLAGGED_KEY = 'panceai_flagged_v2';
-
-/** Drill mode IDs that have dedicated view implementations */
-const DRILL_MODE_PHOTO: TrainingModeId = 'photo_drill';
-const DRILL_MODE_ECG: TrainingModeId = 'ecg_drill';
-const DRILL_MODE_DERM: TrainingModeId = 'derm_drill';
-const DRILL_MODE_IMAGING: TrainingModeId = 'imaging_drill';
-const DRILL_MODE_RAPID_RECALL: TrainingModeId = 'rapid_recall';
-const DRILL_MODE_DDX_COMPARE: TrainingModeId = 'ddx_compare';
-const DRILL_MODE_MINI_LAB: TrainingModeId = 'mini_lab';
-const DRILL_MODE_PHARMACOLOGY: TrainingModeId = 'pharmacology';
-const DRILL_MODE_FIRST_LINE: TrainingModeId = 'first_line_treatment';
-const DRILL_MODE_CONDITION: TrainingModeId = 'condition_drill';
-const DRILL_MODE_SYSTEM: TrainingModeId = 'system_drill';
-const DRILL_MODE_SUBCATEGORY: TrainingModeId = 'subcategory_drill';
-const DRILL_MODE_GUIDELINE: TrainingModeId = 'guideline_drill';
-const DRILL_MODE_FLUID_ELECTROLYTE: TrainingModeId = 'fluid_electrolyte';
-const DRILL_MODE_ANTIBIOTIC: TrainingModeId = 'antibiotic_mode';
-const DRILL_MODE_PATIENT_ENCOUNTER: TrainingModeId = 'patient_encounter';
-const DRILL_MODE_CODE_BLUE: TrainingModeId = 'code_blue_speed';
-const DRILL_MODE_GRAND_ROUNDS: TrainingModeId = 'grand_rounds';
-const DRILL_MODE_VENTILATOR: TrainingModeId = 'ventilator_hero';
-const DRILL_MODE_PHYSIOLOGY: TrainingModeId = 'physiology_drill';
-const DRILL_MODE_ANATOMY: TrainingModeId = 'anatomy_review';
-
-type View =
-  | 'menu'
-  | 'command_center'
-  | 'quiz'
-  | 'custom_study'
-  | 'integrations'
-  | 'photo_drill'
-  | 'ecg_drill'
-  | 'derm_drill'
-  | 'imaging_drill'
-  | 'rapid_recall'
-  | 'ddx_compare'
-  | 'mini_lab'
-  | 'pharmacology'
-  | 'first_line_treatment'
-  | 'condition_drill'
-  | 'system_drill'
-  | 'subcategory_drill'
-  | 'guideline_drill'
-  | 'fluid_electrolyte'
-  | 'antibiotic_mode'
-  | 'patient_encounter'
-  | 'panre_la'
-  | 'code_blue_speed'
-  | 'grand_rounds'
-  | 'ventilator_hero'
-  | 'physiology_drill'
-  | 'anatomy_review'
-  | 'admin_media'
-  | 'social_dashboard'
-  | 'toolkit'
-  | 'gap_analysis'
-  | 'clinical_profile'
-  | 'training_menu'
-  | 'simulation_page'
-  | 'command_center_page'
-  | 'reference_library';
+// Aliases for backward compatibility in this file
+const DRILL_MODE_PHOTO = DRILL_MODE_IDS.PHOTO;
+const DRILL_MODE_ECG = DRILL_MODE_IDS.ECG;
+const DRILL_MODE_DERM = DRILL_MODE_IDS.DERM;
+const DRILL_MODE_IMAGING = DRILL_MODE_IDS.IMAGING;
+const DRILL_MODE_RAPID_RECALL = DRILL_MODE_IDS.RAPID_RECALL;
+const DRILL_MODE_DDX_COMPARE = DRILL_MODE_IDS.DDX_COMPARE;
+const DRILL_MODE_MINI_LAB = DRILL_MODE_IDS.MINI_LAB;
+const DRILL_MODE_PHARMACOLOGY = DRILL_MODE_IDS.PHARMACOLOGY;
+const DRILL_MODE_FIRST_LINE = DRILL_MODE_IDS.FIRST_LINE;
+const DRILL_MODE_CONDITION = DRILL_MODE_IDS.CONDITION;
+const DRILL_MODE_SYSTEM = DRILL_MODE_IDS.SYSTEM;
+const DRILL_MODE_SUBCATEGORY = DRILL_MODE_IDS.SUBCATEGORY;
+const DRILL_MODE_GUIDELINE = DRILL_MODE_IDS.GUIDELINE;
+const DRILL_MODE_FLUID_ELECTROLYTE = DRILL_MODE_IDS.FLUID_ELECTROLYTE;
+const DRILL_MODE_ANTIBIOTIC = DRILL_MODE_IDS.ANTIBIOTIC;
+const DRILL_MODE_PATIENT_ENCOUNTER = DRILL_MODE_IDS.PATIENT_ENCOUNTER;
+const DRILL_MODE_CODE_BLUE = DRILL_MODE_IDS.CODE_BLUE;
+const DRILL_MODE_GRAND_ROUNDS = DRILL_MODE_IDS.GRAND_ROUNDS;
+const DRILL_MODE_VENTILATOR = DRILL_MODE_IDS.VENTILATOR;
+const DRILL_MODE_PHYSIOLOGY = DRILL_MODE_IDS.PHYSIOLOGY;
+const DRILL_MODE_ANATOMY = DRILL_MODE_IDS.ANATOMY;
 
 // Batch fetch 10 questions initially to prevent session ending early
 const INITIAL_QUEUE_SIZE = 10;
@@ -180,6 +133,9 @@ function scheduleNextReview(level: number): string {
 }
 
 const App: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   // Check authentication status
   const { isSignedIn, isLoaded: authLoaded } = useUser();
   const { getToken } = useAuth();
@@ -188,6 +144,15 @@ const App: React.FC = () => {
   const [theme, setTheme] = useTheme();
 
   const [view, setView] = useState<View>('command_center');
+
+  // Sync URL to view: when path is / show command center; /menu shows menu
+  useEffect(() => {
+    if (location.pathname === '/' || location.pathname === '') {
+      setView('command_center');
+    } else if (location.pathname === '/menu') {
+      setView('menu');
+    }
+  }, [location.pathname]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -203,6 +168,7 @@ const App: React.FC = () => {
     setMissedQuestions,
     setFlaggedQuestions,
     isSyncing,
+    isLoading: isStatsLoading,
     lastSyncTime,
     syncError,
   } = useUserStats();
@@ -316,13 +282,12 @@ const App: React.FC = () => {
     return topicStats.slice(0, 5).map((t) => t.topic);
   }, [heatmapPerformance]);
 
-  // ---- performance record hook passed into QuizView ----
-  const addPerformanceRecord = (record: PerformanceRecord) => {
+  // ---- performance record hook passed into QuizView (memoized to avoid child re-renders) ----
+  const addPerformanceRecord = useCallback((record: PerformanceRecord) => {
     setPerformanceData((prev) => [...prev, record]);
-  };
+  }, []);
 
-  // ---- update last performance record with error tag (for meta-cognition) ----
-  const updateLastPerformanceErrorTag = (tag: ErrorTag) => {
+  const updateLastPerformanceErrorTag = useCallback((tag: ErrorTag) => {
     setPerformanceData((prev) => {
       if (prev.length === 0) return prev;
       const updated = [...prev];
@@ -334,28 +299,23 @@ const App: React.FC = () => {
       };
       return updated;
     });
-  };
+  }, []);
 
-  // ---- missed-question handling ----
-  const addMissedQuestion = (question: Question) => {
-    // When you miss during a normal session, seed its SRS metadata
+  const addMissedQuestion = useCallback((question: Question) => {
     const now = new Date().toISOString().split('T')[0];
     const base: Question = {
       ...question,
       repetitionLevel: question.repetitionLevel ?? 1,
       nextReviewDate: question.nextReviewDate ?? now,
     };
-
     setMissedQuestions((prev) => [...prev, base]);
-  };
+  }, []);
 
-  const updateReviewQuestion = (question: Question, wasCorrect: boolean) => {
+  const updateReviewQuestion = useCallback((question: Question, wasCorrect: boolean) => {
     setMissedQuestions((prev) =>
       prev.map((q) => {
         if (q.question !== question.question) return q;
-
         const currentLevel = q.repetitionLevel ?? 1;
-
         if (wasCorrect) {
           const newLevel = currentLevel + 1;
           return {
@@ -363,150 +323,127 @@ const App: React.FC = () => {
             repetitionLevel: newLevel,
             nextReviewDate: scheduleNextReview(newLevel),
           };
-        } else {
-          // reset if incorrect in review mode
-          const newLevel = 1;
-          return {
-            ...q,
-            repetitionLevel: newLevel,
-            nextReviewDate: scheduleNextReview(newLevel),
-          };
         }
+        return {
+          ...q,
+          repetitionLevel: 1,
+          nextReviewDate: scheduleNextReview(1),
+        };
       })
     );
-  };
+  }, []);
 
-  // ---- flagged-question helpers ----
-  const addFlaggedQuestion = (question: Question) => {
+  const addFlaggedQuestion = useCallback((question: Question) => {
     setFlaggedQuestions((prev) => {
       if (prev.some((q) => q.question === question.question)) return prev;
       return [...prev, question];
     });
-  };
+  }, []);
 
-  const removeFlaggedQuestion = (question: Question) => {
+  const removeFlaggedQuestion = useCallback((question: Question) => {
     setFlaggedQuestions((prev) => prev.filter((q) => q.question !== question.question));
-  };
+  }, []);
 
-  // ---- notes: keep notes in all places a question might live ----
-  const updateQuestionNote = (question: Question, note: string) => {
+  const updateQuestionNote = useCallback((question: Question, note: string) => {
     const updater = (q: Question) =>
       q.question === question.question ? { ...q, userNote: note } : q;
-
     setQuestionQueue((prev) => prev.map(updater));
     setMissedQuestions((prev) => prev.map(updater));
     setFlaggedQuestions((prev) => prev.map(updater));
-  };
+  }, []);
 
-  // ---- clearing data from MenuView buttons ----
-  const clearPerformanceData = () => {
-    setPerformanceData([]);
-  };
+  const clearPerformanceData = useCallback(() => setPerformanceData([]), []);
+  const clearMissedQuestionsData = useCallback(() => setMissedQuestions([]), []);
+  const clearFlaggedQuestionsData = useCallback(() => setFlaggedQuestions([]), []);
 
-  const clearMissedQuestionsData = () => {
-    setMissedQuestions([]);
-  };
-
-  const clearFlaggedQuestionsData = () => {
-    setFlaggedQuestions([]);
-  };
-
-  const handleConfirmSession = async (settings: SessionSettings) => {
-    setIsModalOpen(false);
-    setSessionSettings(settings);
-    setError(null);
-    
-    // Initialize session state and reset momentum tracking
-    initializeSession();
-
-    // DUE + FLAGGED are finite; no background stream. Other modes:
-    // - Only ALL + SAME should be endless (handled in QuizView via replenishQueue)
-    try {
-      setIsLoading(true);
-
-      if (settings.focus === 'review') {
-        const today = new Date().toISOString().split('T')[0] ?? '';
-        const due = missedQuestions.filter((q) => q.nextReviewDate && q.nextReviewDate <= today);
-        setQuestionQueue(due);
-        setView('quiz');
-      } else if (settings.focus === 'reviewFlagged') {
-        setQuestionQueue(flaggedQuestions);
-        setView('quiz');
-      } else {
-        // Use questionService which tries database pool first, then Gemini
-        const initialQuestions = await getQuestionBatch(
-          settings,
-          growthAreas,
-          INITIAL_QUEUE_SIZE,
-          getToken
-        );
-        setQuestionQueue(initialQuestions);
-        setView('quiz');
+  const handleConfirmSession = useCallback(
+    async (settings: SessionSettings) => {
+      setIsModalOpen(false);
+      setSessionSettings(settings);
+      setError(null);
+      initializeSession();
+      try {
+        setIsLoading(true);
+        if (settings.focus === 'review') {
+          const today = new Date().toISOString().split('T')[0] ?? '';
+          const due = missedQuestions.filter((q) => q.nextReviewDate && q.nextReviewDate <= today);
+          setQuestionQueue(due);
+          setView('quiz');
+        } else if (settings.focus === 'reviewFlagged') {
+          setQuestionQueue(flaggedQuestions);
+          setView('quiz');
+        } else {
+          const initialQuestions = await getQuestionBatch(
+            settings,
+            growthAreas,
+            INITIAL_QUEUE_SIZE,
+            getToken
+          );
+          setQuestionQueue(initialQuestions);
+          setView('quiz');
+        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Failed to start session. Please try again in a moment.';
+        setError(message);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err: any) {
-      console.error('Error starting session:', err);
-      setError(err?.message || 'Failed to start session. Please try again in a moment.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [missedQuestions, flaggedQuestions, growthAreas, getToken]
+  );
 
-  const handleTrainingMenuStart = (
-    modeId: string,
-    focus?: 'all' | 'growth' | 'flagged' | 'due'
-  ) => {
-    let sessionFocus: SessionSettings['focus'] = 'all';
-    if (focus === 'flagged') sessionFocus = 'reviewFlagged';
-    else if (focus === 'due') sessionFocus = 'review';
-    else if (focus === 'growth') sessionFocus = 'growth';
+  const handleTrainingMenuStart = useCallback(
+    (modeId: string, focus?: 'all' | 'growth' | 'flagged' | 'due') => {
+      let sessionFocus: SessionSettings['focus'] = 'all';
+      if (focus === 'flagged') sessionFocus = 'reviewFlagged';
+      else if (focus === 'due') sessionFocus = 'review';
+      else if (focus === 'growth') sessionFocus = 'growth';
+      handleConfirmSession({ focus: sessionFocus });
+    },
+    [handleConfirmSession]
+  );
 
-    handleConfirmSession({
-      focus: sessionFocus,
-    });
-  };
+  const handleStartSession = useCallback(
+    (settings?: SessionSettings) => {
+      if (settings && typeof settings === 'object' && 'focus' in settings) {
+        handleConfirmSession(settings);
+      } else {
+        setIsModalOpen(true);
+      }
+    },
+    [handleConfirmSession]
+  );
 
-  // ---- starting a session ----
-  const handleStartSession = (settings?: SessionSettings) => {
-    if (settings && typeof settings === 'object' && 'focus' in settings) {
-      handleConfirmSession(settings);
-    } else {
-      setIsModalOpen(true);
-    }
-  };
-
-  const handleEndSession = () => {
-    // Just go back to command center; keep performance/missed/flagged
+  const handleEndSession = useCallback(() => {
     setView('command_center');
     setSessionSettings(null);
     setQuestionQueue([]);
-  };
+  }, []);
 
-  const handleBackToQuiz = () => {
+  const handleBackToQuiz = useCallback(() => {
     if (questionQueue.length > 0 && sessionSettings) {
       setView('quiz');
     } else {
-      // no active session → open setup
       setIsModalOpen(true);
     }
-  };
+  }, [questionQueue.length, sessionSettings]);
 
   const hasActiveSession = !!sessionSettings && questionQueue && questionQueue.length > 0;
 
-  // Handle onboarding completion
-  const handleOnboardingComplete = (profile: UserProfile) => {
+  const handleOnboardingComplete = useCallback((profile: UserProfile) => {
     saveUserProfile(profile);
     setIsOnboardingModalOpen(false);
-  };
+  }, []);
 
-  // Handle onboarding skip
-  const handleOnboardingSkip = () => {
+  const handleOnboardingSkip = useCallback(() => {
     saveUserProfile({ hasCompletedOnboarding: true });
     setIsOnboardingModalOpen(false);
-  };
+  }, []);
 
   // Handler for navigating to drill modes with dedicated routes
   // Memoized to prevent unnecessary child re-renders
   const handleNavigateToDrillMode = useCallback((modeId: string) => {
+    setInitialDrillSystem(null);
     const modeViewMap: Record<string, View> = {
       [DRILL_MODE_PHOTO]: 'photo_drill',
       [DRILL_MODE_ECG]: 'ecg_drill',
@@ -537,8 +474,18 @@ const App: React.FC = () => {
     if (targetView) setView(targetView);
   }, []);
 
+  const handleNavigateToDrillWithSystem = useCallback((modeId: string, system: string) => {
+    setInitialDrillSystem(system);
+    const modeViewMap: Record<string, View> = {
+      [DRILL_MODE_SYSTEM]: 'system_drill',
+    };
+    const targetView = modeViewMap[modeId];
+    if (targetView) setView(targetView);
+  }, []);
+
   // Navigate to simulation page - memoized
   const [simulationInitialFocus, setSimulationInitialFocus] = useState<'all' | 'growth' | 'flagged' | 'due'>('all');
+  const [initialDrillSystem, setInitialDrillSystem] = useState<string | null>(null);
   
   const handleNavigateToSimulation = useCallback((settings?: { initialFocus?: 'all' | 'growth' | 'flagged' | 'due' }) => {
     if (settings?.initialFocus) {
@@ -558,14 +505,6 @@ const App: React.FC = () => {
   const handleNavigateToCustomStudy = useCallback(() => {
     setView('custom_study');
   }, []);
-
-  // Animation variants for page transitions
-  // Optimized for faster navigation with reduced motion preference support
-  const pageVariants = {
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0 },
-  };
 
   const pageTransition = useAccessibleTransition({
     duration: 0.2, // Reduced from 0.35 for snappier navigation
@@ -604,11 +543,34 @@ const App: React.FC = () => {
           {/* Loading Progress Bar */}
           <LoadingProgress isLoading={isLoading} />
 
-          {/* Premium Glass Header - Elegant and professional */}
-          <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
-            <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-              <motion.button
-                onClick={() => setView('command_center')}
+          <Routes>
+            <Route
+              path="/admin"
+              element={
+                <Suspense fallback={<Loader />}>
+                  <AdminDashboard onClose={() => navigate('/')} />
+                </Suspense>
+              }
+            />
+            <Route
+              path="*"
+              element={
+                <>
+                  {/* Skip to Main Content - accessibility */}
+                  <a
+                    href="#main-content"
+                    className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[var(--color-accent)] focus:text-white focus:rounded-lg focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-accent)]"
+                  >
+                    Skip to main content
+                  </a>
+                  {/* Premium Glass Header - Elegant and professional */}
+                  <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
+                    <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+                      <motion.button
+                        onClick={() => {
+                          navigate('/');
+                          setView('command_center');
+                        }}
                 className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -627,17 +589,21 @@ const App: React.FC = () => {
                   className="h-10 sm:h-12 w-auto hidden dark:block"
                   transition={{ duration: 0.2 }}
                 />
-                {/* PANaCEa text with Poppins Bold font */}
-                <span
-                  className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)]"
-                  style={{ fontFamily: "'Poppins', sans-serif" }}
-                >
+                {/* PANaCEa text – Poppins Bold via Tailwind font-poppins */}
+                <span className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] font-poppins">
                   PANaCEa
                 </span>
               </motion.button>
               <div className="flex items-center gap-2">
                 {/* Offline Sync Status Indicator */}
                 <OfflineSyncIndicator />
+                <Link
+                  to={ROUTES.ADMIN}
+                  className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors duration-200 flex items-center justify-center"
+                  aria-label="Admin Dashboard"
+                >
+                  <Shield className="w-5 h-5" />
+                </Link>
                 <motion.button
                   onClick={() => setIsSettingsModalOpen(true)}
                   className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
@@ -668,6 +634,10 @@ const App: React.FC = () => {
               syncError={syncError}
               theme={theme}
               onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              onStartFirstSession={() => {
+                setIsSettingsModalOpen(false);
+                setIsModalOpen(true);
+              }}
             />
           </Suspense>
 
@@ -693,9 +663,17 @@ const App: React.FC = () => {
             </div>
           )}
 
+          {view === 'pearl_deck' && (
+            <div className="w-full">
+              <Suspense fallback={<Loader />}>
+                <MyPearlsPanel onClose={() => setView('command_center')} initialFilter="saved" />
+              </Suspense>
+            </div>
+          )}
+
           {/* Standard views with max-w-4xl constraint */}
-          {view !== 'reference_library' && (
-            <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24">
+          {view !== 'reference_library' && view !== 'pearl_deck' && (
+            <main id="main-content" className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24">
               {isLoading && <Loader forceDark={view === 'imaging_drill'} />}
               {error && (
                 <motion.div
@@ -724,6 +702,8 @@ const App: React.FC = () => {
                         missedQuestions={missedQuestions}
                         flaggedQuestions={flaggedQuestions}
                         dueCount={dueQuestionsCount}
+                        isLoadingStats={isStatsLoading}
+                        onOpenSettings={() => setIsSettingsModalOpen(true)}
                         onStartSession={handleStartSession}
                         onNavigateToDrillMode={handleNavigateToDrillMode}
                         onNavigateToToolkit={() => setView('toolkit')}
@@ -733,6 +713,7 @@ const App: React.FC = () => {
                         onNavigateToSimulation={handleNavigateToSimulation}
                         onNavigateToReference={() => setView('reference_library')}
                         onNavigateToCustomStudy={handleNavigateToCustomStudy}
+                        onNavigateToPearlDeck={() => setView('pearl_deck')}
                         growthAreas={growthAreas}
                         examLabel={examLabel ?? 'PANCE'}
                       />
@@ -941,6 +922,7 @@ const App: React.FC = () => {
                     <Suspense fallback={<Loader />}>
                       <SystemDrillSession
                         onExit={() => setView('command_center')}
+                        initialSystem={initialDrillSystem ?? undefined}
                         addPerformanceRecord={addPerformanceRecord}
                         addMissedQuestion={addMissedQuestion}
                         updateReviewQuestion={updateReviewQuestion}
@@ -1098,8 +1080,10 @@ const App: React.FC = () => {
                     <Suspense fallback={<Loader />}>
                       <div className="relative">
                         <button
+                          type="button"
                           onClick={() => setView('command_center')}
                           className="absolute top-4 left-4 z-10 p-2 bg-[var(--color-bg-primary)] rounded-full shadow-sm border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                          aria-label="Go back to dashboard"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -1302,7 +1286,7 @@ const App: React.FC = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </main>
           )}
 
           {/* Command Palette */}
@@ -1371,6 +1355,10 @@ const App: React.FC = () => {
               canSkip={true}
             />
           </Suspense>
+                </>
+              }
+            />
+          </Routes>
         </div>
       </CommuterProvider>
     </ToastProvider>

@@ -8,7 +8,7 @@
  * 4. Account info and sync status (moved from AccountFooter)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser, useClerk } from '@clerk/clerk-react';
 import {
@@ -37,8 +37,14 @@ import {
 } from 'lucide-react';
 import type { UserProfile, YearInProgram, ClinicalRotation } from '@/types';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
-import { loadUserProfile, updateUserProfile } from '@/services/analytics';
-import { getUserContext, setUserContext, CareerStage } from '@/services/analytics';
+import {
+  loadUserProfile,
+  updateUserProfile,
+  getUserContext,
+  setUserContext,
+  type CareerStage,
+} from '@/services/analytics';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { refreshUserContext } from '@/hooks/useUserContext';
 import { RotationSelector } from '@/components/onboarding/RotationSelector';
 import { ANALYTICS_PALETTES, type AnalyticsPalette } from '@/components/modals/SettingsStatsModal';
@@ -91,10 +97,31 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
   const { isSignedIn, user, isLoaded } = useUser();
   const { signOut } = useClerk();
 
-  // User profile state
+  // API-backed profile when signed in
+  const { profile: apiProfile, updateProfile: updateProfileApi } = useUserProfile();
+
+  // Local profile state (merge API + localStorage)
   const [userProfile, setUserProfileState] = useState<UserProfile>(() => {
     return loadUserProfile() || { hasCompletedOnboarding: false };
   });
+
+  // Sync from API when signed in and profile loads
+  useEffect(() => {
+    if (isSignedIn && apiProfile) {
+      const local = loadUserProfile() || {};
+      setUserProfileState({
+        hasCompletedOnboarding: apiProfile.hasCompletedOnboarding,
+        school: apiProfile.school ?? local.school,
+        graduationDate: apiProfile.graduationDate
+          ? apiProfile.graduationDate.slice(0, 7)
+          : local.graduationDate, // API returns ISO; month input needs YYYY-MM
+        yearInProgram: (apiProfile.yearInProgram as YearInProgram) ?? local.yearInProgram,
+        currentRotation: (apiProfile.currentRotation as ClinicalRotation) ?? local.currentRotation,
+        isCertifiedPA: local.isCertifiedPA,
+        specialty: local.specialty,
+      });
+    }
+  }, [isSignedIn, apiProfile]);
 
   // Career stage state
   const [careerStage, setCareerStageState] = useState<CareerStage>(() => {
@@ -135,18 +162,47 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
 
     // Also update profile if changing to practicing and not already graduated
     if (stage === 'practicing' && userProfile.yearInProgram !== 'Graduated') {
-      const updated = updateUserProfile({
+      const localUpdated = updateUserProfile({
         yearInProgram: 'Graduated',
         isCertifiedPA: true,
       });
-      setUserProfileState(updated);
+      setUserProfileState(localUpdated);
+      if (isSignedIn) {
+        updateProfileApi({ yearInProgram: 'Graduated' }).catch(() => {
+          // Keep local state; API sync failed
+        });
+      }
     }
   };
 
-  const handleUpdateProfile = (updates: Partial<UserProfile>) => {
-    const updated = updateUserProfile(updates);
-    setUserProfileState(updated);
-  };
+  const handleUpdateProfile = useCallback(
+    (updates: Partial<UserProfile>) => {
+      const localUpdated = updateUserProfile(updates);
+      setUserProfileState(localUpdated);
+
+      if (isSignedIn) {
+        const apiUpdates: Parameters<typeof updateProfileApi>[0] = {};
+        if (updates.school !== undefined) apiUpdates.school = updates.school || null;
+        if (updates.graduationDate !== undefined)
+          apiUpdates.graduationDate = updates.graduationDate
+            ? `${updates.graduationDate}-01T00:00:00.000Z`
+            : null;
+        if (updates.yearInProgram !== undefined)
+          apiUpdates.yearInProgram = updates.yearInProgram || null;
+        if (updates.currentRotation !== undefined)
+          apiUpdates.currentRotation = updates.currentRotation || null;
+        if (updates.hasCompletedOnboarding !== undefined)
+          apiUpdates.hasCompletedOnboarding = updates.hasCompletedOnboarding;
+
+        if (Object.keys(apiUpdates).length > 0) {
+          updateProfileApi(apiUpdates).catch(() => {
+            // Local state already updated; API sync failed
+          });
+        }
+      }
+    },
+    [isSignedIn, updateProfileApi]
+  );
 
   return (
     <div className="space-y-4 sm:space-y-6">

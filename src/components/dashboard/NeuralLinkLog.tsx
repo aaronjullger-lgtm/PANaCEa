@@ -23,8 +23,9 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({ lastTuned, reason, adjust
   // Typewriter effect
   useEffect(() => {
     if (currentLineIndex < logLines.length) {
+      const line = logLines[currentLineIndex];
       const timer = setTimeout(() => {
-        setDisplayedLines((prev) => [...prev, logLines[currentLineIndex]]);
+        setDisplayedLines((prev) => [...prev, line ?? '']);
         setCurrentLineIndex((prev) => prev + 1);
       }, 600); // Delay between lines
 
@@ -32,6 +33,7 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({ lastTuned, reason, adjust
     } else {
       setIsTyping(false);
     }
+    return undefined;
   }, [currentLineIndex, logLines]);
 
   // Calculate time until next optimization (14 hours from lastTuned)

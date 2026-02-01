@@ -9,9 +9,11 @@
 import { z } from 'zod';
 import { publicEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
+import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 
 interface Env {
   GEMINI_API_KEY: string;
+  RATE_LIMIT_KV?: unknown;
 }
 
 const GeminiRequestSchema = z.object({
@@ -27,11 +29,15 @@ export const onRequestOptions = withCors();
 
 /**
  * POST /api/gemini
- * Synchronous Gemini API proxy
+ * Synchronous Gemini API proxy (requires authentication)
  */
-export const onRequestPost = publicEndpoint(GeminiRequestSchema, async (context) => {
-  const { env, validated } = context as { env: Env; validated: z.infer<typeof GeminiRequestSchema> };
-  
+export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (context) => {
+  const { request, env, validated } = context as {
+    request: Request;
+    env: Env;
+    validated: z.infer<typeof GeminiRequestSchema>;
+  };
+
   // Validate required environment variables early (fail-fast)
   try {
     validateFunctionEnv(env, 'GEMINI');
@@ -41,7 +47,18 @@ export const onRequestPost = publicEndpoint(GeminiRequestSchema, async (context)
     }
     throw error;
   }
-  
+
+  // Rate limit AI requests (user ID if available, else IP)
+  const identifier = getRateLimitIdentifier(request);
+  const { response: rateLimitResponse, headers: rateLimitHeaders } = await withRateLimit(
+    env,
+    identifier,
+    'gemini'
+  );
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   const { modelName, prompt, temperature, maxTokens, systemInstruction } = validated;
   const apiKey = env.GEMINI_API_KEY;
 
@@ -49,7 +66,10 @@ export const onRequestPost = publicEndpoint(GeminiRequestSchema, async (context)
     // Construct Gemini API URL
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-    // Build request body
+    // Build request body.
+    // For visual drills (ECG/imaging/derm), contents[0].parts can include inlineData with
+    // base64 image (mimeType + data) so the model can describe findings; keep payload
+    // within Edge size limits (e.g. ~4MB request body).
     const requestBody: Record<string, unknown> = {
       contents: [
         {
@@ -140,13 +160,22 @@ export const onRequestPost = publicEndpoint(GeminiRequestSchema, async (context)
       };
     }
 
-    return {
-      data: {
-        text: generatedText,
-        model: modelName,
-        finishReason: responseData.candidates?.[0]?.finishReason,
-      },
-    };
+    return new Response(
+      JSON.stringify({
+        data: {
+          text: generatedText,
+          model: modelName,
+          finishReason: responseData.candidates?.[0]?.finishReason,
+        },
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          ...rateLimitHeaders,
+        },
+      }
+    );
   } catch (error) {
     console.error('[Gemini] Unexpected error:', error);
     return {

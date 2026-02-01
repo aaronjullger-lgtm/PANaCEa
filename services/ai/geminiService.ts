@@ -404,7 +404,8 @@ export async function callGeminiText(
       }
 
       const data = await response.json();
-      const text = typeof data === 'string' ? data : data.text;
+      const text =
+        typeof data === 'string' ? data : (data.data?.text ?? data.text);
 
       if (!text || !text.trim()) {
         throw new Error('Empty response from Gemini');

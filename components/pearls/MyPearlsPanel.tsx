@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Bookmark,
   BookmarkCheck,
+  Zap,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { syncManager } from '../../lib/services/sync/syncManager';
@@ -106,6 +107,7 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
   const [isFlipped, setIsFlipped] = useState(false);
   const [filter, setFilter] = useState<'all' | 'saved' | 'due'>(initialFilter);
   const [systemFilter, setSystemFilter] = useState<string | null>(null);
+  const [rapidReviewMode, setRapidReviewMode] = useState(false);
 
   // Fetch user's pearls
   const fetchPearls = useCallback(async () => {
@@ -177,6 +179,29 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
 
   // Current pearl
   const currentPearl = filteredPearls[currentIndex];
+
+  // Rapid Review: keyboard shortcuts
+  useEffect(() => {
+    if (!rapidReviewMode || filteredPearls.length === 0) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        if (e.key === ' ') setIsFlipped((prev) => !prev);
+        else {
+          setIsFlipped(false);
+          setCurrentIndex((prev) => (prev + 1) % filteredPearls.length);
+        }
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setIsFlipped(false);
+        setCurrentIndex((prev) => (prev - 1 + filteredPearls.length) % filteredPearls.length);
+      } else if (e.key === 'Escape') {
+        setRapidReviewMode(false);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [rapidReviewMode, filteredPearls.length]);
 
   // Navigation
   const goNext = () => {
@@ -547,30 +572,46 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
             </button>
           </div>
 
-          {/* Filter tabs */}
-          <div className="flex gap-2 mt-4">
-            {(['all', 'due', 'saved'] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => {
-                  setFilter(f);
-                  setCurrentIndex(0);
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  filter === f
-                    ? 'bg-[var(--color-bg-primary)] text-[var(--color-accent)] shadow-lg'
-                    : 'bg-[var(--color-bg-primary)]/20 hover:bg-[var(--color-bg-primary)]/30'
-                }`}
-              >
-                {f === 'all' && `All (${stats.total})`}
-                {f === 'due' && `Due (${stats.due})`}
-                {f === 'saved' && `Saved (${stats.saved})`}
-              </button>
-            ))}
+          {/* Rapid Review toggle & Filter tabs */}
+          <div className="flex flex-wrap items-center gap-2 mt-4">
+            <button
+              onClick={() => {
+                setRapidReviewMode((prev) => !prev);
+                setCurrentIndex(0);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+                rapidReviewMode
+                  ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                  : 'bg-[var(--color-bg-primary)]/20 hover:bg-[var(--color-bg-primary)]/30'
+              }`}
+              title="Rapid Review: Space=flip, Arrows=navigate"
+            >
+              <Zap className="w-4 h-4" />
+              Rapid Review
+            </button>
+            {!rapidReviewMode &&
+              (['all', 'due', 'saved'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => {
+                    setFilter(f);
+                    setCurrentIndex(0);
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    filter === f
+                      ? 'bg-[var(--color-bg-primary)] text-[var(--color-accent)] shadow-lg'
+                      : 'bg-[var(--color-bg-primary)]/20 hover:bg-[var(--color-bg-primary)]/30'
+                  }`}
+                >
+                  {f === 'all' && `All (${stats.total})`}
+                  {f === 'due' && `Due (${stats.due})`}
+                  {f === 'saved' && `Saved (${stats.saved})`}
+                </button>
+              ))}
           </div>
 
-          {/* System filter dropdown */}
-          {systems.length > 1 && (
+          {/* System filter dropdown - hide in rapid review */}
+          {!rapidReviewMode && systems.length > 1 && (
             <div className="mt-3">
               <select
                 value={systemFilter || ''}
@@ -592,6 +633,12 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
                 ))}
               </select>
             </div>
+          )}
+
+          {rapidReviewMode && filteredPearls.length > 0 && (
+            <p className="text-xs text-[var(--color-text-inverse)]/70 mt-2">
+              Space = flip • ← → = navigate • Esc = exit Rapid Review
+            </p>
           )}
         </div>
 

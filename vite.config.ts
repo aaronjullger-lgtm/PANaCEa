@@ -125,6 +125,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
+      // When using npm run dev (Vite only), proxy to Express (npm run dev:all) or to wrangler pages dev for CF parity
       proxy: {
         '/geminiProxy': {
           target: 'http://localhost:3001',

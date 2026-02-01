@@ -14,6 +14,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home, Bug, ChevronDown, ChevronUp } from 'lucide-react';
 import { captureError } from '../../lib/monitoring/sentry';
+import { MaintenancePage } from './MaintenancePage';
 
 interface Props {
   children: ReactNode;
@@ -159,7 +160,18 @@ class GlobalErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      const { error, errorInfo, showDetails, errorId } = this.state;
+      // Server/config errors: show MaintenancePage instead of generic error
+      const { error } = this.state;
+      if (error?.name === 'ServerConfigError' || error?.message?.includes('Server configuration error')) {
+        return (
+          <MaintenancePage
+            message={error.message}
+            onRetry={this.handleRetry}
+          />
+        );
+      }
+
+      const { errorInfo, showDetails, errorId } = this.state;
 
       return (
         <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">

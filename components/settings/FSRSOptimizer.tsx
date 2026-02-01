@@ -23,6 +23,8 @@ export const FSRSOptimizer: React.FC = () => {
   const [result, setResult] = useState<OptimizationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastOptimized, setLastOptimized] = useState<Date | null>(null);
+  const [canOptimize, setCanOptimize] = useState(true);
+  const [reviewsNeeded, setReviewsNeeded] = useState(0);
 
   // Load optimization status on mount
   React.useEffect(() => {
@@ -32,6 +34,8 @@ export const FSRSOptimizer: React.FC = () => {
           if (status.isOptimized && status.lastOptimized) {
             setLastOptimized(new Date(status.lastOptimized));
           }
+          setCanOptimize(status.canOptimize ?? true);
+          setReviewsNeeded(status.reviewsNeeded ?? 0);
         })
         .catch((err) => console.error('Failed to load optimization status:', err));
     }
@@ -177,8 +181,9 @@ export const FSRSOptimizer: React.FC = () => {
       {!isOptimizing && !result && !error && (
         <div className="p-3 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg">
           <p className="text-xs text-[var(--color-accent)]">
-            ℹ️ Requires at least 50 reviews across 20+ unique questions. Optimization takes 10-30
-            seconds and runs client-side using WebAssembly.
+            {canOptimize
+              ? 'Requires 500+ valid reviews for personalization. Optimization takes 10-30 seconds.'
+              : `Need ${reviewsNeeded} more reviews for personalization.`}
           </p>
         </div>
       )}

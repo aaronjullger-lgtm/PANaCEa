@@ -25,6 +25,7 @@ export type TrainingModeId =
   | 'imaging_drill'
   | 'rapid_recall'
   | 'ddx_compare'
+  | 'contrastive_drill'
   | 'guideline_drill'
   | 'mini_lab'
   | 'first_line_treatment'
@@ -42,9 +43,9 @@ export type TrainingModeId =
   | 'polypharmacy_puzzle'
   | 'physiology_drill'
   | 'anatomy_review'
-  | 'medical_wordle'
-  | 'cram_mode'
-  | 'radiology_scroll';
+  | 'medical_wordle'   // Future mode - not yet in MODE_REGISTRY
+  | 'cram_mode'        // Future mode - not yet in MODE_REGISTRY
+  | 'radiology_scroll'; // Future mode - not yet in MODE_REGISTRY
 
 /**
  * Categories based on learning activity type
@@ -87,12 +88,12 @@ export const CATEGORY_INFO: Record<
 > = {
   visual_diagnostics: {
     label: 'Visual Diagnostics',
-    description: 'Pattern recognition with images and media',
+    description: 'Image-based drills only — ECG, derm, radiology (no text scenarios)',
     iconName: 'Eye',
   },
   clinical_simulation: {
     label: 'Clinical Simulation',
-    description: 'Interactive patient scenarios and management',
+    description: 'Text-based scenarios — fluids, labs, cases (no image interpretation)',
     iconName: 'Stethoscope',
   },
   question_practice: {
@@ -209,6 +210,16 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     iconName: 'Scan',
     theme: 'slate',
     route: '/modes/imaging-drill',
+    estimatedMinutes: 10,
+  },
+  {
+    id: 'photo_drill',
+    label: 'Photo Drill',
+    description: 'General image recognition and clinical photo interpretation',
+    category: 'visual_diagnostics',
+    iconName: 'Image',
+    theme: 'amber',
+    route: '/modes/photo-drill',
     estimatedMinutes: 10,
   },
   // --- CLINICAL SIMULATION ---
@@ -355,6 +366,16 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     estimatedMinutes: 12,
   },
   {
+    id: 'contrastive_drill',
+    label: 'Contrastive Learning',
+    description: 'One symptom, many causes - master distinguishing features',
+    category: 'specialty_drills',
+    iconName: 'Target',
+    theme: 'violet',
+    route: '/modes/contrastive-drill',
+    estimatedMinutes: 10,
+  },
+  {
     id: 'code_blue_speed',
     label: 'Code Blue Speed',
     description: 'Timed ACLS/PALS rapid-fire scenarios',
@@ -407,6 +428,7 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     theme: 'emerald',
     route: '/modes/polypharmacy-puzzle',
     estimatedMinutes: 12,
+    isComingSoon: true,
   },
 ];
 

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import useSWR from 'swr';
-import { Sparkles, RefreshCw, ShieldCheck, BookOpen, Flame } from 'lucide-react';
+import { Sparkles, RefreshCw, ShieldCheck, BookOpen, Flame, Check } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import { ClinicalSkeleton } from '../ui/ClinicalSkeleton';
-import { fetchDailyTriad, type DailyTriad } from '@/services/domain';
+import { fetchDailyTriad, markTriadReviewed, type DailyTriad } from '@/services/domain';
 
 const triadFetcher = () => fetchDailyTriad();
 
@@ -30,7 +31,8 @@ function BuzzwordPills({ buzzwords }: { buzzwords: string[] }) {
       {pills.map((word) => (
         <span
           key={word}
-          className="text-xs px-2 py-1 rounded-full bg-[var(--color-bg-tertiary)]/50 text-[var(--color-text-muted)] border border-[var(--color-border)]"
+          className="text-xs text-[var(--color-text-muted)]"
+          aria-hidden
         >
           {word}
         </span>
@@ -75,6 +77,8 @@ function ErrorCard({ onRetry }: { onRetry: () => void }) {
 }
 
 export default function DailyTriadCard() {
+  const { getToken } = useAuth();
+  const [isMarkingReviewed, setIsMarkingReviewed] = useState(false);
   const { data, error, isLoading, mutate } = useSWR<DailyTriad>(
     '/api/dashboard/daily-triad',
     triadFetcher,
@@ -82,6 +86,20 @@ export default function DailyTriadCard() {
       revalidateOnFocus: false,
     }
   );
+
+  const handleMarkReviewed = useCallback(async () => {
+    try {
+      setIsMarkingReviewed(true);
+      const token = await getToken();
+      if (token) {
+        await markTriadReviewed(token);
+      }
+    } catch {
+      // Silent fail - endpoint logs for analytics
+    } finally {
+      setIsMarkingReviewed(false);
+    }
+  }, [getToken]);
 
   if (isLoading) return <TriadSkeleton />;
   if (error || !data) return <ErrorCard onRetry={() => mutate()} />;
@@ -106,20 +124,20 @@ export default function DailyTriadCard() {
         <TriadBadge type={data.type} />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-[var(--color-text-muted)]">
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--color-bg-tertiary)]/50 border border-[var(--color-border)]">
-          <ShieldCheck className="w-4 h-4 text-[var(--color-data-pass)]" />
+      <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-[var(--color-text-muted)]">
+        <span className="inline-flex items-center gap-1.5">
+          <ShieldCheck className="w-4 h-4 text-[var(--color-data-pass)]" aria-hidden />
           {data.system}
         </span>
         {data.subcategory && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--color-bg-tertiary)]/50 border border-[var(--color-border)]">
-            <BookOpen className="w-4 h-4 text-[var(--color-accent)]" />
+          <span className="inline-flex items-center gap-1.5">
+            <BookOpen className="w-4 h-4 text-[var(--color-accent)]" aria-hidden />
             {data.subcategory}
           </span>
         )}
         {typeof data.panceYield === 'number' && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--color-bg-tertiary)]/50 border border-[var(--color-border)]">
-            <Flame className="w-4 h-4 text-[var(--color-data-provisional)]" />
+          <span className="inline-flex items-center gap-1.5">
+            <Flame className="w-4 h-4 text-[var(--color-data-provisional)]" aria-hidden />
             Yield {data.panceYield}
           </span>
         )}
@@ -127,15 +145,27 @@ export default function DailyTriadCard() {
 
       <BuzzwordPills buzzwords={data.buzzwords} />
 
-      <div className="mt-5 flex items-center justify-between">
+      <div className="mt-5 flex items-center justify-between gap-2">
         <p className="text-xs text-[var(--color-text-muted)]">Source: {data.source.toUpperCase()}</p>
-        <button
-          onClick={() => mutate()}
-          className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/70 text-[var(--color-text-primary)]"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Shuffle
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleMarkReviewed}
+            disabled={isMarkingReviewed}
+            aria-label="Mark triad as reviewed"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/20 disabled:opacity-50"
+          >
+            <Check className="w-4 h-4" />
+            {isMarkingReviewed ? 'Saving...' : 'Reviewed'}
+          </button>
+          <button
+            onClick={() => mutate()}
+            aria-label="Shuffle for a different triad"
+            className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/70 text-[var(--color-text-primary)]"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Shuffle
+          </button>
+        </div>
       </div>
     </motion.div>
   );

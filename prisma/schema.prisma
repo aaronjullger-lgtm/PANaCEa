@@ -1347,6 +1347,7 @@ model UserProgress {
 // =============================================================================
 // REVIEWLOG: High-Performance Time-Series Table for FSRS v6 Optimization
 // Replaces UserProgress.reviewHistory Json[] for 100x speedup (500ms → 5ms)
+// Algorithm-facing fields: rating, state, due_date, review_date, duration, review_type
 // =============================================================================
 
 model ReviewLog {
@@ -1356,27 +1357,27 @@ model ReviewLog {
   // Question/Content identification
   conditionId      String? // MedicalContent.conditionId
   medicalContentId String? // Direct FK to MedicalContent
-  questionId       String? // Source question ID
+  questionId       String? // Source question ID (polymorphic: Question | PreGeneratedQuestion | QuestionSeed)
   questionType     String? // 'pre_generated' | 'question' | 'seed'
+  questionFkId     String? // FK to Question when questionType='question' (enables proper relation)
 
-  // FSRS v6 State Snapshot (at time of review)
-  grade          Int // FSRS rating: 1 (Again), 2 (Hard), 3 (Good), 4 (Easy)
-  state          Int // 0=New, 1=Learning, 2=Review, 3=Relearning
-  stability      Float // S value at time of review
-  difficulty     Float // D value at time of review
+  // === Algorithm-facing fields (exact names for FSRS integration) ===
+  rating     Int       @map("grade") // FSRS rating: 1 (Again), 2 (Hard), 3 (Good), 4 (Easy)
+  state      Int       // 0=New, 1=Learning, 2=Review, 3=Relearning
+  due_date   DateTime? @map("scheduledAt") // When this review was scheduled
+  review_date DateTime @default(now()) @map("reviewedAt") // When reviewed
+  duration   Int?      @map("responseTimeMs") // Milliseconds to answer
+  review_type String   @default("real") // "real" (MAIN) vs "cram" (CRAM/RAPID_RECALL) - filter for algorithm
+
+  // FSRS v6 extended state (for optimizer)
+  stability      Float  // S value at time of review
+  difficulty     Float  // D value at time of review
   retrievability Float? // R value at time of review (calculated)
-
-  // Timing (critical for FSRS optimization)
-  reviewedAt  DateTime  @default(now())
-  scheduledAt DateTime? // When this review was scheduled
-  elapsedDays Float? // Days since last review
-
-  // Performance metrics
-  responseTimeMs Int? // Time to answer (milliseconds)
+  elapsedDays    Float? // Days since last review
   wasCorrect     Boolean // Actual correctness
 
   // Context
-  sessionType SessionType @default(MAIN) // CRITICAL: Only MAIN sessions affect FSRS weights
+  sessionType SessionType @default(MAIN) // Kept for backward compat; maps to review_type
   sessionId   String? // FK to StudySession
   attemptId   String? // FK to QuestionAttempt
   deviceType  String? // 'mobile' | 'tablet' | 'desktop'
@@ -1390,22 +1391,19 @@ model ReviewLog {
   // Relations
   User           User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   MedicalContent MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  Question       Question?       @relation(fields: [questionFkId], references: [id], onDelete: SetNull)
 
   // === 8 CRITICAL INDEXES FOR FSRS OPTIMIZER ===
-  // These indexes enable:
-  // 1. Fast user review history queries (userId + time)
-  // 2. Condition-specific review lookups (conditionId + time)
-  // 3. System-level aggregations (system + time)
-  // 4. FSRS state-based filtering (state, grade + time)
-  @@index([userId, reviewedAt])
-  @@index([userId, conditionId, reviewedAt])
-  @@index([userId, system, reviewedAt])
-  @@index([reviewedAt])
-  @@index([conditionId, reviewedAt])
+  @@index([userId, review_date])
+  @@index([userId, conditionId, review_date])
+  @@index([userId, system, review_date])
+  @@index([review_date])
+  @@index([conditionId, review_date])
   @@index([medicalContentId])
-  @@index([userId, state, reviewedAt])
-  @@index([userId, sessionType, reviewedAt]) // CRITICAL: Fast filtering of MAIN sessions
-  @@index([userId, grade, reviewedAt])
+  @@index([userId, state, review_date])
+  @@index([userId, review_type, review_date]) // CRITICAL: Fast filtering of "real" vs "cram"
+  @@index([userId, rating, review_date])
+  @@index([questionFkId])
 }
 
 /// Junction table linking MedicalContent to MediaAsset
@@ -1762,16 +1760,27 @@ model Question {
   timesCorrect     Int             @default(0)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime
+  // Content granularity (2nd/3rd tier hierarchy)
+  category         String?         // 2nd tier hierarchy
+  topic            String?         // 3rd tier hierarchy
+  cognitiveLevel   CognitiveLevel  @default(LEVEL_1_RECALL)
+  clinicalSettings String[]        @default([]) // Rotation tags (e.g., Surgery, ER)
+  relatedDrugs     String[]        @default([]) // Entity linking
+  relatedDiseases  String[]        @default([]) // Entity linking
   // New FK for deep relations
   conditionId      String?
   medicalContentId String?
   Condition        Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
   MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  ReviewLog        ReviewLog[]     // Reviews when questionFkId references this Question
 
   @@index([conditionId])
   @@index([medicalContentId])
   @@index([difficulty])
   @@index([system])
+  @@index([category])
+  @@index([topic])
+  @@index([cognitiveLevel])
 }
 
 model QuestionAttempt {
@@ -1784,7 +1793,8 @@ model QuestionAttempt {
   mode               String?
   wasCorrect         Boolean  @default(false)
   isRankedAttempt    Boolean  @default(false)
-  timeSpentMs        Int? // Time spent on question in milliseconds
+  // Time on question: timeSpentMs = session/attempt APIs; durationMs = drill submit (telemetry)
+  timeSpentMs        Int? // Time spent on question in milliseconds (questions/attempt, review)
   answerChangedCount Int? // Number of times answer was changed before submission
   createdAt          DateTime @default(now())
 
@@ -1793,8 +1803,9 @@ model QuestionAttempt {
   systemNormalized String? // Pre-computed normalized system name for fast aggregation
 
   // Phase 3: Telemetry Injection (Cognitive Fidelity)
-  telemetryJson Json? // Detailed behavioral telemetry: MVRT, time_to_first_interaction, rapid_guess, etc.
-  durationMs    Int? // Total duration from question display to submission (ms)
+  telemetryJson   Json?   // Detailed behavioral telemetry: MVRT, time_to_first_interaction, rapid_guess, etc.
+  durationMs      Int?    // Total duration from display to submission (ms); set by drill submit-review
+  selectedAnswer  String? // Answer choice selected (e.g. A, B, C, D) for drill/analytics
 
   @@index([isRankedAttempt])
   @@index([mode])
@@ -2320,10 +2331,15 @@ model User {
   examDate                DateTime?
   graduationDate          DateTime?
   school                  String?
-  currentRotation         String?
+  currentRotation         String?                   // Clinical rotation name (e.g., Surgery, ER)
+  rotationExamDate        DateTime?                 // Exam date for current rotation
   yearInProgram           String?
   isAnonymous             Boolean                   @default(false)
   role                    UserRole                  @default(USER)
+  // User Lifecycle (student vs. practicing PA)
+  lifecycleRole           UserLifecycleRole         @default(STUDENT)
+  trainingPhase           TrainingPhase?            // DIDACTIC | CLINICAL | GRADUATED
+  activeSystems           String[]                  @default([]) // Enabled didactic modules (e.g., ["CV", "PULM"])
   CohortMember            CohortMember[]
   DailyStreak             DailyStreak[]
   GrandRoundsAttempt      GrandRoundsAttempt[]
@@ -2356,6 +2372,7 @@ model User {
   UserConfusionPattern    UserConfusionPattern[]
   UserCircadianProfile    UserCircadianProfile?
   SessionAnalytics        SessionAnalytics[]
+  DailyUserAnalytics      DailyUserAnalytics[]
   PersonalizedFSRSParams  PersonalizedFSRSParams?
   UserStatistics          UserStatistics?
   UserRolling360Stats     UserRolling360Stats?
@@ -2364,6 +2381,8 @@ model User {
   @@index([clerkId])
   @@index([email])
   @@index([role])
+  @@index([lifecycleRole])
+  @@index([trainingPhase])
 }
 
 model UserStatistics {
@@ -2753,6 +2772,26 @@ enum UserRole {
   APPROVER
   ADMIN
   SUPERADMIN
+}
+
+/// User Lifecycle: Student vs. practicing PA (distinct from RBAC UserRole)
+enum UserLifecycleRole {
+  STUDENT
+  PRACTICING_PA
+}
+
+/// Training phase for PA program progression
+enum TrainingPhase {
+  DIDACTIC
+  CLINICAL
+  GRADUATED
+}
+
+/// Bloom's taxonomy / cognitive demand level for questions
+enum CognitiveLevel {
+  LEVEL_1_RECALL
+  LEVEL_2_CONCEPT
+  LEVEL_3_VIGNETTE
 }
 
 enum WordleStatus {
@@ -3430,6 +3469,25 @@ model SessionAnalytics {
 
   @@index([userId])
   @@index([computedAt])
+}
+
+// Daily per-user rollup for cron aggregate-analytics (per-user, per-day stats)
+model DailyUserAnalytics {
+  id                 String   @id @default(cuid())
+  userId             String
+  sessionDate        DateTime @db.Date // UTC date (midnight) for the day
+  questionsAnswered  Int      @default(0)
+  correctAnswers     Int      @default(0)
+  accuracy           Float    @default(0)
+  avgResponseTimeMs  Int?
+  systemsStudied     String[] @default([])
+  updatedAt          DateTime @updatedAt
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sessionDate])
+  @@index([userId])
+  @@index([sessionDate])
 }
 
 // =============================================================================

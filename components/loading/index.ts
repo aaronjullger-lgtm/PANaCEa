@@ -18,6 +18,8 @@ export {
   QuestionSkeleton,
   ChatSkeleton,
   StatCardSkeleton,
+  QuickStatsBarSkeleton,
+  UserStatsOverviewSkeleton,
   TableSkeleton,
 } from './SkeletonLoader';
 
@@ -28,16 +30,6 @@ export {
   CramModeLoadingState,
   GenericModeLoadingState,
 } from './ModeLoadingStates';
-
-// View transitions and progress indicators
-export {
-  ViewTransitionOverlay,
-  RouteChangeProgressBar,
-  DataLoadingIndicator,
-  useViewTransition,
-  ContentFadeTransition,
-  SlideTransition,
-} from './ViewTransitions';
 
 // Legacy aliases for backwards compatibility with components/ui/SkeletonLoader.tsx
 export { Skeleton as SkeletonLoader } from './SkeletonLoader';

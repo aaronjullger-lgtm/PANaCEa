@@ -153,6 +153,7 @@ PANaCEa/
 ├── docs/                 # 📚 All documentation (organized)
 ├── src/                  # 💻 Source code
 │   ├── registries/       # Medical content registries
+│   ├── lib/              # Frontend-only lib (search, markdown, etc.)
 │   ├── archived/         # Deprecated code
 │   ├── types/            # TypeScript types
 │   ├── constants.ts      # App constants
@@ -160,7 +161,7 @@ PANaCEa/
 │   └── middleware.ts     # Middleware functions
 │
 ├── components/           # React components
-├── lib/                  # Utility libraries
+├── lib/                  # Root lib: server/shared logic (db, auth, services, utils)
 ├── services/             # API services
 ├── hooks/                # React hooks
 ├── contexts/             # React contexts
@@ -274,6 +275,10 @@ Consider these additional improvements:
 - Import paths automatically updated
 - Deprecated code archived for reference
 - Backup folders consolidated
+
+### Lib split (avoid wrong locations)
+- **`lib/`** (project root): server/shared logic — db, auth, services, utils, middleware, etc. Used by API, server, and shared code.
+- **`src/lib/`**: frontend-only utilities — e.g. `conditionSearch`, `drugSearch`, `markdown`, `unifiedSearch`. Do not put server-only or Prisma code here.
 
 **Organization completed:** December 25, 2025
 **Files organized:** ~80 markdown files, 14 registries, multiple archived folders

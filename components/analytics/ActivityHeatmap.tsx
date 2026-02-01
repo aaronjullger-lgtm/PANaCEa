@@ -17,6 +17,8 @@ interface ActivityHeatmapProps {
   performanceData: PerformanceRecord[];
   /** Number of weeks to display (default: 13 for quarterly view) */
   weeks?: number;
+  /** Called when user clicks "Start First Session" in empty state. If not provided, falls back to /menu (parent should pass callback for in-app nav). */
+  onStartFirstSession?: () => void;
 }
 
 interface DailyStats {
@@ -37,7 +39,7 @@ interface DailyStats {
  */
 function getIntensityColor(count: number): string {
   if (count === 0) {
-    return 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)]';
+    return 'bg-slate-100 dark:bg-[var(--color-bg-tertiary)] border-slate-200 dark:border-[var(--color-border)]';
   } else if (count <= 5) {
     return 'bg-[var(--color-accent)]/20 border-[var(--color-accent)]/30';
   } else if (count <= 15) {
@@ -163,8 +165,20 @@ function getMonthLabels(dateGrid: (Date | null)[][]): { month: string; colSpan: 
   return labels;
 }
 
-const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ performanceData, weeks = 13 }) => {
+const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
+  performanceData,
+  weeks = 13,
+  onStartFirstSession,
+}) => {
   const [selectedDay, setSelectedDay] = useState<DayActivityData | null>(null);
+
+  const handleStartFirstSession = useCallback(() => {
+    if (onStartFirstSession) {
+      onStartFirstSession();
+    } else {
+      window.location.href = '/menu';
+    }
+  }, [onStartFirstSession]);
   const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number } | undefined>();
 
   // Process performance data into daily stats
@@ -342,7 +356,8 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ performanceData, week
             Your study activity will appear here once you start answering questions.
           </p>
           <button
-            onClick={() => (window.location.href = '/menu')}
+            onClick={handleStartFirstSession}
+            aria-label="Start your first study session"
             className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 border border-[var(--color-accent)]/40 rounded-xl text-[var(--color-text-inverse)] font-semibold transition-all shadow-lg flex items-center gap-2 mx-auto"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -456,7 +471,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ performanceData, week
                           className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm border transition-all ${
                             date
                               ? `${getIntensityColor(count)} cursor-pointer hover:ring-2 hover:ring-[var(--color-accent)]/50`
-                              : 'bg-[var(--color-bg-tertiary)]/30 border-transparent cursor-default'
+                              : 'bg-slate-100 dark:bg-[var(--color-bg-tertiary)]/30 border-transparent cursor-default'
                           }`}
                           title={
                             date && stats

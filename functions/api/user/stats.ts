@@ -11,6 +11,7 @@
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { resolveUserId } from '../_shared/user-resolver';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import {
   getFromCache,
@@ -33,15 +34,23 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    const userId = auth.userId;
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+    const userId = await resolveUserId(prisma, auth.userId);
+    if (!userId) {
+      return {
+        data: { success: false, error: 'User not found - must be synced from Clerk webhook first' },
+        status: 404,
+      };
+    }
 
     // Check cache first if KV is available
     if (isKVAvailable(env.CACHE)) {
-      const cacheKey = getUserStatsCacheKey(userId);
+      const cacheKey = getUserStatsCacheKey(auth.userId);
       const cached = await getFromCache(env.CACHE, cacheKey);
 
       if (cached) {
-        logger.info('Cache hit for user stats', { userId });
+        logger.info('Cache hit for user stats', { userId: auth.userId });
         return {
           data: cached,
           headers: { 'X-Cache': 'HIT' },
@@ -49,63 +58,81 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       }
     }
 
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const now = new Date();
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 86400000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 86400000);
 
-    // Get all attempts for this user
-    const allAttempts = await prisma.questionAttempt.findMany({
-      where: { userId },
-      select: {
-        wasCorrect: true,
-        system: true,
-        conditionId: true,
-        mode: true,
-        timeSpentMs: true,
-        answerChangedCount: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Use aggregation and bounded window instead of unbounded findMany
+    const [totalCount, correctCount, aggregates, systemGrouped, conditionGrouped, recentAttempts, questionsSeenCount] =
+      await Promise.all([
+        prisma.questionAttempt.count({ where: { userId } }),
+        prisma.questionAttempt.count({ where: { userId, wasCorrect: true } }),
+        prisma.questionAttempt.aggregate({
+          where: { userId },
+          _avg: { timeSpentMs: true, answerChangedCount: true },
+        }),
+        prisma.questionAttempt.groupBy({
+          by: ['system', 'wasCorrect'],
+          where: { userId, system: { not: null } },
+          _count: { id: true },
+        }),
+        prisma.questionAttempt.groupBy({
+          by: ['conditionId', 'wasCorrect'],
+          where: { userId, conditionId: { not: null } },
+          _count: { id: true },
+        }),
+        prisma.questionAttempt.findMany({
+          where: { userId, createdAt: { gte: ninetyDaysAgo } },
+          select: { wasCorrect: true, system: true, timeSpentMs: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+          take: 5000,
+        }),
+        prisma.userQuestionSeen.count({ where: { userId } }),
+      ]);
 
-    // Calculate overall stats
-    const totalAttempts = allAttempts.length;
-    const correctAttempts = allAttempts.filter((a: (typeof allAttempts)[0]) => a.wasCorrect).length;
+    const totalAttempts = totalCount;
+    const correctAttempts = correctCount;
+    const allAttempts = recentAttempts;
+
     const overallAccuracy =
       totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
 
-    // Calculate average time metrics
-    const attemptsWithTime = allAttempts.filter(
-      (a: (typeof allAttempts)[0]) => a.timeSpentMs && a.timeSpentMs > 0
-    );
     const avgTimeMs =
-      attemptsWithTime.length > 0
-        ? Math.round(
-            attemptsWithTime.reduce(
-              (sum: number, a: (typeof attemptsWithTime)[0]) => sum + (a.timeSpentMs || 0),
-              0
-            ) / attemptsWithTime.length
-          )
+      aggregates._avg.timeSpentMs != null && aggregates._avg.timeSpentMs > 0
+        ? Math.round(aggregates._avg.timeSpentMs)
         : null;
     const avgAnswerChanges =
-      attemptsWithTime.length > 0
-        ? +(
-            attemptsWithTime.reduce(
-              (sum: number, a: (typeof attemptsWithTime)[0]) => sum + (a.answerChangedCount || 0),
-              0
-            ) / attemptsWithTime.length
-          ).toFixed(2)
+      aggregates._avg.answerChangedCount != null
+        ? Number(aggregates._avg.answerChangedCount.toFixed(2))
         : null;
 
-    // PHASE 1 FIX: Normalize all system names and aggregate by canonical name
-    // This handles both "CV" and "Cardiovascular" being counted together
-    const systemMap = new Map<string, Array<(typeof allAttempts)[0]>>();
-
-    for (const attempt of allAttempts) {
-      if (attempt.system) {
-        const normalizedSystem = normalizeSystemName(attempt.system);
-        if (!systemMap.has(normalizedSystem)) {
-          systemMap.set(normalizedSystem, []);
+    // Build system counts from groupBy; add timing/lastAttempt from recentAttempts
+    type SystemRow = { system: string | null; wasCorrect: boolean; _count: { id: number } };
+    const systemCountsMap = new Map<string, { total: number; correct: number; timeSum: number; timeN: number }>();
+    for (const row of systemGrouped as SystemRow[]) {
+      if (!row.system) continue;
+      const norm = normalizeSystemName(row.system);
+      const cur = systemCountsMap.get(norm) || { total: 0, correct: 0, timeSum: 0, timeN: 0 };
+      cur.total += row._count.id;
+      if (row.wasCorrect) cur.correct += row._count.id;
+      systemCountsMap.set(norm, cur);
+    }
+    for (const a of recentAttempts) {
+      if (a.system && a.timeSpentMs && a.timeSpentMs > 0) {
+        const norm = normalizeSystemName(a.system);
+        const cur = systemCountsMap.get(norm);
+        if (cur) {
+          cur.timeSum += a.timeSpentMs;
+          cur.timeN += 1;
         }
-        systemMap.get(normalizedSystem)!.push(attempt);
+      }
+    }
+    const systemLastAttempt = new Map<string, Date>();
+    for (const a of recentAttempts) {
+      if (a.system) {
+        const norm = normalizeSystemName(a.system);
+        if (!systemLastAttempt.has(norm)) systemLastAttempt.set(norm, a.createdAt);
       }
     }
 
@@ -126,44 +153,33 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     const canonicalSystems = getAllSystems();
 
     for (const system of canonicalSystems) {
-      const systemAttempts = systemMap.get(system) || [];
-      const total = systemAttempts.length;
-      const correct = systemAttempts.filter((a: (typeof systemAttempts)[0]) => a.wasCorrect).length;
+      const data = systemCountsMap.get(system);
+      const total = data?.total ?? 0;
+      const correct = data?.correct ?? 0;
       const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+      const avgTimeMsSys = data && data.timeN > 0 ? Math.round(data.timeSum / data.timeN) : null;
+      const lastAttempt = systemLastAttempt.get(system);
 
-      // Calculate trend
       let trend: 'improving' | 'declining' | 'neutral' = 'neutral';
-      if (systemAttempts.length >= 10) {
-        const recent5 = systemAttempts.slice(0, 5);
-        const previous5 = systemAttempts.slice(5, 10);
-        const recentAcc = recent5.filter((a: (typeof recent5)[0]) => a.wasCorrect).length / 5;
-        const prevAcc = previous5.filter((a: (typeof previous5)[0]) => a.wasCorrect).length / 5;
-
+      const systemRecent = recentAttempts.filter(
+        (a) => a.system && normalizeSystemName(a.system) === system
+      );
+      if (systemRecent.length >= 10) {
+        const recent5 = systemRecent.slice(0, 5);
+        const previous5 = systemRecent.slice(5, 10);
+        const recentAcc = recent5.filter((a) => a.wasCorrect).length / 5;
+        const prevAcc = previous5.filter((a) => a.wasCorrect).length / 5;
         if (recentAcc > prevAcc + 0.15) trend = 'improving';
         else if (recentAcc < prevAcc - 0.15) trend = 'declining';
       }
-
-      // Calculate average time for this system
-      const systemWithTime = systemAttempts.filter(
-        (a: (typeof systemAttempts)[0]) => a.timeSpentMs && a.timeSpentMs > 0
-      );
-      const sysAvgTime =
-        systemWithTime.length > 0
-          ? Math.round(
-              systemWithTime.reduce(
-                (sum: number, a: (typeof systemWithTime)[0]) => sum + (a.timeSpentMs || 0),
-                0
-              ) / systemWithTime.length
-            )
-          : null;
 
       systemStats[system] = {
         total,
         correct,
         accuracy,
         trend,
-        avgTimeMs: sysAvgTime,
-        lastAttempt: systemAttempts[0]?.createdAt?.toISOString() || null,
+        avgTimeMs: avgTimeMsSys,
+        lastAttempt: lastAttempt?.toISOString() ?? null,
       };
     }
 
@@ -200,21 +216,15 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
         attempts: stats.total,
       }));
 
-    // Calculate per-condition stats (top 20 most attempted)
-    const conditionCounts: Record<string, { total: number; correct: number; conditionId: string }> =
-      {};
-    for (const attempt of allAttempts as typeof allAttempts) {
-      if (attempt.conditionId) {
-        if (!conditionCounts[attempt.conditionId]) {
-          conditionCounts[attempt.conditionId] = {
-            total: 0,
-            correct: 0,
-            conditionId: attempt.conditionId,
-          };
-        }
-        conditionCounts[attempt.conditionId].total++;
-        if (attempt.wasCorrect) conditionCounts[attempt.conditionId].correct++;
-      }
+    // Build condition stats from groupBy
+    type CondRow = { conditionId: string | null; wasCorrect: boolean; _count: { id: number } };
+    const conditionCounts: Record<string, { total: number; correct: number; conditionId: string }> = {};
+    for (const row of conditionGrouped as CondRow[]) {
+      if (!row.conditionId) continue;
+      const c = conditionCounts[row.conditionId] || { total: 0, correct: 0, conditionId: row.conditionId };
+      c.total += row._count.id;
+      if (row.wasCorrect) c.correct += row._count.id;
+      conditionCounts[row.conditionId] = c;
     }
 
     const conditionStats = Object.values(conditionCounts)
@@ -271,16 +281,7 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       }
     }
 
-    // Get questions seen count
-    const questionsSeenCount = await prisma.userQuestionSeen.count({
-      where: { userId },
-    });
-
-    // Calculate time-based analytics (last 7 days vs previous 7 days)
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
-    const fourteenDaysAgo = new Date(now.getTime() - 14 * 86400000);
-
+    // Calculate time-based analytics (last 7 days vs previous 7 days) from recentAttempts
     const last7DaysAttempts = allAttempts.filter(
       (a: (typeof allAttempts)[0]) => a.createdAt >= sevenDaysAgo
     );

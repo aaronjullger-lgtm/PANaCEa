@@ -79,6 +79,9 @@ export const questionTypeSchema = z.enum(
 
 /**
  * Organ system validation (NCCPA Blueprint)
+ * Convention: UPPERCASE (e.g. CARDIOVASCULAR, PULMONARY).
+ * Used by: question generation, session preferences.
+ * Note: schemas.ts OrganSystemSchema uses lowercase; Condition.system in DB may vary.
  */
 export const organSystemSchema = z.enum(
   [
@@ -140,8 +143,10 @@ export const fsrsRatingSchema = z.union([z.literal(1), z.literal(2), z.literal(3
 });
 
 /**
- * Question review submission
- * Used by: /api/drills/submit-review
+ * Question review submission (LEGACY - different flow)
+ * Fields: userAnswer, rating, timeSpentMs, confidence.
+ * Canonical for /api/drills/submit-review: DrillSubmitReviewSchema in schemas.ts
+ * (selectedAnswer, telemetry, timeToFirstClick, etc).
  */
 export const reviewSubmissionSchema = z
   .object({
@@ -264,6 +269,33 @@ export const confusionPairSchema = z
 // ============================================================================
 // ANALYTICS SCHEMAS
 // ============================================================================
+
+/**
+ * User profile partial update (PUT /api/user/profile)
+ */
+export const profileUpdateSchema = z
+  .object({
+    firstName: z.string().min(1).max(100).optional(),
+    lastName: z.string().min(1).max(100).optional(),
+    examDate: z
+      .string()
+      .refine((s) => !Number.isNaN(Date.parse(s)), { message: 'Invalid exam date format' })
+      .optional()
+      .nullable(),
+    graduationDate: z
+      .string()
+      .refine((s) => !Number.isNaN(Date.parse(s)), { message: 'Invalid graduation date format' })
+      .optional()
+      .nullable(),
+    school: z.string().max(200).optional().nullable(),
+    currentRotation: z.string().max(100).optional().nullable(),
+    yearInProgram: z.string().max(50).optional().nullable(),
+    hasCompletedBaseline: z.boolean().optional(),
+    hasCompletedOnboarding: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field must be provided for update',
+  });
 
 /**
  * Learning profile recompute request
@@ -455,7 +487,7 @@ export const pharmDrillQuerySchema = z.object({
  * Used by: /api/drills/related-content
  */
 export const relatedContentSchema = z.object({
-  category: z.enum(['physiology', 'anatomy', 'lab', 'ecg', 'procedure', 'finding']),
+  category: z.enum(['physiology', 'anatomy', 'lab', 'ecg', 'procedure', 'finding', 'imaging']),
   tags: z.array(z.string().max(100)).max(20).optional().default([]),
   conceptId: z.string().max(100).optional(),
   limit: z.coerce.number().int().min(1).max(50).default(5),
@@ -546,6 +578,24 @@ export function createValidator<T>(schema: z.ZodSchema<T>) {
 }
 
 // ============================================================================
+// GEMINI STREAM REQUEST
+// ============================================================================
+
+/**
+ * Gemini streaming API request body
+ * Used by: /api/gemini/stream
+ */
+export const geminiStreamRequestSchema = z
+  .object({
+    modelName: z.string().min(1).max(64).default('gemini-2.5-flash'),
+    prompt: z.string().min(1, 'Prompt is required').max(128 * 1024, 'Prompt too long'),
+    temperature: z.number().min(0).max(2).default(0.8),
+  })
+  .strict();
+
+export const validateGeminiStreamRequest = createValidator(geminiStreamRequestSchema);
+
+// ============================================================================
 // PRE-BUILT VALIDATORS
 // ============================================================================
 
@@ -565,11 +615,18 @@ export const validateQuestionFlag = createValidator(questionFlagSchema);
  */
 export const MAX_PAYLOAD_SIZE = 1024 * 1024; // 1MB
 
+/**
+ * Get UTF-8 byte length (edge-compatible; avoids Node.js Buffer)
+ */
+function utf8ByteLength(str: string): number {
+  return new TextEncoder().encode(str).length;
+}
+
 export function validatePayloadSize(payload: string | object): boolean {
   const size =
     typeof payload === 'string'
-      ? Buffer.byteLength(payload, 'utf8')
-      : Buffer.byteLength(JSON.stringify(payload), 'utf8');
+      ? utf8ByteLength(payload)
+      : utf8ByteLength(JSON.stringify(payload));
 
   return size <= MAX_PAYLOAD_SIZE;
 }

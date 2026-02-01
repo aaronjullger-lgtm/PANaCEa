@@ -15,6 +15,11 @@
 /**
  * Required environment variables for different function types
  */
+/**
+ * DATABASE_URL for production (Cloudflare Edge):
+ * - Use Supabase Transaction Pooler (port 6543) or Prisma Accelerate (prisma://...)
+ * - Direct PostgreSQL (port 5432) is dev-only; not Edge-compatible
+ */
 export const ENV_REQUIREMENTS = {
   /** Functions that need database access */
   DATABASE: ['DATABASE_URL'] as const,
@@ -40,29 +45,32 @@ export type EnvRequirement = keyof typeof ENV_REQUIREMENTS;
 export class MissingEnvError extends Error {
   public readonly missingVars: string[];
   public readonly statusCode = 500;
+  private readonly env?: Record<string, unknown>;
 
-  constructor(missingVars: string[]) {
+  constructor(missingVars: string[], env?: Record<string, unknown>) {
     const message = formatMissingEnvMessage(missingVars);
     super(message);
     this.name = 'MissingEnvError';
     this.missingVars = missingVars;
+    this.env = env;
   }
 
   /**
-   * Convert to JSON response for API errors
+   * Convert to JSON response for API errors.
+   * Uses context.env when available (edge runtime); falls back to process.env for dev detection.
    */
   toResponse(): Response {
+    const isDev =
+      (this.env?.ENVIRONMENT as string) === 'development' ||
+      (this.env?.NODE_ENV as string) === 'development' ||
+      (typeof process !== 'undefined' && process?.env?.NODE_ENV === 'development');
     return new Response(
       JSON.stringify({
         success: false,
         error: {
           code: 'MISSING_ENVIRONMENT_CONFIG',
           message: 'Server configuration error. Required environment variables are missing.',
-          // Don't expose specific missing vars in production response
-          details:
-            process.env.NODE_ENV === 'development'
-              ? { missing: this.missingVars }
-              : undefined,
+          details: isDev ? { missing: this.missingVars } : undefined,
         },
       }),
       {
@@ -78,7 +86,8 @@ export class MissingEnvError extends Error {
  */
 function formatMissingEnvMessage(missingVars: string[]): string {
   const envDocs: Record<string, string> = {
-    DATABASE_URL: 'PostgreSQL/Prisma Accelerate connection string (prisma://...)',
+    DATABASE_URL:
+      'PostgreSQL: use Prisma Accelerate (prisma://...) or Supabase Transaction Pooler (port 6543); direct session port is not Edge-compatible.',
     GEMINI_API_KEY: 'Google Gemini API key for AI question generation',
     CLERK_SECRET_KEY: 'Clerk secret key for authentication',
     CLERK_WEBHOOK_SECRET: 'Clerk webhook signing secret',
@@ -123,7 +132,7 @@ export function validateFunctionEnv(
 
   if (missing.length > 0) {
     console.error(`[Env Validation] Missing required environment variables: ${missing.join(', ')}`);
-    throw new MissingEnvError(missing);
+    throw new MissingEnvError(missing, env);
   }
 }
 
@@ -151,7 +160,7 @@ export function getEnvVar<T extends boolean>(
   }
 
   if (required) {
-    throw new MissingEnvError([key]);
+    throw new MissingEnvError([key], env);
   }
 
   return undefined as T extends true ? string : string | undefined;

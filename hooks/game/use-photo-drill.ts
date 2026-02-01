@@ -174,8 +174,10 @@ export interface ClinicalContext {
 export interface PhotoCase {
   /** Unique identifier for the case */
   id: string;
-  /** URL to the case image */
+  /** URL to the case image (takes precedence when present) */
   imageUrl: string;
+  /** Optional stored media/asset ID for resolving image from reference APIs */
+  imageId?: string;
   /** The imaging modality type */
   modality: 'ecg' | 'xray' | 'derm';
   /** Category or system (e.g., 'cardiovascular', 'pulmonary') */

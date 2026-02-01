@@ -152,6 +152,7 @@ export async function assembleQuestionsFromSeeds(
   for (let i = 0; i < count; i++) {
     // Pick a seed (cycle through them if we need more questions than seeds)
     const seed = seeds[i % seeds.length];
+    if (!seed) continue;
     const question = await assembleQuestionFromSeed(seed.id);
     assembledQuestions.push(question);
   }

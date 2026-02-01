@@ -1,5 +1,7 @@
 // lib/services/soapGradingService.ts
-// SOAP Note grading via Gemini proxy
+// SOAP Note grading via Gemini proxy (Cloudflare /api/gemini)
+
+import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
 export interface GradingResult {
   totalScore: number; // 0-100
@@ -120,7 +122,7 @@ interface GradingResult {
   }
 
   const data: any = await response.json();
-  const rawText = typeof data === 'string' ? data : data.text;
+  const rawText = typeof data === 'string' ? data : (data.data?.text ?? data.text);
 
   if (!rawText || typeof rawText !== 'string') {
     throw new Error('Empty response from Gemini');

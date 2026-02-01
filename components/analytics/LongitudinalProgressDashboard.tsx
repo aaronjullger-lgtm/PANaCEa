@@ -235,22 +235,12 @@ function calculateMasteryScore(correct: number, total: number, accuracy: number)
   return Math.min(MAX_MASTERY_SCORE, Math.round(score));
 }
 
-/**
- * Get the maximum mastery score for scaling
- */
-function getMaxMasteryScore(phases: TimelinePhase[]): number {
-  if (phases.length === 0) return 100;
-  return Math.max(...phases.map((p) => p.masteryScore), 100);
-}
-
 export default function LongitudinalProgressDashboard({
   performanceData,
   userYearInProgram,
   theme = 'light',
 }: LongitudinalProgressDashboardProps): React.ReactElement {
   const phases = useMemo(() => calculateTimelinePhases(performanceData), [performanceData]);
-
-  const maxScore = useMemo(() => getMaxMasteryScore(phases), [phases]);
 
   // Extract phase elements with guards for TypeScript
   const lastPhase = phases[phases.length - 1];
@@ -343,42 +333,98 @@ export default function LongitudinalProgressDashboard({
         </div>
       </div>
 
-      {/* Progress Timeline Chart */}
+      {/* Mastery Score Over Time - Sparkline (static data viz, not interactive) */}
       <div className="mb-6">
         <h4 className="text-sm font-semibold mb-4 text-[var(--color-text-secondary)]">
           Mastery Score Over Time
         </h4>
-        <div className="space-y-3">
-          {phases.map((phase, index) => (
-            <motion.div
-              key={phase.phase}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="rounded-lg p-3 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                  {phase.phase}
-                </span>
-                <span className="text-xs text-[var(--color-text-muted)]">
-                  {phase.questions} questions • {phase.accuracy}% accuracy
-                </span>
-              </div>
-              <div className="relative h-8 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(phase.masteryScore / maxScore) * 100}%` }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] rounded-full flex items-center justify-end pr-2"
-                >
-                  <span className="text-xs font-bold text-[var(--color-text-inverse)]">
-                    {phase.masteryScore}
-                  </span>
-                </motion.div>
-              </div>
-            </motion.div>
-          ))}
+        <div className="rounded-lg p-4 bg-[var(--color-bg-secondary)]">
+          <svg
+            viewBox="0 0 400 120"
+            className="w-full h-24"
+            role="img"
+            aria-label="Mastery score trend over time"
+          >
+            <defs>
+              <linearGradient id="sparklineGradient" x1="0" x2="0" y1="1" y2="0">
+                <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {phases.length >= 1 &&
+              (() => {
+                const padding = { top: 8, right: 8, bottom: 24, left: 36 };
+                const width = 400 - padding.left - padding.right;
+                const height = 120 - padding.top - padding.bottom;
+                const scores = phases.map((p) => p.masteryScore);
+                const minScore = Math.min(...scores, 0);
+                const maxScoreVal = Math.max(...scores, 1);
+                const range = maxScoreVal - minScore || 1;
+                const step = phases.length > 1 ? width / (phases.length - 1) : 0;
+                const points = phases.map((phase, i) => {
+                  const x = padding.left + (phases.length > 1 ? i * step : width / 2);
+                  const y =
+                    padding.top +
+                    height -
+                    ((phase.masteryScore - minScore) / range) * height;
+                  return { x, y, phase };
+                });
+                const linePath =
+                  points.length > 0
+                    ? `M ${points.map((p) => `${p.x},${p.y}`).join(' L ')}`
+                    : '';
+                const areaPath =
+                  points.length > 1
+                    ? `M ${padding.left},${padding.top + height} L ${points.map((p) => `${p.x},${p.y}`).join(' L ')} L ${padding.left + width},${padding.top + height} Z`
+                    : '';
+
+                return (
+                  <>
+                    {areaPath && (
+                      <path
+                        d={areaPath}
+                        fill="url(#sparklineGradient)"
+                        aria-hidden
+                      />
+                    )}
+                    {linePath && (
+                      <motion.path
+                        d={linePath}
+                        fill="none"
+                        stroke="var(--color-accent)"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                        aria-hidden
+                      />
+                    )}
+                    {points.map(({ x, y, phase: p }, i) => (
+                      <motion.circle
+                        key={p.phase}
+                        cx={x}
+                        cy={y}
+                        r={4}
+                        fill="var(--color-accent)"
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.5 + i * 0.05 }}
+                        aria-hidden
+                      />
+                    ))}
+                  </>
+                );
+              })()}
+          </svg>
+          <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 mt-2 text-xs text-[var(--color-text-muted)]">
+            {phases.map((phase) => (
+              <span key={phase.phase}>
+                {phase.phase}: {phase.masteryScore}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 

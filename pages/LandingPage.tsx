@@ -17,6 +17,7 @@ import {
   Target,
   Repeat,
 } from 'lucide-react';
+import ThemeToggleButton from '../components/ui/ThemeToggleButton';
 
 export function LandingPage() {
   const [showAuth, setShowAuth] = useState(false);
@@ -102,27 +103,27 @@ export function LandingPage() {
               alt="PANaCEa Icon"
               className="h-12 sm:h-14 w-auto hidden dark:block"
             />
-            {/* PANaCEa text with Poppins Bold font */}
-            <span
-              className="text-3xl sm:text-4xl font-bold text-[var(--color-text-primary)]"
-              style={{ fontFamily: "'Poppins', sans-serif" }}
-            >
+            {/* PANaCEa text – Poppins Bold via Tailwind font-poppins */}
+            <span className="text-3xl sm:text-4xl font-bold text-[var(--color-text-primary)] font-poppins">
               PANaCEa
             </span>
           </motion.div>
-          <motion.button
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            onClick={() => {
-              setAuthMode('sign-in');
-              setShowAuth(true);
-            }}
-            className="px-6 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-all duration-200 shadow-lg hover:scale-105"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Sign In
-          </motion.button>
+          <div className="flex items-center gap-2">
+            <ThemeToggleButton />
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              onClick={() => {
+                setAuthMode('sign-in');
+                setShowAuth(true);
+              }}
+              className="px-6 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-all duration-200 shadow-lg hover:scale-105"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Sign In
+            </motion.button>
+          </div>
         </div>
       </header>
 

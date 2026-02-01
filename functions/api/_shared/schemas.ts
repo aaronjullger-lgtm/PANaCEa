@@ -20,7 +20,12 @@ export const CUIDSchema = z.string().min(20).max(30);
 /** Flexible ID that accepts both UUID and CUID */
 export const IDSchema = z.string().min(1).max(100);
 
-/** Organ system enum */
+/**
+ * Organ system enum.
+ * Convention: lowercase (e.g. cardiovascular, pulmonary).
+ * Used by: session config, question attempts, analytics.
+ * Note: zodSchemas.organSystemSchema uses UPPERCASE for question generation.
+ */
 export const OrganSystemSchema = z.enum([
   'cardiovascular',
   'pulmonary',
@@ -150,6 +155,7 @@ export const ReviewSubmissionSchema = z.object({
 
 export type ReviewSubmissionInput = z.infer<typeof ReviewSubmissionSchema>;
 
+/** Canonical schema for /api/drills/submit-review (Edge API) */
 export const DrillSubmitReviewSchema = z.object({
   questionId: IDSchema,
   selectedAnswer: z.union([z.string(), z.number()]),

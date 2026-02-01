@@ -19,6 +19,7 @@ import {
   handleCorsOptions,
   type Env,
 } from '../../_shared/auth';
+import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import {
   canEditContent,
   canApproveContent,
@@ -32,13 +33,20 @@ import { validateRequest, AdminContentTransitionSchema } from '../../_shared/sch
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
+  try {
+    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
+  } catch (e) {
+    if (e instanceof MissingEnvError) return e.toResponse();
+    throw e;
+  }
+
   if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
+    return handleCorsOptions(context);
   }
 
   const authContext = await authenticateRequest(request, env);
   if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
+    return createErrorResponse(request, 'Unauthorized', 401, undefined, env);
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -50,7 +58,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     });
 
     if (!user) {
-      return createErrorResponse('User not found', 404);
+      return createErrorResponse(request, 'User not found', 404, undefined, env);
     }
 
     // Validate input with Zod schema
@@ -64,15 +72,33 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     const userRole = user.role as UserRole;
 
     if (newStatus === 'pending_review' && !canEditContent(userRole)) {
-      return createErrorResponse('Forbidden: Insufficient permissions to submit for review', 403);
+      return createErrorResponse(
+        request,
+        'Forbidden: Insufficient permissions to submit for review',
+        403,
+        undefined,
+        env
+      );
     }
 
     if (newStatus === 'approved' && !canApproveContent(userRole)) {
-      return createErrorResponse('Forbidden: Only approvers can approve content', 403);
+      return createErrorResponse(
+        request,
+        'Forbidden: Only approvers can approve content',
+        403,
+        undefined,
+        env
+      );
     }
 
     if (newStatus === 'published' && !canPublishContent(userRole)) {
-      return createErrorResponse('Forbidden: Only admins can publish content', 403);
+      return createErrorResponse(
+        request,
+        'Forbidden: Only admins can publish content',
+        403,
+        undefined,
+        env
+      );
     }
 
     // Get client IP and user agent for audit logging
@@ -88,10 +114,16 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       description: description || `Status changed to ${newStatus}`,
     });
 
-    return createSuccessResponse(updated);
+    return createSuccessResponse(request, updated, 200, 0, env);
   } catch (error: any) {
     console.error('Error transitioning content status:', error);
-    return createErrorResponse(error.message || 'Failed to transition status', 500);
+    return createErrorResponse(
+      request,
+      error.message || 'Failed to transition status',
+      500,
+      undefined,
+      env
+    );
   } finally {
     await safePrismaDisconnect(prisma);
   }

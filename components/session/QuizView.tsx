@@ -56,6 +56,7 @@ import { ClinicalSkeleton } from '@/components/ui/ClinicalSkeleton';
 
 // Sprint 10: Trust badges for question source indication
 import { TrustBadge } from '@/components/ui/TrustBadge';
+import { SplitPaneDrillLayout } from '@/components/drill/SplitPaneDrillLayout';
 
 // Icons
 import { CloseIcon } from '@/components/icons/CloseIcon';
@@ -105,6 +106,8 @@ interface QuizViewProps {
   addFlaggedQuestion: (question: Question) => void;
   removeFlaggedQuestion: (question: Question) => void;
   updateQuestionNote: (question: Question, note: string) => void;
+  /** When true and question has vignette, use split-pane layout (vignette left, content right) */
+  useSplitPane?: boolean;
 }
 
 const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
@@ -248,6 +251,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   addFlaggedQuestion,
   removeFlaggedQuestion,
   updateQuestionNote,
+  useSplitPane = false,
 }) => {
   // Validate required callback props at runtime
   useEffect(() => {
@@ -1265,22 +1269,47 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             </button>
           </div>
         </div>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentQuestion.id ?? `${currentQuestion.question}-${questionNumber}`}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-          >
-            {/* Sprint 10: Trust Badge for question source */}
+        <SplitPaneDrillLayout
+          vignette={useSplitPane ? currentQuestion.vignette : null}
+          className="mb-6"
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentQuestion.id ?? `${currentQuestion.question}-${questionNumber}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+            >
+              {/* Sprint 10: Trust Badge for question source; Beta badge when from staging */}
             <div className="flex items-center gap-2 mb-2">
-              <TrustBadge source={currentQuestion.source} size="sm" />
+              <TrustBadge
+                source={currentQuestion.source}
+                fromStaging={currentQuestion.fromStaging}
+                size="sm"
+              />
             </div>
-            <QuestionDisplay text={currentQuestion.question} />
-          </motion.div>
-        </AnimatePresence>
-      </div>
+            {currentQuestion.imageUrl && (
+              <div className="mb-4 rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                <img
+                  src={currentQuestion.imageUrl}
+                  alt="Clinical image for question"
+                  className="w-full max-h-[320px] object-contain"
+                />
+              </div>
+            )}
+              <QuestionDisplay
+                text={
+                  useSplitPane && currentQuestion.vignette
+                    ? currentQuestion.question.replace(
+                        (currentQuestion.vignette || '') + '\n\n',
+                        ''
+                      )
+                    : currentQuestion.question
+                }
+              />
+            </motion.div>
+          </AnimatePresence>
 
       {/* ANSWER OPTIONS */}
       <div className="space-y-3 mt-6">
@@ -1446,6 +1475,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           </button>
         </div>
       )}
+        </SplitPaneDrillLayout>
+      </div>
 
       {/* Session stats available via S shortcut (SessionStatsOverlay) - no cluttering popups */}
 

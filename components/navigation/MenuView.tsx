@@ -64,7 +64,11 @@ import type {
   SystemMasterySummary,
   ErrorTagCount,
 } from '@/components/ProgressDashboard';
-import { calculateAccuracy, calculateStreaks, loadWidgetPreferences } from '@/lib/dashboardUtils';
+import {
+  calculateAccuracy,
+  calculateDayStreak,
+  loadWidgetPreferences,
+} from '@/lib/dashboardUtils';
 import { getTimeBasedGreeting } from '@/lib/utils/timeUtils';
 import type { ErrorTag } from '@/types';
 
@@ -215,8 +219,8 @@ const MenuView: React.FC<MenuViewProps> = ({
     const totalQuestions = performanceData.length;
     const totalCorrect = performanceData.filter((r) => r.isCorrect).length;
 
-    // Calculate streaks using utility function
-    const { current: currentStreak, best: bestStreak } = calculateStreaks(performanceData);
+    // Day streak (consecutive days studied) - sync with Dashboard
+    const { current: currentStreak, best: bestStreak } = calculateDayStreak(performanceData);
 
     // Today's stats
     const today = new Date().toISOString().split('T')[0];

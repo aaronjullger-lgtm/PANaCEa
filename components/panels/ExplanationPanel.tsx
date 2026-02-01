@@ -35,6 +35,7 @@ import type { ErrorTag } from '../types';
 import { getConditionByIdSync, loadConditions } from '../lib/loadConditions';
 import { analyzeAnswer } from '@/services/ai';
 import { ClinicalSkeleton } from './ui/ClinicalSkeleton';
+import { ClinicalPearlHighlight } from './ui/ClinicalPearlHighlight';
 
 /** Maximum number of bullet points to display in Core Rationale section */
 const MAX_BULLETS = 6;
@@ -439,16 +440,9 @@ Keep your response concise (3-5 sentences max) and supportive.`;
         {buzzwords.length > 0 && (
           <section className="mb-6">
             <SectionHeader icon={<AlertCircle className="w-5 h-5" />} title="Buzzwords & Clues" />
-            <div className="flex flex-wrap gap-2">
-              {buzzwords.map((buzzword, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1.5 bg-data-provisional/10 text-data-provisional rounded-full text-sm font-semibold border border-data-provisional/30"
-                >
-                  {buzzword}
-                </span>
-              ))}
-            </div>
+            <p className="text-sm text-[var(--color-text-secondary)]">
+              {buzzwords.join(' · ')}
+            </p>
           </section>
         )}
 
@@ -477,14 +471,12 @@ Keep your response concise (3-5 sentences max) and supportive.`;
         {pearls.length > 0 && (
           <section className="mb-6">
             <SectionHeader icon={<Lightbulb className="w-5 h-5" />} title="Clinical Pearls" />
-            <ul className="space-y-2 pl-1">
+            <ul className="space-y-3 pl-0 list-none">
               {pearls.map((pearl, index) => (
-                <li
-                  key={index}
-                  className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
-                >
-                  <span className="text-data-provisional mt-1.5 flex-shrink-0">💡</span>
-                  <span dangerouslySetInnerHTML={{ __html: pearl }} className="flex-1" />
+                <li key={index}>
+                  <ClinicalPearlHighlight label="Pearl">
+                    <span dangerouslySetInnerHTML={{ __html: pearl }} />
+                  </ClinicalPearlHighlight>
                 </li>
               ))}
             </ul>

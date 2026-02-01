@@ -5,6 +5,7 @@
  */
 
 // Layout and Shell
+export { SplitPaneDrillLayout } from './SplitPaneDrillLayout';
 export {
   default as MiniDrillLayout,
   QuestionCard,

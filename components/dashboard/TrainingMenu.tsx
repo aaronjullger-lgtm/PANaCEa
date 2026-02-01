@@ -138,12 +138,12 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     {
       key: 'visual_diagnostics',
       title: 'Visual Diagnostics',
-      description: 'ECG, derm, imaging, and lab pattern recognition',
+      description: 'Images only — ECG, derm, radiology (no text scenarios)',
     },
     {
       key: 'clinical_simulation',
       title: 'Clinical Simulation',
-      description: 'Interactive patient scenarios and management',
+      description: 'Text scenarios only — fluids, labs, cases (no image interpretation)',
     },
     {
       key: 'question_practice',
@@ -488,7 +488,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
 
         <div className="flex flex-col gap-3 relative z-[1]">
           <div
-            className={`w-10 h-10 rounded-xl bg-[var(--color-bg-secondary)]/60 flex items-center justify-center shadow-sm border border-[var(--color-border)] ${isDisabled ? 'opacity-50' : ''}`}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 ${isDisabled ? 'opacity-50' : ''}`}
           >
             <IconComponent
               className={`w-5 h-5 ${styles.iconColor} ${isDisabled ? 'opacity-50' : ''}`}
@@ -622,7 +622,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
               <DashboardActionCard
                 title="Grand Rounds"
                 subtitle="Daily Competitive Challenge"
-                description="Same questions for everyone today - compete with your peers on the leaderboard."
+                description="Daily standardized assessment."
                 icon={Trophy}
                 stats={[
                   { label: "Today's Set", value: 20 },

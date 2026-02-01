@@ -14,8 +14,8 @@ import {
   CartesianGrid,
   BarChart,
   Cell,
+  Bar,
 } from 'recharts';
-import { Bar } from 'recharts/es6/cartesian/Bar';
 import {
   Sparkles,
   Gauge,
@@ -27,7 +27,9 @@ import {
   Brain,
   Play,
   Info,
+  Download,
 } from 'lucide-react';
+import { exportUserAnalytics } from '@/lib/analyticsExport';
 import { useAuth } from '@clerk/clerk-react';
 import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
@@ -42,6 +44,7 @@ const MIN_SYSTEM_REVIEWS = 5; // Minimum reviews per system for confident displa
 
 interface AnalyticsDashboardProps {
   isLoading?: boolean;
+  performanceData?: import('@/types').PerformanceRecord[];
 }
 
 type SystemRadarDatum = { system: string; accuracy: number; attempts: number };
@@ -110,7 +113,10 @@ interface UserStatsResponse {
   };
 }
 
-export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoading = false }) => {
+export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
+  isLoading = false,
+  performanceData = [],
+}) => {
   const { getToken } = useAuth();
   const [userStats, setUserStats] = useState<UserStatsResponse | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -293,6 +299,18 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
 
   return (
     <div className="space-y-6">
+      {/* Backup your data - reassure users they own their data */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => exportUserAnalytics(performanceData ?? [], 'csv')}
+          disabled={!performanceData?.length}
+          className="text-sm text-[var(--color-accent)] hover:underline flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download className="w-4 h-4" />
+          Backup your data (CSV)
+        </button>
+      </div>
+
       {/* Context Banner for Students */}
       {hasData && (
         <div className="p-4 rounded-xl bg-surface-card border border-[var(--color-border)]">
@@ -601,7 +619,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isLoadin
             ) : (
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={timeData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgb(226 232 240)" className="dark:[stroke:var(--color-border)]" />
                   <XAxis
                     dataKey="system"
                     tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}

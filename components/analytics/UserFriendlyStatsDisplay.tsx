@@ -33,6 +33,7 @@ import {
   Coffee,
 } from 'lucide-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { UserStatsOverviewSkeleton } from '@/components/loading';
 
 // ============================================================================
 // Types - Server Response
@@ -187,10 +188,11 @@ const InsightCard: React.FC<{ insight: string; index: number }> = ({ insight, in
   );
 };
 
-const ReadinessGauge: React.FC<{ score: number; passProbability: number }> = ({
-  score,
-  passProbability,
-}) => {
+const ReadinessGauge: React.FC<{
+  score: number;
+  passProbability: number;
+  hasData?: boolean;
+}> = ({ score, passProbability, hasData = true }) => {
   const safeScore = isNaN(score) || !isFinite(score) ? 0 : Math.min(100, Math.max(0, score));
   const safePassProb =
     isNaN(passProbability) || !isFinite(passProbability)
@@ -199,9 +201,8 @@ const ReadinessGauge: React.FC<{ score: number; passProbability: number }> = ({
 
   const getColor = (s: number) => {
     if (s >= 80) return 'var(--color-success)';
-    if (s >= 65) return 'var(--color-accent)';
-    if (s >= 50) return 'var(--color-warning)';
-    return 'var(--color-border-strong)';
+    if (s >= 60) return 'var(--color-accent)';
+    return 'var(--color-warning)';
   };
 
   const getLabel = (s: number) => {
@@ -245,36 +246,44 @@ const ReadinessGauge: React.FC<{ score: number; passProbability: number }> = ({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-bold text-text-primary">{safeScore}</span>
-            <span className="text-xs text-text-muted">/ 100</span>
+            {hasData ? (
+              <>
+                <span className="text-2xl font-bold text-text-primary">{safeScore}</span>
+                <span className="text-xs text-text-muted">/ 100</span>
+              </>
+            ) : (
+              <span className="text-xl font-bold text-text-muted">—</span>
+            )}
           </div>
         </div>
 
         <div className="flex-1">
           <p
             className="text-lg font-semibold text-text-primary"
-            style={{ color: getColor(safeScore) }}
+            style={{ color: hasData ? getColor(safeScore) : undefined }}
           >
-            {getLabel(safeScore)}
+            {hasData ? getLabel(safeScore) : 'Waiting for first session'}
           </p>
           <p className="text-sm text-text-muted mt-1">
-            {safePassProb}% estimated pass probability
+            {hasData ? `${safePassProb}% estimated pass probability` : 'Complete questions to see readiness'}
           </p>
-          <div className="mt-3">
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-text-muted">Pass Probability</span>
-              <span className="font-medium text-text-primary">{safePassProb}%</span>
+          {hasData && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-text-muted">Pass Probability</span>
+                <span className="font-medium text-text-primary">{safePassProb}%</span>
+              </div>
+              <div className="h-2 bg-surface-primary rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${safePassProb}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                  className="h-full rounded-full"
+                  style={{ backgroundColor: getColor(safePassProb) }}
+                />
+              </div>
             </div>
-            <div className="h-2 bg-surface-primary rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${safePassProb}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="h-full rounded-full"
-                style={{ backgroundColor: getColor(safePassProb) }}
-              />
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
@@ -448,7 +457,10 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
       .filter((s) => s.trend === 'declining' && s.total >= 10)
       .sort((a, b) => a.mastery - b.mastery);
 
+    const hasData = overall.totalAttempts > 0;
+
     return {
+      hasData,
       readinessScore,
       passProbability,
       predictedScore,
@@ -488,9 +500,8 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <RefreshCw className="w-6 h-6 text-text-muted animate-spin" />
-        <span className="ml-2 text-text-muted">Analyzing your learning data...</span>
+      <div className="space-y-6">
+        <UserStatsOverviewSkeleton />
       </div>
     );
   }
@@ -560,13 +571,14 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             <ReadinessGauge
               score={displayData.readinessScore}
               passProbability={displayData.passProbability}
+              hasData={displayData.hasData}
             />
 
             {/* Key Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard
                 label="Lifetime Accuracy"
-                value={`${displayData.accuracyLifetime}%`}
+                value={displayData.hasData ? `${displayData.accuracyLifetime}%` : '—'}
                 icon={<Target className="w-5 h-5" />}
                 trend={
                   displayData.accuracyTrend === 'improving'
@@ -577,11 +589,11 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                 }
                 trendValue={`${displayData.accuracyChange > 0 ? '+' : ''}${displayData.accuracyChange}%`}
                 color={
-                  displayData.accuracyLifetime >= 70
+                  displayData.accuracyLifetime >= 80
                     ? 'green'
-                    : displayData.accuracyLifetime >= 50
-                      ? 'amber'
-                      : 'red'
+                    : displayData.accuracyLifetime >= 60
+                      ? 'blue'
+                      : 'amber'
                 }
               />
 
@@ -616,8 +628,8 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   displayData.predictedScore >= 500
                     ? 'green'
                     : displayData.predictedScore >= 450
-                      ? 'amber'
-                      : 'red'
+                      ? 'blue'
+                      : 'amber'
                 }
               />
             </div>
@@ -855,7 +867,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                       key={sys.system}
                       system={sys.system}
                       mastery={sys.mastery}
-                      trend={sys.trend}
+                      trend={sys.trend as 'improving' | 'declining' | 'neutral'}
                       isStrength
                     />
                   ))}
@@ -876,7 +888,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                       key={sys.system}
                       system={sys.system}
                       mastery={sys.mastery}
-                      trend={sys.trend}
+                      trend={sys.trend as 'improving' | 'declining' | 'neutral'}
                       isStrength={false}
                     />
                   ))}
@@ -897,7 +909,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                       key={sys.system}
                       system={sys.system}
                       mastery={sys.mastery}
-                      trend={sys.trend}
+                      trend={sys.trend as 'improving' | 'declining' | 'neutral'}
                       isStrength
                     />
                   ))}
@@ -918,7 +930,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                       key={sys.system}
                       system={sys.system}
                       mastery={sys.mastery}
-                      trend={sys.trend}
+                      trend={sys.trend as 'improving' | 'declining' | 'neutral'}
                       isStrength={false}
                     />
                   ))}

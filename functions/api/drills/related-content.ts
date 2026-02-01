@@ -212,6 +212,37 @@ export const onRequestPost = authenticatedEndpoint(
           }
           break;
         }
+
+        case 'imaging': {
+          if (conceptId) {
+            relatedContent = await prisma.imagingStudy.findFirst({
+              where: {
+                OR: [
+                  { id: conceptId },
+                  { name: { contains: conceptId, mode: 'insensitive' } },
+                  { modality: { contains: conceptId, mode: 'insensitive' } },
+                ],
+              },
+            });
+          }
+
+          if (tags && tags.length > 0) {
+            relatedItems = await prisma.imagingStudy.findMany({
+              where: {
+                OR: tags.map((tag) => ({
+                  OR: [
+                    { name: { contains: tag, mode: 'insensitive' } },
+                    { modality: { contains: tag, mode: 'insensitive' } },
+                    { bodyRegion: { contains: tag, mode: 'insensitive' } },
+                  ],
+                })),
+              },
+              take: limit,
+              orderBy: { name: 'asc' },
+            });
+          }
+          break;
+        }
       }
 
       // Filter out duplicates from relatedItems

@@ -21,8 +21,8 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   Cell,
+  Bar,
 } from 'recharts';
-import { Bar } from 'recharts/es6/cartesian/Bar';
 import { useWorkloadProjection } from '../../hooks/useWorkloadProjection';
 
 interface WorkloadChartProps {

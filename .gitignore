@@ -9,6 +9,15 @@ assets/media
 assets/infographics
 *.log
 logs/
+*.out
+nohup.out
+upload-log*.txt
+build-output.txt
+typecheck-errors.txt
+typecheck-full.txt
+typecheck-output.txt
+delete-log.txt
+unmapped-conditions.txt
 backups/
 .cache
 .temp

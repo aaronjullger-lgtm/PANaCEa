@@ -15,7 +15,7 @@
  * Client-side checks prevent unnecessary API calls but do NOT provide security.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Shield,
@@ -28,9 +28,11 @@ import {
   Flag,
   ArrowLeft,
   Sparkles,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { isAdmin, canManageRoles, getRoleDisplayName, type UserRole } from '../../lib/auth/rbac';
+import { canManageRoles, getRoleDisplayName, type UserRole } from '../../lib/auth/rbac';
 import { FlaggedQuestionsDashboard } from '../../components/admin/FlaggedQuestionsDashboard';
 import { QuestionPerformanceDashboard } from '../../components/admin/QuestionPerformanceDashboard';
 import QuestionCurationPanel from '../../components/admin/QuestionCurationPanel';
@@ -63,9 +65,43 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     pendingFlags: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [accessError, setAccessError] = useState<string | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  const fetchStats = useCallback(
+    async (token: string | null) => {
+      if (!token) return;
+      setStatsError(null);
+      setStatsLoading(true);
+      try {
+        const statsResponse = await fetch('/api/admin/stats', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const res = await statsResponse.json();
+
+        // API returns { success, data: { totalUsers, activeUsersToday, ... } }
+        const statsData = res?.data ?? {};
+        setStats({
+          totalUsers: statsData.totalUsers ?? 0,
+          activeUsers: statsData.activeUsersToday ?? 0,
+          totalQuestions: statsData.totalStudySessions ?? 0,
+          avgAccuracy: statsData.averageAccuracy ?? 0,
+          pendingFlags: statsData.pendingFlags ?? 0,
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to load stats';
+        setStatsError(message);
+      } finally {
+        setStatsLoading(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     const checkAccess = async () => {
+      setAccessError(null);
       if (!isSignedIn || !userId) {
         setHasAccess(false);
         setIsLoading(false);
@@ -75,60 +111,24 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       try {
         const token = await getToken();
 
-        // Verify admin access via API
         const accessResponse = await fetch('/api/admin/check-access', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (accessResponse.ok) {
+          const accessJson = await accessResponse.json();
+          const role = (accessJson?.data?.role ?? accessJson?.role) as string | undefined;
           setHasAccess(true);
-          setUserRole('admin');
-
-          // Load admin stats from API
-          try {
-            const statsResponse = await fetch('/api/admin/stats', {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
-
-            if (statsResponse.ok) {
-              const { data } = await statsResponse.json();
-              setStats({
-                totalUsers: data.totalUsers || 0,
-                activeUsers: data.activeUsersToday || 0,
-                totalQuestions: data.totalStudySessions || 0,
-                avgAccuracy: data.averageAccuracy || 0,
-                pendingFlags: data.pendingFlags || 0,
-              });
-            } else {
-              // Fallback to placeholder stats
-              setStats({
-                totalUsers: 150,
-                activeUsers: 78,
-                totalQuestions: 45230,
-                avgAccuracy: 76.5,
-                pendingFlags: 0,
-              });
-            }
-          } catch (statsError) {
-            console.error('Failed to fetch stats:', statsError);
-            // Fallback to placeholder stats
-            setStats({
-              totalUsers: 150,
-              activeUsers: 78,
-              totalQuestions: 45230,
-              avgAccuracy: 76.5,
-              pendingFlags: 0,
-            });
-          }
+          setUserRole(role === 'superadmin' ? 'superadmin' : 'admin');
+          await fetchStats(token);
         } else {
           setHasAccess(false);
+          const errBody = await accessResponse.json().catch(() => ({}));
+          setAccessError(errBody?.error ?? errBody?.message ?? 'Access denied');
         }
       } catch (error) {
-        console.error('Failed to check admin access:', error);
+        const message = error instanceof Error ? error.message : 'Failed to verify access';
+        setAccessError(message);
         setHasAccess(false);
       } finally {
         setIsLoading(false);
@@ -136,7 +136,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     };
 
     checkAccess();
-  }, [isSignedIn, userId, getToken]);
+  }, [isSignedIn, userId, getToken, fetchStats]);
 
   if (isLoading) {
     return (
@@ -167,6 +167,11 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             You don't have permission to access the admin dashboard.
             {!isSignedIn && ' Please sign in with an admin account.'}
           </p>
+          {accessError && (
+            <p className="text-sm text-data-fail mb-4 px-4 py-2 bg-data-fail/10 rounded-lg">
+              {accessError}
+            </p>
+          )}
           <button
             onClick={onClose}
             className="px-6 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors"
@@ -191,10 +196,12 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             <div className="flex items-center gap-3">
               {activePanel !== 'dashboard' && (
                 <button
+                  type="button"
                   onClick={() => setActivePanel('dashboard')}
                   className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                  aria-label="Back to dashboard"
                 >
-                  <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
+                  <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" aria-hidden />
                 </button>
               )}
               <div>
@@ -237,10 +244,12 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             </div>
             {onClose && (
               <button
+                type="button"
                 onClick={onClose}
                 className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                aria-label="Close admin dashboard"
               >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -270,6 +279,37 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
           <>
             {/* Stats Grid */}
             <div className="p-6">
+              {statsError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 flex items-center justify-between gap-3 p-4 rounded-xl bg-data-fail/10 border border-data-fail/30 text-data-fail"
+                >
+                  <span className="text-sm">{statsError}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      getToken().then(fetchStats);
+                    }}
+                    disabled={statsLoading}
+                    aria-label="Retry loading stats"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-data-fail/20 hover:bg-data-fail/30 text-data-fail text-sm font-medium disabled:opacity-50"
+                  >
+                    {statsLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                    ) : (
+                      <RefreshCw className="w-4 h-4" aria-hidden />
+                    )}
+                    Retry
+                  </button>
+                </motion.div>
+              )}
+              {statsLoading && !statsError && (
+                <div className="mb-4 flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading stats…
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                 {/* Total Users */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)]">

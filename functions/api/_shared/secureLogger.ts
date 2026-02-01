@@ -236,7 +236,9 @@ export class SecureLogger {
    * Log debug information (only in development)
    */
   debug(message: string, additionalContext?: LogContext): void {
-    if (process.env.NODE_ENV === 'development') {
+    // Edge-compatible: avoid process.env; default to no debug in Workers
+    const isDev = typeof process !== 'undefined' && process?.env?.NODE_ENV === 'development';
+    if (isDev) {
       const logEntry = createLogEntry('debug', message, {
         ...this.context,
         ...additionalContext,

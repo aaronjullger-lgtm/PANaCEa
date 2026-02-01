@@ -2,8 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { CONDITION_REGISTRY, type ConditionMeta } from '../../../config/conditionRegistry';
 import { DRUG_REGISTRY, type DrugMeta } from '../../../src/registries/drugRegistry';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../prisma';
 
 export interface SyncStats {
   total: number;

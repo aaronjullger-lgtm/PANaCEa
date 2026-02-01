@@ -7,7 +7,7 @@
  * @see docs/PANCE Blueprint for official organ system distribution
  */
 
-import { API_ENDPOINTS, fetchWithAuth } from '../../lib/apiClient';
+import { API_ENDPOINTS, fetchWithAuth } from '@/lib/apiClient';
 
 // ============================================================================
 // TYPES

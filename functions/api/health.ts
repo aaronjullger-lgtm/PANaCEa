@@ -28,6 +28,7 @@ interface CloudflareContext {
  * Returns system health status and diagnostics
  */
 export async function onRequestGet(context: CloudflareContext): Promise<Response> {
+  const requestId = crypto.randomUUID();
   const startTime = Date.now();
   const diagnostics: Record<string, any> = {
     timestamp: new Date().toISOString(),
@@ -110,22 +111,22 @@ export async function onRequestGet(context: CloudflareContext): Promise<Response
       },
     });
   } catch (error) {
-    // Catastrophic failure - still return JSON
+    // Catastrophic failure - return JSON without stack (never leak stack in API responses)
     const errorResponse = {
       timestamp: new Date().toISOString(),
       endpoint: '/api/health',
       status: 'error',
       error: error instanceof Error ? error.message : 'Unknown error',
       errorType: error instanceof Error ? error.name : 'Unknown',
-      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 5) : undefined,
     };
 
     const corsHeaders = getCorsHeaders(context.request) || {};
 
-    return new Response(JSON.stringify(errorResponse, null, 2), {
+    return new Response(JSON.stringify({ ...errorResponse, requestId }, null, 2), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
+        'X-Request-ID': requestId,
         ...corsHeaders,
       },
     });

@@ -143,7 +143,7 @@ export interface ParameterBounds {
 // ============================================================================
 
 /** Minimum reviews required for reliable optimization */
-export const MIN_REVIEWS_FOR_OPTIMIZATION = 100;
+export const MIN_REVIEWS_FOR_OPTIMIZATION = 500;
 
 /** Minimum reviews for per-system optimization */
 export const MIN_REVIEWS_PER_SYSTEM = 30;
@@ -500,6 +500,38 @@ export function lbfgsOptimize(
 // ============================================================================
 // Main Optimization API
 // ============================================================================
+
+/**
+ * Shape of Prisma ReviewLog for optimization (algorithm-facing fields)
+ */
+export interface ReviewLogRow {
+  rating: number;
+  state: number;
+  stability: number;
+  difficulty: number;
+  elapsedDays: number | null;
+  wasCorrect: boolean;
+  system?: string | null;
+}
+
+/**
+ * Convert ReviewLog rows to OptimizationReview array
+ * Use when optimizing from ReviewLog (MAIN/real sessions only)
+ *
+ * @param rows - ReviewLog rows from prisma.reviewLog.findMany()
+ * @returns Optimization-ready review records
+ */
+export function convertReviewLogRows(rows: ReviewLogRow[]): OptimizationReview[] {
+  return rows.map((r) => ({
+    elapsedDays: r.elapsedDays ?? 0,
+    stability: r.stability,
+    difficulty: r.difficulty,
+    rating: r.rating as Rating,
+    state: r.state as FSRSState,
+    success: r.rating >= 2 || r.wasCorrect,
+    system: r.system ?? undefined,
+  }));
+}
 
 /**
  * Convert ReviewSnapshot array to OptimizationReview array

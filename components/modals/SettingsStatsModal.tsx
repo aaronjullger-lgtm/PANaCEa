@@ -59,6 +59,7 @@ import { RotationSelector } from '@/components/onboarding/RotationSelector';
 import { StatisticsPreferences, DEFAULT_WIDGET_CONFIG } from '@/components/ProgressDashboard';
 import type { WidgetId } from '@/components/ProgressDashboard';
 import { exportUserAnalytics } from '@/lib/analyticsExport';
+import { toast } from '@/lib/toast';
 import {
   calculateAccuracy,
   calculateStreaks,
@@ -99,6 +100,8 @@ interface SettingsStatsModalProps {
   isSyncing?: boolean;
   lastSyncTime?: number | null;
   syncError?: string | null;
+  /** Called when user clicks "Start First Session" in ActivityHeatmap empty state (closes modal, opens session) */
+  onStartFirstSession?: () => void;
 }
 
 type TabId = 'stats' | 'settings' | 'preferences' | 'activity'; // | 'characters' - disabled for now
@@ -203,7 +206,7 @@ const AccessibilitySettings: React.FC = () => {
       <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
           <Headphones className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="font-medium text-[var(--color-text-primary)]">Accessibility</h3>
+          <h3 className="font-bold text-[var(--color-text-primary)]">Accessibility</h3>
         </div>
         <p className="text-xs text-[var(--color-text-muted)]">
           Voice mode is initializing. Please refresh the page if this persists.
@@ -218,7 +221,7 @@ const AccessibilitySettings: React.FC = () => {
     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
       <div className="flex items-center gap-2 mb-3">
         <Headphones className="w-5 h-5 text-[var(--color-accent)]" />
-        <h3 className="font-medium text-[var(--color-text-primary)]">Accessibility - Voice Mode</h3>
+        <h3 className="font-bold text-[var(--color-text-primary)]">Accessibility - Voice Mode</h3>
       </div>
       <p className="text-xs text-[var(--color-text-muted)] mb-4">
         Enable hands-free study with voice commands and text-to-speech. Perfect for commuting or
@@ -347,10 +350,12 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   isSyncing,
   lastSyncTime,
   syncError,
+  onStartFirstSession,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('stats');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [confirmClear, setConfirmClear] = useState<string | null>(null);
+  const [clearConfirmText, setClearConfirmText] = useState('');
   const [exportStatus, setExportStatus] = useState<'csv' | 'json' | null>(null);
 
   // Widget preferences state
@@ -439,6 +444,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       setLocalEnabledWidgets(newWidgets);
       saveWidgetPrefs(newWidgets);
     }
+    toast.success('Changes saved');
   };
 
   const handleResetWidgets = () => {
@@ -449,6 +455,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       setLocalEnabledWidgets(defaults);
       saveWidgetPrefs(defaults);
     }
+    toast.success('Changes saved');
+  };
+
+  const notifyEnabledSystemsChanged = () => {
+    window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
   };
 
   const handleToggleSystem = (system: SystemCode) => {
@@ -459,8 +470,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       } else {
         next.add(system);
       }
-      // Save to localStorage
       localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(next)));
+      notifyEnabledSystemsChanged();
+      toast.success('Changes saved');
       return next;
     });
   };
@@ -469,17 +481,22 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     const allSystems = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
     setEnabledSystems(allSystems);
     localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(allSystems)));
+    notifyEnabledSystemsChanged();
+    toast.success('Changes saved');
   };
 
   const handleDisableAllSystems = () => {
     setEnabledSystems(new Set());
     localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
+    notifyEnabledSystemsChanged();
+    toast.success('Changes saved');
   };
 
   const handleToggleClinicalFidelity = (setting: keyof typeof clinicalFidelitySettings) => {
     setClinicalFidelitySettings((prev: typeof clinicalFidelitySettings) => {
       const updated = { ...prev, [setting]: !prev[setting] };
       localStorage.setItem('panceai_clinical_fidelity', JSON.stringify(updated));
+      toast.success('Changes saved');
       return updated;
     });
   };
@@ -493,6 +510,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         next.add(modeId);
       }
       localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify(Array.from(next)));
+      toast.success('Changes saved');
       return next;
     });
   };
@@ -501,11 +519,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     const allModes = new Set(ALL_MINI_MODES);
     setEnabledMiniModes(allModes);
     localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify(Array.from(allModes)));
+    toast.success('Changes saved');
   };
 
   const handleDisableAllMiniModes = () => {
     setEnabledMiniModes(new Set());
     localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify([]));
+    toast.success('Changes saved');
   };
 
   // Toggle handlers for Content Difficulty
@@ -519,6 +539,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         },
       };
       saveToggleSettings(updated);
+      toast.success('Changes saved');
       return updated;
     });
   };
@@ -536,6 +557,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         },
       };
       saveToggleSettings(updated);
+      toast.success('Changes saved');
       return updated;
     });
   };
@@ -551,6 +573,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         },
       };
       saveToggleSettings(updated);
+      toast.success('Changes saved');
       return updated;
     });
   };
@@ -566,6 +589,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         },
       };
       saveToggleSettings(updated);
+      toast.success('Changes saved');
       return updated;
     });
   };
@@ -583,6 +607,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         },
       };
       saveToggleSettings(updated);
+      toast.success('Changes saved');
       return updated;
     });
   };
@@ -598,6 +623,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         },
       };
       saveToggleSettings(updated);
+      toast.success('Changes saved');
       return updated;
     });
   };
@@ -613,13 +639,15 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         },
       };
       saveToggleSettings(updated);
+      toast.success('Changes saved');
       return updated;
     });
   };
 
-  const handleSetAnalyticsPalette = (palette: AnalyticsPalette) => {
+  const handleSetAnalyticsPalette = (palette: AnalyticsPalette, skipToast?: boolean) => {
     setAnalyticsPalette(palette);
     localStorage.setItem('panceai_analytics_palette', palette);
+    if (!skipToast) toast.success('Changes saved');
     // Apply palette colors to CSS variables for charts/visualizations
     const paletteConfig = ANALYTICS_PALETTES.find((p) => p.id === palette);
     if (paletteConfig) {
@@ -653,7 +681,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
   // Apply analytics palette on mount
   useEffect(() => {
-    handleSetAnalyticsPalette(analyticsPalette);
+    handleSetAnalyticsPalette(analyticsPalette, true);
   }, []);
 
   // Body scroll lock: Prevent background page scrolling when modal is open
@@ -852,13 +880,16 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
   const handleClear = (type: string) => {
     if (confirmClear === type) {
-      if (type === 'performance') clearPerformanceData();
-      else if (type === 'missed') clearMissedQuestionsData();
+      if (type === 'performance' && clearConfirmText === 'DELETE') {
+        clearPerformanceData();
+      } else if (type === 'missed') clearMissedQuestionsData();
       else if (type === 'flagged') clearFlaggedQuestionsData();
       setConfirmClear(null);
+      setClearConfirmText('');
     } else {
       setConfirmClear(type);
-      setTimeout(() => setConfirmClear(null), 3000);
+      setClearConfirmText('');
+      if (type !== 'performance') setTimeout(() => setConfirmClear(null), 3000);
     }
   };
 
@@ -870,14 +901,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4"
+        className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4"
         onClick={onClose}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="flex flex-col bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[var(--color-border)] dark:border-slate-700"
+          className="flex flex-col bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-slate-200 dark:border-slate-700 ring-1 ring-black/5 dark:ring-white/10"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -916,7 +947,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
           <div className="flex border-b border-[var(--color-border)]">
             <button
               onClick={() => setActiveTab('stats')}
-              className={`flex-1 py-2.5 sm:py-3 text-sm font-medium transition-colors ${
+              className={`flex-1 min-h-[44px] py-2.5 sm:py-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
                 activeTab === 'stats'
                   ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
@@ -928,7 +959,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('activity')}
-              className={`flex-1 py-2.5 sm:py-3 text-sm font-medium transition-colors ${
+              className={`flex-1 min-h-[44px] py-2.5 sm:py-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
                 activeTab === 'activity'
                   ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
@@ -964,7 +995,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`flex-1 py-2.5 sm:py-3 text-sm font-medium transition-colors ${
+              className={`flex-1 min-h-[44px] py-2.5 sm:py-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
                 activeTab === 'settings'
                   ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
@@ -1003,7 +1034,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         )}
                         <span className="text-sm font-medium text-[var(--color-text-muted)]">
                           {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD
-                            ? 'Hot Streak!'
+                            ? 'Study Continuity'
                             : 'Recent Form'}
                         </span>
                       </div>
@@ -1120,9 +1151,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)]">
                       {stats.todayQuestions > 0
-                        ? Math.round((stats.todayCorrect / stats.todayQuestions) * 100)
-                        : 0}
-                      % accuracy
+                        ? `${Math.round((stats.todayCorrect / stats.todayQuestions) * 100)}% accuracy`
+                        : '—'}
                     </div>
                   </div>
 
@@ -1138,9 +1168,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)]">
                       {stats.weekQuestions > 0
-                        ? Math.round((stats.weekCorrect / stats.weekQuestions) * 100)
-                        : 0}
-                      % accuracy
+                        ? `${Math.round((stats.weekCorrect / stats.weekQuestions) * 100)}% accuracy`
+                        : '—'}
                     </div>
                   </div>
                 </div>
@@ -1215,7 +1244,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                 {/* Activity Heatmap */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 sm:p-6">
-                  <ActivityHeatmap performanceData={performanceData} weeks={13} />
+                  <ActivityHeatmap
+                    performanceData={performanceData}
+                    weeks={13}
+                    onStartFirstSession={onStartFirstSession}
+                  />
                 </div>
 
                 {/* Activity Summary */}
@@ -1245,7 +1278,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <Download className="w-5 h-5 text-[var(--color-accent)]" />
-                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                    <h3 className="font-bold text-[var(--color-text-primary)]">
                       Export Your Data
                     </h3>
                   </div>
@@ -1315,7 +1348,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Content Difficulty Settings */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="mb-3">
-                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                    <h3 className="font-bold text-[var(--color-text-primary)]">
                       Content Difficulty
                     </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -1397,7 +1430,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Question Format Settings */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="mb-3">
-                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                    <h3 className="font-bold text-[var(--color-text-primary)]">
                       Question Format
                     </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -1550,7 +1583,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Feedback & Review Settings */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="mb-3">
-                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                    <h3 className="font-bold text-[var(--color-text-primary)]">
                       Feedback & Review
                     </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -1693,7 +1726,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Performance Tracking Settings */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="mb-3">
-                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                    <h3 className="font-bold text-[var(--color-text-primary)]">
                       Performance Tracking
                     </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -1809,7 +1842,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Divider */}
                 <div className="border-t border-[var(--color-border)] pt-6">
                   <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-6">
-                    Advanced Study Options
+                    Current Curriculum
                   </h3>
                 </div>
 
@@ -1817,7 +1850,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="font-medium text-[var(--color-text-primary)]">
+                      <h3 className="font-bold text-[var(--color-text-primary)]">
                         Study Systems
                       </h3>
                       <p className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -1849,8 +1882,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         onClick={() => handleToggleSystem(system)}
                         className={`p-2.5 rounded-lg text-sm font-medium transition-all ${
                           enabledSystems.has(system)
-                            ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
-                            : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                            ? 'bg-blue-50 dark:bg-[var(--color-accent)] text-blue-700 dark:text-[var(--color-btn-primary-text)] border-2 border-blue-500 dark:border-[var(--color-accent)]'
+                            : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border-2 border-transparent'
                         }`}
                       >
                         <div className="font-semibold">{system}</div>
@@ -1888,8 +1921,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="font-medium text-[var(--color-text-primary)]">Mini Modes</h3>
-                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                      <h3 className="font-bold text-[var(--color-text-primary)]">Mini Modes</h3>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1 max-w-prose">
                         Select which mini training modes appear in your menu. The main PANCE
                         adaptive system is always available.
                       </p>
@@ -1911,7 +1944,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </button>
                   </div>
 
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                  <div className="space-y-4 max-h-64 overflow-y-auto">
                     {/* Visual Modes */}
                     <div className="mb-3">
                       <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
@@ -1929,7 +1962,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             onClick={() => handleToggleMiniMode(mode.id)}
                             className={`p-3 rounded-lg text-left text-xs transition-all ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border border-[var(--color-accent)]/20'
+                                ? 'bg-blue-50 dark:bg-[var(--color-accent)]/20 text-blue-700 dark:text-[var(--color-text-primary)] border border-blue-200 dark:border-[var(--color-accent)]/20'
                                 : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
                             }`}
                           >
@@ -1957,7 +1990,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             onClick={() => handleToggleMiniMode(mode.id)}
                             className={`p-3 rounded-lg text-left text-xs transition-all ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border border-[var(--color-accent)]/20'
+                                ? 'bg-blue-50 dark:bg-[var(--color-accent)]/20 text-blue-700 dark:text-[var(--color-text-primary)] border border-blue-200 dark:border-[var(--color-accent)]/20'
                                 : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
                             }`}
                           >
@@ -1987,7 +2020,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             onClick={() => handleToggleMiniMode(mode.id)}
                             className={`p-3 rounded-lg text-left text-xs transition-all ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border border-[var(--color-accent)]/40'
+                                ? 'bg-blue-50 dark:bg-[var(--color-accent)]/20 text-blue-700 dark:text-[var(--color-text-primary)] border border-blue-200 dark:border-[var(--color-accent)]/40'
                                 : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
                             }`}
                           >
@@ -2022,7 +2055,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             onClick={() => handleToggleMiniMode(mode.id)}
                             className={`p-3 rounded-lg text-left text-xs transition-all ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border border-[var(--color-accent)]/40'
+                                ? 'bg-blue-50 dark:bg-[var(--color-accent)]/20 text-blue-700 dark:text-[var(--color-text-primary)] border border-blue-200 dark:border-[var(--color-accent)]/40'
                                 : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
                             }`}
                           >
@@ -2078,7 +2111,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Keyboard Shortcuts */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="mb-3">
-                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                    <h3 className="font-bold text-[var(--color-text-primary)]">
                       Keyboard Shortcuts
                     </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -2094,10 +2127,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       </h4>
                       <div className="space-y-1">
                         {[
-                          { keys: ['A'], description: 'Select answer option A' },
-                          { keys: ['B'], description: 'Select answer option B' },
-                          { keys: ['C'], description: 'Select answer option C' },
-                          { keys: ['D'], description: 'Select answer option D' },
+                          { keys: ['A'], description: 'Answer A' },
+                          { keys: ['B'], description: 'Answer B' },
+                          { keys: ['C'], description: 'Answer C' },
+                          { keys: ['D'], description: 'Answer D' },
                           { keys: ['Space'], description: 'Toggle explanation after selection' },
                           { keys: ['Enter'], description: 'Proceed to next question' },
                           { keys: ['Esc'], description: 'Return to dashboard' },
@@ -2168,7 +2201,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Clinical Fidelity Mode */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="mb-3">
-                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                    <h3 className="font-bold text-[var(--color-text-primary)]">
                       Clinical Fidelity Mode
                     </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -2265,7 +2298,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Institutional Features (Phase 9 - B2B) */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border-2 border-dashed border-[var(--color-border)]">
                   <div className="mb-3">
-                    <h3 className="font-medium text-[var(--color-text-primary)]">
+                    <h3 className="font-bold text-[var(--color-text-primary)]">
                       Institutional Features
                     </h3>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -2349,17 +2382,31 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         <div className="text-xs text-[var(--color-text-muted)]">
                           {performanceData.length} records
                         </div>
+                        {confirmClear === 'performance' && (
+                          <div className="mt-2">
+                            <input
+                              type="text"
+                              placeholder="Type DELETE to confirm"
+                              value={clearConfirmText}
+                              onChange={(e) => setClearConfirmText(e.target.value)}
+                              className="mt-1 px-2 py-1 text-sm border border-[var(--color-border)] rounded"
+                            />
+                          </div>
+                        )}
                       </div>
                       <button
                         onClick={() => handleClear('performance')}
+                        disabled={confirmClear === 'performance' && clearConfirmText !== 'DELETE'}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                          confirmClear === 'performance'
+                          confirmClear === 'performance' && clearConfirmText === 'DELETE'
                             ? 'bg-red-600 text-white'
-                            : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                            : confirmClear === 'performance'
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                         }`}
                       >
                         <Trash2 className="w-4 h-4 inline-block mr-1" />
-                        {confirmClear === 'performance' ? 'Confirm Clear' : 'Clear'}
+                        {confirmClear === 'performance' && clearConfirmText === 'DELETE' ? 'Confirm Clear' : 'Clear Data…'}
                       </button>
                     </div>
 
@@ -2409,7 +2456,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         }`}
                       >
                         <Trash2 className="w-4 h-4 inline-block mr-1" />
-                        {confirmClear === 'flagged' ? 'Confirm' : 'Clear'}
+                        {confirmClear === 'flagged' ? 'Confirm' : 'Clear Flagged…'}
                       </button>
                     </div>
                   </div>
@@ -2465,13 +2512,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     )}
                   </AnimatePresence>
                 </div>
-
-                {/* Version Info */}
-                <div className="text-center text-xs text-[var(--color-text-muted)]">
-                  PANaCEa v1.0.0 • Built for PANCE Success
-                </div>
               </div>
             )}
+          </div>
+
+          {/* Fixed Footer - Version */}
+          <div className="flex-shrink-0 border-t border-[var(--color-border)] px-4 py-2 text-center text-xs text-[var(--color-text-muted)]">
+            PANaCEa v1.0.0 • Built for PANCE Success
           </div>
         </motion.div>
       </motion.div>

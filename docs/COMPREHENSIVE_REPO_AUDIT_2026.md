@@ -934,28 +934,42 @@ SELECT COUNT(*) FROM "PersonalizedFSRSParams";
 ```typescript
 // scripts/maintenance/fsrs-optimizer-job.ts
 import { PrismaClient } from '@prisma/client';
-import { optimizeFSRSParams } from '@/lib/fsrs-optimizer';
+import {
+  optimizeFSRSParameters,
+  convertReviewLogRows,
+  MIN_REVIEWS_FOR_OPTIMIZATION,
+} from '@/lib/fsrs-optimizer';
 
 const prisma = new PrismaClient();
 
 async function optimizeForUser(userId: string) {
-  // Step 1: Fetch review history (MAIN sessions only)
+  // Step 1: Fetch review history (MAIN/real sessions only)
   const reviews = await prisma.reviewLog.findMany({
     where: {
       userId,
-      sessionType: 'MAIN', // CRITICAL: Only use MAIN sessions
+      OR: [{ review_type: 'real' }, { sessionType: 'MAIN' }],
     },
-    orderBy: { reviewedAt: 'asc' },
+    orderBy: { review_date: 'asc' },
+    select: {
+      rating: true,
+      state: true,
+      stability: true,
+      difficulty: true,
+      elapsedDays: true,
+      wasCorrect: true,
+      system: true,
+    },
   });
 
-  if (reviews.length < 200) {
+  if (reviews.length < MIN_REVIEWS_FOR_OPTIMIZATION) {
     console.log(`[Optimizer] User ${userId}: Insufficient data (${reviews.length} reviews)`);
     return;
   }
 
-  // Step 2: Run optimizer
-  console.log(`[Optimizer] User ${userId}: Optimizing with ${reviews.length} reviews...`);
-  const optimizedParams = await optimizeFSRSParams(reviews, {
+  // Step 2: Convert and run optimizer
+  const optimizationReviews = convertReviewLogRows(reviews);
+  console.log(`[Optimizer] User ${userId}: Optimizing with ${optimizationReviews.length} reviews...`);
+  const optimizedParams = await optimizeFSRSParameters(userId, optimizationReviews, {
     maxIterations: 100,
     learningRate: 0.01,
   });
@@ -966,13 +980,12 @@ async function optimizeForUser(userId: string) {
     create: {
       userId,
       w: optimizedParams.w,
-      sampleSize: reviews.length,
+      sampleSize: optimizationReviews.length,
       lastOptimizedAt: new Date(),
-      optimizationIterations: 100,
     },
     update: {
       w: optimizedParams.w,
-      sampleSize: reviews.length,
+      sampleSize: optimizationReviews.length,
       lastOptimizedAt: new Date(),
     },
   });

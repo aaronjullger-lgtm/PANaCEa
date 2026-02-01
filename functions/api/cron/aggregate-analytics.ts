@@ -70,81 +70,68 @@ export async function onRequestPost(context: any) {
 
     log.info('Starting analytics aggregation', { date: yesterday.toISOString() });
 
-    // Get all users with activity in the last 24 hours
-    const activeUsers = await prisma.questionAttempt.groupBy({
-      by: ['userId'],
+    // Single query for all attempts in the date range (avoids N+1)
+    type AttemptRow = { userId: string; wasCorrect: boolean; timeSpentMs: number | null; system: string | null };
+    const attempts = await prisma.questionAttempt.findMany({
       where: {
-        createdAt: { gte: yesterday },
+        createdAt: { gte: yesterday, lt: today },
       },
-      _count: { id: true },
-    });
+      select: {
+        userId: true,
+        wasCorrect: true,
+        timeSpentMs: true,
+        system: true,
+      },
+    }) as AttemptRow[];
 
-    let processedCount = 0;
-
-    for (const userActivity of activeUsers) {
-      const attempts = await prisma.questionAttempt.findMany({
-        where: {
-          userId: userActivity.userId,
-          createdAt: { gte: yesterday, lt: today },
-        },
-        select: {
-          isCorrect: true,
-          timeSpentMs: true,
-          system: true,
-        },
-      });
-
-      // Define attempt type for type safety
-      type AttemptRecord = {
-        isCorrect: boolean;
-        timeSpentMs: number | null;
-        system: string | null;
+    // Aggregate per user in memory
+    const perUser = new Map<
+      string,
+      { total: number; correct: number; timeSum: number; systems: Set<string> }
+    >();
+    for (const a of attempts) {
+      const cur = perUser.get(a.userId) ?? {
+        total: 0,
+        correct: 0,
+        timeSum: 0,
+        systems: new Set<string>(),
       };
+      cur.total += 1;
+      if (a.wasCorrect) cur.correct += 1;
+      cur.timeSum += a.timeSpentMs ?? 0;
+      if (a.system) cur.systems.add(a.system);
+      perUser.set(a.userId, cur);
+    }
 
-      const totalAttempts = attempts.length;
-      const correctAttempts = attempts.filter((a: AttemptRecord) => a.isCorrect).length;
-      const avgTime =
-        attempts.reduce((sum: number, a: AttemptRecord) => sum + (a.timeSpentMs || 0), 0) /
-        totalAttempts;
+    const sessionDateOnly = new Date(yesterday);
+    sessionDateOnly.setUTCHours(0, 0, 0, 0);
 
-      // Systems studied
-      const systems = [
-        ...new Set(
-          attempts
-            .map((a: AttemptRecord) => a.system)
-            .filter((s: string | null): s is string => Boolean(s))
-        ),
-      ];
-
-      // Upsert daily analytics
-      await prisma.sessionAnalytics.upsert({
+    for (const [userId, agg] of perUser.entries()) {
+      const avgTime = agg.total > 0 ? agg.timeSum / agg.total : 0;
+      await prisma.dailyUserAnalytics.upsert({
         where: {
-          userId_sessionDate: {
-            userId: userActivity.userId,
-            sessionDate: yesterday,
-          },
+          userId_sessionDate: { userId, sessionDate: sessionDateOnly },
         },
         update: {
-          questionsAnswered: totalAttempts,
-          correctAnswers: correctAttempts,
-          accuracy: totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 0,
+          questionsAnswered: agg.total,
+          correctAnswers: agg.correct,
+          accuracy: agg.total > 0 ? (agg.correct / agg.total) * 100 : 0,
           avgResponseTimeMs: Math.round(avgTime),
-          systemsStudied: systems,
+          systemsStudied: [...agg.systems],
           updatedAt: new Date(),
         },
         create: {
-          userId: userActivity.userId,
-          sessionDate: yesterday,
-          questionsAnswered: totalAttempts,
-          correctAnswers: correctAttempts,
-          accuracy: totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 0,
+          userId,
+          sessionDate: sessionDateOnly,
+          questionsAnswered: agg.total,
+          correctAnswers: agg.correct,
+          accuracy: agg.total > 0 ? (agg.correct / agg.total) * 100 : 0,
           avgResponseTimeMs: Math.round(avgTime),
-          systemsStudied: systems,
+          systemsStudied: [...agg.systems],
         },
       });
-
-      processedCount++;
     }
+    const processedCount = perUser.size;
 
     // Log to audit
     await prisma.auditLog.create({

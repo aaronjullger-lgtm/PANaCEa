@@ -1,6 +1,7 @@
 import type { PerformanceRecord } from '@/types';
 import { callGeminiText } from '../ai/geminiService';
 import { GEMINI_FLASH_MODEL } from '@/src/constants';
+import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
 /**
  * Get a Socratic hint for an incorrect answer without revealing the solution
@@ -12,7 +13,7 @@ export async function getSocraticHint(
   userAnswer: string
 ): Promise<string> {
   try {
-    const response = await fetch('/geminiProxy', {
+    const response = await fetch(API_ENDPOINTS.GEMINI_PROXY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -43,7 +44,8 @@ Provide ONLY the hint sentence, no additional commentary.`,
     }
 
     const data = await response.json();
-    const hint = typeof data === 'string' ? data : data.text || '';
+    const hint =
+      typeof data === 'string' ? data : (data.data?.text ?? data.text) ?? '';
     return hint.trim();
   } catch (error) {
     console.error('Error generating Socratic hint:', error);

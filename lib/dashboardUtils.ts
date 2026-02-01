@@ -17,7 +17,65 @@ export function calculateAccuracy(correct: number, total: number): number {
 }
 
 /**
- * Calculate streak information from performance data
+ * Calculate day streak (consecutive days studied) from performance data.
+ * Single source of truth for "Day Streak" / "Study Streak" displays.
+ */
+export function calculateDayStreak(records: { timestamp?: number }[]): {
+  current: number;
+  best: number;
+} {
+  if (records.length === 0) return { current: 0, best: 0 };
+
+  const uniqueDates = new Set<string>();
+  records.forEach((r) => {
+    if (r.timestamp) {
+      uniqueDates.add(new Date(r.timestamp).toISOString().split('T')[0] ?? '');
+    }
+  });
+  const dates = Array.from(uniqueDates).sort().reverse();
+  if (dates.length === 0) return { current: 0, best: 0 };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split('T')[0];
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+  let current = 0;
+  if (dates[0] === todayStr || dates[0] === yesterdayStr) {
+    current = 1;
+    let checkDate = new Date(dates[0]);
+    for (let i = 1; i < dates.length; i++) {
+      const prev = new Date(checkDate);
+      prev.setDate(prev.getDate() - 1);
+      const prevStr = prev.toISOString().split('T')[0];
+      if (dates[i] === prevStr) {
+        current++;
+        checkDate = prev;
+      } else break;
+    }
+  }
+
+  let best = 1;
+  let temp = 1;
+  for (let i = 0; i < dates.length - 1; i++) {
+    const curr = new Date(dates[i]);
+    const next = new Date(dates[i + 1]);
+    const diff = Math.round((curr.getTime() - next.getTime()) / (24 * 60 * 60 * 1000));
+    if (diff === 1) temp++;
+    else {
+      best = Math.max(best, temp);
+      temp = 1;
+    }
+  }
+  best = Math.max(best, temp);
+
+  return { current, best };
+}
+
+/**
+ * Calculate question streak (consecutive correct answers) from performance data
  */
 export function calculateStreaks(records: { isCorrect: boolean }[]): {
   current: number;

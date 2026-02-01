@@ -215,11 +215,11 @@ const statsAfter = await prisma.userRolling360Stats.findUnique({
 });
 // statsBefore.totalAttempts === statsAfter.totalAttempts ✅
 
-// Test 3: ReviewLog uses sessionType = CRAM
+// Test 3: ReviewLog - MAIN/real sessions only (exclude drill/CRAM)
 const reviewLogs = await prisma.reviewLog.findMany({
   where: {
     userId,
-    sessionType: { not: 'CRAM' }, // Should NOT contain drill sessions
+    OR: [{ review_type: 'real' }, { sessionType: 'MAIN' }],
   },
 });
 ```

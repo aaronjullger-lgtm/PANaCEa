@@ -24,11 +24,12 @@ import {
   ExternalLink,
   Sparkles,
   Award,
+  Image,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 
 interface RelatedReference {
-  type: 'physiology' | 'anatomy' | 'lab' | 'procedure' | 'ecg' | 'finding';
+  type: 'physiology' | 'anatomy' | 'lab' | 'procedure' | 'ecg' | 'finding' | 'imaging';
   id: string;
   name: string;
   preview?: string;
@@ -57,6 +58,7 @@ const TYPE_ICONS: Record<string, React.ElementType> = {
   procedure: BookOpen,
   ecg: Sparkles,
   finding: Lightbulb,
+  imaging: Image,
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -66,6 +68,7 @@ const TYPE_COLORS: Record<string, string> = {
   procedure: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
   ecg: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
   finding: 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]',
+  imaging: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
 };
 
 export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({

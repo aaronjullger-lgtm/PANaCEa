@@ -18,7 +18,12 @@
 
 import { z } from 'zod';
 import { authenticateRequest } from './auth';
-import { getCorsHeaders, handleCorsPreflightSecure, getCorsHeadersPermissive } from './cors';
+import { getCorsHeaders, handleCorsPreflightSecure } from './cors';
+import {
+  validateFunctionEnv,
+  MissingEnvError,
+  type EnvRequirement,
+} from './env-validation';
 import { logger } from './secureLogger';
 import { enforcePayloadSize, validateSchema } from './zodSchemas';
 import { createEdgePrismaClient, safePrismaDisconnect } from './prisma-edge';
@@ -89,6 +94,8 @@ export function withMiddleware<TContext extends CloudflareContext>(
     const handler = middlewareAndHandler[middlewareAndHandler.length - 1] as Handler<any>;
     const middleware = middlewareAndHandler.slice(0, -1) as Middleware<any>[];
 
+    const requestId = crypto.randomUUID();
+
     // Build middleware chain
     let index = 0;
     const dispatch = async (ctx: any): Promise<HandlerResponse> => {
@@ -108,10 +115,10 @@ export function withMiddleware<TContext extends CloudflareContext>(
 
     try {
       const result = await dispatch(context);
-      return toResponse(result, context.request);
+      return toResponse(result, context.request, requestId);
     } catch (error) {
       logger.error('Middleware chain error', error);
-      return toResponse({ status: 500, error: 'Internal server error' }, context.request);
+      return toResponse({ status: 500, error: 'Internal server error' }, context.request, requestId);
     }
   };
 }
@@ -119,8 +126,17 @@ export function withMiddleware<TContext extends CloudflareContext>(
 /**
  * Convert handler response to standard Response object
  */
-function toResponse(result: HandlerResponse, request: Request): Response {
+function toResponse(result: HandlerResponse, request: Request, requestId?: string): Response {
   if (result instanceof Response) {
+    if (requestId) {
+      const headers = new Headers(result.headers);
+      headers.set('X-Request-ID', requestId);
+      return new Response(result.body, {
+        status: result.status,
+        statusText: result.statusText,
+        headers,
+      });
+    }
     return result;
   }
 
@@ -129,26 +145,45 @@ function toResponse(result: HandlerResponse, request: Request): Response {
     ? JSON.stringify({ error: result.error })
     : JSON.stringify(result.data || result);
 
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  if (requestId) headers.set('X-Request-ID', requestId);
+
   const response = new Response(body, {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers,
   });
 
   // Add CORS headers
   const corsHeaders = getCorsHeaders(request);
   if (corsHeaders) {
-    const headers = new Headers(response.headers);
     Object.entries(corsHeaders).forEach(([key, value]) => {
-      headers.set(key, value);
-    });
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
+      (response.headers as Headers).set(key, value);
     });
   }
 
   return response;
+}
+
+// ============================================================================
+// ENV VALIDATION MIDDLEWARE
+// ============================================================================
+
+/**
+ * Validate required environment variables before running the handler.
+ * Fails fast with 500 if DATABASE_URL, CLERK_SECRET_KEY, etc. are missing.
+ */
+export function withEnvCheck(required: EnvRequirement): Middleware {
+  return async (context, next) => {
+    try {
+      validateFunctionEnv(context.env as Record<string, unknown>, required);
+      return await next();
+    } catch (error) {
+      if (error instanceof MissingEnvError) {
+        return error.toResponse();
+      }
+      throw error;
+    }
+  };
 }
 
 // ============================================================================
@@ -454,6 +489,7 @@ function getRateLimitErrorMessage(endpointType?: string): string {
 
 /**
  * Admin endpoint stack with rate limiting
+ * Includes env validation for DATABASE + AUTH
  */
 export function adminEndpoint<T>(
   schema: z.ZodSchema<T>,
@@ -462,6 +498,7 @@ export function adminEndpoint<T>(
   return withMiddleware(
     withCors(),
     withErrorHandling(),
+    withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
     withAuth(),
     withAdminRole(), // Admin role check added
     withRateLimit({ requestsPerMinute: 30, endpointType: 'admin' }),
@@ -511,16 +548,20 @@ export function withLogging(options: { logBody?: boolean } = {}): Middleware {
 
 /**
  * Standard authenticated endpoint stack
+ * Includes env validation, rate limiting (300 req/min), and auth
  */
 export function authenticatedEndpoint<T>(
   schema: z.ZodSchema<T>,
   handler: Handler<AuthenticatedContext & ValidatedContext<T>>,
-  options?: { source?: 'body' | 'query' | 'params' }
+  options?: { source?: 'body' | 'query' | 'params'; requestsPerMinute?: number }
 ) {
+  const rateLimit = options?.requestsPerMinute ?? 300;
   return withMiddleware(
     withCors(),
     withErrorHandling(),
+    withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
     withAuth(),
+    withRateLimit({ requestsPerMinute: rateLimit, endpointType: 'api' }),
     withValidation(schema, options),
     withLogging(),
     handler
@@ -529,15 +570,21 @@ export function authenticatedEndpoint<T>(
 
 /**
  * Public endpoint stack (no auth required)
+ * Includes env validation and rate limiting (600 req/min by IP)
  */
 export function publicEndpoint<T>(
   schema: z.ZodSchema<T>,
   handler: Handler<ValidatedContext<T>>,
-  options?: { source?: 'body' | 'query' | 'params' }
+  options?: { source?: 'body' | 'query' | 'params'; envRequired?: EnvRequirement }
 ) {
+  const envCheck = options?.envRequired
+    ? withEnvCheck(options.envRequired)
+    : withEnvCheck('DATABASE');
   return withMiddleware(
     withCors(),
     withErrorHandling(),
+    envCheck,
+    withRateLimit({ requestsPerMinute: 600, endpointType: 'api', keyPrefix: 'public' }),
     withValidation(schema, options),
     withLogging(),
     handler

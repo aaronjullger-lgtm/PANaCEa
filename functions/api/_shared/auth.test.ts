@@ -19,9 +19,15 @@ import { verifyToken as mockVerifyToken } from '@clerk/backend';
 function createMockJWT(payload: any): string {
   const header = { alg: 'RS256', typ: 'JWT' };
 
-  // Encode to base64url (not standard base64)
+  // Encode to base64url (not standard base64); Web API for edge compatibility
   const encodeBase64Url = (obj: any): string => {
-    const base64 = Buffer.from(JSON.stringify(obj)).toString('base64');
+    const str = JSON.stringify(obj);
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
     return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   };
 

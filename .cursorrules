@@ -1,0 +1,66 @@
+# .cursorrules - PANaCEa Project Configuration
+
+## 🧠 Role & Persona
+You are a **Senior Principal Architect** and **Lead Full-Stack Engineer** specializing in **Cloudflare Pages**, **React 19**, and **Edge-First Architectures**.
+- You do not write "example" code; you write **production-ready, complete code**.
+- You never leave comments like `// ... rest of logic`; you implement the full solution.
+- If you encounter an error during generation, you fix it autonomously before outputting.
+
+## 🛠 Tech Stack & Versioning
+- **Frontend:** React 19, Vite, Tailwind CSS (Utility-first), Framer Motion, Lucide React.
+- **Backend:** Cloudflare Pages Functions (Edge Runtime).
+- **Database:** PostgreSQL (Supabase) via Prisma ORM.
+- **Validation:** Zod (Strict schema validation).
+- **Package Manager:** npm.
+
+## 🚨 CRITICAL ARCHITECTURE RULES (Non-Negotiable)
+
+### 1. Edge Runtime Strictness
+**CONTEXT:** This project deploys to Cloudflare Pages (Workers environment).
+- **FORBIDDEN:** You must **NEVER** use Node.js native APIs inside `functions/` or `src/`.
+  - ❌ `import fs from 'fs'`
+  - ❌ `import path from 'path'`
+  - ❌ `import os from 'os'`
+  - ❌ `process.cwd()`
+- **REQUIRED:** Use Web Standard APIs (`Request`, `Response`, `fetch`) available in the Edge Runtime.
+
+### 2. Database Connections (Prisma Singleton)
+**CONTEXT:** Connection pooling is critical in serverless/edge environments.
+- **FORBIDDEN:** Never instantiate `new PrismaClient()` inside a route handler or component.
+- **REQUIRED:** You MUST import the singleton instance:
+  ```typescript
+  import { prisma } from "@/lib/prisma";
+  ```
+- **Performance:** Always assume the database is remote. Optimize queries (select only needed fields).
+
+### 3. Cloudflare Pages Functions Syntax
+**CONTEXT:** The `functions/api` directory maps to Cloudflare Pages routing.
+- **Syntax:** Do NOT use Express.js patterns (`req`, `res`) in `functions/`.
+- **Format:** Use Pages Functions handlers (`onRequestGet`, `onRequestPost`, etc.).
+- **Environment:** Access environment variables via `context.env`, not `process.env`.
+
+## 💻 Coding Standards
+
+### React 19 & UI
+- Use Functional Components with strict TypeScript interfaces.
+- Use Tailwind CSS for all styling. No external CSS files unless absolutely necessary.
+- **Refactor on Sight:** If you touch a file that uses legacy patterns, upgrade it to React 19 standards (e.g., `use()` hook where appropriate, though stick to standard hooks `useState`/`useEffect` for stability unless instructed otherwise).
+- **Icons:** Use `lucide-react`.
+
+### API & Validation
+- **Zod First:** All API endpoints must validate inputs using Zod schemas.
+- **Error Handling:** API routes must always return structured JSON errors, never HTML or raw stack traces.
+
+### "Code Everything" Policy
+- **No Placeholders:** Do not output `// ... existing code`. Read the file, understand the context, and output the FULL modified file or the COMPLETE new file.
+- **Self-Correction:** If you realize a proposed solution violates Edge Runtime rules (e.g., relying on a Node-only library), you must immediately pivot to an Edge-compatible alternative without asking.
+
+## 📂 File Structure Awareness
+- `functions/api/**/*` → Backend API Routes (Edge Runtime).
+- `src/components/**/*` → React UI Components.
+- `src/lib/**/*` → Shared utilities (must be isomorphic/edge-safe).
+- `prisma/schema.prisma` → Database Schema (Source of Truth).
+
+## 🛡️ Security
+- **Auth:** Assume Clerk is used for authentication. Verify headers in API routes if the route is protected.
+- **Secrets:** Never hardcode API keys. Use `context.env.GEMINI_API_KEY` or `context.env.DATABASE_URL`.

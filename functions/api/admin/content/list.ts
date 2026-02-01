@@ -19,21 +19,29 @@ import {
   handleCorsOptions,
   type Env,
 } from '../../_shared/auth';
+import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { canViewCMS, type UserRole } from '../../_shared/rbac';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
+  try {
+    validateFunctionEnv(env as Record<string, unknown>, ['DATABASE_URL', 'CLERK_SECRET_KEY']);
+  } catch (e) {
+    if (e instanceof MissingEnvError) return e.toResponse();
+    throw e;
+  }
+
   // Handle CORS preflight
   if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
+    return handleCorsOptions(context);
   }
 
   // Authenticate user
   const authContext = await authenticateRequest(request, env);
   if (!authContext) {
-    return createErrorResponse('Unauthorized', 401);
+    return createErrorResponse(request, 'Unauthorized', 401, undefined, env);
   }
 
   // Get user from database to check role
@@ -46,7 +54,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     });
 
     if (!user || !canViewCMS(user.role as UserRole)) {
-      return createErrorResponse('Forbidden: Insufficient permissions', 403);
+      return createErrorResponse(request, 'Forbidden: Insufficient permissions', 403, undefined, env);
     }
 
     // Parse query parameters
@@ -99,18 +107,24 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       },
     });
 
-    return createSuccessResponse({
-      content,
-      pagination: {
-        page,
-        perPage,
-        total,
-        totalPages: Math.ceil(total / perPage),
+    return createSuccessResponse(
+      request,
+      {
+        content,
+        pagination: {
+          page,
+          perPage,
+          total,
+          totalPages: Math.ceil(total / perPage),
+        },
       },
-    });
+      200,
+      0,
+      env
+    );
   } catch (error: any) {
     console.error('Error listing content:', error);
-    return createErrorResponse('Failed to list content', 500);
+    return createErrorResponse(request, 'Failed to list content', 500, undefined, env);
   } finally {
     await safePrismaDisconnect(prisma);
   }

@@ -20,9 +20,6 @@
 import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
 
-// Log which Prisma mode we're using for debugging
-const DEBUG = process.env.NODE_ENV !== 'production';
-
 /**
  * Prisma Accelerate Cache Strategy Configuration
  * 
@@ -63,15 +60,35 @@ type DatabaseUrlInput =
   | null
   | undefined;
 
+// Global singleton cache per isolate (keyed by normalized DATABASE_URL)
+// Reduces connection churn when multiple handlers run in the same isolate.
+declare global {
+  // eslint-disable-next-line no-var
+  var __EDGE_PRISMA__: Map<string, EdgePrismaClient> | undefined;
+}
+
+function getSingletonCache(): Map<string, EdgePrismaClient> {
+  if (typeof globalThis.__EDGE_PRISMA__ === 'undefined') {
+    globalThis.__EDGE_PRISMA__ = new Map();
+  }
+  return globalThis.__EDGE_PRISMA__;
+}
+
+function normalizeDatabaseUrl(url: string): string {
+  return url.trim();
+}
+
 /**
  * Creates a Prisma Client instance for Cloudflare Edge Runtime.
+ * Reuses a single client per isolate when DATABASE_URL is the same (global singleton).
  *
  * Uses Prisma Accelerate for edge-compatible HTTP-based database access.
  *
  * PRODUCTION REQUIREMENTS:
- * - DATABASE_URL should be a Prisma Accelerate connection string
+ * - DATABASE_URL should be a Prisma Accelerate connection string (or Supabase Transaction Pooler on port 6543)
  * - Format: prisma://accelerate.prisma-data.net/?api_key=YOUR_ACCELERATE_KEY
  * - Get your key from: https://www.prisma.io/data-platform/accelerate
+ * - Direct PostgreSQL URLs are dev-only; production must use Accelerate or pooler.
  *
  * The Accelerate extension provides:
  * - Edge-compatible HTTP-based database access
@@ -127,6 +144,13 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
   }
 
   try {
+    const key = normalizeDatabaseUrl(databaseUrl);
+    const cache = getSingletonCache();
+    const cached = cache.get(key);
+    if (cached) {
+      return cached;
+    }
+
     // Prisma 7 with Accelerate: Use accelerateUrl in constructor
     // This is the new Prisma 7 approach for edge runtimes
     const PrismaClientAny = PrismaClient as any;
@@ -138,10 +162,14 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
     });
 
     // Apply Accelerate extension for edge runtime HTTP-based queries
-    const extendedClient = client.$extends(withAccelerate());
+    const extendedClient = client.$extends(withAccelerate()) as EdgePrismaClient & {
+      __isSingleton?: boolean;
+    };
+    (extendedClient as { __isSingleton?: boolean }).__isSingleton = true;
+    cache.set(key, extendedClient);
 
     // Note: $on() is not available on extended clients, so we skip beforeExit hook
-    // Connection cleanup is handled by safePrismaDisconnect() in finally blocks
+    // Singleton is not disconnected per request; isolate lifecycle handles cleanup.
 
     return extendedClient;
   } catch (error) {
@@ -161,11 +189,16 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
 }
 
 /**
- * Safely disconnect Prisma client with error handling
- * Prevents connection leaks in serverless environments
+ * Safely disconnect Prisma client with error handling.
+ * Skips disconnect for singleton clients (reused per isolate); non-singleton clients are disconnected.
  */
 export async function safePrismaDisconnect(prisma: EdgePrismaClient | null): Promise<void> {
   if (!prisma) return;
+
+  const withFlag = prisma as EdgePrismaClient & { __isSingleton?: boolean };
+  if (withFlag.__isSingleton) {
+    return; // Do not disconnect singleton; reuse in same isolate
+  }
 
   try {
     await prisma.$disconnect();

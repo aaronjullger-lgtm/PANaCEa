@@ -5,6 +5,7 @@
 import { verifyToken } from '@clerk/backend';
 import { authLogger } from '../../../lib/logging/structuredLogger';
 import { CloudflareEnv } from './types';
+import { getCorsHeaders, getCorsConfig, handleCorsPreflightSecure } from './cors';
 
 /**
  * Re-export CloudflareEnv as Env for backward compatibility
@@ -66,7 +67,13 @@ function decodeJwtPayload(token: string): JwtPayload | null {
     while (payload.length % 4 !== 0) {
       payload += '=';
     }
-    const decoded = Buffer.from(payload, 'base64').toString('utf-8');
+    // Use atob + TextDecoder (Web API) for edge compatibility; avoid Node.js Buffer
+    const binary = atob(payload);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const decoded = new TextDecoder().decode(bytes);
     return JSON.parse(decoded) as JwtPayload;
   } catch (error) {
     console.error('Failed to decode JWT payload:', error);
@@ -183,9 +190,20 @@ export async function verifyAuthToken(
 }
 
 /**
- * Create a standardized error response
+ * Create a standardized error response with secure CORS
+ * @param request - Request object for CORS origin validation
+ * @param error - Error message
+ * @param status - HTTP status code
+ * @param code - Optional error code
+ * @param env - Optional env for CORS config override
  */
-export function createErrorResponse(error: string, status: number, code?: string): Response {
+export function createErrorResponse(
+  request: Request,
+  error: string,
+  status: number,
+  code?: string,
+  env?: Env
+): Response {
   const response = {
     success: false,
     error,
@@ -193,27 +211,34 @@ export function createErrorResponse(error: string, status: number, code?: string
     timestamp: new Date().toISOString(),
   };
 
+  const corsHeaders = getCorsHeaders(request, env ? getCorsConfig(env) : undefined);
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    ...(corsHeaders || {}),
+  };
+
   return new Response(JSON.stringify(response), {
     status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
+    headers,
   });
 }
 
 /**
- * Create a standardized success response
+ * Create a standardized success response with secure CORS
+ * @param request - Request object for CORS origin validation
  * @param data - Response payload
  * @param status - HTTP status code (default: 200)
  * @param cacheSeconds - Cache duration in seconds (default: 0, no cache)
+ * @param env - Optional env for CORS config override
  */
 export function createSuccessResponse<T = unknown>(
+  request: Request,
   data: T,
   status: number = 200,
-  cacheSeconds: number = 0
+  cacheSeconds: number = 0,
+  env?: Env
 ): Response {
   const response = {
     success: true,
@@ -221,11 +246,12 @@ export function createSuccessResponse<T = unknown>(
     timestamp: new Date().toISOString(),
   };
 
+  const corsHeaders = getCorsHeaders(request, env ? getCorsConfig(env) : undefined);
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    ...(corsHeaders || {}),
   };
 
   // Add cache headers if specified
@@ -243,18 +269,11 @@ export function createSuccessResponse<T = unknown>(
 }
 
 /**
- * Handle CORS preflight requests
+ * Handle CORS preflight requests with secure origin allowlist
+ * @param context - Pages Function context with request and optional env
  */
-export function handleCorsOptions(context?: any): Response {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '86400', // Cache preflight for 24 hours
-    },
-  });
+export function handleCorsOptions(context: { request: Request; env?: Env }): Response {
+  return handleCorsPreflightSecure(context.request, context.env);
 }
 
 /**

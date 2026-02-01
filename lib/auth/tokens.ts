@@ -1,17 +1,27 @@
 /**
  * Token generation and validation utilities for PANaCEa
  * Handles password reset and email verification tokens
+ *
+ * Edge-safe: generateToken uses Web Crypto API when available.
+ * hashToken/verifyToken/hashPassword/verifyPassword use bcrypt (Node-only).
  */
 
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 
 /**
- * Generates a secure random token
+ * Generates a secure random token (Edge-safe: uses Web Crypto when available)
  * @param length - Length of the token in bytes (default: 32)
  * @returns Hex-encoded token string
  */
 export function generateToken(length: number = 32): string {
+  if (typeof globalThis.crypto !== 'undefined' && globalThis.crypto.getRandomValues) {
+    const bytes = new Uint8Array(length);
+    globalThis.crypto.getRandomValues(bytes);
+    return Array.from(bytes)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
   return crypto.randomBytes(length).toString('hex');
 }
 

@@ -85,6 +85,13 @@ Vite variables work differently:
 
 ---
 
+## wrangler.toml and Secrets
+
+**Prefer Cloudflare Dashboard for secrets.** The `[vars]` section in `wrangler.toml` is committed to version control. Use it only for non-sensitive, build-time values (e.g. `VITE_API_URL`). For production:
+
+- Set `CLERK_SECRET_KEY`, `GEMINI_API_KEY`, `DATABASE_URL` in Cloudflare Dashboard > Environment Variables
+- Consider moving `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_SUPABASE_*`, `VITE_SENTRY_DSN` to Dashboard as well for easier key rotation
+
 ## Complete Environment Variable Checklist
 
 For a fully functional deployment, set these in Cloudflare Pages Environment Variables:
@@ -100,11 +107,20 @@ For a fully functional deployment, set these in Cloudflare Pages Environment Var
 
 - [ ] `CLERK_SECRET_KEY` - Clerk authentication (server)
 - [ ] `GEMINI_API_KEY` - Gemini API access
-- [ ] `DATABASE_URL` - PostgreSQL connection string
+- [ ] `DATABASE_URL` - PostgreSQL connection string (use Prisma Accelerate for Edge)
+
+### Sentry (Build-time - Optional, for source maps)
+
+- [ ] `SENTRY_AUTH_TOKEN` - Sentry API token
+- [ ] `SENTRY_ORG` - Sentry organization slug
+- [ ] `SENTRY_PROJECT` - Sentry project slug
+- [ ] `SENTRY_UPLOAD=true` - Enable source map upload
 
 ### Backend (Runtime - Optional)
 
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` - For admin Supabase operations
+- [ ] `ADMIN_USER_IDS` - Comma-separated Clerk IDs for admin access
+- [ ] `SUPERADMIN_USER_IDS` - Comma-separated Clerk IDs for superadmin
 - [ ] `SMTP_*` - Email configuration (if using)
 
 ---
@@ -114,8 +130,8 @@ For a fully functional deployment, set these in Cloudflare Pages Environment Var
 ### Local Development (.env file)
 
 ```bash
-# Copy example
-cp .env.example .env
+# Copy example (see env.example in project root)
+cp env.example .env
 
 # Add your keys
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxxxx

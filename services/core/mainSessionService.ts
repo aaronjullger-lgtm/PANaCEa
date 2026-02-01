@@ -156,6 +156,7 @@ export async function fetchSessionQuestions(
       condition: q.condition,
       pearls: q.pearls || [],
       source: q.source,
+      fromStaging: q.fromStaging,
       metadata: q.metadata,
     }));
 

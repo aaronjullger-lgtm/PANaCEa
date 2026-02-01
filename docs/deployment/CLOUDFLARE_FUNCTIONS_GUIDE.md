@@ -4,6 +4,18 @@
 
 Your repository is **already correctly configured** for Cloudflare Pages Functions! The structure is exactly as Cloudflare requires.
 
+**Production and recommended local dev:** Production uses Cloudflare Pages only (no Express server). For full CF parity locally, run `npm run dev:wrangler` (or equivalent) so `/api` and AI endpoints are served by Cloudflare Functions. When using `npm run dev:all`, the Vite proxy forwards `/api` and `/geminiProxy` to the legacy Express server on port 3001.
+
+### Split-Brain Architecture (Intentional)
+
+| Environment | API Source | Notes |
+|-------------|------------|-------|
+| **Production** | `functions/api/` (Cloudflare Pages Functions) | Edge runtime, no Express |
+| **Local: `dev:wrangler`** | `functions/api/` via wrangler | Matches production (recommended) |
+| **Local: `dev:all`** | Express (`server.ts` + `routes/`) | Legacy; faster iteration for some workflows |
+
+Express is **kept for local development only**. It is never deployed. New features should be implemented in `functions/api/` first.
+
 ## Project Structure (Verified ✅)
 
 ```

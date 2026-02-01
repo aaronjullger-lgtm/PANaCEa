@@ -35,6 +35,8 @@ import type { Question, PerformanceRecord, SessionSettings } from '../../types';
 
 interface SystemDrillSessionProps {
   onExit?: () => void;
+  /** When set, pre-select this system (id e.g. CV, or display name e.g. Cardiovascular) for Residency Cockpit deep link */
+  initialSystem?: string;
   addPerformanceRecord: (record: PerformanceRecord) => void;
   addMissedQuestion: (question: Question) => void;
   updateReviewQuestion: (question: Question, wasCorrect: boolean) => void;
@@ -155,6 +157,7 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
   addFlaggedQuestion,
   removeFlaggedQuestion,
   updateQuestionNote,
+  initialSystem,
 }) => {
   const [selectedSystem, setSelectedSystem] = useState<string | null>(null);
   const [showLanding, setShowLanding] = useState(true);
@@ -162,6 +165,23 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { getToken } = useAuth();
+
+  // Residency Cockpit: pre-select system when initialSystem is provided (id or display name)
+  useEffect(() => {
+    if (!initialSystem) return;
+    const normalized = initialSystem.trim();
+    const match =
+      SYSTEM_OPTIONS.find(
+        (o) =>
+          o.id === normalized ||
+          o.id === normalized.toUpperCase() ||
+          o.name.toLowerCase() === normalized.toLowerCase()
+      );
+    if (match) {
+      setSelectedSystem(match.id);
+      setShowLanding(true);
+    }
+  }, [initialSystem]);
 
   const stats = getDrillLandingStats('system_drill');
   const categoryBreakdown = getCategoryBreakdown('system_drill');
@@ -392,6 +412,7 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
           <QuizView
             initialQueue={queue}
             setParentQueue={setQueue}
+            useSplitPane
             addPerformanceRecord={addPerformanceRecord}
             addMissedQuestion={addMissedQuestion}
             updateReviewQuestion={updateReviewQuestion}

@@ -64,6 +64,7 @@ describe('TrainingMenu Component Logic', () => {
       'Wind',
       'AlertTriangle',
       'PillBottle',
+      'Target',
     ];
 
     it('should have valid icon names for all modes', () => {

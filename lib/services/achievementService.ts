@@ -5,9 +5,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { ACHIEVEMENTS, getAchievementById } from '../../config/achievements';
-import { getPrismaClient } from '../db';
-
-const getPrisma = () => getPrismaClient();
+import { prisma } from '../prisma';
 
 export interface AchievementProgress {
   achievementId: string;
@@ -45,7 +43,6 @@ export async function unlockAchievement(
     const existing = await hasAchievement(userId, achievementId);
     if (existing) return false;
 
-    const prisma = getPrisma();
     // Create achievement record
     await prisma.userAchievement.create({
       data: {
@@ -67,7 +64,6 @@ export async function unlockAchievement(
  * Get all achievements for a user with unlock status
  */
 export async function getUserAchievements(userId: string): Promise<AchievementProgress[]> {
-  const prisma = getPrisma();
   const unlockedAchievements = await prisma.userAchievement.findMany({
     where: { userId },
   });
@@ -231,7 +227,6 @@ export async function checkMasteryAchievements(
  */
 export async function checkAllSystemsGoldAchievement(userId: string): Promise<string[]> {
   const unlockedIds: string[] = [];
-  const prisma = getPrisma();
 
   const allSystems = ['CV', 'PULM', 'GI', 'NEURO', 'RENAL', 'ENDO', 'HEME', 'MSK', 'DERM', 'PSYCH'];
 

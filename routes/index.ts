@@ -64,7 +64,7 @@ export function registerRoutes(app: Express): void {
   // [DORMANT] Clinical pearls - not called by frontend
   app.use('/api/pearls', pearlsRouter);
   app.use('/api/osce', osceRouter);
-  app.use('', aiRouter); // Mount at root for /geminiProxy compatibility
+  app.use('', aiRouter);
 
   app.use('/api', usersRouter); // Handles /achievements, /performance
 
@@ -78,6 +78,5 @@ export function registerRoutes(app: Express): void {
   console.log('  - /api/analytics, /api/sync');
   console.log('  - /api/questions, /api/osce');
   console.log('  - /api/performance, /api/achievements');
-  console.log('  - /geminiProxy (AI)');
   console.log('  [DORMANT]: /api/games, /api/pearls, /api/adaptive, /api/recommendations');
 }

@@ -47,7 +47,11 @@ export {
   enhanceSessionSettings,
 } from '../ai/intelligentQuestionService';
 
-// Adaptive algorithms
+// Adaptive algorithms (import for default export use)
+import {
+  calculateAdaptiveState as calcAdaptiveStateFn,
+  selectOptimalQuestions as selectOptimalQuestionsFn,
+} from '../ai/adaptiveQuestionEngine';
 export {
   calculateAdaptiveState,
   selectOptimalQuestions,
@@ -207,7 +211,7 @@ export function convertPoolQuestion(poolQ: {
     topic: poolQ.system || 'General',
     conditionId,
     condition,
-    pearls: undefined, // Will be loaded on-demand from medicalContent
+    pearls: [], // Will be loaded on-demand from medicalContent
     source: poolQ.source === 'pool' ? 'database-pool' : 'database-main',
   } as Question;
 }
@@ -238,8 +242,8 @@ export function extractPearlsFromRationale(rationale: string): string[] {
     /(?:Key Takeaway|Clinical Pearl|Remember|Important|High-Yield Fact):\s*(.+?)(?:\n\n|$)/gi;
   let match;
   while ((match = keyTakeawayPattern.exec(rationale)) !== null) {
-    const pearl = match[1].trim();
-    if (pearl.length > 10 && pearl.length < 500) {
+    const pearl = match[1]?.trim();
+    if (pearl && pearl.length > 10 && pearl.length < 500) {
       pearls.push(pearl);
     }
   }
@@ -247,8 +251,8 @@ export function extractPearlsFromRationale(rationale: string): string[] {
   // Pattern 2: Bullet points that look like pearls
   const bulletPattern = /^[•-]\s*(.{10,300})$/gm;
   while ((match = bulletPattern.exec(rationale)) !== null) {
-    const pearl = match[1].trim();
-    if (pearl.length > 20 && !pearl.toLowerCase().startsWith('the correct answer')) {
+    const pearl = match[1]?.trim();
+    if (pearl && pearl.length > 20 && !pearl.toLowerCase().startsWith('the correct answer')) {
       pearls.push(pearl);
     }
   }
@@ -413,11 +417,15 @@ export default {
   ) => (await import('../ai/intelligentQuestionService')).getIntelligentQuestions(...args),
 
   // Adaptive algorithms - wrapped to avoid top-level await
-  calculateAdaptiveState: async (...args: Parameters<typeof calculateAdaptiveState>) => {
+  calculateAdaptiveState: async (
+    ...args: Parameters<typeof calcAdaptiveStateFn>
+  ) => {
     const mod = await import('../ai/adaptiveQuestionEngine');
     return mod.calculateAdaptiveState(...args);
   },
-  selectOptimalQuestions: async (...args: Parameters<typeof selectOptimalQuestions>) => {
+  selectOptimalQuestions: async (
+    ...args: Parameters<typeof selectOptimalQuestionsFn>
+  ) => {
     const mod = await import('../ai/adaptiveQuestionEngine');
     return mod.selectOptimalQuestions(...args);
   },

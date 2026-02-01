@@ -61,14 +61,15 @@ await prisma.reviewLog.create({
     userId: user.id,
     questionId: question.id,
     conditionId: condition.id,
-    sessionType: 'MAIN', // CRITICAL: Only MAIN affects FSRS weights
-    grade: 3, // FSRS rating (1-4)
+    sessionType: 'MAIN', // Backward compat
+    review_type: 'real', // Algorithm field: "real" vs "cram"
+    rating: 3, // FSRS rating 1-4 (algorithm field)
     state: card.state,
     stability: card.stability,
     difficulty: card.difficulty,
     wasCorrect: true,
-    responseTimeMs: 12500,
-    reviewedAt: new Date(),
+    duration: 12500, // Milliseconds (algorithm field)
+    review_date: new Date(), // Algorithm field
   },
 });
 ```
@@ -79,11 +80,13 @@ await prisma.reviewLog.create({
   data: {
     userId: user.id,
     questionId: question.id,
-    sessionType: 'CRAM', // Excluded from FSRS optimization
-    grade: 4,
+    sessionType: 'CRAM',
+    review_type: 'cram',
+    rating: 4,
     state: 2,
     wasCorrect: true,
-    // ...
+    stability: 10.0,
+    difficulty: 5.0,
   },
 });
 ```
@@ -92,22 +95,23 @@ await prisma.reviewLog.create({
 
 #### Get MAIN Session Reviews Only
 ```typescript
-// CRITICAL: Always filter by sessionType = 'MAIN'
+// CRITICAL: Filter by sessionType or review_type = 'real'
 const mainReviews = await prisma.reviewLog.findMany({
   where: {
     userId: user.id,
-    sessionType: 'MAIN', // Enforces "Main Session Quarantine"
+    OR: [
+      { review_type: 'real' },
+      { sessionType: 'MAIN' },
+    ],
   },
-  orderBy: {
-    reviewedAt: 'asc',
-  },
+  orderBy: { review_date: 'asc' },
 });
 ```
 
 #### Export for Rust Optimizer
 ```typescript
 const reviewData = mainReviews.map(r => ({
-  rating: r.grade,
+  rating: r.rating, // Algorithm field (1-4)
   elapsed_days: r.elapsedDays || 0,
   state: r.state,
 }));
@@ -223,11 +227,12 @@ async function reviewQuestion(userId: string, questionId: string, rating: Rating
       userId,
       questionId,
       sessionType: 'MAIN',
-      grade: rating,
+      review_type: 'real',
+      rating,
       state: next.card.state,
       stability: next.card.stability,
       difficulty: next.card.difficulty,
-      reviewedAt: new Date(),
+      review_date: new Date(),
     },
   });
 }
@@ -249,7 +254,7 @@ const cardioStats = await prisma.reviewLog.aggregate({
   where: {
     userId: user.id,
     system: 'CV',
-    sessionType: 'MAIN', // Exclude cram/rapid
+    OR: [{ review_type: 'real' }, { sessionType: 'MAIN' }],
   },
   _avg: {
     difficulty: true,
@@ -283,13 +288,13 @@ const reviews = await prisma.reviewLog.findMany({
 });
 ```
 
-### ✅ DO: Filter by sessionType = 'MAIN'
+### ✅ DO: Filter by review_type = 'real' or sessionType = 'MAIN'
 ```typescript
-// GOOD - Only MAIN sessions affect weights
+// GOOD - Only real/MAIN sessions affect weights
 const reviews = await prisma.reviewLog.findMany({
   where: { 
     userId: user.id,
-    sessionType: 'MAIN', // Enforces statistical quarantine
+    OR: [{ review_type: 'real' }, { sessionType: 'MAIN' }],
   },
 });
 ```

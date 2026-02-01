@@ -1,46 +1,125 @@
+/**
+ * Task Types for Sub-Topic SRS Tracking
+ * 
+ * Each condition can have separate FSRS tracks for different task types,
+ * allowing users to master different aspects of a condition independently.
+ */
+
 export const TASK_TYPES = {
   DIAGNOSIS: 'diagnosis',
   TREATMENT: 'treatment',
   MECHANISM: 'mechanism',
   WORKUP: 'workup',
   PREVENTION: 'prevention',
-  CLINICAL_PEARL: 'clinical_pearl',
+  PROGNOSIS: 'prognosis',
+  COMPLICATION: 'complication',
 } as const;
 
 export type TaskType = (typeof TASK_TYPES)[keyof typeof TASK_TYPES];
 
-export const VALID_TASK_TYPES = Object.values(TASK_TYPES);
+/**
+ * Get human-readable label for task type
+ */
+export function getTaskTypeLabel(taskType: TaskType): string {
+  const labels: Record<TaskType, string> = {
+    diagnosis: 'Diagnosis',
+    treatment: 'Treatment',
+    mechanism: 'Mechanism/Pathophysiology',
+    workup: 'Diagnostic Workup',
+    prevention: 'Prevention/Screening',
+    prognosis: 'Prognosis/Outcomes',
+    complication: 'Complications',
+  };
 
-export function getTaskTypeFromContent(content: string, title?: string): TaskType {
-  const lowerContent = (content + ' ' + (title || '')).toLowerCase();
+  return labels[taskType] || taskType;
+}
+
+/**
+ * Get description for task type
+ */
+export function getTaskTypeDescription(taskType: TaskType): string {
+  const descriptions: Record<TaskType, string> = {
+    diagnosis: 'What is the most likely diagnosis?',
+    treatment: 'What is the appropriate treatment/management?',
+    mechanism: 'What is the underlying pathophysiology?',
+    workup: 'What is the next best diagnostic step?',
+    prevention: 'What preventive measures or screening is recommended?',
+    prognosis: 'What is the expected outcome/prognosis?',
+    complication: 'What complications should be monitored?',
+  };
+
+  return descriptions[taskType] || '';
+}
+
+/**
+ * All task types as array
+ */
+export const ALL_TASK_TYPES: TaskType[] = Object.values(TASK_TYPES);
+
+/**
+ * Infer task type from question text
+ */
+export function inferTaskType(questionText: string): TaskType {
+  const lowerQuestion = questionText.toLowerCase();
 
   if (
-    lowerContent.includes('treatment') ||
-    lowerContent.includes('management') ||
-    lowerContent.includes('therapy')
-  ) {
-    return TASK_TYPES.TREATMENT;
-  }
-  if (
-    lowerContent.includes('diagnos') ||
-    lowerContent.includes('presentation') ||
-    lowerContent.includes('symptom')
+    lowerQuestion.includes('most likely diagnosis') ||
+    lowerQuestion.includes('presenting with') ||
+    lowerQuestion.includes('what is the diagnosis')
   ) {
     return TASK_TYPES.DIAGNOSIS;
   }
-  if (lowerContent.includes('mechanism') || lowerContent.includes('pathophys')) {
+
+  if (
+    lowerQuestion.includes('treatment') ||
+    lowerQuestion.includes('management') ||
+    lowerQuestion.includes('first-line') ||
+    lowerQuestion.includes('therapy')
+  ) {
+    return TASK_TYPES.TREATMENT;
+  }
+
+  if (
+    lowerQuestion.includes('mechanism') ||
+    lowerQuestion.includes('pathophysiology') ||
+    lowerQuestion.includes('cause')
+  ) {
     return TASK_TYPES.MECHANISM;
   }
+
   if (
-    lowerContent.includes('workup') ||
-    lowerContent.includes('test') ||
-    lowerContent.includes('lab')
+    lowerQuestion.includes('next step') ||
+    lowerQuestion.includes('diagnostic test') ||
+    lowerQuestion.includes('workup') ||
+    lowerQuestion.includes('confirm the diagnosis')
   ) {
     return TASK_TYPES.WORKUP;
   }
-  if (lowerContent.includes('prevent') || lowerContent.includes('prophyla')) {
+
+  if (
+    lowerQuestion.includes('prevent') ||
+    lowerQuestion.includes('screening') ||
+    lowerQuestion.includes('prophylaxis')
+  ) {
     return TASK_TYPES.PREVENTION;
   }
 
-  return TASK_TYPES.DIAGNOSIS; // Default
+  if (
+    lowerQuestion.includes('prognosis') ||
+    lowerQuestion.includes('outcome') ||
+    lowerQuestion.includes('expected course')
+  ) {
+    return TASK_TYPES.PROGNOSIS;
+  }
+
+  if (
+    lowerQuestion.includes('complication') ||
+    lowerQuestion.includes('adverse effect') ||
+    lowerQuestion.includes('monitor for')
+  ) {
+    return TASK_TYPES.COMPLICATION;
+  }
+
+  // Default to diagnosis if unclear
+  return TASK_TYPES.DIAGNOSIS;
 }
