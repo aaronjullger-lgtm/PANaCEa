@@ -32,8 +32,18 @@ export const onRequestPost = authenticatedEndpoint(
       const { sessionId, diagnosis, treatmentPlan } = validated.body;
       log.info('Completing OSCE session', { sessionId });
 
-      await prisma.patientEncounterSession.update({
-        where: { id: sessionId },
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
+      });
+
+      if (!user) {
+        log.warn('User not found for OSCE complete', { clerkId: auth.userId });
+        return { status: 404, error: 'User not found' };
+      }
+
+      const updated = await prisma.patientEncounterSession.updateMany({
+        where: { id: sessionId, userId: user.id },
         data: {
           status: 'completed',
           diagnosis,
@@ -42,7 +52,15 @@ export const onRequestPost = authenticatedEndpoint(
         },
       });
 
-      log.info('OSCE session completed successfully');
+      if (updated.count === 0) {
+        log.warn('No session updated on complete (not found or not owned by user)', {
+          sessionId,
+          userId: user.id,
+        });
+        return { status: 404, error: 'Session not found' };
+      }
+
+      log.info('OSCE session completed successfully', { sessionId });
       return { data: { success: true } };
     } catch (error: any) {
       log.error('Error completing OSCE session', error);

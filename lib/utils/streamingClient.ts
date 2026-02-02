@@ -25,6 +25,12 @@ export type StreamErrorCallback = (error: Error) => void;
 export interface StreamOptions {
   modelName?: string;
   temperature?: number;
+  /** Optional: Gemini context cache name (e.g. cachedContents/xxx) for "Chat with your Library" */
+  cachedContent?: string;
+  /** Optional: Bearer token for authenticated requests (required when backend requires auth) */
+  token?: string | null;
+   /** Optional: Gemini 3 thinking level for reasoning depth control */
+  thinkingLevel?: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
   onChunk?: StreamChunkCallback;
   onComplete?: StreamCompleteCallback;
   onError?: StreamErrorCallback;
@@ -57,6 +63,9 @@ export async function streamGeminiText(
   const {
     modelName = 'gemini-2.5-flash',
     temperature = 0.8,
+    cachedContent,
+    token,
+    thinkingLevel,
     onChunk,
     onComplete,
     onError,
@@ -66,17 +75,28 @@ export async function streamGeminiText(
   let accumulatedText = '';
 
   try {
+    const body: Record<string, unknown> = {
+      modelName,
+      prompt,
+      temperature,
+    };
+    if (cachedContent && cachedContent.startsWith('cachedContents/')) {
+      body.cachedContent = cachedContent;
+    }
+    if (thinkingLevel) {
+      body.thinkingLevel = thinkingLevel;
+    }
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
     // Make request to streaming endpoint
     const response = await fetch(getApiEndpoint(API_ENDPOINTS.GEMINI_STREAM), {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        modelName,
-        prompt,
-        temperature,
-      }),
+      headers,
+      body: JSON.stringify(body),
       signal, // Support cancellation
     });
 

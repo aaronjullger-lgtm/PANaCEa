@@ -19,6 +19,7 @@
 
 export type TrainingModeId =
   | 'core_adaptive'
+  | 'reasoning_tutor'
   | 'photo_drill'
   | 'ecg_drill'
   | 'derm_drill'
@@ -61,7 +62,7 @@ export const RANKED_MODES = ['GRAND_ROUNDS', 'SMART_REVIEW', 'PANCE_SIMULATOR'] 
 
 export function isRankedMode(mode?: string | null): boolean {
   if (!mode) return false;
-  const normalized = mode.replace(/-/g, '_').toUpperCase();
+  const normalized = mode.replaceAll('-', '_').toUpperCase();
   return RANKED_MODES.includes(normalized as (typeof RANKED_MODES)[number]);
 }
 
@@ -232,6 +233,16 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     theme: 'cyan',
     route: '/modes/fluid-electrolyte',
     estimatedMinutes: 10,
+  },
+  {
+    id: 'reasoning_tutor',
+    label: 'Reasoning Tutor',
+    description: 'Chat-based differential diagnosis and tutoring with your weak spots in mind',
+    category: 'clinical_simulation',
+    iconName: 'Brain',
+    theme: 'slate',
+    route: '/modes/reasoning-tutor',
+    estimatedMinutes: 15,
   },
   {
     id: 'mini_lab',
@@ -441,27 +452,19 @@ const STANDALONE_MODE_IDS = ['core_adaptive', 'patient_encounter', 'grand_rounds
 
 // Filter modes by category, EXCLUDING standalone modes that have their own tabs
 export const VISUAL_DIAGNOSTICS_MODES = TRAINING_MODES.filter(
-  (m) =>
-    m.category === 'visual_diagnostics' &&
-    !STANDALONE_MODE_IDS.includes(m.id as (typeof STANDALONE_MODE_IDS)[number])
+  (m) => m.category === 'visual_diagnostics' && !STANDALONE_MODE_IDS.includes(m.id)
 );
 
 export const CLINICAL_SIMULATION_MODES = TRAINING_MODES.filter(
-  (m) =>
-    m.category === 'clinical_simulation' &&
-    !STANDALONE_MODE_IDS.includes(m.id as (typeof STANDALONE_MODE_IDS)[number])
+  (m) => m.category === 'clinical_simulation' && !STANDALONE_MODE_IDS.includes(m.id)
 );
 
 export const QUESTION_PRACTICE_MODES = TRAINING_MODES.filter(
-  (m) =>
-    m.category === 'question_practice' &&
-    !STANDALONE_MODE_IDS.includes(m.id as (typeof STANDALONE_MODE_IDS)[number])
+  (m) => m.category === 'question_practice' && !STANDALONE_MODE_IDS.includes(m.id)
 );
 
 export const SPECIALTY_DRILL_MODES = TRAINING_MODES.filter(
-  (m) =>
-    m.category === 'specialty_drills' &&
-    !STANDALONE_MODE_IDS.includes(m.id as (typeof STANDALONE_MODE_IDS)[number])
+  (m) => m.category === 'specialty_drills' && !STANDALONE_MODE_IDS.includes(m.id)
 );
 
 // Individual standalone mode references

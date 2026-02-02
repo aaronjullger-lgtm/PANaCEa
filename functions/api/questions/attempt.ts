@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { scheduleConceptReview } from '../intelligence/profile';
 
 const AttemptSchema = z.object({
   questionId: z.string().min(1),
@@ -177,6 +178,18 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
 
     // Get detailed system stats
     const detailedSystemStats = system ? await getUserSystemStats(prisma, userId, system) : null;
+
+    // SRS: Schedule concept review (Leitner-style: fail +1 day, pass +3 days)
+    if (typeof correctness === 'boolean' && (system || conditionId)) {
+      try {
+        const conceptKey = `${system || 'General'}|${conditionId || questionType || 'unknown'}`;
+        await scheduleConceptReview(prisma, userId, conceptKey, correctness);
+      } catch (srsErr) {
+        logger.warn('SRS scheduleConceptReview failed (non-fatal)', {
+          error: srsErr instanceof Error ? srsErr.message : String(srsErr),
+        });
+      }
+    }
 
     logger.info('Attempt recorded', { userId: auth.userId, questionId, correctness });
 

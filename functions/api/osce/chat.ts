@@ -39,15 +39,39 @@ export const onRequestPost = authenticatedEndpoint(
       const { sessionId, messages } = validated.body;
       log.info('Saving OSCE chat', { sessionId, messageCount: messages.length });
 
+      // Ensure the session belongs to the authenticated user
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
+      });
+
+      if (!user) {
+        log.warn('User not found for chat save', { clerkId: auth.userId });
+        return { status: 404, error: 'User not found' };
+      }
+
+      const session = await prisma.patientEncounterSession.findFirst({
+        where: { id: sessionId, userId: user.id },
+        select: { id: true },
+      });
+
+      if (!session) {
+        log.warn('Session not found or not owned by user for chat save', {
+          sessionId,
+          userId: user.id,
+        });
+        return { status: 404, error: 'Session not found' };
+      }
+
       await prisma.patientEncounterSession.update({
         where: { id: sessionId },
         data: {
-          messages: messages,
+          messages,
           updatedAt: new Date(),
         },
       });
 
-      log.info('Chat saved successfully');
+      log.info('Chat saved successfully', { sessionId });
       return { data: { success: true } };
     } catch (error: any) {
       log.error('Error saving chat message', error);

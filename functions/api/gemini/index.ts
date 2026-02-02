@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { publicEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 
@@ -22,6 +22,10 @@ const GeminiRequestSchema = z.object({
   temperature: z.number().min(0).max(2).optional().default(0.8),
   maxTokens: z.number().int().min(1).max(8192).optional().default(2048),
   systemInstruction: z.string().optional(),
+  /** Optional: use Gemini context cache (e.g. cachedContents/xxx) for "Chat with your Library" */
+  cachedContent: z.string().min(1).startsWith('cachedContents/').optional(),
+  /** Optional: Gemini 3 thinking level for reasoning control */
+  thinkingLevel: z.enum(['MINIMAL', 'LOW', 'MEDIUM', 'HIGH']).optional(),
 });
 
 // Handle CORS preflight
@@ -59,7 +63,8 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
     return rateLimitResponse;
   }
 
-  const { modelName, prompt, temperature, maxTokens, systemInstruction } = validated;
+  const { modelName, prompt, temperature, maxTokens, systemInstruction, cachedContent, thinkingLevel } =
+    validated;
   const apiKey = env.GEMINI_API_KEY;
 
   try {
@@ -70,6 +75,7 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
     // For visual drills (ECG/imaging/derm), contents[0].parts can include inlineData with
     // base64 image (mimeType + data) so the model can describe findings; keep payload
     // within Edge size limits (e.g. ~4MB request body).
+    // When cachedContent is set, Gemini uses the cache as context; only the new turn is sent in contents.
     const requestBody: Record<string, unknown> = {
       contents: [
         {
@@ -84,7 +90,15 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
       },
     };
 
-    // Add system instruction if provided
+    if (cachedContent) {
+      requestBody.cachedContent = cachedContent;
+    }
+
+    if (thinkingLevel) {
+      requestBody.thinkingConfig = { thinkingLevel };
+    }
+
+    // Add system instruction if provided (ignored when cachedContent already has one)
     if (systemInstruction) {
       requestBody.systemInstruction = {
         parts: [{ text: systemInstruction }],

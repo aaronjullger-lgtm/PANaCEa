@@ -1,0 +1,23 @@
+{
+  "name": "panacea-podcast-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Lecture-to-Podcast pipeline: Adobe Extract / PDF text → Gemini script → Google Cloud TTS → MP3. Run as Node service (e.g. Cloud Run).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "^1.1.1",
+    "@google-cloud/text-to-speech": "^5.0.0"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": ">=18"
+  }
+}

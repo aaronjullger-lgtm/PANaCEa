@@ -1,9 +1,6 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { TASK_TYPES, TaskType } from './taskTypes';
 
-// Use GoogleGenerativeAI from the package
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
 const variantSchema = {
   type: SchemaType.OBJECT,
   properties: {
@@ -33,7 +30,18 @@ export interface VariantRequest {
   userIncorrectAnswer?: string; // The incorrect option selected by the user
 }
 
-export async function generateVariant(request: VariantRequest) {
+/**
+ * Generate a question variant via Gemini.
+ * apiKey: pass from Edge (context.env.GEMINI_API_KEY) or Node (process.env.GEMINI_API_KEY).
+ * Omit in browser; returns null if no key.
+ */
+export async function generateVariant(
+  request: VariantRequest,
+  apiKey?: string
+) {
+  const key = apiKey ?? (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ?? '';
+  if (!key) return null;
+  const genAI = new GoogleGenerativeAI(key);
   const model = genAI.getGenerativeModel({
     model: 'gemini-2.0-flash-exp',
     generationConfig: {

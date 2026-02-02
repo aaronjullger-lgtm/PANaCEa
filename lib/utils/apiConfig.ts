@@ -19,14 +19,22 @@ export const API_ENDPOINTS = {
   DRUGS_ALL: '/api/drugs/all',
   GEMINI_PROXY: '/api/gemini',
   GEMINI_STREAM: '/api/gemini/stream',
+  STUDY_CHAT: '/api/study/chat',
+  KNOWLEDGE_UPLOAD: '/api/knowledge/upload',
+  KNOWLEDGE_CACHE: '/api/knowledge/cache',
+  KNOWLEDGE_CACHE_DELETE: (name: string) => `/api/knowledge/cache/${encodeURIComponent(name)}`,
+  KNOWLEDGE_CACHES: '/api/knowledge/caches',
+  KNOWLEDGE_STUDENT_CONTEXT: '/api/knowledge/cache/student-context',
   DDX_GENERATE: '/api/ddx/generate',
   SESSIONS: '/api/sessions',
   REVIEWS: '/api/reviews',
   SYNC: '/api/sync',
+  INTELLIGENCE_PROFILE: '/api/intelligence/profile',
   SRS_SUBMIT: '/api/srs/submit',
   RECOMMENDATIONS: '/api/recommendations',
   SUBMIT_REVIEW: '/api/drills/submit-review',
   USER_STATS: '/api/user/stats',
+  USER_PREFERENCES: '/api/user/preferences',
 } as const;
 
 export type ApiEndpoint = keyof typeof API_ENDPOINTS;

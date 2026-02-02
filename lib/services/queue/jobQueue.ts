@@ -25,7 +25,8 @@ export type JobType =
   | 'media_processing'
   | 'sync_operation'
   | 'ai_quality_check'
-  | 'duplicate_detection';
+  | 'duplicate_detection'
+  | 'podcast_generation';
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
 

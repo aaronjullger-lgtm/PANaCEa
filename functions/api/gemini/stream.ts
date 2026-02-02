@@ -279,19 +279,37 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       return errorToResponse(validationError, corsHeaders);
     }
 
-    const { modelName, prompt, temperature } = parsed.data;
+    const { modelName, prompt, temperature, cachedContent, thinkingLevel } = parsed.data;
     const apiKey = env.GEMINI_API_KEY;
 
     addBreadcrumb('Request validated, calling Gemini API', 'gemini-stream', 'info', {
       modelName,
       promptLength: prompt.length,
       temperature,
+      hasCachedContent: !!cachedContent,
     });
 
     // Construct Gemini API URL for streaming
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?key=${apiKey}&alt=sse`;
     // Redacted URL for logging (never log the real API key)
     const geminiUrlRedacted = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?key=[REDACTED]&alt=sse`;
+
+    const streamBody: Record<string, unknown> = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 2048,
+      },
+    };
+    if (cachedContent) {
+      streamBody.cachedContent = cachedContent;
+    }
+    if (thinkingLevel) {
+      // Gemini 3 thinking-level control; older models may ignore or error
+      streamBody.thinkingConfig = { thinkingLevel };
+    }
 
     // Call Gemini with streaming enabled
     let geminiResponse: Response;
@@ -301,19 +319,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: prompt }],
-            },
-          ],
-          generationConfig: {
-            temperature,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 2048,
-          },
-        }),
+        body: JSON.stringify(streamBody),
       });
     } catch (fetchError) {
       const networkError = new ExternalServiceError(

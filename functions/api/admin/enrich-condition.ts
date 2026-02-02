@@ -202,13 +202,7 @@ export const onRequestPost = authenticatedEndpoint(EnrichConditionSchema, async 
       select: { role: true, id: true },
     });
 
-    if (
-      !user ||
-      (user.role !== 'ADMIN' &&
-        user.role !== 'SUPERADMIN' &&
-        user.role !== 'admin' &&
-        user.role !== 'superadmin')
-    ) {
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN')) {
       logger.warn('Non-admin attempted content enrichment', {
         userId: auth.userId,
         role: user?.role,

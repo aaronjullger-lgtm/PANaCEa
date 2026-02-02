@@ -176,13 +176,7 @@ export const onRequestGet = authenticatedEndpoint(ContentAuditSchema, async (con
       select: { role: true, id: true },
     });
 
-    if (
-      !user ||
-      (user.role !== 'ADMIN' &&
-        user.role !== 'SUPERADMIN' &&
-        user.role !== 'admin' &&
-        user.role !== 'superadmin')
-    ) {
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN')) {
       logger.warn('Non-admin attempted content audit', {
         userId: auth.userId,
         role: user?.role,

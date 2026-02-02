@@ -201,6 +201,25 @@ model BackgroundJob {
   @@index([status])
 }
 
+model Podcast {
+  id              String   @id @default(uuid())
+  userId          String
+  jobId           String?  @unique
+  title           String
+  durationSeconds Int?
+  audioUrl        String?
+  script          Json?
+  takeaways       Json?
+  chapters        Json?
+  sourceFileName  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
 model BaselineAssessment {
   id               String   @id
   userId           String   @unique
@@ -742,33 +761,40 @@ model ECGPattern {
 }
 
 model EducationalResource {
-  id               String    @id
-  title            String
-  resourceType     String
-  fileUrl          String?
-  originalFilename String?
-  extractedText    String?
-  summary          String?
-  keyTopics        String[]
-  author           String?
-  source           String?
-  pageNumber       Int?
-  duration         Int?
-  mimeType         String?
-  fileSize         Int?
-  conditionIds     String[]
-  systemCodes      String[]
-  approvalStatus   String    @default("pending")
-  approvedBy       String?
-  approvedAt       DateTime?
-  rejectionReason  String?
-  qualityScore     Float?
-  uploadedBy       String?
-  uploadedAt       DateTime  @default(now())
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime
-  viewCount        Int       @default(0)
-  lastAccessedAt   DateTime?
+  id                   String    @id
+  title                String
+  resourceType         String
+  fileUrl              String?
+  originalFilename     String?
+  extractedText        String?
+  summary              String?
+  keyTopics            String[]
+  author               String?
+  source               String?
+  pageNumber           Int?
+  duration             Int?
+  mimeType             String?
+  fileSize             Int?
+  conditionIds         String[]
+  systemCodes          String[]
+  approvalStatus       String    @default("pending")
+  approvedBy           String?
+  approvedAt           DateTime?
+  rejectionReason      String?
+  qualityScore         Float?
+  uploadedBy           String?
+  uploadedAt           DateTime  @default(now())
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime
+  viewCount            Int       @default(0)
+  lastAccessedAt      DateTime?
+  // Study Companion: Supabase path for PDF download (bucket-relative)
+  storagePath          String?
+  // Gemini context cache for "Chat with your Textbook"
+  geminiCacheName      String?
+  geminiCacheExpiresAt DateTime?
+  // Adobe Extract JSON path in Supabase for citation highlight coordinates
+  adobeDataPath        String?
 
   @@index([approvalStatus])
   @@index([approvedAt])
@@ -776,6 +802,25 @@ model EducationalResource {
   @@index([resourceType])
   @@index([systemCodes])
   @@index([uploadedBy])
+}
+
+/// Per-user Gemini context cache for "Chat with your Library" and student-context tutor.
+/// source: 'upload' | 'drive' | 'student-context'
+model KnowledgeCache {
+  id               String   @id @default(cuid())
+  userId           String
+  displayName      String
+  geminiCacheName  String   // e.g. cachedContents/xxx
+  geminiFileIds    String[] @default([]) // file names/URIs used in cache (optional)
+  expiresAt        DateTime
+  source           String   // 'upload' | 'drive' | 'student-context'
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime
+  User             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, source])
+  @@index([userId, expiresAt])
 }
 
 model EncounterResult {
@@ -1443,7 +1488,18 @@ model PatientEncounterCase {
   teachingPoints          String[]
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime
+  CaseRubric              CaseRubric?
   PatientEncounterSession PatientEncounterSession[]
+}
+
+/// Clinical checklist for grading an OSCE encounter (critical items + red flags).
+model CaseRubric {
+  id         String                 @id @default(uuid())
+  caseId     String                 @unique
+  checklist  Json                   // [{ item: string, isRedFlag?: boolean }]
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+  PatientEncounterCase PatientEncounterCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
 }
 
 model PatientEncounterSession {
@@ -1451,7 +1507,7 @@ model PatientEncounterSession {
   userId               String
   caseId               String
   startTime            DateTime             @default(now())
-  updatedAt            DateTime
+  updatedAt            DateTime             @updatedAt
   status               String               @default("active")
   messages             Json
   physicalFindings     Json?
@@ -1460,9 +1516,23 @@ model PatientEncounterSession {
   treatmentPlan        String?
   PatientEncounterCase PatientEncounterCase @relation(fields: [caseId], references: [id])
   User                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  OsceResult           OsceResult?
 
   @@index([status])
   @@index([userId])
+}
+
+/// Post-encounter grading result (faculty-style rubric + Gemini assessment).
+model OsceResult {
+  id                    String                    @id @default(uuid())
+  sessionId             String                   @unique
+  score                 Float
+  checklist             Json                      // [{ item, status: "PASS"|"FAIL", feedback }]
+  redFlagsMissed        String[]
+  clinicalReasoningScore Float
+  billingCodeSuggestion String?
+  createdAt             DateTime                 @default(now())
+  PatientEncounterSession PatientEncounterSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
 model PeerStatistic {
@@ -2377,12 +2447,29 @@ model User {
   UserStatistics          UserStatistics?
   UserRolling360Stats     UserRolling360Stats?
   ReviewLog               ReviewLog[]
+  KnowledgeCache          KnowledgeCache[]
+  ConceptGap              ConceptGap[]
+  Podcast                 Podcast[]
 
   @@index([clerkId])
   @@index([email])
   @@index([role])
   @@index([lifecycleRole])
   @@index([trainingPhase])
+}
+
+/// Identified knowledge gap (e.g. from OSCE differential-diagnosis failure) for Tutor to target.
+model ConceptGap {
+  id         String   @id @default(uuid())
+  userId     String
+  system     String   // e.g. "Cardiology", "Pulmonary"
+  sourceType String   // e.g. "osce"
+  sourceId   String?  // e.g. OsceResult id
+  createdAt  DateTime @default(now())
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, system])
 }
 
 model UserStatistics {

@@ -51,7 +51,7 @@ export const onRequestGet = authenticatedEndpoint(AdminStatsSchema, async (conte
       select: { role: true, id: true },
     });
 
-    if (user?.role !== 'admin' && user?.role !== 'superadmin') {
+    if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
       logger.warn('Non-admin attempted to access admin stats', {
         userId: auth.userId,
         role: user?.role,

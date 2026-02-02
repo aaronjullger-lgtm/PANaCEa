@@ -49,9 +49,13 @@ export const CACHE_STRATEGY = {
 } as const;
 
 /**
- * Type for the Edge Prisma Client with Accelerate
+ * Type for the Edge Prisma Client with Accelerate.
+ *
+ * We derive this from the PrismaClient constructor type instead of the
+ * createEdgePrismaClient return type to avoid circular type references.
  */
-export type EdgePrismaClient = ReturnType<typeof createEdgePrismaClient>;
+type PrismaClientInstance = InstanceType<typeof PrismaClient>;
+export type EdgePrismaClient = PrismaClientInstance;
 
 type DatabaseUrlInput =
   | string

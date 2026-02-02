@@ -252,7 +252,7 @@ export async function submitDrillReview(
     quality,
     timeToAnswer: numericTime,
     baselineTime: parTimeMs,
-  });
+  }, prisma as any);
 
   try {
     await applyAttemptToUserStatistics(prisma as any, userId, {

@@ -6,14 +6,7 @@
  */
 
 import { z } from 'zod';
-import {
-  authenticatedEndpoint,
-  withCors,
-  withMiddleware,
-  withAuth,
-  withErrorHandling,
-  withLogging,
-} from '../_shared/middleware';
+import { withCors, withMiddleware, withAuth, withErrorHandling, withLogging } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { IDSchema } from '../_shared/schemas';
@@ -34,9 +27,9 @@ export const onRequestGet = withMiddleware(
   withAuth(),
   withLogging(),
   async (context: any) => {
-    const { env, auth } = context;
-    const log = createEndpointLogger('/api/osce/history', auth.userId);
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+      const { env, auth } = context;
+      const log = createEndpointLogger('/api/osce/history', auth.userId);
+      const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
       const url = new URL(context.request.url);
@@ -62,11 +55,32 @@ export const onRequestGet = withMiddleware(
       const { sessionId: validSessionId, limit } = validation.data.query;
       log.info('Fetching OSCE history', { sessionId: validSessionId, limit });
 
-      const history = await prisma.encounterChatHistory.findMany({
-        where: { sessionId: validSessionId },
-        orderBy: { timestamp: 'asc' },
-        take: limit,
+      // Ensure the session belongs to the authenticated user
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
       });
+
+      if (!user) {
+        log.warn('User not found for OSCE history', { clerkId: auth.userId });
+        return { status: 404, error: 'User not found' };
+      }
+
+      const session = await prisma.patientEncounterSession.findFirst({
+        where: { id: validSessionId, userId: user.id },
+        select: { messages: true, startTime: true, updatedAt: true },
+      });
+
+      if (!session) {
+        log.warn('Session not found or not owned by user for history', {
+          sessionId: validSessionId,
+          userId: user.id,
+        });
+        return { status: 404, error: 'Session not found' };
+      }
+
+      const messages = Array.isArray(session.messages) ? session.messages : [];
+      const history = messages.slice(-limit);
 
       log.info('History fetched successfully', { count: history.length });
       return { data: { history } };

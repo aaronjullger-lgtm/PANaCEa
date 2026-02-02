@@ -171,8 +171,13 @@ function toResponse(result: HandlerResponse, request: Request, requestId?: strin
 /**
  * Validate required environment variables before running the handler.
  * Fails fast with 500 if DATABASE_URL, CLERK_SECRET_KEY, etc. are missing.
+ *
+ * Accepts either a preset key (e.g. 'DATABASE', 'FULL_STACK') or an explicit
+ * list of env var names for advanced cases.
  */
-export function withEnvCheck(required: EnvRequirement): Middleware {
+export function withEnvCheck(
+  required: EnvRequirement | readonly string[] | string[]
+): Middleware {
   return async (context, next) => {
     try {
       validateFunctionEnv(context.env as Record<string, unknown>, required);
@@ -271,7 +276,7 @@ export function withAdminRole(): Middleware<AuthenticatedContext> {
         select: { role: true },
       });
 
-      if (!user || user.role !== 'admin') {
+      if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN')) {
         logger.warn('Non-admin user attempted to access admin endpoint', {
           userId: context.auth.userId,
           path: new URL(context.request.url).pathname,

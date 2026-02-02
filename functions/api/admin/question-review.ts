@@ -58,7 +58,9 @@ export const onRequestGet = authenticatedEndpoint(
         select: { role: true, id: true },
       });
 
-      if (!user || (!isAdmin(user.role as UserRole) && user.role !== 'content_creator')) {
+      const role = String(user?.role).toLowerCase() as UserRole | undefined;
+
+      if (!user || !role || (!isAdmin(role) && user.role !== 'content_creator')) {
         logger.warn('Non-admin attempted to access question review', {
           userId: auth.userId,
           role: user?.role,
@@ -188,7 +190,9 @@ export const onRequestPost = authenticatedEndpoint(ValidationSchema, async (cont
       select: { role: true, id: true, name: true },
     });
 
-    if (!user || (!isAdmin(user.role as UserRole) && user.role !== 'content_creator')) {
+    const role = String(user?.role).toLowerCase() as UserRole | undefined;
+
+    if (!user || !role || (!isAdmin(role) && user.role !== 'content_creator')) {
       logger.warn('Non-admin attempted to update question validation', {
         userId: auth.userId,
         role: user?.role,

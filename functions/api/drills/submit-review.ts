@@ -2,6 +2,7 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { submitDrillReview } from '../../../lib/services/drillReviewService';
+import { scheduleConceptReview } from '../intelligence/profile';
 import { z } from 'zod';
 
 // Zod schema for TelemetryData (Phase 3: Telemetry Injection)
@@ -139,6 +140,18 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       question,
       { info: logger.info.bind(logger), warn: logger.warn.bind(logger) }
     );
+
+    // SRS: Schedule concept review (Leitner-style: fail +1 day, pass +3 days)
+    if (typeof result.isCorrect === 'boolean') {
+      try {
+        const conceptKey = `${question.system || 'General'}|${question.conditionId || questionId}`;
+        await scheduleConceptReview(prisma, user.id, conceptKey, result.isCorrect);
+      } catch (srsErr) {
+        logger.warn('SRS scheduleConceptReview failed (non-fatal)', {
+          error: srsErr instanceof Error ? srsErr.message : String(srsErr),
+        });
+      }
+    }
 
     return { data: result };
   } catch (error: unknown) {

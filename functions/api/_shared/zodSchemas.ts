@@ -593,6 +593,10 @@ export const geminiStreamRequestSchema = z
       .min(1, 'Prompt is required')
       .max(128 * 1024, 'Prompt too long'),
     temperature: z.number().min(0).max(2).default(0.8),
+    /** Optional: use Gemini context cache (e.g. cachedContents/xxx) for "Chat with your Library" */
+    cachedContent: z.string().min(1).startsWith('cachedContents/').optional(),
+    /** Optional: Gemini 3 thinking level for reasoning control */
+    thinkingLevel: z.enum(['MINIMAL', 'LOW', 'MEDIUM', 'HIGH']).optional(),
   })
   .strict();
 

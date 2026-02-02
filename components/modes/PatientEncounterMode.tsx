@@ -17,6 +17,7 @@ import {
   Heart,
   ClipboardList,
   Stethoscope as StethoscopeIcon,
+  Phone,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import type {
@@ -28,7 +29,7 @@ import type {
 import type { PlacedOrder, ExamFinding, OSCEScoreReport } from '@/types/osce-enhanced';
 
 // Import OSCE Enhancement Components
-import { OrderPanel, ExamPanel, RapportMeter, RapportIndicator, ScoreReport } from './osce';
+import { OrderPanel, ExamPanel, RapportMeter, RapportIndicator, ScoreReport, OSCELiveSession } from './osce';
 import { useEnhancedOSCE } from '@/hooks/useEnhancedOSCE';
 import {
   getRandomEncounterCase,
@@ -167,6 +168,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [showOrderPanel, setShowOrderPanel] = useState(false);
   const [showExamPanel, setShowExamPanel] = useState(false);
   const [showRapportMeter, setShowRapportMeter] = useState(true);
+  const [showLiveSession, setShowLiveSession] = useState(false);
   const [enhancedScoreReport, setEnhancedScoreReport] = useState<OSCEScoreReport | null>(null);
 
   // Initialize Enhanced OSCE Hook
@@ -962,6 +964,16 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                 {phase}
               </span>
+              {session.id && (
+                <button
+                  onClick={() => setShowLiveSession(true)}
+                  className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+                  title="Live voice patient"
+                  aria-label="Live voice patient"
+                >
+                  <Phone className="w-4 h-4 text-slate-400" />
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-4">
@@ -988,6 +1000,16 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 >
                   <ClipboardList className="w-4 h-4" />
                 </button>
+                {session.id && (
+                  <button
+                    onClick={() => setShowLiveSession(true)}
+                    className={`p-2 rounded-md transition-colors ${showLiveSession ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
+                    title="Live voice patient"
+                    aria-label="Open live voice patient"
+                  >
+                    <Phone className="w-4 h-4" />
+                  </button>
+                )}
               </div>
               {/* Clinical Fidelity Badge */}
               {isFidelityModeActive && (
@@ -1034,6 +1056,28 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </div>
           </div>
         </div>
+
+        {/* Live Voice Patient overlay */}
+        {showLiveSession && session.id && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div className="relative max-w-md w-full">
+              <OSCELiveSession
+                sessionId={session.id}
+                patientContext={
+                  currentCase
+                    ? {
+                        patientName: currentCase.patientName,
+                        age: typeof currentCase.age === 'number' ? currentCase.age : undefined,
+                        sex: currentCase.sex,
+                        chiefComplaint: currentCase.chiefComplaint,
+                      }
+                    : undefined
+                }
+                onClose={() => setShowLiveSession(false)}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 py-6">

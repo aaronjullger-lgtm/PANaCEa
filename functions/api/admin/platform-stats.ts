@@ -41,7 +41,9 @@ export const onRequestGet = authenticatedEndpoint(PlatformStatsSchema, async (co
       select: { role: true, id: true },
     });
 
-    if (!user || !isAdmin(user.role as UserRole)) {
+    const role = String(user?.role).toLowerCase() as UserRole | undefined;
+
+    if (!user || !role || !isAdmin(role)) {
       logger.warn('Non-admin attempted to access platform stats', {
         userId: auth.userId,
         role: user?.role,

@@ -1,0 +1,329 @@
+/**
+ * API: Post-Encounter Analysis (grade OSCE transcript)
+ * POST /api/osce/analysis/grade
+ *
+ * Asynchronous grading of a completed OSCE session against a clinical rubric
+ * via Gemini, simulating faculty review. Persists OsceResult and optionally
+ * creates ConceptGap for Tutor targeting when Differential Diagnosis fails.
+ */
+
+import { z } from 'zod';
+import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import {
+  createEdgePrismaClient,
+  safePrismaDisconnect,
+  type EdgePrismaClient,
+} from '../../_shared/prisma-edge';
+import { createEndpointLogger } from '../../_shared/secureLogger';
+import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
+import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
+import { IDSchema } from '../../_shared/schemas';
+
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
+// Use gemini-2.5-pro-preview or gemini-2.0-flash; set to gemini-3-pro-preview when available.
+const GEMINI_GRADE_MODEL = 'gemini-2.5-pro-preview';
+
+const GradeBodySchema = z.object({
+  body: z.object({
+    sessionId: IDSchema,
+  }),
+});
+
+interface Env {
+  DATABASE_URL: string;
+  GEMINI_API_KEY: string;
+  RATE_LIMIT_KV?: KVNamespace;
+}
+
+type ChecklistItem = { item: string; status: 'PASS' | 'FAIL'; feedback: string };
+type GradePayload = {
+  score: number;
+  checklist: ChecklistItem[];
+  redFlagsMissed: string[];
+  clinicalReasoningScore: number;
+  billingCodeSuggestion: string;
+};
+
+const RUBRIC_CHECKLIST_ITEM = z.object({
+  item: z.string(),
+  isRedFlag: z.boolean().optional(),
+});
+type RubricItem = z.infer<typeof RUBRIC_CHECKLIST_ITEM>;
+
+function parseRubricChecklist(checklist: unknown): RubricItem[] {
+  if (!Array.isArray(checklist)) return [];
+  return checklist.filter((x): x is RubricItem => RUBRIC_CHECKLIST_ITEM.safeParse(x).success);
+}
+
+function inferSystemFromCase(chiefComplaint: string, correctDiagnosis: string): string {
+  const text = `${chiefComplaint} ${correctDiagnosis}`.toLowerCase();
+  if (/\b(heart|cardiac|chest pain|acs|mi|coronary)\b/.test(text)) return 'cardiovascular';
+  if (/\b(lung|pulmonary|dyspnea|copd|asthma|pe)\b/.test(text)) return 'pulmonary';
+  if (/\b(gi|abdominal|hepatic|pancreat)\b/.test(text)) return 'gastrointestinal';
+  if (/\b(neuro|stroke|seizure|headache)\b/.test(text)) return 'neurological';
+  if (/\b(renal|kidney|aki|ckd)\b/.test(text)) return 'nephrology';
+  if (/\b(infection|sepsis|uti|pneumonia)\b/.test(text)) return 'infectious_disease';
+  if (/\b(psych|depression|anxiety|suicid)\b/.test(text)) return 'psychiatry';
+  return 'general';
+}
+
+async function callGeminiGrade(
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string
+): Promise<string> {
+  const url = `${GEMINI_BASE}/v1beta/models/${GEMINI_GRADE_MODEL}:generateContent?key=${apiKey}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      generationConfig: {
+        temperature: 0.2,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 4096,
+        responseMimeType: 'application/json',
+      },
+    }),
+  });
+  if (!res.ok) throw new Error(`Gemini ${res.status}: ${await res.text()}`);
+  const data = (await res.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('Gemini returned no text');
+  return text;
+}
+
+function parseGradePayload(rawText: string): GradePayload {
+  const stripped = rawText.replace(/^```json\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+  const parsed = JSON.parse(stripped) as GradePayload;
+  return {
+    score: Number(parsed.score) || 0,
+    checklist: Array.isArray(parsed.checklist) ? parsed.checklist : [],
+    redFlagsMissed: Array.isArray(parsed.redFlagsMissed) ? parsed.redFlagsMissed : [],
+    clinicalReasoningScore: Number(parsed.clinicalReasoningScore) || 0,
+    billingCodeSuggestion:
+      typeof parsed.billingCodeSuggestion === 'string' ? parsed.billingCodeSuggestion : 'N/A',
+  };
+}
+
+type SessionWithCase = Awaited<
+  ReturnType<EdgePrismaClient['patientEncounterSession']['findFirst']>
+> & {
+  PatientEncounterCase: NonNullable<
+    Awaited<
+      ReturnType<EdgePrismaClient['patientEncounterSession']['findFirst']>
+    >['PatientEncounterCase']
+  >;
+};
+
+async function resolveSessionAndRubric(
+  prisma: EdgePrismaClient,
+  sessionId: string,
+  userId: string
+): Promise<
+  | { ok: true; session: SessionWithCase; checklistText: string; transcript: unknown; caseLabel: string }
+  | { ok: false; status: number; error: string }
+> {
+  const session = await prisma.patientEncounterSession.findFirst({
+    where: { id: sessionId, userId },
+    include: {
+      PatientEncounterCase: true,
+      User: { select: { id: true } },
+    },
+  });
+  if (!session) return { ok: false, status: 404, error: 'Session not found' };
+  if (session.status !== 'completed') {
+    return { ok: false, status: 400, error: 'Session must be completed before grading' };
+  }
+  const caseRecord = session.PatientEncounterCase;
+  const rubric = await prisma.caseRubric.findUnique({ where: { caseId: session.caseId } });
+  if (!rubric) {
+    return { ok: false, status: 404, error: 'No rubric found for this case. Create a CaseRubric for the case before grading.' };
+  }
+  const rubricItems = parseRubricChecklist(rubric.checklist as unknown);
+  const checklistText = rubricItems
+    .map((r) => `- ${r.item}${r.isRedFlag ? ' [RED FLAG]' : ''}`)
+    .join('\n');
+  const caseLabel = `${caseRecord.chiefComplaint} - ${caseRecord.patientName} ${caseRecord.age}`;
+  const transcript = session.messages;
+  return {
+    ok: true,
+    session: session as SessionWithCase,
+    checklistText,
+    transcript,
+    caseLabel,
+  };
+}
+
+async function persistGradeAndConceptGap(
+  prisma: EdgePrismaClient,
+  sessionId: string,
+  payload: GradePayload,
+  session: {
+    User?: { id: string } | null;
+    PatientEncounterCase: { chiefComplaint: string; correctDiagnosis: string };
+  }
+): Promise<{ resultId: string; conceptGapCreated: boolean }> {
+  const existingResult = await prisma.osceResult.findUnique({ where: { sessionId } });
+  const data = {
+    score: payload.score,
+    checklist: payload.checklist as unknown as object,
+    redFlagsMissed: payload.redFlagsMissed,
+    clinicalReasoningScore: payload.clinicalReasoningScore,
+    billingCodeSuggestion: payload.billingCodeSuggestion || null,
+  };
+  if (existingResult) {
+    await prisma.osceResult.update({ where: { sessionId }, data });
+  } else {
+    await prisma.osceResult.create({ data: { sessionId, ...data } });
+  }
+  const savedResult = await prisma.osceResult.findUnique({ where: { sessionId } });
+  if (!savedResult) throw new Error('Failed to persist OsceResult');
+
+  const differentialFailed =
+    payload.clinicalReasoningScore < 60 || payload.redFlagsMissed.length > 0;
+  let conceptGapCreated = false;
+  if (differentialFailed && session.User?.id) {
+    const system = inferSystemFromCase(
+      session.PatientEncounterCase.chiefComplaint,
+      session.PatientEncounterCase.correctDiagnosis
+    );
+    const existingGap = await prisma.conceptGap.findFirst({
+      where: { userId: session.User.id, system, sourceType: 'osce', sourceId: savedResult.id },
+    });
+    if (!existingGap) {
+      await prisma.conceptGap.create({
+        data: { userId: session.User.id, system, sourceType: 'osce', sourceId: savedResult.id },
+      });
+      conceptGapCreated = true;
+    }
+  }
+  return { resultId: savedResult.id, conceptGapCreated };
+}
+
+export const onRequestOptions = withCors();
+
+export const onRequestPost = authenticatedEndpoint(
+  GradeBodySchema,
+  async (context) => {
+    const { request, env, validated, auth } = context as {
+      request: Request;
+      env: Env;
+      validated: z.infer<typeof GradeBodySchema>;
+      auth: { userId: string };
+    };
+    const log = createEndpointLogger('/api/osce/analysis/grade', auth.userId);
+
+    try {
+      validateFunctionEnv(env as unknown as Record<string, unknown>, 'GEMINI');
+    } catch (e) {
+      if (e instanceof MissingEnvError) return e.toResponse();
+      throw e;
+    }
+
+    // Tight Gemini-specific rate limiting on top of standard API limits
+    const identifier = getRateLimitIdentifier(request);
+    const { response: rateLimitResponse } = await withRateLimit(
+      env as { RATE_LIMIT_KV?: KVNamespace },
+      identifier,
+      'gemini'
+    );
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
+
+    const { sessionId } = validated.body;
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+    const user = await prisma.user.findUnique({
+      where: { clerkId: auth.userId },
+      select: { id: true },
+    });
+    if (!user) {
+      log.warn('User not found', { clerkId: auth.userId });
+      return { status: 404, error: 'User not found' };
+    }
+
+    const resolved = await resolveSessionAndRubric(prisma, sessionId, user.id);
+    if (!resolved.ok) {
+      if (resolved.status === 404) log.warn('Session or rubric not found', { sessionId });
+      return { status: resolved.status, error: resolved.error };
+    }
+
+    const { session, checklistText, transcript, caseLabel } = resolved;
+    const systemPrompt = `You are a senior PA faculty member grading an OSCE. Evaluate the following transcript against the provided Clinical Checklist. Be strict. If the student missed a 'Red Flag' question, mark it as a critical fail.
+
+Evaluate using the 4 PANCE blueprint skill areas (weight them in your overall score):
+- History Taking (16%)
+- Physical Exam (16%)
+- Differential Diagnosis (18%)
+- Clinical Intervention (16%)
+
+Respond with ONLY a single JSON object (no markdown, no code fence), in this exact shape:
+{"score": number 0-100, "checklist": [{"item": "exact rubric item text", "status": "PASS" or "FAIL", "feedback": "brief feedback"}], "redFlagsMissed": ["list of red flag items the student missed"], "clinicalReasoningScore": number 0-100, "billingCodeSuggestion": "ICD-10 code or N/A"}`;
+
+    const userPrompt = `Case: ${caseLabel}
+
+Clinical Checklist:
+${checklistText}
+
+Transcript (Speaker A = Student, Speaker B = Simulated Patient):
+${JSON.stringify(transcript)}
+
+Output your grading as a single JSON object only.`;
+
+    try {
+      let rawText: string;
+      try {
+        rawText = await callGeminiGrade(env.GEMINI_API_KEY, systemPrompt, userPrompt);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        const is429 = msg.startsWith('Gemini 429');
+        log.warn('Gemini grading error', { msg: msg.slice(0, 200) });
+        return {
+          status: is429 ? 429 : 502,
+          error: is429 ? 'Rate limit exceeded' : 'Grading service failed',
+        };
+      }
+
+      let payload: GradePayload;
+      try {
+        payload = parseGradePayload(rawText);
+      } catch (error_) {
+        log.error('Failed to parse Gemini JSON', { raw: rawText.slice(0, 300), err: error_ });
+        return { status: 502, error: 'Invalid grading response format' };
+      }
+
+      const { resultId, conceptGapCreated } = await persistGradeAndConceptGap(
+        prisma,
+        sessionId,
+        payload,
+        session
+      );
+      if (conceptGapCreated) {
+        log.info('ConceptGap created for Tutor', { userId: session.User?.id, sessionId });
+      }
+      log.info('OSCE grading completed', { sessionId, score: payload.score });
+      return {
+        data: {
+          resultId,
+          score: payload.score,
+          checklist: payload.checklist,
+          redFlagsMissed: payload.redFlagsMissed,
+          clinicalReasoningScore: payload.clinicalReasoningScore,
+          billingCodeSuggestion: payload.billingCodeSuggestion,
+          conceptGapCreated,
+        },
+      };
+    } catch (err) {
+      log.error('Grade analysis error', err);
+      return { status: 500, error: 'Internal server error' };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  }
+);

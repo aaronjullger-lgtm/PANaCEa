@@ -31,7 +31,7 @@ export const onRequestGet = authenticatedEndpoint(CacheMetricsSchema, async (con
       select: { role: true, id: true },
     });
 
-    if (user?.role !== 'admin' && user?.role !== 'superadmin') {
+    if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
       logger.warn('Non-admin attempted to access cache metrics', {
         userId: auth.userId,
         role: user?.role,

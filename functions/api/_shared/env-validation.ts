@@ -93,6 +93,7 @@ function formatMissingEnvMessage(missingVars: string[]): string {
     CLERK_WEBHOOK_SECRET: 'Clerk webhook signing secret',
     SUPABASE_URL: 'Supabase project URL',
     SUPABASE_ANON_KEY: 'Supabase anonymous key',
+    SUPABASE_SERVICE_ROLE_KEY: 'Supabase service role key (storage/admin); required for study/chat when resource uses storagePath or adobeDataPath',
     TURNSTILE_SECRET_KEY: 'Cloudflare Turnstile secret for bot protection',
   };
 

@@ -96,11 +96,19 @@ interface CommandCenterHubProps {
     initialFocus?: 'all' | 'growth' | 'flagged' | 'due';
   }) => void;
   onNavigateToReference?: () => void;
+  /** My Library: upload PDFs, set active cache for Tutor */
+  onNavigateToMyLibrary?: () => void;
   onNavigateToCustomStudy?: () => void;
   /** Opens Pearl Deck (Rapid Review - saved pearls only) */
   onNavigateToPearlDeck?: () => void;
+  /** Clinical Eye: image analysis with code execution */
+  onNavigateToClinicalEye?: () => void;
+  /** Anatomy Visualizer: Firefly + Gemini segmentation */
+  onNavigateToVisualizer?: () => void;
   /** Opens the Settings modal (for Current Curriculum "Change" button) */
   onOpenSettings?: () => void;
+  /** Profile-aware Reasoning Tutor chat */
+  onNavigateToTutorChat?: () => void;
 }
 
 // Icon mapping
@@ -583,9 +591,13 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   onNavigateToIntegrations,
   onNavigateToSimulation,
   onNavigateToReference,
+  onNavigateToMyLibrary,
   onNavigateToCustomStudy,
   onNavigateToPearlDeck,
+  onNavigateToClinicalEye,
+  onNavigateToVisualizer,
   onOpenSettings,
+  onNavigateToTutorChat,
 }) => {
   const { user } = useUser();
   const { showPANREContent, careerStage } = useUserContext();
@@ -1020,6 +1032,78 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               </section>
             )}
 
+            {/* AI-Powered Tools: Clinical Eye & Visualizer */}
+            {(onNavigateToClinicalEye || onNavigateToVisualizer || onNavigateToTutorChat) && (
+              <section>
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[var(--color-text-muted)]" />
+                  AI-Powered Tools
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {onNavigateToClinicalEye && (
+                    <button
+                      onClick={onNavigateToClinicalEye}
+                      className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 rounded-xl bg-[var(--color-bg-secondary)]">
+                          <Eye className="w-6 h-6 text-[var(--color-text-secondary)]" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-[var(--color-text-primary)]">Clinical Eye</h4>
+                          <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                            Upload ECGs or images; get analysis with code-based measurements
+                          </p>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                    </button>
+                  )}
+                  {onNavigateToVisualizer && (
+                    <button
+                      onClick={onNavigateToVisualizer}
+                      className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 rounded-xl bg-[var(--color-bg-secondary)]">
+                          <Image className="w-6 h-6 text-[var(--color-text-secondary)]" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-[var(--color-text-primary)]">Anatomy Visualizer</h4>
+                          <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                            Generate anatomy images and segment regions (Firefly + Gemini)
+                          </p>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                    </button>
+                  )}
+                  {onNavigateToTutorChat && (
+                    <button
+                      onClick={onNavigateToTutorChat}
+                      className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 rounded-xl bg-[var(--color-bg-secondary)]">
+                          <MessageSquare className="w-6 h-6 text-[var(--color-text-secondary)]" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-[var(--color-text-primary)]">
+                            Reasoning Tutor Chat
+                          </h4>
+                          <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                            Chat with a Gemini Tutor that uses your weak spots and active Library to
+                            guide explanations
+                          </p>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
+                      </div>
+                    </button>
+                  )}
+                </div>
+              </section>
+            )}
+
             {/* Clinical Reference Library */}
             {onNavigateToReference && (
               <section>
@@ -1056,6 +1140,36 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                           50+ ECG
                         </span>
                       </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </button>
+              </section>
+            )}
+
+            {/* My Library - Upload PDFs, set active cache for Tutor */}
+            {onNavigateToMyLibrary && (
+              <section>
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                  <FolderTree className="w-5 h-5 text-[var(--color-text-muted)]" />
+                  Knowledge
+                </h3>
+                <button
+                  onClick={onNavigateToMyLibrary}
+                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 rounded-xl bg-[var(--color-accent)]/20">
+                      <Sparkles className="w-6 h-6 text-[var(--color-accent)]" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-[var(--color-text-primary)]">My Library</h4>
+                      <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+                        Upload PDFs and set an active document so the Tutor uses your materials when answering questions
+                      </p>
+                      <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                        Context caching
+                      </span>
                     </div>
                     <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
                   </div>

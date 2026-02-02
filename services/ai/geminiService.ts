@@ -463,6 +463,12 @@ export async function callGeminiTextStreaming(
   prompt: string,
   temperature: number = 0.8,
   options: {
+    /** Optional: Gemini context cache name for "Chat with your Library" / Tutor grounding */
+    cachedContent?: string;
+    /** Optional: get Clerk session token for authenticated proxy requests (required when backend requires auth) */
+    getToken?: () => Promise<string | null>;
+    /** Optional: Gemini 3 thinking level for reasoning depth control */
+    thinkingLevel?: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
     onChunk?: (chunk: string) => void;
     onComplete?: (fullText: string) => void;
     onError?: (error: Error) => void;
@@ -532,6 +538,9 @@ export async function callGeminiTextStreaming(
         options: {
           modelName: string;
           temperature: number;
+          cachedContent?: string;
+          token?: string | null;
+          thinkingLevel?: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
           onChunk?: (chunk: string) => void;
           onComplete?: (fullText: string) => void;
           onError?: (error: Error) => void;
@@ -566,9 +575,13 @@ export async function callGeminiTextStreaming(
       throw error;
     }
 
+    const token = options.getToken ? await options.getToken() : null;
     const result = await streamingModule.streamGeminiText(prompt, {
       modelName,
       temperature,
+      cachedContent: options.cachedContent,
+      token: token ?? undefined,
+      thinkingLevel: options.thinkingLevel,
       onChunk: options.onChunk,
       onComplete: options.onComplete,
       onError: options.onError,

@@ -36,6 +36,8 @@ import { getConditionByIdSync, loadConditions } from '../lib/loadConditions';
 import { analyzeAnswer } from '@/services/ai';
 import { ClinicalSkeleton } from './ui/ClinicalSkeleton';
 import { ClinicalPearlHighlight } from './ui/ClinicalPearlHighlight';
+import { usePreferences } from '@/hooks/usePreferences';
+import { useAuth } from '@clerk/clerk-react';
 
 /** Maximum number of bullet points to display in Core Rationale section */
 const MAX_BULLETS = 6;
@@ -314,6 +316,14 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   const [tutorResponse, setTutorResponse] = useState('');
   const [loadingTutor, setLoadingTutor] = useState(false);
 
+  const { preferences } = usePreferences();
+  const { getToken } = useAuth();
+  const customSettings = preferences.customSettings as Record<string, unknown> | undefined;
+  const activeKnowledgeCacheName = customSettings?.activeKnowledgeCacheName as string | undefined;
+  const activeKnowledgeCacheDisplayName = customSettings?.activeKnowledgeCacheDisplayName as
+    | string
+    | undefined;
+
   // Process explanation using the compression service
   const processedContent = useMemo(() => {
     return highYieldPackage(explanation, condition);
@@ -379,9 +389,11 @@ Keep your response concise (3-5 sentences max) and supportive.`;
       // Use streaming API from geminiService
       const { callGeminiTextStreaming } = await import('@/services/ai/geminiService');
 
-      await callGeminiTextStreaming('gemini-2.0-flash-exp', prompt, 0.7, {
+      await callGeminiTextStreaming('gemini-3-flash-preview', prompt, 0.8, {
+        getToken,
+        ...(activeKnowledgeCacheName ? { cachedContent: activeKnowledgeCacheName } : {}),
+        thinkingLevel: 'HIGH',
         onChunk: (chunk) => {
-          // Append each chunk as it arrives
           setTutorResponse((prev) => prev + chunk);
         },
         onComplete: () => {
@@ -566,6 +578,11 @@ Keep your response concise (3-5 sentences max) and supportive.`;
                   icon={<MessageCircle className="w-5 h-5" />}
                   title="Ask Your Virtual Tutor"
                 />
+                {activeKnowledgeCacheName && (
+                  <p className="text-xs text-[var(--color-text-secondary)]">
+                    Answering using: {activeKnowledgeCacheDisplayName || 'your library'}
+                  </p>
+                )}
                 <div className="flex gap-2">
                   <input
                     type="text"

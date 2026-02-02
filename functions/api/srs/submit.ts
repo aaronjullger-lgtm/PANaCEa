@@ -174,7 +174,7 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
     // Variant Queue Logic
     let queuedVariantId = null;
     if (!isCorrect && conditionId && taskType) {
-      const queueService = new VariantQueueService(prisma as any);
+      const queueService = new VariantQueueService(prisma as any, env.GEMINI_API_KEY);
       queuedVariantId = await queueService.queueVariantForReview(dbUserId, questionId, taskType);
     }
 

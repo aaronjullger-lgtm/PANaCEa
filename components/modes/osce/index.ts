@@ -6,3 +6,4 @@ export { BodyMap, EXAM_MANEUVERS } from './BodyMap';
 export { ExamPanel } from './ExamPanel';
 export { ScoreReport } from './ScoreReport';
 export { RapportMeter, RapportChangeNotification, RapportIndicator } from './RapportMeter';
+export { OSCELiveSession } from './OSCELiveSession';

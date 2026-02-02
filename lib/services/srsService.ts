@@ -16,17 +16,32 @@ import { FSRS, FSRSCard, FSRSState, Rating, defaultParameters, FSRSParameters } 
 const fsrs = new FSRS();
 
 /**
- * Load user-specific FSRS parameters from database
- * Falls back to defaults if user has no custom config
+ * Minimal Prisma-like contract for FSRS config (edge-safe; no lib/prisma import).
+ * Callers from Edge pass createEdgePrismaClient(); callers from Node can pass lib/prisma.
  */
-async function loadUserFSRSConfig(userId: string): Promise<FSRSParameters> {
-  // Browser bundle should never import Prisma; guard with build-time SSR flag.
-  if (!import.meta.env.SSR || !process.env.DATABASE_URL) {
+type FSRSConfigPrismaLike = {
+  userSRSConfig: {
+    findUnique: (args: { where: { userId: string } }) => Promise<{
+      requestRetention: number;
+      wWeights: number[] | null;
+    } | null>;
+  };
+} | null;
+
+/**
+ * Load user-specific FSRS parameters from database when prisma is provided.
+ * Falls back to defaults when prisma is null/undefined (e.g. browser or no DB).
+ * No dynamic import of lib/prisma so this file stays edge-safe (no pg bundle).
+ */
+async function loadUserFSRSConfig(
+  userId: string,
+  prisma: FSRSConfigPrismaLike
+): Promise<FSRSParameters> {
+  if (!prisma) {
     return defaultParameters;
   }
 
   try {
-    const { prisma } = await import('../prisma');
     const config = await prisma.userSRSConfig.findUnique({
       where: { userId },
     });
@@ -34,7 +49,7 @@ async function loadUserFSRSConfig(userId: string): Promise<FSRSParameters> {
       return {
         request_retention: config.requestRetention,
         maximum_interval: defaultParameters.maximum_interval,
-        w: config.wWeights as number[],
+        w: config.wWeights,
       };
     }
   } catch (error) {
@@ -45,10 +60,11 @@ async function loadUserFSRSConfig(userId: string): Promise<FSRSParameters> {
 }
 
 /**
- * Create FSRS instance with user-specific or default parameters
+ * Create FSRS instance with user-specific or default parameters.
+ * Pass prisma from Edge (createEdgePrismaClient) or Node (lib/prisma); pass null in browser.
  */
-async function createUserFSRS(userId: string): Promise<FSRS> {
-  const params = await loadUserFSRSConfig(userId);
+async function createUserFSRS(userId: string, prisma: FSRSConfigPrismaLike): Promise<FSRS> {
+  const params = await loadUserFSRSConfig(userId, prisma);
   return new FSRS(params);
 }
 
@@ -405,9 +421,10 @@ export function getDueCards(
 export async function updateReviewOutcome(
   userId: string,
   questionId: string,
-  input: SRSUpdateInput
+  input: SRSUpdateInput,
+  prisma?: FSRSConfigPrismaLike
 ): Promise<SRSScheduleResult> {
-  const userFsrs = await createUserFSRS(userId);
+  const userFsrs = await createUserFSRS(userId, prisma ?? null);
   const items = loadSRSItems();
   let item = items.get(questionId);
 
@@ -748,9 +765,10 @@ export async function updateReviewOutcomeAsync(
   userId: string,
   questionId: string,
   input: SRSUpdateInput,
-  syncToCloud?: (items: SRSItem[]) => Promise<void>
+  syncToCloud?: (items: SRSItem[]) => Promise<void>,
+  prisma?: FSRSConfigPrismaLike
 ): Promise<SRSScheduleResult> {
-  const result = updateReviewOutcome(userId, questionId, input);
+  const result = updateReviewOutcome(userId, questionId, input, prisma);
 
   // If sync function provided, sync to cloud
   if (syncToCloud) {

@@ -45,10 +45,14 @@ import {
   SimulationPage,
   CommandCenterPage,
   ClinicalReferenceLibrary,
+  MyLibraryPage,
+  TutorChatPage,
   CustomStudyMode,
   ClinicalProfileDashboard,
   AdminDashboard,
   MyPearlsPanel,
+  ClinicalEyePage,
+  VisualizerPage,
 } from './config/lazyComponents';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { Toaster } from 'sonner';
@@ -572,6 +576,22 @@ const App: React.FC = () => {
               }
             />
             <Route
+              path="/clinical-eye"
+              element={
+                <Suspense fallback={<Loader />}>
+                  <ClinicalEyePage onBack={() => navigate('/')} />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/visualizer"
+              element={
+                <Suspense fallback={<Loader />}>
+                  <VisualizerPage onBack={() => navigate('/')} />
+                </Suspense>
+              }
+            />
+            <Route
               path="*"
               element={
                 <>
@@ -682,6 +702,14 @@ const App: React.FC = () => {
                     </div>
                   )}
 
+                  {view === 'my_library' && (
+                    <div className="w-full">
+                      <Suspense fallback={<Loader />}>
+                        <MyLibraryPage onExit={() => setView('command_center')} />
+                      </Suspense>
+                    </div>
+                  )}
+
                   {view === 'pearl_deck' && (
                     <div className="w-full">
                       <Suspense fallback={<Loader />}>
@@ -694,7 +722,9 @@ const App: React.FC = () => {
                   )}
 
                   {/* Standard views with max-w-4xl constraint */}
-                  {view !== 'reference_library' && view !== 'pearl_deck' && (
+                  {view !== 'reference_library' &&
+                    view !== 'my_library' &&
+                    view !== 'pearl_deck' && (
                     <main
                       id="main-content"
                       className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24"
@@ -737,7 +767,9 @@ const App: React.FC = () => {
                                 onNavigateToIntegrations={() => setView('integrations')}
                                 onNavigateToSimulation={handleNavigateToSimulation}
                                 onNavigateToReference={() => setView('reference_library')}
+                                onNavigateToMyLibrary={() => setView('my_library')}
                                 onNavigateToCustomStudy={handleNavigateToCustomStudy}
+                                onNavigateToTutorChat={() => setView('tutor_chat')}
                                 onNavigateToPearlDeck={() => setView('pearl_deck')}
                                 growthAreas={growthAreas}
                                 examLabel={examLabel ?? 'PANCE'}
@@ -1298,6 +1330,7 @@ const App: React.FC = () => {
                                   onNavigateToGapAnalysis={() => setView('gap_analysis')}
                                   onNavigateToIntegrations={() => setView('integrations')}
                                   onNavigateToReference={() => setView('reference_library')}
+                                  onNavigateToMyLibrary={() => setView('my_library')}
                                   onBack={() => setView('command_center')}
                                 />
                               </Suspense>
@@ -1320,6 +1353,26 @@ const App: React.FC = () => {
                             >
                               <Suspense fallback={<Loader />}>
                                 <CustomStudyMode onBack={() => setView('command_center')} />
+                              </Suspense>
+                            </WithGeminiErrorBoundary>
+                          </motion.div>
+                        )}
+
+                        {view === 'tutor_chat' && (
+                          <motion.div
+                            key="tutor_chat"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            transition={pageTransition}
+                          >
+                            <WithGeminiErrorBoundary
+                              viewName="tutor_chat"
+                              onRetry={() => setView('tutor_chat')}
+                            >
+                              <Suspense fallback={<Loader />}>
+                                <TutorChatPage onExit={() => setView('command_center')} />
                               </Suspense>
                             </WithGeminiErrorBoundary>
                           </motion.div>

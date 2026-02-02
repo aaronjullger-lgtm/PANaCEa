@@ -41,7 +41,9 @@ export type View =
   | 'simulation_page'
   | 'command_center_page'
   | 'reference_library'
-  | 'pearl_deck';
+  | 'pearl_deck'
+  | 'my_library'
+  | 'tutor_chat';
 
 /** Drill mode IDs with dedicated view implementations */
 export const DRILL_MODE_IDS = {

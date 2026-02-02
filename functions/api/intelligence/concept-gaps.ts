@@ -18,6 +18,7 @@ import {
   EdgePrismaClient,
 } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveUserId } from '../_shared/user-resolver';
 import { z } from 'zod';
 
 // ============================================================================
@@ -152,7 +153,13 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
   try {
     log.info('Fetching concept gaps analysis');
     prisma = createEdgePrismaClient(env.DATABASE_URL);
-    const userId = auth.userId;
+    const userId = await resolveUserId(prisma, auth.userId);
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'User not found' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Fetch question attempts for analysis
     const [questionAttempts, conditions] = await Promise.all([
@@ -486,7 +493,7 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
     const response: ConceptGapsResponse = {
       success: true,
       analysis: {
-        userId,
+        userId: auth.userId,
         analyzedAt: new Date().toISOString(),
 
         totalGapsIdentified: knowledgeGaps.length,

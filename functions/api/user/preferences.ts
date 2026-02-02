@@ -260,13 +260,22 @@ export const onRequestPatch = authenticatedEndpoint<z.infer<typeof PartialPrefer
         };
       }
 
-      // Update existing preferences
+      // Build update data: merge customSettings so partial updates don't wipe other keys
+      const updateData: Record<string, unknown> = { ...payload, updatedAt: new Date() };
+      if (payload.customSettings !== undefined) {
+        const existingCustom =
+          (existing.customSettings as Record<string, unknown>) ?? {};
+        const merged = { ...existingCustom, ...payload.customSettings };
+        // Remove keys explicitly set to null (client "clear" semantics)
+        for (const key of Object.keys(merged)) {
+          if (merged[key] === null) delete merged[key];
+        }
+        updateData.customSettings = merged;
+      }
+
       const preferences = await prisma.userPreferences.update({
         where: { userId: auth.userId },
-        data: {
-          ...payload,
-          updatedAt: new Date(),
-        },
+        data: updateData as Parameters<typeof prisma.userPreferences.update>[0]['data'],
       });
 
       logger.info('Preferences updated (partial)', {

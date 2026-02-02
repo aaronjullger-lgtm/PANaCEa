@@ -8,6 +8,8 @@ export const ROUTES = {
   HOME: '/',
   ADMIN: '/admin',
   ADMIN_CURATION: '/admin/curation',
+  CLINICAL_EYE: '/clinical-eye',
+  VISUALIZER: '/visualizer',
 } as const;
 
 // Type for route values

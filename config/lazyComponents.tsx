@@ -70,6 +70,12 @@ export const CommandCenterPage = lazy(() =>
 export const ClinicalReferenceLibrary = lazy(
   () => import('../components/library/ClinicalReferenceLibrary')
 );
+export const MyLibraryPage = lazy(() =>
+  import('../components/pages/MyLibraryPage').then((m) => ({ default: m.MyLibraryPage }))
+);
+export const TutorChatPage = lazy(() =>
+  import('../components/pages/TutorChatPage').then((m) => ({ default: m.TutorChatPage }))
+);
 export const CustomStudyMode = lazy(() => import('../components/modes/CustomStudyMode'));
 export const QuestionCurationPanel = lazy(
   () => import('../components/admin/QuestionCurationPanel')
@@ -81,3 +87,9 @@ export const AdminDashboard = lazy(() =>
   import('../pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
 );
 export const MyPearlsPanel = lazy(() => import('../components/pearls/MyPearlsPanel'));
+export const ClinicalEyePage = lazy(() =>
+  import('../pages/ClinicalEyePage').then((m) => ({ default: m.ClinicalEyePage }))
+);
+export const VisualizerPage = lazy(() =>
+  import('../pages/VisualizerPage').then((m) => ({ default: m.VisualizerPage }))
+);
