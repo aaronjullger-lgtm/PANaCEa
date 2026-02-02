@@ -14,7 +14,7 @@ Adaptive learning meets medical education excellence for Physician Assistant stu
 
 </div>
 
-> **🚨 DEPLOYMENT STATUS:** Cloudflare Pages deployments are currently blocked (error code 8000119). See [CLOUDFLARE_DEPLOYMENT_BLOCKED.md](./CLOUDFLARE_DEPLOYMENT_BLOCKED.md) for details and resolution steps. Local development is unaffected.
+> **🚨 DEPLOYMENT FIX REQUIRED:** Cloudflare deployments failing due to API token permissions. **Solution:** Update `CLOUDFLARE_API_TOKEN` secret with "Account → Cloudflare Pages: Edit" permission. See [CLOUDFLARE_API_TOKEN_FIX.md](./CLOUDFLARE_API_TOKEN_FIX.md) for step-by-step instructions. Local development is unaffected.
 
 ---
 
