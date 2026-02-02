@@ -5,6 +5,7 @@
  * Improves perceived performance for question submissions and stat updates.
  */
 
+import { toast } from 'sonner';
 import type { Question, PerformanceRecord } from '../../types';
 
 interface OptimisticUpdate<T> {
@@ -237,24 +238,14 @@ export function createOptimisticPerformanceRecord(
 }
 
 /**
- * Show toast for optimistic updates
+ * Show toast for optimistic updates (uses sonner for consistent styling and a11y)
  */
 export function showOptimisticFeedback(isCorrect: boolean): void {
-  const icon = isCorrect ? '✓' : '✗';
-  const color = isCorrect ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]';
-  const message = isCorrect ? 'Correct!' : 'Incorrect';
-
-  // Use lightweight notification instead of heavy modal
-  const toast = document.createElement('div');
-  toast.className = `fixed top-4 right-4 ${color} text-[var(--color-text-inverse)] px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-slide-in`;
-  toast.innerHTML = `<span class="text-xl">${icon}</span><span class="font-semibold">${message}</span>`;
-
-  document.body.appendChild(toast);
-
-  setTimeout(() => {
-    toast.classList.add('animate-slide-out');
-    setTimeout(() => toast.remove(), 300);
-  }, 2000);
+  if (isCorrect) {
+    toast.success('Correct!', { duration: 2000 });
+  } else {
+    toast.error('Incorrect', { duration: 2000 });
+  }
 }
 
 export { optimisticUI };

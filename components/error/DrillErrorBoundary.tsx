@@ -18,6 +18,8 @@ import {
   BookOpen,
   Clock,
 } from 'lucide-react';
+import type { ErrorCategory } from '@/lib/utils/errorHandlingUtils';
+import { getUserFacingError } from '@/lib/utils/errorHandlingUtils';
 
 // Lazy load Sentry to avoid initialization conflicts with Clerk
 let captureError: ((error: Error, context?: Record<string, unknown>) => void) | null = null;
@@ -89,6 +91,19 @@ function detectErrorType(error: Error): 'api' | 'network' | 'budget' | 'unknown'
   return 'unknown';
 }
 
+function errorTypeToCategory(type: 'api' | 'network' | 'budget' | 'unknown'): ErrorCategory {
+  switch (type) {
+    case 'api':
+      return 'server';
+    case 'network':
+      return 'network';
+    case 'budget':
+      return 'rate_limit';
+    default:
+      return 'unknown';
+  }
+}
+
 // ============================================================================
 // Error Fallback Components
 // ============================================================================
@@ -101,7 +116,9 @@ interface ErrorFallbackProps {
   drillType?: string;
 }
 
-function ApiErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) {
+function ApiErrorFallback({ error, errorType, onRetry, onReturnHome }: ErrorFallbackProps) {
+  const category = errorTypeToCategory(errorType);
+  const { title, message, secondaryLabel } = getUserFacingError(category, 'drill');
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -112,13 +129,9 @@ function ApiErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) 
         <AlertTriangle className="w-8 h-8 text-data-fail" />
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-        Unable to Load Questions
-      </h2>
+      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">{title}</h2>
 
-      <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md">
-        We're having trouble connecting to our question service. This might be temporary.
-      </p>
+      <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md">{message}</p>
 
       <div className="flex gap-3">
         <button
@@ -134,7 +147,7 @@ function ApiErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) 
           className="flex items-center gap-2 px-4 py-2 bg-clinical-slate-200 dark:bg-clinical-slate-700 text-clinical-slate-700 dark:text-clinical-slate-200 rounded-lg hover:bg-clinical-slate-300 dark:hover:bg-clinical-slate-600 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Return Home
+          {secondaryLabel ?? 'Back to Command Center'}
         </button>
       </div>
 
@@ -271,7 +284,9 @@ function BudgetExceededFallback({ onReturnHome }: ErrorFallbackProps) {
   );
 }
 
-function UnknownErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackProps) {
+function UnknownErrorFallback({ error, errorType, onRetry, onReturnHome }: ErrorFallbackProps) {
+  const category = errorTypeToCategory(errorType);
+  const { title, message, secondaryLabel } = getUserFacingError(category, 'drill');
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -282,13 +297,9 @@ function UnknownErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackPro
         <AlertTriangle className="w-8 h-8 text-clinical-slate-500" />
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-        Something Went Wrong
-      </h2>
+      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">{title}</h2>
 
-      <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md">
-        An unexpected error occurred. Please try again or return to the dashboard.
-      </p>
+      <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md">{message}</p>
 
       <div className="flex gap-3">
         <button
@@ -304,7 +315,7 @@ function UnknownErrorFallback({ error, onRetry, onReturnHome }: ErrorFallbackPro
           className="flex items-center gap-2 px-4 py-2 bg-clinical-slate-200 dark:bg-clinical-slate-700 text-clinical-slate-700 dark:text-clinical-slate-200 rounded-lg hover:bg-clinical-slate-300 dark:hover:bg-clinical-slate-600 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Return Home
+          {secondaryLabel ?? 'Back to Command Center'}
         </button>
       </div>
 

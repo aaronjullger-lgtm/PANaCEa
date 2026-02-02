@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 // import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { exchangeCodeForToken, type TodoistOAuthConfig } from '../lib/services/todoistService';
+import { exchangeCodeForToken, type TodoistOAuthConfig } from '@/lib/services/todoistService';
 
 const TODOIST_CONFIG: TodoistOAuthConfig = {
   clientId: import.meta.env.VITE_TODOIST_CLIENT_ID || '',

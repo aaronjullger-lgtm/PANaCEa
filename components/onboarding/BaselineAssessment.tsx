@@ -1,12 +1,13 @@
 /**
  * Baseline Assessment Component
- * Initial diagnostic exam to establish user's knowledge baseline
- * 20 questions across mixed topics to generate initial strengths/weaknesses
+ * Initial diagnostic exam using real questions from the question bank.
+ * Fetches 20 questions via GET /api/baseline/questions and submits via POST /api/baseline/submit.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ClipboardCheck, TrendingUp, Brain, Award, ChevronRight } from 'lucide-react';
+import { ClipboardCheck, TrendingUp, Brain, Award, ChevronRight, Loader2 } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 
 interface BaselineAssessmentProps {
   onComplete: (results: BaselineResults) => void;
@@ -22,95 +23,116 @@ export interface BaselineResults {
   strongestSystems: string[];
 }
 
-type AssessmentPhase = 'intro' | 'assessment' | 'results';
+type AssessmentPhase = 'intro' | 'loading' | 'assessment' | 'submitting' | 'results';
+
+interface BaselineQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  system: string;
+}
 
 export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentProps) {
+  const { getToken } = useAuth();
   const [phase, setPhase] = useState<AssessmentPhase>('intro');
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<boolean[]>([]);
+  const [questions, setQuestions] = useState<BaselineQuestion[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [answers, setAnswers] = useState<Array<{ questionId: string; selectedIndex: number }>>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<BaselineResults | null>(null);
 
-  // Predetermined mock answers for consistency (demo purposes only)
-  const mockAnswers = [
-    true,
-    false,
-    true,
-    true,
-    false,
-    true,
-    false,
-    true,
-    true,
-    false,
-    true,
-    true,
-    false,
-    true,
-    false,
-    true,
-    true,
-    false,
-    true,
-    true,
-  ];
+  const totalQuestions = questions.length;
 
-  // Mock questions for demonstration
-  // In production, these would be fetched from your question bank
-  const totalQuestions = 20;
+  const fetchQuestions = useCallback(async () => {
+    setError(null);
+    setPhase('loading');
+    try {
+      const token = await getToken();
+      if (!token) {
+        setError('Please sign in to start the assessment.');
+        setPhase('intro');
+        return;
+      }
+      const res = await fetch('/api/baseline/questions', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Request failed (${res.status})`);
+      }
+      const data = await res.json();
+      const list = data?.data?.questions ?? data?.questions ?? [];
+      if (!Array.isArray(list) || list.length === 0) {
+        setError('No baseline questions available. Try again later.');
+        setPhase('intro');
+        return;
+      }
+      setQuestions(list);
+      setPhase('assessment');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load questions');
+      setPhase('intro');
+    }
+  }, [getToken]);
 
   const handleStartAssessment = () => {
-    setPhase('assessment');
+    void fetchQuestions();
   };
 
-  const handleAnswer = (isCorrect: boolean) => {
-    const newAnswers = [...answers, isCorrect];
+  const handleAnswer = (selectedIndex: number) => {
+    const q = questions[currentIndex];
+    if (!q) return;
+    const newAnswers = [...answers, { questionId: q.id, selectedIndex }];
     setAnswers(newAnswers);
 
-    if (newAnswers.length >= totalQuestions) {
-      // Assessment complete, calculate results
-      setTimeout(() => {
-        calculateResults(newAnswers);
-      }, 500);
+    if (newAnswers.length >= questions.length) {
+      submitAndShowResults(newAnswers);
     } else {
-      setCurrentQuestion(currentQuestion + 1);
+      setCurrentIndex((i) => i + 1);
     }
   };
 
-  const calculateResults = (finalAnswers: boolean[]) => {
-    const correctCount = finalAnswers.filter((a) => a).length;
-    const accuracy = (correctCount / totalQuestions) * 100;
-
-    // Mock system breakdown
-    const systemBreakdown = {
-      CV: { correct: 3, total: 4, accuracy: 75 },
-      PULM: { correct: 2, total: 3, accuracy: 66.7 },
-      GI: { correct: 4, total: 4, accuracy: 100 },
-      NEURO: { correct: 1, total: 3, accuracy: 33.3 },
-      RENAL: { correct: 2, total: 2, accuracy: 100 },
-      MSK: { correct: 1, total: 2, accuracy: 50 },
-      DERM: { correct: 1, total: 2, accuracy: 50 },
-    };
-
-    // Sort systems by accuracy
-    const sorted = Object.entries(systemBreakdown).sort(([, a], [, b]) => b.accuracy - a.accuracy);
-
-    const results: BaselineResults = {
-      totalQuestions,
-      correctAnswers: correctCount,
-      accuracy,
-      systemBreakdown,
-      strongestSystems: sorted.slice(0, 3).map(([sys]) => sys),
-      weakestSystems: sorted
-        .slice(-3)
-        .map(([sys]) => sys)
-        .reverse(),
-    };
-
-    setPhase('results');
-
-    // Wait a moment before calling onComplete to show results
-    setTimeout(() => {
-      onComplete(results);
-    }, 5000);
+  const submitAndShowResults = async (
+    finalAnswers: Array<{ questionId: string; selectedIndex: number }>
+  ) => {
+    setPhase('submitting');
+    setError(null);
+    try {
+      const token = await getToken();
+      if (!token) {
+        setError('Session expired. Please sign in again.');
+        setPhase('assessment');
+        return;
+      }
+      const res = await fetch('/api/baseline/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ answers: finalAnswers }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Submit failed (${res.status})`);
+      }
+      const data = await res.json();
+      const payload = data?.data ?? data;
+      const baselineResults: BaselineResults = {
+        totalQuestions: payload.totalQuestions ?? finalAnswers.length,
+        correctAnswers: payload.correctAnswers ?? 0,
+        accuracy: payload.accuracy ?? 0,
+        systemBreakdown: payload.systemBreakdown ?? {},
+        weakestSystems: Array.isArray(payload.weakestSystems) ? payload.weakestSystems : [],
+        strongestSystems: Array.isArray(payload.strongestSystems) ? payload.strongestSystems : [],
+      };
+      setResults(baselineResults);
+      setPhase('results');
+      setTimeout(() => onComplete(baselineResults), 4000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to submit assessment');
+      setPhase('assessment');
+    }
   };
 
   if (phase === 'intro') {
@@ -121,23 +143,17 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
           animate={{ opacity: 1, scale: 1 }}
           className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-2xl w-full p-8"
         >
-          {/* Icon */}
           <div className="flex justify-center mb-6">
             <div className="p-4 bg-[var(--color-accent)]/20 rounded-full">
               <ClipboardCheck className="w-12 h-12 text-[var(--color-accent)]" />
             </div>
           </div>
-
-          {/* Title */}
           <h2 className="text-3xl font-bold text-[var(--color-text-primary)] text-center mb-4">
             Welcome to PANaCEa
           </h2>
-
           <p className="text-lg text-[var(--color-text-muted)] text-center mb-8">
             Let's establish your baseline with a brief diagnostic assessment
           </p>
-
-          {/* Benefits */}
           <div className="space-y-4 mb-8">
             <div className="flex items-start gap-3">
               <Brain className="w-6 h-6 text-[var(--color-accent)] flex-shrink-0 mt-1" />
@@ -150,7 +166,6 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
                 </div>
               </div>
             </div>
-
             <div className="flex items-start gap-3">
               <TrendingUp className="w-6 h-6 text-[var(--color-accent)] flex-shrink-0 mt-1" />
               <div>
@@ -162,7 +177,6 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
                 </div>
               </div>
             </div>
-
             <div className="flex items-start gap-3">
               <Award className="w-6 h-6 text-[var(--color-accent)] flex-shrink-0 mt-1" />
               <div>
@@ -175,8 +189,9 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
               </div>
             </div>
           </div>
-
-          {/* Actions */}
+          {error && (
+            <p className="text-[var(--color-data-fail)] text-sm mb-4 text-center">{error}</p>
+          )}
           <div className="flex gap-3">
             <button
               onClick={handleStartAssessment}
@@ -199,22 +214,40 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
     );
   }
 
-  if (phase === 'assessment') {
-    const progress = ((currentQuestion + 1) / totalQuestions) * 100;
+  if (phase === 'loading') {
+    return (
+      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-md w-full p-8 text-center"
+        >
+          <Loader2 className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
+          <p className="text-[var(--color-text-primary)] font-medium">Loading assessment...</p>
+          <p className="text-sm text-[var(--color-text-muted)] mt-1">
+            Preparing your baseline questions
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (phase === 'assessment' && questions.length > 0) {
+    const q = questions[currentIndex];
+    const progress = ((currentIndex + 1) / totalQuestions) * 100;
 
     return (
       <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-3xl w-full p-8"
+          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-3xl w-full p-8 max-h-[90vh] overflow-y-auto"
         >
-          {/* Progress */}
           <div className="mb-6">
             <div className="flex justify-between text-sm text-[var(--color-text-muted)] mb-2">
               <span>Baseline Assessment</span>
               <span>
-                {currentQuestion + 1} of {totalQuestions}
+                {currentIndex + 1} of {totalQuestions}
               </span>
             </div>
             <div className="h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
@@ -227,41 +260,84 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
             </div>
           </div>
 
-          {/* Mock Question Display */}
-          <div className="text-center py-12">
-            <div className="text-2xl font-bold text-[var(--color-text-primary)] mb-8">
-              Question {currentQuestion + 1}
-            </div>
-            <p className="text-[var(--color-text-muted)] mb-8">
-              In a production app, this would display actual questions from your question bank.
-            </p>
+          {q && (
+            <>
+              <p className="text-[var(--color-text-primary)] text-lg mb-6 whitespace-pre-wrap">
+                {q.question}
+              </p>
+              <div className="grid gap-3">
+                {q.options.map((opt, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleAnswer(idx)}
+                    className="text-left p-4 bg-[var(--color-bg-secondary)] rounded-xl hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </motion.div>
+      </div>
+    );
+  }
 
-            {/* Mock Answer Buttons */}
-            <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-              <button
-                onClick={() => handleAnswer(mockAnswers[currentQuestion] ?? false)}
-                className="p-4 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
-              >
-                Option A
-              </button>
-              <button
-                onClick={() => handleAnswer(!(mockAnswers[currentQuestion] ?? true))}
-                className="p-4 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
-              >
-                Option B
-              </button>
-              <button
-                onClick={() => handleAnswer(mockAnswers[currentQuestion] ?? false)}
-                className="p-4 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
-              >
-                Option C
-              </button>
-              <button
-                onClick={() => handleAnswer(!(mockAnswers[currentQuestion] ?? true))}
-                className="p-4 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
-              >
-                Option D
-              </button>
+  if (phase === 'submitting') {
+    return (
+      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-md w-full p-8 text-center"
+        >
+          <Loader2 className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
+          <p className="text-[var(--color-text-primary)] font-medium">Calculating your results...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (phase === 'results' && results) {
+    return (
+      <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-2xl w-full p-8"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+            className="flex justify-center mb-6"
+          >
+            <div className="p-4 bg-green-500/20 rounded-full">
+              <ClipboardCheck className="w-12 h-12 text-green-500" />
+            </div>
+          </motion.div>
+          <h2 className="text-3xl font-bold text-[var(--color-text-primary)] text-center mb-2">
+            Assessment Complete
+          </h2>
+          <p className="text-[var(--color-text-muted)] text-center mb-4">
+            You got {results.correctAnswers} of {results.totalQuestions} correct (
+            {results.accuracy.toFixed(0)}%)
+          </p>
+          {results.weakestSystems.length > 0 && (
+            <p className="text-sm text-[var(--color-text-muted)] text-center mb-8">
+              Focus areas: {results.weakestSystems.join(', ')}
+            </p>
+          )}
+          <div className="flex justify-center">
+            <div className="flex gap-2">
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                  className="w-3 h-3 bg-[var(--color-accent)] rounded-full"
+                />
+              ))}
             </div>
           </div>
         </motion.div>
@@ -269,55 +345,5 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
     );
   }
 
-  // Results phase
-  return (
-    <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-2xl w-full p-8"
-      >
-        {/* Success Icon */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-          className="flex justify-center mb-6"
-        >
-          <div className="p-4 bg-green-500/20 rounded-full">
-            <ClipboardCheck className="w-12 h-12 text-green-500" />
-          </div>
-        </motion.div>
-
-        <h2 className="text-3xl font-bold text-[var(--color-text-primary)] text-center mb-2">
-          Assessment Complete
-        </h2>
-
-        <p className="text-[var(--color-text-muted)] text-center mb-8">
-          Your personalized learning profile is being generated...
-        </p>
-
-        {/* Loading animation */}
-        <div className="flex justify-center">
-          <div className="flex gap-2">
-            {[0, 1, 2].map((i) => (
-              <motion.div
-                key={i}
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 1, 0.5],
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  delay: i * 0.2,
-                }}
-                className="w-3 h-3 bg-[var(--color-accent)] rounded-full"
-              />
-            ))}
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  );
+  return null;
 }

@@ -53,6 +53,12 @@ export const PANRELASimulator = lazy(
 );
 export const CommandPalette = lazy(() => import('../components/navigation/CommandPalette'));
 export const UserProfileModal = lazy(() => import('../components/onboarding/UserProfileModal'));
+export const BaselineAssessment = lazy(() =>
+  import('../components/onboarding/BaselineAssessment').then((m) => ({ default: m.BaselineAssessment }))
+);
+export const OnboardingYourPlan = lazy(() =>
+  import('../components/onboarding/OnboardingYourPlan').then((m) => ({ default: m.OnboardingYourPlan }))
+);
 export const MediaApproval = lazy(() => import('../pages/admin/MediaApproval'));
 export const StudyGroupDashboard = lazy(() => import('../components/social/StudyGroupDashboard'));
 export const ToolkitHub = lazy(() => import('../components/toolkit/ToolkitHub'));

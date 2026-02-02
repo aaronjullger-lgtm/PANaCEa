@@ -100,17 +100,13 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
 
       const data = await res.json();
 
-      // Backend returns array of recommendations directly
-      if (Array.isArray(data)) {
-        const now = Date.now();
-        setRecommendations(data);
-        setLastUpdated(now);
-        // Store to cache for future visits
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-        localStorage.setItem(TIMESTAMP_KEY, now.toString());
-      } else {
-        throw new Error('Invalid response format from server');
-      }
+      // Handle both shapes: Cloudflare list returns { data }, legacy may return array at root
+      const list = Array.isArray(data) ? data : (data && data.data) ? data.data : [];
+      const now = Date.now();
+      setRecommendations(list);
+      setLastUpdated(now);
+      localStorage.setItem(CACHE_KEY, JSON.stringify(list));
+      localStorage.setItem(TIMESTAMP_KEY, now.toString());
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Unknown error';
       console.error('[RecommendationFeed] Failed to fetch recommendations:', errorMsg);

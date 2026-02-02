@@ -14,17 +14,16 @@ import {
   Target,
   Clock,
   TrendingUp,
-  TrendingDown,
   BarChart3,
   Award,
   AlertTriangle,
-  CheckCircle,
   XCircle,
   Flame,
   Zap,
   BookOpen,
   Cloud,
   CloudOff,
+  Sparkles,
 } from 'lucide-react';
 // Domain services
 import {
@@ -40,9 +39,7 @@ import {
   resetAnswerPatterns,
   calculateBehavioralCalibration,
   resetBehavioralRecords,
-  getBehavioralInsights,
   resetMomentum,
-  getMomentumInsights,
   resetPauseTracking,
 } from '@/services/session';
 
@@ -58,6 +55,9 @@ import type { PerformanceRecord } from '../../types';
 import { StreakVisualization } from './StreakVisualization';
 import { ScorePredictionCard } from './ScorePredictionCard';
 import { MetacognitiveReflection } from '../session/MetacognitiveReflection';
+import { callGeminiText } from '@/services/ai/geminiService';
+import { GEMINI_FLASH_MODEL } from '@/src/constants';
+import styles from './SessionEndSummary.module.css';
 
 interface SessionEndSummaryProps {
   isOpen?: boolean; // For conditional rendering from parent
@@ -87,6 +87,47 @@ interface SystemPerformance {
   actualPercent: number;
 }
 
+function getDistributionScoreClass(score: number): string {
+  if (score >= 80) return 'text-[var(--color-data-pass)]';
+  if (score >= 60) return 'text-[var(--color-data-provisional)]';
+  return 'text-[var(--color-data-fail)]';
+}
+
+function getDistributionBarClass(score: number): string {
+  if (score >= 80) return 'bg-[var(--color-data-pass)]';
+  if (score >= 60) return 'bg-[var(--color-data-provisional)]';
+  return 'bg-[var(--color-data-fail)]';
+}
+
+function getAccuracyClass(accuracy: number): string {
+  if (accuracy >= 80) return 'text-[var(--color-data-pass)]';
+  if (accuracy >= 60) return 'text-[var(--color-data-provisional)]';
+  return 'text-[var(--color-data-fail)]';
+}
+
+function getAccuracyBarClass(accuracy: number): string {
+  if (accuracy >= 80) return 'bg-[var(--color-data-pass)]';
+  if (accuracy >= 60) return 'bg-[var(--color-data-provisional)]';
+  return 'bg-[var(--color-data-fail)]';
+}
+
+/** Bar fill with width set via ref to satisfy no-inline-style linter; width is dynamic (accuracy %). */
+function AccuracyBarFill({
+  accuracy,
+  barClass,
+}: Readonly<{ accuracy: number; barClass: string }>) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (ref.current) ref.current.style.setProperty('--bar-pct', `${accuracy}%`);
+  }, [accuracy]);
+  return (
+    <div
+      ref={ref}
+      className={`h-full rounded-full transition-all ${barClass} ${styles.barFill}`}
+    />
+  );
+}
+
 export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
   isOpen = true,
   performanceData,
@@ -104,10 +145,12 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
   const syncAttempted = useRef(false);
   const [syncStatus, setSyncStatus] = React.useState<'pending' | 'synced' | 'failed' | null>(null);
   const [showReflection, setShowReflection] = React.useState(false);
+  const [aiSummary, setAiSummary] = React.useState<string | null>(null);
+  const [loadingAiSummary, setLoadingAiSummary] = React.useState(false);
 
   // Use external summary if provided, otherwise calculate
-  const summary = externalSummary || getSessionSummary();
-  const drifts = calculateDistributionDrift();
+  const summary = externalSummary ?? getSessionSummary();
+  calculateDistributionDrift();
   const patternAnalysis = analyzePatterns();
   const behavioralCalibration = calculateBehavioralCalibration();
 
@@ -172,9 +215,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 
     for (const p of performanceData) {
       const system = p.topic;
-      if (!systemStats[system]) {
-        systemStats[system] = { correct: 0, total: 0 };
-      }
+      systemStats[system] ??= { correct: 0, total: 0 };
       systemStats[system].total++;
       if (p.isCorrect) systemStats[system].correct++;
     }
@@ -227,6 +268,23 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
   };
 
   const grade = getGrade(overallStats.accuracy);
+
+  const fetchAiSummary = React.useCallback(async () => {
+    setLoadingAiSummary(true);
+    setAiSummary(null);
+    try {
+      const systemsPracticed = systemPerformance.map((s) => s.name).join(', ') || 'mixed systems';
+      const weakNames = weakAreas.map((w) => w.name).join(', ') || 'none';
+      const strongNames = strongAreas.map((s) => s.name).join(', ') || 'none';
+      const prompt = `You are a study coach. Based on this session summary, write exactly 1-2 short, encouraging sentences. Format: "Today you improved on X; consider focusing on Y next." Session: total questions ${overallStats.total}, correct ${overallStats.correct}, accuracy ${overallStats.accuracy}%. Systems practiced: ${systemsPracticed}. Weak areas this session: ${weakNames}. Strong areas: ${strongNames}. Reply with only the 1-2 sentences, no preamble.`;
+      const text = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.6);
+      setAiSummary((text || '').trim());
+    } catch {
+      setAiSummary("We couldn't generate a summary right now. Try again in a moment.");
+    } finally {
+      setLoadingAiSummary(false);
+    }
+  }, [overallStats, systemPerformance, weakAreas, strongAreas]);
 
   // Sync session analytics to database on mount
   useEffect(() => {
@@ -412,13 +470,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 </span>
               </div>
               <span
-                className={`text-xl font-bold ${
-                  summary.distributionScore >= 80
-                    ? 'text-[var(--color-data-pass)]'
-                    : summary.distributionScore >= 60
-                      ? 'text-[var(--color-data-provisional)]'
-                      : 'text-[var(--color-data-fail)]'
-                }`}
+                className={`text-xl font-bold ${getDistributionScoreClass(summary.distributionScore)}`}
               >
                 {summary.distributionScore}/100
               </span>
@@ -428,13 +480,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 initial={{ width: 0 }}
                 animate={{ width: `${summary.distributionScore}%` }}
                 transition={{ duration: 0.8, delay: 0.3 }}
-                className={`h-full rounded-full ${
-                  summary.distributionScore >= 80
-                    ? 'bg-[var(--color-data-pass)]'
-                    : summary.distributionScore >= 60
-                      ? 'bg-[var(--color-data-provisional)]'
-                      : 'bg-[var(--color-data-fail)]'
-                }`}
+                className={`h-full rounded-full ${getDistributionBarClass(summary.distributionScore)}`}
               />
             </div>
             <p className="text-xs text-[var(--color-text-muted)] mt-2">
@@ -456,25 +502,13 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                       {sp.system}
                     </span>
                     <div className="flex-1 h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          sp.accuracy >= 80
-                            ? 'bg-[var(--color-data-pass)]'
-                            : sp.accuracy >= 60
-                              ? 'bg-[var(--color-data-provisional)]'
-                              : 'bg-[var(--color-data-fail)]'
-                        }`}
-                        style={{ width: `${sp.accuracy}%` }}
+                      <AccuracyBarFill
+                        accuracy={sp.accuracy}
+                        barClass={getAccuracyBarClass(sp.accuracy)}
                       />
                     </div>
                     <span
-                      className={`w-12 text-xs font-bold text-right ${
-                        sp.accuracy >= 80
-                          ? 'text-[var(--color-data-pass)]'
-                          : sp.accuracy >= 60
-                            ? 'text-[var(--color-data-provisional)]'
-                            : 'text-[var(--color-data-fail)]'
-                      }`}
+                      className={`w-12 text-xs font-bold text-right ${getAccuracyClass(sp.accuracy)}`}
                     >
                       {sp.accuracy}%
                     </span>
@@ -524,18 +558,18 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 <span className="font-medium text-[var(--color-accent)]">Test-Taking Insights</span>
               </div>
               <ul className="space-y-2">
-                {patternAnalysis.overallInsights.slice(0, 3).map((insight, i) => (
+                {patternAnalysis.overallInsights.slice(0, 3).map((insight) => (
                   <li
-                    key={`pattern-${i}`}
+                    key={`pattern-${insight.slice(0, 50)}`}
                     className="flex items-start gap-2 text-sm text-[var(--color-accent)]"
                   >
                     <TrendingUp className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                     <span>{insight}</span>
                   </li>
                 ))}
-                {behavioralCalibration.insights.slice(0, 2).map((insight, i) => (
+                {behavioralCalibration.insights.slice(0, 2).map((insight) => (
                   <li
-                    key={`behavior-${i}`}
+                    key={`behavior-${insight.slice(0, 50)}`}
                     className="flex items-start gap-2 text-sm text-[var(--color-accent)]"
                   >
                     <TrendingUp className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
@@ -579,6 +613,25 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               <StreakVisualization performanceData={performanceData} maxDisplay={50} />
             </div>
           )}
+
+          {/* Optional: AI session summary (1-2 sentences) */}
+          <div className="mb-6 p-4 bg-[var(--color-accent)]/10 rounded-xl border border-[var(--color-accent)]/30">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-5 h-5 text-[var(--color-accent)]" />
+              <span className="font-medium text-[var(--color-accent)]">AI Summary</span>
+            </div>
+            {aiSummary ? (
+              <p className="text-sm text-[var(--color-text-primary)] leading-relaxed">{aiSummary}</p>
+            ) : (
+              <button
+                onClick={fetchAiSummary}
+                disabled={loadingAiSummary}
+                className="text-sm text-[var(--color-accent)] font-medium hover:underline disabled:opacity-50"
+              >
+                {loadingAiSummary ? 'Generating...' : 'Get AI summary'}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -645,7 +698,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           }}
           onComplete={(reflection) => {
             console.log('[SessionEndSummary] Reflection submitted:', reflection);
-            // TODO: Sync to database via API
+            // Reflection sync to database can be added via API when backend is ready.
             setShowReflection(false);
           }}
           onSkip={() => setShowReflection(false)}

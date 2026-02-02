@@ -13,6 +13,7 @@ import React from 'react';
 import {
   ComposedChart,
   Line,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -22,7 +23,6 @@ import {
   ReferenceLine,
   Cell,
 } from 'recharts';
-import { Bar } from 'recharts/es6/cartesian/Bar';
 import { useWorkloadProjection } from '../../hooks/useWorkloadProjection';
 
 interface WorkloadChartProps {

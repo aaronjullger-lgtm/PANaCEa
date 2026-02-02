@@ -1,6 +1,7 @@
 import React from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { createAppError, getUserFacingError } from '@/lib/utils/errorHandlingUtils';
 
 interface ErrorStateProps {
   message?: string;
@@ -8,6 +9,8 @@ interface ErrorStateProps {
   className?: string;
   title?: string;
   showIcon?: boolean;
+  /** Optional secondary action (e.g. "Go Home", "Back to Command Center") */
+  secondaryAction?: { label: string; onClick: () => void };
 }
 
 /**
@@ -21,6 +24,7 @@ interface ErrorStateProps {
  * @param className - Additional Tailwind classes
  * @param title - Optional error title (default: "Error")
  * @param showIcon - Whether to show the error icon (default: true)
+ * @param secondaryAction - Optional secondary button (e.g. Go Home)
  */
 export const ErrorState: React.FC<ErrorStateProps> = ({
   message = 'Something went wrong',
@@ -28,6 +32,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   className = '',
   title = 'Error',
   showIcon = true,
+  secondaryAction,
 }) => {
   return (
     <motion.div
@@ -50,17 +55,30 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
 
       <p className="text-[var(--color-text-muted)] mb-6 max-w-md">{message}</p>
 
-      {onRetry && (
-        <motion.button
-          onClick={onRetry}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2 px-6 py-3 bg-[var(--color-accent)] text-white rounded-xl font-medium hover:bg-[var(--color-accent-hover)] transition-colors shadow-lg"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Try Again
-        </motion.button>
-      )}
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {onRetry && (
+          <motion.button
+            onClick={onRetry}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 px-6 py-3 bg-[var(--color-accent)] text-white rounded-xl font-medium hover:bg-[var(--color-accent-hover)] transition-colors shadow-lg"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Try Again
+          </motion.button>
+        )}
+        {secondaryAction && (
+          <motion.button
+            onClick={secondaryAction.onClick}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 px-6 py-3 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-xl font-medium border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+          >
+            <Home className="w-4 h-4" />
+            {secondaryAction.label}
+          </motion.button>
+        )}
+      </div>
     </motion.div>
   );
 };
@@ -69,17 +87,31 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
  * ErrorBoundaryFallback - Error fallback component for React Error Boundaries
  *
  * Use this as the fallback UI for ErrorBoundary components.
+ * Uses getUserFacingError for friendly copy and optional "Go Home" secondary action.
  */
 export const ErrorBoundaryFallback: React.FC<{
   error: Error;
   resetErrorBoundary: () => void;
-}> = ({ error, resetErrorBoundary }) => {
+  context?: 'default' | 'drill' | 'gemini';
+}> = ({ error, resetErrorBoundary, context = 'default' }) => {
+  const appError = createAppError(error);
+  const { title, message, secondaryLabel } = getUserFacingError(appError.category, context);
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
       <ErrorState
-        title="Application Error"
-        message={error.message || 'An unexpected error occurred. Please try refreshing the page.'}
+        title={title}
+        message={message}
         onRetry={resetErrorBoundary}
+        secondaryAction={
+          secondaryLabel
+            ? {
+                label: secondaryLabel,
+                onClick: () => {
+                  window.location.href = '/';
+                },
+              }
+            : undefined
+        }
       />
     </div>
   );

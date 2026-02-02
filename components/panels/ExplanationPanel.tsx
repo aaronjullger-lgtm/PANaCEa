@@ -24,16 +24,10 @@ import {
   ExternalLink,
   MessageCircle,
 } from 'lucide-react';
-import {
-  compressToBullets,
-  extractBuzzwords,
-  generateMnemonic,
-  highYieldPackage,
-} from '../lib/services/explanationCompression';
+import { highYieldPackage } from '../lib/services/explanationCompression';
 import ErrorTagger from './quiz/ErrorTagger';
 import type { ErrorTag } from '../types';
 import { getConditionByIdSync, loadConditions } from '../lib/loadConditions';
-import { analyzeAnswer } from '@/services/ai';
 import { ClinicalSkeleton } from './ui/ClinicalSkeleton';
 import { ClinicalPearlHighlight } from './ui/ClinicalPearlHighlight';
 import { usePreferences } from '@/hooks/usePreferences';
@@ -109,74 +103,48 @@ const GlassPanel: React.FC<{
   );
 };
 
+function extractHtmlParagraphs(text: string): string[] {
+  const stripped = text
+    .replaceAll(/<\/p>/gi, '\n\n')
+    .replaceAll(/<\/li>/gi, '\n')
+    .replaceAll(/<[^>]*>/g, '')
+    .trim();
+  return stripped.split(/\n\n+/).filter((p) => p.trim().length > 0);
+}
+
+function extractNumberedOrBulletPoints(text: string, regex: RegExp): string[] {
+  const points = text.split(regex);
+  return points.map((p) => p.trim()).filter((p) => p.length > 0);
+}
+
+function splitBySentencesIntoParagraphs(text: string): string[] {
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  const paragraphs: string[] = [];
+  let current: string[] = [];
+  for (const sentence of sentences) {
+    current.push(sentence);
+    if (current.length >= 2 || current.join(' ').length > 200) {
+      paragraphs.push(current.join(' '));
+      current = [];
+    }
+  }
+  if (current.length > 0) {
+    paragraphs.push(current.join(' '));
+  }
+  return paragraphs;
+}
+
 /**
  * Format rationale text into structured paragraphs
  * Handles common patterns: numbered lists, sentence breaks, key points
  */
 function formatRationale(text: string): string[] {
   if (!text || typeof text !== 'string') return [];
-
-  // If already has HTML structure, extract paragraphs
-  if (text.includes('<p>') || text.includes('<li>')) {
-    // Extract text content, split by closing tags
-    const stripped = text
-      .replace(/<\/p>/gi, '\n\n')
-      .replace(/<\/li>/gi, '\n')
-      .replace(/<[^>]*>/g, '')
-      .trim();
-    return stripped.split(/\n\n+/).filter((p) => p.trim().length > 0);
-  }
-
-  // Split by common delimiters
-  const paragraphs: string[] = [];
-
-  // Check for numbered points (1. 2. 3. or 1) 2) 3))
-  if (/\d+[\.\)]\s/.test(text)) {
-    const points = text.split(/(?=\d+[\.\)]\s)/);
-    for (const point of points) {
-      const trimmed = point.trim();
-      if (trimmed.length > 0) {
-        paragraphs.push(trimmed);
-      }
-    }
-    return paragraphs;
-  }
-
-  // Check for bullet-like patterns (• - *)
-  if (/^[\•\-\*]\s/m.test(text)) {
-    const points = text.split(/(?=[\•\-\*]\s)/);
-    for (const point of points) {
-      const trimmed = point.trim();
-      if (trimmed.length > 0) {
-        paragraphs.push(trimmed);
-      }
-    }
-    return paragraphs;
-  }
-
-  // Split by double newlines first
-  if (text.includes('\n\n')) {
-    return text.split(/\n\n+/).filter((p) => p.trim().length > 0);
-  }
-
-  // Split long text by sentences (aim for ~2-3 sentences per paragraph)
-  const sentences = text.split(/(?<=[.!?])\s+/);
-  if (sentences.length > 3) {
-    let current: string[] = [];
-    for (const sentence of sentences) {
-      current.push(sentence);
-      if (current.length >= 2 || current.join(' ').length > 200) {
-        paragraphs.push(current.join(' '));
-        current = [];
-      }
-    }
-    if (current.length > 0) {
-      paragraphs.push(current.join(' '));
-    }
-    return paragraphs;
-  }
-
-  // Return as single paragraph if short
+  if (text.includes('<p>') || text.includes('<li>')) return extractHtmlParagraphs(text);
+  if (/\d+[.)]\s/.test(text)) return extractNumberedOrBulletPoints(text, /(?=\d+[.)]\s)/);
+  if (/^[•\-*]\s/m.test(text)) return extractNumberedOrBulletPoints(text, /(?=[•\-*]\s)/);
+  if (text.includes('\n\n')) return text.split(/\n\n+/).filter((p) => p.trim().length > 0);
+  if (text.split(/(?<=[.!?])\s+/).length > 3) return splitBySentencesIntoParagraphs(text);
   return [text.trim()];
 }
 
@@ -208,27 +176,30 @@ const DifferentialAccordion: React.FC<{
 
   return (
     <div className="space-y-2">
-      {differentials.map((diff, index) => (
+      {differentials.map((diff, index) => {
+        const isExpanded = expandedIndex === index;
+        return (
         <div
-          key={index}
+          key={`${diff.option}-${diff.reasoning.slice(0, 40)}`}
           className="border border-[var(--color-border)]/60 rounded-lg overflow-hidden bg-[var(--color-bg-primary)]/60"
         >
           <button
-            onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
+            type="button"
+            onClick={() => setExpandedIndex(isExpanded ? null : index)}
             className="w-full flex items-center justify-between p-3 text-left hover:bg-[var(--color-bg-tertiary)]/60 transition-colors"
-            aria-expanded={expandedIndex === index}
+            {...(isExpanded ? { 'aria-expanded': true } : { 'aria-expanded': false })}
           >
             <span className="font-medium text-[var(--color-text-primary)] line-clamp-1">
               {diff.option}
             </span>
-            {expandedIndex === index ? (
+            {isExpanded ? (
               <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)] flex-shrink-0" />
             ) : (
               <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)] flex-shrink-0" />
             )}
           </button>
           <AnimatePresence>
-            {expandedIndex === index && (
+            {isExpanded && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
@@ -243,7 +214,8 @@ const DifferentialAccordion: React.FC<{
             )}
           </AnimatePresence>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
@@ -361,14 +333,14 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
     }
   }, [conditionId, basicScienceLinks.length]);
 
-  const handleAskTutor = async () => {
-    if (!tutorQuestion.trim()) return;
+  const askTutorWithQuestion = async (studentQuestion: string) => {
+    if (!studentQuestion.trim()) return;
 
     setLoadingTutor(true);
-    setTutorResponse(''); // Start with empty string for streaming
+    setTutorResponse('');
+    setShowTutor(true);
 
     try {
-      // Build contextual prompt for AI tutor
       const prompt = `You are a clinical tutor helping a PA student understand a medical concept.
 
 Context:
@@ -376,7 +348,7 @@ Context:
 - Condition: ${condition}
 - Original Explanation: ${explanation}
 
-Student's Question: ${tutorQuestion}
+Student's Question: ${studentQuestion}
 
 Provide a clear, conversational explanation that:
 - Directly answers their specific question
@@ -386,7 +358,6 @@ Provide a clear, conversational explanation that:
 
 Keep your response concise (3-5 sentences max) and supportive.`;
 
-      // Use streaming API from geminiService
       const { callGeminiTextStreaming } = await import('@/services/ai/geminiService');
 
       await callGeminiTextStreaming('gemini-3-flash-preview', prompt, 0.8, {
@@ -416,6 +387,14 @@ Keep your response concise (3-5 sentences max) and supportive.`;
     }
   };
 
+  const handleAskTutor = async () => {
+    await askTutorWithQuestion(tutorQuestion.trim());
+  };
+
+  const handleExplainSimple = async () => {
+    await askTutorWithQuestion('Explain the key concept in 2–3 simple sentences.');
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -436,9 +415,9 @@ Keep your response concise (3-5 sentences max) and supportive.`;
         <section className="mb-6">
           <SectionHeader icon={<Lightbulb className="w-5 h-5" />} title="Core Rationale" />
           <ul className="space-y-2 pl-1">
-            {bullets.slice(0, MAX_BULLETS).map((bullet, index) => (
+            {bullets.slice(0, MAX_BULLETS).map((bullet) => (
               <li
-                key={index}
+                key={bullet.slice(0, 80)}
                 className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
               >
                 <span className="text-[var(--color-accent)] mt-1.5 flex-shrink-0">•</span>
@@ -482,8 +461,8 @@ Keep your response concise (3-5 sentences max) and supportive.`;
           <section className="mb-6">
             <SectionHeader icon={<Lightbulb className="w-5 h-5" />} title="Clinical Pearls" />
             <ul className="space-y-3 pl-0 list-none">
-              {pearls.map((pearl, index) => (
-                <li key={index}>
+              {pearls.map((pearl) => (
+                <li key={pearl.slice(0, 80)}>
                   <ClinicalPearlHighlight label="Pearl">
                     <span dangerouslySetInnerHTML={{ __html: pearl }} />
                   </ClinicalPearlHighlight>
@@ -498,9 +477,9 @@ Keep your response concise (3-5 sentences max) and supportive.`;
           <section className="mb-6">
             <SectionHeader icon={<BookOpen className="w-5 h-5" />} title="Additional Rationale" />
             <div className="space-y-3">
-              {formatRationale(rationale).map((paragraph, index) => (
+              {formatRationale(rationale).map((paragraph) => (
                 <p
-                  key={index}
+                  key={paragraph.slice(0, 80)}
                   className="text-[var(--color-text-secondary)] leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: paragraph }}
                 />
@@ -517,9 +496,9 @@ Keep your response concise (3-5 sentences max) and supportive.`;
               title="Review: Foundational Science"
             />
             <div className="space-y-2">
-              {loadedBasicScienceLinks.map((link, index) => (
+              {loadedBasicScienceLinks.map((link) => (
                 <a
-                  key={index}
+                  key={link.conceptId}
                   href={`/concepts/${link.conceptId}`}
                   className="flex items-center gap-2 p-3 bg-[var(--color-accent)]/10 rounded-lg border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/15 transition-colors group"
                   target="_blank"
@@ -533,6 +512,13 @@ Keep your response concise (3-5 sentences max) and supportive.`;
               ))}
             </div>
           </section>
+        )}
+
+        {/* When incorrect: prominent prompt to use the tutor */}
+        {!isCorrect && (
+          <p className="text-sm text-[var(--color-text-secondary)] mb-2">
+            Struggling with this? Ask the tutor for a clearer explanation.
+          </p>
         )}
 
         {/* Actions Row */}
@@ -557,13 +543,23 @@ Keep your response concise (3-5 sentences max) and supportive.`;
               <MessageCircle className="w-4 h-4" />
               Ask Tutor
             </button>
+            {/* One-tap simple explanation when incorrect */}
+            {!isCorrect && (
+              <button
+                onClick={handleExplainSimple}
+                disabled={loadingTutor}
+                className="flex items-center gap-2 px-4 py-2 border-2 border-[var(--color-data-fail)]/50 bg-[var(--color-data-fail)]/10 text-[var(--color-text-primary)] font-medium rounded-lg hover:bg-[var(--color-data-fail)]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Explain in simple terms
+              </button>
+            )}
           </div>
 
           {/* Feedback Buttons */}
           <FeedbackButtons onFeedback={onFeedback} />
         </div>
 
-        {/* AI Tutor Section */}
+        {/* AI Tutor Section — styled when incorrect to stand out */}
         <AnimatePresence>
           {showTutor && (
             <motion.div
@@ -571,7 +567,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="mt-4 pt-4 border-t border-[var(--color-border)]/60"
+              className={`mt-4 pt-4 border-t ${isCorrect ? 'border-[var(--color-border)]/60' : 'ring-2 ring-[var(--color-data-fail)]/20 rounded-xl bg-[var(--color-data-fail)]/5 border-[var(--color-data-fail)]/30'}`}
             >
               <div className="space-y-3">
                 <SectionHeader
@@ -588,7 +584,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
                     type="text"
                     value={tutorQuestion}
                     onChange={(e) => setTutorQuestion(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAskTutor()}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAskTutor()}
                     placeholder="Why isn't it B? or Explain like I'm 5..."
                     className="flex-1 px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                   />

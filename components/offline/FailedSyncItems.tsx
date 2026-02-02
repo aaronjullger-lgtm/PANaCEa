@@ -6,8 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Copy, Trash2, X, CheckCircle } from 'lucide-react';
-import { getDeadLetterQueue } from '../lib/services/sync/offlineSync';
-import type { SyncOperation } from '../lib/services/sync/offlineSync';
+import { getDeadLetterQueue, type SyncOperation } from '@/lib/services/sync/offlineSync';
 
 // Use the same constant as offlineSync to avoid hardcoding
 const DEAD_LETTER_QUEUE_KEY = 'panacea_dead_letter_queue';

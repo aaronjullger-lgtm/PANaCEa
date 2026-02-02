@@ -6,7 +6,7 @@
  */
 
 import React, { Component, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Wifi, Clock, Server } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Wifi, Clock, Server, Home } from 'lucide-react';
 import { logError, addBreadcrumb as logBreadcrumb } from '@/lib/errors/errorLogger';
 import {
   toAppError,
@@ -18,6 +18,7 @@ import {
   isAppError,
   type AppError,
 } from '@/lib/errors/types';
+import { getUserFacingError } from '@/lib/utils/errorHandlingUtils';
 
 export interface GeminiErrorInfo {
   type: 'rate_limit' | 'server_error' | 'network' | 'timeout' | 'generic';
@@ -306,21 +307,16 @@ export class GeminiErrorBoundary extends Component<
 
     const maxRetries = 3;
     const canRetry = errorInfo?.retryable && retryCount < maxRetries;
+    const { title, message, primaryAction, secondaryLabel } = getUserFacingError('server', 'gemini');
 
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center min-h-[300px]">
         <ErrorIcon type={errorInfo?.type || 'generic'} />
 
-        <h3 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">
-          {errorInfo?.type === 'rate_limit' && 'Rate Limit Reached'}
-          {errorInfo?.type === 'server_error' && 'Service Unavailable'}
-          {errorInfo?.type === 'network' && 'Connection Lost'}
-          {errorInfo?.type === 'timeout' && 'Request Timed Out'}
-          {errorInfo?.type === 'generic' && 'Something Went Wrong'}
-        </h3>
+        <h3 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">{title}</h3>
 
         <p className="mt-2 text-sm text-[var(--color-text-secondary)] max-w-md">
-          {errorInfo?.message}
+          {message}
           {errorInfo?.type === 'network' &&
             typeof window !== 'undefined' &&
             (import.meta.env?.DEV || window.location.hostname === 'localhost') && (
@@ -330,16 +326,29 @@ export class GeminiErrorBoundary extends Component<
             )}
         </p>
 
-        {canRetry && (
-          <button
-            onClick={this.handleRetry}
-            disabled={isRetrying}
-            className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-primary)] text-white rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
-            {isRetrying ? 'Retrying...' : 'Try Again'}
-          </button>
-        )}
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          {canRetry && (
+            <button
+              onClick={this.handleRetry}
+              disabled={isRetrying}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-brand-primary)] text-white rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
+              {isRetrying ? 'Retrying...' : primaryAction}
+            </button>
+          )}
+          {secondaryLabel && (
+            <button
+              onClick={() => {
+                window.location.href = '/';
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-lg font-medium border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+            >
+              <Home className="w-4 h-4" />
+              {secondaryLabel}
+            </button>
+          )}
+        </div>
 
         {retryCount > 0 && (
           <p className="mt-2 text-xs text-[var(--color-text-tertiary)]">

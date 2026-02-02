@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { useUser, useClerk } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cloud, Settings, LogOut, CheckCircle, XCircle } from 'lucide-react';
-import { getTimeBasedGreeting } from '../lib/utils/timeUtils';
+import { getTimeBasedGreeting } from '@/lib/utils/timeUtils';
 
 interface AccountFooterProps {
   isSyncing?: boolean;

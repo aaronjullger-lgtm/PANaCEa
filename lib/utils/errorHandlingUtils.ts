@@ -374,6 +374,93 @@ function getErrorTitle(category: ErrorCategory): string {
 }
 
 /**
+ * Context for tailoring user-facing error copy (e.g. drill vs tutor)
+ */
+export type ErrorDisplayContext = 'default' | 'drill' | 'gemini';
+
+/**
+ * User-facing error copy for ErrorState and error boundary fallbacks.
+ * Returns friendly title, message, primary action label, and optional secondary action label.
+ */
+export function getUserFacingError(
+  category: ErrorCategory,
+  context: ErrorDisplayContext = 'default'
+): {
+  title: string;
+  message: string;
+  primaryAction: string;
+  secondaryLabel?: string;
+} {
+  if (context === 'gemini') {
+    return {
+      title: 'Tutor Unavailable',
+      message:
+        "The tutor is temporarily busy. Please try again in a moment, or continue without asking a follow-up.",
+      primaryAction: 'Try Again',
+      secondaryLabel: 'Go Home',
+    };
+  }
+
+  const base: Record<ErrorCategory, { title: string; message: string }> = {
+    network: {
+      title: 'Connection Problem',
+      message: "We couldn't load this. Check your connection and try again.",
+    },
+    authentication: {
+      title: 'Session Expired',
+      message: 'Your session has expired. Please sign in again to continue.',
+    },
+    authorization: {
+      title: 'Access Denied',
+      message: "You don't have permission to perform this action.",
+    },
+    validation: {
+      title: 'Invalid Input',
+      message: 'Please check your input and try again.',
+    },
+    server: {
+      title: 'Something Went Wrong',
+      message: "We couldn't load this. Please try again or go home and try another topic.",
+    },
+    database: {
+      title: 'Save Error',
+      message: 'We had trouble saving. Please try again.',
+    },
+    timeout: {
+      title: 'Request Timeout',
+      message: 'The request took too long. Please try again.',
+    },
+    rate_limit: {
+      title: 'Too Many Requests',
+      message: "You've made too many requests. Please wait a moment before trying again.",
+    },
+    not_found: {
+      title: 'Not Found',
+      message: "We couldn't find what you're looking for.",
+    },
+    conflict: {
+      title: 'Conflict',
+      message: 'This action conflicts with existing data. Please refresh and try again.',
+    },
+    unknown: {
+      title: 'Something Went Wrong',
+      message: "We couldn't complete this. Please try again or go home and try another topic.",
+    },
+  };
+
+  const { title, message } = base[category];
+  const primaryAction = 'Try Again';
+  const secondaryLabel =
+    context === 'drill'
+      ? 'Back to Command Center'
+      : category === 'network' || category === 'server' || category === 'unknown'
+        ? 'Go Home'
+        : undefined;
+
+  return { title, message, primaryAction, secondaryLabel };
+}
+
+/**
  * Check if error is recoverable by user action
  */
 export function isUserRecoverable(error: AppError): boolean {

@@ -272,13 +272,13 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Virtual OSCE</h3>
+              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Live OSCE</h3>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold text-steel-blue-400">
-                Interactive
+                Voice patient
               </span>
             </div>
             <p className="text-sm text-[var(--color-text-secondary)] mb-3">
-              Full interactive patient encounters with AI-powered evaluation and real-time feedback
+              Practice with a live voice simulated patient; AI-powered evaluation and real-time feedback
             </p>
             <div className="flex items-center gap-4">
               <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
@@ -743,7 +743,47 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         />
       )}
 
-      {/* Intelligent Recommendations */}
+      {/* Primary CTA: Start review when due, else start a session */}
+      {!isLoadingStats && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          {stats.dueCount > 0 ? (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-accent)]/10">
+              <p className="text-[var(--color-text-primary)] font-medium">
+                {stats.dueCount} question{stats.dueCount !== 1 ? 's' : ''} due — keep your streak going
+              </p>
+              <PrimaryButton
+                onClick={() => onStartSession({ focus: 'review' })}
+                className="flex items-center gap-2"
+              >
+                <Play className="w-4 h-4" />
+                Start review
+              </PrimaryButton>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+              <p className="text-[var(--color-text-secondary)] font-medium">
+                Ready to study?
+              </p>
+              <PrimaryButton
+                onClick={() => onStartSession()}
+                className="flex items-center gap-2"
+              >
+                <Play className="w-4 h-4" />
+                Start a session
+              </PrimaryButton>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Recommended for you */}
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">
+        Recommended for you
+      </h2>
       <RecommendationFeed onNavigateToDrill={handleNavigateToDrillModeWithSettings} />
 
       {/* Residency Cockpit: Study by System (body map / system grid from Rolling 360) */}
@@ -1050,9 +1090,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                           <Eye className="w-6 h-6 text-[var(--color-text-secondary)]" />
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-bold text-[var(--color-text-primary)]">Clinical Eye</h4>
+                          <h4 className="font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                            Clinical Eye
+                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                              AI-powered
+                            </span>
+                          </h4>
                           <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                            Upload ECGs or images; get analysis with code-based measurements
+                            Image analysis: upload ECGs or clinical images for AI explanations and code-based measurements
                           </p>
                         </div>
                         <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
@@ -1069,7 +1114,12 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                           <Image className="w-6 h-6 text-[var(--color-text-secondary)]" />
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-bold text-[var(--color-text-primary)]">Anatomy Visualizer</h4>
+                          <h4 className="font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                            Anatomy Visualizer
+                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                              AI-powered
+                            </span>
+                          </h4>
                           <p className="text-sm text-[var(--color-text-muted)] mt-1">
                             Generate anatomy images and segment regions (Firefly + Gemini)
                           </p>
@@ -1163,9 +1213,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       <Sparkles className="w-6 h-6 text-[var(--color-accent)]" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-[var(--color-text-primary)]">My Library</h4>
+                      <h4 className="font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                        My Library
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                          Smarter tutor
+                        </span>
+                      </h4>
                       <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-                        Upload PDFs and set an active document so the Tutor uses your materials when answering questions
+                        Upload notes and PDFs so the Tutor uses your materials for personalized explanations
                       </p>
                       <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
                         Context caching

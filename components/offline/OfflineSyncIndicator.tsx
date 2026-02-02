@@ -138,19 +138,21 @@ export function OfflineSyncIndicator() {
           ) : status.isOffline ? (
             <>
               <WifiOff className="inline w-4 h-4 mr-1" />
-              Offline Mode
+              You're offline
             </>
           ) : status.pendingCount > 0 ? (
             `${status.pendingCount} pending`
           ) : (
             <>
               <Wifi className="inline w-4 h-4 mr-1" />
-              All synced
+              Up to date
             </>
           )}
         </div>
         {!syncing && status.lastSyncTime && (
-          <div className="text-xs opacity-80">Last sync: {formatLastSync(status.lastSyncTime)}</div>
+          <div className="text-xs opacity-80">
+            {status.pendingCount > 0 ? 'Will sync when ready' : `Synced ${formatLastSync(status.lastSyncTime)}`}
+          </div>
         )}
       </div>
 
@@ -167,8 +169,8 @@ export function OfflineSyncIndicator() {
 
       {/* Info message when offline */}
       {status.isOffline && (
-        <div className="ml-2 text-xs opacity-80 max-w-[200px]">
-          Working offline. Changes will sync when connection is restored.
+        <div className="ml-2 text-xs opacity-80 max-w-[220px]">
+          Changes will sync when connection is restored.
         </div>
       )}
     </div>

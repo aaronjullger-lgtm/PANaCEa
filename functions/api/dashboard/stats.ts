@@ -54,7 +54,7 @@ function computeCurrentStreak(
     return 0;
   }
 
-  let expected = new Date(lastDate);
+  const expected = new Date(lastDate);
   expected.setHours(0, 0, 0, 0);
 
   for (const entry of sorted) {

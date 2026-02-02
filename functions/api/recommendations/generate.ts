@@ -22,7 +22,14 @@ export const onRequestPost = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const recommendations = await generateRecommendations(auth.userId, prisma);
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
+      });
+      if (!user) {
+        return { status: 404, error: 'User not found' };
+      }
+      const recommendations = await generateRecommendations(user.id, prisma);
 
       return {
         data: {

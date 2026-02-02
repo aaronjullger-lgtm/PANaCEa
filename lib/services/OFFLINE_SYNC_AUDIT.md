@@ -31,6 +31,10 @@ There are three offline/sync-related modules with overlapping concerns:
 - Uses a unified queue format with `type` discriminator
 - Shares retry logic and dead-letter handling
 
+## User-Facing Copy
+
+**OfflineSyncIndicator** (`components/offline/OfflineSyncIndicator.tsx`) is the single user-facing entry for offline/sync status. All user-visible copy (e.g. "You're offline", "Changes will sync when connection is restored", "N pending", "Up to date") lives there.
+
 ## Key Files
 
 | Consumer | Module |

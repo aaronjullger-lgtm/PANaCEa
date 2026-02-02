@@ -14,6 +14,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home, Bug, ChevronDown, ChevronUp } from 'lucide-react';
 import { captureError } from '../../lib/monitoring/sentry';
+import { createAppError, getUserFacingError } from '../../lib/utils/errorHandlingUtils';
 import { MaintenancePage } from './MaintenancePage';
 
 interface Props {
@@ -170,6 +171,8 @@ class GlobalErrorBoundary extends Component<Props, State> {
       }
 
       const { errorInfo, showDetails, errorId } = this.state;
+      const appError = createAppError(error);
+      const { title, message } = getUserFacingError(appError.category, 'default');
 
       return (
         <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
@@ -181,8 +184,8 @@ class GlobalErrorBoundary extends Component<Props, State> {
                   <AlertTriangle className="w-8 h-8" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold">Something went wrong</h1>
-                  <p className="text-white/80 text-sm">We've encountered an unexpected error</p>
+                  <h1 className="text-xl font-bold">{title}</h1>
+                  <p className="text-white/80 text-sm">{message}</p>
                 </div>
               </div>
             </div>
@@ -201,8 +204,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
 
               {/* Friendly message */}
               <p className="text-[var(--color-text-secondary)]">
-                We apologize for the inconvenience. This error has been logged and our team will
-                look into it. You can try one of the following options:
+                You can try again or go home and try another section.
               </p>
 
               {/* Action buttons */}

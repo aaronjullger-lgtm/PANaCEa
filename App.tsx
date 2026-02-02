@@ -1,9 +1,8 @@
 // App.tsx
 import React, { useEffect, useMemo, useState, useCallback, Suspense } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Shield } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { ROUTES } from './config/routes';
 import { type View, pageVariants, DRILL_MODE_IDS } from './config/appViews';
 import {
@@ -36,6 +35,8 @@ import {
   PANRELASimulator,
   CommandPalette,
   UserProfileModal,
+  BaselineAssessment,
+  OnboardingYourPlan,
   MediaApproval,
   StudyGroupDashboard,
   ToolkitHub,
@@ -57,6 +58,7 @@ import {
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { Toaster } from 'sonner';
 import Loader from './components/loading/Loader';
+import { DrillLoadingState } from './components/drill/DrillLoadingState';
 import ThemeToggleButton from './components/ui/ThemeToggleButton';
 import { useTheme } from './hooks/useTheme';
 import { LandingPage } from './pages/LandingPage';
@@ -68,11 +70,20 @@ import { preloadData } from './lib/utils/dataLoader';
 import { useAccessibleTransition } from './hooks/useReducedMotion';
 import { flushPendingToLocalStorage } from './lib/services/sync/offlineSync';
 import { WithGeminiErrorBoundary } from './components/hoc/withGeminiErrorBoundary';
-import type { Question, PerformanceRecord, SessionSettings, ErrorTag, UserProfile } from './types';
+import type {
+  QuizQuestion,
+  PerformanceRecord,
+  SessionSettings,
+  ErrorTag,
+  UserProfile,
+} from './types';
 import { hasCompletedOnboarding, saveUserProfile, getExamLabel } from './services/analytics';
 import { CommuterProvider } from './contexts/CommuterContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { OfflineSyncIndicator } from './components/offline/OfflineSyncIndicator';
+
+/** Session focus options for simulation / training menu */
+type SimulationFocus = 'all' | 'growth' | 'flagged' | 'due';
 
 // Aliases for backward compatibility in this file
 const DRILL_MODE_PHOTO = DRILL_MODE_IDS.PHOTO;
@@ -148,7 +159,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
-  const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
+  const [questionQueue, setQuestionQueue] = useState<QuizQuestion[]>([]);
 
   // Use the cloud-sync-enabled stats hook
   const {
@@ -171,6 +182,10 @@ const App: React.FC = () => {
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState<boolean>(false);
+  type OnboardingStep = 'profile' | 'baseline' | 'your_plan';
+  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep | null>(null);
+  const [onboardingWeakestSystems, setOnboardingWeakestSystems] = useState<string[]>([]);
+  const [onboardingExamDate, setOnboardingExamDate] = useState<string | null>(null);
 
   // Get exam label based on user context (PANCE or PANRE)
   const examLabel = getExamLabel();
@@ -205,6 +220,9 @@ const App: React.FC = () => {
         // Show onboarding modal after a short delay for better UX
         setTimeout(() => {
           setIsOnboardingModalOpen(true);
+          setOnboardingStep('profile');
+          setOnboardingWeakestSystems([]);
+          setOnboardingExamDate(null);
         }, 500);
       }
     }
@@ -225,8 +243,8 @@ const App: React.FC = () => {
       }
     };
 
-    window.addEventListener('keydown', handleGlobalKeyDown);
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    globalThis.addEventListener('keydown', handleGlobalKeyDown);
+    return () => globalThis.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
 
   // ---- Safety net: flush pending sync data before browser closes ----
@@ -237,8 +255,8 @@ const App: React.FC = () => {
       flushPendingToLocalStorage();
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    globalThis.addEventListener('beforeunload', handleBeforeUnload);
+    return () => globalThis.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
   // ---- derived: "growth areas" and heatmap data ----
@@ -286,7 +304,7 @@ const App: React.FC = () => {
       setPerformanceData((prev) => {
         if (prev.length === 0) return prev;
         const updated = [...prev];
-        const lastRecord = updated[updated.length - 1];
+        const lastRecord = updated.at(-1);
         if (!lastRecord) return prev;
         updated[updated.length - 1] = {
           ...lastRecord,
@@ -299,9 +317,9 @@ const App: React.FC = () => {
   );
 
   const addMissedQuestion = useCallback(
-    (question: Question) => {
+    (question: QuizQuestion) => {
       const now = new Date().toISOString().split('T')[0];
-      const base: Question = {
+      const base: QuizQuestion = {
         ...question,
         repetitionLevel: question.repetitionLevel ?? 1,
         nextReviewDate: question.nextReviewDate ?? now,
@@ -312,7 +330,7 @@ const App: React.FC = () => {
   );
 
   const updateReviewQuestion = useCallback(
-    (question: Question, wasCorrect: boolean) => {
+    (question: QuizQuestion, wasCorrect: boolean) => {
       setMissedQuestions((prev) =>
         prev.map((q) => {
           if (q.question !== question.question) return q;
@@ -337,7 +355,7 @@ const App: React.FC = () => {
   );
 
   const addFlaggedQuestion = useCallback(
-    (question: Question) => {
+    (question: QuizQuestion) => {
       setFlaggedQuestions((prev) => {
         if (prev.some((q) => q.question === question.question)) return prev;
         return [...prev, question];
@@ -347,15 +365,15 @@ const App: React.FC = () => {
   );
 
   const removeFlaggedQuestion = useCallback(
-    (question: Question) => {
+    (question: QuizQuestion) => {
       setFlaggedQuestions((prev) => prev.filter((q) => q.question !== question.question));
     },
     [setFlaggedQuestions]
   );
 
   const updateQuestionNote = useCallback(
-    (question: Question, note: string) => {
-      const updater = (q: Question) =>
+    (question: QuizQuestion, note: string) => {
+      const updater = (q: QuizQuestion) =>
         q.question === question.question ? { ...q, userNote: note } : q;
       setQuestionQueue((prev) => prev.map(updater));
       setMissedQuestions((prev) => prev.map(updater));
@@ -411,7 +429,7 @@ const App: React.FC = () => {
   );
 
   const handleTrainingMenuStart = useCallback(
-    (modeId: string, focus?: 'all' | 'growth' | 'flagged' | 'due') => {
+    (modeId: string, focus?: SimulationFocus) => {
       let sessionFocus: SessionSettings['focus'] = 'all';
       if (focus === 'flagged') sessionFocus = 'reviewFlagged';
       else if (focus === 'due') sessionFocus = 'review';
@@ -450,13 +468,60 @@ const App: React.FC = () => {
 
   const handleOnboardingComplete = useCallback((profile: UserProfile) => {
     saveUserProfile(profile);
-    setIsOnboardingModalOpen(false);
+    setOnboardingStep('baseline');
   }, []);
 
   const handleOnboardingSkip = useCallback(() => {
     saveUserProfile({ hasCompletedOnboarding: true });
-    setIsOnboardingModalOpen(false);
+    setOnboardingWeakestSystems([]);
+    setOnboardingStep('your_plan');
   }, []);
+
+  const handleBaselineComplete = useCallback(
+    (results: { weakestSystems: string[] }) => {
+      setOnboardingWeakestSystems(results.weakestSystems ?? []);
+      setOnboardingStep('your_plan');
+    },
+    []
+  );
+
+  const handleBaselineSkip = useCallback(() => {
+    setOnboardingWeakestSystems([]);
+    setOnboardingStep('your_plan');
+  }, []);
+
+  const handleYourPlanStartSession = useCallback(() => {
+    setIsOnboardingModalOpen(false);
+    setOnboardingStep(null);
+    setIsModalOpen(true);
+  }, []);
+
+  const handleYourPlanSkip = useCallback(() => {
+    setIsOnboardingModalOpen(false);
+    setOnboardingStep(null);
+  }, []);
+
+  // Fetch exam date when showing "Your plan" step
+  useEffect(() => {
+    if (onboardingStep !== 'your_plan') return;
+    let cancelled = false;
+    getToken()
+      .then((token) => {
+        if (!token || cancelled) return;
+        return fetch('/api/user/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      })
+      .then((res) => (res?.ok ? res.json() : null))
+      .then((data: { data?: { profile?: { examDate?: string | null } } } | null) => {
+        if (!cancelled && data?.data?.profile?.examDate)
+          setOnboardingExamDate(data.data.profile.examDate);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [onboardingStep, getToken]);
 
   // Handler for navigating to drill modes with dedicated routes
   // Memoized to prevent unnecessary child re-renders
@@ -502,13 +567,11 @@ const App: React.FC = () => {
   }, []);
 
   // Navigate to simulation page - memoized
-  const [simulationInitialFocus, setSimulationInitialFocus] = useState<
-    'all' | 'growth' | 'flagged' | 'due'
-  >('all');
+  const [simulationInitialFocus, setSimulationInitialFocus] = useState<SimulationFocus>('all');
   const [initialDrillSystem, setInitialDrillSystem] = useState<string | null>(null);
 
   const handleNavigateToSimulation = useCallback(
-    (settings?: { initialFocus?: 'all' | 'growth' | 'flagged' | 'due' }) => {
+    (settings?: { initialFocus?: SimulationFocus }) => {
       if (settings?.initialFocus) {
         setSimulationInitialFocus(settings.initialFocus);
       } else {
@@ -729,7 +792,16 @@ const App: React.FC = () => {
                       id="main-content"
                       className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24"
                     >
-                      {isLoading && <Loader forceDark={view === 'imaging_drill'} />}
+                      {isLoading &&
+                        (sessionSettings ? (
+                          <DrillLoadingState
+                            message="Preparing your question..."
+                            variant="question"
+                            showTimer={false}
+                          />
+                        ) : (
+                          <Loader forceDark={view === 'imaging_drill'} />
+                        ))}
                       {error && (
                         <motion.div
                           initial={{ opacity: 0, y: -10 }}
@@ -1438,14 +1510,31 @@ const App: React.FC = () => {
                     )}
                   </AnimatePresence>
 
-                  {/* User Profile Onboarding Modal */}
+                  {/* Onboarding: Profile → Baseline (optional) → Your plan */}
                   <Suspense fallback={null}>
-                    <UserProfileModal
-                      isOpen={isOnboardingModalOpen}
-                      onComplete={handleOnboardingComplete}
-                      onSkip={handleOnboardingSkip}
-                      canSkip={true}
-                    />
+                    {isOnboardingModalOpen && (onboardingStep === 'profile' || onboardingStep === null) && (
+                      <UserProfileModal
+                        isOpen={true}
+                        onComplete={handleOnboardingComplete}
+                        onSkip={handleOnboardingSkip}
+                        canSkip={true}
+                      />
+                    )}
+                    {isOnboardingModalOpen && onboardingStep === 'baseline' && (
+                      <BaselineAssessment
+                        onComplete={handleBaselineComplete}
+                        onSkip={handleBaselineSkip}
+                      />
+                    )}
+                    {isOnboardingModalOpen && onboardingStep === 'your_plan' && (
+                      <OnboardingYourPlan
+                        weakestSystems={onboardingWeakestSystems}
+                        examDate={onboardingExamDate ?? undefined}
+                        onStartSession={handleYourPlanStartSession}
+                        onSetExamDate={(date) => setOnboardingExamDate(date)}
+                        onSkip={handleYourPlanSkip}
+                      />
+                    )}
                   </Suspense>
                 </>
               }

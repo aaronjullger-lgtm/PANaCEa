@@ -1,0 +1,4 @@
+/* Dynamic width for system performance bar - value set via --bar-pct in JS */
+.barFill {
+  width: var(--bar-pct, 0);
+}
