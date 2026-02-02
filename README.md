@@ -14,6 +14,8 @@ Adaptive learning meets medical education excellence for Physician Assistant stu
 
 </div>
 
+> **🚨 DEPLOYMENT FIX REQUIRED:** Cloudflare deployments failing due to API token permissions. **Solution:** Update `CLOUDFLARE_API_TOKEN` secret with "Account → Cloudflare Pages: Edit" permission. See [CLOUDFLARE_API_TOKEN_FIX.md](./CLOUDFLARE_API_TOKEN_FIX.md) for step-by-step instructions. Local development is unaffected.
+
 ---
 
 ## 🎯 Overview
