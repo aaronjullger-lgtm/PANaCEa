@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { buttonVariantStyles, type ButtonVariant } from '../../lib/utils/designVariants';
+import { feedback } from '@/services/core/feedbackService';
 
 /**
  * PrimaryButton - Standardized button component for consistent UI
@@ -26,6 +27,8 @@ interface PrimaryButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'>
   iconRight?: LucideIcon;
   fullWidth?: boolean;
   disabled?: boolean;
+  /** Trigger selection haptic on press (for important CTAs) */
+  hapticOnPress?: boolean;
 }
 
 const variantStyles: Record<ButtonVariant, string> = buttonVariantStyles;
@@ -44,11 +47,17 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   iconRight: IconRight,
   fullWidth = false,
   disabled = false,
+  hapticOnPress = false,
   className = '',
+  onClick,
   ...props
 }) => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (hapticOnPress && !disabled) feedback.selection();
+    onClick?.(e);
+  };
   const baseStyles =
-    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-offset-2 focus:ring-offset-[var(--color-bg-primary)]';
+    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-offset-2 focus:ring-offset-[var(--color-bg-primary)] active:scale-[0.95]';
   const disabledStyles = disabled ? 'opacity-50 cursor-not-allowed' : '';
   const widthStyles = fullWidth ? 'w-full' : '';
 
@@ -60,10 +69,11 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 
   return (
     <motion.button
-      whileHover={disabled ? {} : { scale: 1.02, y: -2 }}
-      whileTap={disabled ? {} : { scale: 0.98 }}
+      whileHover={disabled ? {} : { y: -2, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)' }}
+      whileTap={disabled ? {} : { scale: 0.95 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       disabled={disabled}
+      onClick={handleClick}
       className={`
         ${baseStyles}
         ${variantStyles[variant]}

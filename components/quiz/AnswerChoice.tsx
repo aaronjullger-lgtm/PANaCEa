@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { feedback } from '@/services/core/feedbackService';
 
 interface AnswerChoiceProps {
   /** The answer text content */
@@ -59,7 +60,7 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
     const handleMainClick = (e: React.MouseEvent) => {
       // Don't select if already answered or if the answer is eliminated
       if (isAnswered || isEliminated) return;
-      // Allow selecting/deselecting before submitting
+      feedback.selection();
       onSelect(index);
     };
 

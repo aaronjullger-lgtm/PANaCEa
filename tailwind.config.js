@@ -12,6 +12,15 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      keyframes: {
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+      },
+      animation: {
+        shimmer: 'shimmer 1.5s infinite',
+      },
       boxShadow: {
         'brand': '0 10px 40px -10px rgba(15, 23, 42, 0.5)',
         'brand-lg': '0 20px 50px -15px rgba(15, 23, 42, 0.55)',

@@ -116,9 +116,9 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
         {children}
       </main>
 
-      {/* Fixed Footer Bar */}
+      {/* Fixed Footer Bar - Glassmorphism */}
       {footer && (
-        <div className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-secondary)] border-t border-[var(--color-border)] z-10">
+        <div className="fixed bottom-0 left-0 right-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-white/10 dark:border-white/10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.25)]">
           {footer}
         </div>
       )}

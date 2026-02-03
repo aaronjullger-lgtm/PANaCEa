@@ -739,8 +739,10 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     // Trigger sensory feedback (haptic + optional sound)
     if (isCorrect) {
-      feedback.correct();
-      setCurrentStreak((prev) => prev + 1);
+      const newStreak = currentStreak + 1;
+      setCurrentStreak(newStreak);
+      if (newStreak >= 3) feedback.streak();
+      else feedback.correct();
     } else {
       feedback.incorrect();
       setCurrentStreak(0);
