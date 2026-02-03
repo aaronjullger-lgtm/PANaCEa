@@ -58,6 +58,7 @@ import { ScorePredictionCard } from './ScorePredictionCard';
 import { MetacognitiveReflection } from '../session/MetacognitiveReflection';
 import { callGeminiText } from '@/services/ai/geminiService';
 import { GEMINI_FLASH_MODEL } from '@/src/constants';
+import { fireStreakCelebration } from '@/lib/streakCelebration';
 import styles from './SessionEndSummary.module.css';
 
 interface SessionEndSummaryProps {
@@ -66,6 +67,8 @@ interface SessionEndSummaryProps {
   sessionDurationMs?: number;
   sessionStartTime?: number;
   sessionSummary?: any; // PANCE distribution summary
+  /** When true, fire confetti once (e.g. user just completed daily target / streak milestone) */
+  celebrateStreak?: boolean;
   onClose: () => void;
   onReviewMissed?: () => void;
   onStartNewSession?: () => void;
@@ -123,6 +126,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
   sessionDurationMs,
   sessionStartTime,
   sessionSummary: externalSummary,
+  celebrateStreak = false,
   onClose,
   onReviewMissed,
   onStartNewSession,
@@ -132,6 +136,14 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 }) => {
   const { getToken } = useAuth();
   const syncAttempted = useRef(false);
+
+  // Micro-interaction: confetti when user completed daily target / streak milestone
+  useEffect(() => {
+    if (celebrateStreak && isOpen) {
+      const t = setTimeout(() => fireStreakCelebration(), 400);
+      return () => clearTimeout(t);
+    }
+  }, [celebrateStreak, isOpen]);
   const [syncStatus, setSyncStatus] = React.useState<'pending' | 'synced' | 'failed' | null>(null);
   const [showReflection, setShowReflection] = React.useState(false);
   const [aiSummary, setAiSummary] = React.useState<string | null>(null);
@@ -356,7 +368,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm p-4"
     >
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}

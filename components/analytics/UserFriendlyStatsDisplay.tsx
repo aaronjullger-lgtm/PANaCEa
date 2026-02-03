@@ -584,8 +584,8 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
               hasData={displayData.hasData}
             />
 
-            {/* Key Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Key Stats Grid - stretch so cards match height and reduce vertical gap */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-stretch">
               <StatCard
                 label="Lifetime Accuracy"
                 value={displayData.hasData ? `${displayData.accuracyLifetime}%` : '—'}
@@ -644,8 +644,8 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
               />
             </div>
 
-            {/* Quick Stats Row */}
-            <div className="grid grid-cols-3 gap-4">
+            {/* Quick Stats Row - stretch to match Key Stats row height */}
+            <div className="grid grid-cols-3 gap-4 items-stretch">
               <div className="bg-surface-card border border-border-subtle rounded-xl p-4 text-center">
                 <Clock className="w-5 h-5 mx-auto text-text-muted mb-2" />
                 <p className="text-lg font-bold text-text-primary">

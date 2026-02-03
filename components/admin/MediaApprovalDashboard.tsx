@@ -425,7 +425,7 @@ export function MediaApprovalDashboard() {
 
       {/* Detail Modal */}
       {selectedMedia && !showRejectionModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-[var(--color-bg-primary)] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
@@ -550,7 +550,7 @@ export function MediaApprovalDashboard() {
 
       {/* Rejection Modal */}
       {showRejectionModal && selectedMedia && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-[var(--color-bg-primary)] rounded-lg max-w-md w-full p-6">
             <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
               Reject Media
@@ -681,7 +681,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-[var(--color-bg-primary)] rounded-lg max-w-lg w-full p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-[var(--color-text-primary)]">

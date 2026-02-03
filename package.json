@@ -166,6 +166,7 @@
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.22",
     "bcrypt": "^6.0.0",
+    "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "csv-parse": "^6.1.0",

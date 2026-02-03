@@ -62,6 +62,7 @@ import { Toaster } from 'sonner';
 import Loader from './components/loading/Loader';
 import { DrillLoadingState } from './components/drill/DrillLoadingState';
 import ThemeToggleButton from './components/ui/ThemeToggleButton';
+import { MasteryHeatmapToggle } from './components/ui/MasteryHeatmapToggle';
 import { useTheme } from './hooks/useTheme';
 import { LandingPage } from './pages/LandingPage';
 import { LoadingProgress } from './components/loading/LoadingProgress';
@@ -764,6 +765,7 @@ const App: React.FC = () => {
                         >
                           <Settings className="w-5 h-5" />
                         </motion.button>
+                        <MasteryHeatmapToggle compact className="hidden sm:inline-flex" />
                         <ThemeToggleButton />
                       </div>
                     </div>

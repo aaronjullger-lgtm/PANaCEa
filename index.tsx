@@ -12,6 +12,7 @@ import { AuthProvider } from './components/auth/AuthProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ShortcutProvider } from './src/context/ShortcutContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { MasteryHeatmapProvider } from './contexts/MasteryHeatmapContext';
 
 // Initialize error tracking asynchronously only in production to avoid dev DSN access
 if (import.meta.env.PROD) {
@@ -46,7 +47,9 @@ root.render(
           <ShortcutProvider>
             <BrowserRouter>
               <ThemeProvider>
-                <App />
+                <MasteryHeatmapProvider>
+                  <App />
+                </MasteryHeatmapProvider>
               </ThemeProvider>
             </BrowserRouter>
           </ShortcutProvider>

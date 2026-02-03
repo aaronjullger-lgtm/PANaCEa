@@ -35,6 +35,7 @@ import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { CalibrationProgress } from '@/components/analytics/CalibrationProgress';
 import { EmptyLineChart } from '@/components/analytics/EmptyChartState';
+import { PANCEReadinessTreemap, type SystemNode } from '@/components/analytics/PANCEReadinessTreemap';
 import chartTheme from '@/lib/chartTheme';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { getQuadrantLabel } from '@/lib/calibrationQuadrants';
@@ -260,6 +261,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       .filter((d) => d.attempts > 0)
       .sort((a, b) => b.accuracy - a.accuracy); // Best first, worst last (bottom 3 = study today)
   }, [userStats]);
+
+  // PANCE readiness treemap: same data as bar chart (volume = attempts, color = mastery)
+  const treemapData: SystemNode[] = useMemo(() => {
+    return systemPerformanceBarData.map((d) => ({
+      name: d.system,
+      systemCode: d.system,
+      volume: d.attempts,
+      masteryPercent: d.accuracy,
+    }));
+  }, [systemPerformanceBarData]);
 
   // Transform server data for time chart (decision time by system)
   const timeData: TimeDatum[] = useMemo(() => {
@@ -635,6 +646,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             </div>
           )}
 
+          {/* PANCE Readiness Treemap (hierarchical view: size = volume, color = mastery) */}
+          {treemapData.length > 0 && (
+            <div className="mb-6">
+              <PANCEReadinessTreemap data={treemapData} />
+            </div>
+          )}
+
           {/* System Performance: horizontal bar (best to worst), bottom 3 = red zone */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="p-6 rounded-xl border border-[var(--color-border)] bg-surface-primary">
@@ -768,7 +786,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             ) : (
               <>
                 <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={stabilityTrendData}>
+                  <LineChart data={stabilityTrendData} margin={{ top: 4, right: 24, left: 0, bottom: 28 }}>
                     <CartesianGrid {...chartTheme.grid} />
                     <XAxis dataKey="date" tick={chartTheme.axis.tick} angle={-20} height={60} />
                     <YAxis

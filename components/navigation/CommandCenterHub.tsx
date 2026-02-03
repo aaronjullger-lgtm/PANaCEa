@@ -47,6 +47,7 @@ import {
   Headphones,
   FolderTree,
   Sparkles,
+  MoreHorizontal,
 } from 'lucide-react';
 import type { PerformanceRecord, Question, SessionSettings, SystemCode } from '@/types';
 import type { ClinicalRotation } from '@/types';
@@ -77,6 +78,8 @@ import { QuickStatsBarSkeleton } from '@/components/loading';
 import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
 import { BodyMapWidget } from '@/components/dashboard/BodyMapWidget';
 import { RoundsButton } from '@/components/dashboard/RoundsButton';
+import { HighContrastDataToggle } from '@/components/ui/HighContrastDataToggle';
+import { SmartSchedulerGantt, type ScheduleBlock } from '@/components/analytics/SmartSchedulerGantt';
 
 // ============================================================================
 // Types
@@ -269,7 +272,7 @@ const CoreAdaptiveHero: React.FC<{
                   {badgeLabel}
                 </span>
               </div>
-              <p className="text-sm text-[var(--color-text-secondary)]">
+              <p className="text-base text-[var(--color-text-secondary)]">
                 {subtitle}
               </p>
             </div>
@@ -323,7 +326,7 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
                 Voice patient
               </span>
             </div>
-            <p className="text-sm text-[var(--color-text-secondary)] mb-3">
+            <p className="text-base text-[var(--color-text-secondary)] mb-3">
               Practice with a live voice simulated patient; rubric-based SOAP note grading and real-time feedback.
             </p>
             <div className="flex items-center gap-4">
@@ -490,7 +493,7 @@ const ModeCard: React.FC<{
               </span>
             )}
           </div>
-          <p className="text-sm text-[var(--color-text-muted)] line-clamp-3">{mode.description}</p>
+          <p className="text-[15px] text-[var(--color-text-secondary)] line-clamp-3">{mode.description}</p>
           {mode.estimatedMinutes && (
             <div className="flex items-center gap-1.5 mt-2 text-xs text-[var(--color-text-muted)]">
               <Timer className="w-3 h-3" />
@@ -769,6 +772,20 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     return { streak, dueCount, accuracy, questionsToday: todayRecords.length };
   }, [performanceData, flaggedQuestions, missedQuestions, propDueCount]);
 
+  // FSRS / spaced repetition schedule blocks for Gantt (today when dueCount > 0)
+  const schedulerBlocks: ScheduleBlock[] = useMemo(() => {
+    if (stats.dueCount <= 0) return [];
+    const today = new Date().toISOString().slice(0, 10);
+    return [
+      {
+        id: 'today-due',
+        label: 'Review due',
+        date: today,
+        count: stats.dueCount,
+      },
+    ];
+  }, [stats.dueCount]);
+
   // For Didactic users: sub-label showing enabled systems (e.g. "Testing: CV, PULM, GI Only")
   const enabledSystemsLabel = useMemo(() => {
     if (careerStage !== 'student') return null;
@@ -1008,9 +1025,11 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   <button
                     type="button"
                     onClick={onOpenSettings}
-                    className="text-sm font-medium text-[var(--color-accent)] hover:underline"
+                    title="More options"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
                   >
-                    More options
+                    <MoreHorizontal className="w-4 h-4" aria-hidden />
+                    <span>More options</span>
                   </button>
                 )}
               </div>
@@ -1018,12 +1037,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
               {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map((system) => {
                 const fullName = getSystemDisplayFullName(system);
+                const isWeak = growthAreas.some((a) => a.toUpperCase() === system || a === system);
                 return (
                   <button
                     key={system}
                     type="button"
                     onClick={() => handleToggleSystem(system)}
                     title={fullName}
+                    data-mastery={isWeak ? 'weak' : undefined}
                     className={`min-w-0 p-4 rounded-lg text-xs font-medium transition-all text-left ${
                       enabledSystems.has(system)
                         ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-2 border-[var(--color-accent)]'
@@ -1080,7 +1101,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     System Chooser
                   </span>
                 </div>
-                <p className="text-sm text-[var(--color-text-secondary)] mb-3">
+                <p className="text-base text-[var(--color-text-secondary)] mb-3">
                   Build targeted sessions: choose specific organ systems, focus areas, and customize
                   difficulty
                 </p>
@@ -1098,7 +1119,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             </div>
 
             <PrimaryButton
-              variant="primary"
+              variant="secondary"
               size="md"
               icon={Play}
               iconRight={ChevronRight}
@@ -1207,9 +1228,10 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </div>
       </div>
 
-      {/* Tab panels: one visible at a time (view switch, not scroll) */}
-      <AnimatePresence mode="wait">
-        {activeTab === 'training' && (
+      {/* Tab panels: aligned to same grid as header/tabs (max-w 1200px) */}
+      <div className="max-w-[1200px] mx-auto">
+        <AnimatePresence mode="wait">
+          {activeTab === 'training' && (
           <motion.div
             key="training"
             id="study-tools-panel-training"
@@ -1691,11 +1713,22 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           >
             {/* Research-Backed User-Friendly Stats */}
             <section>
-              <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-action-blue" />
-                Your Learning Analytics
-              </h3>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-action-blue" />
+                  Your Learning Analytics
+                </h3>
+                <HighContrastDataToggle compact className="shrink-0" />
+              </div>
               <UserFriendlyStatsDisplay />
+            </section>
+
+            {/* Spaced repetition schedule (Gantt-style) */}
+            <section>
+              <SmartSchedulerGantt
+                blocks={schedulerBlocks}
+                daysToShow={14}
+              />
             </section>
 
             {/* Learning Profile - Comprehensive User Analytics */}
@@ -1819,7 +1852,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             )}
           </motion.div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

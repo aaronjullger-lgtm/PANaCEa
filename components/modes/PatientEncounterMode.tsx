@@ -228,6 +228,17 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     registerTick();
   }, [session?.questions.length, registerTick, session]);
 
+  // HUD mode: medical-monitor style UI when Live OSCE session is active
+  useEffect(() => {
+    const root = document.documentElement;
+    if (showLiveSession) {
+      root.classList.add('live-osce-hud');
+    }
+    return () => {
+      root.classList.remove('live-osce-hud');
+    };
+  }, [showLiveSession]);
+
   const getSemanticVitalClass = useCallback((value: number, range?: [number, number]) => {
     if (!range) return 'text-white';
     return value < range[0] || value > range[1] ? 'text-data-fail' : 'text-data-pass';
@@ -1210,7 +1221,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
         {/* Live Voice Patient overlay */}
         {showLiveSession && session.id && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4">
             <div className="relative max-w-md w-full">
               <OSCELiveSession
                 sessionId={session.id}

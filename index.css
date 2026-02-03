@@ -427,6 +427,31 @@ body,
   animation: voice-pulse 1.5s ease-in-out infinite;
 }
 
+/* ===== HUD MODE (LIVE OSCE) ===== */
+/* Add .live-osce-hud to root when in Live OSCE for medical-monitor style UI */
+.live-osce-hud {
+  --hud-bg: #0a0e14;
+  --hud-accent-cyan: #22d3ee;
+  --hud-accent-magenta: #e879f9;
+  --hud-text: #e2e8f0;
+}
+.live-osce-hud .hud-vital,
+.live-osce-hud [data-hud="vital"] {
+  color: var(--hud-accent-cyan);
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
+}
+.live-osce-hud .hud-timer,
+.live-osce-hud [data-hud="timer"] {
+  color: var(--hud-accent-magenta);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 8px rgba(232, 121, 249, 0.5);
+}
+.live-osce-hud [data-hud="waveform"] {
+  stroke: var(--hud-accent-cyan);
+  stroke-width: 1.5;
+  opacity: 0.9;
+}
+
 .voice-indicator {
   width: 12px;
   height: 12px;
@@ -1311,6 +1336,38 @@ body,
 }
 
 /* ===============================================
+   SKELETON SHIMMER (LEFT-TO-RIGHT, DESIGN SYSTEM)
+   =============================================== */
+
+/* Single skeleton: left-to-right shimmer overlay (blue-gray, not pure gray) */
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(71, 85, 105, 0.15) 50%,
+    transparent 100%
+  );
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Wrapper for full layout: children get shimmer context */
+.skeleton-shimmer-wrap .skeleton-shimmer::after,
+.skeleton-shimmer-wrap [class*='Skeleton'] {
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* ===============================================
    SCROLLBAR STYLING FOR DARK MODE
    =============================================== */
 
@@ -1373,6 +1430,69 @@ body,
 
 .dark::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.8);
+}
+
+/* ===============================================
+   WCAG HIGH-CONTRAST DATA VISUALIZATION
+   When .high-contrast-data is on root: charts use distinct borders, no gradients/shadows.
+   =============================================== */
+
+.high-contrast-data {
+  --chart-grid-stroke: rgba(255, 255, 255, 0.35);
+  --chart-axis-stroke: rgba(255, 255, 255, 0.6);
+  --chart-tooltip-shadow: none;
+}
+
+.high-contrast-data .dark {
+  --chart-grid-stroke: rgba(255, 255, 255, 0.4);
+  --chart-axis-stroke: rgba(255, 255, 255, 0.7);
+}
+
+/* Light mode high-contrast: dark grid on light bg */
+.high-contrast-data:not(.dark) {
+  --chart-grid-stroke: rgba(15, 23, 42, 0.25);
+  --chart-axis-stroke: rgba(15, 23, 42, 0.5);
+}
+
+/* View Transitions API – morphing feel when navigating (card → detail) */
+@supports (view-transition-name: none) {
+  ::view-transition-old(root) {
+    animation: view-transition-fade-out 0.2s ease-out;
+  }
+  ::view-transition-new(root) {
+    animation: view-transition-fade-in 0.25s ease-in;
+  }
+  @keyframes view-transition-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes view-transition-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+/* Strip soft shadows from chart containers in high-contrast */
+.high-contrast-data [class*='recharts'] {
+  filter: none;
+}
+
+.high-contrast-data [class*='surface-card'][class*='rounded'],
+.high-contrast-data [class*='border'][class*='rounded-xl'] {
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+
+/* ===============================================
+   MASTERY HEATMAP OVERLAY (GLOBAL TOGGLE)
+   When .mastery-heatmap-overlay is on: cards with data-mastery glow faintly.
+   =============================================== */
+
+.mastery-heatmap-overlay [data-mastery='weak'] {
+  box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.25);
+}
+
+.mastery-heatmap-overlay [data-mastery='strong'] {
+  box-shadow: inset 0 0 0 2px rgba(34, 197, 94, 0.25);
 }
 
 /* ===============================================

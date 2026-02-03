@@ -40,10 +40,10 @@ export function Sparkline({
   data,
   width = 100,
   height = 30,
-  color = '#3b82f6',
+  color,
   strokeWidth = 2,
   showDots = false,
-  fillArea = false,
+  fillArea = true,
   min: minProp,
   max: maxProp,
   className = '',
@@ -131,7 +131,8 @@ export function Sparkline({
     : true;
   // Use design system colors: data-pass (teal) and data-fail (red)
   const semanticColorClass = inRange ? 'text-data-pass' : 'text-data-fail';
-  const effectiveColor = color || (inRange ? '#14b8a6' : '#ef4444'); // data-pass / data-fail
+  /* Brand-safe: use accent when no color passed (SVG stroke accepts var() in browser) */
+  const effectiveColor = color ?? 'var(--color-accent)';
 
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>

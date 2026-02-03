@@ -1691,6 +1691,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       {/* Sprint 4: Session End Summary */}
       <SessionEndSummary
         isOpen={showSessionEndSummary}
+        celebrateStreak={performanceData.length >= 10}
         onClose={() => {
           setShowSessionEndSummary(false);
           resetSessionDistribution();
