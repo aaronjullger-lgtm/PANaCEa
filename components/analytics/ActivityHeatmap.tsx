@@ -148,6 +148,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
   onStartFirstSession,
 }) => {
   const [selectedDay, setSelectedDay] = useState<DayActivityData | null>(null);
+  const lowPower = useLowPowerMode();
 
   const handleStartFirstSession = useCallback(() => {
     if (onStartFirstSession) {

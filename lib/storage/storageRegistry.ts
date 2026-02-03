@@ -35,23 +35,26 @@ export const StorageKeys = {
   ATTENDING_PERSONA: 'panceai_attending_persona',
 
   // Feature-specific storage
-  OFFLINE_QUEUE: 'panacea_offline_queue',
-  DEAD_LETTER_QUEUE: 'panacea_dead_letter_queue',
-  COMMUTER_MODE: 'panacea_commuter_mode',
-  COMMUTER_SETTINGS: 'panacea_commuter_settings',
+  OFFLINE_QUEUE: 'panceai_offline_queue',
+  DEAD_LETTER_QUEUE: 'panceai_dead_letter_queue',
+  COMMUTER_MODE: 'panceai_commuter_mode',
+  COMMUTER_SETTINGS: 'panceai_commuter_settings',
   CIRCADIAN_DATA: 'panceai_circadian_data',
   CONFUSION_PAIRS: 'panceai_confusion_pairs',
 
   // Toolkit/calculator data
-  RECENT_CALCULATORS: 'panacea_recent_calculators',
-  PINNED_CALCULATORS: 'panacea_pinned_calculators',
+  RECENT_CALCULATORS: 'panceai_recent_calculators',
+  PINNED_CALCULATORS: 'panceai_pinned_calculators',
 
   // Apple Watch sync
-  WATCH_SCHEDULE: 'panacea_watch_schedule',
-  WATCH_FLASHCARDS: 'panacea_watch_flashcards',
+  WATCH_SCHEDULE: 'panceai_watch_schedule',
+  WATCH_FLASHCARDS: 'panceai_watch_flashcards',
 
   // Feedback preferences
-  FEEDBACK_CONFIG: 'panacea_feedback_config',
+  FEEDBACK_CONFIG: 'panceai_feedback_config',
+
+  // Clinical fidelity (Patient Encounter / EMR)
+  CLINICAL_FIDELITY: 'panceai_clinical_fidelity',
 
   // Drill/session data
   DRILL_RECORDS: 'panceai_drill_records',

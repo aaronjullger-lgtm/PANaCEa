@@ -152,6 +152,7 @@ export function useUserStats(): UseUserStatsResult {
         console.warn('[useUserStats] 401 Unauthorized - stopping sync to prevent infinite loop');
         setSyncError('Authentication failed. Please sign in again.');
         setIsSyncing(false);
+        setIsLoading(false);
         return; // Exit early, do not throw or retry
       }
 
@@ -187,6 +188,7 @@ export function useUserStats(): UseUserStatsResult {
       setSyncError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsSyncing(false);
+      setIsLoading(false);
     }
   }, [isSignedIn, user, getToken, performanceData, missedQuestions, flaggedQuestions]);
 
@@ -220,6 +222,7 @@ export function useUserStats(): UseUserStatsResult {
         console.warn('[useUserStats] 401 Unauthorized - stopping sync to prevent infinite loop');
         setSyncError('Authentication failed. Please sign in again.');
         setIsSyncing(false);
+        setIsLoading(false);
         return; // Exit early, do not throw or retry
       }
 
@@ -253,6 +256,7 @@ export function useUserStats(): UseUserStatsResult {
       setSyncError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsSyncing(false);
+      setIsLoading(false);
     }
   }, [isSignedIn, user, getToken]);
 
@@ -268,33 +272,37 @@ export function useUserStats(): UseUserStatsResult {
     };
   }, [syncToCloud]);
 
-  // Auto-sync when user signs in (only once per session)
+  // Auto-sync when user signs in (only once per session). Show loading until first sync completes.
   useEffect(() => {
-    if (isSignedIn && user) {
-      // Prefer the in-memory state (initialized from localStorage during render).
-      // This avoids edge cases where some other test/code clears localStorage between
-      // `renderHook()` and this effect running.
-      let hasLocalData =
-        performanceData.length > 0 || missedQuestions.length > 0 || flaggedQuestions.length > 0;
+    if (!isSignedIn || !user) {
+      setIsLoading(false);
+      return;
+    }
 
-      // Fallback: if state is empty, re-check localStorage directly.
-      if (!hasLocalData) {
-        const localPerformance = safeParse<PerformanceRecord[]>(
-          localStorage.getItem(PERFORMANCE_KEY),
-          []
-        );
-        const localMissed = safeParse<Question[]>(localStorage.getItem(MISSED_KEY), []);
-        const localFlagged = safeParse<Question[]>(localStorage.getItem(FLAGGED_KEY), []);
+    // Prefer the in-memory state (initialized from localStorage during render).
+    // This avoids edge cases where some other test/code clears localStorage between
+    // `renderHook()` and this effect running.
+    let hasLocalData =
+      performanceData.length > 0 || missedQuestions.length > 0 || flaggedQuestions.length > 0;
 
-        hasLocalData =
-          localPerformance.length > 0 || localMissed.length > 0 || localFlagged.length > 0;
-      }
+    // Fallback: if state is empty, re-check localStorage directly.
+    if (!hasLocalData) {
+      const localPerformance = safeParse<PerformanceRecord[]>(
+        localStorage.getItem(PERFORMANCE_KEY),
+        []
+      );
+      const localMissed = safeParse<Question[]>(localStorage.getItem(MISSED_KEY), []);
+      const localFlagged = safeParse<Question[]>(localStorage.getItem(FLAGGED_KEY), []);
 
-      if (hasLocalData) {
-        syncToCloud();
-      } else {
-        syncFromCloud();
-      }
+      hasLocalData =
+        localPerformance.length > 0 || localMissed.length > 0 || localFlagged.length > 0;
+    }
+
+    setIsLoading(true);
+    if (hasLocalData) {
+      syncToCloud();
+    } else {
+      syncFromCloud();
     }
   }, [isSignedIn]); // Only trigger on sign-in state change, not on every clerkId change
 

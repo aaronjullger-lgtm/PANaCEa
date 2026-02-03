@@ -105,6 +105,8 @@ interface CommandCenterHubProps {
   onNavigateToReference?: () => void;
   /** My Library: upload PDFs, set active cache for Tutor */
   onNavigateToMyLibrary?: () => void;
+  /** Study Companion: PDF + citations + chat with textbook */
+  onNavigateToStudyCompanion?: () => void;
   onNavigateToCustomStudy?: () => void;
   /** Opens Pearl Deck (Rapid Review - saved pearls only) */
   onNavigateToPearlDeck?: () => void;
@@ -228,9 +230,20 @@ const CoreAdaptiveHero: React.FC<{
   isPracticing?: boolean;
   /** Sub-label for Start Session (e.g. "Testing: CV, PULM, GI Only") - shown for Didactic users */
   enabledSystemsLabel?: string | null;
+  /** Optional label for accuracy (e.g. "Module Accuracy") */
+  accuracyLabel?: string;
   /** Weak areas from analytics; when present, show "Focusing on your weak areas: X, Y" */
   growthAreas?: string[];
-}> = ({ onStart, accuracy, questionsToday, examLabel, isPracticing, enabledSystemsLabel, growthAreas = [] }) => {
+}> = ({
+  onStart,
+  accuracy,
+  questionsToday,
+  examLabel,
+  isPracticing,
+  enabledSystemsLabel,
+  accuracyLabel,
+  growthAreas = [],
+}) => {
   const mainTitle = isPracticing ? 'Knowledge Maintenance' : 'Core PANCE Simulation';
   const badgeLabel = isPracticing ? 'PANRE-LA Check-in' : `${examLabel} Prep`;
   const subtitle =
@@ -265,7 +278,8 @@ const CoreAdaptiveHero: React.FC<{
           <div className="mt-4 flex flex-wrap items-center gap-4 text-[var(--color-text-muted)]">
             <span className="inline-flex items-center gap-1.5 text-sm">
               <Target className="w-4 h-4 text-sage-500" aria-hidden />
-              {accuracy !== null ? `${accuracy}%` : 'Waiting for first session'} accuracy
+              {accuracy !== null ? `${accuracy}%` : 'Waiting for first session'}{' '}
+              {accuracyLabel ?? 'accuracy'}
             </span>
             <span className="inline-flex items-center gap-1.5 text-sm">
               <CheckCircle className="w-4 h-4 text-action-blue" aria-hidden />
@@ -629,6 +643,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   onNavigateToSimulation,
   onNavigateToReference,
   onNavigateToMyLibrary,
+  onNavigateToStudyCompanion,
   onNavigateToCustomStudy,
   onNavigateToPearlDeck,
   onNavigateToClinicalEye,
@@ -1153,24 +1168,42 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             { id: 'training' as const, label: 'Training Modes', icon: Zap },
             { id: 'resources' as const, label: 'Clinical Resources', icon: BookOpen },
             { id: 'analytics' as const, label: 'Progress & Analytics', icon: BarChart3 },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={activeTab === tab.id ? 'true' : 'false'}
-              aria-controls={`study-tools-panel-${tab.id}`}
-              id={`study-tools-tab-${tab.id}`}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-1 py-2 font-medium transition-all whitespace-nowrap border-b-2 bg-transparent ${
-                activeTab === tab.id
-                  ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
-                  : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-200'
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          ))}
+          ].map((tab) => {
+            const isSelected = activeTab === tab.id;
+            const className = `flex items-center gap-2 px-1 py-2 font-medium transition-all whitespace-nowrap border-b-2 bg-transparent ${
+              isSelected
+                ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
+                : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-200'
+            }`;
+
+            return isSelected ? (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected="true"
+                aria-controls={`study-tools-panel-${tab.id}`}
+                id={`study-tools-tab-${tab.id}`}
+                onClick={() => setActiveTab(tab.id)}
+                className={className}
+              >
+                <tab.icon className="w-4 h-4" strokeWidth={1.5} />
+                {tab.label}
+              </button>
+            ) : (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected="false"
+                aria-controls={`study-tools-panel-${tab.id}`}
+                id={`study-tools-tab-${tab.id}`}
+                onClick={() => setActiveTab(tab.id)}
+                className={className}
+              >
+                <tab.icon className="w-4 h-4" strokeWidth={1.5} />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -1613,6 +1646,33 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     </div>
                   </div>
                 </button>
+
+                {onNavigateToStudyCompanion && (
+                  <button
+                    onClick={onNavigateToStudyCompanion}
+                    className="mt-3 w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-xl bg-action-blue/15">
+                        <MessageSquare className="w-6 h-6 text-action-blue" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                          Study Companion
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-action-blue/15 text-action-blue">
+                            Citations
+                          </span>
+                        </h4>
+                        <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+                          Chat with an approved textbook and see evidence highlighted directly on the PDF
+                        </p>
+                        <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs bg-action-blue/15 text-action-blue">
+                          PDF + Tutor
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                )}
               </section>
             )}
           </motion.div>

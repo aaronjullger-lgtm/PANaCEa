@@ -60,7 +60,7 @@ export const onRequestGet = authenticatedEndpoint(
 
       const role = String(user?.role).toLowerCase() as UserRole | undefined;
 
-      if (!user || !role || (!isAdmin(role) && user.role !== 'content_creator')) {
+      if (!user || !role || (!isAdmin(role) && (user.role as string) !== 'content_creator')) {
         logger.warn('Non-admin attempted to access question review', {
           userId: auth.userId,
           role: user?.role,
@@ -127,7 +127,6 @@ export const onRequestGet = authenticatedEndpoint(
                 id: true,
                 name: true,
                 system: true,
-                panceYield: true,
               },
             },
           },
@@ -187,12 +186,12 @@ export const onRequestPost = authenticatedEndpoint(ValidationSchema, async (cont
     // Check if user is admin or content_creator
     const user = await prisma.user.findUnique({
       where: { clerkId: auth.userId },
-      select: { role: true, id: true, name: true },
+      select: { role: true, id: true },
     });
 
     const role = String(user?.role).toLowerCase() as UserRole | undefined;
 
-    if (!user || !role || (!isAdmin(role) && user.role !== 'content_creator')) {
+    if (!user || !role || (!isAdmin(role) && (user.role as string) !== 'content_creator')) {
       logger.warn('Non-admin attempted to update question validation', {
         userId: auth.userId,
         role: user?.role,

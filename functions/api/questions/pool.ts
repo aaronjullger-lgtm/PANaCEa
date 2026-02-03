@@ -39,6 +39,8 @@ interface QuestionDataJson {
   system?: string;
   subcategory?: string;
   tags?: string[];
+  contentSource?: string;
+  contentSourceTitle?: string;
 }
 
 interface PreGeneratedQuestionRecord {
@@ -68,18 +70,20 @@ interface PoolQuestionOutput {
   source: 'pool' | 'main';
   /** True when question is from staging lake (beta/peer review) */
   fromStaging?: boolean;
+  contentSource?: string;
+  contentSourceTitle?: string;
 }
 
 interface MainQuestionRecord {
   id: string;
   vignette: string | null;
   question: string;
-  options: string[];
+  options: unknown;
   correctAnswer: string;
   explanation: string | null;
   system: string | null;
   difficulty: string | null;
-  tags: string[];
+  tags: unknown;
 }
 
 /**
@@ -368,14 +372,17 @@ async function getFromPreGeneratedPool(
     if (difficulty) where.difficulty = difficulty;
     if (category) where.questionType = category;
 
-    const dbResults = await prisma.preGeneratedQuestion.findMany({
+    const dbResults = await (prisma.preGeneratedQuestion.findMany as any)({
       where,
       take: fetchCount,
       orderBy: { generatedAt: 'asc' },
-      ...CACHE_STRATEGY.QUESTIONS, // 5min cache for question pool
+      ...(CACHE_STRATEGY.QUESTIONS as any), // 5min cache for question pool
     });
     preGenQuestions = dbResults.map(mapToPreGeneratedQuestion);
-    remaining = await prisma.preGeneratedQuestion.count({ where, ...CACHE_STRATEGY.AGGREGATE });
+    remaining = await (prisma.preGeneratedQuestion.count as any)({
+      where,
+      ...(CACHE_STRATEGY.AGGREGATE as any),
+    });
   }
 
   // Filter out seen questions
@@ -442,6 +449,8 @@ async function getFromPreGeneratedPool(
       conditionId: q.conditionId,
       source: 'pool',
       fromStaging: q.questionType === 'staging',
+      contentSource: data.contentSource,
+      contentSourceTitle: data.contentSourceTitle,
     });
     toMarkUsed.push(q.id);
   }
@@ -525,12 +534,14 @@ async function getFromMainTable(
     // Convert options from object format {A: "text", B: "text"} to array format ["text", "text"]
     let optionsArray: string[] = [];
     if (Array.isArray(q.options)) {
-      optionsArray = q.options;
+      optionsArray = q.options.filter((x): x is string => typeof x === 'string');
     } else if (typeof q.options === 'object' && q.options !== null) {
       // Object format: { A: "Option A", B: "Option B", ... }
       const optionsObj = q.options as Record<string, string>;
       const sortedKeys = Object.keys(optionsObj).sort((a, b) => a.localeCompare(b)); // A, B, C, D, E
-      optionsArray = sortedKeys.map((key) => optionsObj[key]);
+      optionsArray = sortedKeys
+        .map((key) => optionsObj[key])
+        .filter((x): x is string => typeof x === 'string');
     }
 
     // Skip questions with no valid options
@@ -548,7 +559,7 @@ async function getFromMainTable(
       explanation: q.explanation ?? undefined,
       system: q.system ?? 'General',
       difficulty: q.difficulty || 'medium',
-      tags: q.tags,
+      tags: Array.isArray(q.tags) ? (q.tags.filter((x): x is string => typeof x === 'string') as string[]) : [],
       source: 'main',
       fromStaging: false,
     });

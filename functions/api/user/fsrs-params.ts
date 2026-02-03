@@ -216,12 +216,16 @@ export async function onRequestPost(context: {
     }
 
     // Fetch all user progress records with review history
+    // UserProgress links to MedicalContent via conditionId (conditionId = MedicalContent.id)
     const userProgressRecords = await prisma.userProgress.findMany({
       where: { userId: auth.userId },
       select: {
         id: true,
+        conditionId: true,
         reviewHistory: true,
-        medicalContentId: true,
+        MedicalContent: {
+          select: { system: true },
+        },
       },
     });
 
@@ -233,15 +237,11 @@ export async function onRequestPost(context: {
     for (const record of userProgressRecords) {
       const history = record.reviewHistory as ReviewSnapshot[];
       if (Array.isArray(history) && history.length > 0) {
+        const systemCode = record.MedicalContent?.system ?? null;
         for (const snapshot of history) {
           allSnapshots.push(snapshot);
-          // If we have system info, track it for per-system modifiers
-          if (includeSystemModifiers && record.medicalContentId) {
-            // Extract system code from medicalContentId (format: SYSTEM-CONDITION)
-            const systemCode = record.medicalContentId.split('-')[0];
-            if (systemCode) {
-              systemCodes[snapshotIndex] = systemCode;
-            }
+          if (includeSystemModifiers && systemCode) {
+            systemCodes[snapshotIndex] = systemCode;
           }
           snapshotIndex++;
         }

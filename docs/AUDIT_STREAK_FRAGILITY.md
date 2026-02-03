@@ -18,6 +18,16 @@ The app uses **streaks** (Fire icon) to drive daily usage. A single missed day r
 - **Setting**: “Streak goal” can be **Every day** or **Weekdays only** (`UserPreferences.streakGoalDays`: `'all'` | `'weekdays'`).
 - **Behavior**: When **Weekdays only** is set, only Monday–Friday count as “required” for the streak. Missing Saturday or Sunday does **not** break the streak. Reduces burnout from gamifying rest days.
 
+## Migration
+
+After pulling these changes, run:
+
+```bash
+npx prisma migrate dev --name add_streak_freeze_weekend_mode
+```
+
+This adds `UserPreferences.streakFreezes`, `userCoins`, `streakGoalDays` and the `StreakFreezeUse` table.
+
 ## Audit Checks
 
 - [ ] Streak calculation uses `streakGoalDays` so weekends are skipped when `'weekdays'`.

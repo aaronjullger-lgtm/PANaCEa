@@ -61,12 +61,14 @@ import { StatisticsPreferences, DEFAULT_WIDGET_CONFIG } from '@/components/Progr
 import type { WidgetId } from '@/components/ProgressDashboard';
 import { exportUserAnalytics, exportArchive } from '@/lib/analyticsExport';
 import { toast } from '@/lib/toast';
+import { SliderWithInput } from '@/components/ui/SliderWithInput';
 import {
   calculateAccuracy,
   calculateStreaks,
   loadWidgetPreferences as loadWidgetPrefs,
   saveWidgetPreferences as saveWidgetPrefs,
 } from '@/lib/dashboardUtils';
+import { getAccuracyBarClassSemantic } from '@/lib/accuracyColorUtils';
 import ActivityHeatmap from '@/components/analytics/ActivityHeatmap';
 import DecisionTimeAnalysis from '@/components/analytics/DecisionTimeAnalysis';
 import LongitudinalProgressDashboard from '@/components/analytics/LongitudinalProgressDashboard';
@@ -75,6 +77,7 @@ import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
 import EnhancedSettingsTab from '@/components/settings/EnhancedSettingsTab';
 import { useCommuter } from '@/contexts/CommuterContext';
 import { useUserContext } from '@/hooks/useUserContext';
+import { useClinicalFidelitySettings } from '@/hooks/useClinicalFidelitySettings';
 import RadialProgress from '@/components/ui/RadialProgress';
 import TrendSparkline from '@/components/ui/TrendSparkline';
 import { Skeleton } from '@/components/loading';
@@ -311,14 +314,14 @@ const AccessibilitySettings: React.FC = () => {
           <div className="p-2">
             <SliderWithInput
               value={settings.speechRate}
-              onChange={(v) => updateSettings({ speechRate: v })}
+              onChange={(v: number) => updateSettings({ speechRate: v })}
               min={0.5}
               max={2}
               step={0.1}
               unit="x"
               label={<span className="text-sm text-[var(--color-text-primary)]">Speech rate</span>}
-              toInputValue={(v) => v.toFixed(1)}
-              fromInputValue={(s) => parseFloat(s) || 0.5}
+              toInputValue={(v: number) => v.toFixed(1)}
+              fromInputValue={(s: string) => parseFloat(s) || 0.5}
             />
           </div>
         </div>
@@ -409,34 +412,19 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     return new Set();
   });
 
-  // Analytics color palette state - Load from localStorage
+  // Analytics color palette state - Load from localStorage (allowlist to avoid invalid values)
+  const VALID_ANALYTICS_PALETTES = new Set<AnalyticsPalette>(['default', 'neon', 'pastel', 'high-contrast']);
   const [analyticsPalette, setAnalyticsPalette] = useState<AnalyticsPalette>(() => {
     const saved = localStorage.getItem('panceai_analytics_palette');
-    return (saved as AnalyticsPalette) || 'default';
+    const value = saved?.trim();
+    return value && VALID_ANALYTICS_PALETTES.has(value as AnalyticsPalette)
+      ? (value as AnalyticsPalette)
+      : 'default';
   });
 
-  // Clinical Fidelity Mode settings - Load from localStorage
-  const [clinicalFidelitySettings, setClinicalFidelitySettings] = useState(() => {
-    const saved = localStorage.getItem('panceai_clinical_fidelity');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return {
-          emrInterface: false,
-          writeOrders: false,
-          rawLabValues: false,
-          multimediaAuscultation: false,
-        };
-      }
-    }
-    return {
-      emrInterface: false,
-      writeOrders: false,
-      rawLabValues: false,
-      multimediaAuscultation: false,
-    };
-  });
+  // Clinical Fidelity Mode settings (shared hook with Patient Encounter)
+  const { settings: clinicalFidelitySettings, toggle: toggleClinicalFidelity } =
+    useClinicalFidelitySettings();
 
   // Mini Modes selection - Load from localStorage
   const [miniModesSearch, setMiniModesSearch] = useState('');
@@ -538,12 +526,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   };
 
   const handleToggleClinicalFidelity = (setting: keyof typeof clinicalFidelitySettings) => {
-    setClinicalFidelitySettings((prev: typeof clinicalFidelitySettings) => {
-      const updated = { ...prev, [setting]: !prev[setting] };
-      localStorage.setItem('panceai_clinical_fidelity', JSON.stringify(updated));
-      toast.success('Changes saved');
-      return updated;
-    });
+    toggleClinicalFidelity(setting);
+    toast.success('Changes saved');
   };
 
   const handleToggleMiniMode = (modeId: string) => {
@@ -925,8 +909,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     if (confirmClear === type) {
       if (type === 'performance' && clearConfirmText === 'DELETE') {
         clearPerformanceData();
-      } else if (type === 'missed') clearMissedQuestionsData();
-      else if (type === 'flagged') clearFlaggedQuestionsData();
+        toast.success('Performance data cleared');
+      } else if (type === 'missed') {
+        clearMissedQuestionsData();
+        toast.success('To review list cleared');
+      } else if (type === 'flagged') {
+        clearFlaggedQuestionsData();
+        toast.success('Flagged questions cleared');
+      }
       setConfirmClear(null);
       setClearConfirmText('');
     } else {
@@ -934,6 +924,22 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       setClearConfirmText('');
       if (type !== 'performance') setTimeout(() => setConfirmClear(null), 3000);
     }
+  };
+
+  const handleArchiveAndReset = () => {
+    if (performanceData.length === 0) {
+      toast.success('No performance data to archive');
+      return;
+    }
+    const confirmed = window.confirm(
+      'This will download a full archive and then clear performance, missed, and flagged data. Continue?'
+    );
+    if (!confirmed) return;
+    exportArchive(performanceData);
+    clearPerformanceData();
+    clearMissedQuestionsData();
+    clearFlaggedQuestionsData();
+    toast.success('Archive downloaded and data reset');
   };
 
   if (!isOpen) return null;
@@ -959,13 +965,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <div className="p-1.5 sm:p-2 bg-[var(--color-accent)]/10 rounded-xl flex-shrink-0">
                 {activeTab === 'stats' ? (
-                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
+                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" strokeWidth={1.5} />
                 ) : activeTab === 'preferences' ? (
-                  <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
+                  <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" strokeWidth={1.5} />
                 ) : activeTab === 'activity' ? (
-                  <ActivityIcon className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
+                  <ActivityIcon className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" strokeWidth={1.5} />
                 ) : (
-                  <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
+                  <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" strokeWidth={1.5} />
                 )}
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] dark:text-slate-100 truncate">
@@ -1276,13 +1282,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           </div>
                           <div className="flex-1 h-2 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
                             <div
-                              className={`h-full rounded-full ${
-                                sys.accuracy >= 80
-                                  ? 'bg-data-pass'
-                                  : sys.accuracy >= 60
-                                    ? 'bg-[var(--color-accent)]'
-                                    : 'bg-data-provisional'
-                              }`}
+                              className={`h-full rounded-full ${getAccuracyBarClassSemantic(sys.accuracy)}`}
                               style={{ width: `${sys.accuracy}%` }}
                             />
                           </div>
@@ -1953,13 +1953,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <div className="flex gap-2 mb-3">
                     <button
                       onClick={handleEnableAllSystems}
-                      className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg transition-colors"
+                      className="px-4 py-2 text-sm font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--color-text-primary)] rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
                     >
                       Enable All
                     </button>
                     <button
                       onClick={handleDisableAllSystems}
-                      className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg transition-colors"
+                      className="px-4 py-2 text-sm font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--color-text-primary)] rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
                     >
                       Disable All
                     </button>
@@ -2077,13 +2077,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <div className="flex gap-2 mb-3">
                     <button
                       onClick={handleEnableAllMiniModes}
-                      className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg transition-colors"
+                      className="px-4 py-2 text-sm font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--color-text-primary)] rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
                     >
                       Enable All
                     </button>
                     <button
                       onClick={handleDisableAllMiniModes}
-                      className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg transition-colors"
+                      className="px-4 py-2 text-sm font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--color-text-primary)] rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
                     >
                       Disable All
                     </button>
@@ -2165,8 +2165,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             onClick={() => handleToggleMiniMode(mode.id)}
                             className={`p-3 rounded-lg text-left text-xs transition-all ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-blue-50 dark:bg-[var(--color-accent)]/20 text-blue-700 dark:text-[var(--color-text-primary)] border border-blue-200 dark:border-[var(--color-accent)]/20'
-                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                                ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
+                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
                             }`}
                           >
                             <div className="font-semibold">{mode.label}</div>
@@ -2190,8 +2190,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             onClick={() => handleToggleMiniMode(mode.id)}
                             className={`p-3 rounded-lg text-left text-xs transition-all ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-blue-50 dark:bg-[var(--color-accent)]/20 text-blue-700 dark:text-[var(--color-text-primary)] border border-blue-200 dark:border-[var(--color-accent)]/20'
-                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                                ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
+                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
                             }`}
                           >
                             <div className="font-semibold">{mode.label}</div>
@@ -2215,8 +2215,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             onClick={() => handleToggleMiniMode(mode.id)}
                             className={`p-3 rounded-lg text-left text-xs transition-all ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-blue-50 dark:bg-[var(--color-accent)]/20 text-blue-700 dark:text-[var(--color-text-primary)] border border-blue-200 dark:border-[var(--color-accent)]/40'
-                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                                ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
+                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
                             }`}
                           >
                             <div className="font-semibold">{mode.label}</div>
@@ -2240,8 +2240,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             onClick={() => handleToggleMiniMode(mode.id)}
                             className={`p-3 rounded-lg text-left text-xs transition-all ${
                               enabledMiniModes.has(mode.id)
-                                ? 'bg-blue-50 dark:bg-[var(--color-accent)]/20 text-blue-700 dark:text-[var(--color-text-primary)] border border-blue-200 dark:border-[var(--color-accent)]/40'
-                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                                ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
+                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
                             }`}
                           >
                             <div className="font-semibold">{mode.label}</div>
@@ -2411,7 +2411,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       <input
                         type="checkbox"
                         checked={clinicalFidelitySettings.emrInterface}
-                        onChange={() => handleToggleClinicalFidelity('emrInterface')}
+                        onChange={() => handleToggleClinicalFidelity('emrInterface' as const)}
                         className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
@@ -2590,23 +2590,40 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           </div>
                         )}
                       </div>
-                      <button
-                        onClick={() => handleClear('performance')}
-                        disabled={confirmClear === 'performance' && clearConfirmText !== 'DELETE'}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                          confirmClear === 'performance' && clearConfirmText === 'DELETE'
-                            ? 'bg-red-600 text-white'
-                            : confirmClear === 'performance'
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                              : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                        }`}
-                        aria-label={confirmClear === 'performance' && clearConfirmText === 'DELETE' ? 'Confirm clear performance data' : 'Clear performance data (opens confirmation)'}
-                      >
-                        <Trash2 className="w-4 h-4 inline-block mr-1" aria-hidden />
-                        {confirmClear === 'performance' && clearConfirmText === 'DELETE'
-                          ? 'Confirm Clear'
-                          : 'Clear Performance Data…'}
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={handleArchiveAndReset}
+                          disabled={performanceData.length === 0}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                            performanceData.length === 0
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600'
+                              : 'bg-[var(--color-accent)] text-white hover:opacity-90'
+                          }`}
+                          aria-label="Archive and reset: download backup then clear performance data"
+                        >
+                          <Download className="w-4 h-4 inline-block mr-1" aria-hidden />
+                          Archive & Reset
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleClear('performance')}
+                          disabled={confirmClear === 'performance' && clearConfirmText !== 'DELETE'}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                            confirmClear === 'performance' && clearConfirmText === 'DELETE'
+                              ? 'bg-red-600 text-white'
+                              : confirmClear === 'performance'
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                          }`}
+                          aria-label={confirmClear === 'performance' && clearConfirmText === 'DELETE' ? 'Confirm clear performance data' : 'Clear performance data permanently (requires typing DELETE)'}
+                        >
+                          <Trash2 className="w-4 h-4 inline-block mr-1" aria-hidden />
+                          {confirmClear === 'performance' && clearConfirmText === 'DELETE'
+                            ? 'Confirm Clear'
+                            : 'Clear permanently…'}
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-[var(--color-bg-primary)] rounded-lg">

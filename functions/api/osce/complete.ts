@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveUserByClerkId } from '../_shared/resolveUser';
 import { IDSchema } from '../_shared/schemas';
 
 // Schema for OSCE completion
@@ -32,10 +33,7 @@ export const onRequestPost = authenticatedEndpoint(
       const { sessionId, diagnosis, treatmentPlan } = validated.body;
       log.info('Completing OSCE session', { sessionId });
 
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        select: { id: true },
-      });
+      const user = await resolveUserByClerkId(prisma, auth.userId);
 
       if (!user) {
         log.warn('User not found for OSCE complete', { clerkId: auth.userId });

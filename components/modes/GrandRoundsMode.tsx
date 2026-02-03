@@ -14,10 +14,7 @@ import {
   Clock,
   Play,
   CheckCircle,
-  XCircle,
   Crown,
-  Medal,
-  Zap,
   AlertCircle,
   Loader2,
   Timer,
@@ -75,19 +72,8 @@ const getTimeUntilNextChallenge = () => {
   return `${hours}h ${minutes}m ${seconds}s`;
 };
 
-const TARGETED_DAILY_KEY_PREFIX = 'panceai_targeted_daily_';
-
-/** Get today's date string YYYY-MM-DD for targeted daily completion key */
-function getTargetedDailyKey(): string {
-  const t = new Date();
-  const y = t.getUTCFullYear();
-  const m = String(t.getUTCMonth() + 1).padStart(2, '0');
-  const d = String(t.getUTCDate()).padStart(2, '0');
-  return `${TARGETED_DAILY_KEY_PREFIX}${y}-${m}-${d}`;
-}
-
 const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
-  const { user, isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useUser();
   const { getToken } = useAuth();
 
   const [isTargeted, setIsTargeted] = useState(false);
@@ -103,11 +89,6 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const [timeElapsedMs, setTimeElapsedMs] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // For targeted mode: store correctAnswerIndex per question id for scoring (not shown in UI)
-  const [correctIndicesByQuestionId, setCorrectIndicesByQuestionId] = useState<
-    Record<string, number>
-  >({});
 
   // Next challenge countdown
   const [nextChallengeCountdown, setNextChallengeCountdown] = useState(getTimeUntilNextChallenge());
@@ -152,28 +133,8 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         throw new Error('Authentication required. Please sign in again.');
       }
 
-      // Targeted Daily Question (Didactic): questions from enabled systems only, completion in localStorage
+      // Targeted Daily Question (Didactic): server-authoritative (no correct answers on client)
       if (targeted) {
-        const todayKey = getTargetedDailyKey();
-        const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(todayKey) : null;
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored) as { correctCount: number; totalQuestions: number };
-            setCompletedStats({
-              score: parsed.correctCount * 20,
-              correctCount: parsed.correctCount,
-              totalQuestions: parsed.totalQuestions,
-              timeSpentMs: 0,
-              percentile: 0,
-              ranking: 0,
-            });
-            setViewState('completed');
-            return;
-          } catch {
-            /* invalid stored, fetch fresh */
-          }
-        }
-
         let systems: string[] = [];
         try {
           const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('panceai_enabled_systems') : null;
@@ -191,55 +152,61 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         }
 
         const params = new URLSearchParams();
-        params.set('count', '5');
         params.set('systems', systems.join(','));
-        const response = await fetch(`/api/questions/pool?${params}`, {
+        const response = await fetch(`/api/targeted-daily/today?${params}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: Failed to fetch questions`);
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData?.error || `HTTP ${response.status}: Failed to fetch targeted daily`);
         }
-        const data = (await response.json()) as { questions: Array<{
-          id: string;
-          vignette?: string;
-          question?: string;
-          options: string[];
-          correctAnswer?: string;
-          system?: string;
-          difficulty?: string;
-          tags?: string[];
-        }> };
-        const raw = data.questions || [];
-        if (raw.length === 0) {
-          setError('No questions available for your selected systems. Try enabling more systems.');
-          setViewState('error');
+        const data = (await response.json()) as
+          | {
+              status: 'completed';
+              stats: { correctCount: number; totalQuestions: number; timeSpentMs: number };
+            }
+          | {
+              status: 'active';
+              question: {
+                id: string;
+                vignette?: string;
+                question: string;
+                options: string[];
+                system: string;
+                difficulty: string;
+                tags?: string[];
+              };
+            };
+
+        if (data.status === 'completed') {
+          setCompletedStats({
+            score: data.stats.correctCount * 20,
+            correctCount: data.stats.correctCount,
+            totalQuestions: data.stats.totalQuestions,
+            timeSpentMs: data.stats.timeSpentMs,
+            percentile: 0,
+            ranking: 0,
+          });
+          setViewState('completed');
           return;
         }
-        const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
-        const correctIndices: Record<string, number> = {};
-        const questions: Question[] = raw.slice(0, 5).map((q) => {
-          const letter = (q.correctAnswer ?? 'A').toString().toUpperCase().charAt(0);
-          const correctIndex = letterToIndex[letter] ?? 0;
-          correctIndices[q.id] = correctIndex;
-          const vignette = q.vignette ?? '';
-          const questionText = (q.question ?? '').trim();
-          const fullQuestion = vignette ? `${vignette}\n\n${questionText}` : questionText;
-          return {
-            id: q.id,
-            vignette: q.vignette,
-            question: fullQuestion,
-            options: q.options ?? [],
-            correctAnswerIndex: correctIndex,
-            rationale: '',
-            topic: q.system ?? '',
-            conditionId: '',
-            condition: '',
-          } as Question;
-        });
-        setCorrectIndicesByQuestionId(correctIndices);
+
+        const q = data.question;
         setChallengeData({
-          challengeId: `targeted-${todayKey}`,
-          questions,
+          challengeId: `targeted-${q.id}`,
+          questions: [
+            {
+              id: q.id,
+              vignette: q.vignette,
+              question: q.question,
+              options: q.options,
+              correctAnswerIndex: 0, // not used; scoring happens server-side
+              rationale: '',
+              topic: q.system,
+              conditionId: '',
+              condition: '',
+            } as Question,
+          ],
         });
         setViewState('landing');
         return;
@@ -296,6 +263,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
   // Timer for active quiz
   useEffect(() => {
+    if (isTargeted) return;
     if (viewState !== 'active' || !startTime) return;
 
     const interval = setInterval(() => {
@@ -309,7 +277,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [viewState, startTime]);
+  }, [viewState, startTime, isTargeted]);
 
   const handleStart = useCallback(() => {
     setViewState('active');
@@ -365,31 +333,38 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     try {
       const timeSpentMs = Date.now() - startTime;
 
-      // Targeted Daily Question: score client-side and persist to localStorage (no server submit)
+      // Targeted Daily Question: submit server-side (no correct answers on client)
       if (isTargeted) {
-        let correctCount = 0;
-        for (const q of challengeData.questions) {
-          const correctIndex = correctIndicesByQuestionId[q.id];
-          if (typeof correctIndex === 'number' && answers[q.id] === correctIndex) {
-            correctCount++;
-          }
+        const questionId = challengeData.questions[0]?.id;
+        if (!questionId) throw new Error('Missing question id');
+        const answerIndex = answers[questionId];
+        if (typeof answerIndex !== 'number') throw new Error('Missing answer');
+
+        const token = await getToken();
+        if (!token) throw new Error('Authentication required. Please sign in again.');
+
+        const response = await fetch('/api/targeted-daily/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ answerIndex, timeSpentMs }),
+        });
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData?.error || 'Failed to submit targeted daily');
         }
-        const totalQuestions = challengeData.questions.length;
-        const todayKey = getTargetedDailyKey();
-        try {
-          localStorage.setItem(
-            todayKey,
-            JSON.stringify({ correctCount, totalQuestions, date: todayKey })
-          );
-        } catch {
-          /* ignore */
-        }
+
+        const result = (await response.json()) as {
+          success: boolean;
+          stats: { correctCount: number; totalQuestions: number; timeSpentMs: number };
+        };
+        if (!result.success) throw new Error('Submission failed');
+
         hapticSuccess();
         setCompletedStats({
-          score: correctCount * 20,
-          correctCount,
-          totalQuestions,
-          timeSpentMs,
+          score: result.stats.correctCount * 20,
+          correctCount: result.stats.correctCount,
+          totalQuestions: result.stats.totalQuestions,
+          timeSpentMs: result.stats.timeSpentMs,
           percentile: 0,
           ranking: 0,
         });
@@ -459,6 +434,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   };
 
   const getTimeRemaining = () => {
+    if (isTargeted) return 0;
     return Math.max(0, TOTAL_TIME_MS - timeElapsedMs);
   };
 
@@ -533,7 +509,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             </p>
           </div>
 
-          <div className={`grid gap-4 ${isTargeted ? 'grid-cols-2' : 'grid-cols-2'}`}>
+          <div className="grid grid-cols-2 gap-4">
             <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
               <div className="text-4xl font-bold text-muted-amber-500">{completedStats.score}</div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Total Score</div>
@@ -617,22 +593,26 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-primary)] rounded-lg">
               <Target className="w-6 h-6 text-muted-amber-500 flex-shrink-0" />
               <div>
-                <div className="font-semibold">5 Questions</div>
+                <div className="font-semibold">{isTargeted ? '1 Question' : '5 Questions'}</div>
                 <div className="text-sm text-[var(--color-text-muted)]">
-                  High-yield clinical scenarios
+                  {isTargeted
+                    ? 'One high-yield question from your enabled systems'
+                    : 'High-yield clinical scenarios'}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-primary)] rounded-lg">
-              <Clock className="w-6 h-6 text-muted-amber-500 flex-shrink-0" />
-              <div>
-                <div className="font-semibold">20 Minutes</div>
-                <div className="text-sm text-[var(--color-text-muted)]">
-                  Speed affects your score
+            {!isTargeted && (
+              <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-primary)] rounded-lg">
+                <Clock className="w-6 h-6 text-muted-amber-500 flex-shrink-0" />
+                <div>
+                  <div className="font-semibold">20 Minutes</div>
+                  <div className="text-sm text-[var(--color-text-muted)]">
+                    Speed affects your score
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {!isTargeted && (
               <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-primary)] rounded-lg">
@@ -695,7 +675,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
     const progress = ((currentQuestionIndex + 1) / challengeData.questions.length) * 100;
     const timeRemaining = getTimeRemaining();
-    const timeRemainingPercent = (timeRemaining / TOTAL_TIME_MS) * 100;
+    const timeRemainingPercent = isTargeted ? 0 : (timeRemaining / TOTAL_TIME_MS) * 100;
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] p-6">
@@ -717,16 +697,18 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Timer
-                  className={`w-5 h-5 ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-muted-amber-500'}`}
-                />
-                <span
-                  className={`text-2xl font-bold ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-muted-amber-500'}`}
-                >
-                  {formatTime(timeRemaining)}
-                </span>
-              </div>
+              {!isTargeted && (
+                <div className="flex items-center gap-2">
+                  <Timer
+                    className={`w-5 h-5 ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-muted-amber-500'}`}
+                  />
+                  <span
+                    className={`text-2xl font-bold ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-muted-amber-500'}`}
+                  >
+                    {formatTime(timeRemaining)}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Progress bar */}
@@ -738,14 +720,16 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                   className="h-full bg-gradient-to-r from-muted-amber-500 to-muted-amber-600"
                 />
               </div>
-              <div className="h-1 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-100 ${
-                    timeRemainingPercent < 25 ? 'bg-red-500' : 'bg-muted-amber-500'
-                  }`}
-                  style={{ width: `${timeRemainingPercent}%` }}
-                />
-              </div>
+              {!isTargeted && (
+                <div className="h-1 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
+                  <motion.div
+                    animate={{ width: `${timeRemainingPercent}%` }}
+                    className={`h-full ${
+                      timeRemainingPercent < 25 ? 'bg-red-500' : 'bg-muted-amber-500'
+                    }`}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -771,7 +755,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               <div className="space-y-3">
                 {currentQuestion.options?.map((option: string, index: number) => (
                   <motion.button
-                    key={index}
+                    key={`${index}-${option}`}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     onClick={() => handleAnswerSelect(index)}
@@ -789,7 +773,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                             : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                         }`}
                       >
-                        {String.fromCharCode(65 + index)}
+                        {String.fromCodePoint(65 + index)}
                       </div>
                       <span>{option}</span>
                     </div>

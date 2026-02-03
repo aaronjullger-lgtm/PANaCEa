@@ -422,7 +422,7 @@ if (typeof process === 'undefined') {
       },
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', '@clerk/clerk-react', 'framer-motion'],
+      include: ['react', 'react-dom', '@clerk/clerk-react', 'framer-motion', '@tanstack/react-virtual'],
       // Avoid prebundling the entire lucide icon set; rely on per-icon ESM imports for tree-shaking
       exclude: ['lucide-react'],
     },

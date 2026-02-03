@@ -1000,6 +1000,31 @@ model GrandRoundsChallenge {
   GrandRoundsAttempt GrandRoundsAttempt[]
 }
 
+/**
+ * Targeted Daily Question (Didactic)
+ * Server-authoritative “one per day” attempt, filtered by client-provided enabled systems.
+ * Integrity: we never send correct answers to the client; scoring happens on submit.
+ */
+model TargetedDailyAttempt {
+  id         String   @id
+  userId     String
+  date       DateTime @db.Date
+  systems    String[]
+  questionId String
+
+  answerIndex Int?
+  isCorrect   Boolean?
+  timeSpentMs Int?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
 model HistoryComponent {
   id                  String   @id
   name                String   @unique
@@ -2453,6 +2478,7 @@ model User {
   CohortMember            CohortMember[]
   DailyStreak             DailyStreak[]
   GrandRoundsAttempt      GrandRoundsAttempt[]
+  TargetedDailyAttempt    TargetedDailyAttempt[]
   PatientEncounterSession PatientEncounterSession[]
   PeerStatistic           PeerStatistic[]
   PerformanceRecord       PerformanceRecord[]
@@ -2502,7 +2528,7 @@ model User {
 model ConceptGap {
   id         String   @id @default(uuid())
   userId     String
-  system     String   // e.g. "Cardiology", "Pulmonary"
+  system     String   // e.g. "cardiovascular", "pulmonary" (lowercase, matches OrganSystemSchema)
   sourceType String   // e.g. "osce"
   sourceId   String?  // e.g. OsceResult id
   createdAt  DateTime @default(now())

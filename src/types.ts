@@ -42,6 +42,10 @@ export interface Question {
   lastReviewedAt?: string; // ISO timestamp
   /** Source of the question (pool, database, ai_fallback) */
   source?: string;
+  /** Content source attribution (e.g. 'openstax') */
+  contentSource?: string;
+  /** Content source title (e.g. book name) */
+  contentSourceTitle?: string;
   /** True when question is from staging lake (beta/peer review) */
   fromStaging?: boolean;
   /** Optional image/ECG/imaging URL for multi-modal questions */

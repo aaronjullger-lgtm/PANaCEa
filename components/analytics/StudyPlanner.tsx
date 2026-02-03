@@ -229,16 +229,16 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
   }, [selectedRetention, cmrrResult]);
 
   // Handlers
-  const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
+  const handleRetentionChange = useCallback((value: number) => {
     setSelectedRetention(value);
   }, []);
 
-  const handleSliderCommit = useCallback(() => {
-    if (onRetentionChange) {
-      onRetentionChange(selectedRetention);
-    }
-  }, [selectedRetention, onRetentionChange]);
+  const handleRetentionCommit = useCallback(
+    (value: number) => {
+      onRetentionChange?.(value);
+    },
+    [onRetentionChange]
+  );
 
   const handlePresetClick = useCallback(
     (value: number) => {

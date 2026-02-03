@@ -106,7 +106,7 @@ export const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
     icon: <TrendingUp className="w-5 h-5" />,
     enabled: true,
   },
-  { id: 'currentStreak', label: 'Active Streak', icon: <Zap className="w-5 h-5" />, enabled: true },
+  { id: 'currentStreak', label: 'Study Continuity', icon: <Zap className="w-5 h-5" />, enabled: true },
   {
     id: 'overallAccuracy',
     label: 'Current Accuracy',

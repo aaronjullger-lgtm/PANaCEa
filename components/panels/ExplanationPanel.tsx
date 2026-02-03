@@ -30,8 +30,11 @@ import type { ErrorTag } from '@/types';
 import { getConditionByIdSync, loadConditions } from '@/lib/loadConditions';
 import { ClinicalSkeleton } from '@/components/ui/ClinicalSkeleton';
 import { ClinicalPearlHighlight } from '@/components/ui/ClinicalPearlHighlight';
+import { OpenStaxAttributionFooter } from '@/components/ui/OpenStaxAttributionFooter';
 import { usePreferences } from '@/hooks/usePreferences';
 import { useAuth } from '@clerk/clerk-react';
+import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { sanitizeForRationale } from '@/lib/sanitizeHtml';
 
 /** Maximum number of bullet points to display in Core Rationale section */
 const MAX_BULLETS = 6;
@@ -73,6 +76,10 @@ export interface ExplanationPanelProps {
   pearls?: string[];
   /** Additional rationale text (can be different from explanation) */
   rationale?: string;
+  /** Optional: attribution source (e.g. 'openstax') */
+  contentSource?: string;
+  /** Optional: content source title (e.g. book name) */
+  contentSourceTitle?: string;
 }
 
 /**
@@ -282,6 +289,8 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   conditionId,
   pearls = [],
   rationale,
+  contentSource,
+  contentSourceTitle,
 }) => {
   const [showTutor, setShowTutor] = useState(false);
   const [tutorQuestion, setTutorQuestion] = useState('');
@@ -295,6 +304,54 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   const activeKnowledgeCacheDisplayName = customSettings?.activeKnowledgeCacheDisplayName as
     | string
     | undefined;
+
+  interface CuratedPassageView {
+    id: string;
+    title: string;
+    body: string;
+    source: string;
+    sourceUrl: string;
+    license: string;
+  }
+
+  const [curatedPassage, setCuratedPassage] = useState<CuratedPassageView | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCurated() {
+      if (!conditionId) {
+        setCuratedPassage(null);
+        return;
+      }
+      try {
+        const endpoint = getApiEndpoint('/api/content/curated-passages');
+        const url = `${endpoint}?conditionId=${encodeURIComponent(
+          conditionId
+        )}&limit=1&source=OpenStax`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+
+        const payload = (await res.json()) as
+          | { passages?: CuratedPassageView[] }
+          | { data?: { passages?: CuratedPassageView[] } };
+        const root: any = (payload as any).data ?? payload;
+        const list = (root?.passages || []) as CuratedPassageView[];
+        if (!cancelled && list.length > 0) {
+          setCuratedPassage(list[0]);
+        } else if (!cancelled) {
+          setCuratedPassage(null);
+        }
+      } catch (error) {
+        console.warn('[ExplanationPanel] Failed to load curated passages', error);
+      }
+    }
+
+    loadCurated();
+    return () => {
+      cancelled = true;
+    };
+  }, [conditionId]);
 
   // Process explanation using the compression service
   const processedContent = useMemo(() => {
@@ -421,7 +478,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
                 className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
               >
                 <span className="text-[var(--color-accent)] mt-1.5 flex-shrink-0">•</span>
-                <span dangerouslySetInnerHTML={{ __html: bullet }} className="flex-1" />
+                <span dangerouslySetInnerHTML={{ __html: sanitizeForRationale(bullet) }} className="flex-1" />
               </li>
             ))}
           </ul>
@@ -481,7 +538,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
                 <p
                   key={paragraph.slice(0, 80)}
                   className="text-[var(--color-text-secondary)] leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: paragraph }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeForRationale(paragraph) }}
                 />
               ))}
             </div>
@@ -555,66 +612,87 @@ Keep your response concise (3-5 sentences max) and supportive.`;
             )}
           </div>
 
-          {/* Feedback Buttons */}
-          <FeedbackButtons onFeedback={onFeedback} />
+        {/* Feedback Buttons */}
+        <FeedbackButtons onFeedback={onFeedback} />
+      </div>
+
+      {/* Curated textbook excerpt (e.g. OpenStax) */}
+      {curatedPassage && (
+        <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+          <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
+            From textbook: {curatedPassage.title}
+          </h3>
+          <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
+            {curatedPassage.body}
+          </p>
+          <OpenStaxAttributionFooter
+            title={curatedPassage.title || contentSourceTitle || 'Textbook'}
+            sourceUrl={curatedPassage.sourceUrl}
+            licenseName={curatedPassage.license}
+          />
         </div>
+      )}
 
-        {/* AI Tutor Section — styled when incorrect to stand out */}
-        <AnimatePresence>
-          {showTutor && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className={`mt-4 pt-4 border-t ${isCorrect ? 'border-[var(--color-border)]/60' : 'ring-2 ring-[var(--color-data-fail)]/20 rounded-xl bg-[var(--color-data-fail)]/5 border-[var(--color-data-fail)]/30'}`}
-            >
-              <div className="space-y-3">
-                <SectionHeader
-                  icon={<MessageCircle className="w-5 h-5" />}
-                  title="Ask Your Virtual Tutor"
+      {/* AI Tutor Section — styled when incorrect to stand out */}
+      <AnimatePresence>
+        {showTutor && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className={`mt-4 pt-4 border-t ${isCorrect ? 'border-[var(--color-border)]/60' : 'ring-2 ring-[var(--color-data-fail)]/20 rounded-xl bg-[var(--color-data-fail)]/5 border-[var(--color-data-fail)]/30'}`}
+          >
+            <div className="space-y-3">
+              <SectionHeader
+                icon={<MessageCircle className="w-5 h-5" />}
+                title="Ask Your Virtual Tutor"
+              />
+              {activeKnowledgeCacheName && (
+                <p className="text-xs text-[var(--color-text-secondary)]">
+                  Answering using: {activeKnowledgeCacheDisplayName || 'your library'}
+                </p>
+              )}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={tutorQuestion}
+                  onChange={(e) => setTutorQuestion(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAskTutor()}
+                  placeholder="Why isn't it B? or Explain like I'm 5..."
+                  className="flex-1 px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                 />
-                {activeKnowledgeCacheName && (
-                  <p className="text-xs text-[var(--color-text-secondary)]">
-                    Answering using: {activeKnowledgeCacheDisplayName || 'your library'}
-                  </p>
-                )}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={tutorQuestion}
-                    onChange={(e) => setTutorQuestion(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAskTutor()}
-                    placeholder="Why isn't it B? or Explain like I'm 5..."
-                    className="flex-1 px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                  />
-                  <button
-                    onClick={handleAskTutor}
-                    disabled={!tutorQuestion.trim() || loadingTutor}
-                    className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loadingTutor ? 'Thinking...' : 'Ask'}
-                  </button>
-                </div>
-                {/* Show skeleton while loading and no response yet */}
-                {loadingTutor && !tutorResponse && (
-                  <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
-                    <ClinicalSkeleton variant="compact" lines={4} />
-                  </div>
-                )}
-
-                {/* Show streaming response as it arrives */}
-                {tutorResponse && (
-                  <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
-                    <p className="text-sm text-[var(--color-text-primary)] leading-relaxed whitespace-pre-wrap">
-                      {tutorResponse}
-                    </p>
-                  </div>
-                )}
+                <button
+                  onClick={handleAskTutor}
+                  disabled={!tutorQuestion.trim() || loadingTutor}
+                  className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingTutor ? 'Thinking...' : 'Ask'}
+                </button>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {/* Show skeleton while loading and no response yet */}
+              {loadingTutor && !tutorResponse && (
+                <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+                  <ClinicalSkeleton variant="compact" lines={4} />
+                </div>
+              )}
+
+              {/* Show streaming response as it arrives */}
+              {tutorResponse && (
+                <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+                  <p className="text-sm text-[var(--color-text-primary)] leading-relaxed whitespace-pre-wrap">
+                    {tutorResponse}
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+        {contentSource === 'openstax' && (
+          <OpenStaxAttributionFooter title={contentSourceTitle || 'Textbook'} sourceUrl="https://openstax.org" />
+        )}
       </GlassPanel>
     </motion.div>
   );

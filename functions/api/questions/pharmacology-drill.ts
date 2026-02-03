@@ -28,26 +28,25 @@ export const onRequestPost = authenticatedEndpoint(PharmacologyDrillSchema, asyn
     const { drugClass, difficulty } = validated.body;
 
     // Build where clause for pharmacology questions
-    const where: any = {
+    // Question schema: topic, tags, relatedDrugs, explanation (not rationale)
+    const where: Record<string, unknown> = {
       OR: [
         { topic: 'Pharmacology' },
         { topic: 'Pharmacotherapy' },
-        // Also include questions tagged with drug classes
         { tags: { hasSome: ['pharmacology', 'medications', 'drugs'] } },
       ],
-      // Exclude questions without proper structure
       question: { not: null },
       options: { not: null },
-      rationale: { not: null },
+      explanation: { not: null },
     };
 
     if (drugClass) {
-      // Filter by specific drug class if provided
-      where.AND = [
+      const drugLower = drugClass.toLowerCase();
+      (where as any).AND = [
         {
           OR: [
-            { drugClass },
-            { tags: { has: drugClass.toLowerCase() } },
+            { relatedDrugs: { hasSome: [drugClass] } },
+            { tags: { has: drugLower } },
             { question: { contains: drugClass, mode: 'insensitive' } },
           ],
         },
@@ -81,21 +80,21 @@ export const onRequestPost = authenticatedEndpoint(PharmacologyDrillSchema, asyn
       skip: randomSkip,
       select: {
         id: true,
+        vignette: true,
         question: true,
         options: true,
-        correctAnswerIndex: true,
-        rationale: true,
-        pearls: true,
-        condition: true,
-        conditionId: true,
+        correctAnswer: true,
+        explanation: true,
         system: true,
-        subcategory: true,
-        topic: true,
+        tags: true,
         difficulty: true,
-        panceYield: true,
-        drugClass: true,
-        mechanism: true,
-        imageUrl: true,
+        category: true,
+        topic: true,
+        conditionId: true,
+        relatedDrugs: true,
+        Condition: {
+          select: { name: true, subcategory: true },
+        },
       },
     });
 
@@ -104,14 +103,27 @@ export const onRequestPost = authenticatedEndpoint(PharmacologyDrillSchema, asyn
       throw new Error('Failed to retrieve pharmacology question');
     }
 
+    // Derive correctAnswerIndex from options + correctAnswer for client compatibility
+    const opts = Array.isArray(question.options) ? question.options : [];
+    const correctIdx =
+      typeof question.correctAnswer === 'string'
+        ? opts.findIndex((o: unknown) => String(o) === question.correctAnswer)
+        : -1;
+
     logger.info('Pharmacology question retrieved', {
       userId: auth.userId,
       questionId: question.id,
-      drugClass: question.drugClass,
+      topic: question.topic,
     });
 
     return {
-      data: question,
+      data: {
+        ...question,
+        rationale: question.explanation,
+        condition: question.Condition?.name ?? null,
+        subcategory: question.Condition?.subcategory ?? question.category,
+        correctAnswerIndex: Math.max(0, correctIdx),
+      },
     };
   } catch (error) {
     logger.error('Error generating pharmacology question', {

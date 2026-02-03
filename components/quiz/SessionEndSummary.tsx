@@ -42,6 +42,7 @@ import {
   resetMomentum,
   resetPauseTracking,
 } from '@/services/session';
+import { getAccuracyTextClass, getAccuracyBarClass } from '@/lib/accuracyColorUtils';
 
 // Analytics services
 import {
@@ -88,27 +89,15 @@ interface SystemPerformance {
 }
 
 function getDistributionScoreClass(score: number): string {
-  if (score >= 80) return 'text-[var(--color-data-pass)]';
-  if (score >= 60) return 'text-[var(--color-accent)]';
-  return 'text-[var(--color-data-provisional)]';
+  return getAccuracyTextClass(score);
 }
 
 function getDistributionBarClass(score: number): string {
-  if (score >= 80) return 'bg-[var(--color-data-pass)]';
-  if (score >= 60) return 'bg-[var(--color-accent)]';
-  return 'bg-[var(--color-data-provisional)]';
+  return getAccuracyBarClass(score);
 }
 
 function getAccuracyClass(accuracy: number): string {
-  if (accuracy >= 80) return 'text-[var(--color-data-pass)]';
-  if (accuracy >= 60) return 'text-[var(--color-accent)]';
-  return 'text-[var(--color-data-provisional)]';
-}
-
-function getAccuracyBarClass(accuracy: number): string {
-  if (accuracy >= 80) return 'bg-[var(--color-data-pass)]';
-  if (accuracy >= 60) return 'bg-[var(--color-accent)]';
-  return 'bg-[var(--color-data-provisional)]';
+  return getAccuracyTextClass(accuracy);
 }
 
 /** Bar fill with width set via ref to satisfy no-inline-style linter; width is dynamic (accuracy %). */
@@ -642,7 +631,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] font-medium hover:bg-[var(--color-data-provisional)]/30 transition-colors"
             >
               <XCircle className="w-5 h-5" />
-              Review {overallStats.incorrect} Missed
+              Review {overallStats.incorrect} To Review
             </button>
           )}
 

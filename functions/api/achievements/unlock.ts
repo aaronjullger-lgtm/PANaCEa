@@ -41,6 +41,7 @@ export const onRequestPost = authenticatedEndpoint(UnlockAchievementSchema, asyn
         progress: progress ?? 100,
       },
       create: {
+        id: crypto.randomUUID(),
         userId: auth.userId,
         achievementId,
         progress: progress ?? 100,

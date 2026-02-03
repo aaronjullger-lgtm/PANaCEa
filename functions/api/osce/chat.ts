@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveUserByClerkId } from '../_shared/resolveUser';
 import { IDSchema } from '../_shared/schemas';
 
 // Schema for OSCE chat messages
@@ -40,10 +41,7 @@ export const onRequestPost = authenticatedEndpoint(
       log.info('Saving OSCE chat', { sessionId, messageCount: messages.length });
 
       // Ensure the session belongs to the authenticated user
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        select: { id: true },
-      });
+      const user = await resolveUserByClerkId(prisma, auth.userId);
 
       if (!user) {
         log.warn('User not found for chat save', { clerkId: auth.userId });

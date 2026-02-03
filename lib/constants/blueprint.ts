@@ -57,6 +57,29 @@ export const NCCPA_2025_BLUEPRINT_PERCENT: Readonly<Record<string, number>> = {
 } as const;
 
 /**
+ * Maps blueprint canonical names to DB/system abbreviations.
+ * Used when querying PreGeneratedQuestion, Question, etc. which store system as "CV", "DERM", etc.
+ */
+export const BLUEPRINT_TO_ABBREVIATION: Readonly<Record<string, string>> = {
+  Cardiovascular: 'CV',
+  Pulmonary: 'PULM',
+  Gastrointestinal: 'GI',
+  Musculoskeletal: 'MSK',
+  HEENT: 'HEENT',
+  Reproductive: 'REPRO',
+  Neurological: 'NEURO',
+  Psychiatry: 'PSYCH',
+  Endocrine: 'ENDO',
+  Dermatology: 'DERM',
+  Genitourinary: 'GU',
+  Hematology: 'HEME',
+  'Infectious Disease': 'ID',
+  Nephrology: 'RENAL',
+  'Emergency Medicine': 'EM',
+  General: 'General',
+};
+
+/**
  * System aliases for flexible matching across the codebase.
  * Maps common abbreviations and alternate names to canonical system names.
  */
@@ -215,6 +238,14 @@ export function normalizeSystemName(system: string): string {
 
   // Return as-is if no match found
   return system;
+}
+
+/**
+ * Convert blueprint canonical name to DB abbreviation (e.g. "Cardiovascular" -> "CV").
+ * Use when querying PreGeneratedQuestion, Question where system is stored as abbreviation.
+ */
+export function getSystemAbbreviation(system: string): string {
+  return BLUEPRINT_TO_ABBREVIATION[system] ?? system;
 }
 
 /**

@@ -34,6 +34,7 @@ import {
   updateWeaknessMap,
   updateConfusionGraph,
 } from '@/lib/services/explanationCompressionService';
+import { OpenStaxAttributionFooter } from '@/components/ui/OpenStaxAttributionFooter';
 
 /**
  * Calculate estimated reading time based on text length
@@ -97,6 +98,8 @@ export interface StructuredRationale {
   highYieldImageOrTable?: string;
   /** 5. Clinical Pearl: A memorable hook */
   clinicalPearl?: string;
+  /** Common Pitfalls: Pre-written pitfalls (no unmoderated comments). @see docs/AUDIT_WISDOM_OF_THE_CROWDS.md */
+  commonPitfalls?: string[];
 }
 
 /**
@@ -137,6 +140,10 @@ export interface ExplanationPanelProps {
   onTeachMe?: (conditionSlug: string) => void;
   /** Optional font size adjustment */
   fontSizeAdjustment?: number;
+  /** Optional: attribution source (e.g. 'openstax') */
+  contentSource?: string;
+  /** Optional: content source title (e.g. book name) */
+  contentSourceTitle?: string;
 }
 
 /**
@@ -157,6 +164,8 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   onViewCondition,
   onTeachMe,
   fontSizeAdjustment = 0,
+  contentSource,
+  contentSourceTitle,
 }) => {
   const [showWrongAnswers, setShowWrongAnswers] = useState(false);
   const [userReaction, setUserReaction] = useState<'helpful' | 'not_helpful' | null>(null);
@@ -631,6 +640,10 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             </button>
           </div>
         </motion.div>
+
+        {contentSource === 'openstax' && (
+          <OpenStaxAttributionFooter title={contentSourceTitle || 'Textbook'} sourceUrl="https://openstax.org" />
+        )}
       </div>
     </motion.div>
   );

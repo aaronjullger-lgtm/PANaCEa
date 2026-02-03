@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { withCors, withMiddleware, withAuth, withErrorHandling, withLogging } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveUserByClerkId } from '../_shared/resolveUser';
 import { IDSchema } from '../_shared/schemas';
 
 // Schema for history query params
@@ -56,10 +57,7 @@ export const onRequestGet = withMiddleware(
       log.info('Fetching OSCE history', { sessionId: validSessionId, limit });
 
       // Ensure the session belongs to the authenticated user
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        select: { id: true },
-      });
+      const user = await resolveUserByClerkId(prisma, auth.userId);
 
       if (!user) {
         log.warn('User not found for OSCE history', { clerkId: auth.userId });

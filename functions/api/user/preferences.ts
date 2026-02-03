@@ -72,6 +72,9 @@ const UserPreferencesSchema = z.object({
   shareAnonymousData: z.boolean().optional(),
   showOnLeaderboard: z.boolean().optional(),
 
+  // Streak resilience (@see docs/AUDIT_STREAK_FRAGILITY.md)
+  streakGoalDays: z.enum(['all', 'weekdays']).optional(),
+
   // Custom settings (flexible JSON)
   customSettings: z.record(z.string(), z.unknown()).optional(),
 });
@@ -113,6 +116,7 @@ const PartialPreferencesSchema = z.object({
   pushNotifications: z.boolean().optional(),
   shareAnonymousData: z.boolean().optional(),
   showOnLeaderboard: z.boolean().optional(),
+  streakGoalDays: z.enum(['all', 'weekdays']).optional(),
   customSettings: z.record(z.string(), z.unknown()).optional(),
 });
 

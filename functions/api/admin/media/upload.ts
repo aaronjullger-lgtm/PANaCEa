@@ -176,7 +176,7 @@ export const onRequestPost = withMiddleware(
           originalUrl: publicUrl,
           conditionId: conditionId || null,
           correctDiagnosis: correctDiagnosis || null,
-          distractors: distractors.length > 0 ? distractors : null,
+          distractors: distractors.length > 0 ? distractors : undefined,
           description: description?.slice(0, 1000) || null,
           altText: altText?.slice(0, 500) || null,
           tags: tagArray,

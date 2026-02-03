@@ -49,6 +49,11 @@ export interface PageDimensions {
   height?: number;
 }
 
+export interface AdobeRequestHeader {
+  key: string;
+  value: string;
+}
+
 export interface SmartPDFViewerProps {
   /** URL of the PDF to display. */
   readonly pdfUrl: string;
@@ -60,6 +65,11 @@ export interface SmartPDFViewerProps {
   readonly highlights?: CitationHighlight[];
   /** Optional page dimensions for bounds→percent (default 612×792). */
   readonly pageDimensions?: PageDimensions;
+  /**
+   * Optional headers for PDF download (token-based auth).
+   * Passed to Adobe previewFile via content.location.headers.
+   */
+  readonly requestHeaders?: AdobeRequestHeader[];
   /** Callback when user requests "Ask the Tutor" with selected text. */
   readonly onAskTutor?: (selectedText: string) => void;
   /** Optional class for the outer container. */
@@ -104,6 +114,7 @@ export function SmartPDFViewer({
   clientId,
   highlights = [],
   pageDimensions = {},
+  requestHeaders,
   onAskTutor,
   className = '',
   minHeight = '400px',
@@ -176,7 +187,12 @@ export function SmartPDFViewer({
 
     const promise = view.previewFile(
       {
-        content: { location: { url: pdfUrl } },
+        content: {
+          location: {
+            url: pdfUrl,
+            ...(requestHeaders && requestHeaders.length > 0 ? { headers: requestHeaders } : {}),
+          },
+        },
         metaData: { fileName },
       },
       previewConfig
@@ -196,7 +212,7 @@ export function SmartPDFViewer({
       viewerPromiseRef.current = null;
       setViewerReady(false);
     };
-  }, [sdkReady, clientId, divId, pdfUrl, fileName, liquidMode]);
+  }, [sdkReady, clientId, divId, pdfUrl, fileName, liquidMode, requestHeaders]);
 
   // Re-init viewer when liquidMode toggles (enableLinearization is a preview config)
   // Already in dependency array above

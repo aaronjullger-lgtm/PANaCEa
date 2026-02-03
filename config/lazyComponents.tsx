@@ -82,6 +82,9 @@ export const MyLibraryPage = lazy(() =>
 export const TutorChatPage = lazy(() =>
   import('../components/pages/TutorChatPage').then((m) => ({ default: m.TutorChatPage }))
 );
+export const StudyCompanionPage = lazy(() =>
+  import('../components/pages/StudyCompanionPage').then((m) => ({ default: m.StudyCompanionPage }))
+);
 export const CustomStudyMode = lazy(() => import('../components/modes/CustomStudyMode'));
 export const QuestionCurationPanel = lazy(
   () => import('../components/admin/QuestionCurationPanel')

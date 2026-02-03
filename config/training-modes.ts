@@ -451,7 +451,7 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
 // ============================================================================
 
 // Standalone modes that have their own dedicated tabs (NOT in training menu categories)
-const STANDALONE_MODE_IDS = ['core_adaptive', 'patient_encounter', 'grand_rounds'] as const;
+const STANDALONE_MODE_IDS: readonly string[] = ['core_adaptive', 'patient_encounter', 'grand_rounds'];
 
 // Filter modes by category, EXCLUDING standalone modes that have their own tabs
 export const VISUAL_DIAGNOSTICS_MODES = TRAINING_MODES.filter(

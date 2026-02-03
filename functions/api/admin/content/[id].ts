@@ -62,7 +62,7 @@ export async function onRequestGet(context: {
     const content = await prisma.medicalContent.findUnique({
       where: { id: params.id },
       include: {
-        versions: {
+        ContentVersion: {
           orderBy: { version: 'desc' },
           take: 10, // Last 10 versions
         },
@@ -148,10 +148,10 @@ export async function onRequestPut(context: {
       }
     );
 
-    return createSuccessResponse(updated);
+    return createSuccessResponse(request, updated, 200, 0, env);
   } catch (error: any) {
     console.error('Error updating content:', error);
-    return createErrorResponse(error.message || 'Failed to update content', 500);
+    return createErrorResponse(request, error.message || 'Failed to update content', 500, undefined, env);
   } finally {
     await safePrismaDisconnect(prisma);
   }

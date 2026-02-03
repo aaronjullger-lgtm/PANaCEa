@@ -142,11 +142,13 @@ export {
   startOSCESession,
   saveOSCEChat,
   completeOSCESession,
+  gradeOSCESession,
   saveChatMessage,
   getSessionHistory,
   clearSession,
   calculateEncounterScore,
 } from './osceService';
+export type { OsceGradeResult } from './osceService';
 
 // Named exports from OSCE scoring engine
 export {

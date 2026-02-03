@@ -126,6 +126,45 @@ export async function completeOSCESession(
   }
 }
 
+/** Grade API response: checklist (item, status, feedback), redFlagsMissed, score, etc. */
+export interface OsceGradeResult {
+  resultId: string;
+  score: number;
+  checklist: Array<{ item: string; status: 'PASS' | 'FAIL'; feedback: string }>;
+  redFlagsMissed: string[];
+  clinicalReasoningScore: number;
+  billingCodeSuggestion: string;
+  conceptGapCreated?: boolean;
+}
+
+/**
+ * Grade completed OSCE session (rubric checklist + red flags).
+ * Session must be completed first via completeOSCESession.
+ */
+export async function gradeOSCESession(
+  sessionId: string,
+  token?: string | null
+): Promise<OsceGradeResult | null> {
+  try {
+    const response = await fetch('/api/osce/analysis/grade', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ body: { sessionId } }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = await parseJsonResponse(response);
+    return data?.data ?? null;
+  } catch (error) {
+    console.error('Error grading OSCE session:', error);
+    return null;
+  }
+}
+
 /**
  * Generate a unique session ID (fallback if API fails)
  */

@@ -321,20 +321,19 @@ export async function searchContent(
         take: limit * 2,
       });
 
-      conditions.forEach(
-        (condition: {
-          id: string;
-          name: string;
-          displayName?: string;
-          aliases?: string[];
-          system?: string;
-        }) => {
-          const ranked = rankCondition(condition, sanitizedQuery);
-          if (ranked.score > 0) {
-            results.push(ranked);
-          }
+      conditions.forEach((row) => {
+        const condition = {
+          id: row.id,
+          name: row.name,
+          displayName: row.displayName ?? undefined,
+          aliases: row.aliases,
+          system: row.system,
+        };
+        const ranked = rankCondition(condition, sanitizedQuery);
+        if (ranked.score > 0) {
+          results.push(ranked);
         }
-      );
+      });
     }
 
     // Search drugs
@@ -352,21 +351,20 @@ export async function searchContent(
         take: limit * 2,
       });
 
-      drugs.forEach(
-        (drug: {
-          id: string;
-          genericName: string;
-          brandName?: string;
-          aliases?: string[];
-          drugClass?: string[];
-          displayName?: string;
-        }) => {
-          const ranked = rankDrug(drug, sanitizedQuery);
-          if (ranked.score > 0) {
-            results.push(ranked);
-          }
+      drugs.forEach((row) => {
+        const drug = {
+          id: row.id,
+          genericName: row.genericName,
+          brandName: row.brandName ?? undefined,
+          aliases: row.aliases,
+          drugClass: row.drugClass,
+          displayName: row.displayName ?? undefined,
+        };
+        const ranked = rankDrug(drug, sanitizedQuery);
+        if (ranked.score > 0) {
+          results.push(ranked);
         }
-      );
+      });
     }
 
     // Sort by score and take top results

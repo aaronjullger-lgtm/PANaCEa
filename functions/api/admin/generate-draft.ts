@@ -135,6 +135,7 @@ Ensure all information is accurate, concise, and suitable for PA students prepar
     // Create draft in database
     const newContent = await prisma.medicalContent.create({
       data: {
+        id: crypto.randomUUID(),
         conditionId,
         system,
         subcategory: subcategory || 'general',
@@ -144,12 +145,14 @@ Ensure all information is accurate, concise, and suitable for PA students prepar
         version: 1,
         createdBy: user.id,
         updatedBy: user.id,
+        updatedAt: new Date(),
       },
     });
 
     // Create initial version record
     await prisma.contentVersion.create({
       data: {
+        id: crypto.randomUUID(),
         contentId: newContent.id,
         version: 1,
         content: aiContent,
@@ -162,6 +165,7 @@ Ensure all information is accurate, concise, and suitable for PA students prepar
     // Create audit log
     await prisma.contentAuditLog.create({
       data: {
+        id: crypto.randomUUID(),
         contentId: newContent.id,
         conditionId: newContent.conditionId,
         version: 1,

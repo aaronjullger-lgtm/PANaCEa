@@ -1,91 +1,193 @@
-# Comprehensive Audit — Post-Implementation
+# Comprehensive Post-Implementation Audit
 
 **Role:** Senior Full-Stack Architect & Quality Assurance Lead  
-**Scope:** Plan fidelity, repo consistency, logic/security, brittleness/scalability, refactoring opportunities for the recent implementation (Commuter Mode, WASM Sync, AI Latency Masking, Battery Drain, DOM Bloat, Image Optimization).
+**Scope:** Plan fidelity, repo consistency, logic/security, brittleness, refactoring.  
+**Reference plans:** `AUDIT_CORE_SESSION_CHECKLIST.md`, `AUDIT_VIRTUAL_OSCE_AI_PATIENT.md`, `AUDIT_CLINICAL_FIDELITY.md`, `OSCE_GRADING_AUDIT.md`.
 
 ---
 
-## 1. Plan Fidelity
+## Critical Fixes
 
-| Plan Item | Status | Edge Cases / Gaps |
-|-----------|--------|-------------------|
-| **Commuter Mode — Optimistic updates** | ✅ | QuizView queues via `syncManager.queueAnswer`; fire-and-forget for implicitMetrics/FSRS. No duplicate `recordQuestionAttempt` in QuizView. |
-| **Commuter Mode — 50-card buffer** | ✅ | `INITIAL_QUEUE_SIZE` = 50 in App + SessionContext; QuizView `LOW_QUEUE_THRESHOLD` 20, `BATCH_SIZE` 25. |
-| **WASM Sync — Merge review logs** | ✅ | `userProgressService.updateUserProgressWithHistory` uses atomic `array_append` for `reviewHistory`. |
-| **WASM Sync — Re-hydration before optimize** | ✅ | FSRSOptimizer calls `syncManager.syncAll(token)` before `optimizeFSRSParameters`. |
-| **AI Latency — Streaming** | ✅ | Virtual OSCE debrief and Quiz "Explain differently" use streaming; Core PANCE uses pre-generated rationale. |
-| **Battery Drain — FSRS in worker** | ✅ | FSRS runs server-side only; documented. |
-| **Battery Drain — Low power + GPU** | ✅ | `useLowPowerMode` (getBattery + prefers-reduced-motion); GPU layers and animation gating in MomentumIndicator, ActivityHeatmap, StreakFlame, IntelligenceHub, SystemRadarChart, SystemComparison. |
-| **DOM Bloat — Virtualization** | ✅ | QuestionPerformanceDashboard uses VirtualizedTableBody; VirtualizedPerformanceRecordList exists for future History tab. |
-| **Image Optimization — Zoom on demand** | ✅ | API returns `thumbnailUrl` + `highResUrl`; PhotoDrillSession shows thumbnail first, "Full resolution" loads high-res. |
-| **Image Optimization — Preload next** | ✅ | PhotoDrillSession preloads `queue[currentCaseIndex + 1]` thumbnail in background. |
+### 1. **Storage key inconsistency (panacea vs panceai)**
 
-**Omissions:** None critical. Optional: pan/zoom gesture UI for high-res image (currently swap only); History tab not yet implemented (component ready).
+**Location:** `lib/storage/storageRegistry.ts` vs `contexts/CommuterContext.tsx`, `components/toolkit/ToolkitHub.tsx`
+
+**Issue:** The registry defines `COMMUTER_MODE: 'panacea_commuter_mode'` and `COMMUTER_SETTINGS: 'panacea_commuter_settings'` (and other `panacea_*` keys). `CommuterContext` uses `'panceai_commuter_mode'` and `'panceai_commuter_settings'`. Any code that uses `StorageKeys.COMMUTER_MODE` would read/write a **different** key than the app, so commuter state would not sync. `ToolkitHub` uses `'panceai_recent_calculators'` / `'panceai_pinned_calculators'` directly while the registry has `'panacea_recent_calculators'` / `'panacea_pinned_calculators'`.
+
+**Fix:** Align on one prefix. Either (a) change the registry to `panceai_*` for all user-facing keys (recommended for consistency with the rest of the app), or (b) change CommuterContext and ToolkitHub to use `StorageKeys` and fix the registry values. Then use the registry everywhere for these keys so future renames are in one place.
 
 ---
 
-## 2. Repo Consistency
+### 2. **CaseRubric missing → grading returns 404**
 
-- **Naming:** New hooks `useLowPowerMode`, `useReducedMotion`; components `VirtualizedTableBody`, `VirtualizedPerformanceRecordList` follow PascalCase/camelCase. Audit docs use `AUDIT_*.md`.
-- **Folder structure:** Hooks in `hooks/`, UI in `components/ui/` or `components/analytics/`, API in `functions/api/`, shared lib in `lib/` — matches project.
-- **Styling:** Tailwind + CSS variables (`var(--color-*)`), Lucide icons — consistent.
-- **Edge runtime:** No Node APIs in `functions/`; Prisma via `createEdgePrismaClient(context.env.DATABASE_URL)`.
-- **Minor:** `resolveImageUrl` lives only in PhotoDrillSession; if reused elsewhere, move to `lib/` (e.g. `lib/utils/imageUrl.ts`).
+**Location:** `functions/api/osce/analysis/grade.ts` → `resolveSessionAndRubric()`
 
----
+**Issue:** Grading requires a `CaseRubric` for the case. If none exists, the API returns 404 with "No rubric found for this case. Create a CaseRubric for the case before grading." There is **no documented API or seed path** to create rubrics (see `OSCE_GRADING_AUDIT.md`). So for most cases, grading is effectively unavailable unless rubrics are created out-of-band.
 
-## 3. Logic & Security
-
-### Critical / High
-
-1. **useLowPowerMode — Battery listener leak (race)**  
-   `batteryCleanup` is assigned inside `getBattery().then()`. If the component unmounts before the promise resolves, the effect cleanup runs with `batteryCleanup` still `undefined`, so battery listeners are never removed. **Fix:** Store cleanup in a ref set inside the `.then()`, and in the effect cleanup call `ref.current?.()`. (See Critical Fixes below.)
-
-2. **FSRSOptimizer — Silent sync failure**  
-   `syncManager.syncAll(token).catch(() => {})` swallows errors. If sync fails, the user may optimize on stale data without feedback. **Recommendation:** At least log; optionally show a non-blocking toast ("Sync had issues; other devices may have newer data").
-
-3. **Media API — Public endpoint**  
-   `/api/drills/media` is public (no auth). Documented as intentional for reference data. Ensure MediaAsset only exposes approved, non-PII content; no change required if already constrained.
-
-### Data fetching & state
-
-- **SyncManager → /api/questions/attempt:** Payload matches Attempt schema (`questionId`, `wasCorrect`, `timeSpentMs`, `system`, `conditionId`, `mode: 'session'`). No double-record from QuizView (attempt path is queue-only).
-- **API response shape:** Media API returns `{ data: PhotoCase[] }`; `use-photo-drill` now uses `body?.data` when not array — correct.
-- **Env:** Functions use `context.env` / `env.DATABASE_URL`, `env.GEMINI_API_KEY`; no `process.env` in Edge handlers — correct.
+**Fix:** Implement at least one of: (a) seed script or migration that creates default rubrics from existing cases (e.g. from `essentialQuestions` / `idealWorkup`), (b) admin or internal API to create/update `CaseRubric` for a given `caseId`, or (c) fallback in the grader that builds a minimal rubric from case fields when no rubric exists (and optionally persist it). Document the chosen approach.
 
 ---
 
-## 4. Holes & Scalability
+### 3. **Grade API not invoked on end encounter → checklist never shown**
 
-- **VirtualizedTableBody:** Depends on `parentRef.current` being set. If the parent is conditionally rendered or ref is attached late, first frame may have no scroll element; TanStack Virtual tolerates null. No hard failure.
-- **PhotoDrillSession preload:** Uses `queue[currentCaseIndex + 1]`. If queue is refilled asynchronously, index may briefly be out of bounds; guard `if (!nextCaseData) return` is present — OK.
-- **userProgressService atomic append:** Uses raw `array_append`. If Prisma or DB schema changes `reviewHistory` type, the raw SQL could break. Document that this path is sensitive to schema.
-- **SyncManager retry:** `scheduleRetry` uses a simple backoff. Under heavy load, many pending answers could cause repeated sync bursts; consider rate-limiting or batching if needed later.
-- **Image optimization:** When both `thumbnailUrl` and `highResUrl` are null/undefined, `imageUrl` is used everywhere; behavior is correct. If the API ever returns only `originalUrl` and no thumbnail, current mapping still yields one URL for display.
+**Location:** `components/modes/PatientEncounterMode.tsx` → `handleEndEncounter()`
 
----
+**Issue:** On "End Encounter," the flow calls Virtual Preceptor (`generateDebrief`) and enhanced OSCE report. It does **not** call `POST /api/osce/analysis/grade`. So the rubric-based checklist (item + PASS/FAIL + feedback) and `redFlagsMissed` are never fetched or displayed. Users do not see the formal "Critical actions" checklist in the results view.
 
-## 5. Refactoring Opportunities
-
-- **resolveImageUrl:** Duplicated only in PhotoDrillSession. Extract to e.g. `lib/utils/resolveImageUrl.ts` (or `lib/utils/media.ts`) and reuse for any drill or media URL resolution.
-- **VirtualizedPerformanceRecordList:** Not yet used. When adding a History tab, pass a scroll container ref and `performanceData`; avoid mapping full array to DOM.
-- **VirtualizedTableBody empty state:** Returns a single div for "No data"; QuestionPerformanceDashboard passes custom `emptyMessage`. Consistent; no change required.
-- **Low-power vs reduced-motion:** Several components use both `useLowPowerMode` and `useReducedMotion` (e.g. StreakFlame). Pattern is clear; could add a small helper `useReduceAnimations()` that returns `useReducedMotion() || useLowPowerMode()` if more components need the same combo.
+**Fix:** From the results flow, either (1) call the grade API when the session is completed (and ensure session is marked completed before calling grade), then display `checklist` and `redFlagsMissed` in the results UI, or (2) surface the same information from the Preceptor / enhanced report (e.g. explicit "Critical actions: done / missed" section). Prefer (1) for a single source of truth and persistence of `OsceResult`.
 
 ---
 
-## 6. Summary
+### 4. **XSS surface: rationale and HTML rendered without sanitization**
 
-| Category | Critical Fixes | Logical Omissions | Technical Debt | Verification Steps |
-|----------|----------------|-------------------|----------------|--------------------|
-| **Count** | 1 (battery cleanup race) | 0 | 3 (silent sync, resolveImageUrl, reduceAnimations helper) | 5 |
+**Location:** `components/session/QuizView.tsx`, `components/panels/ExplanationPanel.tsx`
+
+**Issue:** `dangerouslySetInnerHTML` is used for `currentQuestion.rationale`, table HTML, pearls, and explanation bullets. Rationale is generated server-side (Gemini), so risk is lower than user input, but (a) a compromised or buggy generator could emit script, and (b) any future user-editable or external content would be unsafe. The codebase uses `stripHtmlTags` in `geminiService` for options/condition but not for all HTML rendered in the client.
+
+**Fix:** (1) Sanitize all content before passing to `dangerouslySetInnerHTML` (e.g. allow only a small tag set: `<b>`, `<i>`, `<br>`, `<table>`, etc., and strip script/event handlers). Consider a small client-side sanitizer or a shared `sanitizeForRationale()` that strips dangerous tags. (2) Ensure every generator path that produces rationale/HTML runs through the same sanitization or tag allow-list before storage/display.
+
+---
+
+## Logical Omissions
+
+### 1. **Plan vs implementation gaps (from audit checklists)**
+
+| Item | Plan | Current state |
+|------|------|----------------|
+| Normal Lab Reference | Slide-out "Normal Labs" panel during questions | Not implemented; no drawer/panel in QuizView. |
+| "Vague" Patient AI | OSCE patient initially non-medical, requires OPQRST | Partial; no explicit lay-language / withhold-medical-terms rule in `chatWithPatientSimulator`. |
+| Specific Exam Triggers | Only reveal findings for requested body systems | Vulnerability; "full physical exam" can dump all findings; no strict one-maneuver-one-finding rule. |
+| Critical Action Grading | Grade and show checklist (e.g. "Ordered EKG") | Logic and API exist; grade API not called from results; checklist not shown. |
+| Distractor Explanations | Explanations address why wrong answers are wrong | Generation requires it; main session shows single rationale string; structured rationale UI not used in QuizView. |
+| Commuter: hide timer | Hide countdown when Commuter Mode is on | Timer always shown; QuizView does not use `useCommuter()` to hide timer. |
+| EMR tabbed layout | Tabbed HPI \| PMH \| Meds \| Labs when EMR toggle on | Toggle exists; tabbed layout not implemented (single scroll in Patient Encounter). |
+
+Address these in order of product priority (e.g. Critical Action Grading and Specific Exam Triggers for OSCE; Normal Labs and Commuter timer for main session).
+
+---
+
+### 2. **Session completion before grade**
+
+**Location:** Grade API requires `session.status === 'completed'`.
+
+**Issue:** If the front end calls the grade API before calling the complete endpoint (or before the session is persisted as completed), grading returns 400. The current flow does not call the grade API at all; once it does, the sequence must be: (1) complete session (status = completed), (2) then call grade. Document or enforce this order (e.g. in `handleEndEncounter`, await `completeOSCESession` then call grade).
+
+---
+
+### 3. **ConceptGap.system schema comment outdated**
+
+**Location:** `prisma/schema.prisma` → `ConceptGap.system`
+
+**Issue:** Comment says `// e.g. "Cardiology", "Pulmonary"` but `inferSystemFromCase` in the grade API stores lowercase values (`cardiovascular`, `pulmonary`, etc.). Downstream code may rely on the enum-style values. Comment should match reality to avoid future misuse.
+
+**Fix:** Update the comment to e.g. `// e.g. "cardiovascular", "pulmonary" (lowercase, matches OrganSystemSchema)`.
+
+---
+
+## Technical Debt
+
+### 1. **Clinical fidelity settings: duplicated load/save**
+
+**Location:** `components/modes/PatientEncounterMode.tsx` (loadClinicalFidelitySettings, localStorage key `panceai_clinical_fidelity`), `components/modals/SettingsStatsModal.tsx` (useState initializer + handleToggleClinicalFidelity reading/writing same key).
+
+**Issue:** Two places parse and persist the same object. If the shape or key changes, both must be updated. Defaults and key are duplicated.
+
+**Recommendation:** Extract a small module or hook, e.g. `useClinicalFidelitySettings()`, that reads from localStorage (or from `StorageKeys` once unified), returns `[settings, updateSetting]`, and persists on change. Use it in both PatientEncounterMode and SettingsStatsModal. Optionally add `panceai_clinical_fidelity` to `StorageKeys` and use it everywhere.
+
+---
+
+### 2. **Storage key registry not used consistently**
+
+**Location:** `lib/storage/storageRegistry.ts` vs various components.
+
+**Issue:** Many components use hardcoded `'panceai_*'` or `'panacea_*'` strings. The registry exists to avoid collisions and centralize keys but is not used for commuter mode, clinical fidelity, enabled systems, grand rounds, or toolkit calculators. This increases the chance of typos and key drift (e.g. panacea vs panceai).
+
+**Recommendation:** (1) Fix registry values to match actual keys in use (or vice versa), then (2) migrate call sites to use `StorageKeys` (or a single wrapper) for commuter, clinical fidelity, and other shared keys so renames and migrations are in one place.
+
+---
+
+### 3. **Error handling in PatientEncounterMode**
+
+**Location:** `components/modes/PatientEncounterMode.tsx` — multiple async handlers.
+
+**Issue:** Several `catch` blocks only `console.error` and do not set a user-visible error state or toast, so the user may see a silent failure (e.g. save chat or complete session fails). One `.catch(() => '')` swallows errors entirely.
+
+**Recommendation:** For user-facing actions (submit question, complete session, save chat, end encounter), set an error state or trigger a toast on failure so the user knows something went wrong. Avoid empty `.catch()`; at least log and optionally set error state.
+
+---
+
+### 4. **Duplicate “resolve user by clerkId” in OSCE APIs**
+
+**Location:** `functions/api/osce/complete.ts`, `chat.ts`, `history.ts`, `analysis/grade.ts` — each resolves `user` via `prisma.user.findUnique({ where: { clerkId: auth.userId } })`.
+
+**Issue:** Same snippet repeated in four handlers. If the resolution logic or error handling changes (e.g. map multiple auth providers), four places must be updated.
+
+**Recommendation:** Extract a small helper, e.g. `resolveUserByClerkId(prisma, clerkId)` returning `{ id }` or null, and use it in all OSCE endpoints. Optionally reuse the same pattern from a shared middleware or helper used by other authenticated endpoints.
 
 ---
 
 ## Verification Steps
 
-1. **Commuter / Sync:** Offline, answer a question → go online → confirm `/api/questions/attempt` is called and attempt appears (e.g. in DB or dashboard). Confirm no duplicate attempt for one answer.
-2. **Battery / Low power:** In DevTools throttle or use a device with low battery; confirm heavy animations (e.g. heatmap cells, streak flame) are reduced or instant. Toggle `prefers-reduced-motion` and recheck.
-3. **Virtualization:** Open admin Question Performance table with 100+ rows; scroll and confirm only a small number of row DOM nodes (inspect Elements). Confirm no layout jump.
-4. **Image optimization:** Use Photo Drill with an asset that has both thumbnail and original; confirm first paint is thumbnail and "Full resolution" loads the high-res image. Confirm next-case image preload (e.g. Network tab) when advancing.
-5. **FSRS re-hydration:** With pending offline answers, open Settings → run FSRS Optimizer; confirm sync runs first (e.g. network or logs) and optimization completes without error.
+**Run these to confirm stability and security:**
+
+1. **OSCE ownership**
+   - As User A, start an OSCE session and note `sessionId`.
+   - As User B (different account), call `POST /api/osce/complete` and `POST /api/osce/chat` with User A’s `sessionId`. Expect 404 (not 200).
+   - As User B, call `GET /api/osce/history?sessionId=<A's sessionId>`. Expect 404.
+
+2. **Grading and CaseRubric**
+   - Complete an OSCE session for a case that has **no** `CaseRubric`. Call `POST /api/osce/analysis/grade` with that sessionId. Expect 404 "No rubric found."
+   - For a case that **has** a rubric, complete the session then call the grade API. Expect 200 and a body with `checklist`, `redFlagsMissed`, `score`.
+
+3. **Commuter Mode and storage**
+   - Enable Commuter Mode in Settings. Reload the app. Confirm commuter mode is still enabled (read from same key).
+   - Open DevTools → Application → Local Storage. Confirm the key used is the one you intend (e.g. `panceai_commuter_mode`). If the registry uses `panacea_commuter_mode`, confirm whether any code path uses the registry key; if not, fix registry or call sites.
+
+4. **Timer visibility**
+   - Start a main-session quiz. Confirm the question timer is visible.
+   - Enable Commuter Mode, start a quiz again. Currently the timer remains visible; after implementing the “hide timer in Commuter Mode” feature, confirm it is hidden.
+
+5. **Patient Encounter end-to-end**
+   - Start a Virtual OSCE, send a few history messages, then type “I do a full physical exam.” Note whether the AI returns only one system’s findings or dumps all; after implementing the “specific exam triggers” rule, it should ask “Which part?” or return only one system.
+   - End the encounter. Confirm results show Preceptor feedback. After wiring the grade API, confirm results also show checklist (PASS/FAIL per item) and red flags missed.
+
+6. **Environment variables (Cloudflare)**
+   - Deploy to Cloudflare Pages and run an OSCE completion and a grade request. Confirm no reliance on `process.env` in the Functions code path (only `context.env`). If any function uses `process.env` for required config, replace with `context.env` and configure in the dashboard.
+
+7. **Rationale display**
+   - Answer a question and open the rationale. Confirm it renders without layout/script errors. If possible, inject a string with `<script>alert(1)</script>` into a rationale (e.g. via a test or staging generator) and confirm it does not execute (sanitization or CSP).
+
+---
+
+## Summary Table
+
+| Category | Item | Severity | Status |
+|----------|------|----------|--------|
+| Critical | Storage key panacea vs panceai | High | Open |
+| Critical | CaseRubric missing → 404 | High | Open |
+| Critical | Grade API not called → checklist not shown | High | Open |
+| Critical | XSS surface on rationale/HTML | Medium | Open |
+| Omission | Normal Labs panel | Medium | Not implemented |
+| Omission | Vague patient AI / OPQRST | Medium | Partial |
+| Omission | Specific exam triggers | Medium | Vulnerability |
+| Omission | Commuter hide timer | Low | Not implemented |
+| Omission | EMR tabbed layout | Low | Not implemented |
+| Omission | Distractor explanations in main session UI | Low | Partial |
+| Debt | Clinical fidelity settings DRY | Low | Duplicated |
+| Debt | Storage registry consistency | Low | Inconsistent |
+| Debt | Silent errors in PatientEncounterMode | Low | Partial |
+| Debt | Resolve user by clerkId repeated | Low | DRY |
+
+---
+
+## References
+
+- `docs/AUDIT_CORE_SESSION_CHECKLIST.md`
+- `docs/AUDIT_VIRTUAL_OSCE_AI_PATIENT.md`
+- `docs/AUDIT_CLINICAL_FIDELITY.md`
+- `docs/OSCE_GRADING_AUDIT.md`
+- `docs/ENDPOINT_SECURITY_PRIORITY.md`
+- `functions/api/osce/` (complete, chat, history, analysis/grade)
+- `components/modes/PatientEncounterMode.tsx`
+- `contexts/CommuterContext.tsx`
+- `lib/storage/storageRegistry.ts`

@@ -323,7 +323,7 @@ interface UserLearningProfileData {
 interface StudySessionData {
   id: string;
   userId: string;
-  sessionType: string;
+  sessionType?: string | null;
   totalQuestions: number;
   correctAnswers: number;
   accuracy: number;

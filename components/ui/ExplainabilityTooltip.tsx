@@ -30,6 +30,7 @@ export function ExplainabilityTooltip({
     <span
       role="button"
       tabIndex={0}
+      aria-label={ariaLabel}
       className={`relative inline-flex items-center cursor-help ${className}`}
       onMouseEnter={() => setVisible(true)}
       onMouseLeave={() => setVisible(false)}
@@ -45,8 +46,7 @@ export function ExplainabilityTooltip({
       <Info
         className="text-[var(--color-text-muted)] hover:text-[var(--color-accent)] cursor-help transition-colors flex-shrink-0"
         size={iconSize * 4}
-        aria-label={ariaLabel}
-        role="img"
+        aria-hidden
       />
       {visible && (
         <div

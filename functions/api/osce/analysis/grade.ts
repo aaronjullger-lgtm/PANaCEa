@@ -15,6 +15,7 @@ import {
   type EdgePrismaClient,
 } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
+import { resolveUserByClerkId } from '../../_shared/resolveUser';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { IDSchema } from '../../_shared/schemas';
@@ -141,13 +142,27 @@ async function resolveSessionAndRubric(
   }
   const caseRecord = session.PatientEncounterCase;
   const rubric = await prisma.caseRubric.findUnique({ where: { caseId: session.caseId } });
-  if (!rubric) {
-    return { ok: false, status: 404, error: 'No rubric found for this case. Create a CaseRubric for the case before grading.' };
+
+  let checklistText: string;
+  if (rubric && Array.isArray(rubric.checklist)) {
+    const rubricItems = parseRubricChecklist(rubric.checklist as unknown);
+    checklistText = rubricItems
+      .map((r) => `- ${r.item}${r.isRedFlag ? ' [RED FLAG]' : ''}`)
+      .join('\n');
+  } else {
+    // Fallback: build checklist from case essentialQuestions and idealWorkup so grading works without a CaseRubric
+    const essential = (caseRecord as { essentialQuestions?: string[] }).essentialQuestions ?? [];
+    const workup = (caseRecord as { idealWorkup?: string[] }).idealWorkup ?? [];
+    const fallbackItems = [
+      ...essential.map((q) => `- ${q}`),
+      ...workup.map((w) => `- ${w} [RED FLAG]`),
+    ];
+    checklistText =
+      fallbackItems.length > 0
+        ? fallbackItems.join('\n')
+        : '- Obtain relevant history\n- Perform focused physical exam\n- Order appropriate workup\n- Document diagnosis and plan';
   }
-  const rubricItems = parseRubricChecklist(rubric.checklist as unknown);
-  const checklistText = rubricItems
-    .map((r) => `- ${r.item}${r.isRedFlag ? ' [RED FLAG]' : ''}`)
-    .join('\n');
+
   const caseLabel = `${caseRecord.chiefComplaint} - ${caseRecord.patientName} ${caseRecord.age}`;
   const transcript = session.messages;
   return {
@@ -239,10 +254,7 @@ export const onRequestPost = authenticatedEndpoint(
     const { sessionId } = validated.body;
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId: auth.userId },
-      select: { id: true },
-    });
+    const user = await resolveUserByClerkId(prisma, auth.userId);
     if (!user) {
       log.warn('User not found', { clerkId: auth.userId });
       return { status: 404, error: 'User not found' };

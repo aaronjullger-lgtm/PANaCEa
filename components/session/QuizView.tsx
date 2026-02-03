@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShortcut } from '@/src/context/ShortcutContext';
 import { useUser } from '@clerk/clerk-react';
+import { useCommuter } from '@/contexts/CommuterContext';
 
 // Core services - using client-safe API wrappers
 import { getQuestionClient, fetchPearlsClient } from '@/services/client/questionApi';
@@ -53,9 +54,12 @@ import {
   StreakBadge,
 } from '@/components/quiz';
 import { ClinicalSkeleton } from '@/components/ui/ClinicalSkeleton';
+import { sanitizeForRationale } from '@/lib/sanitizeHtml';
+import { getAccuracyBarClass } from '@/lib/accuracyColorUtils';
 
 // Sprint 10: Trust badges for question source indication
 import { TrustBadge } from '@/components/ui/TrustBadge';
+import { OpenStaxAttributionFooter } from '@/components/ui/OpenStaxAttributionFooter';
 import { SplitPaneDrillLayout } from '@/components/drill/SplitPaneDrillLayout';
 import { DrillLoadingState } from '@/components/drill/DrillLoadingState';
 
@@ -188,7 +192,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
         {beforeTable && <p className="whitespace-pre-wrap">{beforeTable}</p>}
 
         {/* Table */}
-        <div className="my-2" dangerouslySetInnerHTML={{ __html: tableHTML }} />
+        <div className="my-2" dangerouslySetInnerHTML={{ __html: sanitizeForRationale(tableHTML) }} />
 
         {/* Any non-final text after the table */}
         {vignetteAfterTable && <p className="whitespace-pre-wrap">{vignetteAfterTable}</p>}
@@ -327,6 +331,11 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Lab calculator modal (Anion Gap, Osmolar Gap, Parkland) – encourages active calculation
   const [showLabCalcModal, setShowLabCalcModal] = useState(false);
 
+  // Peer selection stats ("42% of students also chose B") – Wisdom of the Crowds
+  const [answerDistribution, setAnswerDistribution] = useState<
+    { optionLetter: string; count: number; percent: number }[] | null
+  >(null);
+
   // Wellness check state and constants
   const WELLNESS_CHECK_QUESTION_THRESHOLD = 30;
   const LATE_NIGHT_START_HOUR = 22;
@@ -345,6 +354,8 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [showSessionEndSummary, setShowSessionEndSummary] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [showTimer, setShowTimer] = useState(true);
+  const commuter = useCommuter();
+  const showTimerVisible = showTimer && !commuter?.isCommuterMode;
   const [behavioralRefreshKey, setBehavioralRefreshKey] = useState(0);
 
   const noteUpdateTimeout = useRef<number | null>(null);
@@ -360,6 +371,33 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (!currentQuestion) return false;
     return flaggedQuestions.some((q) => q.question === currentQuestion.question);
   }, [currentQuestion, flaggedQuestions]);
+
+  // Fetch peer selection stats when feedback is shown (for "X% of students also chose B")
+  useEffect(() => {
+    if (!isAnswered || !currentQuestion?.id || selectedAnswerIndex === null) {
+      setAnswerDistribution(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch(
+          `${getApiEndpoint(API_ENDPOINTS.QUESTIONS_ANSWER_DISTRIBUTION)}?questionId=${encodeURIComponent(currentQuestion?.id ?? '')}`,
+          { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+        );
+        if (!res.ok || cancelled) return;
+        const json = (await res.json()) as { data?: { distribution?: { optionLetter: string; count: number; percent: number }[] } };
+        const dist = json?.data?.distribution;
+        if (!cancelled && Array.isArray(dist)) setAnswerDistribution(dist);
+      } catch {
+        if (!cancelled) setAnswerDistribution(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAnswered, currentQuestion?.id, selectedAnswerIndex, getToken]);
 
   // Keep current question synced with queue[0]
   useEffect(() => {
@@ -450,6 +488,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       setSelectedAnswerIndex(null);
       setShowRationale(false);
       setAlternateRationale(null);
+      setAnswerDistribution(null); // Reset peer selection stats for next question
       setIsExplainerLoading(false);
       setQuestionNumber((prev) => prev + 1);
       setEliminatedAnswers(new Set()); // Reset eliminated answers for new question
@@ -1053,11 +1092,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     return { score, correct, total };
   }, [isAnswered, currentQuestion, performanceData]);
 
-  const getBarColor = (score: number): string => {
-    if (score >= 80) return 'bg-[var(--color-data-pass)]';
-    if (score >= 60) return 'bg-[var(--color-accent)]';
-    return 'bg-[var(--color-data-provisional)]';
-  };
+  const getBarColor = (score: number): string =>
+    getAccuracyBarClass(score);
 
   // NO CURRENT QUESTION - Show appropriate screen based on context
   if (!currentQuestion) {
@@ -1121,7 +1157,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   startTime={questionStartTime}
                   parTimeMs={calculateParTime(currentQuestion)}
                   isAnswered={isAnswered}
-                  isVisible={showTimer}
+                  isVisible={showTimerVisible}
                   compact
                 />
               )}
@@ -1243,6 +1279,12 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   size="sm"
                 />
               </div>
+              {currentQuestion.contentSource === 'openstax' && (
+                <OpenStaxAttributionFooter
+                  title={currentQuestion.contentSourceTitle || 'Textbook'}
+                  sourceUrl="https://openstax.org"
+                />
+              )}
               {currentQuestion.imageUrl && (
                 <div className="mb-4 rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
                   <img
@@ -1339,6 +1381,23 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   </div>
                 )}
 
+                {/* Peer selection stats: "42% of students also chose B" — Wisdom of the Crowds (especially when wrong) */}
+                {selectedAnswerIndex !== null && answerDistribution && (() => {
+                  const letter = ['A', 'B', 'C', 'D'][selectedAnswerIndex];
+                  const entry = answerDistribution.find((d) => d.optionLetter === letter);
+                  if (!entry || entry.count === 0) return null;
+                  return (
+                    <p className="mb-4 text-sm text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-2">
+                      <span className="font-medium text-[var(--color-text-secondary)]">
+                        {entry.percent}% of students also chose {letter}.
+                      </span>
+                      {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
+                        <> This was a tricky distractor — you&apos;re not alone.</>
+                      )}
+                    </p>
+                  );
+                })()}
+
                 {/* Core PANCE: rationale – structured (5-section) or legacy HTML */}
                 {(() => {
                   const r = currentQuestion.rationale;
@@ -1378,7 +1437,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                           <div
                             className="text-[var(--color-text-secondary)] leading-relaxed bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3"
                             dangerouslySetInnerHTML={{
-                              __html: structured.whyCorrect.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'),
+                              __html: sanitizeForRationale(structured.whyCorrect.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
                             }}
                           />
                         </section>
@@ -1390,7 +1449,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                             {letters.map((letter, i) => {
                               if (i === currentQuestion.correctAnswerIndex) return null;
                               const key = whyKeys[i];
-                              const text = structured[key];
+                              if (!key) return null;
+                              const text = structured[key as keyof typeof structured];
                               if (!text || typeof text !== 'string') return null;
                               const optionText = currentQuestion.options[i];
                               const isUserChoice = i === selectedAnswerIndex;
@@ -1440,9 +1500,21 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                             <div
                               className="text-[var(--color-text-secondary)] leading-relaxed bg-muted-amber-50 dark:bg-muted-amber-900/20 border border-muted-amber-200 dark:border-muted-amber-800 rounded-lg px-4 py-3"
                               dangerouslySetInnerHTML={{
-                                __html: structured.clinicalPearl.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'),
+                                __html: sanitizeForRationale(structured.clinicalPearl.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
                               }}
                             />
+                          </section>
+                        )}
+                        {structured.commonPitfalls && structured.commonPitfalls.length > 0 && (
+                          <section>
+                            <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                              Common Pitfalls
+                            </h3>
+                            <ul className="list-disc list-inside space-y-1 text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-4 py-3">
+                              {structured.commonPitfalls.map((pitfall, i) => (
+                                <li key={i}>{pitfall}</li>
+                              ))}
+                            </ul>
                           </section>
                         )}
                       </div>
@@ -1528,7 +1600,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     </h3>
                     <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
                       {currentQuestion.pearls.map((pearl, index) => (
-                        <li key={index} dangerouslySetInnerHTML={{ __html: pearl }} />
+                        <li key={index} dangerouslySetInnerHTML={{ __html: sanitizeForRationale(pearl) }} />
                       ))}
                     </ul>
                   </div>

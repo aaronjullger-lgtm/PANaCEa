@@ -34,10 +34,10 @@ import {
   XCircle,
   LogOut,
   Mail,
+  Flame,
 } from 'lucide-react';
-import type { UserProfile, YearInProgram, ClinicalRotation, SystemCode } from '@/types';
+import type { UserProfile, YearInProgram, ClinicalRotation } from '@/types';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import {
   loadUserProfile,
   updateUserProfile,
@@ -47,8 +47,8 @@ import {
 } from '@/services/analytics';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { refreshUserContext } from '@/hooks/useUserContext';
+import { usePreferences } from '@/hooks/usePreferences';
 import { RotationSelector } from '@/components/onboarding/RotationSelector';
-import { Layers } from 'lucide-react';
 import { ANALYTICS_PALETTES, type AnalyticsPalette } from '@/components/modals/SettingsStatsModal';
 import FSRSOptimizer from './FSRSOptimizer';
 import WorkloadProjector from './WorkloadProjector';
@@ -162,6 +162,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
   });
 
   // Expanded sections
+  const { preferences, updatePreference } = usePreferences();
+  const streakGoalDays = preferences.streakGoalDays ?? 'all';
+
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['career-stage', 'profile'])
   );
@@ -351,6 +354,73 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
         </AnimatePresence>
       </section>
 
+      {/* Streak & Rest (Weekend Mode) — don't gamify burnout */}
+      <section className="bg-[var(--color-bg-secondary)] rounded-xl border-2 border-[var(--color-border)] overflow-hidden">
+        <button
+          onClick={() => toggleSection('streak-rest')}
+          className="w-full p-4 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+              <Flame className="w-5 h-5 text-amber-500" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-bold text-[var(--color-text-primary)]">Streak & Rest</h3>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                {streakGoalDays === 'weekdays'
+                  ? 'Weekdays only — weekends don’t break your streak'
+                  : 'Every day counts toward your streak'}
+              </p>
+            </div>
+          </div>
+          {expandedSections.has('streak-rest') ? (
+            <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)]" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
+          )}
+        </button>
+        <AnimatePresence>
+          {expandedSections.has('streak-rest') && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="p-4 pt-0 space-y-3">
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  Choose when your streak is required. Weekdays only means Saturday and Sunday
+                  won’t break your streak — rest days matter.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => updatePreference('streakGoalDays', 'all')}
+                    className={`flex-1 py-2.5 px-4 rounded-xl font-medium transition-colors ${
+                      streakGoalDays === 'all'
+                        ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                        : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]/80'
+                    }`}
+                  >
+                    Every day
+                  </button>
+                  <button
+                    onClick={() => updatePreference('streakGoalDays', 'weekdays')}
+                    className={`flex-1 py-2.5 px-4 rounded-xl font-medium transition-colors ${
+                      streakGoalDays === 'weekdays'
+                        ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                        : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]/80'
+                    }`}
+                  >
+                    Weekdays only
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
+
       {/* Profile Information */}
       <section className="bg-[var(--color-bg-secondary)] rounded-xl overflow-hidden">
         <button
@@ -405,12 +475,16 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                 {/* Year in Program - Only for students */}
                 {careerStage === 'student' && (
                   <div>
-                    <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+                    <label
+                      htmlFor="settings-year-in-program"
+                      className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] mb-2"
+                    >
                       <GraduationCap className="w-4 h-4" />
                       Training year
                     </label>
                     <div className="relative">
                       <select
+                        id="settings-year-in-program"
                         value={userProfile.yearInProgram || ''}
                         onChange={(e) => {
                           const value = e.target.value;
@@ -418,6 +492,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                             handleUpdateProfile({ yearInProgram: value as YearInProgram });
                           }
                         }}
+                        aria-label="Training year"
                         className="w-full px-4 py-2.5 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
                           text-[var(--color-text-primary)] appearance-none
                           focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent
@@ -442,9 +517,15 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                     {careerStage === 'student' ? 'Expected Graduation' : 'Graduation Date'}
                   </label>
                   <input
-                    type="month"
+                    id="settings-graduation-month"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="\\d{4}-\\d{2}"
                     value={userProfile.graduationDate || ''}
                     onChange={(e) => handleUpdateProfile({ graduationDate: e.target.value })}
+                    aria-label={careerStage === 'student' ? 'Expected graduation month' : 'Graduation month'}
+                    placeholder="YYYY-MM"
+                    title="Enter month as YYYY-MM"
                     className="w-full px-4 py-2.5 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
                       text-[var(--color-text-primary)]
                       focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent
@@ -468,15 +549,20 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                         userProfile.currentRotation
                       ) && (
                         <div>
-                          <label className="block text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+                          <label
+                            htmlFor="settings-eor-test-date"
+                            className="block text-sm font-semibold text-[var(--color-text-primary)] mb-2"
+                          >
                             EOR Test Date
                           </label>
                           <input
+                            id="settings-eor-test-date"
                             type="date"
                             value={userProfile.eorTestDate ?? ''}
                             onChange={(e) =>
                               handleUpdateProfile({ eorTestDate: e.target.value || undefined })
                             }
+                            aria-label="EOR test date"
                             className="w-full px-4 py-2.5 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] text-sm"
                           />
                           <p className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -619,11 +705,12 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                         <div className="flex gap-1">
                           {Object.values(palette.colors)
                             .slice(0, 5)
-                            .map((color, i) => (
-                              <div
-                                key={i}
+                            .map((color) => (
+                              <motion.div
+                                key={color}
                                 className="w-4 h-4 rounded border border-[var(--color-border)]"
-                                style={{ backgroundColor: color }}
+                                initial={false}
+                                animate={{ backgroundColor: color }}
                               />
                             ))}
                         </div>

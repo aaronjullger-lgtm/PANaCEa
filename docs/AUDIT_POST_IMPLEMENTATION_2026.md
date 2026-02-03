@@ -1,134 +1,141 @@
-# Comprehensive Audit: Post–User-Satisfaction Implementation (Feb 2026)
+# Post-Implementation Audit (Feb 2026)
 
 **Role:** Senior Full-Stack Architect & Quality Assurance Lead  
-**Scope:** Plan fidelity, repo consistency, logic/security, brittleness/scalability, refactoring opportunities.  
-**Reference:** Top 10 user-satisfaction improvements (toasts, errors, offline, Command Center, loading, AI discoverability, recommendations, baseline, onboarding, tutor/session summary).
+**Scope:** Plan fidelity, repo consistency, logic/security, brittleness/scalability, refactoring opportunities for the recent UX/accessibility/data-permanence work.
+
+**Status:** The three critical fixes were implemented (Archive & Reset in Settings, PatientEncounterMode try/catch, ExplainabilityTooltip a11y). The two copy-related logical omissions were also addressed: SessionEndSummary button now says "Review X To Review", and WeaknessCheatsheetExporter HTML export uses "Incorrect X time(s)" instead of "Missed X time(s)". Technical-debt items (centralize labels, document fix.modeIds and reduced-motion) remain as optional follow-ups.
 
 ---
 
-## 1. Critical Fixes
+## * Critical Fixes
 
-| Priority | Issue | Location | Action |
-|----------|------|----------|--------|
-| **High** | **Onboarding completion not synced to server** | `App.tsx`, `UserProfileModal`, `userProfileService` | ~~`hasCompletedOnboarding` stored only in localStorage; server never set.~~ | **Implemented:** (1) On profile complete and profile skip, `syncOnboardingCompleteToServer()` calls `PUT /api/user/profile` with `{ hasCompletedOnboarding: true }`. (2) On app load when signed in, GET profile runs first; if `data.profile.hasCompletedOnboarding === true`, `saveUserProfile({ hasCompletedOnboarding: true })` hydrates localStorage so cross-device and after clear-storage behave correctly. |
-| **Medium** | **RecommendationFeed still uses `console.error`** | `components/dashboard/RecommendationFeed.tsx` (lines 110, 164) | Violates project preference to avoid console in production; ESLint may be off but the pattern remains. | Replace with a small logger or remove; if keeping for debug, gate with `import.meta.env.DEV` or use the project’s secure logger on the client. |
-| **Low** | **Baseline submit: Prisma disconnect if client throws before try** | `functions/api/baseline/submit.ts` | If `createEdgePrismaClient(env.DATABASE_URL)` threw (e.g. env missing), `finally` would still run but `prisma` would be assigned. No issue in practice; edge case only. | Document or add a guard so `safePrismaDisconnect` is only called when `prisma` is defined. |
+### 1. **Archive & Reset flow not implemented in Settings UI**
 
-**Already addressed in prior work (verified in code):**
+**Plan stated:** Data Management should offer a **primary** action "Archive & Reset" (download archive, then clear data; no extra confirmation) and a **secondary** action "Clear permanently…" (type DELETE to confirm).
 
-- Baseline submit sets `User.hasCompletedBaseline: true` after upsert (`functions/api/baseline/submit.ts`).
-- OnboardingYourPlan shows toasts on exam date save success/failure (`components/onboarding/OnboardingYourPlan.tsx`).
-- RecommendationFeed parses generate response as `data?.data ?? data` and `payload?.recommendations` (`components/dashboard/RecommendationFeed.tsx`).
+**Current state:** `exportArchive` is implemented in `lib/analyticsExport.ts` and imported in `components/modals/SettingsStatsModal.tsx`, but **it is never called**. The Performance Data section only has a single path: "Clear Performance Data…" → type DELETE → "Confirm Clear". There is no one-click "Archive & Reset" that downloads the archive and then clears data.
 
----
+**Fix:** In `SettingsStatsModal.tsx` Data Management section, add a primary "Archive & Reset" button that (1) calls `exportArchive(performanceData)` (and if `performanceData.length === 0`, show a toast and return without clearing), (2) then calls `clearPerformanceData()`. Keep the existing "Clear Performance Data…" / type DELETE flow as the secondary destructive option (e.g. "Clear permanently…").
 
-## 2. Logical Omissions
+### 2. **PatientEncounterMode: unhandled promise rejection leaves user stuck in `loading_encounter`**
 
-| Item | Plan / Expected | Current State | Recommendation |
-|------|------------------|---------------|-----------------|
-| **Onboarding completion sync** | Completion should be durable across devices. | Only localStorage; server `User.hasCompletedOnboarding` never updated from onboarding. | See Critical Fixes: persist via PUT profile and optionally seed localStorage from GET profile on load. |
-| **Skip baseline when already completed** | If user already has `hasCompletedBaseline`, skip baseline step. | App always shows profile → baseline → your_plan; no check for existing baseline. | When opening onboarding, if server/profile indicates `hasCompletedBaseline`, set step to `'your_plan'` (or skip baseline step in the flow). |
-| **Circadian in recommendations** | Plan §6: optional “optimal study time” from circadian analytics. | `lib/recommendationEngine.ts` does not call circadian service. | Low priority: add optional call and one recommendation line when service is available. |
-| **Due count per system** | Optional “Review Cardiology — N due” style. | Only aggregate “Spaced Repetition Review” with total count. | Optional: group due items by system and add per-system recommendations if UI supports it. |
-| **First-time AI pro tip** | Optional dismissible tooltip after onboarding (e.g. “Pro tip: Use Clinical Eye…”). | Not implemented. | Optional: one-time tooltip + `localStorage.setItem('hasSeenAIPrompt', '1')`. |
-| **Exam date fetch on your_plan** | Robust load of existing exam date. | Single GET on step transition; no retry. | Add one retry or fallback message (“Couldn’t load exam date”) with optional manual refresh. |
+**Location:** `components/modes/PatientEncounterMode.tsx` — `handleStartEncounter`.
 
----
+**Issue:** If `getToken()` or `getRandomEncounterCase(token)` **throws** (e.g. network error, backend down), the code never calls `setViewState('landing')` or `setIsLoading(false)`. The user remains on the loading-encounter screen with no way to recover except refresh.
 
-## 3. Technical Debt
+**Fix:** Wrap the entire async body of `handleStartEncounter` in `try/catch`. In `catch`: set `setLoadError(...)`, `setViewState('landing')`, `setIsLoading(false)`.
 
-| Area | Observation | Suggestion |
-|------|-------------|------------|
-| **Recommendation API contract** | List returns `{ data: recommendations }`; generate returns `{ data: { success, count, recommendations } }`. Feed normalizes both. | Document the contract; consider shared response type and a small client parser for list vs generate. |
-| **`prisma: any` in recommendationEngine** | `generateRecommendations(userId, prisma: any)` uses `any`. | Type with a minimal interface (e.g. methods used: `baselineAssessment.findFirst`, `user.findUnique`, `userTopicProgress.findMany`, `studyRecommendation.findMany/createMany`) or project’s Edge Prisma type. |
-| **“20 questions today”** | Hardcoded in OnboardingYourPlan and possibly elsewhere. | Single constant (e.g. `FIRST_GOAL_QUESTIONS = 20`) in config or constants; use in copy and any analytics. |
-| **Baseline question payload** | GET and submit cast `questionData` as `Record<string, unknown>` and read `question`/`options`/`correctIndex` ad hoc. | Add a small Zod schema or shared type for baseline question payload and use in both endpoints (and optionally in DB validation). |
-| **Error messaging in onboarding** | BaselineAssessment and OnboardingYourPlan use inline strings; App’s exam-date fetch uses `.catch(() => {})`. | Use shared user-facing messages (e.g. from `getUserFacingError` or a small messages module); at least log exam-date fetch failure for debugging. |
-| **ESLint rules disabled** | `no-console`, `no-explicit-any`, `exhaustive-deps`, etc. were turned off to reduce noise. | Re-enable incrementally (e.g. per directory or file); fix onboarding, baseline, and recommendation code first. |
+### 3. **ExplainabilityTooltip: accessible name on the button**
+
+**Location:** `components/ui/ExplainabilityTooltip.tsx`.
+
+**Issue:** The focusable element is a `<span role="button">`. The accessible name is only on the child `<Info aria-label={ariaLabel} role="img" />`. Some assistive technologies expect the button element itself to have the label. The spec recommends the interactive element (the button) to have the accessible name.
+
+**Fix:** Add `aria-label={ariaLabel}` to the `<span role="button">`, and set `aria-hidden="true"` on the `<Info>` icon so the button is announced once (e.g. "How is this calculated?, button").
 
 ---
 
-## 4. Repo Consistency
+## * Logical Omissions
 
-| Check | Status | Notes |
-|-------|--------|------|
-| **Naming** | OK | `BaselineAssessment`, `OnboardingYourPlan`, `handleBaselineComplete` match existing patterns. |
-| **Folder structure** | OK | Baseline API under `functions/api/baseline/`; onboarding under `components/onboarding/`. |
-| **Styling** | OK | CSS variables (`--color-accent`, `--color-text-primary`), Tailwind, rounded-xl, Lucide. |
-| **Edge / no Node** | OK | Baseline and profile use Edge Prisma; no `fs`/`path`/`process.cwd()` in functions. |
-| **Auth** | OK | Baseline and profile use `authenticatedEndpoint` and Clerk; `resolveUserId` for internal id. |
-| **Lib placement** | OK | `lib/recommendationEngine.ts` is server/shared; no Prisma in `src/lib/`. |
+### 1. **SessionEndSummary still says "Review X Missed"**
 
----
+**Location:** `components/quiz/SessionEndSummary.tsx` — button label: `Review {overallStats.incorrect} Missed`.
 
-## 5. Logic & Security
+**Omission:** The plan renamed "Missed Questions" to "To Review" across the app. This button was not updated and still uses "Missed".
 
-| Area | Finding | Recommendation |
-|------|---------|----------------|
-| **Data fetching** | Baseline and profile use Bearer token; errors surface in UI or toast. RecommendationFeed parses list and generate correctly. | Keep; ensure all fetch paths handle non-ok and non-JSON (RecommendationFeed already does). |
-| **State management** | Onboarding step and weakestSystems/examDate live in App; no cross-tab sync. | Acceptable; optionally persist step in localStorage only if resume across reloads is required. |
-| **Baseline submit** | Answers validated with Zod; grading uses server-side question data. | Good. Consider a light rate limit (e.g. one submit per user per minute) to prevent abuse. |
-| **Env / secrets** | Profile and baseline use `context.env.DATABASE_URL`; no keys in client. | OK. Ensure Cloudflare env (e.g. `CLERK_SECRET_KEY`, `DATABASE_URL`) are set in production. |
-| **RLS / Supabase** | Prisma + Postgres (Supabase); baseline and recommendations keyed by resolved `userId`. | If RLS is enabled, ensure policies align with the same user id used by Prisma (e.g. `auth.uid()` mapped to `User.id`). |
+**Suggestion:** Change to e.g. "Review X To Review" or "Review X incorrect" (or "Review X questions" if you want to avoid repeating "To Review").
 
----
+### 2. **WeaknessCheatsheetExporter HTML export still uses "Missed" in body**
 
-## 6. Brittleness & Scalability
+**Location:** `components/analytics/WeaknessCheatsheetExporter.tsx` — generated HTML: `Missed ${data.count} time${...}`.
 
-| Risk | Location | Mitigation |
-|------|----------|-------------|
-| **PreGeneratedQuestion shape** | Baseline GET/submit assume `questionData` has `question`/`vignette`, `options`/`choices`, `correctAnswerIndex`/`correctIndex`. | Add Zod or DB constraint for valid shapes; handle missing fields with defaults and logging. |
-| **Few baseline questions** | Fewer than 20 approved questions → shorter list; UI still works. | Document minimum (e.g. 20); consider admin metric or alert when count is low. |
-| **Recommendation list size** | List uses `take: 50`. | Sufficient for now; add pagination or cursor if needed later. |
-| **Session end AI summary** | One Gemini call per click; no server-side rate limit. | Acceptable for now; if cost grows, add per-user daily limit or usage tracking. |
+**Omission:** The component was reframed as "Yield Optimization"; the exported HTML still says "Missed X time(s)" per condition.
+
+**Suggestion:** Replace with e.g. "Incorrect X time(s)" or "To review: X time(s)" for consistency with the new framing.
+
+### 3. **Archive & Reset when there is no data**
+
+**Location:** `lib/analyticsExport.ts` — `exportArchive` does `if (performanceData.length === 0) { console.warn(...); return; }`.
+
+**Omission:** When you add the "Archive & Reset" button, if the user has no performance data, calling `exportArchive` will do nothing (no file) and then clearing would still run. That could be confusing. The UI should either disable "Archive & Reset" when `performanceData.length === 0`, or call export only when there is data and show a toast when there is nothing to archive.
 
 ---
 
-## 7. Verification Steps
+## * Technical Debt
 
-1. **Onboarding (happy path)**  
-   - Sign out, sign in (or use user with cleared localStorage).  
-   - Complete profile → complete baseline (or skip) → see “Your plan” with weakest systems (if baseline done) and “20 questions today”.  
-   - Click “Start first session” → session modal opens, onboarding closes.  
-   - Set exam date → “Set exam date” → see success toast; reload and confirm exam date persisted (GET profile).
+### 1. **Duplicate / scattered copy strings**
 
-2. **Onboarding (skip baseline)**  
-   - Profile → Continue or Skip → Baseline → Skip → “Your plan” with “all systems”.  
-   - Start first session → session modal opens.
+- "To Review" appears in many files (`SettingsStatsModal`, `CommandCenterHub`, `TodoistExportModal`, `TodoistExportPanel`, `AnkiExportPanel`, `MenuView`, `QuickReviewMode`, etc.). "Clear To Review…", "To Review Study Guide", "To Review Only", etc. are not centralized.
+- **Suggestion:** Introduce a small shared constants or copy module (e.g. `constants/labels.ts` or `copy/dataManagement.ts`) with keys like `TO_REVIEW_LABEL`, `CLEAR_TO_REVIEW`, `ARCHIVE_AND_RESET`, and use them in modals and navigation so future renames and i18n are easier.
 
-3. **Onboarding completion persistence (gap)**  
-   - Complete onboarding on device A; on device B (same user), confirm onboarding shows again until server sync is implemented.  
-   - After implementing server sync: complete onboarding, then clear localStorage and reload; confirm onboarding does not show again if server returns `hasCompletedOnboarding: true`.
+### 2. **STUDY_OUTCOME_GROUPS.fix.modeIds is always []**
 
-4. **Recommendations**  
-   - Open Command Center; recommendations load (list).  
-   - Click “Refresh” / “Analyze progress” (generate).  
-   - Confirm new recommendations appear (count and list update); no “0 new” when backend returned recommendations.
+**Location:** `config/training-modes.ts` — `fix.modeIds: []` with a comment that the "Fix My Weaknesses" CTA is handled specially in the UI.
 
-5. **Baseline**  
-   - Start baseline; answer all 20 (or available).  
-   - Submit → see results (accuracy, weakest/strongest).  
-   - After close, open Command Center; confirm “Review [weak system]” appears.
+**Debt:** If someone later adds mode IDs to `fix.modeIds`, the Command Center "Fix My Weaknesses" block would need to render both the special "Focus on my weak areas" CTA and the list of modes. Right now it only renders the CTA. Consider a short comment in `CommandCenterHub.tsx` where the fix group is rendered, e.g. "fix.modeIds is intentionally empty; fix is handled by the weak-areas CTA only."
 
-6. **Errors**  
-   - Disconnect network; trigger baseline submit or profile save.  
-   - Confirm user sees clear error (toast or inline), not silent failure.  
-   - Trigger a drill that uses Gemini; confirm error boundary shows friendly message and “Try again” / “Go home”.
+### 3. **useSupabase token failure is only logged**
 
-7. **Session end AI summary**  
-   - Finish a short session; on end screen click “Get AI summary”.  
-   - Confirm 1–2 sentences appear; on failure, confirm fallback message.
+**Location:** `hooks/useSupabase.ts` — on `getToken()` failure, the code `console.error`s and returns `null`. Callers may not handle a Supabase client that later sends unauthenticated requests.
 
-8. **Build & lint**  
-   - `npm run build` and `npx eslint .` (current config).  
-   - Fix any new errors in modified files.
+**Debt:** Document that the client can be "anonymous" when the token is null, and ensure any RLS-protected usage either checks auth state or handles 403s. No code change required immediately if RLS and UI already handle it.
+
+### 4. **index.css and component-level reduced motion**
+
+**Current state:** Global `@media (prefers-reduced-motion: reduce)` in `index.css` forces very short durations site-wide. Several components also use `useReducedMotion()` and set Framer `duration: 0` or `initial: false`.
+
+**Debt:** Slight duplication between global CSS and component logic. Acceptable for robustness (defense in depth). Optional: document in one place (e.g. accessibility doc) that both global and component-level handling exist and why.
 
 ---
 
-## 8. Summary
+## * Verification Steps
 
-- **Critical (implemented):** Onboarding completion is now synced to the server on profile complete/skip via PUT profile, and localStorage is hydrated from GET profile on load so behavior is correct across devices and after clear storage.
-- **Logical:** Optional improvements: skip baseline when already completed, circadian recommendation, due-per-system, first-time AI pro tip, and retry/fallback for exam date fetch.
-- **Technical debt:** Type Prisma in recommendation engine; standardize recommendation API response shape; shared error messages and first-goal constant; re-enable ESLint incrementally.
-- **Consistency & security:** Aligned with repo patterns and auth; no secrets in client; consider baseline rate limit and RLS alignment.
-- **Verification:** Focus on full onboarding flow (including cross-device after fix), recommendation generate/list, baseline submit/results, error paths, and session end AI summary.
+1. **Data Management (Settings)**  
+   - Open Settings → Stats (or tab where Data Management lives).  
+   - Confirm Performance Data section shows record count and **two** actions once implemented: "Archive & Reset" (primary) and "Clear permanently…" (type DELETE).  
+   - With 0 records: "Archive & Reset" should either be disabled or show a toast and not clear.  
+   - With data: "Archive & Reset" should download `panacea-archive_<timestamp>.json` and then clear performance data.  
+   - "Clear permanently…" should still require typing DELETE and then clear.
+
+2. **Virtual OSCE (Patient Encounter)**  
+   - Start an encounter; confirm loading shell and rotating status messages appear.  
+   - Simulate failure: e.g. disconnect network before "Start Interview", or point backend to an invalid URL — confirm you return to landing with an error message and are not stuck on loading.  
+   - In a successful run, confirm transition from loading to active encounter and that typing indicator shows rotating messages during AI response.
+
+3. **Explainability tooltips**  
+   - Find a "Predicted PANCE Score" or "Estimated PANCE Score" or calibration copy that has the (i) icon.  
+   - Focus the icon with keyboard and trigger with Enter/Space; confirm tooltip shows and the button is announced (e.g. "How is this calculated?, button").  
+   - After fixing: confirm the button has `aria-label` and the icon is `aria-hidden`.
+
+4. **Focus management**  
+   - Open Settings from the main view (e.g. gear icon), then close the modal (Escape or close button).  
+   - Confirm focus returns to the Settings button so the next Tab focuses the next element after the button.
+
+5. **Reduced motion**  
+   - Enable "Reduce motion" in OS (e.g. macOS Accessibility → Display → Reduce motion).  
+   - Reload app; confirm no prolonged animations (e.g. QuickStatsBar, ModeCard, streaks, GlassCard).  
+   - Confirm loading/typing status messages in Patient Encounter still update (only duration/visual motion should be reduced, not logic).
+
+6. **Training / Study Now flow**  
+   - From Command Center, use "Study Now" and confirm the "What do you want to focus on?" screen with Learn / Test / Fix groups.  
+   - Confirm "Focus on my weak areas" under Fix starts a session with growth areas or incorrect focus when available.
+
+7. **Copy consistency**  
+   - After applying the SessionEndSummary and WeaknessCheatsheetExporter copy changes, do a quick grep for user-facing "Missed" and confirm only intentional uses remain (e.g. "Missed Critical Cues" in OSCE debrief).
+
+8. **Environment and API**  
+   - In `functions/`, confirm no `process.env`; all env access via `context.env` (or validated `env` from context).  
+   - Run a production build and smoke-test key API routes (e.g. stats, generate, sync) with required env set.
+
+---
+
+## Summary
+
+| Category           | Count | Notes |
+|--------------------|-------|--------|
+| Critical fixes     | 3     | Archive & Reset in UI; PatientEncounterMode try/catch; ExplainabilityTooltip aria-label on button. |
+| Logical omissions  | 3     | SessionEndSummary and export HTML copy; empty-data behavior for Archive & Reset. |
+| Technical debt     | 4     | Centralize labels; document fix.modeIds and reduced-motion strategy; useSupabase behavior. |
+| Verification steps | 8     | Data Management, OSCE, tooltips, focus, reduced motion, Study Now, copy, env/API. |
+
+Implementing the three critical fixes and the suggested copy/empty-data behavior will align the app with the original plan and reduce risk of stuck states and accessibility issues. The verification steps should be run before release.

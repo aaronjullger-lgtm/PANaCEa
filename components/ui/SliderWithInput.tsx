@@ -35,6 +35,8 @@ export interface SliderWithInputProps {
   fromInputValue?: (input: string) => number;
   /** Optional commit on blur only (e.g. for retention callback) */
   onCommit?: (value: number) => void;
+  /** Snap input to grid on blur (default true) */
+  snapInputOnBlur?: boolean;
   /** Input width class (default w-16) */
   inputClassName?: string;
   /** Disabled state */
@@ -71,9 +73,13 @@ function clampAndSnap(
 
 /** Index of nearest snap value for slider position */
 function indexOfNearest(value: number, snapValues: number[]): number {
+  if (snapValues.length === 0) return 0;
   let best = 0;
-  for (let i = 0; i < snapValues.length; i++) {
-    if (Math.abs(snapValues[i] - value) < Math.abs(snapValues[best] - value)) best = i;
+  const fallback = snapValues[0] ?? value;
+  for (let i = 1; i < snapValues.length; i++) {
+    const candidate = snapValues[i] ?? fallback;
+    const bestVal = snapValues[best] ?? fallback;
+    if (Math.abs(candidate - value) < Math.abs(bestVal - value)) best = i;
   }
   return best;
 }
@@ -96,9 +102,16 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
   sliderHidden = false,
   'aria-label': ariaLabel,
 }) => {
-  const step = stepProp ?? (snapValues && snapValues.length > 1
-    ? Math.min(...snapValues.slice(1).map((s, i) => s - snapValues[i]))
-    : 1);
+  const step =
+    stepProp ??
+    (snapValues && snapValues.length > 1
+      ? Math.min(
+          ...snapValues.slice(1).map((s, i) => {
+            const prev = snapValues[i] ?? s;
+            return Math.abs(s - prev);
+          })
+        )
+      : 1);
 
   const [inputStr, setInputStr] = useState<string>(() => toInputValue(value));
   const [isFocused, setIsFocused] = useState(false);
@@ -145,7 +158,7 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
     let next: number;
     if (snapValues && snapValues.length > 0) {
       const idx = indexOfNearest(value, snapValues);
-      next = idx <= 0 ? min : snapValues[idx - 1];
+      next = idx <= 0 ? min : (snapValues[idx - 1] ?? min) as number;
     } else {
       next = Math.max(min, value - step);
     }
@@ -159,7 +172,7 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
     let next: number;
     if (snapValues && snapValues.length > 0) {
       const idx = indexOfNearest(value, snapValues);
-      next = idx >= snapValues.length - 1 ? max : snapValues[idx + 1];
+      next = idx >= snapValues.length - 1 ? max : (snapValues[idx + 1] ?? max) as number;
     } else {
       next = Math.min(max, value + step);
     }
@@ -172,16 +185,23 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
   const sliderValue = useMemo(() => {
     if (snapValues && snapValues.length > 0) {
       const idx = indexOfNearest(value, snapValues);
-      return snapValues[idx];
+      return snapValues[idx] ?? value;
     }
     return value;
   }, [value, snapValues]);
 
-  const sliderMin = snapValues && snapValues.length > 0 ? snapValues[0]! : min;
-  const sliderMax = snapValues && snapValues.length > 0 ? snapValues[snapValues.length - 1]! : max;
-  const sliderStep = snapValues && snapValues.length > 1
-    ? Math.min(...snapValues.slice(1).map((s, i) => Math.abs(s - snapValues[i]!)))
-    : step;
+  const sliderMin = snapValues && snapValues.length > 0 ? snapValues[0] ?? min : min;
+  const sliderMax =
+    snapValues && snapValues.length > 0 ? snapValues[snapValues.length - 1] ?? max : max;
+  const sliderStep =
+    snapValues && snapValues.length > 1
+      ? Math.min(
+          ...snapValues.slice(1).map((s, i) => {
+            const prev = snapValues[i] ?? s;
+            return Math.abs(s - prev);
+          })
+        )
+      : step;
 
   const handleSliderChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

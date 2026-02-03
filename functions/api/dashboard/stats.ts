@@ -18,58 +18,19 @@ import {
 } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserId } from '../_shared/user-resolver';
-import {
-  calculateConceptGaps,
-} from '../intelligence/profile';
+import { calculateConceptGaps } from '../intelligence/profile';
 import { NCCPA_2025_BLUEPRINT_PERCENT } from '../../../lib/constants/blueprint';
+import {
+  computeCurrentStreak as calcStreak,
+  computeLongestStreak,
+  type StreakGoalDays,
+} from '../../../lib/streakCalc';
 
 // ============================================================================
 // Validation
 // ============================================================================
 
 const StatsSchema = z.object({});
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function computeCurrentStreak(
-  dates: { date: Date }[],
-  today: Date
-): number {
-  if (dates.length === 0) return 0;
-
-  const sorted = [...dates].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-
-  let streak = 0;
-  const todayStart = new Date(today);
-  todayStart.setHours(0, 0, 0, 0);
-
-  const lastDate = new Date(sorted[0]!.date);
-  lastDate.setHours(0, 0, 0, 0);
-
-  if (lastDate.getTime() < todayStart.getTime() - 86400000) {
-    return 0;
-  }
-
-  const expected = new Date(lastDate);
-  expected.setHours(0, 0, 0, 0);
-
-  for (const entry of sorted) {
-    const d = new Date(entry.date);
-    d.setHours(0, 0, 0, 0);
-    if (d.getTime() === expected.getTime()) {
-      streak++;
-      expected.setDate(expected.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-
-  return streak;
-}
 
 function computePredictedPassChance(osceScores: number[], quizAccuracy?: number): number {
   if (osceScores.length > 0) {
@@ -104,15 +65,33 @@ export const onRequestGet = authenticatedEndpoint(StatsSchema, async (context) =
       return { status: 404, error: 'User not found' };
     }
 
-    const today = new Date();
+    const today = new Date(
+      Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        0,
+        0,
+        0,
+        0
+      )
+    );
 
-    // DailyStreak uses Clerk ID (auth.userId), not internal User.id
-    const [streakRows, conceptGaps, osceResults, quizStats] = await Promise.all([
+    // DailyStreak and StreakFreezeUse use Clerk ID (auth.userId)
+    const [streakRows, freezeRows, prefs, conceptGaps, osceResults, quizStats] = await Promise.all([
       prisma.dailyStreak.findMany({
         where: { userId: auth.userId },
         select: { date: true },
         orderBy: { date: 'desc' },
         take: 365,
+      }),
+      prisma.streakFreezeUse.findMany({
+        where: { userId: auth.userId },
+        select: { date: true },
+      }),
+      prisma.userPreferences.findUnique({
+        where: { userId: auth.userId },
+        select: { streakGoalDays: true, streakFreezes: true, userCoins: true },
       }),
       calculateConceptGaps(prisma, userId),
       prisma.patientEncounterSession.findMany({
@@ -132,10 +111,16 @@ export const onRequestGet = authenticatedEndpoint(StatsSchema, async (context) =
     const correctAttempts = quizStats.find((g) => g.wasCorrect)?._count ?? 0;
     const quizAccuracy = totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : undefined;
 
-    const currentStreak = computeCurrentStreak(
-      streakRows.map((r) => ({ date: r.date })),
-      today
-    );
+    const streakGoalDays: StreakGoalDays =
+      prefs?.streakGoalDays === 'weekdays' ? 'weekdays' : 'all';
+    const activityDates = streakRows.map((r) => new Date(r.date));
+    const frozenDates = freezeRows.map((r) => new Date(r.date));
+    const { currentStreak } = calcStreak({
+      activityDates,
+      frozenDates,
+      today,
+      streakGoalDays,
+    });
 
     let weakestSystem = 'N/A';
     const bySystemEntries = Object.entries(conceptGaps.bySystem);
@@ -164,6 +149,9 @@ export const onRequestGet = authenticatedEndpoint(StatsSchema, async (context) =
       currentStreak,
       weakestSystem,
       predictedPassChance,
+      streakFreezes: prefs?.streakFreezes ?? 0,
+      userCoins: prefs?.userCoins ?? 0,
+      streakGoalDays,
     };
 
     log.info('Dashboard stats computed', { currentStreak, weakestSystem });

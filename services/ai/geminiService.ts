@@ -179,10 +179,11 @@ async function fetchTextbookContext(options: {
     const response = await fetch(`${endpoint}?${params.toString()}`);
     if (!response.ok) return null;
 
-    const payload = (await response.json()) as {
-      chunks?: { bookTitle?: string; text?: string }[];
-    };
-    const chunks = payload?.chunks || [];
+    const payload = (await response.json()) as
+      | { chunks?: { bookTitle?: string; text?: string }[] }
+      | { data?: { chunks?: { bookTitle?: string; text?: string }[] } };
+    const root: any = (payload as any)?.data ? (payload as any).data : payload;
+    const chunks = (root?.chunks || []) as { bookTitle?: string; text?: string }[];
     if (chunks.length === 0) return null;
 
     const title = chunks[0]?.bookTitle || 'OpenStax Textbook';
@@ -337,6 +338,8 @@ export interface ParsedRationaleObject {
   whyIncorrectD?: string;
   clinicalPearl?: string;
   highYieldImageOrTable?: string;
+  /** Pre-written common pitfalls (no unmoderated comments). @see docs/AUDIT_WISDOM_OF_THE_CROWDS.md */
+  commonPitfalls?: string[];
 }
 
 export interface ParsedQuestionResponse {
@@ -348,7 +351,6 @@ export interface ParsedQuestionResponse {
   topic?: string;
   system?: SystemCode;
   condition?: string;
-  conditionId?: string;
   conditionId?: string;
 }
 
@@ -1215,7 +1217,7 @@ Core Instructions:
 3. Highly plausible distractors: each wrong option correct for a different patient/scenario (Kaplan-level).
 4. Use "\\n" inside the question string for paragraph breaks.
 5. Data Table Formatting: If you include ANY vital signs and/or laboratory values, you MUST place ALL of them into a single simple HTML <table> with a header row in the question string. Use exactly two columns labeled "Parameter" and "Value". Do NOT repeat vitals or labs in plain text outside the table.
-6. STANDARDIZED RATIONALE (5-section object): "rationale" MUST be an object: bottomLine (one sentence: diagnosis + treatment), whyCorrect (walk through vignette steps), whyIncorrectA/B/C/D (why a student might have chosen it, then why wrong for this patient), clinicalPearl (memorable hook), highYieldImageOrTable ("N/A" or short description). Use <b>, <i> in strings.
+6. STANDARDIZED RATIONALE (5-section object): "rationale" MUST be an object: bottomLine (one sentence: diagnosis + treatment), whyCorrect (walk through vignette steps), whyIncorrectA/B/C/D (why a student might have chosen it, then why wrong for this patient), clinicalPearl (memorable hook), highYieldImageOrTable ("N/A" or short description). Optionally include "commonPitfalls": array of 1-3 short pitfalls (e.g. "Confusing with X because both present with Y"). Use <b>, <i> in strings.
 7. "pearls" = 3–4 high-yield single-sentence pearls; use <b>, <i>.
 8. Question HTML: The "question" string MAY use the table tags above and <br> for line breaks, but should not use <b> or <i>.
 9. Options & Condition: The "options" and "condition" fields MUST be plain text only (no HTML tags).
@@ -1232,7 +1234,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   "question": string,
   "options": [string, string, string, string],
   "correctAnswerIndex": number,
-  "rationale": { "bottomLine": string, "whyCorrect": string, "whyIncorrectA": string, "whyIncorrectB": string, "whyIncorrectC": string, "whyIncorrectD": string, "clinicalPearl": string, "highYieldImageOrTable": "N/A" or string },
+  "rationale": { "bottomLine": string, "whyCorrect": string, "whyIncorrectA": string, "whyIncorrectB": string, "whyIncorrectC": string, "whyIncorrectD": string, "clinicalPearl": string, "highYieldImageOrTable": "N/A" or string, "commonPitfalls": optional [string] },
   "topic": string,
   "condition": string,
   "pearls": [string, string, string]
@@ -1500,9 +1502,9 @@ LABS/IMAGING RESULTS (Reveal only if user orders tests):
 ${JSON.stringify(caseData.labData, null, 2)}
 
 INSTRUCTIONS:
-1. ROLEPLAY: Act as the patient. Speak in first person ("I feel..."). Be realistic. Do not volunteer information unless specifically asked.
+1. ROLEPLAY: Act as the patient. Speak in first person ("I feel..."). Be realistic. Do not volunteer information unless specifically asked. Answer in the patient's own words (lay language). Do not use medical terms unless the student has already asked clarifying questions (e.g. location, character, radiation, timing).
 2. PERSONALITY: If a persona is provided, let it influence how forthcoming or guarded the patient is, their anxiety level, and their communication style.
-3. PHYSICAL EXAMS: If the user says "I listen to the heart" or "Examine abdomen", provide the specific finding from the PHYSICAL EXAM FINDINGS section. Format these findings in brackets, e.g., "[Exam Finding] The abdomen is soft, non-tender."
+3. PHYSICAL EXAMS: Return ONLY the physical exam finding(s) for the specific maneuver(s) the student just described. If they said only "listen to heart", return only cardiac findings. Do not return abdominal, lung, or other system findings unless they explicitly performed or asked for that part of the exam. If the student says only "I do a physical exam" or "full exam" without specifying systems, respond with: "Which part of the exam would you like to do? (e.g. heart, lungs, abdomen)". Format findings in brackets, e.g., "[Exam Finding] The abdomen is soft, non-tender."
 4. LABS/IMAGING: If the user orders a test (e.g., "Order CBC", "Get a CXR"), provide the result from the LABS/IMAGING RESULTS section. If the test is not listed, assume it is normal/unremarkable. Format as "[Lab Result] CBC: WBC 12k...".
 5. LANGUAGE: If the user speaks Spanish, respond in Spanish.
 6. DO NOT reveal the diagnosis or the "correct" answer. You are the simulation, not the grader.
@@ -1564,10 +1566,11 @@ Return ONLY raw JSON (no markdown formatting) with this structure:
     // Fallback to simple string match if AI fails
     const normalizedUser = (userDiagnosis || '').toLowerCase();
     const normalizedCorrect = (correctDiagnosis || '').toLowerCase();
-    const isCorrect =
+    const isCorrect = Boolean(
       normalizedUser &&
-      normalizedCorrect &&
-      (normalizedUser.includes(normalizedCorrect) || normalizedCorrect.includes(normalizedUser));
+        normalizedCorrect &&
+        (normalizedUser.includes(normalizedCorrect) || normalizedCorrect.includes(normalizedUser))
+    );
     return {
       isCorrect,
       score: isCorrect ? 100 : 0,

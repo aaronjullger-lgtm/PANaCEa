@@ -12,6 +12,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { getAccuracyHex } from '../../lib/accuracyColorUtils';
 
 export interface RadialProgressProps {
   /** Progress value (0-100) */
@@ -58,14 +59,9 @@ export const RadialProgress: React.FC<RadialProgressProps> = ({
     const off = circ - (clampedValue / 100) * circ;
 
     // Traffic-light system for accuracy/progress (color-blind safe; never red for "low" metric)
-    // < 60% = Amber (warning/keep trying), 60–80% = Blue (building), > 80% = Teal (mastery)
     const pColor =
       color === 'var(--color-accent)' && value !== undefined
-        ? value >= 80
-          ? '#14b8a6' // teal - mastery
-          : value >= 60
-            ? '#2563eb' // blue - building
-            : '#f59e0b' // amber - warning/keep trying (never red for student progress)
+        ? getAccuracyHex(value)
         : color;
 
     // Responsive font size based on circle size

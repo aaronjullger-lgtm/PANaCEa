@@ -9,9 +9,9 @@ import {
   Tooltip,
   CartesianGrid,
   BarChart,
-  Bar,
   Cell,
 } from 'recharts';
+import { Bar } from 'recharts/es6/cartesian/Bar';
 import {
   Sparkles,
   Gauge,
@@ -236,7 +236,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     });
     if (!res.ok) throw new Error('Failed to fetch calibration');
     const json = await res.json();
-    return json.data as { calibration: CalibrationQuadrantData; days: number };
+    // API middleware sends result.data as body, so response is { calibration, days }
+    return json as { calibration: CalibrationQuadrantData; days: number };
   };
   const { data: calibrationData } = useSWR<{ calibration: CalibrationQuadrantData; days: number }>(
     userStats && userStats.stats?.overall?.totalAttempts > 0
@@ -671,7 +672,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                     />
                     <Tooltip
-                      formatter={(value: number) => [`${value}%`, 'Accuracy']}
+                      formatter={(value?: number) => [`${value ?? 0}%`, 'Accuracy']}
                       contentStyle={chartTheme.tooltip.contentStyle}
                       labelStyle={chartTheme.tooltip.labelStyle}
                     />

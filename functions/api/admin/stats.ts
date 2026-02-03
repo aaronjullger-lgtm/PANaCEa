@@ -84,7 +84,7 @@ export const onRequestGet = authenticatedEndpoint(AdminStatsSchema, async (conte
         .groupBy({
           by: ['userId'],
           where: {
-            attemptedAt: { gte: todayStart },
+            createdAt: { gte: todayStart },
           },
         })
         .then((results: { userId: string }[]) => results.length),

@@ -61,7 +61,9 @@ export function useLowPowerMode(): boolean {
       nav
         .getBattery()
         .then((battery: BatteryLike) => {
+          if (!mountedRef.current) return;
           const update = () => {
+            if (!mountedRef.current) return;
             const lowLevel = battery.level < LOW_LEVEL_THRESHOLD;
             const dischargingLow = !battery.charging && battery.level < DISCHARGING_LOW_THRESHOLD;
             setReduceHeavyAnimations(reduce || lowLevel || dischargingLow);
@@ -81,6 +83,7 @@ export function useLowPowerMode(): boolean {
     }
 
     return () => {
+      mountedRef.current = false;
       cleanupReducedMotion();
       batteryCleanupRef.current?.();
       batteryCleanupRef.current = null;

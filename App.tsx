@@ -48,6 +48,7 @@ import {
   ClinicalReferenceLibrary,
   MyLibraryPage,
   TutorChatPage,
+  StudyCompanionPage,
   CustomStudyMode,
   ClinicalProfileDashboard,
   AdminDashboard,
@@ -893,6 +894,7 @@ const App: React.FC = () => {
                                 onNavigateToMyLibrary={() => setView('my_library')}
                                 onNavigateToCustomStudy={handleNavigateToCustomStudy}
                                 onNavigateToTutorChat={() => setView('tutor_chat')}
+                                onNavigateToStudyCompanion={() => setView('study_companion')}
                                 onNavigateToPearlDeck={() => setView('pearl_deck')}
                                 growthAreas={growthAreas}
                                 examLabel={examLabel ?? 'PANCE'}
@@ -1454,6 +1456,7 @@ const App: React.FC = () => {
                                   onNavigateToIntegrations={() => setView('integrations')}
                                   onNavigateToReference={() => setView('reference_library')}
                                   onNavigateToMyLibrary={() => setView('my_library')}
+                                  onNavigateToStudyCompanion={() => setView('study_companion')}
                                   onBack={() => setView('command_center')}
                                 />
                               </Suspense>
@@ -1496,6 +1499,26 @@ const App: React.FC = () => {
                             >
                               <Suspense fallback={<Loader />}>
                                 <TutorChatPage onExit={() => setView('command_center')} />
+                              </Suspense>
+                            </WithGeminiErrorBoundary>
+                          </motion.div>
+                        )}
+
+                        {view === 'study_companion' && (
+                          <motion.div
+                            key="study_companion"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            transition={pageTransition}
+                          >
+                            <WithGeminiErrorBoundary
+                              viewName="study_companion"
+                              onRetry={() => setView('study_companion')}
+                            >
+                              <Suspense fallback={<Loader />}>
+                                <StudyCompanionPage onExit={() => setView('command_center')} />
                               </Suspense>
                             </WithGeminiErrorBoundary>
                           </motion.div>

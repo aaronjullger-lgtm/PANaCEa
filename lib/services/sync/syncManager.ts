@@ -296,6 +296,8 @@ class SyncManager {
             system: answer.system,
             conditionId: answer.conditionId,
             mode: 'session',
+            // Omit if out of range (prevents schema rejection)
+            selectedAnswer: ['A', 'B', 'C', 'D'][answer.selectedAnswer],
           }),
         });
 

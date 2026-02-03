@@ -52,7 +52,8 @@ const fetcher = async (url: string): Promise<CalibrationApiResponse> => {
   const res = await fetch(url);
   if (!res.ok) throw new Error('Failed to fetch calibration');
   const json = await res.json();
-  return json.data;
+  // API middleware sends result.data as body, so response is { calibration, days } not { data: {...} }
+  return json as CalibrationApiResponse;
 };
 
 const quadrants: Array<{

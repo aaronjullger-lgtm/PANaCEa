@@ -360,7 +360,7 @@ function generateSimplifiedCheatsheet(performanceData: PerformanceRecord[], days
       html += `
       <li class="condition-item">
         <div class="condition-name">${condition}</div>
-        <div class="topic">${data.topic} • Missed ${data.count} time${data.count > 1 ? 's' : ''}</div>
+        <div class="topic">${data.topic} • Incorrect ${data.count} time${data.count > 1 ? 's' : ''}</div>
       </li>
 `;
     });

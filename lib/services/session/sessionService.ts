@@ -6,7 +6,7 @@ import type { Env } from '../../../functions/api/_shared/auth';
 import type { Prisma } from '@prisma/client';
 import {
   NCCPA_2025_BLUEPRINT_PERCENT,
-  SYSTEM_ALIASES,
+  getSystemAbbreviation,
   normalizeSystemName,
 } from '../../constants/blueprint';
 
@@ -104,30 +104,33 @@ export class SessionService {
       const systemQuotas = this.calculateNCCPAQuotas(count, minSystems);
 
       for (const [targetSystem, targetCount] of Object.entries(systemQuotas)) {
+        // Map blueprint name (e.g. "Cardiovascular") to DB abbreviation (e.g. "CV")
+        const systemAbbrev = getSystemAbbreviation(targetSystem);
         const poolQ = await this.fetchFromPool(userId, seenIds, {
           count: targetCount,
-          system: targetSystem,
+          system: systemAbbrev,
         });
         questions.push(...poolQ.questions);
         analytics.fromPool += poolQ.questions.length;
 
         // If not enough from pool, try seeds
         const remaining = targetCount - poolQ.questions.length;
+        let seedQ: EnrichedQuestion[] = [];
         if (remaining > 0 && mode !== 'review') {
-          const seedQ = await this.expandFromSeeds(userId, seenIds, {
+          seedQ = await this.expandFromSeeds(userId, seenIds, {
             count: remaining,
-            system: targetSystem,
+            system: systemAbbrev,
           });
           questions.push(...seedQ);
           analytics.fromSeeds += seedQ.length;
         }
 
         // If still not enough, try main questions
-        const stillRemaining = targetCount - poolQ.questions.length - (analytics.fromSeeds || 0);
+        const stillRemaining = targetCount - poolQ.questions.length - seedQ.length;
         if (stillRemaining > 0) {
           const mainQ = await this.fetchFromMain(userId, seenIds, {
             count: Math.min(stillRemaining, 5),
-            system: targetSystem,
+            system: systemAbbrev,
           });
           questions.push(...mainQ);
           analytics.fromMain += mainQ.length;

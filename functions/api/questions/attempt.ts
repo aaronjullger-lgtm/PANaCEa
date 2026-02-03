@@ -10,6 +10,8 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { scheduleConceptReview } from '../intelligence/profile';
 
+const LETTERS = ['A', 'B', 'C', 'D'] as const;
+
 const AttemptSchema = z.object({
   questionId: z.string().min(1),
   isCorrect: z.boolean().optional(),
@@ -22,6 +24,11 @@ const AttemptSchema = z.object({
   timeSpentMs: z.number().optional(),
   answerChangedCount: z.number().optional(),
   isRankedAttempt: z.boolean().optional().default(false),
+  /** Selected answer: 0–3 (index) or "A"–"D" — for peer selection stats */
+  selectedAnswer: z.union([
+    z.number().int().min(0).max(3),
+    z.enum(['A', 'B', 'C', 'D']),
+  ]).optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -54,6 +61,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       timeSpentMs,
       answerChangedCount,
       isRankedAttempt = false,
+      selectedAnswer: selectedAnswerRaw,
     } = validated;
 
     // Support both isCorrect and wasCorrect field names
@@ -61,10 +69,17 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
     const timeSpentMillis = timeSpentMs ?? timeSpent ?? null;
     const attemptId = `attempt-${userId}-${questionId}-${Date.now()}`;
 
+    const selectedAnswerLetter =
+      selectedAnswerRaw === undefined
+        ? null
+        : typeof selectedAnswerRaw === 'number'
+          ? LETTERS[selectedAnswerRaw] ?? null
+          : selectedAnswerRaw;
+
     // Transaction for atomicity
     type AttemptResult = { wasCorrect: boolean; system: string | null };
     const result = await prisma.$transaction(async (tx: typeof prisma) => {
-      // 1. Record attempt
+      // 1. Record attempt (with selectedAnswer for peer selection stats)
       await tx.questionAttempt.create({
         data: {
           id: attemptId,
@@ -78,6 +93,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
           isRankedAttempt,
           timeSpentMs: timeSpentMillis,
           answerChangedCount: answerChangedCount || null,
+          selectedAnswer: selectedAnswerLetter,
           createdAt: new Date(),
         },
       });

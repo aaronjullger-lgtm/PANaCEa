@@ -12,6 +12,7 @@
  */
 
 import { FSRS, FSRSCard, FSRSState, Rating, defaultParameters, FSRSParameters } from '../fsrs';
+import { queueOperation } from './sync/offlineSync';
 
 const fsrs = new FSRS();
 
@@ -1259,7 +1260,6 @@ export async function submitVariantReview(
   payload: VariantSubmitPayload
 ): Promise<VariantSubmitResponse | null> {
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
-    const { queueOperation } = await import('./sync/offlineSync');
     queueOperation('srs_submit', payload);
     return { success: true };
   }

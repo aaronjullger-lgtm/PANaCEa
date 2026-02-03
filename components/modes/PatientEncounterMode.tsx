@@ -40,11 +40,14 @@ import {
   startOSCESession,
   saveOSCEChat,
   completeOSCESession,
+  gradeOSCESession,
   translateToSpanish,
   type SpanishMode,
   generatePatientCase,
 } from '@/services/domain';
+import type { OsceGradeResult } from '@/services/domain';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
+import { toast } from '@/lib/toast';
 import {
   chatWithPatientSimulator,
   evaluateDiagnosis,
@@ -77,36 +80,7 @@ import { ChatSkeleton } from '@/components/loading/SkeletonLoader';
 import { useVitalsEngine } from '@/hooks/useVitalsEngine';
 import { formatPatientAge, formatPatientAgeShort, parsePatientAge } from '@/lib/utils/ageFormatter';
 
-// Clinical Fidelity settings interface
-interface ClinicalFidelitySettings {
-  emrInterface: boolean;
-  writeOrders: boolean;
-  rawLabValues: boolean;
-  multimediaAuscultation: boolean;
-}
-
-// Load clinical fidelity settings from localStorage
-function loadClinicalFidelitySettings(): ClinicalFidelitySettings {
-  const saved = localStorage.getItem('panceai_clinical_fidelity');
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch {
-      return {
-        emrInterface: false,
-        writeOrders: false,
-        rawLabValues: false,
-        multimediaAuscultation: false,
-      };
-    }
-  }
-  return {
-    emrInterface: false,
-    writeOrders: false,
-    rawLabValues: false,
-    multimediaAuscultation: false,
-  };
-}
+import { useClinicalFidelitySettings } from '@/hooks/useClinicalFidelitySettings';
 
 interface PatientEncounterModeProps {
   onExit?: () => void;
@@ -167,10 +141,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [streamedDebriefText, setStreamedDebriefText] = useState('');
   const [isStreamingDebrief, setIsStreamingDebrief] = useState(false);
 
-  // Clinical Fidelity Mode
-  const [clinicalFidelity, setClinicalFidelity] = useState<ClinicalFidelitySettings>(() =>
-    loadClinicalFidelitySettings()
-  );
+  // Clinical Fidelity Mode (shared hook with Settings modal)
+  const { settings: clinicalFidelity } = useClinicalFidelitySettings();
   const isFidelityModeActive = clinicalFidelity.rawLabValues || clinicalFidelity.emrInterface;
 
   // Enhanced OSCE Panel States
@@ -179,6 +151,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [showRapportMeter, setShowRapportMeter] = useState(true);
   const [showLiveSession, setShowLiveSession] = useState(false);
   const [enhancedScoreReport, setEnhancedScoreReport] = useState<OSCEScoreReport | null>(null);
+  const [gradeResult, setGradeResult] = useState<OsceGradeResult | null>(null);
 
   // Initialize Enhanced OSCE Hook
   const enhancedOSCE = useEnhancedOSCE({
@@ -212,17 +185,6 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     registerTick,
     applyIntervention,
   } = useVitalsEngine(initialVitals, pathologyKey);
-
-  // Listen for changes to clinical fidelity settings
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'panceai_clinical_fidelity') {
-        setClinicalFidelity(loadClinicalFidelitySettings());
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   // Rotate typing status message during AI response (latency masking)
   const TYPING_STATUS_MESSAGES = [
@@ -344,44 +306,51 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const handleStartEncounter = async () => {
     setIsLoading(true);
     setLoadError(null);
-    // Optimistic UI: show encounter shell immediately so user isn't stuck on a spinner
     setViewState('loading_encounter');
 
-    const token = await getToken();
-
-    const newCase = await getRandomEncounterCase(token);
-
-    if (!newCase) {
-      console.error('Failed to load case');
-      setIsLoading(false);
-      setViewState('landing');
-      setLoadError(
-        'Unable to load patient case. Please ensure the backend server is running (npm run dev:all) and try again.'
-      );
-      return;
-    }
-
-    setCurrentCase(newCase);
-    enhancedOSCE.initializeSession(newCase as any);
-
-    let sessionId: string | undefined;
     try {
-      const osceSession = await startOSCESession(newCase.id, token);
-      if (osceSession) {
-        sessionId = osceSession.id;
-      }
-    } catch (e) {
-      console.error('Failed to start OSCE session', e);
-    }
+      const token = await getToken();
 
-    setSession({
-      id: sessionId,
-      caseId: newCase.id,
-      questions: [],
-      startTime: Date.now(),
-    });
-    setIsLoading(false);
-    setViewState('active');
+      const newCase = await getRandomEncounterCase(token);
+
+      if (!newCase) {
+        console.error('Failed to load case');
+        setLoadError(
+          'Unable to load patient case. Please ensure the backend server is running (npm run dev:all) and try again.'
+        );
+        setViewState('landing');
+        return;
+      }
+
+      setCurrentCase(newCase);
+      enhancedOSCE.initializeSession(newCase as any);
+
+      let sessionId: string | undefined;
+      try {
+        const osceSession = await startOSCESession(newCase.id, token);
+        if (osceSession) {
+          sessionId = osceSession.id;
+        }
+      } catch (e) {
+        console.error('Failed to start OSCE session', e);
+      }
+
+      setSession({
+        id: sessionId,
+        caseId: newCase.id,
+        questions: [],
+        startTime: Date.now(),
+      });
+      setViewState('active');
+    } catch (err) {
+      console.error('Failed to start encounter', err);
+      setLoadError(
+        'Unable to load patient case. Please check your connection and try again.'
+      );
+      setViewState('landing');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleAskQuestion = async () => {
@@ -477,6 +446,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setLanguageMode('english');
     setDiagnosisFeedback(null);
     setTreatmentFeedback(null);
+    setGradeResult(null);
     setPhysicalFindings([]);
     setDiagnosticResults([]);
     setPatientPersona(null);
@@ -563,15 +533,41 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       differentials: differentialDiagnoses.length > 0 ? differentialDiagnoses : undefined,
     };
 
-    setIsLoading(false);
+    setIsLoading(true);
     setPreceptorFeedback(null);
+    setGradeResult(null);
     setStreamedDebriefText('');
     setIsStreamingDebrief(true);
     setViewState('results');
 
+    const token = await getToken();
+    const authToken = token ?? '';
+    const sessionId = session?.id;
+    if (!sessionId) {
+      setIsLoading(false);
+      setIsStreamingDebrief(false);
+      toast.error('Session is missing. Please try again.');
+      return;
+    }
+
+    try {
+      // Complete session first so grade API can run (requires status === 'completed')
+      const completed = await completeOSCESession(
+        sessionId,
+        userDiagnosis,
+        treatmentPlan || '',
+        authToken
+      );
+      if (!completed) toast.error('Session could not be saved. Your results may not be recorded.');
+      const rubricResult = await gradeOSCESession(sessionId, authToken);
+      if (rubricResult) setGradeResult(rubricResult);
+    } catch (e) {
+      console.error('Error completing or grading OSCE session:', e);
+      toast.error('Could not save or grade session. Showing debrief only.');
+    }
+
     try {
       const prompt = buildDebriefPrompt(sessionSummary, currentCase);
-      const token = await getToken();
       const fullText = await streamGeminiText(prompt, {
         modelName: 'gemini-2.5-pro',
         temperature: 0.7,
@@ -616,6 +612,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       setAar(report);
     } catch (error) {
       console.error('Error streaming Virtual Preceptor debrief:', error);
+      toast.error('Debrief could not be loaded. Showing a summary instead.');
       const fallback = getFallbackDebriefFeedback(sessionSummary, currentCase);
       setPreceptorFeedback(fallback);
       setStreamedDebriefText('');
@@ -649,6 +646,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         currentCase
       ).catch(() => '');
       setAar(report);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -2131,6 +2130,57 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   </li>
                 ))}
               </ul>
+            </motion.div>
+          )}
+
+          {/* Rubric Checklist (from grade API) */}
+          {gradeResult && (gradeResult.checklist?.length > 0 || gradeResult.redFlagsMissed?.length > 0) && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.52 }}
+              className="bg-slate-900 rounded-xl p-6 border border-slate-800"
+            >
+              <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-slate-500" /> Rubric Checklist
+              </h3>
+              {gradeResult.checklist?.length > 0 && (
+                <ul className="space-y-2 mb-4">
+                  {gradeResult.checklist.map((item, idx) => (
+                    <li
+                      key={idx}
+                      className={`flex items-start gap-2 text-sm rounded p-3 border ${
+                        item.status === 'PASS'
+                          ? 'bg-emerald-950/30 border-emerald-800 text-slate-300'
+                          : 'bg-slate-950 border-slate-800 text-slate-300'
+                      }`}
+                    >
+                      {item.status === 'PASS' ? (
+                        <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                      )}
+                      <span className="font-medium">{item.item}</span>
+                      {item.feedback && (
+                        <span className="text-slate-400 text-xs block mt-1 pl-6">{item.feedback}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {gradeResult.redFlagsMissed?.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-red-400 mb-2">Red flags missed:</p>
+                  <ul className="space-y-1">
+                    {gradeResult.redFlagsMissed.map((flag, idx) => (
+                      <li key={idx} className="text-sm text-slate-300 flex items-center gap-2">
+                        <XCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
+                        {flag}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </motion.div>
           )}
 

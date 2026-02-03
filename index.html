@@ -361,6 +361,11 @@
         color: rgb(94 234 212);
       }
 
+      /* Safe area for mobile bottom bar (notched devices) */
+      .safe-area-pb {
+        padding-bottom: env(safe-area-inset-bottom, 0);
+      }
+
       /* Gold sparkle effect for perfect streaks */
       @keyframes sparkle {
         0%,

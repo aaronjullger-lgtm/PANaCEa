@@ -43,7 +43,8 @@ export type View =
   | 'reference_library'
   | 'pearl_deck'
   | 'my_library'
-  | 'tutor_chat';
+  | 'tutor_chat'
+  | 'study_companion';
 
 /** Drill mode IDs with dedicated view implementations */
 export const DRILL_MODE_IDS = {
