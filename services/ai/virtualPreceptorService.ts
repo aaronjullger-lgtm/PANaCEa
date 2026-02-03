@@ -69,44 +69,27 @@ export interface EncounterSessionSummary {
 }
 
 /**
- * Generates a comprehensive pedagogical debrief from the Virtual Preceptor.
- *
- * This uses Gemini Pro with a carefully structured prompt to evaluate:
- * - History-taking thoroughness and efficiency
- * - Physical exam appropriateness
- * - Diagnostic reasoning and differential diagnosis
- * - Treatment plan safety and completeness
- *
- * @param session - Summary of the student's encounter session
- * @param caseData - The ground truth patient case
- * @returns Structured feedback with scores and narrative evaluation
+ * Build the debrief prompt for streaming or non-streaming use.
+ * Exported so the client can stream the AI response (token-by-token) for latency masking.
  */
-export async function generateDebrief(
+export function buildDebriefPrompt(
   session: EncounterSessionSummary,
   caseData: PatientEncounterCase
-): Promise<PreceptorFeedback> {
-  // Build a concise case summary for the AI
+): string {
   const caseSummary = buildCaseSummary(caseData);
-
-  // Format the transcript for readability
   const formattedTranscript = formatTranscript(session.transcript);
-
-  // Format physical exams and diagnostics
   const physicalExamSummary =
     session.physicalExams.map((e) => `  - ${e.maneuver}: ${e.finding}`).join('\n') ||
     '  (None performed)';
-
   const diagnosticsSummary =
     session.diagnosticTests.map((t) => `  - ${t.testName}: ${t.result}`).join('\n') ||
     '  (None ordered)';
-
   const differentialsSummary =
     session.differentials && session.differentials.length > 0
       ? session.differentials.map((d) => `  - ${d}`).join('\n')
       : '  (None documented)';
 
-  // Construct the prompt
-  const prompt = `
+  return `
 You are a **Clinical Preceptor** evaluating a Physician Assistant (PA) student's performance in an OSCE-style patient encounter simulation.
 
 Your tone should be:
@@ -205,23 +188,47 @@ Return **ONLY** a valid JSON object with NO markdown formatting, matching this e
 
 Return ONLY the JSON object. Do NOT include \`\`\`json markers or any other text.
 `;
+}
+
+/** Exported for client-side parsing of streamed debrief JSON */
+export function cleanDebriefJsonResponse(text: string): string {
+  return cleanJsonResponse(text);
+}
+
+/** Exported for client-side normalization of parsed debrief */
+export function normalizeDebriefFeedback(raw: any): PreceptorFeedback {
+  return normalizePreceptorFeedback(raw);
+}
+
+/** Exported for client-side fallback when streaming/parse fails */
+export function getFallbackDebriefFeedback(
+  session: EncounterSessionSummary,
+  caseData: PatientEncounterCase
+): PreceptorFeedback {
+  return generateFallbackFeedback(session, caseData);
+}
+
+/**
+ * Generates a comprehensive pedagogical debrief from the Virtual Preceptor.
+ * For streaming (latency masking), use buildDebriefPrompt + streamGeminiText + cleanDebriefJsonResponse + normalizeDebriefFeedback on the client.
+ *
+ * @param session - Summary of the student's encounter session
+ * @param caseData - The ground truth patient case
+ * @returns Structured feedback with scores and narrative evaluation
+ */
+export async function generateDebrief(
+  session: EncounterSessionSummary,
+  caseData: PatientEncounterCase
+): Promise<PreceptorFeedback> {
+  const prompt = buildDebriefPrompt(session, caseData);
 
   try {
-    // Call Gemini Pro for detailed evaluation (higher temperature for nuanced feedback)
     const rawResponse = await callGeminiText('gemini-2.5-pro', prompt, 0.7);
-
-    // Clean and parse the response
     const cleanedResponse = cleanJsonResponse(rawResponse);
     const parsed = JSON.parse(cleanedResponse);
-
-    // Validate and normalize the response
-    const feedback = normalizePreceptorFeedback(parsed);
-
-    return feedback;
+    return normalizePreceptorFeedback(parsed);
   } catch (error) {
     console.error('Error generating Virtual Preceptor debrief:', error);
-
-    // Return a fallback response if AI fails
     return generateFallbackFeedback(session, caseData);
   }
 }

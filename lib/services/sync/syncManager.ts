@@ -20,6 +20,8 @@ export interface OfflineAnswer {
   selectedAnswer: number;
   isCorrect: boolean;
   timeSpentMs: number;
+  system?: string;
+  conditionId?: string;
   confidence?: number;
   rating?: 1 | 2 | 3 | 4; // FSRS rating
   sessionId?: string;
@@ -281,7 +283,7 @@ class SyncManager {
 
     for (const answer of pending) {
       try {
-        const response = await fetch('/api/questions/record', {
+        const response = await fetch('/api/questions/attempt', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -289,13 +291,11 @@ class SyncManager {
           },
           body: JSON.stringify({
             questionId: answer.questionId,
-            selectedAnswer: answer.selectedAnswer,
-            isCorrect: answer.isCorrect,
+            wasCorrect: answer.isCorrect,
             timeSpentMs: answer.timeSpentMs,
-            confidence: answer.confidence,
-            rating: answer.rating,
-            sessionId: answer.sessionId,
-            offlineTimestamp: answer.timestamp,
+            system: answer.system,
+            conditionId: answer.conditionId,
+            mode: 'session',
           }),
         });
 

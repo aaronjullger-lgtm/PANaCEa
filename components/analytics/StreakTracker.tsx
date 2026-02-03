@@ -46,12 +46,12 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
   };
 
   const getStreakMessage = () => {
-    if (safeStreak === 0) return 'Start your streak today!';
-    if (safeStreak === 1) return 'Great start! Keep it going!';
-    if (safeStreak < 7) return 'Building momentum!';
-    if (safeStreak < 14) return "You're on fire!";
-    if (safeStreak < 30) return 'Unstoppable! Keep crushing it!';
-    return 'Legendary dedication!';
+    if (safeStreak === 0) return 'Maintain your daily continuity.';
+    if (safeStreak === 1) return 'Good start. Keep it going.';
+    if (safeStreak < 7) return 'Building momentum.';
+    if (safeStreak < 14) return 'Strong consistency.';
+    if (safeStreak < 30) return 'Sustained effort.';
+    return 'Outstanding consistency.';
   };
 
   const hasStudiedOnDate = (date: string) => {
@@ -68,7 +68,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
           <Flame className="w-5 h-5 text-[var(--color-accent)]" />
-          Study Streak
+          Study Continuity
         </h3>
         {safeStreak >= safeBestStreak && safeStreak > 0 && (
           <motion.div
@@ -164,7 +164,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
         >
           <p className="text-sm text-[var(--color-text-primary)] text-center">
             {safeStreak > 0
-              ? `Keep your ${safeStreak}-day streak alive! Study today.`
+              ? `Maintain your ${safeStreak}-day continuity. Study today.`
               : 'Start building your study habit today!'}
           </p>
         </motion.div>
@@ -179,7 +179,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
         >
           <p className="text-sm text-[var(--color-data-pass)] text-center flex items-center justify-center gap-2">
             <CheckCircle className="w-4 h-4" />
-            Studied today - Streak active!
+            Studied today — continuity maintained.
           </p>
         </motion.div>
       )}

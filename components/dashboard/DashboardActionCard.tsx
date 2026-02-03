@@ -99,8 +99,9 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
   return (
     <motion.div
       className="group relative overflow-hidden rounded-2xl 
-                 border border-[var(--color-border)] 
+                 border border-slate-200 dark:border-[var(--color-border)] 
                  bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] 
+                 shadow-md shadow-slate-300/10 dark:shadow-none
                  transition-all duration-300 
                  hover:border-[var(--color-accent)]/40 
                  hover:shadow-xl hover:shadow-[var(--color-accent)]/10"

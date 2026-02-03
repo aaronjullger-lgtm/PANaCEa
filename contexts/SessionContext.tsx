@@ -34,7 +34,8 @@ import {
 } from '../services/analytics/calibrationService';
 import type { Question, SessionSettings } from '../types';
 
-const INITIAL_QUEUE_SIZE = 3;
+/** Commuter Mode: buffer for offline/low-connectivity — prefetch 50 cards on Start Session */
+const INITIAL_QUEUE_SIZE = 50;
 
 interface CalibrationProgress {
   current: number;

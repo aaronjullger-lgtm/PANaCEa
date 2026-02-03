@@ -9,6 +9,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Filter, Zap, TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import { SliderWithInput } from '@/components/ui/SliderWithInput';
 import type { SystemCode, SessionSettings } from '../../types';
 
 interface ConditionMetadata {
@@ -264,28 +265,23 @@ export function DrillSetup({
           {/* Question Count */}
           {showQuestionCount && (
             <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Zap className="w-5 h-5 text-[var(--color-accent)]" />
-                <label className="text-lg font-bold text-[var(--color-text-primary)]">
-                  Number of Questions
-                </label>
-              </div>
-
-              <div className="grid grid-cols-4 gap-3">
-                {[5, 10, 15, 20].map((count) => (
-                  <button
-                    key={count}
-                    onClick={() => setQuestionCount(count)}
-                    className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                      questionCount === count
-                        ? 'bg-[var(--color-accent)] text-white'
-                        : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-primary)]'
-                    }`}
-                  >
-                    {count}
-                  </button>
-                ))}
-              </div>
+              <SliderWithInput
+                value={questionCount}
+                onChange={setQuestionCount}
+                min={5}
+                max={60}
+                step={5}
+                snapValues={[5, 10, 20, 40, 60]}
+                snapInputOnBlur={false}
+                label={
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-[var(--color-accent)]" />
+                    <span className="text-lg font-bold text-[var(--color-text-primary)]">
+                      Number of Questions
+                    </span>
+                  </div>
+                }
+              />
             </div>
           )}
 

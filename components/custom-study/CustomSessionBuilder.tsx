@@ -21,7 +21,7 @@ import {
   Filter,
   Layers,
 } from 'lucide-react';
-import { ABBREVIATION_TO_TOPIC_MAP } from '../../src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '../../src/constants';
 import type { SystemCode } from '../../types';
 import type {
   CustomSessionConfig,
@@ -323,32 +323,41 @@ function ContentStep({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {availableContent?.systems.map((system) => (
-          <button
-            key={system.code}
-            onClick={() => onToggleSystem(system.code)}
-            className={`p-3 rounded-xl border-2 transition-all text-left ${
-              config.systems.includes(system.code)
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-5 h-5 rounded flex items-center justify-center ${
-                  config.systems.includes(system.code)
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-slate-200 dark:bg-slate-700'
-                }`}
-              >
-                {config.systems.includes(system.code) && <Check className="w-3 h-3" />}
+        {availableContent?.systems.map((system) => {
+          const fullName = getSystemDisplayFullName(system.code);
+          return (
+            <button
+              key={system.code}
+              onClick={() => onToggleSystem(system.code)}
+              title={fullName}
+              className={`min-w-0 p-3 rounded-xl border-2 transition-all text-left ${
+                config.systems.includes(system.code)
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <div
+                  className={`shrink-0 w-5 h-5 rounded flex items-center justify-center ${
+                    config.systems.includes(system.code)
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-slate-200 dark:bg-slate-700'
+                  }`}
+                >
+                  {config.systems.includes(system.code) && <Check className="w-3 h-3" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-slate-900 dark:text-white text-sm truncate" title={system.code}>
+                    {system.code}
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400 truncate" title={fullName}>
+                    {fullName}
+                  </div>
+                </div>
               </div>
-              <span className="font-medium text-slate-900 dark:text-white text-sm">
-                {system.name}
-              </span>
-            </div>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
 
       {config.systems.length === 0 && (
@@ -469,7 +478,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
         {/* Retry missed questions */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="font-medium text-slate-900 dark:text-white">Retry missed questions</div>
+            <div className="font-medium text-slate-900 dark:text-white">Retry questions to review</div>
             <div className="text-sm text-slate-600 dark:text-slate-400">
               Review questions you got wrong at the end of each round
             </div>

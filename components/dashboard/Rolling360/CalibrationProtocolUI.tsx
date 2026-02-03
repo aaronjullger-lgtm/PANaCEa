@@ -333,7 +333,7 @@ export function CalibrationProtocolUI({
           />
         </div>
         <div className="flex justify-between text-xs text-slate-500">
-          <span>Calibrating...</span>
+          <span>Building your model</span>
           <span>{Math.round(progressPercent)}% Complete</span>
         </div>
       </div>

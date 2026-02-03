@@ -19,6 +19,8 @@ Your goal is to generate PANCE-style medical questions based ONLY on the provide
 - If the provided text does not support a question, return NULL.
 - Clinical vignettes should follow: [Age/Sex] presents with [Chief Complaint]. History reveals [Findings]. Physical exam shows [Signs].
 - Difficulty scoring: 0.3 (Recall) to 0.9 (Complex synthesis).
+- Kaplan-level: Prefer third-order stems (Vignette → Diagnosis → Complication/next step → Answer). Example: circular rash → Lyme → first-line for complication → mechanism of doxycycline (30S). Avoid first-order "What is the diagnosis?" when a third-order stem is feasible.
+- Kaplan-level distractors: Every wrong answer must be correct for a slightly different patient (e.g. otitis: viral vs bacterial vs recurrent vs penicillin-allergic). No obviously wrong options.
 `;
 
 export async function generateSingleQuestion(
@@ -66,6 +68,8 @@ export async function generateSingleQuestion(
     CONTEXT:
     Condition: ${condition.condition}
     Data: ${JSON.stringify(condition.sections)}
+
+    KAPLAN-LEVEL: Prefer third-order question (mechanism, next step, complication management). Each wrong option should be correct for a different patient/scenario (Kaplan-level distractors).
 
     TASK:
     Generate one high-quality '${type}' question strictly based on the data above.

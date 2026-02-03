@@ -13,6 +13,7 @@ export default tseslint.config(
       '.wrangler',
       '*.config.js',
       '*.config.ts',
+      'scripts/**', // Scripts: prefer-const and one-off patterns; lint when editing
     ],
   },
   {

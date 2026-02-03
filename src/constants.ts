@@ -26,6 +26,20 @@ export const ABBREVIATION_TO_TOPIC_MAP: Record<string, string> = Object.fromEntr
   Object.entries(TOPIC_MAP).map(([key, value]) => [value, key])
 );
 
+/**
+ * Full name for display in UI (subtext under abbreviation).
+ * Use abbreviation (e.g. MSK, GI) as card title; use this as subtext with ellipsis + tooltip.
+ */
+export function getSystemDisplayFullName(code: string): string {
+  const raw = ABBREVIATION_TO_TOPIC_MAP[code];
+  if (raw === undefined) return String(code);
+  return raw
+    .replace(/\s+System\s*\/?\s*/g, '/')
+    .replace(/\/$/, '')
+    .replace('Psychiatry/Behavioral Science', 'Psychiatry')
+    .trim();
+}
+
 // An ordered list of abbreviations for the Knowledge Map UI
 export const PANCE_TOPIC_ABBREVIATIONS = [
   'CV',

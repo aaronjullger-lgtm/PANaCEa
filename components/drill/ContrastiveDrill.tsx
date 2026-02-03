@@ -26,7 +26,7 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
   // Initial load
   useEffect(() => {
     generateQuestion(0);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (isDrillComplete) {

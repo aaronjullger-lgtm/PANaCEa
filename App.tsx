@@ -1,5 +1,5 @@
 // App.tsx
-import React, { useEffect, useMemo, useState, useCallback, Suspense } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Shield } from 'lucide-react';
@@ -71,7 +71,7 @@ import { useAccessibleTransition } from './hooks/useReducedMotion';
 import { flushPendingToLocalStorage } from './lib/services/sync/offlineSync';
 import { WithGeminiErrorBoundary } from './components/hoc/withGeminiErrorBoundary';
 import type {
-  QuizQuestion,
+  Question as QuizQuestion,
   PerformanceRecord,
   SessionSettings,
   ErrorTag,
@@ -109,7 +109,8 @@ const DRILL_MODE_PHYSIOLOGY = DRILL_MODE_IDS.PHYSIOLOGY;
 const DRILL_MODE_ANATOMY = DRILL_MODE_IDS.ANATOMY;
 
 // Batch fetch 10 questions initially to prevent session ending early
-const INITIAL_QUEUE_SIZE = 10;
+/** Commuter Mode: buffer for trains/buses/basements — prefetch 50 cards on Start Session */
+const INITIAL_QUEUE_SIZE = 50;
 
 // ---- helpers: localStorage ----
 function _safeParse<T>(raw: string | null, fallback: T): T {
@@ -179,6 +180,7 @@ const App: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState<boolean>(false);
@@ -213,20 +215,40 @@ const App: React.FC = () => {
   }, []);
 
   // ---- Check if user needs onboarding on first sign-in ----
+  // Hydrate hasCompletedOnboarding from server so cross-device / after clear-storage works
   useEffect(() => {
-    if (isSignedIn && authLoaded) {
-      const completed = hasCompletedOnboarding();
-      if (!completed) {
-        // Show onboarding modal after a short delay for better UX
-        setTimeout(() => {
-          setIsOnboardingModalOpen(true);
-          setOnboardingStep('profile');
-          setOnboardingWeakestSystems([]);
-          setOnboardingExamDate(null);
-        }, 500);
-      }
-    }
-  }, [isSignedIn, authLoaded]);
+    if (!isSignedIn || !authLoaded) return;
+    let cancelled = false;
+    getToken()
+      .then((token) => {
+        if (!token || cancelled) return null;
+        return fetch('/api/user/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      })
+      .then((res) => (res?.ok ? res.json() : null))
+      .then((data: { data?: { profile?: { hasCompletedOnboarding?: boolean } } } | null) => {
+        if (cancelled) return;
+        if (data?.data?.profile?.hasCompletedOnboarding === true)
+          saveUserProfile({ hasCompletedOnboarding: true });
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (cancelled) return;
+        const completed = hasCompletedOnboarding();
+        if (!completed) {
+          setTimeout(() => {
+            setIsOnboardingModalOpen(true);
+            setOnboardingStep('profile');
+            setOnboardingWeakestSystems([]);
+            setOnboardingExamDate(null);
+          }, 500);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn, authLoaded, getToken]);
 
   // ---- Global keyboard shortcuts ----
   useEffect(() => {
@@ -466,16 +488,38 @@ const App: React.FC = () => {
 
   const hasActiveSession = !!sessionSettings && questionQueue && questionQueue.length > 0;
 
-  const handleOnboardingComplete = useCallback((profile: UserProfile) => {
-    saveUserProfile(profile);
-    setOnboardingStep('baseline');
-  }, []);
+  const syncOnboardingCompleteToServer = useCallback(async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ hasCompletedOnboarding: true }),
+      });
+    } catch {
+      // Non-blocking: localStorage already set; server sync best-effort
+    }
+  }, [getToken]);
+
+  const handleOnboardingComplete = useCallback(
+    (profile: UserProfile) => {
+      saveUserProfile(profile);
+      void syncOnboardingCompleteToServer();
+      setOnboardingStep('baseline');
+    },
+    [syncOnboardingCompleteToServer]
+  );
 
   const handleOnboardingSkip = useCallback(() => {
     saveUserProfile({ hasCompletedOnboarding: true });
+    void syncOnboardingCompleteToServer();
     setOnboardingWeakestSystems([]);
     setOnboardingStep('your_plan');
-  }, []);
+  }, [syncOnboardingCompleteToServer]);
 
   const handleBaselineComplete = useCallback(
     (results: { weakestSystems: string[] }) => {
@@ -658,10 +702,10 @@ const App: React.FC = () => {
               path="*"
               element={
                 <>
-                  {/* Skip to Main Content - accessibility */}
+                  {/* Skip to Main Content - hidden until focused via keyboard (screen reader + a11y) */}
                   <a
                     href="#main-content"
-                    className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[var(--color-accent)] focus:text-white focus:rounded-lg focus:ring-2 focus:ring-offset-2 focus:ring-[var(--color-accent)]"
+                    className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:top-4 focus-visible:left-4 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-[var(--color-accent)] focus-visible:text-white focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-accent)]"
                   >
                     Skip to main content
                   </a>
@@ -707,6 +751,7 @@ const App: React.FC = () => {
                           <Shield className="w-5 h-5" />
                         </Link>
                         <motion.button
+                          ref={settingsButtonRef}
                           onClick={() => setIsSettingsModalOpen(true)}
                           className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
                           aria-label="Settings and Stats"
@@ -724,7 +769,12 @@ const App: React.FC = () => {
                   <Suspense fallback={null}>
                     <SettingsStatsModal
                       isOpen={isSettingsModalOpen}
-                      onClose={() => setIsSettingsModalOpen(false)}
+                      onClose={() => {
+                        setIsSettingsModalOpen(false);
+                        requestAnimationFrame(() => {
+                          settingsButtonRef.current?.focus?.();
+                        });
+                      }}
                       performanceData={performanceData}
                       clearPerformanceData={clearPerformanceData}
                       clearMissedQuestionsData={clearMissedQuestionsData}
@@ -734,6 +784,7 @@ const App: React.FC = () => {
                       isSyncing={isSyncing}
                       lastSyncTime={lastSyncTime}
                       syncError={syncError}
+                      isLoadingStats={isStatsLoading}
                       theme={theme}
                       onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                       onStartFirstSession={() => {

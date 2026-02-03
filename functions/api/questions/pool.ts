@@ -113,8 +113,10 @@ const POOL_LOW_THRESHOLD = 20;
 const DEFAULT_FETCH_COUNT = 10;
 
 // Schema for query params - flat structure since source is 'query'
+// systems: comma-separated list for didactic (e.g. "CV,PULM,GI")
 const PoolGetSchema = z.object({
   system: z.string().optional(),
+  systems: z.string().optional(), // comma-separated for multi-system filter
   category: z.string().optional(),
   difficulty: z.string().optional(),
   count: z.string().optional(),
@@ -163,6 +165,10 @@ export const onRequestGet = authenticatedEndpoint(
 
       const userId = user.id;
       const system = validated.system || null;
+      const systemsParam = validated.systems;
+      const systems: string[] | null = systemsParam
+        ? systemsParam.split(',').map((s) => s.trim()).filter(Boolean)
+        : null;
       const category = validated.category || null;
       const difficulty = validated.difficulty || null;
       const count = validated.count ? Number.parseInt(validated.count, 10) : DEFAULT_FETCH_COUNT;
@@ -200,9 +206,10 @@ export const onRequestGet = authenticatedEndpoint(
         seenQuestionIds.map((q: { questionId: string }) => q.questionId)
       );
 
-      // Check cache
+      // Check cache (include systems for didactic multi-system requests)
       const cacheKey = getQuestionPoolCacheKey({
         system: system ?? undefined,
+        systems: systems ?? undefined,
         category: category ?? undefined,
         difficulty: difficulty ?? undefined,
       });
@@ -212,12 +219,15 @@ export const onRequestGet = authenticatedEndpoint(
         cachedPool = await getFromCache((env as { CACHE: KVNamespace }).CACHE, cacheKey);
       }
 
-      // Get from pre-generated pool
+      // Get from pre-generated pool (systems array for didactic; single system otherwise)
+      const poolOptions = systems?.length
+        ? { count, systems, category, difficulty }
+        : { count, system, category, difficulty };
       const poolQuestions = await getFromPreGeneratedPool(
         prisma,
         userId,
         seenIds,
-        { count, system, category, difficulty },
+        poolOptions,
         cachedPool
       );
       let questions = poolQuestions.questions;
@@ -226,12 +236,10 @@ export const onRequestGet = authenticatedEndpoint(
       // If pool insufficient, supplement from main Question table
       if (questions.length < count) {
         const needed = count - questions.length;
-        const mainQuestions = await getFromMainTable(prisma, userId, seenIds, {
-          count: needed,
-          system,
-          category,
-          difficulty,
-        });
+        const mainOptions = systems?.length
+          ? { count: needed, systems, category, difficulty }
+          : { count: needed, system, category, difficulty };
+        const mainQuestions = await getFromMainTable(prisma, userId, seenIds, mainOptions);
         questions = [...questions, ...mainQuestions];
       }
 
@@ -331,6 +339,7 @@ async function getFromPreGeneratedPool(
   options: {
     count: number;
     system?: string | null;
+    systems?: string[] | null;
     category?: string | null;
     difficulty?: string | null;
   },
@@ -340,12 +349,13 @@ async function getFromPreGeneratedPool(
   remaining: number;
   rawQuestions?: PreGeneratedQuestionRecord[];
 }> {
-  const { count, system, category, difficulty } = options;
+  const { count, system, systems, category, difficulty } = options;
+  const hasSystemFilter = system || (systems && systems.length > 0);
   let preGenQuestions: PreGeneratedQuestionRecord[];
   let remaining: number;
 
   // Fetch more questions than needed for PANCE-weighted selection
-  const fetchMultiplier = system ? 5 : 20; // Fetch 20x when no system filter for better distribution
+  const fetchMultiplier = hasSystemFilter ? 5 : 20; // Fetch 20x when no system filter for better distribution
   const fetchCount = count * fetchMultiplier;
 
   if (cachedQuestions && cachedQuestions.length > 0) {
@@ -353,7 +363,8 @@ async function getFromPreGeneratedPool(
     remaining = cachedQuestions.length;
   } else {
     const where: Record<string, unknown> = {};
-    if (system) where.system = system;
+    if (systems?.length) where.system = { in: systems };
+    else if (system) where.system = system;
     if (difficulty) where.difficulty = difficulty;
     if (category) where.questionType = category;
 
@@ -375,8 +386,8 @@ async function getFromPreGeneratedPool(
 
   let selectedQuestions: PreGeneratedQuestionRecord[];
 
-  if (system) {
-    // If specific system requested, just take from shuffled pool
+  if (hasSystemFilter) {
+    // If specific system(s) requested, just take from shuffled pool
     selectedQuestions = shuffledQuestions.slice(0, count);
   } else {
     // PANCE-weighted selection from the shuffled pool
@@ -461,18 +472,21 @@ async function getFromMainTable(
   options: {
     count: number;
     system?: string | null;
+    systems?: string[] | null;
     category?: string | null;
     difficulty?: string | null;
   }
 ): Promise<PoolQuestionOutput[]> {
-  const { count, system, category, difficulty } = options;
+  const { count, system, systems, category, difficulty } = options;
+  const hasSystemFilter = system || (systems && systems.length > 0);
 
   // Fetch more questions than needed for PANCE-weighted selection
-  const fetchMultiplier = system ? 5 : 20;
+  const fetchMultiplier = hasSystemFilter ? 5 : 20;
   const fetchCount = count * fetchMultiplier;
 
   const where: Record<string, unknown> = {};
-  if (system) where.system = system;
+  if (systems?.length) where.system = { in: systems };
+  else if (system) where.system = system;
   if (difficulty) where.difficulty = difficulty;
   if (category) where.tags = { array_contains: category };
 
@@ -499,8 +513,8 @@ async function getFromMainTable(
   // Shuffle all questions first
   const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
 
-  // Select questions - use PANCE distribution if no specific system
-  const selectedQuestions = system
+  // Select questions - use PANCE distribution if no specific system(s)
+  const selectedQuestions = hasSystemFilter
     ? shuffledQuestions.slice(0, count)
     : selectByPanceDistribution(shuffledQuestions, count);
 

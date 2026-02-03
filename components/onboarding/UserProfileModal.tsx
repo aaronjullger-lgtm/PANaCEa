@@ -163,7 +163,7 @@ export function UserProfileModal({
                 <div>
                   <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] mb-3">
                     <GraduationCap className="w-4 h-4" />
-                    Where are you in your PA journey?
+                    Training year
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {YEAR_IN_PROGRAM_OPTIONS.map((year) => (

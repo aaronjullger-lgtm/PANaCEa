@@ -177,32 +177,36 @@ Difficulty: ${difficulty} - ${difficultyDescriptions[difficulty] || difficulty}
 
 === CRITICAL FORMATTING RULES (Kaplan Style) ===
 
-1. VIGNETTE STRUCTURE (3-5 sentences):
+1. VIGNETTE STRUCTURE (3-5 sentences) – Vignette Evolution:
    - Start with demographics: "A [age]-year-old [sex] [relevant history] presents to [setting]..."
    - Include CHIEF COMPLAINT with duration: "...with a [X]-day history of [symptoms]"
    - Add PERTINENT POSITIVES: specific clinical findings that point toward diagnosis
-   - Add PERTINENT NEGATIVES: findings that rule out key differentials
-   - Include relevant VITAL SIGNS or LAB VALUES when clinically important
+   - Add PERTINENT NEGATIVES: explicitly rule out look-alikes. Example: "No tenderness to palpation (rules out costochondritis). No pain with breathing (rules out pleuritis)."
+   - VITALS AS CLUES: Vitals must not be filler. Use relative baselines when relevant: e.g. "BP 110/70" in a patient "normally hypertensive (160/90)" = relative hypotension. Include relevant VITAL SIGNS or LAB VALUES that support or contradict the diagnosis or add meaningful context.
 
-2. QUESTION STEM - Use SECOND-ORDER THINKING:
+2. QUESTION STEM - Use THIRD-ORDER / "DOUBLE JUMP" (Kaplan-Level):
    - AVOID: "What is the diagnosis?" (first-order recall)
-   - PREFER: "What is the most appropriate next step in management?"
-   - PREFER: "Which mechanism best explains this patient's presentation?"
-   - PREFER: "Which finding would most likely be seen on [imaging/lab]?"
-   - PREFER: "What is the most likely underlying pathophysiology?"
-
-3. ANSWER OPTIONS:
-   - DO NOT prefix with "A.", "B.", etc. - just the option text
-   - Make distractors PLAUSIBLE - they should represent common misconceptions or similar conditions
+   - PREFER third-order: Vignette → Diagnosis → Complication/next step → Answer. Example: "A patient has a circular rash. What is the mechanism of action of the first-line treatment for the likely complication if left untreated?" → Answer: "Inhibits 30S ribosomal subunit" (Lyme → Doxy → mechanism).
+   - PREFER: "What is the mechanism of [first-line treatment]?" or "What is the most appropriate next step in management?"
+   - PREFER: "Which finding would most likely be seen on [imaging/lab] if [complication] develops?"
    - Correct answer should not be obviously longer or more detailed
+
+3. ANSWER OPTIONS - KAPLAN-LEVEL DISTRACTORS:
+   - DO NOT prefix with "A.", "B.", etc. - just the option text
+   - Every wrong answer must be "the right answer to a different question" - correct for a slightly different patient (e.g. otitis: A = viral/watchful, B = bacterial = answer, C = recurrent/effusion, D = penicillin-allergic).
+   - BAD: Obviously wrong options (e.g. chemotherapy for simple otitis). GOOD: Each distractor appropriate for a different scenario.
    - Avoid "all of the above" or "none of the above"
 
-4. CLINICAL DESCRIPTIONS (Describe, Don't Diagnose):
+4. UNCALCULATED LABS: Provide raw BMP (Na, Cl, HCO3, etc.) in a table only; do NOT state "anion gap 20" or other derived values—the student must calculate.
+
+5. HIDDEN IMAGE: When an image/radiograph is referenced or shown, do NOT state the finding or diagnosis in text. Use only scenario + "Radiograph is shown" (e.g. "Patient fell on outstretched hand. Radiograph is shown.").
+
+6. CLINICAL DESCRIPTIONS (Describe, Don't Diagnose):
    - WRONG: "A patient with pneumonia presents..."
    - RIGHT: "A patient presents with fever, productive cough, and right lower lobe crackles..."
    - Let the clinical picture speak - don't give away the diagnosis in the vignette
 
-5. EXPLANATION (Educational Value):
+7. EXPLANATION (Educational Value):
    - Explain WHY the correct answer is right with pathophysiology
    - Briefly explain why EACH distractor is wrong
    - Include a memorable clinical pearl or teaching point

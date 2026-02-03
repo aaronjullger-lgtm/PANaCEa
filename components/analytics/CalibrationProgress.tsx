@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Sparkles, AlertTriangle } from 'lucide-react';
+import { ExplainabilityTooltip } from '@/components/ui/ExplainabilityTooltip';
 
 interface CalibrationProgressProps {
   current: number;
@@ -47,15 +48,15 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
   const stateMessages = {
     not_started: {
       title: 'Begin Calibration',
-      description: 'Complete questions to train your personalized learning algorithm.',
+      description: 'Complete questions so we can tune your personal forgetting curve.',
     },
     early: {
       title: 'Early Calibration',
-      description: 'The algorithm is learning your patterns. Predictions are approximate.',
+      description: 'We need ~60 reviews to tune your curve. Predictions are approximate until then.',
     },
     developing: {
-      title: 'Calibrating...',
-      description: 'Memory predictions are improving. Keep reviewing consistently.',
+      title: 'Building Your Model',
+      description: `Based on your last ${current} reviews. FSRS needs ~${target} to tune your personal forgetting curve—keep reviewing consistently.`,
     },
     refining: {
       title: 'Almost Calibrated',
@@ -140,11 +141,17 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
             <h4
-              className={`font-semibold ${
+              className={`font-semibold flex items-center gap-1.5 ${
                 isCalibrated ? 'text-data-pass' : 'text-[var(--color-text-primary)]'
               }`}
             >
               {currentState.title}
+              {!isCalibrated && (
+                <ExplainabilityTooltip
+                  formula="FSRS (spaced repetition) needs about 60 reviews to learn your personal forgetting curve. Until then, due-date predictions are approximate."
+                  ariaLabel="What does calibration mean?"
+                />
+              )}
             </h4>
             <span className="text-sm font-medium text-[var(--color-text-muted)]">
               {current}/{target} reviews

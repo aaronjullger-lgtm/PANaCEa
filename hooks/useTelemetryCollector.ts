@@ -419,7 +419,7 @@ export function useAutoTelemetry(
     return () => {
       collector.reset();
     };
-  }, [questionId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [questionId]);
 
   return collector;
 }

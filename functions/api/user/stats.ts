@@ -91,7 +91,14 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       }),
       prisma.questionAttempt.findMany({
         where: { userId, createdAt: { gte: ninetyDaysAgo } },
-        select: { wasCorrect: true, system: true, timeSpentMs: true, createdAt: true },
+        select: {
+          wasCorrect: true,
+          system: true,
+          timeSpentMs: true,
+          durationMs: true,
+          mode: true,
+          createdAt: true,
+        },
         orderBy: { createdAt: 'desc' },
         take: 5000,
       }),
@@ -109,6 +116,39 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       aggregates._avg.timeSpentMs != null && aggregates._avg.timeSpentMs > 0
         ? Math.round(aggregates._avg.timeSpentMs)
         : null;
+
+    // Speed by question type: Recall (rapid_recall) vs Clinical Reasoning (vignette/main)
+    type AttemptWithMode = (typeof recentAttempts)[0] & {
+      mode?: string | null;
+      durationMs?: number | null;
+    };
+    const getTimeMs = (a: AttemptWithMode) =>
+      a.timeSpentMs ?? a.durationMs ?? 0;
+    const recallAttempts = (recentAttempts as AttemptWithMode[]).filter(
+      (a) => a.mode === 'rapid_recall' && getTimeMs(a) > 0
+    );
+    const clinicalAttempts = (recentAttempts as AttemptWithMode[]).filter(
+      (a) => a.mode !== 'rapid_recall' && getTimeMs(a) > 0
+    );
+    const recallTimeSum = recallAttempts.reduce((s, a) => s + getTimeMs(a), 0);
+    const clinicalTimeSum = clinicalAttempts.reduce((s, a) => s + getTimeMs(a), 0);
+    const speedByType = {
+      recall: {
+        avgTimeMs:
+          recallAttempts.length > 0
+            ? Math.round(recallTimeSum / recallAttempts.length)
+            : null,
+        count: recallAttempts.length,
+      },
+      clinicalReasoning: {
+        avgTimeMs:
+          clinicalAttempts.length > 0
+            ? Math.round(clinicalTimeSum / clinicalAttempts.length)
+            : null,
+        count: clinicalAttempts.length,
+      },
+    };
+
     const avgAnswerChanges =
       aggregates._avg.answerChangedCount != null
         ? Number(aggregates._avg.answerChangedCount.toFixed(2))
@@ -331,9 +371,9 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     }
 
     if (currentStreak === 0) {
-      recommendations.push('Start a study streak today!');
+      recommendations.push('Maintain your daily continuity.');
     } else if (currentStreak >= 7) {
-      recommendations.push(`Great ${currentStreak}-day streak! Keep it up!`);
+      recommendations.push(`${currentStreak}-day continuity. Keep it up.`);
     }
 
     const underStudiedSystems = Object.entries(systemStats)
@@ -380,6 +420,7 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
                   : 'stable'
               : 'insufficient_data',
         },
+        speedByType,
         recommendations,
       },
     };

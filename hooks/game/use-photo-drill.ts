@@ -170,8 +170,12 @@ export interface ClinicalContext {
 export interface PhotoCase {
   /** Unique identifier for the case */
   id: string;
-  /** URL to the case image (takes precedence when present) */
+  /** Display URL: prefer thumbnail for fast load (image optimization audit). */
   imageUrl: string;
+  /** Lightweight thumbnail for initial load; use when present to save data. */
+  thumbnailUrl?: string | null;
+  /** Full-resolution URL for zoom-on-demand; load only when user zooms. */
+  highResUrl?: string | null;
   /** Optional stored media/asset ID for resolving image from reference APIs */
   imageId?: string;
   /** The imaging modality type */
@@ -254,7 +258,8 @@ async function fetchPhotoCases(
       throw new Error(errorData.error || `API request failed: ${response.status}`);
     }
 
-    const cases = await response.json();
+    const body = await response.json();
+    const cases = Array.isArray(body) ? body : body?.data;
 
     if (!Array.isArray(cases) || cases.length === 0) {
       throw new Error('No photo cases available');

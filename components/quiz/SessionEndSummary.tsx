@@ -89,26 +89,26 @@ interface SystemPerformance {
 
 function getDistributionScoreClass(score: number): string {
   if (score >= 80) return 'text-[var(--color-data-pass)]';
-  if (score >= 60) return 'text-[var(--color-data-provisional)]';
-  return 'text-[var(--color-data-fail)]';
+  if (score >= 60) return 'text-[var(--color-accent)]';
+  return 'text-[var(--color-data-provisional)]';
 }
 
 function getDistributionBarClass(score: number): string {
   if (score >= 80) return 'bg-[var(--color-data-pass)]';
-  if (score >= 60) return 'bg-[var(--color-data-provisional)]';
-  return 'bg-[var(--color-data-fail)]';
+  if (score >= 60) return 'bg-[var(--color-accent)]';
+  return 'bg-[var(--color-data-provisional)]';
 }
 
 function getAccuracyClass(accuracy: number): string {
   if (accuracy >= 80) return 'text-[var(--color-data-pass)]';
-  if (accuracy >= 60) return 'text-[var(--color-data-provisional)]';
-  return 'text-[var(--color-data-fail)]';
+  if (accuracy >= 60) return 'text-[var(--color-accent)]';
+  return 'text-[var(--color-data-provisional)]';
 }
 
 function getAccuracyBarClass(accuracy: number): string {
   if (accuracy >= 80) return 'bg-[var(--color-data-pass)]';
-  if (accuracy >= 60) return 'bg-[var(--color-data-provisional)]';
-  return 'bg-[var(--color-data-fail)]';
+  if (accuracy >= 60) return 'bg-[var(--color-accent)]';
+  return 'bg-[var(--color-data-provisional)]';
 }
 
 /** Bar fill with width set via ref to satisfy no-inline-style linter; width is dynamic (accuracy %). */
@@ -262,8 +262,8 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       };
     return {
       grade: 'F',
-      color: 'text-[var(--color-data-fail)]',
-      bg: 'bg-[var(--color-data-fail)]/10',
+      color: 'text-[var(--color-data-provisional)]',
+      bg: 'bg-[var(--color-data-provisional)]/10',
     };
   };
 

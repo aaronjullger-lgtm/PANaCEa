@@ -45,7 +45,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({ drug, onClose, onDril
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.2 }}
-          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
+          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-[var(--color-border)] ring-1 ring-black/10 dark:ring-white/10"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

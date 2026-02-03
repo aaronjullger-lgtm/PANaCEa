@@ -105,6 +105,23 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
 
   const currentQuestionData = sampleQuestions[currentQuestion];
 
+  // Timer countdown (must run unconditionally - hooks before any early return)
+  useEffect(() => {
+    if (showFeedback || showIntro) return;
+
+    const interval = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          handleTimeout();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [showFeedback, showIntro]);
+
   // Early return if no question data (guard for array access returning undefined)
   if (!currentQuestionData) {
     return (
@@ -123,23 +140,6 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
       </div>
     );
   }
-
-  // Timer countdown
-  useEffect(() => {
-    if (showFeedback || showIntro) return;
-
-    const interval = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          handleTimeout();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [showFeedback, showIntro]);
 
   const handleTimeout = () => {
     // Auto-submit on timeout

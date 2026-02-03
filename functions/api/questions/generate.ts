@@ -117,13 +117,20 @@ export const onRequestPost = authenticatedEndpoint(GenerateQuestionSchema, async
           },
         };
 
+        const textbookContext = await getTextbookContext(prisma, {
+          system: system || conditionData.system,
+          queryText,
+        });
+
         const generatedQ = await generateSingleQuestion(
           env.GEMINI_API_KEY,
           transformedCondition,
-          questionType
+          questionType,
+          textbookContext
         );
 
         if (generatedQ) {
+          const hasTextbookContext = Boolean(textbookContext);
           newQuestion = {
             ...generatedQ,
             system: system || conditionData.system,
@@ -132,6 +139,8 @@ export const onRequestPost = authenticatedEndpoint(GenerateQuestionSchema, async
             metadata: {
               originalQuery: queryText,
               cached: false,
+              contentSource: hasTextbookContext ? 'openstax' : undefined,
+              contentSourceTitle: hasTextbookContext ? textbookContext?.title : undefined,
             },
           };
 
@@ -210,3 +219,49 @@ export const onRequestPost = authenticatedEndpoint(GenerateQuestionSchema, async
     }
   }
 });
+
+async function getTextbookContext(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  options: { system?: string; queryText?: string }
+): Promise<{ title: string; excerpts: string[] } | null> {
+  const { system, queryText } = options;
+
+  const where: {
+    source?: string;
+    systemCodes?: { has: string };
+    OR?: { text?: { contains: string; mode: 'insensitive' } }[];
+  } = {
+    source: 'OpenStax',
+  };
+
+  if (system) {
+    where.systemCodes = { has: system };
+  }
+
+  if (queryText) {
+    where.OR = [{ text: { contains: queryText, mode: 'insensitive' } }];
+  }
+
+  const chunks = await prisma.textbookChunk.findMany({
+    where,
+    orderBy: { updatedAt: 'desc' },
+    take: 3,
+    select: {
+      text: true,
+      bookTitle: true,
+      chapter: true,
+      section: true,
+    },
+  });
+
+  if (chunks.length === 0) return null;
+
+  const title = chunks[0]?.bookTitle || 'OpenStax Textbook';
+  const excerpts = chunks.map((chunk) => {
+    const headingParts = [chunk.chapter, chunk.section].filter(Boolean);
+    const heading = headingParts.length > 0 ? `(${headingParts.join(' - ')}) ` : '';
+    return `${heading}${chunk.text}`;
+  });
+
+  return { title, excerpts };
+}

@@ -165,17 +165,19 @@ BUZZWORD POLICY (Mixed Mode):
   - GOOD: "Physical exam reveals an erythematous, maculopapular eruption over the malar eminences, sparing the nasolabial folds."
 - For 1 of every 3 questions: You MAY include a classic finding, but ask about TREATMENT/MECHANISM/COMPLICATION, not the diagnosis.
 
-IMAGING-AS-TEXT RULE:
-Provide the "Radiologist's Report" as descriptive text, not interpretation.
-- BAD: "X-ray shows pneumonia."
-- GOOD: "Chest radiography demonstrates a focal consolidation in the right lower lobe with associated air bronchograms."
+UNCALCULATED LABS: Provide raw BMP (Na, Cl, HCO3, etc.) in a table only; do NOT state "anion gap 20" or other derived values—the student must calculate.
 
-VIGNETTE STRUCTURE (follow this order):
+HIDDEN IMAGE: When an image/radiograph is referenced or shown, do NOT state the finding or diagnosis in text. Use only scenario + "Radiograph is shown" (e.g. "Patient fell on outstretched hand. Radiograph is shown.").
+
+IMAGING-AS-TEXT RULE (text-only): Provide the "Radiologist's Report" as descriptive text, not interpretation. BAD: "X-ray shows pneumonia." GOOD: "Chest radiography demonstrates a focal consolidation in the right lower lobe with associated air bronchograms."
+
+VIGNETTE STRUCTURE (follow this order) – Vignette Evolution:
 1. Patient Demographics & Chief Complaint: Age, gender, complaint, duration.
 2. History of Present Illness: Character of symptoms, modifying factors, relevant negatives.
-3. Vitals: Realistic numbers in a table. Include normal values to create "noise."
-4. Physical Exam: Focused findings described ANATOMICALLY.
-5. Diagnostics: The descriptive REPORT of findings (labs, imaging).
+3. PERTINENT NEGATIVES: Explicitly rule out look-alikes. Example: "No tenderness to palpation (rules out costochondritis). No pain with breathing (rules out pleuritis)."
+4. Vitals: CLUES not filler. Use relative baselines when relevant (e.g. "normal" BP 110/70 in a patient normally hypertensive 160/90 = relative hypotension). Realistic numbers in a table.
+5. Physical Exam: Focused findings described ANATOMICALLY.
+6. Diagnostics: Raw labs only (no anion gap/osmolar gap in text); for imaging either descriptive report or "Radiograph/Image is shown" without stating the finding.
 
 Condition Context for Accuracy:
 ${contextInfo || 'Use your medical knowledge about this condition.'}
@@ -185,8 +187,9 @@ REQUIREMENTS:
 2. Include 4 options with ONE clearly correct answer and THREE plausible distractors
 3. Distractors should be common misconceptions or treatments for similar conditions
 4. Include a subtle "red herring" detail in each vignette
-5. Format vitals and labs in an HTML table if included
-6. The explanation should teach WHY the answer is correct
+5. PERTINENT NEGATIVES: Rule out look-alikes in the vignette (e.g. no tenderness → rules out costochondritis). VITALS AS CLUES: Vitals must be meaningful; use relative baselines when relevant (e.g. normal BP in a hypertensive patient = relative hypotension).
+6. Format vitals and labs in an HTML table if included
+7. The explanation should teach WHY the answer is correct
 
 Return ONLY a JSON array with this exact structure (no markdown, no prose):
 [
@@ -364,7 +367,7 @@ async function main() {
   console.log(`   Questions generated: ${totalGenerated}`);
   console.log(`   Failed: ${totalFailed}`);
   console.log(`   Final pool size: ${finalCount}`);
-  console.log(`   V2 "Describe, Don\'t Diagnose" questions: ${v2Count}`);
+  console.log(`   V2 "Describe, Don't Diagnose" questions: ${v2Count}`);
   console.log('═'.repeat(70));
 }
 

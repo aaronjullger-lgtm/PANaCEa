@@ -28,7 +28,10 @@ export const SystemRadarChart: React.FC<Props> = ({ systems }) => {
   }));
 
   return (
-    <div className="h-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4">
+    <div
+      className="h-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4"
+      style={{ transform: 'translateZ(0)' }}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
           <PolarGrid stroke="#e2e8f0" strokeOpacity={0.4} />

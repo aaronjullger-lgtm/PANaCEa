@@ -48,6 +48,7 @@ import {
   Sunset,
 } from 'lucide-react';
 import { fetchLearningProfile } from '@/services/analytics';
+import { ExplainabilityTooltip } from '@/components/ui/ExplainabilityTooltip';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import {
   getCognitiveState,
@@ -261,7 +262,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
         </h3>
         <p className="text-[var(--color-text-muted)] max-w-md">
           Complete a few study sessions to build your personalized learning profile. We&apos;ll
-          analyze your patterns and provide AI-powered insights to optimize your studying.
+          analyze your patterns and provide personalized insights to optimize your studying.
         </p>
       </div>
     );
@@ -333,8 +334,12 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[var(--color-text-inverse)] opacity-80 text-sm font-medium mb-1">
+                    <p className="text-[var(--color-text-inverse)] opacity-80 text-sm font-medium mb-1 flex items-center gap-1.5">
                       Estimated PANCE Score
+                      <ExplainabilityTooltip
+                        formula={`Based on your ${profile.lifetimeQuestions.toLocaleString()} practice questions, weighted by difficulty and time decay.`}
+                        className="opacity-90"
+                      />
                     </p>
                     <div className="flex items-baseline gap-3">
                       <span className="text-5xl font-bold">{profile.estimatedScore}</span>

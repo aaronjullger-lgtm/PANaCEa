@@ -26,6 +26,7 @@ import {
   type CMRROutput,
 } from '../../lib/cmrr-optimizer';
 import type { ReviewSnapshot } from '../../lib/fsrs';
+import { SliderWithInput } from '../ui/SliderWithInput';
 
 // ============================================================================
 // Types
@@ -307,51 +308,22 @@ export const StudyPlanner: React.FC<StudyPlannerProps> = ({
           </button>
         </div>
 
-        {/* Slider */}
-        <div className="relative mt-6 mb-2">
-          {/* Track background */}
-          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-gradient-to-r from-[var(--color-data-fail)]/30 via-[var(--color-data-provisional)]/30 to-[var(--color-data-pass)]/30" />
-
-          {/* Optimal marker */}
-          <div
-            className="absolute top-1/2 -translate-y-1/2 w-1 h-4 bg-[var(--color-accent)] rounded-full"
-            style={{
-              left: `${((cmrrResult.optimalRetention - 0.8) / 0.17) * 100}%`,
-            }}
-          />
-
-          {/* Slider input */}
-          <input
-            type="range"
-            min="0.80"
-            max="0.97"
-            step="0.01"
+        {/* Slider + input + stepper: avoid slider trap; snap to 80/85/90/95/97 */}
+        <div className="mt-6 mb-2">
+          <SliderWithInput
             value={selectedRetention}
-            onChange={handleSliderChange}
-            onMouseUp={handleSliderCommit}
-            onTouchEnd={handleSliderCommit}
-            className="relative w-full h-2 appearance-none bg-transparent cursor-pointer z-10
-              [&::-webkit-slider-thumb]:appearance-none
-              [&::-webkit-slider-thumb]:w-5
-              [&::-webkit-slider-thumb]:h-5
-              [&::-webkit-slider-thumb]:rounded-full
-              [&::-webkit-slider-thumb]:bg-[var(--color-text-primary)]
-              [&::-webkit-slider-thumb]:border-2
-              [&::-webkit-slider-thumb]:border-[var(--color-bg-primary)]
-              [&::-webkit-slider-thumb]:shadow-lg
-              [&::-webkit-slider-thumb]:cursor-pointer
-              [&::-moz-range-thumb]:w-5
-              [&::-moz-range-thumb]:h-5
-              [&::-moz-range-thumb]:rounded-full
-              [&::-moz-range-thumb]:bg-[var(--color-text-primary)]
-              [&::-moz-range-thumb]:border-2
-              [&::-moz-range-thumb]:border-[var(--color-bg-primary)]
-              [&::-moz-range-thumb]:cursor-pointer
-            "
+            onChange={handleRetentionChange}
+            min={0.8}
+            max={0.97}
+            step={0.01}
+            snapValues={[0.8, 0.85, 0.9, 0.95, 0.97]}
+            unit="%"
+            toInputValue={(v) => String(Math.round(v * 100))}
+            fromInputValue={(s) => Math.max(0.8, Math.min(0.97, (parseFloat(s) || 0) / 100))}
+            onCommit={handleRetentionCommit}
+            inputClassName="w-14"
           />
         </div>
-
-        {/* Slider labels */}
         <div className="flex justify-between text-xs text-[var(--color-text-tertiary)] mt-1">
           <span>80% (Efficiency)</span>
           <span>97% (Maximum)</span>

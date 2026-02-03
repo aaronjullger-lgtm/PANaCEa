@@ -14,7 +14,6 @@ import {
   checkAndReplenishPool,
   getSessionSummary as getMainSessionSummary,
 } from '@/services/core';
-import { recordQuestionAttempt } from '@/services/core';
 
 // Session services
 import {
@@ -40,6 +39,7 @@ import { generateAlternateRationale } from '@/services/ai';
 // Components
 import { FlagQuestionModal } from '@/components/modals/FlagQuestionModal';
 import AnswerChoice from '@/components/quiz/AnswerChoice';
+import { QuizLabCalcModal } from '@/components/quiz/QuizLabCalcModal';
 import ErrorTagger from '@/components/quiz/ErrorTagger';
 import Loader from '@/components/loading/Loader';
 import WellnessCheckModal from '@/components/wellness/WellnessCheckModal';
@@ -62,13 +62,14 @@ import { DrillLoadingState } from '@/components/drill/DrillLoadingState';
 // Icons
 import { CloseIcon } from '@/components/icons/CloseIcon';
 import { FlagIcon } from '@/components/icons/FlagIcon';
-import { AlertTriangle, BarChart3 } from 'lucide-react';
+import { AlertTriangle, BarChart3, Calculator } from 'lucide-react';
 import { ArrowLeftIcon } from '@/components/icons/ArrowLeftIcon';
 import { ClearHighlightIcon } from '@/components/icons/ClearHighlightIcon';
 
 // Types
 import type { Question, PerformanceRecord, SessionSettings, ErrorTag } from '@/types';
 import type { SRSScheduleResult } from '@/lib/services/srsService';
+import type { StructuredRationale } from '@/components/questions/ExplanationPanel';
 
 // Lib utils
 import { calculateParTime } from '@/lib/utils/questionComplexity';
@@ -86,6 +87,7 @@ import { useImplicitMetrics } from '@/hooks/useImplicitMetrics';
 
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
+import { syncManager } from '@/lib/services/sync/syncManager';
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -322,6 +324,8 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // Report issue modal state
   const [showReportModal, setShowReportModal] = useState(false);
+  // Lab calculator modal (Anion Gap, Osmolar Gap, Parkland) – encourages active calculation
+  const [showLabCalcModal, setShowLabCalcModal] = useState(false);
 
   // Wellness check state and constants
   const WELLNESS_CHECK_QUESTION_THRESHOLD = 30;
@@ -382,9 +386,9 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Sprint 4: Handler for stats overlay toggle with keyboard shortcut
   useShortcut('TOGGLE_STATS', () => setShowStatsOverlay((prev) => !prev), { enabled: true });
 
-  // ---- REPLENISH QUEUE (BATCH FETCH - 10 QUESTIONS AT A TIME) ----
-  const BATCH_SIZE = 10;
-  const LOW_QUEUE_THRESHOLD = 7; // Trigger earlier to prevent running out
+  // ---- REPLENISH QUEUE (Commuter Mode: keep buffer so tunnel/bad WiFi doesn't run out) ----
+  const BATCH_SIZE = 25;
+  const LOW_QUEUE_THRESHOLD = 20; // Refill when 20 left so we keep a buffer
 
   const replenishQueue = useCallback(async () => {
     // Do NOT show the global loader here – this is background work
@@ -537,7 +541,6 @@ const QuizView: React.FC<QuizViewProps> = ({
       recordQuestionResult: typeof recordQuestionResult,
       recordQuestion: typeof recordQuestion,
       recordSessionAnswer: typeof recordSessionAnswer,
-      recordQuestionAttempt: typeof recordQuestionAttempt,
     };
 
     const undefinedFunctions = Object.entries(functionChecks)
@@ -556,12 +559,20 @@ const QuizView: React.FC<QuizViewProps> = ({
     // Sprint 4: Calculate correctness IMMEDIATELY
     const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
     const timeToAnswer = Date.now() - questionStartTime;
-
-    // Sprint C: Submit implicit metrics to backend
     const questionId = currentQuestion.id || `temp-${questionNumber}`;
-    await implicitMetrics.submitAnswer(questionId, isCorrect, 'multiple_choice').catch((err) => {
-      // Don't block UI if metrics submission fails
-      console.warn('Implicit metrics submission failed:', err);
+
+    // Commuter Mode: Optimistic UI — assume save worked. Queue to Sync Manager; do not block on server.
+    syncManager.queueAnswer({
+      questionId,
+      selectedAnswer: selectedAnswerIndex,
+      isCorrect,
+      timeSpentMs: timeToAnswer,
+      system: currentQuestion.system ?? undefined,
+      conditionId: currentQuestion.conditionId ?? undefined,
+    });
+    // Fire-and-forget: metrics and review sync in background (or when back online).
+    void implicitMetrics.submitAnswer(questionId, isCorrect, 'multiple_choice').catch((err) => {
+      console.warn('Implicit metrics submission failed (will retry when online):', err);
     });
 
     // Note: Removed showOptimisticFeedback() call - user feedback on correctness
@@ -732,25 +743,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       timeSpentMs: timeToAnswer,
     });
 
-    // Record attempt to database (non-blocking)
-    if (currentQuestion.id) {
-      getToken().then((token) => {
-        recordQuestionAttempt(
-          {
-            questionId: currentQuestion.id!,
-            wasCorrect: isCorrect,
-            system: currentQuestion.system || currentQuestion.topic,
-            conditionId: currentQuestion.conditionId,
-            mode: 'session',
-            timeSpentMs: timeToAnswer,
-            answerChangedCount: answerChangeCount,
-          },
-          token
-        ).catch((err) => {
-          console.warn('[QuizView] Failed to record attempt to database:', err);
-        });
-      });
-    }
+    // Attempt is recorded via SyncManager.queueAnswer above (syncs to /api/questions/attempt when online or when back online).
 
     // Track answer in session analytics (local state for session summary)
     recordSessionAnswer(
@@ -784,7 +777,7 @@ const QuizView: React.FC<QuizViewProps> = ({
                 questionId: currentQuestion.id,
                 selectedAnswer: selectedAnswerIndex,
                 timeSpentMs: timeToAnswer,
-                timeToFirstClick: implicitMetrics.getMetrics().timeToFirstClick,
+                timeToFirstClick: implicitMetrics.metrics.timeToFirstClick ?? undefined,
                 answerSwitches: answerChangeCount,
                 totalDwellTime: timeToAnswer,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -800,9 +793,14 @@ const QuizView: React.FC<QuizViewProps> = ({
 
             // Map API response to legacy SRSScheduleResult format for backward compatibility
             setSrsResult({
-              nextReview: new Date(Date.now() + 24 * 60 * 60 * 1000), // Placeholder
-              stability: result.data?.implicitMetrics?.latencyRatio ?? 1.0,
+              interval: 1,
+              repetition: 0,
+              easiness: 2.5,
+              dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
               difficulty: result.data?.quality ?? 3,
+              stabilityScore: result.data?.implicitMetrics?.latencyRatio ?? 1.0,
+              qualityAdjusted: result.data?.quality ?? 3,
+              modifiersApplied: [],
             });
           } catch (err) {
             console.error('Failed to submit review to server:', err);
@@ -989,14 +987,16 @@ Provide an ALTERNATE explanation that approaches this from a different angle. Us
 
 Keep it concise (3-4 sentences max) and focus on helping them understand WHY they made this mistake.`;
 
-      // Use streaming API from geminiService
-      const { callGeminiStream } = await import('@/services/domain/geminiService');
+      // Use Edge streaming API (/api/gemini/stream) so user sees tokens immediately (latency masking)
+      const { callGeminiTextStreaming } = await import('@/services/ai/geminiService');
 
       try {
-        for await (const chunk of callGeminiStream('gemini-2.0-flash-exp', prompt, 0.7)) {
-          // Append each chunk as it arrives
-          setAlternateRationale((prev) => prev + chunk);
-        }
+        await callGeminiTextStreaming('gemini-2.5-flash', prompt, 0.7, {
+          getToken,
+          onChunk: (chunk) => setAlternateRationale((prev) => prev + chunk),
+          onComplete: () => setIsExplainerLoading(false),
+          onError: () => setIsExplainerLoading(false),
+        });
         setIsExplainerLoading(false);
       } catch (err) {
         console.error('Error generating alternate rationale:', err);
@@ -1054,9 +1054,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
   }, [isAnswered, currentQuestion, performanceData]);
 
   const getBarColor = (score: number): string => {
-    if (score < 50) return 'bg-[var(--color-data-fail)]';
-    if (score < 80) return 'bg-[var(--color-data-provisional)]';
-    return 'bg-[var(--color-data-pass)]';
+    if (score >= 80) return 'bg-[var(--color-data-pass)]';
+    if (score >= 60) return 'bg-[var(--color-accent)]';
+    return 'bg-[var(--color-data-provisional)]';
   };
 
   // NO CURRENT QUESTION - Show appropriate screen based on context
@@ -1183,6 +1183,15 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)] transition-colors"
             >
               <ClearHighlightIcon className="w-5 h-5" />
+            </button>
+
+            {/* Lab calculators (Anion Gap, Osmolar Gap, Parkland) – encourages active calculation */}
+            <button
+              onClick={() => setShowLabCalcModal(true)}
+              title="Lab calculators (Anion Gap, Osmolar Gap, Parkland)"
+              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-colors"
+            >
+              <Calculator className="w-5 h-5" />
             </button>
 
             {/* Font size controls */}
@@ -1330,13 +1339,148 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   </div>
                 )}
 
-                <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
-                  Rationale
-                </h3>
-                <div
-                  className="text-[var(--color-text-secondary)] leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: currentQuestion.rationale }}
-                />
+                {/* Core PANCE: rationale – structured (5-section) or legacy HTML */}
+                {(() => {
+                  const r = currentQuestion.rationale;
+                  const structured: StructuredRationale | null =
+                    typeof r === 'object' && r !== null && 'whyCorrect' in r
+                      ? (r as StructuredRationale)
+                      : (() => {
+                          if (typeof r !== 'string') return null;
+                          try {
+                            const parsed = JSON.parse(r) as unknown;
+                            if (parsed && typeof parsed === 'object' && 'whyCorrect' in parsed)
+                              return parsed as StructuredRationale;
+                          } catch {
+                            /* not JSON */
+                          }
+                          return null;
+                        })();
+                  if (structured) {
+                    const letters = ['A', 'B', 'C', 'D'] as const;
+                    const whyKeys = ['whyIncorrectA', 'whyIncorrectB', 'whyIncorrectC', 'whyIncorrectD'] as const;
+                    return (
+                      <div className="space-y-4">
+                        {structured.bottomLine && (
+                          <section>
+                            <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                              Bottom Line
+                            </h3>
+                            <p className="text-[var(--color-text-secondary)] leading-relaxed font-medium bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3">
+                              {structured.bottomLine}
+                            </p>
+                          </section>
+                        )}
+                        <section>
+                          <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                            Why the Correct Answer is Right
+                          </h3>
+                          <div
+                            className="text-[var(--color-text-secondary)] leading-relaxed bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3"
+                            dangerouslySetInnerHTML={{
+                              __html: structured.whyCorrect.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'),
+                            }}
+                          />
+                        </section>
+                        <section>
+                          <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                            Why the Distractors Are Wrong
+                          </h3>
+                          <div className="space-y-2">
+                            {letters.map((letter, i) => {
+                              if (i === currentQuestion.correctAnswerIndex) return null;
+                              const key = whyKeys[i];
+                              const text = structured[key];
+                              if (!text || typeof text !== 'string') return null;
+                              const optionText = currentQuestion.options[i];
+                              const isUserChoice = i === selectedAnswerIndex;
+                              return (
+                                <div
+                                  key={letter}
+                                  className={`px-4 py-2 rounded-lg border text-sm ${
+                                    isUserChoice
+                                      ? 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border-dusty-rose-300 dark:border-dusty-rose-700'
+                                      : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
+                                  }`}
+                                >
+                                  <span className="font-semibold text-[var(--color-text-muted)]">
+                                    Option {letter} ({optionText}):
+                                  </span>{' '}
+                                  <span
+                                    className="text-[var(--color-text-secondary)]"
+                                    dangerouslySetInnerHTML={{
+                                      __html: text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'),
+                                    }}
+                                  />
+                                  {isUserChoice && (
+                                    <span className="ml-2 text-xs text-dusty-rose-600 dark:text-dusty-rose-400 font-medium">
+                                      (Your answer)
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </section>
+                        {structured.highYieldImageOrTable && structured.highYieldImageOrTable !== 'N/A' && (
+                          <section>
+                            <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                              High-Yield Image / Table
+                            </h3>
+                            <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed bg-steel-blue-50 dark:bg-steel-blue-900/20 border border-steel-blue-200 dark:border-steel-blue-800 rounded-lg px-4 py-3">
+                              {structured.highYieldImageOrTable}
+                            </p>
+                          </section>
+                        )}
+                        {structured.clinicalPearl && (
+                          <section>
+                            <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                              Clinical Pearl
+                            </h3>
+                            <div
+                              className="text-[var(--color-text-secondary)] leading-relaxed bg-muted-amber-50 dark:bg-muted-amber-900/20 border border-muted-amber-200 dark:border-muted-amber-800 rounded-lg px-4 py-3"
+                              dangerouslySetInnerHTML={{
+                                __html: structured.clinicalPearl.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'),
+                              }}
+                            />
+                          </section>
+                        )}
+                      </div>
+                    );
+                  }
+                  // Legacy rationale: enforce 5-section style – no wall of text (see IMMEDIATE_CONTENT_ACTION_PLAN.md)
+                  const raw = (currentQuestion.rationale as string) || '';
+                  const firstSentenceEnd = raw.search(/[.!?]\s+/);
+                  const bottomLine =
+                    firstSentenceEnd > 0 ? raw.slice(0, firstSentenceEnd + 1).trim() : '';
+                  const restBody = firstSentenceEnd > 0 ? raw.slice(firstSentenceEnd + 1).trim() : '';
+                  const showRest = restBody.length > 0;
+                  return (
+                    <div className="space-y-4">
+                      {bottomLine && (
+                        <section>
+                          <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                            Bottom Line
+                          </h3>
+                          <p className="text-[var(--color-text-secondary)] leading-relaxed font-medium bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3">
+                            {bottomLine}
+                          </p>
+                        </section>
+                      )}
+                      {(showRest || !bottomLine) && (
+                        <section>
+                          <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                            Rationale
+                          </h3>
+                          <div
+                            className="text-[var(--color-text-secondary)] leading-relaxed bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-4 py-3 max-h-[40vh] overflow-y-auto prose prose-sm dark:prose-invert max-w-none"
+                            dangerouslySetInnerHTML={{ __html: showRest ? restBody : raw }}
+                          />
+                        </section>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
                   <div className="mt-4">
@@ -1435,6 +1579,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         onClose={() => setShowWellnessModal(false)}
         reason={wellnessReason}
       />
+
+      {/* Lab calculators modal – Anion Gap, Osmolar Gap, Parkland (in-question Calc button) */}
+      {showLabCalcModal && (
+        <QuizLabCalcModal onClose={() => setShowLabCalcModal(false)} />
+      )}
 
       {/* Report Question Issue Modal */}
       {currentQuestion && (

@@ -221,7 +221,7 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
                 <CheckCircle2 className="w-16 h-16 mx-auto" />
               </div>
               <p className="text-[var(--color-text-secondary)]">
-                No missed questions in this timeframe
+                Nothing to review in this timeframe
               </p>
               <p className="text-sm text-[var(--color-text-muted)] mt-1">
                 Try selecting a different timeframe or keep studying!

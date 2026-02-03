@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 /**
  * GlassCard - Standardized card component with glassmorphism design
@@ -62,6 +63,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   className = '',
   ...props
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const styles = variantStyles[variant];
   const baseLift = 'shadow-md dark:shadow-none';
   const hoverStyles = hoverable
@@ -71,9 +73,9 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeOut' }}
       className={`
         relative overflow-hidden rounded-2xl
         ${styles.bg}

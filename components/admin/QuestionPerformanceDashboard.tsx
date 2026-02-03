@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   BarChart3,
   AlertTriangle,
@@ -12,7 +12,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
-import { motion } from 'framer-motion';
+import { VirtualizedTableBody } from '@/components/ui/VirtualizedTableBody';
 
 interface QuestionPerformance {
   questionId: string;
@@ -53,8 +53,12 @@ const getAccuracyColor = (accuracy: number) => {
   return 'text-[var(--color-data-fail)]';
 };
 
+/** Grid columns for header and virtualized rows (DOM bloat audit: only visible rows in DOM). */
+const TABLE_GRID_COLUMNS = 'minmax(12rem,1fr) 5rem 4rem 5rem 4rem 5rem 4rem';
+
 export const QuestionPerformanceDashboard: React.FC = () => {
   const { getToken } = useAuth();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [questions, setQuestions] = useState<QuestionPerformance[]>([]);
   const [summary, setSummary] = useState<PerformanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -201,6 +205,8 @@ export const QuestionPerformanceDashboard: React.FC = () => {
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
           className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] text-sm"
+          aria-label="Sort by"
+          title="Sort by"
         >
           <option value="quality">Quality Score</option>
           <option value="accuracy">Accuracy</option>
@@ -211,6 +217,8 @@ export const QuestionPerformanceDashboard: React.FC = () => {
           value={order}
           onChange={(e) => setOrder(e.target.value as typeof order)}
           className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] text-sm"
+          aria-label="Sort order"
+          title="Sort order"
         >
           <option value="asc">Worst First</option>
           <option value="desc">Best First</option>
@@ -232,112 +240,113 @@ export const QuestionPerformanceDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Questions Table */}
+      {/* Questions Table — virtualized body: only ~10–15 visible rows in DOM (DOM bloat audit) */}
       {!loading && !error && (
-        <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+        <div
+          className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden"
+          role="region"
+          aria-label="Question performance table"
+        >
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[var(--color-bg-secondary)]">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
-                    Question
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
-                    System
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
-                    Quality
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
-                    Accuracy
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
-                    Attempts
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
-                    Avg Time
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
-                    Flags
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--color-border)]">
-                {questions.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-4 py-12 text-center text-[var(--color-text-muted)]"
-                    >
-                      No question performance data available yet.
-                      <br />
-                      <span className="text-sm">
-                        Questions need at least 5 attempts to appear here.
+            {/* Header row with same grid as body for alignment */}
+            <div
+              className="grid bg-[var(--color-bg-secondary)] shrink-0 border-b border-[var(--color-border)]"
+              style={{ gridTemplateColumns: TABLE_GRID_COLUMNS }}
+            >
+              <div className="px-4 py-3 text-left text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+                Question
+              </div>
+              <div className="px-4 py-3 text-left text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+                System
+              </div>
+              <div className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+                Quality
+              </div>
+              <div className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+                Accuracy
+              </div>
+              <div className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+                Attempts
+              </div>
+              <div className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+                Avg Time
+              </div>
+              <div className="px-4 py-3 text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+                Flags
+              </div>
+            </div>
+            {/* Scroll container: only visible rows rendered (windowing) */}
+            <div
+              ref={scrollContainerRef}
+              className="overflow-auto min-h-[200px] max-h-[60vh]"
+            >
+              <VirtualizedTableBody
+                items={questions}
+                parentRef={scrollContainerRef}
+                gridTemplateColumns={TABLE_GRID_COLUMNS}
+                emptyMessage={
+                  <>
+                    No question performance data available yet.
+                    <br />
+                    <span className="text-sm">
+                      Questions need at least 5 attempts to appear here.
+                    </span>
+                  </>
+                }
+                renderRow={(q) => (
+                  <>
+                    <div className="px-4 py-3">
+                      <div className="max-w-xs truncate text-sm text-[var(--color-text-primary)]">
+                        {q.questionText}
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)] font-mono">
+                        {q.questionId.slice(0, 8)}...
+                      </div>
+                    </div>
+                    <div className="px-4 py-3">
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]">
+                        {q.system}
                       </span>
-                    </td>
-                  </tr>
-                ) : (
-                  questions.map((q, index) => (
-                    <motion.tr
-                      key={q.questionId}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.02 }}
-                      className="hover:bg-[var(--color-bg-secondary)]"
-                    >
-                      <td className="px-4 py-3">
-                        <div className="max-w-xs truncate text-sm text-[var(--color-text-primary)]">
-                          {q.questionText}
-                        </div>
-                        <div className="text-xs text-[var(--color-text-muted)] font-mono">
-                          {q.questionId.slice(0, 8)}...
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]">
-                          {q.system}
+                    </div>
+                    <div className="px-4 py-3 text-center">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-full ${getQualityBg(q.qualityScore)} ${getQualityColor(q.qualityScore)}`}
+                      >
+                        <Zap className="w-3 h-3" />
+                        {q.qualityScore}
+                      </span>
+                    </div>
+                    <div className="px-4 py-3 text-center">
+                      <span className={`text-sm font-medium ${getAccuracyColor(q.accuracy)}`}>
+                        {q.accuracy}%
+                      </span>
+                      <div className="text-xs text-[var(--color-text-muted)]">
+                        {q.correctAttempts}/{q.totalAttempts}
+                      </div>
+                    </div>
+                    <div className="px-4 py-3 text-center text-sm text-[var(--color-text-secondary)]">
+                      {q.totalAttempts}
+                    </div>
+                    <div className="px-4 py-3 text-center">
+                      <span className="inline-flex items-center gap-1 text-sm text-[var(--color-text-secondary)]">
+                        <Clock className="w-3 h-3" />
+                        {formatTime(q.avgTimeMs)}
+                      </span>
+                    </div>
+                    <div className="px-4 py-3 text-center">
+                      {q.flagCount > 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]">
+                          <Flag className="w-3 h-3" />
+                          {q.flagCount}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-full ${getQualityBg(q.qualityScore)} ${getQualityColor(q.qualityScore)}`}
-                        >
-                          <Zap className="w-3 h-3" />
-                          {q.qualityScore}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`text-sm font-medium ${getAccuracyColor(q.accuracy)}`}>
-                          {q.accuracy}%
-                        </span>
-                        <div className="text-xs text-[var(--color-text-muted)]">
-                          {q.correctAttempts}/{q.totalAttempts}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-center text-sm text-[var(--color-text-secondary)]">
-                        {q.totalAttempts}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="inline-flex items-center gap-1 text-sm text-[var(--color-text-secondary)]">
-                          <Clock className="w-3 h-3" />
-                          {formatTime(q.avgTimeMs)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {q.flagCount > 0 ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]">
-                            <Flag className="w-3 h-3" />
-                            {q.flagCount}
-                          </span>
-                        ) : (
-                          <span className="text-[var(--color-text-muted)]">-</span>
-                        )}
-                      </td>
-                    </motion.tr>
-                  ))
+                      ) : (
+                        <span className="text-[var(--color-text-muted)]">-</span>
+                      )}
+                    </div>
+                  </>
                 )}
-              </tbody>
-            </table>
+              />
+            </div>
           </div>
         </div>
       )}

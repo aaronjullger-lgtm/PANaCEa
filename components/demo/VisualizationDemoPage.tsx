@@ -37,7 +37,6 @@ const generateSampleData = (): PerformanceRecord[] => {
       timeSpentMs: Math.floor(Math.random() * 60000) + 10000,
       timestamp,
       focus: 'all' as const,
-      difficulty: 'same' as const,
       questionType: 'diagnosis' as const,
     });
   }
@@ -161,7 +160,7 @@ const VisualizationDemoPage: React.FC = () => {
             </h3>
             <MultiRadialProgress
               items={[
-                { value: 85, label: 'Cardiology', color: 'var(--color-data-fail)' },
+                { value: 85, label: 'Cardiology', color: 'var(--color-data-pass)' },
                 { value: 72, label: 'Neurology', color: 'var(--color-accent)' },
                 { value: 90, label: 'Nephrology', color: 'var(--color-data-pass)' },
                 { value: 68, label: 'Pulmonology', color: 'var(--color-data-provisional)' },

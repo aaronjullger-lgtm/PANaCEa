@@ -8,6 +8,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Zap, Target } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { PerformanceRecord } from '../../types';
 
 interface StreakVisualizationProps {
@@ -25,6 +26,7 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
   performanceData,
   maxDisplay = 50,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   // Calculate streak segments
   const { segments, stats } = useMemo(() => {
     if (performanceData.length === 0) {
@@ -118,9 +120,9 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
           {displayData.map((record, i) => (
             <motion.div
               key={i}
-              initial={{ scale: 0, opacity: 0 }}
+              initial={prefersReducedMotion ? false : { scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: i * 0.02, duration: 0.15 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { delay: i * 0.02, duration: 0.15 }}
               className={`flex-1 min-w-[4px] max-w-[12px] h-6 rounded-sm ${
                 record.isCorrect ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]'
               }`}
@@ -166,12 +168,14 @@ export const StreakBadge: React.FC<{
   streak: number;
   isActive?: boolean;
 }> = ({ streak, isActive = false }) => {
+  const prefersReducedMotion = useReducedMotion();
   if (streak < 2) return null;
 
   return (
     <motion.div
-      initial={{ scale: 0.8, opacity: 0 }}
+      initial={prefersReducedMotion ? false : { scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
+      transition={prefersReducedMotion ? { duration: 0 } : undefined}
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
         streak >= 10
           ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'

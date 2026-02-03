@@ -10,12 +10,15 @@
  * Contains the primary "Start Session" CTA button.
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRolling360Stats, Rolling360Stats } from '../../../hooks/useRolling360Stats';
 import { useSessionGenerator } from '../../../hooks/useSessionGenerator';
 import { CalibrationProtocolUI } from './CalibrationProtocolUI';
 import { StartSessionButton, SemanticButton } from '../../ui/SemanticButton';
+import { ExplainabilityTooltip } from '../../ui/ExplainabilityTooltip';
+import { loadUserProfile } from '../../../services/analytics';
+import { isEorRotation } from '../../../config/rotation-systems';
 
 /** Calibration threshold - users below this see the Calibration Protocol UI */
 const CALIBRATION_THRESHOLD = 60;
@@ -116,9 +119,11 @@ interface CollectingStateProps {
   stats: Rolling360Stats;
   onStartSession: () => void;
   isStarting: boolean;
+  /** When 'EOR', show EOR Readiness labels */
+  examLabel?: 'PANCE' | 'EOR';
 }
 
-function CollectingState({ stats, onStartSession, isStarting }: CollectingStateProps) {
+function CollectingState({ stats, onStartSession, isStarting, examLabel = 'PANCE' }: CollectingStateProps) {
   const progress = (stats.totalInWindow / 50) * 100;
   const questionsNeeded = 50 - stats.totalInWindow;
 
@@ -176,7 +181,7 @@ function CollectingState({ stats, onStartSession, isStarting }: CollectingStateP
       <div className="bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/20 rounded-xl p-4">
         <p className="text-sm text-[var(--color-data-provisional)] text-center">
           Answer <span className="font-semibold">{questionsNeeded} more questions</span> in Main
-          Session to unlock your preliminary PANCE score prediction.
+          Session to unlock your preliminary {examLabel === 'EOR' ? 'EOR' : 'PANCE'} score prediction.
         </p>
       </div>
 
@@ -201,10 +206,12 @@ interface ProvisionalStateProps {
   stats: Rolling360Stats;
   onStartSession: () => void;
   isStarting: boolean;
+  examLabel?: 'PANCE' | 'EOR';
 }
 
-function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStateProps) {
+function ProvisionalState({ stats, onStartSession, isStarting, examLabel = 'PANCE' }: ProvisionalStateProps) {
   const questionsToConfident = 180 - stats.totalInWindow;
+  const readinessTitle = examLabel === 'EOR' ? 'EOR Readiness' : 'Exam Readiness';
 
   return (
     <div className="space-y-6">
@@ -212,7 +219,7 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
           <ChartBarIcon className="w-5 h-5 text-[var(--color-data-provisional)]" />
-          Exam Readiness
+          {readinessTitle}
         </h3>
         <span className="px-3 py-1 bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] text-sm rounded-full flex items-center gap-1">
           <ExclamationTriangleIcon className="w-4 h-4" />
@@ -232,7 +239,12 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
           </span>
           <span className="text-xl text-[var(--color-text-muted)] ml-2">/800</span>
         </motion.div>
-        <p className="text-sm text-[var(--color-text-muted)] mt-2">Predicted PANCE Score</p>
+        <p className="text-sm text-[var(--color-text-muted)] mt-2 flex items-center justify-center gap-1.5">
+          Predicted {examLabel === 'EOR' ? 'EOR' : 'PANCE'} Score
+          <ExplainabilityTooltip
+            formula={`Based on your last ${stats.totalInWindow} questions, weighted by difficulty and time decay.`}
+          />
+        </p>
       </div>
 
       {/* Accuracy */}
@@ -292,11 +304,13 @@ interface ConfidentStateProps {
   stats: Rolling360Stats;
   onStartSession: () => void;
   isStarting: boolean;
+  examLabel?: 'PANCE' | 'EOR';
 }
 
-function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStateProps) {
+function ConfidentState({ stats, onStartSession, isStarting, examLabel = 'PANCE' }: ConfidentStateProps) {
   const isPassing = (stats.predictedScore || 0) >= 350;
   const passLikelihood = stats.passLikelihood || 0;
+  const readinessTitle = examLabel === 'EOR' ? 'EOR Readiness' : 'Exam Readiness';
 
   return (
     <div className="space-y-6">
@@ -304,7 +318,7 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
           <ChartBarIcon className="w-5 h-5 text-[var(--color-data-pass)]" />
-          Exam Readiness
+          {readinessTitle}
         </h3>
         <span
           className={`px-3 py-1 text-sm rounded-full flex items-center gap-1
@@ -333,7 +347,12 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
           </span>
           <span className="text-xl text-[var(--color-text-muted)] ml-2">/800</span>
         </motion.div>
-        <p className="text-sm text-[var(--color-text-muted)] mt-2">Predicted PANCE Score</p>
+        <p className="text-sm text-[var(--color-text-muted)] mt-2 flex items-center justify-center gap-1.5">
+          Predicted {examLabel === 'EOR' ? 'EOR' : 'PANCE'} Score
+          <ExplainabilityTooltip
+            formula={`Based on your last ${stats.totalInWindow} questions, weighted by difficulty and time decay.`}
+          />
+        </p>
       </div>
 
       {/* Stats Grid */}
@@ -424,6 +443,20 @@ interface ExamReadinessCardProps {
 export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
   const { stats, isLoading, error } = useRolling360Stats();
   const { generateSession, isGenerating } = useSessionGenerator();
+  const [profile, setProfile] = useState(() => loadUserProfile());
+  useEffect(() => {
+    setProfile(loadUserProfile());
+    const onStorage = () => setProfile(loadUserProfile());
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  const isEorMode =
+    profile?.yearInProgram === 'Clinical Year' &&
+    profile?.currentRotation &&
+    isEorRotation(profile.currentRotation) &&
+    !!profile?.eorTestDate;
+  const examLabel = isEorMode ? 'EOR' : 'PANCE';
 
   const handleStartSession = async () => {
     await generateSession({ mode: 'mainSession', size: 20 });
@@ -488,6 +521,7 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
               stats={stats}
               onStartSession={handleStartSession}
               isStarting={isGenerating}
+              examLabel={examLabel}
             />
           </motion.div>
         )}
@@ -503,6 +537,7 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
               stats={stats}
               onStartSession={handleStartSession}
               isStarting={isGenerating}
+              examLabel={examLabel}
             />
           </motion.div>
         )}

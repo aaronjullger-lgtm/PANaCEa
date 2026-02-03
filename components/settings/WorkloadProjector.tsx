@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import { TrendingUp, Clock, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import WorkloadChart from '../analytics/WorkloadChart';
+import { SliderWithInput } from '../ui/SliderWithInput';
 
 export const WorkloadProjector: React.FC = () => {
   const [dailyNewCards, setDailyNewCards] = useState(10);
@@ -42,23 +43,21 @@ export const WorkloadProjector: React.FC = () => {
         <div className="space-y-4 pt-2">
           {/* Configuration Controls */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Daily New Cards */}
+            {/* Daily New Cards: input + stepper + slider; snap to 5,10,20,30,40,50 */}
             <div className="space-y-2">
-              <label className="flex items-center justify-between text-sm text-[var(--color-text-primary)]">
-                <span className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-[var(--color-accent)]" />
-                  Daily New Cards
-                </span>
-                <span className="font-mono text-[var(--color-accent)]">{dailyNewCards}</span>
-              </label>
-              <input
-                type="range"
-                min="5"
-                max="50"
-                step="5"
+              <SliderWithInput
                 value={dailyNewCards}
-                onChange={(e) => setDailyNewCards(parseInt(e.target.value, 10))}
-                className="w-full accent-[var(--color-accent)]"
+                onChange={setDailyNewCards}
+                min={5}
+                max={50}
+                step={5}
+                snapValues={[5, 10, 20, 30, 40, 50]}
+                label={
+                  <span className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
+                    <Target className="w-4 h-4 text-[var(--color-accent)]" />
+                    Daily New Cards
+                  </span>
+                }
               />
               <div className="flex justify-between text-xs text-[var(--color-text-secondary)]">
                 <span>5</span>
@@ -66,23 +65,22 @@ export const WorkloadProjector: React.FC = () => {
               </div>
             </div>
 
-            {/* Available Time */}
+            {/* Available Time: input + stepper + slider; snap to 15,30,60,90,120,180 */}
             <div className="space-y-2">
-              <label className="flex items-center justify-between text-sm text-[var(--color-text-primary)]">
-                <span className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[var(--color-accent)]" />
-                  Available Time
-                </span>
-                <span className="font-mono text-[var(--color-accent)]">{availableTime} min</span>
-              </label>
-              <input
-                type="range"
-                min="15"
-                max="180"
-                step="15"
+              <SliderWithInput
                 value={availableTime}
-                onChange={(e) => setAvailableTime(parseInt(e.target.value, 10))}
-                className="w-full accent-[var(--color-accent)]"
+                onChange={setAvailableTime}
+                min={15}
+                max={180}
+                step={15}
+                snapValues={[15, 30, 60, 90, 120, 180]}
+                unit=" min"
+                label={
+                  <span className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
+                    <Clock className="w-4 h-4 text-[var(--color-accent)]" />
+                    Available Time
+                  </span>
+                }
               />
               <div className="flex justify-between text-xs text-[var(--color-text-secondary)]">
                 <span>15 min</span>

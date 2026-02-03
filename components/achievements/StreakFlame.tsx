@@ -7,6 +7,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Flame } from 'lucide-react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useLowPowerMode } from '@/hooks/useLowPowerMode';
 
 interface StreakFlameProps {
   streak: number;
@@ -21,6 +23,9 @@ export function StreakFlame({
   isActiveToday = true,
   size = 'medium',
 }: StreakFlameProps) {
+  const prefersReducedMotion = useReducedMotion();
+  const lowPower = useLowPowerMode();
+  const reduceAnimations = prefersReducedMotion || lowPower;
   // Size mappings
   const sizeClasses = {
     small: 'w-8 h-8',
@@ -56,11 +61,11 @@ export function StreakFlame({
   const intensity = getAnimationIntensity();
 
   return (
-    <div className="relative inline-flex flex-col items-center gap-1">
-      {/* Flame Icon Container */}
+    <div className="relative inline-flex flex-col items-center gap-1" style={{ transform: 'translateZ(0)' }}>
+      {/* Flame Icon Container — GPU layer; no glow/bounce when low power (battery drain audit) */}
       <div className="relative">
         {/* Outer glow */}
-        {isActiveToday && streak > 0 && (
+        {isActiveToday && streak > 0 && !reduceAnimations && (
           <motion.div
             animate={{
               opacity: [0.3, 0.6, 0.3],
@@ -79,18 +84,22 @@ export function StreakFlame({
         {/* Flame Icon */}
         <motion.div
           animate={
-            isActiveToday && streak > 0
+            !reduceAnimations && isActiveToday && streak > 0
               ? {
                   y: [-intensity * 10, intensity * 10, -intensity * 10],
                   scale: [1, 1 + intensity, 1],
                 }
               : {}
           }
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
+          transition={
+            reduceAnimations
+              ? { duration: 0 }
+              : {
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }
+          }
           className={`relative ${sizeClasses[size]} flex items-center justify-center`}
         >
           <Flame
@@ -103,8 +112,9 @@ export function StreakFlame({
           {/* Streak number overlay */}
           {streak > 0 && (
             <motion.div
-              initial={{ scale: 0 }}
+              initial={reduceAnimations ? false : { scale: 0 }}
               animate={{ scale: 1 }}
+              transition={reduceAnimations ? { duration: 0 } : undefined}
               className={`absolute inset-0 flex items-center justify-center font-bold ${textSizes[size]}`}
               style={{
                 color: isActiveToday ? '#ffffff' : flameColor,
@@ -148,7 +158,7 @@ export function StreakFlame({
       )}
 
       {/* At-risk indicator (if streak is about to break) */}
-      {!isActiveToday && streak > 0 && (
+      {!isActiveToday && streak > 0 && !reduceAnimations && (
         <motion.div
           animate={{ opacity: [1, 0.5, 1] }}
           transition={{ duration: 1.5, repeat: Infinity }}
@@ -169,6 +179,9 @@ export function StreakBadge({
   streak: number;
   isActiveToday?: boolean;
 }) {
+  const prefersReducedMotion = useReducedMotion();
+  const lowPower = useLowPowerMode();
+  const reduceAnimations = prefersReducedMotion || lowPower;
   const getFlameColor = () => {
     if (!isActiveToday || streak === 0) return '#64748b';
     if (streak < 3) return '#f97316';
@@ -191,7 +204,7 @@ export function StreakBadge({
       <span className="text-sm font-medium" style={{ color: flameColor }}>
         {streak}
       </span>
-      {!isActiveToday && streak > 0 && (
+      {!isActiveToday && streak > 0 && !reduceAnimations && (
         <motion.div
           animate={{ opacity: [1, 0.5, 1] }}
           transition={{ duration: 1, repeat: Infinity }}

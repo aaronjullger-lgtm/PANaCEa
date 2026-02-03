@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { UserStatsOverviewSkeleton } from '@/components/loading';
+import { getSpeedBenchmarkLabel } from '@/lib/speedBenchmarks';
 
 // ============================================================================
 // Types - Server Response
@@ -526,12 +527,19 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
 
   if (!displayData || !userStats) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 px-4">
         <BookOpen className="w-12 h-12 mx-auto text-text-muted mb-3" />
-        <p className="text-text-primary font-medium">Not enough data yet</p>
-        <p className="text-sm text-text-muted mt-1">
-          Complete more questions to see your personalized analytics
+        <p className="text-text-primary font-medium">Not yet assessed</p>
+        <p className="text-sm text-text-muted mt-1 mb-4 max-w-sm mx-auto">
+          Your personalized analytics will appear here after you answer questions.
         </p>
+        <button
+          type="button"
+          onClick={() => window.location.assign('/study/main-session')}
+          className="px-4 py-2.5 rounded-xl bg-action-primary text-white text-sm font-medium hover:opacity-90 transition-opacity"
+        >
+          Take a 10-question diagnostic quiz to unlock your analytics
+        </button>
       </div>
     );
   }
@@ -641,9 +649,16 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
               <div className="bg-surface-card border border-border-subtle rounded-xl p-4 text-center">
                 <Clock className="w-5 h-5 mx-auto text-text-muted mb-2" />
                 <p className="text-lg font-bold text-text-primary">
-                  {displayData.avgTimePerQuestion}s
+                  {userStats?.stats?.overall?.avgTimeMs
+                    ? getSpeedBenchmarkLabel(userStats.stats.overall.avgTimeMs).primary
+                    : '—'}
                 </p>
-                <p className="text-xs text-text-muted">avg per question</p>
+                <p className="text-xs text-text-muted">
+                  {userStats?.stats?.overall?.avgTimeMs
+                    ? getSpeedBenchmarkLabel(userStats.stats.overall.avgTimeMs).benchmark ||
+                      'avg per question'
+                    : 'avg per question'}
+                </p>
               </div>
 
               <div className="bg-surface-card border border-border-subtle rounded-xl p-4 text-center">

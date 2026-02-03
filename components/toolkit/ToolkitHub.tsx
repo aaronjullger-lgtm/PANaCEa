@@ -22,7 +22,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { SystemCode } from '@/types';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
 import { CalculatorHub } from './calculators/CalculatorHub';
 
 // ============================================================================
@@ -259,19 +259,25 @@ interface SystemGridProps {
 
 const SystemGrid: React.FC<SystemGridProps> = ({ onSelectSystem }) => (
   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-    {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map((system) => (
-      <button
-        key={system}
-        onClick={() => onSelectSystem(system)}
-        className="text-left p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-md transition-all group"
-      >
-        <div className="font-bold text-[var(--color-accent)] mb-1">{system}</div>
-        <div className="text-sm text-[var(--color-text-muted)] truncate">
-          {ABBREVIATION_TO_TOPIC_MAP[system]}
-        </div>
-        <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] mt-2 group-hover:translate-x-1 transition-transform" />
-      </button>
-    ))}
+    {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map((system) => {
+      const fullName = getSystemDisplayFullName(system);
+      return (
+        <button
+          key={system}
+          onClick={() => onSelectSystem(system)}
+          title={fullName}
+          className="min-w-0 text-left p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-md transition-all group"
+        >
+          <div className="font-bold text-[var(--color-accent)] mb-1 truncate" title={system}>
+            {system}
+          </div>
+          <div className="text-sm text-[var(--color-text-muted)] truncate min-w-0" title={fullName}>
+            {fullName}
+          </div>
+          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] mt-2 group-hover:translate-x-1 transition-transform" />
+        </button>
+      );
+    })}
   </div>
 );
 

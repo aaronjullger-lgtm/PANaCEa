@@ -75,10 +75,22 @@ const getTimeUntilNextChallenge = () => {
   return `${hours}h ${minutes}m ${seconds}s`;
 };
 
+const TARGETED_DAILY_KEY_PREFIX = 'panceai_targeted_daily_';
+
+/** Get today's date string YYYY-MM-DD for targeted daily completion key */
+function getTargetedDailyKey(): string {
+  const t = new Date();
+  const y = t.getUTCFullYear();
+  const m = String(t.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(t.getUTCDate()).padStart(2, '0');
+  return `${TARGETED_DAILY_KEY_PREFIX}${y}-${m}-${d}`;
+}
+
 const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const { user, isLoaded, isSignedIn } = useUser();
   const { getToken } = useAuth();
 
+  const [isTargeted, setIsTargeted] = useState(false);
   const [viewState, setViewState] = useState<ViewState>('loading');
   const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
   const [completedStats, setCompletedStats] = useState<CompletedStats | null>(null);
@@ -92,10 +104,27 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // For targeted mode: store correctAnswerIndex per question id for scoring (not shown in UI)
+  const [correctIndicesByQuestionId, setCorrectIndicesByQuestionId] = useState<
+    Record<string, number>
+  >({});
+
   // Next challenge countdown
   const [nextChallengeCountdown, setNextChallengeCountdown] = useState(getTimeUntilNextChallenge());
 
-  // Fetch today's challenge once auth is ready
+  // Detect targeted mode from sessionStorage (set by CommandCenter when Didactic clicks Start)
+  useEffect(() => {
+    try {
+      if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('panceai_grand_rounds_targeted') === '1') {
+        sessionStorage.removeItem('panceai_grand_rounds_targeted');
+        setIsTargeted(true);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // Fetch today's challenge once auth is ready (targeted mode read inside fetch from sessionStorage)
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
     fetchTodaysChallenge();
@@ -105,11 +134,118 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     setViewState('loading');
     setError(null);
 
+    // Resolve targeted mode: state or sessionStorage (set by CommandCenter when Didactic clicks Start)
+    let targeted = isTargeted;
+    try {
+      if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('panceai_grand_rounds_targeted') === '1') {
+        sessionStorage.removeItem('panceai_grand_rounds_targeted');
+        targeted = true;
+        setIsTargeted(true);
+      }
+    } catch {
+      /* ignore */
+    }
+
     try {
       const token = await getToken();
       if (!token) {
         throw new Error('Authentication required. Please sign in again.');
       }
+
+      // Targeted Daily Question (Didactic): questions from enabled systems only, completion in localStorage
+      if (targeted) {
+        const todayKey = getTargetedDailyKey();
+        const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(todayKey) : null;
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored) as { correctCount: number; totalQuestions: number };
+            setCompletedStats({
+              score: parsed.correctCount * 20,
+              correctCount: parsed.correctCount,
+              totalQuestions: parsed.totalQuestions,
+              timeSpentMs: 0,
+              percentile: 0,
+              ranking: 0,
+            });
+            setViewState('completed');
+            return;
+          } catch {
+            /* invalid stored, fetch fresh */
+          }
+        }
+
+        let systems: string[] = [];
+        try {
+          const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('panceai_enabled_systems') : null;
+          if (saved) {
+            const arr = JSON.parse(saved) as string[];
+            if (Array.isArray(arr) && arr.length > 0) systems = arr;
+          }
+        } catch {
+          /* ignore */
+        }
+        if (systems.length === 0) {
+          setError('Enable at least one system in Settings (Current Curriculum) to use Targeted Daily Question.');
+          setViewState('error');
+          return;
+        }
+
+        const params = new URLSearchParams();
+        params.set('count', '5');
+        params.set('systems', systems.join(','));
+        const response = await fetch(`/api/questions/pool?${params}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: Failed to fetch questions`);
+        }
+        const data = (await response.json()) as { questions: Array<{
+          id: string;
+          vignette?: string;
+          question?: string;
+          options: string[];
+          correctAnswer?: string;
+          system?: string;
+          difficulty?: string;
+          tags?: string[];
+        }> };
+        const raw = data.questions || [];
+        if (raw.length === 0) {
+          setError('No questions available for your selected systems. Try enabling more systems.');
+          setViewState('error');
+          return;
+        }
+        const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
+        const correctIndices: Record<string, number> = {};
+        const questions: Question[] = raw.slice(0, 5).map((q) => {
+          const letter = (q.correctAnswer ?? 'A').toString().toUpperCase().charAt(0);
+          const correctIndex = letterToIndex[letter] ?? 0;
+          correctIndices[q.id] = correctIndex;
+          const vignette = q.vignette ?? '';
+          const questionText = (q.question ?? '').trim();
+          const fullQuestion = vignette ? `${vignette}\n\n${questionText}` : questionText;
+          return {
+            id: q.id,
+            vignette: q.vignette,
+            question: fullQuestion,
+            options: q.options ?? [],
+            correctAnswerIndex: correctIndex,
+            rationale: '',
+            topic: q.system ?? '',
+            conditionId: '',
+            condition: '',
+          } as Question;
+        });
+        setCorrectIndicesByQuestionId(correctIndices);
+        setChallengeData({
+          challengeId: `targeted-${todayKey}`,
+          questions,
+        });
+        setViewState('landing');
+        return;
+      }
+
+      // Global Grand Rounds
       const response = await fetch('/api/grand-rounds/today', {
         headers: {
           'Content-Type': 'application/json',
@@ -124,11 +260,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       const data = await response.json();
 
       if (data.status === 'completed') {
-        // User already completed today's challenge
         setCompletedStats(data.stats);
         setViewState('completed');
       } else if (data.status === 'active') {
-        // Challenge available, user hasn't attempted yet
         setChallengeData({
           challengeId: data.challengeId,
           questions: data.questions,
@@ -231,6 +365,39 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     try {
       const timeSpentMs = Date.now() - startTime;
 
+      // Targeted Daily Question: score client-side and persist to localStorage (no server submit)
+      if (isTargeted) {
+        let correctCount = 0;
+        for (const q of challengeData.questions) {
+          const correctIndex = correctIndicesByQuestionId[q.id];
+          if (typeof correctIndex === 'number' && answers[q.id] === correctIndex) {
+            correctCount++;
+          }
+        }
+        const totalQuestions = challengeData.questions.length;
+        const todayKey = getTargetedDailyKey();
+        try {
+          localStorage.setItem(
+            todayKey,
+            JSON.stringify({ correctCount, totalQuestions, date: todayKey })
+          );
+        } catch {
+          /* ignore */
+        }
+        hapticSuccess();
+        setCompletedStats({
+          score: correctCount * 20,
+          correctCount,
+          totalQuestions,
+          timeSpentMs,
+          percentile: 0,
+          ranking: 0,
+        });
+        setViewState('summary');
+        setIsSubmitting(false);
+        return;
+      }
+
       const token = await getToken();
       if (!token) {
         throw new Error('Authentication required. Please sign in again.');
@@ -295,13 +462,15 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     return Math.max(0, TOTAL_TIME_MS - timeElapsedMs);
   };
 
+  const modeLabel = isTargeted ? 'Targeted Daily Question' : 'Grand Rounds';
+
   // Loading state
   if (viewState === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="w-12 h-12 animate-spin text-muted-amber-500 mx-auto" />
-          <p className="text-xl text-[var(--color-text-muted)]">Loading Grand Rounds...</p>
+          <p className="text-xl text-[var(--color-text-muted)]">Loading {modeLabel}...</p>
         </div>
       </div>
     );
@@ -315,7 +484,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
           <h2 className="text-2xl font-bold">Error</h2>
           <p className="text-[var(--color-text-muted)]">
-            {error || 'Something went wrong loading Grand Rounds.'}
+            {error || `Something went wrong loading ${modeLabel}.`}
           </p>
           <div className="flex gap-3">
             <button
@@ -360,11 +529,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
             <h2 className="text-3xl font-bold text-muted-amber-500">Challenge Complete!</h2>
             <p className="text-[var(--color-text-muted)]">
-              You've already completed today's Grand Rounds challenge.
+              You've already completed today's {modeLabel} challenge.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid gap-4 ${isTargeted ? 'grid-cols-2' : 'grid-cols-2'}`}>
             <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
               <div className="text-4xl font-bold text-muted-amber-500">{completedStats.score}</div>
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Total Score</div>
@@ -377,19 +546,23 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Correct</div>
             </div>
 
-            <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold text-muted-amber-500">
-                {completedStats.percentile}%
-              </div>
-              <div className="text-sm text-[var(--color-text-muted)] mt-1">Percentile</div>
-            </div>
+            {!isTargeted && (
+              <>
+                <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
+                  <div className="text-4xl font-bold text-muted-amber-500">
+                    {completedStats.percentile}%
+                  </div>
+                  <div className="text-sm text-[var(--color-text-muted)] mt-1">Percentile</div>
+                </div>
 
-            <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
-              <div className="text-4xl font-bold text-muted-amber-500">
-                #{completedStats.ranking}
-              </div>
-              <div className="text-sm text-[var(--color-text-muted)] mt-1">Global Rank</div>
-            </div>
+                <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
+                  <div className="text-4xl font-bold text-muted-amber-500">
+                    #{completedStats.ranking}
+                  </div>
+                  <div className="text-sm text-[var(--color-text-muted)] mt-1">Global Rank</div>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
@@ -430,11 +603,13 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             </motion.div>
 
             <h1 className="text-4xl font-bold bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 bg-clip-text text-transparent">
-              Grand Rounds Daily Challenge
+              {isTargeted ? 'Targeted Daily Question' : 'Grand Rounds Daily Challenge'}
             </h1>
 
             <p className="text-xl text-[var(--color-text-muted)]">
-              Compete globally on today's challenge!
+              {isTargeted
+                ? 'One question from your current curriculum.'
+                : "Compete globally on today's challenge!"}
             </p>
           </div>
 
@@ -459,15 +634,17 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-primary)] rounded-lg">
-              <Users className="w-6 h-6 text-muted-amber-500 flex-shrink-0" />
-              <div>
-                <div className="font-semibold">Global Leaderboard</div>
-                <div className="text-sm text-[var(--color-text-muted)]">
-                  See your percentile ranking
+            {!isTargeted && (
+              <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-primary)] rounded-lg">
+                <Users className="w-6 h-6 text-muted-amber-500 flex-shrink-0" />
+                <div>
+                  <div className="font-semibold">Global Leaderboard</div>
+                  <div className="text-sm text-[var(--color-text-muted)]">
+                    See your percentile ranking
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="bg-muted-amber-500/10 border border-muted-amber-500/30 rounded-lg p-4">
@@ -534,7 +711,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 </div>
                 <div>
                   <div className="text-sm text-[var(--color-text-muted)]">Question</div>
-                  <div className="font-semibold">Grand Rounds Challenge</div>
+                  <div className="font-semibold">
+                    {isTargeted ? 'Targeted Daily Question' : 'Grand Rounds Challenge'}
+                  </div>
                 </div>
               </div>
 
@@ -655,7 +834,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
   // Summary state - Just finished
   if (viewState === 'summary' && completedStats) {
-    const isTopPercentile = completedStats.percentile >= 90;
+    const isTopPercentile = !isTargeted && completedStats.percentile >= 90;
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
@@ -683,7 +862,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             <p className="text-[var(--color-text-muted)]">
               {isTopPercentile
                 ? "You're in the top 10% of all participants today!"
-                : "You've completed today's Grand Rounds challenge."}
+                : isTargeted
+                  ? "You've completed today's Targeted Daily Question."
+                  : "You've completed today's Grand Rounds challenge."}
             </p>
           </div>
 
@@ -710,29 +891,33 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               <div className="text-sm text-[var(--color-text-muted)] mt-1">Correct</div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
-            >
-              <div className="text-4xl font-bold text-muted-amber-500">
-                {completedStats.percentile}%
-              </div>
-              <div className="text-sm text-[var(--color-text-muted)] mt-1">Percentile</div>
-            </motion.div>
+            {!isTargeted && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
+                >
+                  <div className="text-4xl font-bold text-muted-amber-500">
+                    {completedStats.percentile}%
+                  </div>
+                  <div className="text-sm text-[var(--color-text-muted)] mt-1">Percentile</div>
+                </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
-            >
-              <div className="text-4xl font-bold text-muted-amber-500">
-                #{completedStats.ranking}
-              </div>
-              <div className="text-sm text-[var(--color-text-muted)] mt-1">Global Rank</div>
-            </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
+                >
+                  <div className="text-4xl font-bold text-muted-amber-500">
+                    #{completedStats.ranking}
+                  </div>
+                  <div className="text-sm text-[var(--color-text-muted)] mt-1">Global Rank</div>
+                </motion.div>
+              </>
+            )}
           </div>
 
           <motion.div

@@ -22,6 +22,7 @@ import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { ConditionPreviewCard } from '../conditions/ConditionPreviewCard';
 import type { ConditionMeta } from '../../src/types/conditions';
+import { useLowPowerMode } from '@/hooks/useLowPowerMode';
 
 interface IntelligenceHubProps {
   performanceData: PerformanceRecord[];
@@ -77,6 +78,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
   onStartSession,
   theme = 'dark',
 }) => {
+  const lowPower = useLowPowerMode();
   const [viewLevel, setViewLevel] = useState<ViewLevel>('dashboard');
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -429,8 +431,11 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
               </div>
             </div>
 
-            {/* Radar Chart */}
-            <div className="bg-[var(--color-bg-primary)] rounded-lg p-6">
+            {/* Radar Chart — GPU layer for compositing (battery drain audit) */}
+            <div
+              className="bg-[var(--color-bg-primary)] rounded-lg p-6"
+              style={{ transform: 'translateZ(0)' }}
+            >
               <h3 className="font-semibold text-[var(--color-text-primary)] mb-4 text-center">
                 System Mastery Overview
               </h3>

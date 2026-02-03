@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import useSWR from 'swr';
 import {
   ResponsiveContainer,
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
   LineChart,
   Line,
   XAxis,
@@ -28,15 +24,27 @@ import {
   Play,
   Info,
   Download,
+  CheckCircle,
+  AlertTriangle,
+  HelpCircle,
+  XCircle,
 } from 'lucide-react';
 import { exportUserAnalytics } from '@/lib/analyticsExport';
 import { useAuth } from '@clerk/clerk-react';
 import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { CalibrationProgress } from '@/components/analytics/CalibrationProgress';
-import { EmptyRadarChart, EmptyLineChart } from '@/components/analytics/EmptyChartState';
+import { EmptyLineChart } from '@/components/analytics/EmptyChartState';
 import chartTheme from '@/lib/chartTheme';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getQuadrantLabel } from '@/lib/calibrationQuadrants';
+import {
+  getSpeedBenchmarkLabel,
+  getSpeedBenchmarkStatus,
+  RECALL_TARGET_SEC,
+  CLINICAL_REASONING_TARGET_SEC,
+  OVERALL_TARGET_SEC,
+} from '@/lib/speedBenchmarks';
 
 // Minimum reviews needed for confident predictions (FSRS calibration threshold)
 const CALIBRATION_THRESHOLD = 60;
@@ -50,6 +58,13 @@ interface AnalyticsDashboardProps {
 type SystemRadarDatum = { system: string; accuracy: number; attempts: number };
 type TimeDatum = { system: string; seconds: number; accuracy: number; count: number };
 type StabilityTrendDatum = { date: string; avgStability: number; totalReviews: number };
+type CalibrationQuadrantData = {
+  mastered: number;
+  dangerousMisconception: number;
+  luckyGuess: number;
+  unconfidentWrong: number;
+  total: number;
+};
 
 interface UserStatsResponse {
   success: boolean;
@@ -108,6 +123,10 @@ interface UserStatsResponse {
         accuracy: number | null;
       };
       trend: 'improving' | 'declining' | 'stable' | 'insufficient_data';
+    };
+    speedByType?: {
+      recall: { avgTimeMs: number | null; count: number };
+      clinicalReasoning: { avgTimeMs: number | null; count: number };
     };
     recommendations: string[];
   };
@@ -209,8 +228,26 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     fetchStabilityTrend();
   }, [getToken]);
 
-  // Transform server data for radar chart (system performance)
-  const radarData: SystemRadarDatum[] = useMemo(() => {
+  // Calibration (Confidence vs. Accuracy) for Recent Performance
+  const calibrationFetcher = async (url: string) => {
+    const token = await getToken();
+    const res = await fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error('Failed to fetch calibration');
+    const json = await res.json();
+    return json.data as { calibration: CalibrationQuadrantData; days: number };
+  };
+  const { data: calibrationData } = useSWR<{ calibration: CalibrationQuadrantData; days: number }>(
+    userStats && userStats.stats?.overall?.totalAttempts > 0
+      ? '/api/analytics/calibration?days=90'
+      : null,
+    calibrationFetcher,
+    { revalidateOnFocus: false }
+  );
+
+  // System performance: horizontal bar chart (best to worst), bottom 3 = red zone
+  const systemPerformanceBarData: SystemRadarDatum[] = useMemo(() => {
     if (!userStats?.stats.bySystems) return [];
 
     return Object.entries(userStats.stats.bySystems)
@@ -220,8 +257,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         attempts: stats.total,
       }))
       .filter((d) => d.attempts > 0)
-      .sort((a, b) => b.attempts - a.attempts)
-      .slice(0, 10); // Top 10 systems by attempts
+      .sort((a, b) => b.accuracy - a.accuracy); // Best first, worst last (bottom 3 = study today)
   }, [userStats]);
 
   // Transform server data for time chart (decision time by system)
@@ -299,12 +335,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Backup your data - reassure users they own their data */}
-      <div className="flex justify-end">
+      {/* Backup your data - reassure users they own their progress */}
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <span className="text-xs text-[var(--color-text-muted)]">You own your progress.</span>
         <button
           onClick={() => exportUserAnalytics(performanceData ?? [], 'csv')}
           disabled={!performanceData?.length}
           className="text-sm text-[var(--color-accent)] hover:underline flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Backup your data as CSV"
         >
           <Download className="w-4 h-4" />
           Backup your data (CSV)
@@ -388,16 +426,176 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <Clock className="w-4 h-4" />
                 <span className="font-medium">Decision Speed</span>
               </div>
-              <div className="flex items-baseline gap-2 mb-1">
-                <div className="text-4xl font-bold text-action-primary">
-                  {userStats.stats.overall.avgTimeMs
-                    ? `${Math.round(userStats.stats.overall.avgTimeMs / 1000)}s`
-                    : '—'}
-                </div>
-              </div>
-              <p className="text-xs text-action-muted">Average per question</p>
+              {(() => {
+                const { primary, benchmark, status } = getSpeedBenchmarkLabel(
+                  userStats.stats.overall.avgTimeMs,
+                  { targetSec: OVERALL_TARGET_SEC }
+                );
+                return (
+                  <>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <div
+                        className={`text-4xl font-bold ${
+                          status === 'above_target'
+                            ? 'text-[var(--color-data-provisional)]'
+                            : status === 'below_target'
+                              ? 'text-[var(--color-data-pass)]'
+                              : 'text-action-primary'
+                        }`}
+                      >
+                        {primary}
+                      </div>
+                    </div>
+                    <p className="text-xs text-action-muted">
+                      {benchmark ? `${benchmark} · Avg per question` : 'Average per question'}
+                    </p>
+                  </>
+                );
+              })()}
             </div>
           </div>
+
+          {/* Confidence vs. Accuracy (Calibration) - Illusion of Competence */}
+          {calibrationData?.calibration && calibrationData.calibration.total > 0 && (
+            <div className="p-6 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary">
+              <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
+                <Brain className="w-4 h-4" />
+                <span className="font-medium">Confidence vs. Accuracy</span>
+              </div>
+              <p className="text-xs text-action-muted mb-4">
+                How well your confidence (from behavior) matches correctness. Lucky guesses and
+                dangerous misconceptions need different follow-up.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  {
+                    key: 'mastered' as const,
+                    icon: CheckCircle,
+                    label: getQuadrantLabel('mastered').short,
+                    count: calibrationData.calibration.mastered,
+                    className: 'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]/40 text-[var(--color-data-pass)]',
+                  },
+                  {
+                    key: 'dangerous_misconception' as const,
+                    icon: AlertTriangle,
+                    label: getQuadrantLabel('dangerous_misconception').short,
+                    count: calibrationData.calibration.dangerousMisconception,
+                    className: 'bg-[var(--color-data-fail)]/10 border-[var(--color-data-fail)]/40 text-[var(--color-data-fail)]',
+                  },
+                  {
+                    key: 'lucky_guess' as const,
+                    icon: HelpCircle,
+                    label: getQuadrantLabel('lucky_guess').short,
+                    count: calibrationData.calibration.luckyGuess,
+                    className: 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/40 text-[var(--color-data-provisional)]',
+                  },
+                  {
+                    key: 'unconfident_wrong' as const,
+                    icon: XCircle,
+                    label: getQuadrantLabel('unconfident_wrong').short,
+                    count: calibrationData.calibration.unconfidentWrong,
+                    className: 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400',
+                  },
+                ].map(({ key, icon: Icon, label, count, className }) => (
+                  <div
+                    key={key}
+                    className={`rounded-xl border p-3 flex items-center justify-between ${className}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span className="text-sm font-medium">{label}</span>
+                    </div>
+                    <span className="text-xl font-bold">{count}</span>
+                  </div>
+                ))}
+              </div>
+              {calibrationData.calibration.dangerousMisconception > 0 && (
+                <p className="mt-3 text-xs text-[var(--color-data-fail)]">
+                  High confidence + wrong = dangerous misconception — prioritize reviewing those
+                  topics.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Speed by question type: Recall vs Clinical Reasoning */}
+          {userStats.stats.speedByType &&
+            (userStats.stats.speedByType.recall.count > 0 ||
+              userStats.stats.speedByType.clinicalReasoning.count > 0) && (
+              <div className="p-6 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary">
+                <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
+                  <Clock className="w-4 h-4" />
+                  <span className="font-medium">Speed by question type</span>
+                </div>
+                <p className="text-xs text-action-muted mb-4">
+                  Recall (first-order) vs clinical reasoning (vignettes). Targets: recall &lt;60s,
+                  clinical &lt;90s.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {userStats.stats.speedByType.recall.count > 0 && (
+                    <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-bg-secondary)]/30">
+                      <div className="text-sm font-medium text-action-primary mb-1">
+                        Recall speed
+                      </div>
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-2xl font-bold text-action-primary">
+                          {Math.round(
+                            (userStats.stats.speedByType.recall.avgTimeMs ?? 0) / 1000
+                          )}
+                          s
+                        </span>
+                        <span className="text-xs text-action-muted">
+                          (Target: &lt;{RECALL_TARGET_SEC}s)
+                          {getSpeedBenchmarkStatus(
+                            userStats.stats.speedByType.recall.avgTimeMs,
+                            RECALL_TARGET_SEC
+                          ) === 'below_target' && ' · On target'}
+                          {getSpeedBenchmarkStatus(
+                            userStats.stats.speedByType.recall.avgTimeMs,
+                            RECALL_TARGET_SEC
+                          ) === 'above_target' && ' · Slow for recall'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-action-muted mt-1">
+                        {userStats.stats.speedByType.recall.count} rapid-recall question
+                        {userStats.stats.speedByType.recall.count !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  )}
+                  {userStats.stats.speedByType.clinicalReasoning.count > 0 && (
+                    <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-bg-secondary)]/30">
+                      <div className="text-sm font-medium text-action-primary mb-1">
+                        Clinical reasoning speed
+                      </div>
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-2xl font-bold text-action-primary">
+                          {Math.round(
+                            (userStats.stats.speedByType.clinicalReasoning.avgTimeMs ?? 0) / 1000
+                          )}
+                          s
+                        </span>
+                        <span className="text-xs text-action-muted">
+                          (Target: &lt;{CLINICAL_REASONING_TARGET_SEC}s)
+                          {getSpeedBenchmarkStatus(
+                            userStats.stats.speedByType.clinicalReasoning.avgTimeMs,
+                            CLINICAL_REASONING_TARGET_SEC
+                          ) === 'below_target' && ' · On target'}
+                          {getSpeedBenchmarkStatus(
+                            userStats.stats.speedByType.clinicalReasoning.avgTimeMs,
+                            CLINICAL_REASONING_TARGET_SEC
+                          ) === 'above_target' && ' · Consider pacing'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-action-muted mt-1">
+                        {userStats.stats.speedByType.clinicalReasoning.count} vignette/clinical
+                        question
+                        {userStats.stats.speedByType.clinicalReasoning.count !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
           {/* FSRS Calibration Progress - Epistemic Uncertainty UI */}
           <CalibrationProgress
@@ -436,35 +634,60 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             </div>
           )}
 
-          {/* Visual vs Text Performance Split */}
+          {/* System Performance: horizontal bar (best to worst), bottom 3 = red zone */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="p-6 rounded-xl border border-[var(--color-border)] bg-surface-primary">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
-                <Activity className="w-4 h-4" /> System Performance Radar
+              <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
+                <BarChart3 className="w-4 h-4" /> System Performance (Best → Worst)
               </div>
-              {radarData.length === 0 ? (
-                <EmptyRadarChart message="Complete questions across organ systems" height={320} />
+              <p className="text-xs text-action-muted mb-3">
+                Bottom 3 bars = focus areas. What should I study today?
+              </p>
+              {systemPerformanceBarData.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-[320px] text-center px-4">
+                  <Activity className="w-10 h-10 text-action-muted/50 mb-2" />
+                  <p className="text-sm text-action-muted mb-4">Not yet assessed</p>
+                  <button
+                    type="button"
+                    onClick={handleStartSession}
+                    className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity"
+                  >
+                    Take a 10-question diagnostic quiz to unlock this graph
+                  </button>
+                </div>
               ) : (
-                <ResponsiveContainer width="100%" height={320}>
-                  <RadarChart data={radarData} outerRadius={120}>
-                    <PolarGrid stroke="var(--color-border)" />
-                    <PolarAngleAxis
+                <ResponsiveContainer width="100%" height={Math.max(320, systemPerformanceBarData.length * 36)}>
+                  <BarChart
+                    layout="vertical"
+                    data={systemPerformanceBarData}
+                    margin={{ top: 4, right: 24, left: 0, bottom: 4 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} />
+                    <XAxis type="number" domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+                    <YAxis
+                      type="category"
                       dataKey="system"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
+                      width={100}
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                     />
-                    <PolarRadiusAxis
-                      angle={30}
-                      domain={[0, 100]}
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    <Tooltip
+                      formatter={(value: number) => [`${value}%`, 'Accuracy']}
+                      contentStyle={chartTheme.tooltip.contentStyle}
+                      labelStyle={chartTheme.tooltip.labelStyle}
                     />
-                    <Radar
-                      name="Accuracy"
-                      dataKey="accuracy"
-                      stroke="var(--color-accent)"
-                      fill="var(--color-accent)"
-                      fillOpacity={0.35}
-                    />
-                  </RadarChart>
+                    <Bar dataKey="accuracy" name="Accuracy" radius={[0, 4, 4, 0]} maxBarSize={28}>
+                      {systemPerformanceBarData.map((_, index) => {
+                        const isRedZone = index >= systemPerformanceBarData.length - 3;
+                        return (
+                          <Cell
+                            key={index}
+                            fill={isRedZone ? 'var(--color-data-fail)' : 'var(--color-accent)'}
+                            fillOpacity={isRedZone ? 0.9 : 0.7}
+                          />
+                        );
+                      })}
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               )}
             </div>
@@ -474,10 +697,15 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <TrendingUp className="w-4 h-4" /> Performance Trend
               </div>
               {userStats.stats.recentPerformance.trend === 'insufficient_data' ? (
-                <div className="flex flex-col items-center justify-center h-[320px]">
-                  <p className="text-sm text-action-muted">
-                    Complete more questions to see performance trends.
-                  </p>
+                <div className="flex flex-col items-center justify-center h-[320px] gap-4">
+                  <p className="text-sm text-action-muted">Not yet assessed</p>
+                  <button
+                    type="button"
+                    onClick={handleStartSession}
+                    className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity"
+                  >
+                    Take a 10-question diagnostic quiz to unlock this graph
+                  </button>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-[320px]">
@@ -532,8 +760,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <SkeletonLoader width="100%" height="320" />
             ) : stabilityTrendData.length === 0 ? (
               <EmptyLineChart
-                message="Complete questions to track memory stability growth"
+                message="Not yet assessed"
                 height={320}
+                diagnosticCta={{ onClick: handleStartSession }}
               />
             ) : (
               <>

@@ -130,7 +130,6 @@ interface GradingResult {
 
   if (isDevEnv) {
     // Log raw AI output in development to help tune prompts
-    // eslint-disable-next-line no-console
     console.debug('[SOAP Grading] Raw Gemini response:', rawText);
   }
 

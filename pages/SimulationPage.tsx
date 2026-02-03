@@ -3,12 +3,15 @@
  *
  * Displays the adaptive quiz engine with focus options (All Topics / Growth Areas / Flagged)
  * Replaces the modal flow with a dedicated route at /simulation/core-pance
+ * For Didactic users, passes enabled systems so Core PANCE only serves questions from current curriculum.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Target, Flag, TrendingUp, ChevronLeft, Zap, Clock, Award } from 'lucide-react';
-import type { SessionSettings, PerformanceRecord, Question } from '../types';
+import type { SessionSettings, PerformanceRecord, Question, SystemCode } from '../types';
+import { useUserContext } from '../hooks/useUserContext';
+import { ABBREVIATION_TO_TOPIC_MAP } from '../src/constants';
 
 interface SimulationPageProps {
   onStartSession: (settings: SessionSettings) => void | Promise<void>;
@@ -32,6 +35,29 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
   initialFocus = 'all',
 }) => {
   const [selectedFocus, setSelectedFocus] = useState<FocusOption>(initialFocus);
+  const { careerStage } = useUserContext();
+  const [enabledSystems, setEnabledSystems] = useState<Set<SystemCode>>(() => {
+    try {
+      const saved = localStorage.getItem('panceai_enabled_systems');
+      if (saved) return new Set(JSON.parse(saved) as SystemCode[]);
+    } catch {
+      /* ignore */
+    }
+    return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+  });
+
+  useEffect(() => {
+    const handler = () => {
+      try {
+        const saved = localStorage.getItem('panceai_enabled_systems');
+        if (saved) setEnabledSystems(new Set(JSON.parse(saved) as SystemCode[]));
+      } catch {
+        /* ignore */
+      }
+    };
+    globalThis.addEventListener('panceai_enabled_systems_changed', handler);
+    return () => globalThis.removeEventListener('panceai_enabled_systems_changed', handler);
+  }, []);
 
   // Calculate real stats from performance data
   const stats = useMemo(() => {
@@ -69,7 +95,17 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
         focus = 'all';
     }
 
-    onStartSession({ focus });
+    const allSystems = Object.keys(ABBREVIATION_TO_TOPIC_MAP).length;
+    const isDidacticWithCurriculum =
+      careerStage === 'student' &&
+      enabledSystems.size > 0 &&
+      enabledSystems.size < allSystems;
+
+    const settings: SessionSettings = { focus };
+    if (isDidacticWithCurriculum) {
+      settings.systems = Array.from(enabledSystems);
+    }
+    onStartSession(settings);
   };
 
   const getFocusDescription = () => {
@@ -103,7 +139,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
       stat: stats.growthAreasCount,
     },
     { id: 'flagged', label: 'Flagged', icon: Flag, color: 'purple', stat: stats.flaggedCount },
-    { id: 'due', label: 'Due for Review', icon: Clock, color: 'emerald' },
+    { id: 'due', label: examLabel === 'PANRE' ? 'Maintenance Due' : 'Due for Review', icon: Clock, color: 'emerald' },
   ];
 
   const getFocusTone = (tone: string) => {
@@ -166,10 +202,12 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
             </div>
             <div>
               <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
-                Core {examLabel} Simulation
+                {examLabel === 'PANRE' ? 'Knowledge Maintenance' : `Core ${examLabel} Simulation`}
               </h1>
               <p className="text-[var(--color-text-muted)] mt-1">
-                Gold standard adaptive quiz engine
+                {examLabel === 'PANRE'
+                  ? 'PANRE-LA check-in — maintain your certification knowledge'
+                  : 'Gold standard adaptive quiz engine'}
               </p>
             </div>
           </div>
@@ -317,7 +355,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           className="w-full py-5 px-8 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] font-bold text-lg rounded-xl shadow-lg transition-all flex items-center justify-center gap-3"
         >
           <Award className="w-6 h-6" />
-          Start {examLabel} Session
+          {examLabel === 'PANRE' ? 'Start Maintenance' : `Start ${examLabel} Session`}
         </motion.button>
       </div>
     </div>

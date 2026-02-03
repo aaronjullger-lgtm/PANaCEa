@@ -95,6 +95,11 @@ export const onRequestPost = authenticatedEndpoint(SubmitSchema, async (context)
       },
     });
 
+    await prisma.user.update({
+      where: { id: userId },
+      data: { hasCompletedBaseline: true },
+    });
+
     logger.info('Baseline submitted', { userId, total, correctCount, accuracy });
     return {
       data: {

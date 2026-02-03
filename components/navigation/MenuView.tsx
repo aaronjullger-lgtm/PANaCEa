@@ -1009,7 +1009,7 @@ const MenuView: React.FC<MenuViewProps> = ({
       {showStudyGuide && (
         <StudyGuideGenerator
           questions={missedQuestions}
-          title="Missed Questions Study Guide"
+          title="To Review Study Guide"
           onClose={() => setShowStudyGuide(false)}
         />
       )}

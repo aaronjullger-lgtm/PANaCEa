@@ -1,18 +1,18 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '@clerk/clerk-react';
 import useSWR from 'swr';
 import {
   Brain,
   TrendingUp,
   Flame,
-  BookOpen,
-  Award,
   ArrowRight,
   Sparkles,
   Clock,
   Zap,
   Target,
+  BarChart3,
+  LayoutDashboard,
 } from 'lucide-react';
 import DecayCurve from './charts/DecayCurve';
 import StabilityPyramid from './charts/StabilityPyramid';
@@ -20,6 +20,35 @@ import AlgorithmStatusWidget from './AlgorithmStatusWidget';
 import { ClinicalSkeleton } from '../ui/ClinicalSkeleton';
 import DailyTriad from './DailyTriad';
 import { ExamReadinessCard, SystemPerformanceWidget } from './Rolling360';
+import { CalibrationQuadrantWidget } from './CalibrationQuadrantWidget';
+import { RetentionForecastCard } from './RetentionForecastCard';
+
+const DASHBOARD_VIEW_KEY = 'pancea_dashboard_view';
+
+export type DashboardViewId = 'pilot' | 'data';
+
+const DASHBOARD_VIEWS: Array<{
+  id: DashboardViewId;
+  label: string;
+  shortLabel: string;
+  icon: React.ElementType;
+  subtitle: string;
+}> = [
+  {
+    id: 'pilot',
+    label: 'Daily Pilot',
+    shortLabel: 'Pilot',
+    icon: Zap,
+    subtitle: 'Action — Streak, due reviews, daily goal',
+  },
+  {
+    id: 'data',
+    label: 'Data Scientist',
+    shortLabel: 'Data',
+    icon: BarChart3,
+    subtitle: 'Analysis — Radars, heatmaps, trends',
+  },
+];
 
 // ============================================================================
 // Types
@@ -148,6 +177,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const { user } = useUser();
   const { data, error, isLoading } = useSWR<RetentionData>('/api/stats/retention', fetcher);
 
+  const [view, setView] = useState<DashboardViewId>(() => {
+    if (typeof window === 'undefined') return 'pilot';
+    const stored = localStorage.getItem(DASHBOARD_VIEW_KEY);
+    return stored === 'data' ? 'data' : 'pilot';
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DASHBOARD_VIEW_KEY, view);
+    } catch {
+      // ignore
+    }
+  }, [view]);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning';
@@ -244,211 +287,181 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           </div>
         </motion.div>
 
-        {/* ===== QUICK STATS ROW - Enhanced with trends ===== */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <QuickStat
-            icon={<Flame className="w-5 h-5 text-[var(--color-data-provisional)]" />}
-            label="Day Streak"
-            value={mockStreak}
-            trend={{ value: 14, isPositive: true }}
-            accentColor="bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]"
-            delay={0}
-          />
-          <QuickStat
-            icon={<BookOpen className="w-5 h-5 text-[var(--color-accent)]" />}
-            label="Cards Learned"
-            value={mockCardsLearned}
-            accentColor="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]"
-            delay={0.1}
-          />
-          <QuickStat
-            icon={<Award className="w-5 h-5 text-[var(--color-data-pass)]" />}
-            label="PANCE Predictor"
-            value={`${mockPANCEPredictor}%`}
-            trend={{ value: 3, isPositive: true }}
-            accentColor="bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)]"
-            delay={0.2}
-          />
+        {/* ===== DASHBOARD VIEW TABS ===== */}
+        <div className="flex gap-1 p-1 rounded-xl bg-[var(--color-bg-secondary)]/80 border border-[var(--color-border)]">
+          {DASHBOARD_VIEWS.map((v) => {
+            const Icon = v.icon;
+            const isActive = view === v.id;
+            return (
+              <button
+                key={v.id}
+                type="button"
+                onClick={() => setView(v.id)}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
+                  isActive
+                    ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm border border-[var(--color-border)]'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">{v.label}</span>
+                <span className="sm:hidden">{v.shortLabel}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* ===== ROLLING 360 EXAM READINESS (HERO) ===== */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.5 }}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left: Exam Readiness Card with Start Session Button */}
-            <ExamReadinessCard />
-
-            {/* Right: System Performance Widget */}
-            <SystemPerformanceWidget maxSystems={5} />
-          </div>
-        </motion.div>
-
-        {/* ===== ALGORITHM STATUS & REVIEW ROW ===== */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left: Smart Review Card - Enhanced */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.35, duration: 0.4 }}
-            className="group bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 shadow-sm hover:shadow-lg hover:border-[var(--color-accent)]/30 transition-all duration-300"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)] rounded-xl shadow-lg shadow-[var(--color-accent)]/20">
-                <Brain className="w-6 h-6 text-[var(--color-text-inverse)]" />
+        <AnimatePresence mode="wait">
+          {view === 'pilot' && (
+            <motion.div
+              key="pilot"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
+            >
+              {/* Daily Pilot: Streak, Due, Goal */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <QuickStat
+                  icon={<Flame className="w-5 h-5 text-[var(--color-data-provisional)]" />}
+                  label="Day Streak"
+                  value={mockStreak}
+                  trend={{ value: 14, isPositive: true }}
+                  accentColor="bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]"
+                  delay={0}
+                />
+                <QuickStat
+                  icon={<Brain className="w-5 h-5 text-[var(--color-accent)]" />}
+                  label="Due Reviews"
+                  value={data.dueCount}
+                  accentColor="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]"
+                  delay={0.05}
+                />
+                <QuickStat
+                  icon={<Target className="w-5 h-5 text-[var(--color-data-pass)]" />}
+                  label="Cards Learned"
+                  value={mockCardsLearned}
+                  accentColor="bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)]"
+                  delay={0.1}
+                />
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                  {data.dueCount > 0 ? 'FSRS Review Queue' : 'All Caught Up'}
-                </h2>
-                <p className="text-sm text-[var(--color-text-secondary)]">
-                  {data.dueCount > 0
-                    ? `${data.dueCount} cards ready for spaced review`
-                    : 'No cards due right now — great work!'}
-                </p>
+
+              {/* Hero: Exam Readiness + Start Session */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ExamReadinessCard />
+                <RetentionForecastCard
+                  dueCount={data.dueCount}
+                  decayCurveData={data.decayCurveData}
+                  onStartReview={() => handleNavigation('/study/smart-review')}
+                />
               </div>
-            </div>
 
-            {data.dueCount > 0 && (
-              <>
-                {/* Progress indicator */}
-                <div className="mb-4">
-                  <div className="h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min((data.dueCount / 50) * 100, 100)}%` }}
-                      transition={{ duration: 0.8, ease: 'easeOut' }}
-                      className="h-full bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] rounded-full"
-                    />
-                  </div>
-                </div>
-
+              {/* Daily Practice */}
+              <SectionHeader
+                title="Daily Practice"
+                subtitle="Quick drills to sharpen your skills"
+                icon={<Zap className="w-5 h-5 text-[var(--color-accent)]" />}
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <button
-                  onClick={() => handleNavigation('/study/smart-review')}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] font-semibold rounded-xl shadow-lg shadow-[var(--color-accent)]/25 hover:shadow-xl hover:shadow-[var(--color-accent)]/30 transition-all duration-300 group-hover:scale-[1.02]"
+                  onClick={() => handleNavigation('/drills/wordle')}
+                  className="group relative bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 hover:border-[var(--color-data-pass)]/50 hover:shadow-lg hover:shadow-[var(--color-data-pass)]/10 transition-all duration-300 w-full text-left overflow-hidden"
                 >
-                  Start Review
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2.5 bg-gradient-to-br from-[var(--color-data-pass)] to-[var(--color-data-pass)] rounded-xl shadow-lg shadow-[var(--color-data-pass)]/20">
+                      <Sparkles className="w-5 h-5 text-[var(--color-text-inverse)]" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                      Medical Wordle
+                    </h3>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                    Guess the medical term in 6 tries
+                  </p>
+                  <div className="flex items-center text-[var(--color-data-pass)] text-sm font-semibold group-hover:gap-2 transition-all">
+                    Play Now
+                    <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </button>
-              </>
-            )}
-
-            {data.dueCount === 0 && (
-              <div className="text-center py-4 bg-[var(--color-data-pass)]/10 rounded-xl border border-[var(--color-data-pass)]/30">
-                <Sparkles className="w-8 h-8 text-[var(--color-data-pass)] mx-auto mb-2" />
-                <p className="text-sm text-[var(--color-data-pass)] font-medium">
-                  You're up to date!
-                </p>
+                <button
+                  onClick={() => handleNavigation('/drills/rapid')}
+                  className="group relative bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 hover:border-[var(--color-data-provisional)]/50 hover:shadow-lg hover:shadow-[var(--color-data-provisional)]/10 transition-all duration-300 w-full text-left overflow-hidden"
+                >
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2.5 bg-gradient-to-br from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] rounded-xl shadow-lg shadow-[var(--color-data-provisional)]/20">
+                      <Clock className="w-5 h-5 text-[var(--color-text-inverse)]" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                      Rapid Recall
+                    </h3>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                    Quick-fire questions to test your speed
+                  </p>
+                  <div className="flex items-center text-[var(--color-data-provisional)] text-sm font-semibold group-hover:gap-2 transition-all">
+                    Start Drill
+                    <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </button>
+                <DailyTriad />
               </div>
-            )}
-          </motion.div>
+            </motion.div>
+          )}
 
-          {/* Right: Algorithm Status */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4, duration: 0.4 }}
-          >
-            <AlgorithmStatusWidget
-              lastTuned={new Date(data.lastTuned)}
-              reason={data.tuningReason}
-              adjustment={data.adjustment}
-            />
-          </motion.div>
-        </div>
-
-        {/* ===== COGNITIVE HEALTH ROW (CHARTS) ===== */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45, duration: 0.4 }}
-        >
-          <SectionHeader
-            title="Memory Health"
-            subtitle="Track your retention and stability over time"
-            icon={<TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />}
-          />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left: Decay Curve */}
-            <div className="bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
-              <DecayCurve data={data.decayCurveData} />
-            </div>
-
-            {/* Right: Stability Pyramid */}
-            <div className="bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
-              <StabilityPyramid data={data.stabilityBuckets} />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* ===== DAILY PRACTICE ROW - Enhanced cards ===== */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.55, duration: 0.4 }}
-        >
-          <SectionHeader
-            title="Daily Practice"
-            subtitle="Quick drills to sharpen your skills"
-            icon={<Zap className="w-5 h-5 text-[var(--color-accent)]" />}
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Medical Wordle Card */}
-            <button
-              onClick={() => handleNavigation('/drills/wordle')}
-              className="group relative bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 hover:border-[var(--color-data-pass)]/50 hover:shadow-lg hover:shadow-[var(--color-data-pass)]/10 transition-all duration-300 w-full text-left overflow-hidden"
+          {view === 'data' && (
+            <motion.div
+              key="data"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-6"
             >
-              {/* Gradient accent */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)] opacity-0 group-hover:opacity-100 transition-opacity" />
+              {/* Data Scientist: System Performance + Calibration */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <SystemPerformanceWidget maxSystems={5} />
+                <CalibrationQuadrantWidget className="w-full" />
+              </div>
 
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 bg-gradient-to-br from-[var(--color-data-pass)] to-[var(--color-data-pass)] rounded-xl shadow-lg shadow-[var(--color-data-pass)]/20">
-                  <Sparkles className="w-5 h-5 text-[var(--color-text-inverse)]" />
+              {/* Memory Health */}
+              <SectionHeader
+                title="Memory Health"
+                subtitle="Retention and stability over time"
+                icon={<TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />}
+              />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
+                  <DecayCurve data={data.decayCurveData} />
                 </div>
-                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                  Medical Wordle
-                </h3>
-              </div>
-              <p className="text-sm text-[var(--color-text-secondary)] mb-4">
-                Guess the medical term in 6 tries
-              </p>
-              <div className="flex items-center text-[var(--color-data-pass)] text-sm font-semibold group-hover:gap-2 transition-all">
-                Play Now
-                <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </button>
-
-            {/* Rapid Recall Card */}
-            <button
-              onClick={() => handleNavigation('/drills/rapid')}
-              className="group relative bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 hover:border-[var(--color-data-provisional)]/50 hover:shadow-lg hover:shadow-[var(--color-data-provisional)]/10 transition-all duration-300 w-full text-left overflow-hidden"
-            >
-              {/* Gradient accent */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] opacity-0 group-hover:opacity-100 transition-opacity" />
-
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 bg-gradient-to-br from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] rounded-xl shadow-lg shadow-[var(--color-data-provisional)]/20">
-                  <Clock className="w-5 h-5 text-[var(--color-text-inverse)]" />
+                <div className="bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
+                  <StabilityPyramid data={data.stabilityBuckets} />
                 </div>
-                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                  Rapid Recall
-                </h3>
               </div>
-              <p className="text-sm text-[var(--color-text-secondary)] mb-4">
-                Quick-fire questions to test your speed
-              </p>
-              <div className="flex items-center text-[var(--color-data-provisional)] text-sm font-semibold group-hover:gap-2 transition-all">
-                Start Drill
-                <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </button>
 
-            {/* Daily Triad */}
-            <DailyTriad />
-          </div>
-        </motion.div>
+              {/* Algorithm Status */}
+              <AlgorithmStatusWidget
+                lastTuned={new Date(data.lastTuned)}
+                reason={data.tuningReason}
+                adjustment={data.adjustment}
+              />
+
+              {/* Link to full analytics */}
+              <div className="flex justify-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => handleNavigation('/analytics')}
+                  className="flex items-center gap-2 text-sm font-medium text-[var(--color-accent)] hover:underline"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Open full analytics (radars, heatmaps, trends)
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

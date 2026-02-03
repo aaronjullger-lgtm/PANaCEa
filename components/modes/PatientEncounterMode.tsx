@@ -52,8 +52,13 @@ import {
   orderDiagnosticTest,
   evaluateTreatmentPlan,
   generateAfterActionReport,
+  buildDebriefPrompt,
+  cleanDebriefJsonResponse,
+  normalizeDebriefFeedback,
+  getFallbackDebriefFeedback,
+  type PreceptorFeedback,
 } from '@/services/ai';
-import { generateDebrief, type PreceptorFeedback } from '@/services/ai';
+import { streamGeminiText } from '@/lib/utils/streamingClient';
 import {
   Activity,
   Stethoscope,
@@ -107,7 +112,7 @@ interface PatientEncounterModeProps {
   onExit?: () => void;
 }
 
-type ViewState = 'landing' | 'active' | 'results';
+type ViewState = 'landing' | 'loading_encounter' | 'active' | 'results';
 type EncounterPhase = 'history' | 'physical' | 'diagnostic' | 'diagnosis' | 'treatment';
 
 const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) => {
@@ -140,6 +145,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [loadingStatusIndex, setLoadingStatusIndex] = useState(0);
+  const [typingStatusIndex, setTypingStatusIndex] = useState(0);
   const [languageMode, setLanguageMode] = useState<SpanishMode>('english');
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -157,6 +164,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [aar, setAar] = useState<string>('');
   const [isPatientInfoExpanded, setIsPatientInfoExpanded] = useState(true);
   const [preceptorFeedback, setPreceptorFeedback] = useState<PreceptorFeedback | null>(null);
+  const [streamedDebriefText, setStreamedDebriefText] = useState('');
+  const [isStreamingDebrief, setIsStreamingDebrief] = useState(false);
 
   // Clinical Fidelity Mode
   const [clinicalFidelity, setClinicalFidelity] = useState<ClinicalFidelitySettings>(() =>
@@ -214,6 +223,21 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
+
+  // Rotate typing status message during AI response (latency masking)
+  const TYPING_STATUS_MESSAGES = [
+    'Reading vitals…',
+    'Reviewing your question…',
+    'Patient is responding…',
+    'Checking chart…',
+  ];
+  useEffect(() => {
+    if (!isTyping) return;
+    const interval = setInterval(() => {
+      setTypingStatusIndex((i) => (i + 1) % TYPING_STATUS_MESSAGES.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [isTyping]);
 
   // Generate a dynamic patient persona on initial mount
   useEffect(() => {
@@ -320,16 +344,17 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const handleStartEncounter = async () => {
     setIsLoading(true);
     setLoadError(null);
+    // Optimistic UI: show encounter shell immediately so user isn't stuck on a spinner
+    setViewState('loading_encounter');
 
-    // Get authentication token
     const token = await getToken();
 
-    // Use dynamic generation to ensure fresh content each time (backend OSCE case)
     const newCase = await getRandomEncounterCase(token);
 
     if (!newCase) {
       console.error('Failed to load case');
       setIsLoading(false);
+      setViewState('landing');
       setLoadError(
         'Unable to load patient case. Please ensure the backend server is running (npm run dev:all) and try again.'
       );
@@ -337,11 +362,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }
 
     setCurrentCase(newCase);
-
-    // Initialize Enhanced OSCE with case data (pass full case for type compatibility)
     enhancedOSCE.initializeSession(newCase as any);
 
-    // Start backend session
     let sessionId: string | undefined;
     try {
       const osceSession = await startOSCESession(newCase.id, token);
@@ -352,17 +374,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       console.error('Failed to start OSCE session', e);
     }
 
-    // Simulate loading for content generation buffer
-    setTimeout(() => {
-      setSession({
-        id: sessionId,
-        caseId: newCase.id,
-        questions: [],
-        startTime: Date.now(),
-      });
-      setIsLoading(false);
-      setViewState('active');
-    }, 1500);
+    setSession({
+      id: sessionId,
+      caseId: newCase.id,
+      questions: [],
+      startTime: Date.now(),
+    });
+    setIsLoading(false);
+    setViewState('active');
   };
 
   const handleAskQuestion = async () => {
@@ -532,26 +551,41 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const handleEndEncounter = async () => {
     if (!currentCase || !session) return;
 
-    setIsLoading(true);
+    const sessionSummary = {
+      transcript: session.questions.flatMap((q) => [
+        { role: 'user' as const, content: q.questionText },
+        { role: 'model' as const, content: q.response },
+      ]),
+      physicalExams: physicalFindings,
+      diagnosticTests: diagnosticResults,
+      diagnosisSubmitted: userDiagnosis,
+      treatmentPlan: treatmentPlan || undefined,
+      differentials: differentialDiagnoses.length > 0 ? differentialDiagnoses : undefined,
+    };
+
+    setIsLoading(false);
+    setPreceptorFeedback(null);
+    setStreamedDebriefText('');
+    setIsStreamingDebrief(true);
+    setViewState('results');
+
     try {
-      // Prepare session summary for Virtual Preceptor
-      const sessionSummary = {
-        transcript: session.questions.flatMap((q) => [
-          { role: 'user' as const, content: q.questionText },
-          { role: 'model' as const, content: q.response },
-        ]),
-        physicalExams: physicalFindings,
-        diagnosticTests: diagnosticResults,
-        diagnosisSubmitted: userDiagnosis,
-        treatmentPlan: treatmentPlan || undefined,
-        differentials: differentialDiagnoses.length > 0 ? differentialDiagnoses : undefined,
-      };
+      const prompt = buildDebriefPrompt(sessionSummary, currentCase);
+      const token = await getToken();
+      const fullText = await streamGeminiText(prompt, {
+        modelName: 'gemini-2.5-pro',
+        temperature: 0.7,
+        token: token ?? undefined,
+        onChunk: (chunk) => setStreamedDebriefText((prev) => prev + chunk),
+      });
 
-      // Get Virtual Preceptor evaluation
-      const feedback = await generateDebrief(sessionSummary, currentCase);
+      const cleaned = cleanDebriefJsonResponse(fullText);
+      const parsed = JSON.parse(cleaned);
+      const feedback = normalizeDebriefFeedback(parsed);
       setPreceptorFeedback(feedback);
+      setStreamedDebriefText('');
+      setIsStreamingDebrief(false);
 
-      // Generate Enhanced OSCE Score Report
       const osceReport = enhancedOSCE.generateScoreReport({
         diagnosisSubmitted: userDiagnosis,
         treatmentPlan: treatmentPlan,
@@ -559,7 +593,6 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       });
       setEnhancedScoreReport(osceReport);
 
-      // Generate legacy AAR for compatibility
       const report = await generateAfterActionReport(
         {
           sessionId: session?.id || 'unknown',
@@ -581,12 +614,41 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         currentCase
       );
       setAar(report);
-
-      setViewState('results');
     } catch (error) {
-      console.error('Error ending encounter:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('Error streaming Virtual Preceptor debrief:', error);
+      const fallback = getFallbackDebriefFeedback(sessionSummary, currentCase);
+      setPreceptorFeedback(fallback);
+      setStreamedDebriefText('');
+      setIsStreamingDebrief(false);
+
+      setEnhancedScoreReport(
+        enhancedOSCE.generateScoreReport({
+          diagnosisSubmitted: userDiagnosis,
+          treatmentPlan: treatmentPlan,
+          differentials: differentialDiagnoses,
+        })
+      );
+      const report = await generateAfterActionReport(
+        {
+          sessionId: session?.id || 'unknown',
+          startTime: new Date(session?.startTime || Date.now()).toISOString(),
+          endTime: new Date().toISOString(),
+          testsOrdered: diagnosticResults.map((r) => r.testName),
+          chatHistory: session.questions.flatMap((q) => [
+            { role: 'user', content: q.questionText },
+            { role: 'model', content: q.response },
+          ]),
+          actionsPerformed: [
+            ...physicalFindings.map((f) => `Exam: ${f.maneuver} -> ${f.finding}`),
+            ...diagnosticResults.map((r) => `Lab: ${r.testName} -> ${r.result}`),
+          ],
+          diagnosisSubmitted: userDiagnosis,
+          treatmentPlan: treatmentPlan ? [treatmentPlan] : [],
+          score: fallback.score,
+        },
+        currentCase
+      ).catch(() => '');
+      setAar(report);
     }
   };
 
@@ -898,6 +960,96 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               )}
             </div>
           </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // Rotate status message while encounter is loading (latency masking)
+  const LOADING_STATUS_MESSAGES = [
+    'Reviewing patient chart…',
+    'Nurse is paging the patient…',
+    'Pulling up vitals…',
+    'Room is being prepared…',
+  ];
+  useEffect(() => {
+    if (viewState !== 'loading_encounter') return;
+    const interval = setInterval(() => {
+      setLoadingStatusIndex((i) => (i + 1) % LOADING_STATUS_MESSAGES.length);
+    }, 2200);
+    return () => clearInterval(interval);
+  }, [viewState]);
+
+  if (viewState === 'loading_encounter') {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white">
+        <div className="border-b border-slate-800 bg-slate-900 sticky top-0 z-10 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center shadow-sm border border-slate-800">
+                <MessageSquare className="w-6 h-6 text-slate-500" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">Virtual OSCE</h1>
+                <p className="text-sm text-slate-400">Preparing your encounter…</p>
+              </div>
+            </div>
+            {onExit && (
+              <button
+                onClick={onExit}
+                aria-label="Exit"
+                className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 transition-colors border border-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden animate-pulse">
+                <div className="p-4 md:p-6 flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-slate-800 flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-5 w-32 bg-slate-800 rounded" />
+                    <div className="h-4 w-48 bg-slate-800 rounded" />
+                  </div>
+                </div>
+                <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-3">
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <span className="w-2 h-2 rounded-full bg-slate-500 animate-pulse" />
+                    <span className="text-sm font-medium">
+                      {LOADING_STATUS_MESSAGES[loadingStatusIndex]}
+                    </span>
+                  </div>
+                  <div className="h-24 bg-slate-800 rounded-lg" />
+                  <div className="grid grid-cols-2 gap-3">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="h-20 bg-slate-800 rounded-lg" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800">
+                <div className="h-4 w-24 bg-slate-800 rounded mb-4" />
+                <div className="flex gap-2">
+                  <div className="flex-1 h-12 bg-slate-800 rounded-lg" />
+                  <div className="w-12 h-12 bg-slate-800 rounded-lg" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 md:p-6 min-h-[320px] flex flex-col items-center justify-center">
+              <p className="text-slate-400 text-sm text-center max-w-xs">
+                Conversation will appear here once the patient is ready.
+              </p>
+              <div className="flex items-center gap-2 mt-4 text-slate-500">
+                <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1621,22 +1773,22 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   {/* Loading state with smooth skeleton */}
                   {isLoading && <ChatSkeleton messages={2} className="mt-4" />}
 
-                  {/* Typing indicator (when AI is responding but not loading) */}
+                  {/* Typing indicator with rotating status (latency masking so user knows system is thinking) */}
                   {isTyping && !isLoading && (
-                    <div className="flex items-center gap-2 text-muted-foreground italic p-4">
+                    <div className="flex items-center gap-2 text-slate-400 italic p-4 rounded-lg bg-slate-800/50 border border-slate-700/50">
                       <div
-                        className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce"
+                        className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"
                         style={{ animationDelay: '0ms' }}
                       />
                       <div
-                        className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce"
+                        className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"
                         style={{ animationDelay: '150ms' }}
                       />
                       <div
-                        className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce"
+                        className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"
                         style={{ animationDelay: '300ms' }}
                       />
-                      <span className="text-sm ml-2">Processing...</span>
+                      <span className="text-sm ml-2">{TYPING_STATUS_MESSAGES[typingStatusIndex % TYPING_STATUS_MESSAGES.length]}</span>
                     </div>
                   )}
 
@@ -1746,9 +1898,48 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     );
   }
 
-  // Results View - Virtual Preceptor Report Card
-  if (viewState === 'results' && currentCase && preceptorFeedback) {
-    return (
+  // Results View - Virtual Preceptor Report Card (or streaming evaluation)
+  if (viewState === 'results' && currentCase) {
+    const showStreaming = isStreamingDebrief || streamedDebriefText.length > 0;
+
+    if (showStreaming && !preceptorFeedback) {
+      return (
+        <div className="min-h-screen bg-slate-950 text-white">
+          <div className="border-b border-slate-800 bg-slate-900 sticky top-0 z-10 shadow-sm">
+            <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Award className="w-8 h-8 text-slate-400" />
+                <div>
+                  <h1 className="text-2xl font-bold">Virtual Preceptor Debrief</h1>
+                  <p className="text-sm text-slate-400">AI is evaluating your encounter...</p>
+                </div>
+              </div>
+              {onExit && (
+                <button
+                  onClick={onExit}
+                  className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 transition-colors border border-slate-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="max-w-5xl mx-auto px-4 py-8">
+            <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+              <p className="text-slate-400 text-sm mb-2">Streaming evaluation (token-by-token):</p>
+              <pre className="text-white font-mono text-sm whitespace-pre-wrap break-words min-h-[120px]">
+                {streamedDebriefText || (
+                  <span className="text-slate-500">Waiting for first tokens...</span>
+                )}
+              </pre>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (preceptorFeedback) {
+      return (
       <div className="min-h-screen bg-slate-950 text-white">
         {/* Header */}
         <div className="border-b border-slate-800 bg-slate-900 sticky top-0 z-10 shadow-sm">
@@ -2044,6 +2235,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         </div>
       </div>
     );
+    }
   }
 
   // Legacy results view (fallback if no preceptor feedback)

@@ -144,7 +144,7 @@ export const AnkiExportPanel: React.FC<AnkiExportPanelProps> = ({
         className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       >
         <Download className="w-5 h-5" />
-        {isExporting ? 'Exporting...' : 'Sync Missed Questions'}
+        {isExporting ? 'Exporting...' : 'Export To Review'}
       </button>
 
       {/* Export Result Message */}

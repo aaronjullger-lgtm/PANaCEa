@@ -128,10 +128,10 @@ export const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
     icon: <Calendar className="w-5 h-5" />,
     enabled: false,
   },
-  // Deep Insight widgets - disabled by default
+  // Deep Insight widgets - disabled by default (Case Endurance = accuracy on long vs short questions)
   {
     id: 'vignetteStamina',
-    label: 'Vignette Stamina',
+    label: 'Case Endurance',
     icon: <FileText className="w-5 h-5" />,
     enabled: false,
   },
@@ -155,6 +155,22 @@ export const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
   },
 ];
 
+/** Short descriptions for Settings tooltip preview (reduces cognitive load when toggling widgets) */
+export const WIDGET_PREVIEW_INFO: Record<WidgetId, { description: string }> = {
+  todayProgress: { description: "Questions done today and session accuracy." },
+  recentTrend: { description: "Trend vs previous 50 questions (+/- %)." },
+  currentStreak: { description: "Consecutive correct answers in a row." },
+  overallAccuracy: { description: "Current accuracy (today/week/month scope)." },
+  questionsAttempted: { description: "Total questions in selected time scope." },
+  bestStreak: { description: "Personal best consecutive correct streak." },
+  studyDays: { description: "Number of days with at least one question." },
+  weekProgress: { description: "This week's questions and accuracy." },
+  vignetteStamina: { description: "Accuracy on short vs long questions (Case Endurance)." },
+  speedVsAccuracy: { description: "Fast (<30s) vs slow (>60s) answer accuracy." },
+  secondGuessFactor: { description: "Accuracy when you changed your answer." },
+  topicSplit: { description: "Diagnosis vs management question accuracy." },
+};
+
 // ============================================================================
 // Widget Components
 // ============================================================================
@@ -168,6 +184,7 @@ interface StatCardProps {
   trend?: number;
   delay?: number;
   isGoldAchievement?: boolean; // Reserved for extraordinary achievements
+  isClinicalAchievement?: boolean; // Teal/green success (avoids red/yellow medical alarm)
 }
 
 const StatCard: React.FC<StatCardProps> = ({
@@ -179,61 +196,67 @@ const StatCard: React.FC<StatCardProps> = ({
   trend,
   delay = 0,
   isGoldAchievement = false,
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay }}
-    className={`${
-      isGoldAchievement
-        ? 'gold-achievement rounded-2xl'
-        : 'widget-premium-glass widget-noise-texture'
-    } p-4 hover:shadow-lg transition-all duration-300 relative`}
-  >
-    {/* Gold sparkle for achievements */}
-    {isGoldAchievement && (
-      <Award className="absolute top-2 right-2 w-5 h-5 text-amber-500 animate-pulse" />
-    )}
+  isClinicalAchievement = false,
+}) => {
+  const isHighlight = isGoldAchievement || isClinicalAchievement;
+  const highlightClass = isClinicalAchievement ? 'clinical-achievement' : 'gold-achievement';
+  const highlightTextClass = isClinicalAchievement
+    ? 'text-teal-700 dark:text-teal-300'
+    : 'text-amber-900';
+  const highlightIconClass = isClinicalAchievement ? 'text-teal-500' : 'text-amber-500';
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+      className={`${
+        isHighlight ? `${highlightClass} rounded-2xl` : 'widget-premium-glass widget-noise-texture'
+      } p-4 hover:shadow-lg transition-all duration-300 relative`}
+    >
+      {isHighlight && (
+        <Award
+          className={`absolute top-2 right-2 w-5 h-5 ${highlightIconClass} ${isGoldAchievement ? 'animate-pulse' : ''}`}
+        />
+      )}
 
-    {/* Small uppercase label */}
-    <div className="flex items-center gap-2 mb-3">
-      <span className={isGoldAchievement ? 'text-amber-900' : colorClass}>{icon}</span>
-      <span className={`stat-label-sm ${isGoldAchievement ? 'text-amber-900' : ''}`}>{label}</span>
-    </div>
+      <div className="flex items-center gap-2 mb-3">
+        <span className={isHighlight ? highlightTextClass : colorClass}>{icon}</span>
+        <span className={`stat-label-sm ${isHighlight ? highlightTextClass : ''}`}>{label}</span>
+      </div>
 
-    {/* Large thin data value */}
-    <div className="flex items-baseline gap-2">
-      <span
-        className={`text-4xl font-light ${isGoldAchievement ? 'text-amber-900 font-bold' : colorClass}`}
-      >
-        {value}
-      </span>
-      {trend !== undefined && (
+      <div className="flex items-baseline gap-2">
         <span
-          className={`flex items-center gap-0.5 text-xs font-medium ${
-            trend > 0 ? 'text-green-500' : trend < 0 ? 'text-red-500' : 'text-slate-500'
-          }`}
+          className={`text-4xl font-light ${isHighlight ? `${highlightTextClass} font-bold` : colorClass}`}
         >
-          {trend > 0 ? (
-            <TrendingUp className="w-3 h-3" />
-          ) : trend < 0 ? (
-            <TrendingDown className="w-3 h-3" />
-          ) : null}
-          {trend > 0 ? '+' : ''}
-          {trend}%
+          {value}
+        </span>
+        {trend !== undefined && (
+          <span
+            className={`flex items-center gap-0.5 text-xs font-medium ${
+              trend > 0 ? 'text-teal-500' : trend < 0 ? 'text-slate-500' : 'text-slate-500'
+            }`}
+          >
+            {trend > 0 ? (
+              <TrendingUp className="w-3 h-3" />
+            ) : trend < 0 ? (
+              <TrendingDown className="w-3 h-3" />
+            ) : null}
+            {trend > 0 ? '+' : ''}
+            {trend}%
+          </span>
+        )}
+      </div>
+
+      {subtext && (
+        <span
+          className={`text-[10px] mt-1 block ${isHighlight ? `${highlightTextClass} font-semibold` : 'text-slate-500 dark:text-slate-400'}`}
+        >
+          {subtext}
         </span>
       )}
-    </div>
-
-    {subtext && (
-      <span
-        className={`text-[10px] mt-1 block ${isGoldAchievement ? 'text-amber-900 font-semibold' : 'text-slate-500 dark:text-slate-400'}`}
-      >
-        {subtext}
-      </span>
-    )}
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 // ============================================================================
 // Main Component
@@ -261,19 +284,17 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
 
     switch (widgetId) {
       case 'currentStreak': {
-        // Gold achievement: Extraordinary streak threshold
-        const isExtraordinaryStreak = data.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD;
+        // Clinical: "Study Continuity" / "Consecutive Correct" with teal (no red/yellow)
+        const isStrongConsistency = data.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD;
         return (
           <StatCard
             key={widgetId}
-            icon={
-              isExtraordinaryStreak ? <Flame className="w-5 h-5" /> : <Zap className="w-5 h-5" />
-            }
-            label={isExtraordinaryStreak ? 'Exceptional Streak' : 'Active Streak'}
+            icon={<Zap className="w-5 h-5" />}
+            label={isStrongConsistency ? 'Study Continuity' : 'Consecutive Correct'}
             value={data.currentStreak}
-            subtext={isExtraordinaryStreak ? "You're on fire!" : 'Questions in a row'}
-            colorClass="text-orange-500"
-            isGoldAchievement={isExtraordinaryStreak}
+            subtext={isStrongConsistency ? 'Strong consistency' : 'Questions in a row'}
+            colorClass="text-teal-500"
+            isClinicalAchievement={isStrongConsistency}
             delay={delay}
           />
         );
@@ -324,26 +345,25 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
         );
 
       case 'todayProgress': {
-        // Emphasize: Today's performance
-        // Gold achievement: Perfect day with threshold questions
-        const isPerfectDay =
+        // Emphasize: Today's performance (clinical tone: teal for strong session)
+        const isStrongSession =
           data.todayQuestions >= PERFECT_DAY_QUESTION_THRESHOLD &&
           data.todayCorrect === data.todayQuestions;
         return (
           <StatCard
             key={widgetId}
-            icon={isPerfectDay ? <Award className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-            label={isPerfectDay ? 'Perfect Session!' : "Today's Session"}
+            icon={isStrongSession ? <Award className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+            label="Today's Session"
             value={data.todayQuestions === 0 ? '—' : `${data.todayCorrect}/${data.todayQuestions}`}
             subtext={
               data.todayQuestions > 0
-                ? isPerfectDay
-                  ? 'Flawless performance!'
+                ? isStrongSession
+                  ? 'Strong performance'
                   : `${Math.round((data.todayCorrect / data.todayQuestions) * 100)}% accuracy`
                 : 'Ready to start'
             }
-            colorClass="text-blue-500"
-            isGoldAchievement={isPerfectDay}
+            colorClass="text-teal-500"
+            isClinicalAchievement={isStrongSession}
             delay={delay}
           />
         );
@@ -381,7 +401,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
             label="Recent Form"
             value={`${data.recentTrend >= 0 ? '+' : ''}${data.recentTrend}%`}
             subtext="Last 50 questions"
-            colorClass={data.recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}
+            colorClass={data.recentTrend >= 0 ? 'text-teal-500' : 'text-slate-500'}
             delay={delay}
           />
         );
@@ -422,7 +442,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
           >
             <div className="flex items-center gap-2 mb-3">
               <FileText className="w-5 h-5 text-indigo-500" />
-              <span className="stat-label-sm">Vignette Stamina</span>
+              <span className="stat-label-sm">Case Endurance</span>
             </div>
             <div className="flex items-center gap-4">
               <div
@@ -605,7 +625,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
   };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 grid-flow-dense">
       {enabledWidgets.map((widgetId, index) => renderWidget(widgetId, index))}
     </div>
   );

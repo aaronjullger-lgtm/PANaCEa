@@ -113,9 +113,9 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
-            <div className="font-semibold">Missed Questions Only</div>
+            <div className="font-semibold">To Review Only</div>
             <div className="text-xs opacity-80">
-              Review tasks for questions you got wrong ({missedQuestions.length} questions)
+              Review tasks to reinforce ({missedQuestions.length} questions)
             </div>
           </button>
           <button
@@ -127,7 +127,7 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
             }`}
           >
             <div className="font-semibold">Complete Package</div>
-            <div className="text-xs opacity-80">Both study plan and missed question reviews</div>
+            <div className="text-xs opacity-80">Both study plan and to-review tasks</div>
           </button>
         </div>
       </div>

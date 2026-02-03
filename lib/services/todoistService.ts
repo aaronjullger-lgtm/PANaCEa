@@ -108,8 +108,8 @@ export function generateMissedQuestionTasks(missedQuestions: any[]): TodoistTask
     reviewDate.setDate(reviewDate.getDate() + dayOffset);
 
     tasks.push({
-      content: `Review Missed Questions: ${topic} (${questions.length} questions)`,
-      description: `Review and understand the ${questions.length} questions you missed in ${topic}. Focus on understanding the rationale and key concepts.`,
+      content: `To Review: ${topic} (${questions.length} questions)`,
+      description: `Review and reinforce the ${questions.length} questions in ${topic}. Focus on understanding the rationale and key concepts.`,
       due_date: reviewDate.toISOString().split('T')[0],
       priority: 3,
       labels: ['review', 'missed-questions', topic.toLowerCase()],

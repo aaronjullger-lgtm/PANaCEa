@@ -14,6 +14,7 @@ import {
   type MomentumLevel,
   type MomentumState,
 } from '@/services/session';
+import { useLowPowerMode } from '@/hooks/useLowPowerMode';
 
 interface MomentumIndicatorProps {
   /** Force refresh when question answered */
@@ -75,26 +76,29 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
   refreshKey = 0,
   compact = false,
 }) => {
+  const lowPower = useLowPowerMode();
   const momentum = useMemo(() => {
     return calculateMomentum();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
 
   const fatigue = useMemo(() => {
     return detectFatigueSignals();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
 
   const config = levelConfig[momentum.level];
   const Icon = config.icon;
 
+  const noMotion = lowPower;
+
   if (compact) {
     return (
       <motion.div
         key={momentum.level}
-        initial={{ scale: 0.9 }}
+        initial={noMotion ? false : { scale: 0.9 }}
         animate={{ scale: 1 }}
+        transition={noMotion ? { duration: 0 } : undefined}
         className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.color} border ${config.borderColor}`}
+        style={{ transform: 'translateZ(0)' }}
       >
         <Icon className="w-3 h-3" />
         <span>{momentum.score}</span>
@@ -103,13 +107,13 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
   }
 
   return (
-    <div className="space-y-2">
-      {/* Main indicator */}
+    <div className="space-y-2" style={{ transform: 'translateZ(0)' }}>
+      {/* Main indicator — GPU layer; no spring when low power */}
       <motion.div
         key={momentum.level}
-        initial={{ scale: 0.95, opacity: 0 }}
+        initial={noMotion ? false : { scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 300 }}
+        transition={noMotion ? { duration: 0 } : { type: 'spring', stiffness: 300 }}
         className={`flex items-center gap-3 px-4 py-3 rounded-xl ${config.bgColor} border ${config.borderColor}`}
       >
         <div className={`p-2 rounded-lg bg-white/50 dark:bg-black/20 ${config.color}`}>
@@ -125,9 +129,9 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
           {/* Progress bar */}
           <div className="mt-1.5 h-1.5 bg-white/50 dark:bg-black/20 rounded-full overflow-hidden">
             <motion.div
-              initial={{ width: 0 }}
+              initial={noMotion ? false : { width: 0 }}
               animate={{ width: `${momentum.score}%` }}
-              transition={{ duration: 0.5 }}
+              transition={noMotion ? { duration: 0 } : { duration: 0.5 }}
               className={`h-full rounded-full ${
                 momentum.level === 'peaked'
                   ? 'bg-[var(--color-data-provisional)]'
@@ -170,9 +174,10 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
       <AnimatePresence>
         {momentum.recommendation && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
+            initial={noMotion ? false : { opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            exit={noMotion ? undefined : { opacity: 0, height: 0 }}
+            transition={noMotion ? { duration: 0 } : undefined}
             className="px-3 py-2 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/80 rounded-lg"
           >
             <p className="text-xs text-[var(--color-accent)] dark:text-[var(--color-accent)]/90">
@@ -186,9 +191,10 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
       <AnimatePresence>
         {fatigue.isFatigued && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={noMotion ? false : { opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            exit={noMotion ? undefined : { opacity: 0, y: -10 }}
+            transition={noMotion ? { duration: 0 } : undefined}
             className="px-3 py-2 bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/30 dark:border-[var(--color-data-provisional)]/80 rounded-lg"
           >
             <div className="flex items-start gap-2">

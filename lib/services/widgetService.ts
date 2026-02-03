@@ -218,7 +218,7 @@ export function generateStreakWidgetHTML(
         : `
       <div class="emoji">◆</div>
       <div class="streak-number">0</div>
-      <div class="streak-label">Start your streak today!</div>
+      <div class="streak-label">Maintain your daily continuity.</div>
     `
     }
     

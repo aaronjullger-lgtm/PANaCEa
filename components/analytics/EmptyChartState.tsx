@@ -2,10 +2,11 @@
  * EmptyChartState Component
  *
  * Unified empty state pattern for all charts across the application.
- * Displays a consistent visual metaphor (faint gray placeholder outline)
- * rather than mixing text, icons, and other patterns.
+ * Uses baseline copy ("Not yet assessed") and optional diagnostic CTA
+ * so the app never feels "dead" — gamify data collection.
  *
  * Part of Phase 3 Visualization Improvements - "No Data" Consistency
+ * Empty State Pedagogy: Pre-filled baseline + diagnostic CTA
  */
 
 import React from 'react';
@@ -14,15 +15,23 @@ import { motion } from 'framer-motion';
 
 export type ChartType = 'line' | 'bar' | 'radar' | 'area' | 'heatmap' | 'generic';
 
+/** Default CTA label for unlocking charts via a short diagnostic quiz */
+export const DIAGNOSTIC_CTA_LABEL = 'Take a 10-question diagnostic quiz to unlock this graph';
+
 interface EmptyChartStateProps {
   /** Type of chart to display placeholder for */
   chartType?: ChartType;
   /** Height of the empty state container */
   height?: number | string;
-  /** Custom message to display */
+  /** Baseline message (avoid "No Data"; use "Not yet assessed") */
   message?: string;
   /** Show icon based on chart type */
   showIcon?: boolean;
+  /** Diagnostic CTA: gamify data collection */
+  diagnosticCta?: {
+    label?: string;
+    onClick: () => void;
+  };
 }
 
 const chartIcons: Record<ChartType, React.ComponentType<{ className?: string }>> = {
@@ -152,8 +161,9 @@ const chartPlaceholders: Record<ChartType, React.ReactNode> = {
 export const EmptyChartState: React.FC<EmptyChartStateProps> = ({
   chartType = 'generic',
   height = 320,
-  message = 'No data available yet',
+  message = 'Not yet assessed',
   showIcon = true,
+  diagnosticCta,
 }) => {
   const Icon = chartIcons[chartType];
 
@@ -170,13 +180,22 @@ export const EmptyChartState: React.FC<EmptyChartStateProps> = ({
         {chartPlaceholders[chartType]}
 
         {/* Centered content overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4">
           {showIcon && (
             <div className="p-3 rounded-lg bg-[var(--color-bg-secondary)]">
               <Icon className="w-8 h-8 opacity-30" />
             </div>
           )}
-          <p className="text-sm font-medium opacity-60">{message}</p>
+          <p className="text-sm font-medium opacity-60 text-center">{message}</p>
+          {diagnosticCta && (
+            <button
+              type="button"
+              onClick={diagnosticCta.onClick}
+              className="mt-1 px-4 py-2 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              {diagnosticCta.label ?? DIAGNOSTIC_CTA_LABEL}
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
@@ -184,27 +203,40 @@ export const EmptyChartState: React.FC<EmptyChartStateProps> = ({
 };
 
 /**
- * Specific empty state variants for common use cases
+ * Specific empty state variants for common use cases.
+ * Default to "Not yet assessed" and support diagnostic CTA.
  */
 
-export const EmptyLineChart: React.FC<{ message?: string; height?: number }> = ({
-  message = 'Complete questions to see performance trends',
-  height,
-}) => <EmptyChartState chartType="line" message={message} height={height} />;
+export const EmptyLineChart: React.FC<{
+  message?: string;
+  height?: number;
+  diagnosticCta?: { label?: string; onClick: () => void };
+}> = ({ message = 'Not yet assessed', height, diagnosticCta }) => (
+  <EmptyChartState chartType="line" message={message} height={height} diagnosticCta={diagnosticCta} />
+);
 
-export const EmptyBarChart: React.FC<{ message?: string; height?: number }> = ({
-  message = 'Data will appear once you start reviewing',
-  height,
-}) => <EmptyChartState chartType="bar" message={message} height={height} />;
+export const EmptyBarChart: React.FC<{
+  message?: string;
+  height?: number;
+  diagnosticCta?: { label?: string; onClick: () => void };
+}> = ({ message = 'Not yet assessed', height, diagnosticCta }) => (
+  <EmptyChartState chartType="bar" message={message} height={height} diagnosticCta={diagnosticCta} />
+);
 
-export const EmptyRadarChart: React.FC<{ message?: string; height?: number }> = ({
-  message = 'Complete questions across multiple systems',
-  height,
-}) => <EmptyChartState chartType="radar" message={message} height={height} />;
+export const EmptyRadarChart: React.FC<{
+  message?: string;
+  height?: number;
+  diagnosticCta?: { label?: string; onClick: () => void };
+}> = ({ message = 'Not yet assessed', height, diagnosticCta }) => (
+  <EmptyChartState chartType="radar" message={message} height={height} diagnosticCta={diagnosticCta} />
+);
 
-export const EmptyHeatmap: React.FC<{ message?: string; height?: number }> = ({
-  message = 'Your activity will appear here',
-  height,
-}) => <EmptyChartState chartType="heatmap" message={message} height={height} />;
+export const EmptyHeatmap: React.FC<{
+  message?: string;
+  height?: number;
+  diagnosticCta?: { label?: string; onClick: () => void };
+}> = ({ message = 'Not yet assessed', height, diagnosticCta }) => (
+  <EmptyChartState chartType="heatmap" message={message} height={height} diagnosticCta={diagnosticCta} />
+);
 
 export default EmptyChartState;

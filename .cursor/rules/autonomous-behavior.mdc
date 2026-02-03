@@ -10,9 +10,12 @@ alwaysApply: true
 1. **Terminal Execution:** Running `npm`, `npx`, `wrangler`, `prisma`, and `git` commands.
 2. **Server Management:** Starting/stopping `wrangler pages dev` or `vite`.
 3. **File Operations:** Creating, moving, or deleting files/folders.
+4. **"Do it for me" / "Run it" / "Do X":** When the user asks you to do something (e.g. "deploy for me," "run the build," "test it," "do it"), **execute it**. Run the command, trigger the workflow, or perform the action without asking for an extra confirmation. You do not need the user to spend another message to say "do it for me" — treat such requests as permission to run.
 
-## Cost Guardrail
+## Cost Guardrail (only exception)
 
-You must **STOP AND ASK** permission only if:
+You must **STOP AND ASK** permission **only** if:
 
-1. You are about to execute a script or write code that triggers a **bulk operation** against the **Gemini API** (or any paid external LLM) that could incur significant cost.
+1. You are about to execute a script or write code that triggers a **bulk or high-volume operation** against the **Gemini API** (or any other paid external LLM/API) that could incur **significant cost** (e.g. mass generation, large batch calls, or repeated expensive requests).
+
+Everything else (builds, deploys, tests, file edits, one-off commands) does **not** require asking — just do it.

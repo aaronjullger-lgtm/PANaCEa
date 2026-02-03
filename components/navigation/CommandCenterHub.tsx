@@ -49,6 +49,10 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { PerformanceRecord, Question, SessionSettings, SystemCode } from '@/types';
+import type { ClinicalRotation } from '@/types';
+import { loadUserProfile, updateUserProfile } from '@/services/analytics';
+import { getSystemsForRotation, isEorRotation } from '@/config/rotation-systems';
+import { RotationSelector } from '@/components/onboarding/RotationSelector';
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 import { DatabaseAnalyticsDashboard } from '@/components/analytics/DatabaseAnalyticsDashboard';
 import { LearningProfileDashboard } from '@/components/analytics/LearningProfileDashboard';
@@ -60,14 +64,17 @@ import {
   QUESTION_PRACTICE_MODES,
   SPECIALTY_DRILL_MODES,
   CATEGORY_INFO,
+  STUDY_OUTCOME_GROUPS,
+  getModeById,
   type TrainingModeConfig,
   type TrainingCategory,
 } from '@/config/training-modes';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useRolling360Stats } from '@/hooks/useRolling360Stats';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { calculateDayStreak } from '@/lib/dashboardUtils';
 import { QuickStatsBarSkeleton } from '@/components/loading';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
 import { BodyMapWidget } from '@/components/dashboard/BodyMapWidget';
 import { RoundsButton } from '@/components/dashboard/RoundsButton';
 
@@ -156,9 +163,10 @@ const ICON_MAP: Record<string, LucideIcon> = {
 // ============================================================================
 
 // Grand Rounds Banner (Standalone Daily Challenge)
-// Didactic: Targeted to curriculum; Clinical/Pro: Global shared challenge
+// Didactic: "Targeted Daily Question" from enabled systems only; Clinical/Pro: Global Grand Rounds
 const GrandRoundsBanner: React.FC<{
   onStart: () => void;
+  /** When true, show "Targeted Daily Question" and pass targeted flag so mode fetches by enabled systems */
   isDidactic?: boolean;
 }> = ({ onStart, isDidactic }) => {
   const today = new Date();
@@ -167,6 +175,22 @@ const GrandRoundsBanner: React.FC<{
     month: 'short',
     day: 'numeric',
   });
+
+  const title = isDidactic ? 'Targeted Daily Question' : 'Grand Rounds';
+  const subtitle = isDidactic
+    ? 'One question from your current curriculum.'
+    : 'Same questions for everyone — daily standardized assessment.';
+
+  const handleStart = () => {
+    if (isDidactic) {
+      try {
+        sessionStorage.setItem('panceai_grand_rounds_targeted', '1');
+      } catch {
+        /* ignore */
+      }
+    }
+    onStart();
+  };
 
   return (
     <GlassCard variant="warning" hoverable className="mb-6">
@@ -177,20 +201,16 @@ const GrandRoundsBanner: React.FC<{
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Grand Rounds</h3>
+              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h3>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted-amber/10 text-muted-amber border border-muted-amber/20">
                 Daily Challenge • {dateStr}
               </span>
             </div>
-            <p className="text-sm text-slate-300">
-              {isDidactic
-                ? 'Targeted daily question from your current curriculum.'
-                : 'Daily standardized assessment. Compare your score!'}
-            </p>
+            <p className="text-sm text-slate-300">{subtitle}</p>
           </div>
         </div>
 
-        <PrimaryButton variant="warning" size="md" icon={Play} onClick={onStart}>
+        <PrimaryButton variant="warning" size="md" icon={Play} onClick={handleStart}>
           Start
         </PrimaryButton>
       </div>
@@ -204,9 +224,21 @@ const CoreAdaptiveHero: React.FC<{
   accuracy: number | null;
   questionsToday: number;
   examLabel: string;
+  /** When true, show "Knowledge Maintenance" / "PANRE-LA Check-in" instead of Core PANCE */
+  isPracticing?: boolean;
   /** Sub-label for Start Session (e.g. "Testing: CV, PULM, GI Only") - shown for Didactic users */
   enabledSystemsLabel?: string | null;
-}> = ({ onStart, accuracy, questionsToday, examLabel, enabledSystemsLabel }) => {
+  /** Weak areas from analytics; when present, show "Focusing on your weak areas: X, Y" */
+  growthAreas?: string[];
+}> = ({ onStart, accuracy, questionsToday, examLabel, isPracticing, enabledSystemsLabel, growthAreas = [] }) => {
+  const mainTitle = isPracticing ? 'Knowledge Maintenance' : 'Core PANCE Simulation';
+  const badgeLabel = isPracticing ? 'PANRE-LA Check-in' : `${examLabel} Prep`;
+  const subtitle =
+    growthAreas.length > 0
+      ? `Focusing on your weak areas: ${growthAreas.slice(0, 3).join(', ')}.`
+      : isPracticing
+        ? 'Maintain your certification knowledge with adaptive questions.'
+        : 'Questions weighted by blueprint and your performance patterns.';
   return (
     <GlassCard variant="primary" hoverable className="mb-6">
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
@@ -218,14 +250,14 @@ const CoreAdaptiveHero: React.FC<{
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
-                  Core PANCE Simulation
+                  {mainTitle}
                 </h3>
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-action-blue/10 text-action-blue border border-action-blue/20">
-                  {examLabel} Prep
+                  {badgeLabel}
                 </span>
               </div>
               <p className="text-sm text-[var(--color-text-secondary)]">
-                AI-powered adaptive questions that target your knowledge gaps
+                {subtitle}
               </p>
             </div>
           </div>
@@ -233,7 +265,7 @@ const CoreAdaptiveHero: React.FC<{
           <div className="mt-4 flex flex-wrap items-center gap-4 text-[var(--color-text-muted)]">
             <span className="inline-flex items-center gap-1.5 text-sm">
               <Target className="w-4 h-4 text-sage-500" aria-hidden />
-              {accuracy !== null ? `${accuracy}%` : '—'} accuracy
+              {accuracy !== null ? `${accuracy}%` : 'Waiting for first session'} accuracy
             </span>
             <span className="inline-flex items-center gap-1.5 text-sm">
               <CheckCircle className="w-4 h-4 text-action-blue" aria-hidden />
@@ -278,7 +310,7 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
               </span>
             </div>
             <p className="text-sm text-[var(--color-text-secondary)] mb-3">
-              Practice with a live voice simulated patient; AI-powered evaluation and real-time feedback
+              Practice with a live voice simulated patient; rubric-based SOAP note grading and real-time feedback.
             </p>
             <div className="flex items-center gap-4">
               <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
@@ -307,76 +339,83 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   );
 };
 
-// Quick Stats Bar
+// Quick Stats Bar (respects prefers-reduced-motion)
 const QuickStatsBar: React.FC<{
   streak: number;
   dueCount: number;
   accuracy: number | null;
   questionsToday: number;
-  /** "Module Accuracy" when Didactic with filtered systems, "Accuracy" otherwise */
+  /** "Module Accuracy" when Didactic with filtered systems, "Global Accuracy" otherwise */
   accuracyLabel?: string;
-}> = ({ streak, dueCount, accuracy, questionsToday, accuracyLabel = 'Accuracy' }) => {
+  /** "To Review" for students, "Maintenance Due" for Practicing PAs */
+  dueLabel?: string;
+}> = ({ streak, dueCount, accuracy, questionsToday, accuracyLabel = 'Global Accuracy', dueLabel = 'To Review' }) => {
+  const prefersReducedMotion = useReducedMotion();
+  const stats = [
+    { label: 'Study Continuity', value: streak, icon: Zap, color: 'text-teal-600 dark:text-teal-400' },
+    {
+      label: dueLabel,
+      value: dueCount,
+      icon: AlertCircle,
+      color: dueCount > 0 ? 'text-muted-amber' : 'text-[var(--color-text-muted)]',
+    },
+    {
+      label: accuracyLabel,
+      value: accuracy !== null ? `${accuracy}%` : 'Waiting for first session',
+      icon: Target,
+      color: 'text-sage-500',
+    },
+    { label: 'Today', value: questionsToday, icon: CheckCircle, color: 'text-action-blue' },
+  ];
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-      {[
-        { label: 'Day Streak', value: streak, icon: Flame, color: 'text-muted-amber' },
-        {
-          label: 'To Review',
-          value: dueCount,
-          icon: AlertCircle,
-          color: dueCount > 0 ? 'text-muted-amber' : 'text-[var(--color-text-muted)]',
-        },
-        {
-          label: accuracyLabel,
-          value: accuracy !== null ? `${accuracy}%` : '—',
-          icon: Target,
-          color: 'text-sage-500',
-        },
-        { label: 'Today', value: questionsToday, icon: CheckCircle, color: 'text-action-blue' },
-      ].map((stat, i) => {
-        const isDueCard = stat.label === 'Due for Review';
+      {stats.map((stat, i) => {
+        const isDueCard = stat.label === dueLabel;
         const hasDueItems = isDueCard && dueCount > 0;
+
+        const animate = prefersReducedMotion
+          ? { opacity: 1, y: 0 }
+          : hasDueItems
+            ? {
+                opacity: 1,
+                y: 0,
+                scale: [1, 1.02, 1],
+                borderColor: [
+                  'var(--color-border)',
+                  'rgba(20, 184, 166, 0.4)',
+                  'var(--color-border)',
+                ],
+              }
+            : { opacity: 1, y: 0 };
+        const transition = prefersReducedMotion
+          ? { duration: 0 }
+          : hasDueItems
+            ? {
+                opacity: { delay: i * 0.05, duration: 0.3, ease: 'easeOut' as const },
+                y: { delay: i * 0.05, duration: 0.3, ease: 'easeOut' as const },
+                scale: {
+                  delay: i * 0.05 + 0.3,
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: 'loop' as const,
+                  ease: 'easeInOut',
+                },
+                borderColor: {
+                  delay: i * 0.05 + 0.3,
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: 'loop' as const,
+                  ease: 'easeInOut',
+                },
+              }
+            : { delay: i * 0.05, duration: 0.3, ease: 'easeOut' as const };
 
         return (
           <motion.div
             key={stat.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={
-              hasDueItems
-                ? {
-                    opacity: 1,
-                    y: 0,
-                    scale: [1, 1.02, 1],
-                    borderColor: [
-                      'var(--color-border)',
-                      'rgba(251, 191, 36, 0.4)',
-                      'var(--color-border)',
-                    ],
-                  }
-                : { opacity: 1, y: 0 }
-            }
-            transition={
-              hasDueItems
-                ? {
-                    opacity: { delay: i * 0.05, duration: 0.3, ease: 'easeOut' },
-                    y: { delay: i * 0.05, duration: 0.3, ease: 'easeOut' },
-                    scale: {
-                      delay: i * 0.05 + 0.3,
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatType: 'loop' as const,
-                      ease: 'easeInOut',
-                    },
-                    borderColor: {
-                      delay: i * 0.05 + 0.3,
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatType: 'loop' as const,
-                      ease: 'easeInOut',
-                    },
-                  }
-                : { delay: i * 0.05, duration: 0.3, ease: 'easeOut' }
-            }
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+            animate={animate}
+            transition={transition}
             className={`flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-xl border transition-colors ${
               hasDueItems
                 ? 'border-data-provisional/30 hover:border-data-provisional/40'
@@ -397,22 +436,23 @@ const QuickStatsBar: React.FC<{
   );
 };
 
-// Mode Card
+// Mode Card (respects prefers-reduced-motion; reflow-friendly for text scaling)
 const ModeCard: React.FC<{
   mode: TrainingModeConfig;
   onSelect: () => void;
 }> = ({ mode, onSelect }) => {
   const Icon = ICON_MAP[mode.iconName] || Target;
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <motion.button
-      whileHover={{ y: -2, scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
+      whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.01 }}
+      whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.2, ease: 'easeOut' }}
       onClick={onSelect}
       disabled={mode.isComingSoon}
       className={`
-        w-full text-left p-4 rounded-xl border transition-all duration-200 group
+        w-full text-left p-4 rounded-xl border transition-all duration-200 group min-h-0
         focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
         ${
           mode.isComingSoon
@@ -422,21 +462,21 @@ const ModeCard: React.FC<{
       `}
     >
       <div className="flex items-start gap-3">
-        <div className="p-2 rounded-xl bg-[var(--color-bg-secondary)] group-hover:bg-[var(--color-accent)]/10 transition-colors duration-200">
+        <div className="p-2 rounded-xl bg-[var(--color-bg-secondary)] group-hover:bg-[var(--color-accent)]/10 transition-colors duration-200 flex-shrink-0">
           <Icon className="w-5 h-5 text-[var(--color-text-secondary)] group-hover:text-[var(--color-accent)] transition-colors" />
         </div>
         <div className="flex-1 min-w-0 max-w-xl">
           <div className="flex items-center justify-between gap-2 mb-0.5">
-            <h4 className="font-semibold text-[var(--color-text-primary)] truncate">
+            <h4 className="font-semibold text-[var(--color-text-primary)] break-words">
               {mode.label}
             </h4>
             {mode.isComingSoon && (
-              <span className="text-xs text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] px-2 py-0.5 rounded-full">
+              <span className="text-xs text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] px-2 py-0.5 rounded-full flex-shrink-0">
                 Soon
               </span>
             )}
           </div>
-          <p className="text-sm text-[var(--color-text-muted)] line-clamp-1">{mode.description}</p>
+          <p className="text-sm text-[var(--color-text-muted)] line-clamp-3">{mode.description}</p>
           {mode.estimatedMinutes && (
             <div className="flex items-center gap-1.5 mt-2 text-xs text-[var(--color-text-muted)]">
               <Timer className="w-3 h-3" />
@@ -444,9 +484,6 @@ const ModeCard: React.FC<{
             </div>
           )}
         </div>
-        {!mode.isComingSoon && (
-          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0 mt-1" />
-        )}
       </div>
     </motion.button>
   );
@@ -629,8 +666,66 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     globalThis.addEventListener('panceai_enabled_systems_changed', handler);
     return () => globalThis.removeEventListener('panceai_enabled_systems_changed', handler);
   }, []);
+
+  // Practicing PAs: default to all systems ON (they toggle OFF to exclude rarely practiced areas)
+  useEffect(() => {
+    if (careerStage !== 'practicing') return;
+    const all = Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[];
+    const saved = localStorage.getItem('panceai_enabled_systems');
+    if (!saved || saved === '[]') {
+      setEnabledSystems(new Set(all));
+      localStorage.setItem('panceai_enabled_systems', JSON.stringify(all));
+      window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
+    }
+  }, [careerStage]);
+
+  const handleToggleSystem = useCallback((system: SystemCode) => {
+    setEnabledSystems((prev: Set<SystemCode>) => {
+      const next = new Set(prev);
+      if (next.has(system)) next.delete(system);
+      else next.add(system);
+      localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(next)));
+      window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
+      return next;
+    });
+  }, []);
+
+  const [userProfile, setUserProfile] = useState(() => loadUserProfile() || { hasCompletedOnboarding: false });
+  useEffect(() => {
+    const sync = () => setUserProfile(loadUserProfile() || { hasCompletedOnboarding: false });
+    sync();
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+
+  const isClinicalStudent = careerStage === 'student' && userProfile?.yearInProgram === 'Clinical Year';
+  const currentRotation = userProfile?.currentRotation;
+  const eorTestDate = userProfile?.eorTestDate;
+
+  const handleRotationChange = useCallback(
+    (rotation: ClinicalRotation) => {
+      updateUserProfile({ currentRotation: rotation });
+      setUserProfile((prev) => ({ ...prev, currentRotation: rotation }));
+      const systems = getSystemsForRotation(rotation);
+      setEnabledSystems(new Set(systems));
+      localStorage.setItem('panceai_enabled_systems', JSON.stringify(systems));
+      window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
+      // Persist for question service Clinical 60/40 (60% rotation / 40% background)
+      localStorage.setItem('panceai_current_rotation', rotation);
+      localStorage.setItem('panceai_year_in_program', 'Clinical Year');
+    },
+    []
+  );
+
+  const handleEorTestDateChange = useCallback((date: string) => {
+    updateUserProfile({ eorTestDate: date || undefined });
+    setUserProfile((prev) => ({ ...prev, eorTestDate: date || undefined }));
+  }, []);
+
   const [activeTab, setActiveTab] = useState<'training' | 'resources' | 'analytics'>('training');
   const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
+  const [studyFocusStep, setStudyFocusStep] = useState<'idle' | 'choose_focus'>('idle');
+  const [showAllTools, setShowAllTools] = useState(false);
 
   // Calculate stats for the dashboard (accuracy null when no data - show "—" instead of 0%)
   const stats = useMemo(() => {
@@ -668,10 +763,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     return `Testing: ${enabled.slice(0, 5).join(', ')}${enabled.length > 5 ? '…' : ''} Only`;
   }, [careerStage, enabledSystems]);
 
-  // Filter modes based on user context (PANCE vs PANRE)
+  // Filter modes based on user context (PANCE vs PANRE; hide didactic-only for Practicing PAs)
   const filteredModes = useMemo(() => {
     const filterForContext = (modes: TrainingModeConfig[]) =>
-      modes.filter((m) => !m.panreOnly || showPANREContent);
+      modes.filter((m) => {
+        if (m.panreOnly && !showPANREContent) return false;
+        if (m.didacticOnly && showPANREContent) return false;
+        return true;
+      });
 
     return {
       visual: filterForContext(VISUAL_DIAGNOSTICS_MODES),
@@ -738,8 +837,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             enabledSystems.size > 0 &&
             enabledSystems.size < Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
               ? 'Module Accuracy'
-              : 'Accuracy'
+              : 'Global Accuracy'
           }
+          dueLabel={careerStage === 'practicing' ? 'Maintenance Due' : 'To Review'}
         />
       )}
 
@@ -753,14 +853,15 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           {stats.dueCount > 0 ? (
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-accent)]/10">
               <p className="text-[var(--color-text-primary)] font-medium">
-                {stats.dueCount} question{stats.dueCount !== 1 ? 's' : ''} due — keep your streak going
+                {stats.dueCount} question{stats.dueCount !== 1 ? 's' : ''} due
+                {careerStage === 'practicing' ? ' — maintenance' : ' — maintain study continuity'}
               </p>
               <PrimaryButton
                 onClick={() => onStartSession({ focus: 'review' })}
                 className="flex items-center gap-2"
               >
                 <Play className="w-4 h-4" />
-                Start review
+                {careerStage === 'practicing' ? 'Practice due' : 'Start review'}
               </PrimaryButton>
             </div>
           ) : (
@@ -781,7 +882,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       )}
 
       {/* Recommended for you */}
-      <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">
+      <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3">
         Recommended for you
       </h2>
       <RecommendationFeed onNavigateToDrill={handleNavigateToDrillModeWithSettings} />
@@ -791,42 +892,139 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         <ResidencyCockpitSection onNavigateToDrillWithSystem={onNavigateToDrillWithSystem} />
       )}
 
-      {/* Grand Rounds - Daily Challenge (Standalone) */}
+      {/* Grand Rounds (Clinical/Pro) vs Targeted Daily Question (Didactic) */}
       <GrandRoundsBanner
         onStart={() => onNavigateToDrillMode('grand_rounds')}
-        isDidactic={careerStage === 'student'}
+        isDidactic={
+          careerStage === 'student' && userProfile?.yearInProgram !== 'Clinical Year'
+        }
       />
 
-      {/* Current Curriculum - Elevated for Didactic users */}
+      {/* Clinical Student: Current Rotation dropdown (presets systems) + EOR Test Date */}
+      {isClinicalStudent && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
+        >
+          <h3 className="font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 text-[var(--color-accent)]" />
+            Current Rotation
+          </h3>
+          <p className="text-sm text-[var(--color-text-muted)] mb-3">
+            Selecting a rotation presets which systems you&apos;re tested on (e.g. Surgery = GI, CV, MSK; zero Psych).
+          </p>
+          <RotationSelector
+            value={currentRotation}
+            onChange={handleRotationChange}
+            label=""
+          />
+          {currentRotation && isEorRotation(currentRotation) && (
+            <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+              <label className="block text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+                EOR Test Date
+              </label>
+              <input
+                type="date"
+                value={eorTestDate ?? ''}
+                onChange={(e) => handleEorTestDateChange(e.target.value)}
+                className="w-full max-w-xs px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] text-sm"
+                aria-label="EOR test date for current rotation"
+              />
+              <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                Dashboard will show &quot;EOR Readiness&quot; until this date.
+              </p>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Current Curriculum - Elevated for Didactic: Study Systems on dashboard + sub-label on Start Session */}
       {careerStage === 'student' &&
-        enabledSystems.size > 0 &&
-        enabledSystems.size < Object.keys(ABBREVIATION_TO_TOPIC_MAP).length && (
+        enabledSystems.size >= 0 &&
+        enabledSystems.size <= Object.keys(ABBREVIATION_TO_TOPIC_MAP).length && (
           <motion.div
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+            className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-[var(--color-accent)]/10">
-                <Layers className="w-5 h-5 text-[var(--color-accent)]" />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-[var(--color-accent)]/10">
+                  <Layers className="w-5 h-5 text-[var(--color-accent)]" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[var(--color-text-primary)]">Current Curriculum</h3>
+                  <p className="text-sm text-[var(--color-text-muted)]">
+                    {enabledSystems.size === 0
+                      ? 'Enable at least one system to test.'
+                      : enabledSystems.size === Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
+                        ? 'All systems enabled.'
+                        : `Testing: ${Array.from(enabledSystems).slice(0, 6).join(', ')}${enabledSystems.size > 6 ? ` +${enabledSystems.size - 6} more` : ''} only`}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-[var(--color-text-primary)]">Current Curriculum</h3>
-                <p className="text-sm text-[var(--color-text-muted)]">
-                  Testing: {Array.from(enabledSystems).slice(0, 6).join(', ')}
-                  {enabledSystems.size > 6 ? ` +${enabledSystems.size - 6} more` : ''}
-                </p>
-              </div>
+              {onOpenSettings && (
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  className="text-sm font-medium text-[var(--color-accent)] hover:underline self-start sm:self-center"
+                >
+                  More options
+                </button>
+              )}
             </div>
-            {onOpenSettings && (
+            {/* Inline Study Systems toggles for Didactic */}
+            <div className="flex gap-2 mb-2">
               <button
                 type="button"
-                onClick={onOpenSettings}
-                className="text-sm font-medium text-[var(--color-accent)] hover:underline self-start sm:self-center"
+                onClick={() => {
+                  const all = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+                  setEnabledSystems(all);
+                  localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(all)));
+                  window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
+                }}
+                className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
               >
-                Change
+                Enable All
               </button>
-            )}
+              <button
+                type="button"
+                onClick={() => {
+                  setEnabledSystems(new Set());
+                  localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
+                  window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
+                }}
+                className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
+              >
+                Disable All
+              </button>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+              {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map((system) => {
+                const fullName = getSystemDisplayFullName(system);
+                return (
+                  <button
+                    key={system}
+                    type="button"
+                    onClick={() => handleToggleSystem(system)}
+                    title={fullName}
+                    className={`min-w-0 p-2 rounded-lg text-xs font-medium transition-all text-left ${
+                      enabledSystems.has(system)
+                        ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-2 border-[var(--color-accent)]'
+                        : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border-2 border-transparent'
+                    }`}
+                  >
+                    <div className="font-semibold truncate" title={system}>
+                      {system}
+                    </div>
+                    <div className="text-[10px] opacity-80 truncate min-w-0" title={fullName}>
+                      {fullName}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </motion.div>
         )}
 
@@ -837,6 +1035,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         questionsToday={stats.questionsToday}
         examLabel={examLabel}
         enabledSystemsLabel={enabledSystemsLabel}
+        accuracyLabel={
+          careerStage === 'student' &&
+          enabledSystems.size > 0 &&
+          enabledSystems.size < Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
+            ? 'Module Accuracy'
+            : 'Global Accuracy'
+        }
+        growthAreas={growthAreas}
       />
 
       {/* Virtual OSCE Section (Standalone Feature) */}
@@ -924,24 +1130,36 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </motion.div>
       )}
 
-      {/* Study Tools Section Header - Sticky */}
+      {/* Study Tools / Maintenance Section Header - Sticky (terminology differs for Practicing PAs) */}
       <div className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/95 backdrop-blur border-b border-gray-200 dark:border-slate-700 -mx-4 px-4 pb-4 mb-6">
-        <div className="mb-4">
-          <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Study Tools</h2>
+        <div className="mb-3">
+          <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
+            {careerStage === 'practicing' ? 'Maintenance & Reference' : 'Study Tools'}
+          </h2>
           <p className="text-sm text-[var(--color-text-muted)]">
-            Choose your training mode or explore clinical resources
+            {careerStage === 'practicing'
+              ? 'Training modes, clinical resources, and progress'
+              : 'Switch view: choose training modes, clinical resources, or progress &amp; analytics'}
           </p>
         </div>
 
-        {/* Tab Navigation - Underline Style */}
-        <div className="flex gap-4 overflow-x-auto -mx-1 px-1 border-b border-gray-200 dark:border-slate-800">
+        {/* Tab Navigation - switches content below (not scroll anchors) */}
+        <div
+          className="flex gap-4 overflow-x-auto -mx-1 px-1 border-b border-gray-200 dark:border-slate-800"
+          role="tablist"
+          aria-label="Study tools view"
+        >
           {[
             { id: 'training' as const, label: 'Training Modes', icon: Zap },
             { id: 'resources' as const, label: 'Clinical Resources', icon: BookOpen },
-            { id: 'analytics' as const, label: 'Analytics', icon: BarChart3 },
+            { id: 'analytics' as const, label: 'Progress & Analytics', icon: BarChart3 },
           ].map((tab) => (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={activeTab === tab.id ? 'true' : 'false'}
+              aria-controls={`study-tools-panel-${tab.id}`}
+              id={`study-tools-tab-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-1 py-2 font-medium transition-all whitespace-nowrap border-b-2 bg-transparent ${
                 activeTab === tab.id
@@ -956,41 +1174,214 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </div>
       </div>
 
-      {/* Tab Content */}
+      {/* Tab panels: one visible at a time (view switch, not scroll) */}
       <AnimatePresence mode="wait">
         {activeTab === 'training' && (
           <motion.div
             key="training"
+            id="study-tools-panel-training"
+            role="tabpanel"
+            aria-labelledby="study-tools-tab-training"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
           >
-            <CategorySection
-              category="visual_diagnostics"
-              modes={filteredModes.visual}
-              onSelectMode={handleModeSelect}
-            />
-            <CategorySection
-              category="clinical_simulation"
-              modes={filteredModes.clinical}
-              onSelectMode={handleModeSelect}
-            />
-            <CategorySection
-              category="question_practice"
-              modes={filteredModes.questions}
-              onSelectMode={handleModeSelect}
-            />
-            <CategorySection
-              category="specialty_drills"
-              modes={filteredModes.specialty}
-              onSelectMode={handleModeSelect}
-            />
+            {/* Progressive disclosure: default = one CTA; "Study Now" opens outcome choice */}
+            {studyFocusStep === 'idle' && !showAllTools && (
+              <div className="space-y-6">
+                <div className="text-center py-6">
+                  <p className="text-[var(--color-text-secondary)] mb-6">
+                    What do you want to do?
+                  </p>
+                  <PrimaryButton
+                    size="lg"
+                    icon={Play}
+                    iconRight={ChevronRight}
+                    onClick={() => setStudyFocusStep('choose_focus')}
+                    className="gap-2"
+                  >
+                    Study Now
+                  </PrimaryButton>
+                </div>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllTools(true)}
+                    className="text-sm text-[var(--color-accent)] hover:underline"
+                  >
+                    Browse all tools
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Second step: "What do you want to focus on?" — grouped by outcome */}
+            {studyFocusStep === 'choose_focus' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
+                    What do you want to focus on?
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setStudyFocusStep('idle')}
+                    className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                  >
+                    Back
+                  </button>
+                </div>
+
+                {/* Learn New Material */}
+                <section>
+                  <div className="flex items-center gap-2 mb-3">
+                    <BookOpen className="w-5 h-5 text-[var(--color-text-muted)]" />
+                    <h4 className="font-semibold text-[var(--color-text-primary)]">
+                      {STUDY_OUTCOME_GROUPS.learn.label}
+                    </h4>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-muted)] mb-3">
+                    {STUDY_OUTCOME_GROUPS.learn.description}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {STUDY_OUTCOME_GROUPS.learn.modeIds.map((id) => {
+                      const mode = getModeById(id);
+                      if (!mode || (mode.panreOnly && !showPANREContent)) return null;
+                      return (
+                        <ModeCard
+                          key={mode.id}
+                          mode={mode}
+                          onSelect={() => {
+                            handleModeSelect(mode);
+                            setStudyFocusStep('idle');
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
+
+                {/* Test My Knowledge */}
+                <section>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Target className="w-5 h-5 text-[var(--color-text-muted)]" />
+                    <h4 className="font-semibold text-[var(--color-text-primary)]">
+                      {STUDY_OUTCOME_GROUPS.test.label}
+                    </h4>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-muted)] mb-3">
+                    {STUDY_OUTCOME_GROUPS.test.description}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {STUDY_OUTCOME_GROUPS.test.modeIds.slice(0, 6).map((id) => {
+                      const mode = getModeById(id);
+                      if (!mode || mode.isComingSoon || (mode.panreOnly && !showPANREContent)) return null;
+                      return (
+                        <ModeCard
+                          key={mode.id}
+                          mode={mode}
+                          onSelect={() => {
+                            handleModeSelect(mode);
+                            setStudyFocusStep('idle');
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                  {STUDY_OUTCOME_GROUPS.test.modeIds.length > 6 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAllTools(true);
+                        setStudyFocusStep('idle');
+                      }}
+                      className="mt-2 text-sm text-[var(--color-accent)] hover:underline"
+                    >
+                      More options…
+                    </button>
+                  )}
+                </section>
+
+                {/* Fix My Weaknesses */}
+                <section>
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertCircle className="w-5 h-5 text-[var(--color-text-muted)]" />
+                    <h4 className="font-semibold text-[var(--color-text-primary)]">
+                      {STUDY_OUTCOME_GROUPS.fix.label}
+                    </h4>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-muted)] mb-3">
+                    {STUDY_OUTCOME_GROUPS.fix.description}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onStartSession(growthAreas.length > 0 ? { focus: 'topic', topic: growthAreas[0] } : { focus: 'incorrect' });
+                      setStudyFocusStep('idle');
+                    }}
+                    className="w-full sm:w-auto text-left p-4 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50 hover:bg-[var(--color-bg-secondary)] transition-all group flex items-center gap-3"
+                  >
+                    <div className="p-2 rounded-lg bg-[var(--color-accent)]/10">
+                      <Target className="w-5 h-5 text-[var(--color-accent)]" />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-[var(--color-text-primary)]">
+                        Focus on my weak areas
+                      </span>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                        {growthAreas.length > 0
+                          ? `Start with ${growthAreas[0]} and related topics`
+                          : 'Questions from your to-review list'}
+                      </p>
+                    </div>
+                  </button>
+                </section>
+              </div>
+            )}
+
+            {/* Full list (progressive disclosure: "Browse all tools") */}
+            {showAllTools && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className="text-lg font-bold text-[var(--color-text-primary)]">All study tools</h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowAllTools(false)}
+                    className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                  >
+                    Show less
+                  </button>
+                </div>
+                <CategorySection
+                  category="visual_diagnostics"
+                  modes={filteredModes.visual}
+                  onSelectMode={handleModeSelect}
+                />
+                <CategorySection
+                  category="clinical_simulation"
+                  modes={filteredModes.clinical}
+                  onSelectMode={handleModeSelect}
+                />
+                <CategorySection
+                  category="question_practice"
+                  modes={filteredModes.questions}
+                  onSelectMode={handleModeSelect}
+                />
+                <CategorySection
+                  category="specialty_drills"
+                  modes={filteredModes.specialty}
+                  onSelectMode={handleModeSelect}
+                />
+              </div>
+            )}
           </motion.div>
         )}
 
         {activeTab === 'resources' && (
           <motion.div
             key="resources"
+            id="study-tools-panel-resources"
+            role="tabpanel"
+            aria-labelledby="study-tools-tab-resources"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
@@ -1033,11 +1424,10 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       <h4 className="font-bold text-[var(--color-text-primary)]">
                         Lab Calculators
                       </h4>
-                      <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                        GFR, Anion Gap, Corrected Na+, A-a Gradient
-                      </p>
+<p className="text-sm text-[var(--color-text-muted)] mt-1">
+                      GFR, Anion Gap, Corrected Na+, A-a Gradient
+                    </p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </button>
               </div>
@@ -1066,7 +1456,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                         Study only your saved clinical pearls for high-yield review
                       </p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </button>
               </section>
@@ -1100,7 +1489,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                             Image analysis: upload ECGs or clinical images for AI explanations and code-based measurements
                           </p>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
                       </div>
                     </button>
                   )}
@@ -1124,7 +1512,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                             Generate anatomy images and segment regions (Firefly + Gemini)
                           </p>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
                       </div>
                     </button>
                   )}
@@ -1146,7 +1533,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                             guide explanations
                           </p>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
                       </div>
                     </button>
                   )}
@@ -1191,7 +1577,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                         </span>
                       </div>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </button>
               </section>
@@ -1226,7 +1611,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                         Context caching
                       </span>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </button>
               </section>
@@ -1237,6 +1621,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         {activeTab === 'analytics' && (
           <motion.div
             key="analytics"
+            id="study-tools-panel-analytics"
+            role="tabpanel"
+            aria-labelledby="study-tools-tab-analytics"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
@@ -1311,7 +1698,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                         Visual mastery grid across organ systems
                       </p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </button>
                 <button
@@ -1328,7 +1714,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                         Identify high-yield focus areas
                       </p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </button>
                 <button
@@ -1347,7 +1732,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                         Strengths, timing patterns, and diagnosis bias
                       </p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </button>
               </div>

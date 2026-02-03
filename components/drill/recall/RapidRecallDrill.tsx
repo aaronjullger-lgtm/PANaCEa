@@ -220,7 +220,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
     if (currentQuestion && status === 'playing') {
       telemetry.startQuestion('rapid_recall');
     }
-  }, [currentQuestion]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentQuestion]);
 
   /**
    * Normalize a diagnosis string for comparison.

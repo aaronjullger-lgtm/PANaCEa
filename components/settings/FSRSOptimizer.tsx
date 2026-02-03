@@ -1,8 +1,10 @@
 /**
  * FSRS Optimizer UI Component (Phase 5: Self-Optimizing Engine)
  *
- * Provides user interface for running client-side FSRS parameter optimization.
- * Shows before/after parameter comparison and efficiency gains.
+ * Provides UI for running FSRS parameter optimization. Heavy L-BFGS runs server-side
+ * (POST /api/user/fsrs-params), so the main thread is never blocked. Any future
+ * client-side optimizer must run in a Web Worker.
+ * WASM re-hydration: Before running, flushes pending sync so optimizer trains on latest data.
  */
 
 import React, { useState } from 'react';
@@ -15,9 +17,10 @@ import {
   type OptimizationResult,
   type OptimizationProgress,
 } from '../../services/optimizer/fsrsOptimizer';
+import { syncManager } from '../../lib/services/sync/syncManager';
 
 export const FSRSOptimizer: React.FC = () => {
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [progress, setProgress] = useState<OptimizationProgress | null>(null);
   const [result, setResult] = useState<OptimizationResult | null>(null);
@@ -48,6 +51,10 @@ export const FSRSOptimizer: React.FC = () => {
       setIsOptimizing(true);
       setError(null);
       setResult(null);
+
+      // WASM re-hydration: flush pending sync so optimizer trains on latest data (not stale)
+      const token = await getToken();
+      await syncManager.syncAll(token).catch(() => {});
 
       // Run optimization with progress tracking
       const optimizationResult = await optimizeFSRSParameters(userId, setProgress);
@@ -183,11 +190,14 @@ export const FSRSOptimizer: React.FC = () => {
 
       {/* Info Box */}
       {!isOptimizing && !result && !error && (
-        <div className="p-3 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg">
+        <div className="p-3 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg space-y-2">
           <p className="text-xs text-[var(--color-accent)]">
             {canOptimize
               ? 'Requires 500+ valid reviews for personalization. Optimization takes 10-30 seconds.'
               : `Need ${reviewsNeeded} more reviews for personalization.`}
+          </p>
+          <p className="text-xs text-[var(--color-text-secondary)]">
+            Multi-device? Sync other devices first so optimization uses all your reviews.
           </p>
         </div>
       )}

@@ -92,7 +92,6 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
     const calibration = calculateBehavioralCalibration();
     const records = getBehavioralRecords();
     return { ...calibration, total: records.length };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
 
   if (stats.total < 5) {

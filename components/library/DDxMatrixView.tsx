@@ -103,11 +103,19 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
   }, [selectedIds]);
 
   const fetchComparison = async () => {
+    const id0 = selectedIds[0];
+    const id1 = selectedIds[1];
+    if (!id0 || !id1) return;
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchConditionComparison(selectedIds);
-      setComparisonData(data);
+      const data = await fetchConditionComparison(id0, id1);
+      setComparisonData({
+        conditions: [data.correct, data.selected],
+        discriminatingFeatures: [],
+        uniqueEntities: [],
+        comparisonFields: data.fields,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load comparison');
     } finally {
@@ -133,9 +141,12 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
   // Check if a field differs across conditions
   const fieldDiffers = (field: ComparisonField): boolean => {
     if (!comparisonData?.conditions || comparisonData.conditions.length < 2) return false;
-    const values = comparisonData.conditions.map((c) =>
-      formatFieldValue(c[field.key as keyof DeepConditionData])
-    );
+    const values = comparisonData.conditions.map((c) => {
+      const v = c[field.key as keyof DeepConditionData];
+      return formatFieldValue(
+        v === undefined || v === null ? '-' : Array.isArray(v) ? v : (v as string)
+      );
+    });
     const unique = new Set(values.filter((v) => v !== '-'));
     return unique.size > 1;
   };
@@ -303,7 +314,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                   const isExpanded = expandedCategories.has(category);
                   const filteredFields = showLinkedEntities
                     ? fields
-                    : fields.filter((f) => !f.isLinkedEntity);
+                    : fields.filter((f) => !(f as ComparisonField & { isLinkedEntity?: boolean }).isLinkedEntity);
 
                   if (filteredFields.length === 0) return null;
 
@@ -356,7 +367,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                                           <span className="w-5 h-5 rounded-full bg-[var(--color-accent)] text-white text-xs flex items-center justify-center font-bold">
                                             {i + 1}
                                           </span>
-                                          {cond.condition}
+                                          {cond.name}
                                         </div>
                                       </th>
                                     ))}
@@ -384,9 +395,9 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                                         </td>
                                         {comparisonData.conditions.map((cond) => {
                                           const value = cond[field.key as keyof DeepConditionData];
-                                          const displayValue = field.isLinkedEntity
+                                          const displayValue = (field as ComparisonField & { isLinkedEntity?: boolean }).isLinkedEntity
                                             ? formatLinkedEntity(value)
-                                            : formatFieldValue(value);
+                                            : formatFieldValue(value === undefined || value === null ? '-' : Array.isArray(value) ? value : (value as string));
 
                                           return (
                                             <td
@@ -435,7 +446,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
               onClick={() => onStartQuiz(selectedIds)}
               className="w-full py-2.5 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:opacity-90 transition-opacity"
             >
-              Start DDx Quiz: {comparisonData.conditions.map((c) => c.condition).join(' vs ')}
+              Start DDx Quiz: {comparisonData.conditions.map((c) => c.name).join(' vs ')}
             </button>
           </div>
         )}

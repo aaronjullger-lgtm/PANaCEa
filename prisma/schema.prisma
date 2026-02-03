@@ -804,6 +804,43 @@ model EducationalResource {
   @@index([uploadedBy])
 }
 
+/// Textbook chunks for RAG retrieval (e.g. OpenStax)
+model TextbookChunk {
+  id          String   @id
+  source      String
+  bookTitle   String
+  chapter     String?
+  section     String?
+  text        String
+  systemCodes String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  // Optional full-text search index (if enabled via SQL migration)
+  searchVector Unsupported("tsvector")?
+
+  @@index([source])
+  @@index([bookTitle])
+  @@index([systemCodes])
+}
+
+/// Curated passages for direct textbook excerpts (e.g. OpenStax)
+model CuratedPassage {
+  id           String   @id
+  title        String
+  body         String
+  source       String
+  sourceUrl    String
+  license      String
+  systemCodes  String[] @default([])
+  conditionIds String[] @default([])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+
+  @@index([source])
+  @@index([systemCodes])
+  @@index([conditionIds])
+}
+
 /// Per-user Gemini context cache for "Chat with your Library" and student-context tutor.
 /// source: 'upload' | 'drive' | 'student-context'
 model KnowledgeCache {
@@ -1876,6 +1913,9 @@ model QuestionAttempt {
   telemetryJson   Json?   // Detailed behavioral telemetry: MVRT, time_to_first_interaction, rapid_guess, etc.
   durationMs      Int?    // Total duration from display to submission (ms); set by drill submit-review
   selectedAnswer  String? // Answer choice selected (e.g. A, B, C, D) for drill/analytics
+
+  // Metacognition: implicit confidence (0-1) from behavior for Calibration / Illusion of Competence
+  implicitConfidence Float? // 0-1; high+right=mastered, high+wrong=dangerous, low+right=lucky, low+wrong=unconfident
 
   @@index([isRankedAttempt])
   @@index([mode])
@@ -3367,6 +3407,11 @@ model UserPreferences {
   shareAnonymousData Boolean @default(true)
   showOnLeaderboard  Boolean @default(true)
 
+  // Streak resilience (see docs/AUDIT_STREAK_FRAGILITY.md)
+  streakFreezes   Int    @default(0) // Earn by studying or buy with coins; max per config
+  userCoins       Int    @default(0) // Earn from questions; spend on freezes
+  streakGoalDays  String @default("all") // "all" | "weekdays" — weekdays only = no streak break on Sat/Sun
+
   // Custom JSON for future extensibility
   customSettings Json?
 
@@ -3377,6 +3422,19 @@ model UserPreferences {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+/// Streak freeze use: one row per date the user used a freeze (so that day does not break the streak).
+/// userId is Clerk ID to match DailyStreak lookup in streak APIs.
+model StreakFreezeUse {
+  id        String   @id @default(cuid())
+  userId    String   // Clerk ID (same as DailyStreak in API)
+  date      DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
 }
 
 // Step 5: User Goal Tracking

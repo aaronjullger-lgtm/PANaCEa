@@ -74,7 +74,7 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen,
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-hidden border border-[var(--color-border)]"
+            className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-hidden border border-[var(--color-border)] ring-1 ring-black/10 dark:ring-white/10"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}

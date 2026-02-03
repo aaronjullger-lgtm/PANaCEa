@@ -296,7 +296,6 @@ export function useUserStats(): UseUserStatsResult {
         syncFromCloud();
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]); // Only trigger on sign-in state change, not on every clerkId change
 
   // Listen for external updates (e.g. from performanceService)

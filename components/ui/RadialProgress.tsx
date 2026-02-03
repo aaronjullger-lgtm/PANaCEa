@@ -3,6 +3,11 @@
  *
  * Circular progress indicator with customizable colors and animations.
  * Perfect for displaying accuracy, completion percentages, or any metric 0-100%.
+ *
+ * When color is left as default (accent), uses a color-blind-safe traffic-light scale:
+ * - &gt; 80%: Teal (mastery)
+ * - 60–80%: Blue (building)
+ * - &lt; 60%: Amber (warning/keep trying). Red is never used for "low" progress.
  */
 
 import React, { useMemo } from 'react';
@@ -52,14 +57,15 @@ export const RadialProgress: React.FC<RadialProgressProps> = ({
     const circ = 2 * Math.PI * r;
     const off = circ - (clampedValue / 100) * circ;
 
-    // Determine color based on value if not explicitly set
+    // Traffic-light system for accuracy/progress (color-blind safe; never red for "low" metric)
+    // < 60% = Amber (warning/keep trying), 60–80% = Blue (building), > 80% = Teal (mastery)
     const pColor =
       color === 'var(--color-accent)' && value !== undefined
         ? value >= 80
-          ? '#10b981' // green
+          ? '#14b8a6' // teal - mastery
           : value >= 60
-            ? '#f59e0b' // amber
-            : '#ef4444' // red
+            ? '#2563eb' // blue - building
+            : '#f59e0b' // amber - warning/keep trying (never red for student progress)
         : color;
 
     // Responsive font size based on circle size

@@ -257,7 +257,7 @@ describe('Widget Service', () => {
 
       const html = generateStreakWidgetHTML(streakData);
 
-      expect(html).toContain('Start your streak today');
+      expect(html).toContain('Maintain your daily continuity');
       expect(html).toContain('◆');
     });
   });

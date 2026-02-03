@@ -564,12 +564,16 @@ Clinical Pearls: ${JSON.stringify(content.clinical_pearls || [])}
 
 Difficulty: ${difficulty || 'medium'}
 
+KAPLAN-LEVEL RULES:
+- Third-order / "Double Jump": Prefer a stem that requires a chain (Vignette → Diagnosis → Complication/next step → Answer). Example: circular rash → Lyme → first-line for complication → mechanism of doxycycline (30S). Avoid first-order "What is the diagnosis?" when a third-order stem is feasible.
+- Kaplan-level distractors: Every wrong answer must be correct for a slightly different patient (e.g. otitis: viral vs bacterial vs recurrent vs penicillin-allergic). No obviously wrong options.
+
 Return ONLY valid JSON:
 {
-  "question": "Clinical vignette ending with a question",
+  "question": "Clinical vignette ending with a question (prefer third-order: mechanism, next step, or complication management)",
   "options": ["Option A", "Option B", "Option C", "Option D"],
   "correctAnswerIndex": 0,
-  "rationale": "Why the correct answer is correct",
+  "rationale": "Why the correct answer is correct; briefly why each wrong answer is wrong for this patient",
   "pearls": ["Pearl 1", "Pearl 2", "Pearl 3"]
 }`;
 

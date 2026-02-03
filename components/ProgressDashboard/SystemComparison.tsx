@@ -202,9 +202,9 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
         </div>
       )}
 
-      {/* Radar Chart View (Simplified CSS-based) */}
+      {/* Radar Chart View (Simplified CSS-based) — GPU layer for battery drain audit */}
       {viewMode === 'radar' && (
-        <div className="flex items-center justify-center py-8">
+        <div className="flex items-center justify-center py-8" style={{ transform: 'translateZ(0)' }}>
           <div className="relative w-64 h-64">
             {/* Background circles */}
             {[0.25, 0.5, 0.75, 1].map((level, idx) => (

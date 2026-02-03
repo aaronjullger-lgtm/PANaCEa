@@ -281,6 +281,7 @@ export async function submitDrillReview(
         selectedAnswer: normalizedSelectedAnswer,
         wasCorrect: isCorrect,
         durationMs: effectiveDurationMs,
+        implicitConfidence: implicitResult.confidence,
         telemetryJson: telemetry
           ? {
               ...telemetry,

@@ -33,7 +33,12 @@ type QueryType = z.infer<typeof mediaDrillQuerySchema>;
 
 export interface PhotoCase {
   id: string;
+  /** Display URL: prefer thumbnail for fast load (image optimization audit). */
   imageUrl: string;
+  /** Lightweight thumbnail (WEBP/small) for initial load; omit if same as imageUrl. */
+  thumbnailUrl?: string | null;
+  /** Full-resolution URL (PNG/lossless) for zoom-on-demand; load only when user zooms. */
+  highResUrl?: string | null;
   modality: 'ecg' | 'xray' | 'derm';
   correctDiagnosis: string;
   distractors: string[];
@@ -221,8 +226,10 @@ export const onRequestGet = publicEndpoint(
             continue; // Skip assets without complete quiz data
           }
 
-          // Prefer original URL, fallback to thumbnail
-          const imageUrl = asset.originalUrl || asset.thumbnailUrl;
+          // Image optimization: prefer thumbnail for initial display, high-res for zoom-on-demand
+          const thumbnailUrl = asset.thumbnailUrl ?? null;
+          const highResUrl = asset.originalUrl ?? null;
+          const imageUrl = thumbnailUrl || highResUrl;
           if (!imageUrl) continue;
 
           // Parse JSON fields safely
@@ -269,6 +276,9 @@ export const onRequestGet = publicEndpoint(
           photoCases.push({
             id: asset.id,
             imageUrl,
+            thumbnailUrl: thumbnailUrl || undefined,
+            highResUrl:
+            highResUrl && highResUrl !== (thumbnailUrl || imageUrl) ? highResUrl : undefined,
             modality,
             correctDiagnosis: asset.correctDiagnosis!,
             distractors,

@@ -224,6 +224,16 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
 
   const currentQuestion = questions[currentIndex];
 
+  // Update elapsed time (hooks must run unconditionally)
+  useEffect(() => {
+    if (isLoading || isComplete) return;
+
+    const interval = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [startTime, isLoading, isComplete]);
+
   // Guard: If currentQuestion is undefined during active play, show loading
   if (!isLoading && !loadError && !isComplete && !currentQuestion) {
     return (
@@ -237,16 +247,6 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   }
 
   const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
-
-  // Update elapsed time
-  useEffect(() => {
-    if (isLoading || isComplete) return;
-
-    const interval = setInterval(() => {
-      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [startTime, isLoading, isComplete]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);

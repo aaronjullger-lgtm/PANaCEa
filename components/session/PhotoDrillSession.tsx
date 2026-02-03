@@ -74,9 +74,20 @@ const CATEGORY_CARDS: Array<{
  * - Lobby: Category selection (skipped if filterType is provided)
  * - Drill: Infinite photo drill with smart type-ahead search
  */
+/** Resolve image URL: absolute vs public/images path (image optimization audit). */
+function resolveImageUrl(url: string | null | undefined): string {
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  const normalized = url.replace(/^\/+/, '');
+  if (normalized.startsWith('images/')) return `/${normalized}`;
+  return `/images/${normalized}`;
+}
+
 const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterType }) => {
   const {
     currentCase,
+    queue,
+    currentCaseIndex,
     score,
     streak,
     userAnswer,
@@ -94,28 +105,39 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
   const [imageRevealed, setImageRevealed] = useState<boolean>(false);
   const [isImageLoaded, setIsImageLoaded] = useState<boolean>(false);
   const [imageErrored, setImageErrored] = useState<boolean>(false);
+  /** Zoom-on-demand: when true, show high-res image (image optimization audit). */
+  const [requestHighRes, setRequestHighRes] = useState<boolean>(false);
 
-  // Resolve image source with public/images fallback for locally stored assets
-  const resolvedImageSrc = useMemo(() => {
-    if (!currentCase?.imageUrl) return '';
-    if (currentCase.imageUrl.startsWith('http')) return currentCase.imageUrl;
+  // Thumbnail first (lightweight), high-res only on zoom (image optimization audit)
+  const resolvedThumbnailSrc = useMemo(
+    () => resolveImageUrl(currentCase?.thumbnailUrl || currentCase?.imageUrl),
+    [currentCase?.thumbnailUrl, currentCase?.imageUrl]
+  );
+  const resolvedHighResSrc = useMemo(
+    () => resolveImageUrl(currentCase?.highResUrl || currentCase?.imageUrl),
+    [currentCase?.highResUrl, currentCase?.imageUrl]
+  );
+  const displaySrc = requestHighRes && currentCase?.highResUrl ? resolvedHighResSrc : resolvedThumbnailSrc;
 
-    const normalized = currentCase.imageUrl.replace(/^\/+/, '');
-    if (normalized.startsWith('images/')) {
-      return `/${normalized}`;
-    }
-    return `/images/${normalized}`;
-  }, [currentCase?.imageUrl]);
-
-  // Reset imageRevealed when case changes
+  // Reset imageRevealed and zoom when case changes
   useEffect(() => {
     if (currentCase) {
-      // For non-derm cases or cases without clinical context, auto-reveal
       setImageRevealed(!currentCase.clinicalContext);
       setIsImageLoaded(false);
       setImageErrored(false);
+      setRequestHighRes(false);
     }
   }, [currentCase?.id]);
+
+  // Preload next case image in background while user is on current question (image optimization audit)
+  useEffect(() => {
+    const nextCaseData = queue[currentCaseIndex + 1];
+    if (!nextCaseData) return;
+    const nextThumbnail = resolveImageUrl(nextCaseData.thumbnailUrl || nextCaseData.imageUrl);
+    if (!nextThumbnail) return;
+    const img = new Image();
+    img.src = nextThumbnail;
+  }, [queue, currentCaseIndex]);
 
   // Auto-start session if filterType is provided (direct access from split drill tiles)
   useEffect(() => {
@@ -426,7 +448,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                   </div>
                 )}
 
-                {/* Image View (shown for non-derm cases or when revealed) */}
+                {/* Image View (shown for non-derm cases or when revealed) — thumbnail first, high-res on zoom (image optimization audit) */}
                 {(imageRevealed || !currentCase.clinicalContext) && (
                   <div className="relative bg-[var(--color-bg-tertiary)] rounded-xl overflow-hidden shadow-2xl w-full max-w-3xl mx-auto">
                     <div
@@ -434,7 +456,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                       aria-hidden
                     />
                     <img
-                      src={resolvedImageSrc}
+                      src={displaySrc}
                       alt={`Medical ${currentCase.modality.toUpperCase()} case`}
                       className={`w-full max-h-[50vh] object-contain transition-all duration-500 ${isImageLoaded ? 'blur-0 scale-100 opacity-100' : 'blur-md scale-[1.01] opacity-80'}`}
                       onLoad={() => setIsImageLoaded(true)}
@@ -444,6 +466,22 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                       <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-bg-tertiary)]/80 text-[var(--color-text-secondary)] text-sm">
                         Unable to load image. Check public/images path.
                       </div>
+                    )}
+                    {/* Zoom on demand: load high-res only when user requests (saves data for X-rays/derm) */}
+                    {currentCase.highResUrl && !requestHighRes && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRequestHighRes(true);
+                          setIsImageLoaded(false);
+                        }}
+                        className="absolute top-3 right-3 px-2.5 py-1.5 bg-[var(--color-bg-secondary)]/90 backdrop-blur-sm rounded-lg text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] flex items-center gap-1.5"
+                        aria-label="View full resolution (loads high-res image)"
+                        title="Load full-resolution image for zoom/detail"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        Full resolution
+                      </button>
                     )}
                     {/* Modality Badge */}
                     <div className="absolute top-3 left-3 px-2.5 py-1 bg-[var(--color-bg-secondary)]/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">

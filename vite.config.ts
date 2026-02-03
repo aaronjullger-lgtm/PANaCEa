@@ -4,6 +4,36 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
+const VIRTUAL_JSX_DEV_SHIM = 'virtual:react-jsx-dev-shim';
+
+/**
+ * In production builds, code or deps compiled with dev JSX expect jsxDEV from react/jsx-dev-runtime.
+ * Production React only exports jsx from react/jsx-runtime. This plugin aliases jsx-dev-runtime
+ * to a virtual module that re-exports jsx as jsxDEV so "E.jsxDEV is not a function" is avoided.
+ */
+function reactJsxDevShimPlugin(isProduction: boolean): Plugin {
+  if (!isProduction) return { name: 'react-jsx-dev-shim', config: () => ({}) };
+  return {
+    name: 'react-jsx-dev-shim',
+    enforce: 'pre',
+    resolveId(source) {
+      if (source === 'react/jsx-dev-runtime' || source === 'react/jsx-dev-runtime.js') {
+        return VIRTUAL_JSX_DEV_SHIM;
+      }
+      return null;
+    },
+    load(id) {
+      if (id !== VIRTUAL_JSX_DEV_SHIM) return null;
+      return `
+import { jsx, Fragment } from 'react/jsx-runtime';
+export const jsxDEV = jsx;
+export { Fragment };
+export default { jsxDEV, Fragment };
+`;
+    },
+  };
+}
+
 /**
  * Vite plugin to completely remove Prisma imports from browser bundles.
  * Uses transform to strip out Prisma imports before they reach Rollup.
@@ -143,6 +173,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       prismaExcludePlugin(),
+      reactJsxDevShimPlugin(isProduction),
       react(),
       VitePWA({
         registerType: 'autoUpdate',

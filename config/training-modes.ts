@@ -76,6 +76,8 @@ export interface TrainingModeConfig {
   route: string;
   isComingSoon?: boolean;
   panreOnly?: boolean;
+  /** When true, hide from Practicing PAs (declutter didactic-only tools like Anatomy Review) */
+  didacticOnly?: boolean;
   estimatedMinutes?: number;
 }
 
@@ -294,6 +296,7 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     theme: 'stone',
     route: '/modes/anatomy-review',
     estimatedMinutes: 15,
+    didacticOnly: true,
   },
   {
     id: 'system_drill',
@@ -487,6 +490,7 @@ export function getModesByCategory(category: TrainingCategory): TrainingModeConf
 export function getModesForUserContext(isPANREUser: boolean): TrainingModeConfig[] {
   return MODE_REGISTRY.filter((mode) => {
     if (mode.panreOnly && !isPANREUser) return false;
+    if (mode.didacticOnly && isPANREUser) return false;
     return true;
   });
 }
@@ -506,3 +510,50 @@ export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = MODE_REGISTRY.filte
 export const ALL_MINI_MODES: TrainingModeId[] = MODE_REGISTRY.filter(
   (m) => m.id !== 'core_adaptive'
 ).map((m) => m.id);
+
+// ============================================================================
+// Outcome-based grouping (for "What do you want to focus on?" — reduce decision paralysis)
+// Group by goal, not by format (Drill vs Quiz).
+// ============================================================================
+
+export type StudyOutcomeId = 'learn' | 'test' | 'fix';
+
+export const STUDY_OUTCOME_GROUPS: Record<
+  StudyOutcomeId,
+  { label: string; description: string; modeIds: TrainingModeId[] }
+> = {
+  learn: {
+    label: 'Learn New Material',
+    description: 'Physiology, anatomy, reasoning',
+    modeIds: ['physiology_drill', 'anatomy_review', 'reasoning_tutor'],
+  },
+  test: {
+    label: 'Test My Knowledge',
+    description: 'Drills, sims, and practice questions',
+    modeIds: [
+      'system_drill',
+      'subcategory_drill',
+      'condition_drill',
+      'rapid_recall',
+      'ecg_drill',
+      'derm_drill',
+      'imaging_drill',
+      'photo_drill',
+      'fluid_electrolyte',
+      'mini_lab',
+      'guideline_drill',
+      'pharmacology',
+      'first_line_treatment',
+      'antibiotic_mode',
+      'ddx_compare',
+      'contrastive_drill',
+      'code_blue_speed',
+      'ventilator_hero',
+    ],
+  },
+  fix: {
+    label: 'Fix My Weaknesses',
+    description: 'Focus on areas that need review',
+    modeIds: [], // Handled as special CTA: start session focused on weak areas
+  },
+};

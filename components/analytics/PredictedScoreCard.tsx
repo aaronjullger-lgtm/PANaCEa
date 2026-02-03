@@ -23,6 +23,7 @@ import {
   Clock,
 } from 'lucide-react';
 import type { IrtPredictedScore as PredictedScore } from '@/services/analytics';
+import { ExplainabilityTooltip } from '@/components/ui/ExplainabilityTooltip';
 
 // =============================================================================
 // TYPES
@@ -147,8 +148,11 @@ export function PredictedScoreCard({
             <BarChart3 className="h-6 w-6 text-[var(--color-text-muted)]" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
               Predicted PANCE Score
+              <ExplainabilityTooltip
+                formula={`Based on your last ${questionsAnswered} questions, weighted by difficulty and time decay. Answer 100+ for a stable estimate.`}
+              />
             </h3>
             <p className="text-sm text-[var(--color-text-muted)]">Insufficient data</p>
           </div>
@@ -206,8 +210,11 @@ export function PredictedScoreCard({
             <ReadinessIcon className={`h-6 w-6 ${readinessConfig.color}`} />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
               Predicted PANCE Score
+              <ExplainabilityTooltip
+                formula={`Based on your last ${questionsAnswered} questions, weighted by difficulty and time decay.`}
+              />
             </h3>
             <p className={`text-sm ${readinessConfig.color}`}>{readinessConfig.label}</p>
           </div>

@@ -49,6 +49,10 @@ export interface Question {
   lastReviewedAt?: string; // ISO timestamp
   /** Source of the question (pool, main table, generated) */
   source?: string;
+  /** Content source attribution (e.g. 'openstax') */
+  contentSource?: string;
+  /** Content source title (e.g. book name) */
+  contentSourceTitle?: string;
 }
 
 /** Alias for Question used in quiz/session flows (preferred in new code). */
@@ -180,6 +184,8 @@ export interface UserProfile {
   graduationDate?: string; // ISO date string
   examDate?: string; // ISO date string for PANCE/PANRE
   currentRotation?: ClinicalRotation;
+  /** EOR exam date for current rotation (ISO date string); when set, dashboard shows EOR Readiness */
+  eorTestDate?: string;
   yearInProgram?: YearInProgram;
   hasCompletedOnboarding: boolean;
   isCertifiedPA?: boolean; // For PANRE-LA access

@@ -200,7 +200,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
         ]}
         onStart={handleStart}
         onExit={onExit}
-        isStarting={isStarting}
+        isLoading={isStarting}
       />
     </DrillShell>
   );

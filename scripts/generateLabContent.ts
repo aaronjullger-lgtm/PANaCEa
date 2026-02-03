@@ -145,8 +145,10 @@ Generate exactly ${casesInBatch} unique, complex lab cases in JSON format. Each 
 6. Each lab value must have: name, value, unit, and flag (H=High, L=Low, N=Normal)
 7. Use realistic reference ranges and clinically accurate values
 
+UNCALCULATED LABS (Active Interpretation): Do NOT include pre-calculated derived values in labs. Provide RAW BMP (Na, Cl, HCO3, etc.) only—no "Anion Gap", "Osmolar Gap", or other derived panels. The student (or question) must calculate the anion gap from Na, Cl, HCO3. If the case tests metabolic acidosis, include Na, Cl, HCO3 in BMP and the question can ask "What is the anion gap?" or "What acid-base disorder?"—do not give the gap in the lab panel.
+
 IMPORTANT: The "pertinentResults" field should contain tests organized by their panel/category name as the key.
-For example, Arterial Blood Gas tests go under "Arterial Blood Gas", Thyroid tests under "Thyroid Function", etc.
+For example, Arterial Blood Gas tests go under "Arterial Blood Gas", Thyroid tests under "Thyroid Function", etc. Do NOT add "Anion Gap" as a panel when BMP is present—provide raw values only.
 
 Return ONLY a valid JSON array with the following structure (no markdown, no code blocks):
 [
@@ -190,13 +192,11 @@ Return ONLY a valid JSON array with the following structure (no markdown, no cod
       "Urinalysis": [
         {"name": "Glucose", "value": "3+", "unit": "", "flag": "H"},
         {"name": "Ketones", "value": "3+", "unit": "", "flag": "H"}
-      ],
-      "Anion Gap": [
-        {"name": "Anion Gap", "value": "24", "unit": "mEq/L", "flag": "H"}
       ]
     }
   }
 ]
+Note: Do NOT include "Anion Gap" (or other derived values) in pertinentResults. The student calculates the gap from BMP (Na, Cl, HCO3).
 
 Generate ${casesInBatch} diverse cases. Start IDs at lab_case_${startId} and end at lab_case_${endId}.
 Make sure each case uses a DIFFERENT condition from the list provided.

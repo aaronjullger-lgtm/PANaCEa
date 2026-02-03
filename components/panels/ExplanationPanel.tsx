@@ -24,12 +24,12 @@ import {
   ExternalLink,
   MessageCircle,
 } from 'lucide-react';
-import { highYieldPackage } from '../lib/services/explanationCompression';
-import ErrorTagger from './quiz/ErrorTagger';
-import type { ErrorTag } from '../types';
-import { getConditionByIdSync, loadConditions } from '../lib/loadConditions';
-import { ClinicalSkeleton } from './ui/ClinicalSkeleton';
-import { ClinicalPearlHighlight } from './ui/ClinicalPearlHighlight';
+import { highYieldPackage } from '@/lib/services/explanationCompression';
+import { ErrorTagger } from '@/components/quiz';
+import type { ErrorTag } from '@/types';
+import { getConditionByIdSync, loadConditions } from '@/lib/loadConditions';
+import { ClinicalSkeleton } from '@/components/ui/ClinicalSkeleton';
+import { ClinicalPearlHighlight } from '@/components/ui/ClinicalPearlHighlight';
 import { usePreferences } from '@/hooks/usePreferences';
 import { useAuth } from '@clerk/clerk-react';
 
@@ -415,7 +415,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
         <section className="mb-6">
           <SectionHeader icon={<Lightbulb className="w-5 h-5" />} title="Core Rationale" />
           <ul className="space-y-2 pl-1">
-            {bullets.slice(0, MAX_BULLETS).map((bullet) => (
+            {bullets.slice(0, MAX_BULLETS).map((bullet: string) => (
               <li
                 key={bullet.slice(0, 80)}
                 className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"

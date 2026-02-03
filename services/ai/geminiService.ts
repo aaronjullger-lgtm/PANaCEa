@@ -33,6 +33,12 @@ interface ConditionMetadata {
   subcategory?: string;
 }
 
+interface TextbookContext {
+  title: string;
+  excerpts: string[];
+  source?: string;
+}
+
 /**
  * Get a random condition for a specific organ system
  */
@@ -150,6 +156,42 @@ async function findConditionByName(conditionName: string): Promise<ConditionMeta
     };
   } catch (error) {
     console.error(`Error finding condition by name "${conditionName}":`, error);
+    return null;
+  }
+}
+
+/**
+ * Retrieve textbook excerpts for RAG prompt augmentation.
+ */
+async function fetchTextbookContext(options: {
+  system?: string;
+  query?: string;
+  source?: string;
+}): Promise<TextbookContext | null> {
+  try {
+    const params = new URLSearchParams();
+    if (options.system) params.set('system', options.system);
+    if (options.query) params.set('query', options.query);
+    if (options.source) params.set('source', options.source);
+    params.set('limit', '3');
+
+    const endpoint = getApiEndpoint('/api/content/textbook-retrieve');
+    const response = await fetch(`${endpoint}?${params.toString()}`);
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as {
+      chunks?: { bookTitle?: string; text?: string }[];
+    };
+    const chunks = payload?.chunks || [];
+    if (chunks.length === 0) return null;
+
+    const title = chunks[0]?.bookTitle || 'OpenStax Textbook';
+    const excerpts = chunks.map((chunk) => chunk.text || '').filter(Boolean);
+    if (excerpts.length === 0) return null;
+
+    return { title, excerpts, source: options.source };
+  } catch (error) {
+    console.warn('[fetchTextbookContext] Failed to retrieve textbook context:', error);
     return null;
   }
 }
@@ -285,15 +327,28 @@ export interface SessionData {
 /**
  * Parsed question response from Gemini
  */
+/** Standardized rationale object (5-section template); stored as JSON string on Question */
+export interface ParsedRationaleObject {
+  bottomLine?: string;
+  whyCorrect: string;
+  whyIncorrectA?: string;
+  whyIncorrectB?: string;
+  whyIncorrectC?: string;
+  whyIncorrectD?: string;
+  clinicalPearl?: string;
+  highYieldImageOrTable?: string;
+}
+
 export interface ParsedQuestionResponse {
   question: string;
   options: string[];
   correctAnswerIndex: number;
-  rationale: string;
+  rationale: string | ParsedRationaleObject;
   pearls: string[];
   topic?: string;
   system?: SystemCode;
   condition?: string;
+  conditionId?: string;
   conditionId?: string;
 }
 
@@ -778,11 +833,11 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
       break;
     case 'same':
       detailedDifficultyInstruction =
-        "Generate a 'PANCE-level' question. This must test SECOND-ORDER thinking: the student must first synthesize the clinical description to identify the condition, THEN answer a question about management, mechanism, or complications. Include a subtle red herring finding. Vitals may hint at acuity without explicitly stating 'unstable.'";
+        "Generate a 'PANCE-level' question. This must test SECOND-ORDER thinking: the student must first synthesize the clinical description to identify the condition, THEN answer a question about management, mechanism, or complications. Include PERTINENT NEGATIVES that rule out look-alikes (e.g. no tenderness → rules out costochondritis). Vitals must be CLUES not filler; use relative baselines when relevant (e.g. normal BP in a hypertensive patient = relative hypotension). Include a subtle red herring finding.";
       break;
     case 'harder':
       detailedDifficultyInstruction =
-        "Generate a 'Harder' question. Use an atypical presentation, a complex patient with comorbidities, or a less common variant of a common condition. The question should require THIRD-ORDER thinking: identify the condition from subtle clues, consider how a comorbidity affects treatment, then select the appropriate modified management.";
+        "Generate a 'Harder' question (VIGNETTE EVOLUTION: 'messier' vignette, not just zebra trivia). Prefer a messier vignette: PERTINENT NEGATIVES that explicitly rule out look-alikes; VITALS AS CLUES (e.g. 'normal' BP 110/70 in a patient normally hypertensive 160/90 = relative hypotension). Use atypical presentation, comorbidities, or third-order thinking (identify condition from subtle clues, consider comorbidity, then modified management).";
       break;
   }
 
@@ -793,6 +848,7 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
       : 'Avoid generating questions that are substantively identical or too similar to common practice questions. The goal is to provide a fresh challenge.';
 
   let prompt = '';
+  let selectedTextbookContext: TextbookContext | null = null;
 
   // Optional condition chosen client-side (for hybrid targeting and stats)
   let chosenConditionDef: ConditionDefinition | undefined;
@@ -945,12 +1001,30 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
           ? `You are targeting the subcategory "${safeString(selectedConditionMeta.subcategory, 'General')}" in the "${fullContentTopicName}" system. Where clinically appropriate, focus the vignette on the specific condition "${safeString(selectedConditionMeta.condition)}". However, if a very closely related variant would make for a better, more realistic PANCE-style question, you may use it instead – just ensure the "condition" field in your JSON exactly matches the condition you used.${registryInstruction}`
           : `You are targeting the "${fullContentTopicName}" system.`;
 
+      const textbookContext = await fetchTextbookContext({
+        system: systemCode,
+        query:
+          safeString(selectedConditionMeta?.condition) ||
+          safeString(chosenConditionMeta?.condition) ||
+          fullContentTopicName,
+        source: 'OpenStax',
+      });
+      selectedTextbookContext = textbookContext;
+
+      const textbookContextBlock =
+        textbookContext && textbookContext.excerpts.length > 0
+          ? `\n\nTextbook excerpt (OpenStax: ${textbookContext.title}):\n${textbookContext.excerpts
+              .map((excerpt, idx) => `${idx + 1}. ${excerpt}`)
+              .join('\n')}\nUse these excerpts to keep the vignette aligned with authoritative content.`
+          : '';
+
       const topicFieldInstruction = `The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".`;
 
       prompt = `You are generating a structured JSON object for a PANCE practice question.
 ${userContextInstruction}
 
 ${conditionContext}
+${textbookContextBlock}
 
 Generate one new, unique, PANCE-style multiple-choice question for the topic "${fullContentTopicName}" that specifically tests the task "${taskTopic}".
 
@@ -969,23 +1043,42 @@ BUZZWORD POLICY (Mixed Mode):
 - For 30% of questions: You MAY include a classic buzzword, but the question must ask for a SECOND-ORDER fact (treatment, mechanism, complication) NOT the diagnosis.
   - Example: Give "Kayser-Fleischer rings" but ask for the treatment of Wilson's Disease, not the diagnosis.
 
-IMAGING-AS-TEXT RULE:
-Since users cannot see images, provide the "Radiologist's Report" or "Pathology Read" as descriptive text.
-- BAD: "X-ray shows pneumonia." or "Imaging was normal."
-- GOOD: "Plain radiographs reveal preserved joint space, no osteophytes, and normal bony alignment."
-- GOOD: "Chest radiography demonstrates a focal consolidation in the right lower lobe with associated air bronchograms."
+UNCALCULATED LABS (Active Interpretation):
+- When including labs (e.g. metabolic acidosis), provide RAW BMP values (Na, Cl, HCO3, etc.) in a table only.
+- Do NOT state derived values in the vignette: no "anion gap 20", "osmolar gap", or other pre-calculated values—the student must calculate.
+- BAD: "Patient has an anion gap of 20." GOOD: Give raw BMP (e.g. Na 135, Cl 98, HCO3 12) and let the student calculate the gap.
 
-VIGNETTE STRUCTURE (follow this order):
+HIDDEN IMAGE RULE (when an image/radiograph is referenced or shown):
+- If the question references or displays an image (X-ray, CT, MRI), do NOT state the finding or diagnosis in the vignette text.
+- BAD: "Patient has a fracture of the distal radius (see image)." GOOD: "Patient fell on an outstretched hand. Radiograph is shown." The student must read the image to answer.
+- Vignette = clinical scenario (mechanism, complaint, history) + "Radiograph is shown" or "Image is shown"—no diagnosis in text.
+
+IMAGING-AS-TEXT RULE (text-only questions, no image displayed):
+- When no image is shown, you may provide the "Radiologist's Report" as descriptive text (not interpretation).
+- BAD: "X-ray shows pneumonia." GOOD: "Chest radiography demonstrates a focal consolidation in the right lower lobe with associated air bronchograms."
+
+VIGNETTE STRUCTURE (follow this order) – Vignette Evolution (Adaptive Complexity):
 1. Patient Demographics & Chief Complaint: Age, gender, complaint, duration.
 2. History of Present Illness: Character of symptoms, modifying factors, relevant negatives.
-3. Vitals: Realistic numbers. Include at least one "distractor" normal vital OR use abnormal vitals without explicitly labeling the clinical state.
-4. Physical Exam: Focused findings described ANATOMICALLY, not by diagnosis name.
-5. Diagnostics: The descriptive REPORT of findings (labs, imaging), not the interpretation.
+3. PERTINENT NEGATIVES: Explicitly rule out look-alikes. Example: "No tenderness to palpation (rules out costochondritis). No pain with breathing (rules out pleuritis)." Do not list only positive findings.
+4. Vitals: Vitals must be CLUES, not filler. Use relative baselines when relevant: e.g. "BP 110/70" in a patient "normally hypertensive (160/90)" = relative hypotension. Include at least one meaningful vital (supports/contradicts diagnosis or relative to baseline).
+5. Physical Exam: Focused findings described ANATOMICALLY, not by diagnosis name.
+6. Diagnostics: Raw labs in table (no anion gap/osmolar gap in text); for imaging, either descriptive report (text-only) OR "Radiograph/Image is shown" without stating the finding (when image is shown).
+
+THIRD-ORDER / "DOUBLE JUMP" RULE (Kaplan-Level):
+- AVOID first-order: "What is the diagnosis?" (e.g. circular rash → Lyme).
+- PREFER third-order: Vignette → Diagnosis → Complication/next step → Answer. Example: "A patient has a circular rash. What is the mechanism of action of the first-line treatment for the likely complication if left untreated?" → Answer: "Inhibits 30S ribosomal subunit" (Lyme → Doxy → mechanism).
+- When using buzzwords, ask for treatment/mechanism/complication, NOT the diagnosis.
+
+KAPLAN-LEVEL DISTRACTORS:
+- Every wrong answer must be "the right answer to a different question" - correct for a slightly different patient.
+- Example (otitis): A = correct for viral/watchful waiting, B = bacterial (answer), C = correct for recurrent/effusion, D = correct for penicillin-allergic.
+- BAD: Obviously wrong options (e.g. chemotherapy for simple otitis). GOOD: Each distractor is appropriate for a different scenario (different diagnosis, allergy, recurrence, severity).
 
 Core Instructions (question quality matters):
 1. Vignette with Subtle Red Herring: Include one detail that could mislead toward a wrong diagnosis but is actually a distractor.
-2. Second-Order Task-Focused Question: The vignette must end with a clear question testing "${taskTopic}" that requires SYNTHESIS, not just recall.
-3. Plausible, Crafted Distractors: Three distractors must be highly plausible (common misconceptions, similar diagnoses, or treatments for related conditions).
+2. Second- or Third-Order Task-Focused Question: The vignette must end with a clear question testing "${taskTopic}" that requires SYNTHESIS (prefer chain: diagnosis → complication/next step → management/mechanism).
+3. Plausible, Crafted Distractors: Three distractors must be highly plausible; each should be correct for a different patient/scenario (Kaplan-level).
 4. Vignette Formatting: Insert "\\n" in the question string to separate paragraphs; do NOT return a single wall of text.
 5. Data Table Formatting: If you include ANY vital signs and/or laboratory values, you MUST place ALL of them into a single simple HTML <table> with a header row. Use exactly two columns labeled "Parameter" and "Value". Do NOT repeat vitals or labs in plain text outside the table.
 6. HTML Formatting: The "rationale" and all "pearls" MUST use simple HTML tags (<b>, <i>) instead of markdown.
@@ -1068,8 +1161,24 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
         : '';
     }
 
+    const textbookSystem =
+      settings.topic || growthAreas[0] || chosenConditionDef?.system || undefined;
+    const textbookContext = await fetchTextbookContext({
+      system: textbookSystem,
+      query: safeString(chosenConditionDef?.condition) || settings.conditionName,
+      source: 'OpenStax',
+    });
+    selectedTextbookContext = textbookContext;
+    const textbookContextBlock =
+      textbookContext && textbookContext.excerpts.length > 0
+        ? `\n\nTextbook excerpt (OpenStax: ${textbookContext.title}):\n${textbookContext.excerpts
+            .map((excerpt, idx) => `${idx + 1}. ${excerpt}`)
+            .join('\n')}\nUse these excerpts to keep the vignette aligned with authoritative content.`
+        : '';
+
     prompt = `You are generating a structured JSON object for a PANCE practice question.
 ${userContextInstruction}
+${textbookContextBlock}
 
 Generate one new, unique, PANCE-style multiple-choice question.
 
@@ -1082,26 +1191,32 @@ BUZZWORD POLICY (Mixed Mode):
   - BAD: "EKG shows atrial fibrillation." → GOOD: "EKG demonstrates irregularly irregular rhythm with absent P waves."
 - For 30% of questions: You MAY include a classic buzzword, but ask for treatment/mechanism/complication, NOT the diagnosis.
 
-IMAGING-AS-TEXT RULE:
-Provide the "Radiologist's Report" as descriptive text, not interpretation.
-- BAD: "CT shows appendicitis."
-- GOOD: "CT abdomen demonstrates a dilated, fluid-filled tubular structure in the right lower quadrant with surrounding fat stranding."
+UNCALCULATED LABS: Provide raw BMP (Na, Cl, HCO3, etc.) in a table only; do NOT state "anion gap 20" or other derived values—the student must calculate.
 
-VIGNETTE STRUCTURE:
+HIDDEN IMAGE: When an image/radiograph is referenced or shown, do NOT state the finding or diagnosis in text. Use only scenario + "Radiograph is shown" (e.g. "Patient fell on outstretched hand. Radiograph is shown.").
+
+IMAGING-AS-TEXT (text-only, no image): Provide "Radiologist's Report" as descriptive text, not interpretation. BAD: "CT shows appendicitis." GOOD: "CT abdomen demonstrates a dilated, fluid-filled tubular structure in the RLQ with surrounding fat stranding."
+
+VIGNETTE STRUCTURE (Vignette Evolution):
 1. Patient Demographics & Chief Complaint
 2. History of Present Illness (character, modifying factors, relevant negatives)
-3. Vitals (in table format - include realistic numbers)
-4. Physical Exam (anatomical descriptions, not diagnosis names)
-5. Diagnostics (descriptive REPORT, not interpretation)
+3. PERTINENT NEGATIVES: Explicitly rule out look-alikes (e.g. no tenderness → rules out costochondritis; no pain with breathing → rules out pleuritis).
+4. Vitals: CLUES not filler. Use relative baselines when relevant (e.g. "normal" BP 110/70 in a patient normally hypertensive 160/90 = relative hypotension). In table format.
+5. Physical Exam (anatomical descriptions, not diagnosis names)
+6. Diagnostics (raw labs only; for imaging either descriptive report or "Radiograph/Image is shown" without stating the finding)
+
+THIRD-ORDER / "DOUBLE JUMP" RULE: Prefer questions that require a chain (Vignette → Diagnosis → Complication/next step → Answer). Example: circular rash → Lyme → first-line treatment for complication → mechanism of doxycycline (30S). Avoid first-order "What is the diagnosis?" when a third-order stem is feasible.
+
+KAPLAN-LEVEL DISTRACTORS: Every wrong answer must be "the right answer to a different question" (e.g. otitis: A = viral/watchful, B = bacterial = answer, C = recurrent/effusion, D = penicillin-allergic). No obviously wrong options.
 
 Core Instructions:
 1. Vignette with subtle red herring.
-2. Second-order question (diagnosis, next best step, mechanism, etc.) requiring SYNTHESIS.
-3. Highly plausible distractors that test common misconceptions.
+2. Second- or third-order question (next best step, mechanism, complication management) requiring SYNTHESIS.
+3. Highly plausible distractors: each wrong option correct for a different patient/scenario (Kaplan-level).
 4. Use "\\n" inside the question string for paragraph breaks.
 5. Data Table Formatting: If you include ANY vital signs and/or laboratory values, you MUST place ALL of them into a single simple HTML <table> with a header row in the question string. Use exactly two columns labeled "Parameter" and "Value". Do NOT repeat vitals or labs in plain text outside the table.
-6. "rationale" and "pearls" MUST use simple HTML tags (<b>, <i>), no markdown.
-7. "pearls" = 3–4 high-yield single-sentence pearls.
+6. STANDARDIZED RATIONALE (5-section object): "rationale" MUST be an object: bottomLine (one sentence: diagnosis + treatment), whyCorrect (walk through vignette steps), whyIncorrectA/B/C/D (why a student might have chosen it, then why wrong for this patient), clinicalPearl (memorable hook), highYieldImageOrTable ("N/A" or short description). Use <b>, <i> in strings.
+7. "pearls" = 3–4 high-yield single-sentence pearls; use <b>, <i>.
 8. Question HTML: The "question" string MAY use the table tags above and <br> for line breaks, but should not use <b> or <i>.
 9. Options & Condition: The "options" and "condition" fields MUST be plain text only (no HTML tags).
 10. Uniqueness: ${uniquenessInstruction}
@@ -1117,7 +1232,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   "question": string,
   "options": [string, string, string, string],
   "correctAnswerIndex": number,
-  "rationale": string,
+  "rationale": { "bottomLine": string, "whyCorrect": string, "whyIncorrectA": string, "whyIncorrectB": string, "whyIncorrectC": string, "whyIncorrectD": string, "clinicalPearl": string, "highYieldImageOrTable": "N/A" or string },
   "topic": string,
   "condition": string,
   "pearls": [string, string, string]
@@ -1142,14 +1257,19 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       throw new Error('The API returned a malformed JSON response. Please try again.');
     }
 
-    // Basic sanity checks
+    // Basic sanity checks (rationale may be string or standardized object)
+    const hasRationale =
+      parsed.rationale != null &&
+      (typeof parsed.rationale === 'string'
+        ? parsed.rationale.length > 0
+        : typeof parsed.rationale === 'object' && 'whyCorrect' in parsed.rationale);
     if (
       !parsed.question ||
       !parsed.question.includes('?') ||
       !Array.isArray(parsed.options) ||
       parsed.options.length !== 4 ||
       typeof parsed.correctAnswerIndex !== 'number' ||
-      !parsed.rationale ||
+      !hasRationale ||
       !parsed.topic ||
       !parsed.condition ||
       !Array.isArray(parsed.pearls)
@@ -1162,6 +1282,14 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
     parsed.options = parsed.options.map((opt: string) => stripHtmlTags(opt));
     parsed.condition = stripHtmlTags(parsed.condition);
 
+    // Normalize rationale to string for Question type (store JSON when structured)
+    const rationaleString =
+      typeof parsed.rationale === 'object' &&
+      parsed.rationale !== null &&
+      'whyCorrect' in parsed.rationale
+        ? JSON.stringify(parsed.rationale)
+        : (parsed.rationale as string);
+
     // Track recent questions for uniqueness
     if (recentQuestionHistory.length >= RECENT_HISTORY_COUNT) {
       recentQuestionHistory.shift();
@@ -1173,13 +1301,19 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       console.warn(`API returned an unknown topic "${parsed.topic}". Storing it as-is.`);
     }
 
-    // Build the base question object
+    // Build the base question object (rationale stored as string, possibly JSON of standardized object)
     const baseQuestion: Question = {
       ...parsed,
+      rationale: rationaleString,
       topic: topicAbbreviation,
       conditionId: parsed.conditionId || '',
       condition: parsed.condition || 'Unknown Condition',
     };
+
+    if (selectedTextbookContext) {
+      baseQuestion.contentSource = 'openstax';
+      baseQuestion.contentSourceTitle = selectedTextbookContext.title;
+    }
 
     // If we pre-selected a condition (hybrid mode), lock it in here
     if (chosenConditionDef) {
@@ -1286,7 +1420,22 @@ Student's Incorrect Answer:
 "${userAnswer}"
 
 Original Rationale (for your context only, do NOT repeat verbatim):
-${question.rationale}
+${(() => {
+  const r = question.rationale;
+  if (typeof r === 'string') {
+    try {
+      const obj = JSON.parse(r) as ParsedRationaleObject;
+      if (obj && typeof obj === 'object' && 'whyCorrect' in obj) {
+        const parts = [obj.bottomLine, obj.whyCorrect, obj.clinicalPearl].filter(Boolean);
+        return parts.join('\n\n');
+      }
+    } catch {
+      /* not JSON */
+    }
+    return r;
+  }
+  return String(r);
+})()}
 
 Your Task:
 1. Explain why the student's choice ("${userAnswer}") is incorrect for this specific patient.

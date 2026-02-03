@@ -162,14 +162,14 @@ export function SystemPerformanceWidget({
     );
   }
 
-  // Not enough data
+  // Not yet assessed
   if (!stats || stats.totalInWindow < 10) {
     return (
       <div
         className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 ${className}`}
       >
         <h3 className="text-lg font-semibold text-white mb-4">System Performance</h3>
-        <div className="text-center py-8">
+        <div className="text-center py-6">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-700/50 flex items-center justify-center">
             <svg
               className="w-8 h-8 text-slate-500"
@@ -185,7 +185,14 @@ export function SystemPerformanceWidget({
               />
             </svg>
           </div>
-          <p className="text-slate-400">Answer more questions to see system breakdown</p>
+          <p className="text-slate-400 mb-4">Not yet assessed</p>
+          <button
+            type="button"
+            onClick={() => window.location.assign('/study/main-session')}
+            className="px-4 py-2.5 rounded-xl bg-teal-500/90 text-white text-sm font-medium hover:bg-teal-500 transition-colors"
+          >
+            Take a 10-question diagnostic quiz to unlock this graph
+          </button>
         </div>
       </div>
     );

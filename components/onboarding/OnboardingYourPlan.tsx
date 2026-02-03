@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Play, Calendar, ChevronRight } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { toast } from 'sonner';
 
 interface OnboardingYourPlanProps {
   weakestSystems?: string[];
@@ -38,7 +39,10 @@ export function OnboardingYourPlan({
     setSavingExamDate(true);
     try {
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        toast.error('Please sign in to save exam date.');
+        return;
+      }
       const res = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: {
@@ -50,7 +54,12 @@ export function OnboardingYourPlan({
       if (res.ok) {
         onSetExamDate(examDateInput.trim());
         setExamDateSaved(true);
+        toast.success('Exam date saved.');
+      } else {
+        toast.error('Could not save exam date. Try again.');
       }
+    } catch {
+      toast.error('Could not save exam date. Try again.');
     } finally {
       setSavingExamDate(false);
     }

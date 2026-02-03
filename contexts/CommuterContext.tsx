@@ -164,6 +164,7 @@ export function CommuterProvider({ children }: { children: ReactNode }) {
 
   const toggleCommuterMode = useCallback(() => {
     setIsCommuterMode((prev) => !prev);
+    toast.success('Changes saved');
   }, []);
 
   const enableCommuterMode = useCallback(() => {

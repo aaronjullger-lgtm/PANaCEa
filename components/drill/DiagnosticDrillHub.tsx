@@ -441,7 +441,7 @@ const DrillCard: React.FC<DrillCardProps> = ({ drill, onSelect, getDifficultyCol
       {/* Icon & Title */}
       <div className="flex items-start justify-between mb-4">
         <div
-          className={`p-3 rounded-lg ${
+          className={`p-3 rounded-xl ${
             drill.available
               ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
               : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'

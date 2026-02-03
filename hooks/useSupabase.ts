@@ -51,7 +51,6 @@ export function useSupabase(): SupabaseClient {
     });
     // Empty deps array: client is created once and reused
     // getToken from Clerk is called fresh on each Supabase request
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return supabase;

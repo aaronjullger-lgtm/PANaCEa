@@ -147,8 +147,9 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
 
       const data = await res.json();
 
-      // Handle response structure from generate endpoint: { success, count, recommendations }
-      const newRecs = data.recommendations || [];
+      // Handle response structure from generate endpoint: { data: { success, count, recommendations } }
+      const payload = data?.data ?? data;
+      const newRecs = Array.isArray(payload?.recommendations) ? payload.recommendations : [];
 
       if (newRecs.length > 0) {
         toast.success(
@@ -271,7 +272,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="relative p-5 rounded-2xl bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-primary)] border border-[var(--color-border)] shadow-sm group hover:shadow-md transition-shadow"
+              className="relative p-5 rounded-2xl bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-primary)] border border-slate-200 dark:border-[var(--color-border)] shadow-md shadow-slate-300/10 dark:shadow-none group hover:shadow-lg transition-shadow"
             >
               {/* Priority Indicator */}
               {rec.priority === 'high' && (

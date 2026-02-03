@@ -142,18 +142,16 @@ const DIFFICULTY_INSTRUCTIONS: Record<string, string> = {
 - Common conditions only`,
 
   same: `Generate a PANCE-LEVEL question matching real exam difficulty:
-- Realistic clinical vignette with relevant details
-- May include subtle findings or red herrings
-- Plausible distractors that test understanding
-- Second-order thinking required (diagnosis → management)
-- Mix of common and moderately uncommon presentations`,
+- Realistic clinical vignette with relevant details; include PERTINENT NEGATIVES that rule out look-alikes (e.g. no tenderness → rules out costochondritis).
+- Vitals as CLUES, not filler; use relative baselines when relevant (e.g. normal BP in a hypertensive patient = relative hypotension).
+- May include subtle findings or red herrings; plausible distractors that test understanding.
+- Second-order thinking required (diagnosis → management); mix of common and moderately uncommon presentations.`,
 
-  harder: `Generate a HARDER question above typical PANCE difficulty:
-- Complex patient with comorbidities
-- Atypical presentations or "zebra" conditions
-- Multi-step reasoning required
-- May test mechanism of action or pathophysiology
-- Requires integration of multiple concepts`,
+  harder: `Generate a HARDER question above typical PANCE difficulty (VIGNETTE EVOLUTION - "Messier" vignette, not just zebra trivia):
+- Prefer a "messier" vignette: more data, pertinent negatives, vitals as clues—not just a rarer diagnosis.
+- PERTINENT NEGATIVES: Explicitly rule out look-alikes in the vignette. Example: "No tenderness to palpation (rules out costochondritis). No pain with breathing (rules out pleuritis)."
+- VITALS AS CLUES: Vitals must be clinically meaningful. Use relative baselines when appropriate: e.g. "BP 110/70" in a patient who is "normally hypertensive (160/90)" = relative hypotension—the student must interpret this.
+- Complex patient with comorbidities, multi-step reasoning, mechanism or pathophysiology; integration of multiple concepts.`,
 };
 
 // Maximum retry attempts for CoVe verification failures
@@ -224,24 +222,43 @@ ${difficultyInstruction}
 
 ## KAPLAN-STYLE FORMATTING RULES
 
-### VIGNETTE (3-5 sentences):
+### VIGNETTE (3-5 sentences) – Vignette Evolution (Adaptive Complexity):
 - Start: "A [age]-year-old [sex] with [relevant PMH] presents to [setting] with [chief complaint] for [duration]..."
-- Include PERTINENT POSITIVES: findings that point toward the diagnosis
-- Include PERTINENT NEGATIVES: findings that rule out differentials
-- Add relevant vitals/labs when clinically important
+- Include PERTINENT POSITIVES: findings that point toward the diagnosis.
+- Include PERTINENT NEGATIVES: explicitly rule out look-alikes. Example: "No tenderness to palpation (rules out costochondritis). No pain with breathing (rules out pleuritis)." Do not list only positives.
+- VITALS AS CLUES: Vitals must not be filler. Use relative baselines when relevant: e.g. "BP 110/70" in a patient "normally hypertensive (160/90)" = relative hypotension—the student must interpret. Ensure vitals support or contradict a diagnosis or add meaningful context.
 - DESCRIBE symptoms clinically - don't state the diagnosis in the vignette
 
-### QUESTION STEM (Second-Order Thinking):
-- AVOID first-order recall like "What is the diagnosis?"
-- PREFER: "What is the most appropriate next step in management?"
-- PREFER: "Which mechanism best explains this presentation?"
-- PREFER: "What finding would most likely be seen on [test]?"
+### UNCALCULATED LABS (Active Interpretation):
+- When including labs, provide RAW BMP (Na, Cl, HCO3, etc.) in a table only. Do NOT state "anion gap 20" or other derived values—the student must calculate.
 
-### ANSWER OPTIONS:
+### HIDDEN IMAGE (when an image/radiograph is referenced or shown):
+- Do NOT state the finding or diagnosis in the vignette text. Use only clinical scenario + "Radiograph is shown" (e.g. "Patient fell on outstretched hand. Radiograph is shown."). The student must read the image to answer.
+
+### QUESTION STEM (Third-Order / "Double Jump" Rule):
+- AVOID first-order recall: "What is the diagnosis?" (e.g. "Circular rash → Lyme")
+- AVOID second-order only: "What is the first-line treatment?" (e.g. "Lyme → Doxycycline")
+- PREFER third-order: Require a chain: Vignette → Diagnosis → Complication/next step → Answer.
+  - Example (good): "A patient has a circular rash. What is the mechanism of action of the first-line treatment for the likely complication if left untreated?" → Answer: "Inhibits 30S ribosomal subunit" (Lyme → Doxy → mechanism).
+- PREFER: "What is the mechanism of action of the most appropriate next step in management?"
+- PREFER: "Which finding would most likely be seen on [test] if [complication] develops?"
+- PREFER: "What is the most appropriate next step in management?" (when vignette already implies diagnosis)
+
+### ANSWER OPTIONS (Kaplan-Level Distractors):
 - DO NOT prefix with "A.", "B.", etc. - just write the option text directly
-- Make ALL distractors clinically plausible
-- Distractors should represent common mistakes or similar conditions
+- Every wrong answer must be "the right answer to a different question" - correct for a slightly different patient.
+  - Example (otitis): A = correct for viral/watchful waiting, B = bacterial (answer), C = correct for recurrent/effusion, D = correct for penicillin-allergic.
+- BAD: Obviously wrong options (e.g. chemotherapy for simple ear infection).
+- GOOD: Each distractor is first-line or appropriate for a different scenario (different diagnosis, allergy, recurrence, severity).
 - Correct answer should not be obviously longer/more detailed
+
+## STANDARDIZED RATIONALE (5-Section Template)
+The "rationale" object MUST follow this structure for fast review:
+1. bottomLine: One sentence. "The diagnosis is X, and the treatment is Y." (for the student in a rush)
+2. whyCorrect: Walk through the vignette steps. "The patient's [findings] suggest [diagnosis]. [Key clue] confirms it. Therefore, the next step is..."
+3. whyIncorrectA/B/C/D: For each wrong option, explain why a student might have chosen it, then why it is wrong for this patient. Format: "Option A (Amoxicillin): Incorrect because this patient has a Penicillin allergy."
+4. clinicalPearl: A memorable hook. "Remember: Pain out of proportion to exam = Mesenteric Ischemia until proven otherwise."
+5. highYieldImageOrTable: Optional. "N/A" or a short description of a diagram/flow-chart that would help (e.g. "DDx algorithm for acute chest pain").
 
 ## Output Format
 Generate a JSON object with this exact structure (no markdown, no backticks):
@@ -251,20 +268,22 @@ Generate a JSON object with this exact structure (no markdown, no backticks):
   "options": ["Emergent cardiac catheterization", "Sublingual nitroglycerin", "IV thrombolytic therapy", "Serial troponins every 6 hours"],
   "correctAnswerIndex": 0,
   "rationale": {
-    "whyCorrect": "This patient has an acute **STEMI** with classic presentation. Primary **PCI** within 90 minutes is the gold standard for revascularization.",
+    "bottomLine": "The diagnosis is acute STEMI, and the treatment is emergent PCI (or thrombolytics if PCI unavailable).",
+    "whyCorrect": "This patient has an acute **STEMI** with classic presentation (chest pain, diaphoresis, ST-elevation in V2-V4). Primary **PCI** within 90 minutes is the gold standard for revascularization.",
     "whyIncorrectB": "Nitroglycerin provides symptomatic relief but does not address the coronary occlusion.",
     "whyIncorrectC": "Thrombolytics are second-line when PCI is unavailable within 120 minutes.",
     "whyIncorrectD": "Serial troponins are appropriate for NSTEMI workup, not acute STEMI requiring immediate intervention.",
-    "clinicalPearl": "Door-to-balloon time goal is <90 minutes for STEMI. Every 30-minute delay increases mortality by 7.5%."
+    "clinicalPearl": "Door-to-balloon time goal is <90 minutes for STEMI. Every 30-minute delay increases mortality by 7.5%.",
+    "highYieldImageOrTable": "N/A"
   },
   "pearls": ["STEMI requires emergent reperfusion - PCI preferred over thrombolytics", "Classic STEMI triad: chest pain, diaphoresis, ST-elevation", "ECG changes in V1-V4 indicate anterior/LAD territory"]
 }
 
 CRITICAL RULES:
 1. The vignette MUST describe clinical findings without stating the diagnosis
-2. All 4 options must be plausible for this clinical picture
+2. All 4 options must be plausible; each wrong answer should be correct for a different patient/scenario (Kaplan-level distractors)
 3. Options should NOT have letter prefixes (A., B., etc.)
-4. The rationale MUST explain why each wrong answer is incorrect
+4. The rationale MUST explain why each wrong answer is incorrect for THIS patient (and can note when it would be correct for another scenario)
 5. Include 2-3 high-yield clinical pearls
 6. Return ONLY the JSON object - no markdown formatting`;
     };

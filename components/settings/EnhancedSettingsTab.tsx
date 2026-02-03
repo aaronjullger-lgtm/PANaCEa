@@ -35,8 +35,9 @@ import {
   LogOut,
   Mail,
 } from 'lucide-react';
-import type { UserProfile, YearInProgram, ClinicalRotation } from '@/types';
+import type { UserProfile, YearInProgram, ClinicalRotation, SystemCode } from '@/types';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import {
   loadUserProfile,
   updateUserProfile,
@@ -47,6 +48,7 @@ import {
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { refreshUserContext } from '@/hooks/useUserContext';
 import { RotationSelector } from '@/components/onboarding/RotationSelector';
+import { Layers } from 'lucide-react';
 import { ANALYTICS_PALETTES, type AnalyticsPalette } from '@/components/modals/SettingsStatsModal';
 import FSRSOptimizer from './FSRSOptimizer';
 import WorkloadProjector from './WorkloadProjector';
@@ -63,7 +65,7 @@ interface EnhancedSettingsTabProps {
   syncError?: string | null;
 }
 
-// Career stage options with descriptions
+// Career stage options (Step 1: Role)
 const CAREER_STAGE_OPTIONS: {
   value: CareerStage;
   label: string;
@@ -82,6 +84,30 @@ const CAREER_STAGE_OPTIONS: {
     description: 'Certified PA preparing for PANRE/PANRE-LA',
     icon: Stethoscope,
   },
+];
+
+// Phase options (Step 2: If Student) — Didactic = Curriculum Mode, Clinical = Rotation Mode
+const PHASE_OPTIONS: { value: YearInProgram; label: string; sublabel: string }[] = [
+  {
+    value: 'Didactic Year 1',
+    label: 'Didactic Year (Classroom)',
+    sublabel: 'Curriculum Mode — lock Main Session to your current modules',
+  },
+  {
+    value: 'Clinical Year',
+    label: 'Clinical Year (Rotations)',
+    sublabel: 'Rotation Mode — focus on current rotation + background PANCE prep',
+  },
+];
+
+const EOR_ROTATIONS: ClinicalRotation[] = [
+  'Emergency Medicine',
+  'Family Medicine',
+  'Internal Medicine',
+  'Surgery',
+  'Pediatrics',
+  'Psychiatry',
+  'Obstetrics & Gynecology',
 ];
 
 const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
@@ -105,21 +131,28 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
     return loadUserProfile() || { hasCompletedOnboarding: false };
   });
 
-  // Sync from API when signed in and profile loads
+  // Sync from API when signed in and profile loads; persist to localStorage for question service (Clinical 60/40)
   useEffect(() => {
     if (isSignedIn && apiProfile) {
-      const local = loadUserProfile() || {};
+      const local = (loadUserProfile() || {}) as Partial<UserProfile>;
+      const yearInProgram =
+        (apiProfile.yearInProgram as YearInProgram) ?? local.yearInProgram;
+      const currentRotation =
+        (apiProfile.currentRotation as ClinicalRotation) ?? local.currentRotation;
       setUserProfileState({
         hasCompletedOnboarding: apiProfile.hasCompletedOnboarding,
         school: apiProfile.school ?? local.school,
         graduationDate: apiProfile.graduationDate
           ? apiProfile.graduationDate.slice(0, 7)
           : local.graduationDate, // API returns ISO; month input needs YYYY-MM
-        yearInProgram: (apiProfile.yearInProgram as YearInProgram) ?? local.yearInProgram,
-        currentRotation: (apiProfile.currentRotation as ClinicalRotation) ?? local.currentRotation,
+        yearInProgram,
+        currentRotation,
         isCertifiedPA: local.isCertifiedPA,
-        specialty: local.specialty,
       });
+      if (yearInProgram != null)
+        localStorage.setItem('panceai_year_in_program', yearInProgram);
+      if (currentRotation != null)
+        localStorage.setItem('panceai_current_rotation', currentRotation);
     }
   }, [isSignedIn, apiProfile]);
 
@@ -180,6 +213,18 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
       const localUpdated = updateUserProfile(updates);
       setUserProfileState(localUpdated);
 
+      // Persist yearInProgram and currentRotation to localStorage for question service (Clinical 60/40)
+      if (updates.yearInProgram !== undefined) {
+        if (updates.yearInProgram)
+          localStorage.setItem('panceai_year_in_program', updates.yearInProgram);
+        else localStorage.removeItem('panceai_year_in_program');
+      }
+      if (updates.currentRotation !== undefined) {
+        if (updates.currentRotation)
+          localStorage.setItem('panceai_current_rotation', updates.currentRotation);
+        else localStorage.removeItem('panceai_current_rotation');
+      }
+
       if (isSignedIn) {
         const apiUpdates: Parameters<typeof updateProfileApi>[0] = {};
         if (updates.school !== undefined) apiUpdates.school = updates.school || null;
@@ -213,7 +258,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
           className="w-full p-4 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-accent)] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-[var(--color-accent)] flex items-center justify-center">
               <Target className="w-5 h-5 text-[var(--color-text-inverse)]" />
             </div>
             <div className="text-left">
@@ -265,7 +310,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                       >
                         <div className="flex items-start gap-3">
                           <div
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                               isSelected
                                 ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                                 : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
@@ -362,7 +407,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                   <div>
                     <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] mb-2">
                       <GraduationCap className="w-4 h-4" />
-                      Where are you in your PA journey?
+                      Training year
                     </label>
                     <div className="relative">
                       <select
@@ -409,7 +454,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
 
                 {/* Rotation Selector - Only for Clinical Year students */}
                 {careerStage === 'student' && userProfile.yearInProgram === 'Clinical Year' && (
-                  <div>
+                  <div className="space-y-4">
                     <RotationSelector
                       value={userProfile.currentRotation}
                       onChange={(rotation: ClinicalRotation) =>
@@ -417,6 +462,28 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                       }
                       label="Current Clinical Rotation"
                     />
+                    {/* EOR Test Date - when on an EOR rotation, set date to show EOR Readiness on dashboard */}
+                    {userProfile.currentRotation &&
+                      ['Emergency Medicine', 'Family Medicine', 'Internal Medicine', 'Surgery', 'Pediatrics', 'Psychiatry', 'Obstetrics & Gynecology'].includes(
+                        userProfile.currentRotation
+                      ) && (
+                        <div>
+                          <label className="block text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+                            EOR Test Date
+                          </label>
+                          <input
+                            type="date"
+                            value={userProfile.eorTestDate ?? ''}
+                            onChange={(e) =>
+                              handleUpdateProfile({ eorTestDate: e.target.value || undefined })
+                            }
+                            className="w-full px-4 py-2.5 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] text-sm"
+                          />
+                          <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                            Dashboard will show &quot;EOR Readiness&quot; until this date.
+                          </p>
+                        </div>
+                      )}
                   </div>
                 )}
 
@@ -578,7 +645,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
             className="w-full p-4 flex items-center justify-between"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--color-accent)] flex items-center justify-center text-white font-bold ring-2 ring-white/30 dark:ring-white/20">
+              <div className="w-10 h-10 rounded-xl overflow-hidden bg-[var(--color-accent)] flex items-center justify-center text-white font-bold ring-2 ring-white/30 dark:ring-white/20">
                 {user?.firstName?.charAt(0) ||
                   user?.emailAddresses[0]?.emailAddress?.charAt(0).toUpperCase() ||
                   'S'}

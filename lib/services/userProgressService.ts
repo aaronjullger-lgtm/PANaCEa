@@ -1,8 +1,12 @@
 /**
  * User Progress Service
- * Manages UserProgress records with FSRS card state and review history tracking
+ * Manages UserProgress records with FSRS card state and review history tracking.
+ *
+ * WASM Sync Conflict: Review logs are merged (append-only) via atomic DB append,
+ * never overwritten, so multi-device (e.g. phone offline + laptop) does not lose data.
  */
 
+import { Prisma } from '@prisma/client';
 import type { FSRSCard, Rating, ReviewSnapshot } from '../fsrs';
 import { createReviewSnapshot } from '../fsrs';
 
@@ -15,11 +19,9 @@ export interface UpdateUserProgressInput {
 }
 
 /**
- * Update or create UserProgress with review history snapshot
- * Should be called after every FSRS review to track stability growth over time
- *
- * @param prisma - Prisma client instance
- * @param input - Progress update data
+ * Update or create UserProgress with review history snapshot.
+ * Uses atomic append for reviewHistory so concurrent updates (multi-device) merge
+ * instead of last-write-wins overwriting.
  */
 export async function updateUserProgressWithHistory(
   prisma: any,
@@ -27,51 +29,76 @@ export async function updateUserProgressWithHistory(
 ): Promise<void> {
   const { userId, conditionId, fsrsCard, rating, accuracy } = input;
 
-  // Create review snapshot
   const snapshot: ReviewSnapshot = createReviewSnapshot(fsrsCard, rating);
+  const snapshotJson = JSON.stringify(snapshot);
 
-  // Fetch existing progress
-  const existing = await prisma.userProgress.findUnique({
-    where: {
-      userId_conditionId: {
-        userId,
-        conditionId,
-      },
-    },
-  });
+  // 1. Atomic append to existing row (merge review logs; never overwrite whole array)
+  const executeRaw =
+    typeof prisma.$executeRaw === 'function'
+      ? prisma.$executeRaw.bind(prisma)
+      : null;
 
-  // Prepare review history
-  let reviewHistory: any[] = [];
-
-  if (existing) {
-    reviewHistory = Array.isArray(existing.reviewHistory) ? existing.reviewHistory : [];
-
-    // Keep only last 365 days of history to prevent bloat
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 365);
-
-    reviewHistory = reviewHistory.filter((entry: any) => {
-      const entryDate = new Date(entry.date);
-      return entryDate >= thirtyDaysAgo;
-    });
+  if (executeRaw) {
+    try {
+      // Prisma Json[] → PostgreSQL jsonb[]; append one element with array_append
+      const result = await executeRaw(
+        Prisma.sql`UPDATE "UserProgress" SET "reviewHistory" = array_append("reviewHistory", (${snapshotJson})::jsonb) WHERE "userId" = ${userId} AND "conditionId" = ${conditionId}`
+      );
+      const updated = typeof result === 'number' ? result : Number(result);
+      if (updated > 0) {
+        const row = await prisma.userProgress.findUnique({
+          where: { userId_conditionId: { userId, conditionId } },
+          select: { totalAttempts: true, correctCount: true },
+        });
+        const totalAttempts = (row?.totalAttempts ?? 0) + 1;
+        const correctCount = (row?.correctCount ?? 0) + (accuracy >= 0.7 ? 1 : 0);
+        await prisma.userProgress.update({
+          where: { userId_conditionId: { userId, conditionId } },
+          data: {
+            fsrsCard: {
+              stability: fsrsCard.stability,
+              difficulty: fsrsCard.difficulty,
+              state: fsrsCard.state,
+              elapsed_days: fsrsCard.elapsed_days,
+              scheduled_days: fsrsCard.scheduled_days,
+              reps: fsrsCard.reps,
+              lapses: fsrsCard.lapses,
+              last_review: fsrsCard.last_review.toISOString(),
+            },
+            totalAttempts,
+            correctCount,
+            accuracy: totalAttempts > 0 ? correctCount / totalAttempts : 0,
+            lastReviewAt: new Date(),
+            nextReviewAt: new Date(Date.now() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000),
+            updatedAt: new Date(),
+          },
+        });
+        return;
+      }
+    } catch (e) {
+      // Fallback to read-modify-write if raw not supported or DB type differs
+    }
   }
 
-  // Add new snapshot
+  // 2. No row updated: create or fallback read-modify-write
+  const existing = await prisma.userProgress.findUnique({
+    where: { userId_conditionId: { userId, conditionId } },
+  });
+
+  let reviewHistory: any[] = existing && Array.isArray(existing.reviewHistory)
+    ? [...existing.reviewHistory]
+    : [];
+  const oneYearAgo = new Date();
+  oneYearAgo.setDate(oneYearAgo.getDate() - 365);
+  reviewHistory = reviewHistory.filter((entry: any) => new Date(entry.date) >= oneYearAgo);
   reviewHistory.push(snapshot);
 
-  // Calculate updated stats
-  const totalAttempts = (existing?.totalAttempts || 0) + 1;
-  const correctCount = (existing?.correctCount || 0) + (accuracy >= 0.7 ? 1 : 0); // Consider 70%+ as correct
+  const totalAttempts = (existing?.totalAttempts ?? 0) + 1;
+  const correctCount = (existing?.correctCount ?? 0) + (accuracy >= 0.7 ? 1 : 0);
   const newAccuracy = totalAttempts > 0 ? correctCount / totalAttempts : 0;
 
-  // Upsert UserProgress
   await prisma.userProgress.upsert({
-    where: {
-      userId_conditionId: {
-        userId,
-        conditionId,
-      },
-    },
+    where: { userId_conditionId: { userId, conditionId } },
     update: {
       fsrsCard: {
         stability: fsrsCard.stability,

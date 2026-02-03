@@ -81,6 +81,10 @@ export const virtualAttending = virtualAttendingServiceModule;
 // Re-export commonly used functions and types from virtualPreceptorService
 export {
   generateDebrief,
+  buildDebriefPrompt,
+  cleanDebriefJsonResponse,
+  normalizeDebriefFeedback,
+  getFallbackDebriefFeedback,
   type PreceptorFeedback,
   type EncounterSessionSummary,
 } from './virtualPreceptorService';

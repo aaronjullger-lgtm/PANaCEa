@@ -124,23 +124,6 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
 
   const currentQuestion = questions[currentQuestionIndex];
 
-  // Guard: If currentQuestion is undefined, show loading state
-  if (viewState === 'active' && !currentQuestion) {
-    return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Siren className="w-12 h-12 text-red-500 mx-auto animate-pulse" />
-          <p className="text-[var(--color-text-muted)]">Loading question...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const handleAnswerSelect = (index: number) => {
-    if (isSubmitted) return;
-    setSelectedAnswer(index);
-  };
-
   const handleSubmit = useCallback(() => {
     if (selectedAnswer === null || isSubmitted || !currentQuestion) return;
 
@@ -174,7 +157,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
     handleStart();
   }, [handleStart]);
 
-  // Auto-submit when time runs out
+  // Auto-submit when time runs out (hooks must run unconditionally)
   useEffect(() => {
     if (isTimeUp && !isSubmitted) {
       setIsSubmitted(true);
@@ -184,6 +167,23 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
       }));
     }
   }, [isTimeUp, isSubmitted]);
+
+  // Guard: If currentQuestion is undefined, show loading state
+  if (viewState === 'active' && !currentQuestion) {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Siren className="w-12 h-12 text-red-500 mx-auto animate-pulse" />
+          <p className="text-[var(--color-text-muted)]">Loading question...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleAnswerSelect = (index: number) => {
+    if (isSubmitted) return;
+    setSelectedAnswer(index);
+  };
 
   // Landing page
   if (viewState === 'landing') {

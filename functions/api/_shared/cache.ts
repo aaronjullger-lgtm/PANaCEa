@@ -200,12 +200,14 @@ export function getConditionCacheKey(conditionId: string): string {
  */
 export function getQuestionPoolCacheKey(filters: {
   system?: string;
+  systems?: string[];
   category?: string;
   difficulty?: string;
 }): string {
   const parts: string[] = [CACHE_CONFIG.PREFIX.QUESTION_POOL];
 
   if (filters.system) parts.push(`sys:${filters.system}`);
+  if (filters.systems?.length) parts.push(`sys:${filters.systems.slice().sort().join(',')}`);
   if (filters.category) parts.push(`cat:${filters.category}`);
   if (filters.difficulty) parts.push(`diff:${filters.difficulty}`);
 

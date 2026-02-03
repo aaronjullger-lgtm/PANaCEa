@@ -1,9 +1,9 @@
 /**
  * FSRS Optimizer Service (Phase 5: Self-Optimizing Engine)
  *
- * Leverages the existing fsrs-params API endpoint which already implements
- * L-BFGS optimization on the server side. This provides a simpler integration
- * than client-side WASM while still delivering personalized parameters.
+ * Battery-drain audit: Optimization runs SERVER-SIDE (POST /api/user/fsrs-params).
+ * L-BFGS never runs on the main thread; the client only triggers and receives results.
+ * If we ever add client-side optimization (e.g. WASM), it MUST run in a Web Worker.
  *
  * Reference: FSRS Paper - Default parameters are 20-30% less efficient than
  * personalized parameters for mature users (20k+ user study).

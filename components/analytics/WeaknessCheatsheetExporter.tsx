@@ -59,20 +59,20 @@ export default function WeaknessCheatsheetExporter({
   };
 
   return (
-    <div data-theme={theme} className="rounded-xl p-4 bg-[var(--color-bg-secondary)]">
+    <div className="rounded-xl p-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600">
       <div className="flex items-center gap-2 mb-3">
         <FileText className="w-5 h-5 text-[var(--color-accent)]" />
-        <h3 className="font-medium text-[var(--color-text-primary)]">Weakness Study Guide</h3>
+        <h3 className="font-medium text-slate-800 dark:text-slate-200">Yield Optimization</h3>
       </div>
 
-      <p className="text-xs mb-4 text-[var(--color-text-muted)]">
-        Generate a professional PDF study guide based on questions you've missed. Perfect for
-        focused review and cramming sessions.
+      <p className="text-xs mb-4 text-slate-600 dark:text-slate-400">
+        Generate a study guide focused on high-yield areas to reinforce. Perfect for
+        focused review and exam prep.
       </p>
 
       {/* Time Period Selector */}
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2 text-[var(--color-text-primary)]">
+        <label className="block text-sm font-medium mb-2 text-slate-800 dark:text-slate-200">
           Time Period
         </label>
         <div className="flex gap-2">
@@ -99,8 +99,8 @@ export default function WeaknessCheatsheetExporter({
             <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-[var(--color-accent)]" />
             <div>
               <p className="text-sm font-medium mb-1 text-[var(--color-text-primary)]">
-                Found {summary.totalWeaknesses} area{summary.totalWeaknesses > 1 ? 's' : ''} to
-                review
+                {summary.totalWeaknesses} focus area{summary.totalWeaknesses > 1 ? 's' : ''} to
+                optimize
               </p>
               <p className="text-xs text-[var(--color-text-muted)]">
                 {summary.totalQuestions} questions from last {days} days
@@ -127,7 +127,7 @@ export default function WeaknessCheatsheetExporter({
         <div className="p-3 rounded-lg mb-4 text-center bg-slate-100 dark:bg-[var(--color-success)]/10 border border-slate-200 dark:border-[var(--color-success)]/30">
           <Check className="w-6 h-6 mx-auto mb-2 text-slate-600 dark:text-[var(--color-success)]" />
           <p className="text-sm text-slate-800 dark:text-[var(--color-text-primary)]">
-            No significant weaknesses in the last {days} days!
+            No yield gaps in the last {days} days—keep it up!
           </p>
         </div>
       )}
@@ -243,7 +243,7 @@ function generateSimplifiedCheatsheet(performanceData: PerformanceRecord[], days
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PANaCEa Weakness Summary - Last ${days} Days</title>
+  <title>PANaCEa Yield Optimization - Last ${days} Days</title>
   <style>
     :root {
       --export-accent: ${exportAccent};
@@ -329,7 +329,7 @@ function generateSimplifiedCheatsheet(performanceData: PerformanceRecord[], days
 <body>
   <button class="print-button no-print" onclick="window.print()">Print to PDF</button>
   <div class="header">
-    <h1>Weakness Summary</h1>
+    <h1>Yield Optimization</h1>
     <p>Areas to Review from Last ${days} Days | Generated ${currentDate}</p>
   </div>
 `;

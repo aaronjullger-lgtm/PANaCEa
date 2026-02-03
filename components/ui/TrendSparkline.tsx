@@ -16,8 +16,8 @@ export interface TrendSparklineProps {
   width?: number;
   /** Height of the sparkline in pixels */
   height?: number;
-  /** Color scheme: auto, success, warning, danger */
-  colorScheme?: 'auto' | 'success' | 'warning' | 'danger' | 'neutral';
+  /** Color scheme: auto, clinical (green/teal only), success, warning, danger */
+  colorScheme?: 'auto' | 'clinical' | 'success' | 'warning' | 'danger' | 'neutral';
   /** Show trend indicator icon */
   showTrend?: boolean;
   /** Show the latest value as text */
@@ -34,12 +34,18 @@ const COLOR_SCHEMES = {
   success: {
     line: '#10b981',
     gradient: 'rgba(16, 185, 129, 0.2)',
-    text: 'text-green-500',
+    text: 'text-emerald-500',
+  },
+  /** Clinical: teal/green for success; avoids red/yellow (medical alarm semantics) */
+  clinical: {
+    line: '#14b8a6',
+    gradient: 'rgba(20, 184, 166, 0.2)',
+    text: 'text-teal-500',
   },
   warning: {
-    line: '#f59e0b',
-    gradient: 'rgba(245, 158, 11, 0.2)',
-    text: 'text-amber-500',
+    line: '#0d9488',
+    gradient: 'rgba(13, 148, 136, 0.2)',
+    text: 'text-teal-600',
   },
   danger: {
     line: '#ef4444',
@@ -139,9 +145,14 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
     const diff = recentAvg - earlyAvg;
     const trend = diff > 2 ? 'up' : diff < -2 ? 'down' : 'stable';
 
-    // Determine color scheme
+    // Determine color scheme (clinical: green/teal only; avoid red/yellow for success)
     let colors = COLOR_SCHEMES.neutral;
-    if (colorScheme === 'auto') {
+    if (colorScheme === 'clinical') {
+      const avgValue = data.reduce((sum, v) => sum + v, 0) / data.length;
+      if (avgValue >= 80) colors = COLOR_SCHEMES.clinical;
+      else if (avgValue >= 60) colors = COLOR_SCHEMES.warning;
+      else colors = COLOR_SCHEMES.neutral;
+    } else if (colorScheme === 'auto') {
       const avgValue = data.reduce((sum, v) => sum + v, 0) / data.length;
       if (avgValue >= 80) colors = COLOR_SCHEMES.success;
       else if (avgValue >= 60) colors = COLOR_SCHEMES.warning;
@@ -253,9 +264,9 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
               <TrendIcon
                 className={`w-4 h-4 ${
                   trend === 'up'
-                    ? 'text-green-500'
+                    ? 'text-teal-500'
                     : trend === 'down'
-                      ? 'text-red-500'
+                      ? 'text-slate-500'
                       : 'text-gray-400'
                 }`}
               />

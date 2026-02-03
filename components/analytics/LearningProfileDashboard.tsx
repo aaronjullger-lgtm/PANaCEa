@@ -31,6 +31,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { fetchLearningProfile } from '@/services/analytics';
+import { ExplainabilityTooltip } from '@/components/ui/ExplainabilityTooltip';
 
 interface LearningProfile {
   lifetimeQuestions: number;
@@ -217,8 +218,11 @@ export const LearningProfileDashboard: React.FC = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-[var(--color-accent)] mb-1">
+              <p className="text-sm font-medium text-[var(--color-accent)] mb-1 flex items-center gap-1.5">
                 Estimated PANCE Score
+                <ExplainabilityTooltip
+                  formula={`Based on your ${profile.lifetimeQuestions.toLocaleString()} practice questions, weighted by difficulty and time decay.`}
+                />
               </p>
               <div className="flex items-baseline gap-3">
                 <span className="text-4xl font-bold text-[var(--color-text-primary)]">

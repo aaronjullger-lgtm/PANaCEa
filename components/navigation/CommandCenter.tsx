@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
-import { useSRSItems } from '../hooks/useSRSItems';
+import { useSRSItems } from '@/hooks/useSRSItems';
 
 interface CommandCenterProps {
   performanceData: PerformanceRecord[];
@@ -245,7 +245,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
       recs.push({
         id: 'streak',
         title: 'Maintain Your Streak',
-        description: `${currentStreak}-day streak at risk - answer at least 1 question today`,
+        description: `Study continuity at risk — answer at least 1 question today`,
         priority: 'high',
         action: 'Quick Session',
         actionDestination: 'main_session',
@@ -367,7 +367,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
             <div className="text-xs text-[var(--color-text-muted)] mt-1">Due today</div>
           </motion.div>
 
-          {/* Streak */}
+          {/* Study Continuity (consecutive days studied) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -375,8 +375,8 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
             className="p-4 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-[var(--color-text-muted)]">Current Streak</span>
-              <Flame className="w-5 h-5 text-orange-500" />
+              <span className="text-sm text-[var(--color-text-muted)]">Study Continuity</span>
+              <Zap className="w-5 h-5 text-teal-500" />
             </div>
             <div className="text-3xl font-bold text-[var(--color-text-primary)]">
               {currentStreak}
@@ -412,7 +412,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-[var(--color-text-muted)]">Flagged</span>
-              <AlertCircle className="w-5 h-5 text-yellow-500" />
+              <AlertCircle className="w-5 h-5 text-slate-500" />
             </div>
             <div className="text-3xl font-bold text-[var(--color-text-primary)]">
               {flaggedCount}

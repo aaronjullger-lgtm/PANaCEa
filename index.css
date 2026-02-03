@@ -35,6 +35,17 @@ body,
   overflow-x: hidden;
 }
 
+/* Respect OS prefers-reduced-motion: animations run instantly when user has reduced motion enabled */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* -----------------------------------------------------
    GLOBAL BUTTON COMPONENT CLASSES
 ------------------------------------------------------ */
@@ -84,6 +95,32 @@ body,
   /* Focus ring utility - accessible keyboard focus */
   .focus-ring {
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2;
+  }
+
+  /* Global keyboard focus - visible ring on all interactive elements (accessibility) */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="menuitem"]:focus-visible,
+  [role="option"]:focus-visible,
+  [tabindex="0"]:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-bg-primary),
+      0 0 0 4px var(--color-accent);
+  }
+
+  /* Checkbox/radio often need larger hit area; keep ring visible */
+  input[type="checkbox"]:focus-visible,
+  input[type="radio"]:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-bg-primary),
+      0 0 0 4px var(--color-accent);
   }
 
   /* Ghost button - transparent with high contrast text */
@@ -211,6 +248,7 @@ body,
   --color-text-muted: #64748b; /* slate-500 */
   --color-border: #e2e8f0; /* slate-200 */
   --color-border-light: #f1f5f9; /* slate-100 */
+  --chart-grid-stroke: #f1f5f9; /* slate-100 - subtle grid lines in light mode */
   --color-accent: #0284c7; /* sky-600 */
   --color-accent-hover: #0369a1; /* sky-700 */
   --color-accent-light: #e0f2fe; /* sky-100 */
@@ -310,6 +348,7 @@ body,
   --color-text-muted: #94a3b8;
   --color-border: #475569;
   --color-border-light: #334155;
+  --chart-grid-stroke: rgba(71, 85, 105, 0.2);
   --color-accent: #0ea5e9;
   --color-accent-hover: #38bdf8;
   --color-accent-light: #1e293b;

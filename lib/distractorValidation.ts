@@ -9,6 +9,11 @@
  * - Medically plausible (not obviously wrong)
  * - Not revealing the correct answer through pattern
  *
+ * Kaplan-Level Standard (see docs/AUDIT_KAPLAN_QUESTION_MODEL.md):
+ * Every wrong answer should be "the right answer to a different question" - correct
+ * for a slightly different patient (e.g. otitis: viral vs bacterial vs recurrent vs
+ * penicillin-allergic). Validation suggests this when score or plausibility is low.
+ *
  * Poor distractors reduce question effectiveness and can harm learning.
  */
 
@@ -91,6 +96,13 @@ export function validateDistractors(question: QuestionForValidation): Distractor
   if (lengthViolations >= 2) {
     score -= 15;
     suggestions.push('Make option lengths more similar to avoid revealing correct answer');
+  }
+
+  // Kaplan-level suggestion: each distractor should be "right answer to a different question"
+  if (score < 85) {
+    suggestions.push(
+      'Kaplan-level: Ensure each wrong answer is correct for a different patient/scenario (e.g. viral vs bacterial vs recurrent vs penicillin-allergic for otitis)'
+    );
   }
 
   // RULE 4: Correct answer not always in same position

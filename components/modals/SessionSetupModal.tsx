@@ -68,6 +68,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
     const settings: SessionSettings = {
       count: 20, // Default custom count
       ...customSettings,
+      focus: (customSettings.focus ?? 'all') as SessionSettings['focus'],
     };
 
     // Add selected system if user chose one
@@ -84,7 +85,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="bg-surface-primary rounded-2xl shadow-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="bg-surface-primary rounded-2xl shadow-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700 ring-1 ring-black/10 dark:ring-white/10"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-2xl font-bold text-action-primary mb-2">New Study Session</h2>

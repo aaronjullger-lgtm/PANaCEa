@@ -40,7 +40,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 // Color scales for different metrics - using consistent UI theme colors
 const COLOR_SCALES = {
   attempts: [
-    'bg-slate-100 dark:bg-slate-800', // 0 - empty
+    'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600', // 0 - empty
     'bg-slate-200 dark:bg-slate-700', // 1-5
     'bg-slate-300 dark:bg-slate-600', // 6-10
     'bg-slate-400 dark:bg-slate-500', // 11-20
@@ -54,7 +54,7 @@ const COLOR_SCALES = {
     'bg-slate-500 dark:bg-slate-400', // 85%+
   ],
   streak: [
-    'bg-slate-100 dark:bg-slate-800', // 0 - empty
+    'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600', // 0 - empty
     'bg-slate-200 dark:bg-slate-700', // 1-2
     'bg-slate-300 dark:bg-slate-600', // 3-5
     'bg-slate-400 dark:bg-slate-500', // 6-10

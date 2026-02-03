@@ -271,4 +271,35 @@ export function exportDailyProgress(
   }
 }
 
+/**
+ * Export a full archive of performance data (for "Archive & Reset").
+ * Downloads a JSON file the user can keep; does not clear data.
+ *
+ * @param performanceData - Array of performance records to archive
+ * @returns void - Downloads panacea-archive_<timestamp>.json
+ */
+export function exportArchive(performanceData: PerformanceRecord[]): void {
+  if (performanceData.length === 0) {
+    console.warn('No performance data to archive');
+    return;
+  }
+  const summary = prepareAnalyticsSummary(performanceData);
+  const archive = {
+    exportedAt: summary.exportDate,
+    note: 'PANaCEa archive – full backup before reset. Keep this file to restore or re-import later.',
+    totalRecords: performanceData.length,
+    summary: {
+      totalQuestions: summary.totalQuestions,
+      totalCorrect: summary.totalCorrect,
+      overallAccuracy: summary.overallAccuracy,
+      systemBreakdown: summary.systemBreakdown,
+      dailyProgress: summary.dailyProgress,
+    },
+    performanceRecords: performanceData,
+  };
+  const jsonContent = JSON.stringify(archive, null, 2);
+  const filename = generateFilename('panacea-archive', 'json');
+  downloadFile(jsonContent, filename, 'application/json');
+}
+
 export default exportUserAnalytics;

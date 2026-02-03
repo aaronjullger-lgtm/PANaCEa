@@ -12,7 +12,7 @@ import {
   type TodoistTask,
   type StudyTaskExport,
   type TodoistOAuthConfig,
-} from '../lib/services/todoistService';
+} from '@/lib/services/todoistService';
 
 interface TodoistExportModalProps {
   isOpen: boolean;
@@ -184,7 +184,7 @@ export default function TodoistExportModal({
                   className="rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-[var(--color-text-secondary)]">
-                  Missed Questions Review ({missedQuestions.length} questions)
+                  To Review ({missedQuestions.length} questions)
                 </span>
               </label>
             </div>

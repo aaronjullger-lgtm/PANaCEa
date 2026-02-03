@@ -80,14 +80,22 @@ function getAdaptiveHint(
 }
 
 /**
- * Structured rationale format from AI generation
+ * Standardized rationale format (5-section template)
+ * See docs/AUDIT_STANDARDIZED_RATIONALE.md
  */
 export interface StructuredRationale {
+  /** 1. Bottom Line: One sentence. "The diagnosis is X, and the treatment is Y." (for the student in a rush) */
+  bottomLine?: string;
+  /** 2. Why the Correct Answer is Right: Walk through vignette steps */
   whyCorrect: string;
+  /** 3. Why the Distractors are Wrong: Explain why a student might have chosen each, then why it's wrong for this patient */
   whyIncorrectA?: string;
   whyIncorrectB?: string;
   whyIncorrectC?: string;
   whyIncorrectD?: string;
+  /** 4. High-Yield Image/Table: Placeholder for diagram or flow-chart (optional) */
+  highYieldImageOrTable?: string;
+  /** 5. Clinical Pearl: A memorable hook */
   clinicalPearl?: string;
 }
 
@@ -159,14 +167,14 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   // For legacy support: convert rationale to string if needed
   const rationaleText = useMemo(() => {
     if (isStructuredRationale(rationale)) {
-      // Combine structured fields into a single string for legacy functions
-      const parts = [rationale.whyCorrect];
+      const parts = [rationale.bottomLine, rationale.whyCorrect];
       if (rationale.whyIncorrectA) parts.push(rationale.whyIncorrectA);
       if (rationale.whyIncorrectB) parts.push(rationale.whyIncorrectB);
       if (rationale.whyIncorrectC) parts.push(rationale.whyIncorrectC);
       if (rationale.whyIncorrectD) parts.push(rationale.whyIncorrectD);
+      if (rationale.highYieldImageOrTable) parts.push(rationale.highYieldImageOrTable);
       if (rationale.clinicalPearl) parts.push(rationale.clinicalPearl);
-      return parts.join(' ');
+      return parts.filter(Boolean).join(' ');
     }
     return rationale;
   }, [rationale]);
@@ -376,7 +384,22 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
               </div>
             </motion.section>
 
-            {/* Clinical Pearl Section */}
+            {/* 4. High-Yield Image/Table (placeholder for diagram or flow-chart) */}
+            {rationale.highYieldImageOrTable && rationale.highYieldImageOrTable !== 'N/A' && (
+              <motion.section variants={itemVariants}>
+                <h3 className="font-bold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
+                  <Lightbulb className="w-4 h-4 text-steel-blue-500" />
+                  High-Yield Image / Table
+                </h3>
+                <div className="bg-steel-blue-50 dark:bg-steel-blue-900/20 border border-steel-blue-200 dark:border-steel-blue-800 rounded-lg px-4 py-3">
+                  <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
+                    {renderFormattedText(rationale.highYieldImageOrTable)}
+                  </p>
+                </div>
+              </motion.section>
+            )}
+
+            {/* 5. Clinical Pearl */}
             {rationale.clinicalPearl && (
               <motion.section variants={itemVariants}>
                 <h3 className="font-bold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">

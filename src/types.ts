@@ -166,6 +166,8 @@ export interface UserProfile {
   school?: string;
   graduationDate?: string; // ISO date string
   currentRotation?: ClinicalRotation;
+  /** EOR exam date for current rotation (ISO date); when set, dashboard shows EOR Readiness */
+  eorTestDate?: string;
   yearInProgram?: YearInProgram;
   isCertifiedPA?: boolean;
   hasCompletedOnboarding: boolean;

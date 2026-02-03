@@ -9,6 +9,7 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import type { PerformanceRecord, SystemCode } from '@/types';
+import { useLowPowerMode } from '@/hooks/useLowPowerMode';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import DayCellPopover, { DayActivityData } from './DayCellPopover';
 import { getTodayUTC, DAY_NAMES } from '@/lib/utils/timeUtils';
@@ -88,81 +89,57 @@ function formatDateKey(date: Date): string {
   return date.toISOString().split('T')[0] ?? '';
 }
 
+const MONTHS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
 /**
- * Get month labels for the header
- * Fixed to properly align with week columns by checking the most common month in each column
+ * Get month labels for the header, aligned left-flush with the first week of each month (GitHub-style).
+ * Returns startCol (first column index where that month appears) and endCol (exclusive) for positioning.
  */
-function getMonthLabels(dateGrid: (Date | null)[][]): { month: string; colSpan: number }[] {
-  const labels: { month: string; colSpan: number }[] = [];
-  let currentMonth = -1;
-  let colCount = 0;
-
-  const MONTHS = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-
-  // Guard: Ensure dateGrid has at least one row
+function getMonthLabels(
+  dateGrid: (Date | null)[][]
+): { month: string; startCol: number; endCol: number }[] {
   const firstRow = dateGrid[0];
-  if (!firstRow) return labels;
+  if (!firstRow) return [];
 
-  // Traverse columns (weeks) to build month labels
-  for (let colIdx = 0; colIdx < firstRow.length; colIdx++) {
-    // Get the most common month in this column (week)
-    const monthCounts = new Map<number, number>();
-    let hasValidDate = false;
+  const numCols = firstRow.length;
+  // For each month (0-11), find the first column index that contains any day in that month
+  const firstColByMonth = new Map<number, number>();
 
+  for (let colIdx = 0; colIdx < numCols; colIdx++) {
+    const monthsInColumn = new Set<number>();
     for (let rowIdx = 0; rowIdx < dateGrid.length; rowIdx++) {
       const date = dateGrid[rowIdx]?.[colIdx];
-      if (date) {
-        hasValidDate = true;
-        // Use UTC month to ensure consistency
-        const month = date.getUTCMonth();
-        monthCounts.set(month, (monthCounts.get(month) || 0) + 1);
-      }
+      if (date) monthsInColumn.add(date.getUTCMonth());
     }
-
-    if (hasValidDate) {
-      // Find the month with most occurrences in this column
-      let dominantMonth = -1;
-      let maxCount = 0;
-      monthCounts.forEach((count, month) => {
-        if (count > maxCount) {
-          maxCount = count;
-          dominantMonth = month;
-        }
-      });
-
-      if (dominantMonth !== currentMonth) {
-        if (currentMonth !== -1 && colCount > 0) {
-          const monthName = MONTHS[currentMonth] ?? '';
-          labels.push({ month: monthName, colSpan: colCount });
-        }
-        currentMonth = dominantMonth;
-        colCount = 1;
-      } else {
-        colCount++;
-      }
-    }
+    monthsInColumn.forEach((month) => {
+      if (!firstColByMonth.has(month)) firstColByMonth.set(month, colIdx);
+    });
   }
 
-  // Push final month
-  if (currentMonth !== -1 && colCount > 0) {
-    const monthName = MONTHS[currentMonth] ?? '';
-    labels.push({ month: monthName, colSpan: colCount });
-  }
+  // Build sorted list of (month, startCol), then add endCol
+  const entries = Array.from(firstColByMonth.entries()).sort((a, b) => a[1] - b[1]);
 
-  return labels;
+  return entries.map(([monthNum, startCol], i) => {
+    const endCol = i + 1 < entries.length ? entries[i + 1]![1] : numCols;
+    return {
+      month: MONTHS[monthNum] ?? '',
+      startCol,
+      endCol,
+    };
+  });
 }
 
 const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
@@ -268,6 +245,32 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
   // Get month labels
   const monthLabels = useMemo(() => getMonthLabels(dateGrid), [dateGrid]);
 
+  // Recent activity list for mobile (last 14 days with activity, newest first)
+  const recentActivityList = useMemo(() => {
+    const entries = Array.from(dailyStatsMap.entries())
+      .filter(([, s]) => s.questionsAnswered > 0)
+      .sort(([a], [b]) => (a > b ? -1 : 1))
+      .slice(0, 14);
+    return entries.map(([dateKey, stats]) => ({
+      dateKey,
+      ...stats,
+      displayDate: (() => {
+        const d = new Date(dateKey + 'T12:00:00Z');
+        const today = getTodayUTC();
+        const todayKey = formatDateKey(today);
+        if (dateKey === todayKey) return 'Today';
+        const yesterday = new Date(today);
+        yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+        if (dateKey === formatDateKey(yesterday)) return 'Yesterday';
+        return d.toLocaleDateString(undefined, {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+        });
+      })(),
+    }));
+  }, [dailyStatsMap]);
+
   // Handle day cell click
   const handleDayClick = useCallback(
     (date: Date | null, event: React.MouseEvent) => {
@@ -350,14 +353,14 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-            No Activity Yet
+            Not yet assessed
           </h3>
           <p className="text-sm text-[var(--color-text-muted)] text-center max-w-sm mb-6">
-            Your study activity will appear here once you start answering questions.
+            Your activity heatmap will appear here once you answer questions.
           </p>
           <button
             onClick={handleStartFirstSession}
-            aria-label="Start your first study session"
+            aria-label="Take a 10-question diagnostic quiz to unlock this graph"
             className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 border border-[var(--color-accent)]/40 rounded-xl text-[var(--color-text-inverse)] font-semibold transition-all shadow-lg flex items-center gap-2 mx-auto"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -374,7 +377,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
                 d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            Start First Session
+            Take a 10-question diagnostic quiz to unlock this graph
           </button>
         </div>
       )}
@@ -382,7 +385,35 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
       {/* Heatmap Content */}
       {hasActivity && (
         <>
-          {/* Legend */}
+          {/* Mobile: List view of recent activity (no hover, easy to scan) */}
+          <div className="md:hidden mb-4">
+            <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+              Recent Activity
+            </h3>
+            <ul className="space-y-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50 overflow-hidden">
+              {recentActivityList.length === 0 ? (
+                <li className="px-4 py-3 text-sm text-[var(--color-text-muted)]">
+                  No recent days with activity
+                </li>
+              ) : (
+                recentActivityList.map((item) => (
+                  <li
+                    key={item.dateKey}
+                    className="flex items-center justify-between px-4 py-3 min-h-[44px] text-sm border-b border-[var(--color-border)] last:border-b-0"
+                  >
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      {item.displayDate}
+                    </span>
+                    <span className="text-[var(--color-text-secondary)] tabular-nums">
+                      {item.questionsAnswered} q · {item.accuracy}%
+                    </span>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+
+          {/* Legend - desktop or above list on mobile */}
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
               Activity Heatmap
@@ -402,23 +433,30 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
             </div>
           </div>
 
-          {/* Heatmap Grid Container - Scrollable on mobile */}
-          <div className="overflow-x-auto">
+          <p className="md:hidden text-xs text-[var(--color-text-muted)] mb-2">
+            Scroll horizontally for full calendar
+          </p>
+          {/* Heatmap Grid Container - Horizontal scroll on mobile, touch-friendly */}
+          <div
+            className="overflow-x-auto -mx-1 px-1"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+            role="region"
+            aria-label="Study calendar grid - scroll horizontally for full view"
+          >
             <div className="inline-block min-w-full">
-              {/* Month labels */}
-              <div className="flex mb-2 ml-8 sm:ml-10">
+              {/* Month labels - left-flush with first week of each month (GitHub-style) */}
+              <div className="relative mb-2 ml-8 sm:ml-10" style={{ height: '1.25rem' }}>
                 {monthLabels.map((label, idx) => {
-                  // Calculate the width based on column count with proper cell and gap sizing
-                  // CELL_WIDTH_WITH_GAP = cell width (14px for w-3.5) + gap (4px) = 18px per column
                   const CELL_WIDTH_WITH_GAP = 18;
-                  const width = label.colSpan * CELL_WIDTH_WITH_GAP;
+                  const left = label.startCol * CELL_WIDTH_WITH_GAP;
+                  const width = (label.endCol - label.startCol) * CELL_WIDTH_WITH_GAP;
                   return (
                     <div
                       key={idx}
-                      className="text-[10px] sm:text-xs text-[var(--color-text-muted)] font-medium"
+                      className="absolute text-[10px] sm:text-xs text-[var(--color-text-muted)] font-medium"
                       style={{
+                        left: `${left}px`,
                         width: `${width}px`,
-                        minWidth: `${width}px`,
                         textAlign: 'left',
                         paddingLeft: '2px',
                       }}
@@ -446,9 +484,9 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
                   ))}
                 </div>
 
-                {/* Date cells */}
+                {/* Date cells — GPU layer; no stagger/hover when low power (battery drain audit) */}
                 {(dateGrid[0] ?? []).map((_, colIdx) => (
-                  <div key={colIdx} className="flex flex-col gap-0.5 sm:gap-1">
+                  <div key={colIdx} className="flex flex-col gap-0.5 sm:gap-1" style={{ transform: 'translateZ(0)' }}>
                     {dateGrid.map((row, rowIdx) => {
                       const date = row[colIdx];
                       const dateKey = date ? formatDateKey(date) : null;
@@ -458,20 +496,21 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
                       return (
                         <motion.button
                           key={`${rowIdx}-${colIdx}`}
-                          initial={{ opacity: 0, scale: 0.8 }}
+                          initial={lowPower ? false : { opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          transition={{
-                            delay: colIdx * 0.01,
-                            duration: 0.2,
-                          }}
-                          whileHover={{ scale: 1.2, zIndex: 10 }}
-                          whileTap={{ scale: 0.95 }}
+                          transition={
+                            lowPower
+                              ? { duration: 0 }
+                              : { delay: colIdx * 0.01, duration: 0.2 }
+                          }
+                          whileHover={lowPower ? undefined : { scale: 1.2, zIndex: 10 }}
+                          whileTap={lowPower ? undefined : { scale: 0.95 }}
                           onClick={(e) => handleDayClick(date ?? null, e)}
                           disabled={!date}
                           className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm border transition-all ${
                             date
                               ? `${getIntensityColor(count)} cursor-pointer hover:ring-2 hover:ring-[var(--color-accent)]/50`
-                              : 'bg-slate-100 dark:bg-[var(--color-bg-tertiary)]/30 border-transparent cursor-default'
+                              : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 cursor-default'
                           }`}
                           title={
                             date && stats

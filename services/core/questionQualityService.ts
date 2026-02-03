@@ -105,7 +105,9 @@ export function calculateTextSimilarity(text1: string, text2: string): number {
 }
 
 /**
- * Assess distractor (wrong answer) quality
+ * Assess distractor (wrong answer) quality.
+ * Kaplan-level standard: each wrong answer should be "the right answer to a different
+ * question" (correct for a slightly different patient/scenario). See docs/AUDIT_KAPLAN_QUESTION_MODEL.md.
  */
 export function assessDistractorQuality(
   options: string[],
@@ -218,6 +220,11 @@ export function quickQualityCheck(question: QuestionData): QualityAssessment {
     question.correctAnswer,
     question.system
   );
+  if (distractorQuality < 0.8) {
+    suggestions.push(
+      'Kaplan-level: Each wrong answer should be the right answer to a different question (e.g. viral vs bacterial vs recurrent vs penicillin-allergic for otitis)'
+    );
+  }
 
   // Content relevance - basic check
   const contentRelevance = question.system ? 0.8 : 0.5;

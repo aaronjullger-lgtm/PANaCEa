@@ -50,6 +50,12 @@ export interface UserPreferencesPayload {
   shareAnonymousData?: boolean;
   showOnLeaderboard?: boolean;
 
+  // Streak resilience (see docs/AUDIT_STREAK_FRAGILITY.md)
+  streakFreezes?: number;
+  userCoins?: number;
+  /** 'all' = every day counts; 'weekdays' = only Mon–Fri count (no break on weekend) */
+  streakGoalDays?: 'all' | 'weekdays';
+
   // Custom settings
   customSettings?: any;
 }

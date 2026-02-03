@@ -32,6 +32,7 @@ import {
   Mic,
   Eye,
   Building2,
+  Search,
 } from 'lucide-react';
 import type {
   PerformanceRecord,
@@ -52,13 +53,13 @@ import {
   saveToggleSettings,
   DEFAULT_TOGGLE_SETTINGS,
 } from '@/types/toggleSettings';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
 import { loadUserProfile, updateUserProfile } from '@/services/analytics';
 import { RotationSelector } from '@/components/onboarding/RotationSelector';
 import { StatisticsPreferences, DEFAULT_WIDGET_CONFIG } from '@/components/ProgressDashboard';
 import type { WidgetId } from '@/components/ProgressDashboard';
-import { exportUserAnalytics } from '@/lib/analyticsExport';
+import { exportUserAnalytics, exportArchive } from '@/lib/analyticsExport';
 import { toast } from '@/lib/toast';
 import {
   calculateAccuracy,
@@ -73,8 +74,10 @@ import WeaknessCheatsheetExporter from '@/components/analytics/WeaknessCheatshee
 import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
 import EnhancedSettingsTab from '@/components/settings/EnhancedSettingsTab';
 import { useCommuter } from '@/contexts/CommuterContext';
+import { useUserContext } from '@/hooks/useUserContext';
 import RadialProgress from '@/components/ui/RadialProgress';
 import TrendSparkline from '@/components/ui/TrendSparkline';
+import { Skeleton } from '@/components/loading';
 
 // Lazy load Character Gallery
 const CharacterGallery = lazy(() => import('@/components/characters/CharacterGallery'));
@@ -100,6 +103,8 @@ interface SettingsStatsModalProps {
   isSyncing?: boolean;
   lastSyncTime?: number | null;
   syncError?: string | null;
+  /** When true, show skeletons instead of 0% / 0 in Stats tab (prevents "broken" appearance while loading) */
+  isLoadingStats?: boolean;
   /** Called when user clicks "Start First Session" in ActivityHeatmap empty state (closes modal, opens session) */
   onStartFirstSession?: () => void;
 }
@@ -232,7 +237,7 @@ const AccessibilitySettings: React.FC = () => {
       <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer mb-3">
         <div className="flex items-center gap-3">
           <div
-            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+            className={`w-10 h-10 rounded-xl flex items-center justify-center ${
               isCommuterMode
                 ? 'bg-sage-500 text-white'
                 : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
@@ -302,20 +307,18 @@ const AccessibilitySettings: React.FC = () => {
             />
           </label>
 
-          {/* Speech rate */}
+          {/* Speech rate: input + stepper + slider */}
           <div className="p-2">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-[var(--color-text-primary)]">Speech rate</span>
-              <span className="text-xs text-[var(--color-text-muted)]">{settings.speechRate}x</span>
-            </div>
-            <input
-              type="range"
-              min="0.5"
-              max="2"
-              step="0.1"
+            <SliderWithInput
               value={settings.speechRate}
-              onChange={(e) => updateSettings({ speechRate: parseFloat(e.target.value) })}
-              className="w-full h-2 bg-[var(--color-bg-tertiary)] rounded-lg appearance-none cursor-pointer"
+              onChange={(v) => updateSettings({ speechRate: v })}
+              min={0.5}
+              max={2}
+              step={0.1}
+              unit="x"
+              label={<span className="text-sm text-[var(--color-text-primary)]">Speech rate</span>}
+              toInputValue={(v) => v.toFixed(1)}
+              fromInputValue={(s) => parseFloat(s) || 0.5}
             />
           </div>
         </div>
@@ -350,8 +353,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   isSyncing,
   lastSyncTime,
   syncError,
+  isLoadingStats = false,
   onStartFirstSession,
 }) => {
+  const { careerStage } = useUserContext();
+  const hasNoStatsData = isLoadingStats || performanceData.length === 0;
   const [activeTab, setActiveTab] = useState<TabId>('stats');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [confirmClear, setConfirmClear] = useState<string | null>(null);
@@ -363,17 +369,44 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     loadWidgetPrefs<WidgetId>(getDefaultWidgets())
   );
 
-  // System selection state - Load from localStorage
+  // System selection state - Load from localStorage (Practicing PAs default to all ON)
   const [enabledSystems, setEnabledSystems] = useState<Set<SystemCode>>(() => {
     const saved = localStorage.getItem('panceai_enabled_systems');
+    const all = Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[];
+    if (saved) {
+      try {
+        const arr = JSON.parse(saved) as SystemCode[];
+        return new Set(Array.isArray(arr) && arr.length > 0 ? arr : all);
+      } catch {
+        return new Set(all);
+      }
+    }
+    return new Set(all);
+  });
+
+  // Practicing PAs: when opening settings with empty enabled systems, default to all
+  useEffect(() => {
+    if (!isOpen || careerStage !== 'practicing') return;
+    const saved = localStorage.getItem('panceai_enabled_systems');
+    if (saved === '[]' || !saved) {
+      const all = Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[];
+      setEnabledSystems(new Set(all));
+      localStorage.setItem('panceai_enabled_systems', JSON.stringify(all));
+      window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
+    }
+  }, [isOpen, careerStage]);
+
+  // Active Unit (current learning) vs Completed/Review - for 80% current / 20% review sessions
+  const [activeUnitSystems, setActiveUnitSystems] = useState<Set<SystemCode>>(() => {
+    const saved = localStorage.getItem('panceai_active_unit_systems');
     if (saved) {
       try {
         return new Set(JSON.parse(saved) as SystemCode[]);
       } catch {
-        return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+        return new Set();
       }
     }
-    return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+    return new Set();
   });
 
   // Analytics color palette state - Load from localStorage
@@ -406,6 +439,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   });
 
   // Mini Modes selection - Load from localStorage
+  const [miniModesSearch, setMiniModesSearch] = useState('');
   const [enabledMiniModes, setEnabledMiniModes] = useState<Set<string>>(() => {
     const saved = localStorage.getItem('panceai_enabled_mini_modes');
     if (saved) {
@@ -490,6 +524,17 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
     notifyEnabledSystemsChanged();
     toast.success('Changes saved');
+  };
+
+  const handleSetActiveUnit = (system: SystemCode, asActive: boolean) => {
+    setActiveUnitSystems((prev) => {
+      const next = new Set(prev);
+      if (asActive) next.add(system);
+      else next.delete(system);
+      localStorage.setItem('panceai_active_unit_systems', JSON.stringify(Array.from(next)));
+      toast.success('Changes saved');
+      return next;
+    });
   };
 
   const handleToggleClinicalFidelity = (setting: keyof typeof clinicalFidelitySettings) => {
@@ -899,20 +944,20 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4"
+        className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4"
         onClick={onClose}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="flex flex-col bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-slate-200 dark:border-slate-700 ring-1 ring-black/5 dark:ring-white/10"
+          className="flex flex-col bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.6)] w-full max-w-2xl max-h-[90vh] overflow-hidden border border-slate-200 dark:border-slate-700 dark:border-white/10 ring-1 ring-black/10 dark:ring-white/10"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 bg-[var(--color-accent)]/10 rounded-lg">
+          {/* Header: title (left) and close (right) — close is modal chrome, not a tab */}
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="p-1.5 sm:p-2 bg-[var(--color-accent)]/10 rounded-xl flex-shrink-0">
                 {activeTab === 'stats' ? (
                   <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 ) : activeTab === 'preferences' ? (
@@ -923,7 +968,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 )}
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] dark:text-slate-100">
+              <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] dark:text-slate-100 truncate">
                 {activeTab === 'stats'
                   ? 'Statistics'
                   : activeTab === 'preferences'
@@ -934,17 +979,27 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               </h2>
             </div>
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 sm:p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+              aria-label="Close modal and return to dashboard"
+              title="Close"
+              className="flex-shrink-0 ml-3 flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-[var(--color-text-muted)] hover:bg-slate-100 hover:text-[var(--color-text-primary)] dark:hover:bg-slate-700 dark:hover:text-slate-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden />
             </button>
           </div>
 
-          {/* Tab Switcher */}
-          <div className="flex border-b border-[var(--color-border)]">
+          {/* Tab Switcher - Desktop: top tabs (internal navigation; X above closes entire modal) */}
+          <div
+            className="hidden md:flex border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50"
+            role="tablist"
+            aria-label="Modal sections"
+          >
             <button
+              role="tab"
+              aria-selected={activeTab === 'stats' ? 'true' : 'false'}
               onClick={() => setActiveTab('stats')}
+              aria-label="Statistics"
               className={`flex-1 min-h-[44px] py-2.5 sm:py-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
                 activeTab === 'stats'
                   ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
@@ -956,7 +1011,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               <span className="sm:hidden">Stats</span>
             </button>
             <button
+              role="tab"
+              aria-selected={activeTab === 'activity' ? 'true' : 'false'}
               onClick={() => setActiveTab('activity')}
+              aria-label="Activity"
               className={`flex-1 min-h-[44px] py-2.5 sm:py-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
                 activeTab === 'activity'
                   ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
@@ -966,22 +1024,12 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               <ActivityIcon className="w-4 h-4 inline-block mr-1 sm:mr-2" />
               <span>Activity</span>
             </button>
-            {/* Temporarily disabled - organ characters */}
-            {/* <button
-              onClick={() => setActiveTab('characters')}
-              className={`flex-1 py-2.5 sm:py-3 text-sm font-medium transition-colors ${
-                activeTab === 'characters'
-                  ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
-                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
-              }`}
-            >
-              <Sparkles className="w-4 h-4 inline-block mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Characters</span>
-              <span className="sm:hidden">Chars</span>
-            </button> */}
             <button
+              role="tab"
+              aria-selected={activeTab === 'preferences' ? 'true' : 'false'}
               onClick={() => setActiveTab('preferences')}
-              className={`flex-1 py-2.5 sm:py-3 text-sm font-medium transition-colors ${
+              aria-label="Preferences"
+              className={`flex-1 min-h-[44px] py-2.5 sm:py-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
                 activeTab === 'preferences'
                   ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
@@ -992,7 +1040,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               <span className="sm:hidden">Prefs</span>
             </button>
             <button
+              role="tab"
+              aria-selected={activeTab === 'settings' ? 'true' : 'false'}
               onClick={() => setActiveTab('settings')}
+              aria-label="Settings"
               className={`flex-1 min-h-[44px] py-2.5 sm:py-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 ${
                 activeTab === 'settings'
                   ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
@@ -1004,8 +1055,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
             </button>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 scrollable-area">
+          {/* Content - extra bottom padding on mobile for bottom bar */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 md:pb-6 scrollable-area">
             {activeTab === 'stats' ? (
               <div className="space-y-4 sm:space-y-6">
                 {/* Motivational Message - Low Stakes Approach */}
@@ -1019,16 +1070,16 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   </p>
                 </div>
 
-                {/* Priority: Current Form Stats */}
+                {/* Priority: Current Form Stats - Clinical tone, teal/green for success */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Recent Trend with Sparkline - Most Important */}
+                  {/* Recent Trend with Sparkline - "Study Continuity" / Recent Form */}
                   <div
-                    className={`rounded-xl p-4 ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'gold-achievement' : 'bg-[var(--color-bg-secondary)]'}`}
+                    className={`rounded-xl p-4 ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'clinical-achievement' : 'bg-[var(--color-bg-secondary)]'}`}
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD && (
-                          <Flame className="w-5 h-5 text-amber-900" />
+                          <TrendingUp className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                         )}
                         <span className="text-sm font-medium text-[var(--color-text-muted)]">
                           {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD
@@ -1037,10 +1088,16 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         </span>
                       </div>
                       <div
-                        className={`text-xl font-bold ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900' : stats.recentTrend >= 0 ? 'text-data-pass' : 'text-data-provisional'}`}
+                        className={`text-xl font-bold min-h-[1.75rem] flex items-center ${!hasNoStatsData && stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-teal-700 dark:text-teal-300' : !hasNoStatsData && stats.recentTrend >= 0 ? 'text-data-pass' : !hasNoStatsData ? 'text-data-provisional' : ''}`}
                       >
-                        {stats.recentTrend >= 0 ? '+' : ''}
-                        {stats.recentTrend}%
+                        {hasNoStatsData ? (
+                          <Skeleton height={28} width={56} variant="wave" radius="md" />
+                        ) : (
+                          <>
+                            {stats.recentTrend >= 0 ? '+' : ''}
+                            {stats.recentTrend}%
+                          </>
+                        )}
                       </div>
                     </div>
                     {stats.recentSessionAccuracies.length > 0 ? (
@@ -1049,7 +1106,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           data={stats.recentSessionAccuracies}
                           width={200}
                           height={50}
-                          colorScheme="auto"
+                          colorScheme="clinical"
                           showTrend={false}
                           showValue={false}
                           ariaLabel="Recent performance trend across last 10 sessions"
@@ -1064,29 +1121,33 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     )}
                   </div>
 
-                  {/* Current Streak */}
+                  {/* Consecutive Correct (clinical label; teal for success) */}
                   <div
-                    className={`rounded-xl p-4 text-center ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'gold-achievement relative' : 'bg-[var(--color-bg-secondary)]'}`}
+                    className={`rounded-xl p-4 text-center ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'clinical-achievement relative' : 'bg-[var(--color-bg-secondary)]'}`}
                   >
                     {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD && (
-                      <Award className="absolute top-2 right-2 w-4 h-4 text-amber-900" />
+                      <Award className="absolute top-2 right-2 w-4 h-4 text-teal-600 dark:text-teal-400" />
                     )}
                     <div className="flex items-center justify-center gap-1 mb-2">
                       <Zap
-                        className={`w-5 h-5 ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`}
+                        className={`w-5 h-5 ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-teal-600 dark:text-teal-400' : 'text-teal-500'}`}
                       />
                       <span
-                        className={`text-xs font-medium ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-[var(--color-text-muted)]'}`}
+                        className={`text-xs font-medium ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-teal-700 dark:text-teal-300' : 'text-[var(--color-text-muted)]'}`}
                       >
                         {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD
-                          ? 'Exceptional!'
-                          : 'Active Streak'}
+                          ? 'Strong consistency'
+                          : 'Consecutive Correct'}
                       </span>
                     </div>
                     <div
-                      className={`text-3xl font-bold ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`}
+                      className={`text-3xl font-bold min-h-[2.25rem] flex items-center justify-center ${!hasNoStatsData && stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-teal-700 dark:text-teal-300' : !hasNoStatsData ? 'text-teal-600 dark:text-teal-400' : ''}`}
                     >
-                      {stats.currentStreak}
+                      {hasNoStatsData ? (
+                        <Skeleton height={36} width={40} variant="wave" radius="md" />
+                      ) : (
+                        stats.currentStreak
+                      )}
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)] mt-1">
                       questions in a row
@@ -1104,16 +1165,19 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         label="Overall Accuracy"
                         ariaLabel={`Overall accuracy: ${stats.overallAccuracy.toFixed(0)}% correct across all questions`}
                       />
+                    ) : hasNoStatsData ? (
+                      <div className="flex flex-col items-center justify-center" aria-busy="true" aria-label="Loading accuracy">
+                        <Skeleton height={100} width={100} variant="wave" radius="full" className="mb-2" />
+                        <Skeleton height={14} width={120} variant="wave" radius="sm" className="mb-1" />
+                        <Skeleton height={12} width={80} variant="wave" radius="sm" />
+                      </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center">
-                        <div className="text-4xl font-bold text-[var(--color-text-muted)] mb-2">
-                          --
+                        <div className="text-sm font-medium text-[var(--color-text-muted)] text-center mb-1">
+                          Waiting for first session
                         </div>
                         <div className="text-xs text-[var(--color-text-muted)]">
                           Overall Accuracy
-                        </div>
-                        <div className="text-xs text-[var(--color-text-muted)] mt-1 italic">
-                          No data yet
                         </div>
                       </div>
                     )}
@@ -1150,13 +1214,23 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         Today
                       </span>
                     </div>
-                    <div className="text-xl font-bold text-[var(--color-text-primary)]">
-                      {stats.todayCorrect}/{stats.todayQuestions}
+                    <div className="text-xl font-bold text-[var(--color-text-primary)] min-h-[1.75rem] flex items-center">
+                      {hasNoStatsData ? (
+                        <Skeleton height={24} width={48} variant="wave" radius="md" />
+                      ) : stats.todayQuestions === 0 ? (
+                        '—'
+                      ) : (
+                        `${stats.todayCorrect}/${stats.todayQuestions}`
+                      )}
                     </div>
-                    <div className="text-xs text-[var(--color-text-muted)]">
-                      {stats.todayQuestions > 0
-                        ? `${Math.round((stats.todayCorrect / stats.todayQuestions) * 100)}% accuracy`
-                        : '—'}
+                    <div className="text-xs text-[var(--color-text-muted)] min-h-[1rem] flex items-center mt-0.5">
+                      {hasNoStatsData ? (
+                        <Skeleton height={12} width={72} variant="wave" radius="sm" />
+                      ) : stats.todayQuestions > 0 ? (
+                        `${Math.round((stats.todayCorrect / stats.todayQuestions) * 100)}% accuracy`
+                      ) : (
+                        '—'
+                      )}
                     </div>
                   </div>
 
@@ -1167,13 +1241,23 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         This Week
                       </span>
                     </div>
-                    <div className="text-xl font-bold text-[var(--color-text-primary)]">
-                      {stats.weekCorrect}/{stats.weekQuestions}
+                    <div className="text-xl font-bold text-[var(--color-text-primary)] min-h-[1.75rem] flex items-center">
+                      {hasNoStatsData ? (
+                        <Skeleton height={24} width={48} variant="wave" radius="md" />
+                      ) : stats.weekQuestions === 0 ? (
+                        '—'
+                      ) : (
+                        `${stats.weekCorrect}/${stats.weekQuestions}`
+                      )}
                     </div>
-                    <div className="text-xs text-[var(--color-text-muted)]">
-                      {stats.weekQuestions > 0
-                        ? `${Math.round((stats.weekCorrect / stats.weekQuestions) * 100)}% accuracy`
-                        : '—'}
+                    <div className="text-xs text-[var(--color-text-muted)] min-h-[1rem] flex items-center mt-0.5">
+                      {hasNoStatsData ? (
+                        <Skeleton height={12} width={72} variant="wave" radius="sm" />
+                      ) : stats.weekQuestions > 0 ? (
+                        `${Math.round((stats.weekCorrect / stats.weekQuestions) * 100)}% accuracy`
+                      ) : (
+                        '—'
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1196,8 +1280,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                                 sys.accuracy >= 80
                                   ? 'bg-data-pass'
                                   : sys.accuracy >= 60
-                                    ? 'bg-data-provisional'
-                                    : 'bg-data-fail'
+                                    ? 'bg-[var(--color-accent)]'
+                                    : 'bg-data-provisional'
                               }`}
                               style={{ width: `${sys.accuracy}%` }}
                             />
@@ -1329,6 +1413,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               </div>
             ) : (
               <div className="space-y-6">
+                {/* Auto-save hint so users know they don't need a Save button */}
+                <p className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                  <Check className="w-3.5 h-3.5 text-[var(--color-accent)] flex-shrink-0" aria-hidden />
+                  Changes save automatically. You'll see a confirmation when you update a setting.
+                </p>
                 {/* Enhanced Settings Tab - Career Stage & Profile */}
                 <EnhancedSettingsTab
                   theme={theme}
@@ -1846,14 +1935,17 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   </h3>
                 </div>
 
-                {/* System Selection */}
+                {/* System Selection (students: include; practicing: exclude rarely practiced) */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="font-bold text-[var(--color-text-primary)]">Study Systems</h3>
+                      <h3 className="font-bold text-[var(--color-text-primary)]">
+                        {careerStage === 'practicing' ? 'Exclude from practice' : 'Study Systems'}
+                      </h3>
                       <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                        Select which systems you want to study. Questions will only be generated
-                        from enabled systems.
+                        {careerStage === 'practicing'
+                          ? 'Uncheck systems you rarely practice (e.g. an Ortho PA might uncheck OBGYN). Default: all included.'
+                          : 'Select which systems you want to study. Questions will only be generated from enabled systems.'}
                       </p>
                     </div>
                   </div>
@@ -1874,30 +1966,28 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map((system) => (
-                      <button
-                        key={system}
-                        onClick={() => handleToggleSystem(system)}
-                        className={`p-2.5 rounded-lg text-sm font-medium transition-all ${
-                          enabledSystems.has(system)
-                            ? 'bg-blue-50 dark:bg-[var(--color-accent)] text-blue-700 dark:text-[var(--color-btn-primary-text)] border-2 border-blue-500 dark:border-[var(--color-accent)]'
-                            : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border-2 border-transparent'
-                        }`}
-                      >
-                        <div className="font-semibold">{system}</div>
-                        <div className="text-xs opacity-75 truncate">
-                          {((): string => {
-                            const label = ABBREVIATION_TO_TOPIC_MAP[system];
-                            if (label === undefined) {
-                              return String(system);
-                            }
-                            return label
-                              .replace(' System', '')
-                              .replace('Psychiatry/Behavioral Science', 'Psychiatry');
-                          })()}
-                        </div>
-                      </button>
-                    ))}
+                    {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map((system) => {
+                      const fullName = getSystemDisplayFullName(system);
+                      return (
+                        <button
+                          key={system}
+                          onClick={() => handleToggleSystem(system)}
+                          title={fullName}
+                          className={`min-w-0 p-2.5 rounded-lg text-sm font-medium transition-all text-left ${
+                            enabledSystems.has(system)
+                              ? 'bg-blue-100 dark:bg-[var(--color-accent)]/30 text-blue-800 dark:text-[var(--color-btn-primary-text)] border-2 border-blue-400 dark:border-[var(--color-accent)]'
+                              : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border-2 border-transparent'
+                          }`}
+                        >
+                          <div className="font-semibold truncate" title={system}>
+                            {system}
+                          </div>
+                          <div className="text-xs opacity-75 truncate min-w-0" title={fullName}>
+                            {fullName}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {enabledSystems.size === 0 && (
@@ -1913,6 +2003,63 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     {enabledSystems.size} of {Object.keys(ABBREVIATION_TO_TOPIC_MAP).length} systems
                     enabled
                   </div>
+
+                  {/* Cumulative Review: Active Unit vs Completed/Review */}
+                  {enabledSystems.size > 0 && (
+                    <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+                      <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">
+                        Cumulative Review
+                      </h4>
+                      <p className="text-xs text-[var(--color-text-muted)] mb-3">
+                        Mark systems as <strong>Active Unit</strong> (what you&apos;re learning now)
+                        or <strong>Completed/Review</strong> (past units). Sessions will use ~80%
+                        current unit, ~20% past units for retention.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from(enabledSystems).map((system) => {
+                          const isActive = activeUnitSystems.has(system);
+                          return (
+                            <div
+                              key={system}
+                              className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-border)] overflow-hidden"
+                            >
+                              <span className="px-2 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+                                {system}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleSetActiveUnit(system, true)}
+                                className={`px-2 py-1.5 text-xs font-medium transition-colors ${
+                                  isActive
+                                    ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                                }`}
+                              >
+                                Active
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSetActiveUnit(system, false)}
+                                className={`px-2 py-1.5 text-xs font-medium transition-colors ${
+                                  !isActive
+                                    ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                                }`}
+                              >
+                                Review
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {enabledSystems.size > 0 && activeUnitSystems.size === 0 && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                          Tip: Mark at least one system as Active to use 80/20 mix. Otherwise all
+                          enabled systems are treated equally.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Mini Modes Selection */}
@@ -1920,10 +2067,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <h3 className="font-bold text-[var(--color-text-primary)]">Mini Modes</h3>
-                      <p className="text-xs text-[var(--color-text-muted)] mt-1 max-w-prose">
-                        Select which mini training modes appear in your menu. The main PANCE
-                        adaptive system is always available.
-                      </p>
+                      <ul className="text-xs text-[var(--color-text-muted)] mt-1 max-w-[65ch] space-y-0.5 list-disc list-inside">
+                        <li>Choose which mini training modes appear in your menu.</li>
+                        <li>The main PANCE adaptive system is always available.</li>
+                      </ul>
                     </div>
                   </div>
 
@@ -1942,19 +2089,77 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </button>
                   </div>
 
-                  <div className="space-y-4 max-h-64 overflow-y-auto">
+                  {/* Search - keeps list usable as more modes are added */}
+                  <div className="relative mb-3">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" aria-hidden />
+                    <input
+                      type="search"
+                      value={miniModesSearch}
+                      onChange={(e) => setMiniModesSearch(e.target.value)}
+                      placeholder="Find a mode..."
+                      className="w-full pl-8 pr-3 py-2 text-sm bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
+                      aria-label="Filter mini modes by name or description"
+                    />
+                  </div>
+
+                  <div className="space-y-4 max-h-64 overflow-y-auto rounded-lg border border-[var(--color-border)] border-opacity-50 pr-1">
+                    {(() => {
+                      const q = miniModesSearch.trim().toLowerCase();
+                      const match = (mode: { id: string; label: string; desc: string }) =>
+                        !q || [mode.id, mode.label, mode.desc].some((s) => s.toLowerCase().includes(q));
+
+                      const visualModes = [
+                        { id: 'ecg_drill', label: 'ECG', desc: 'Rhythm strips' },
+                        { id: 'derm_drill', label: 'Derm', desc: 'Skin lesions' },
+                        { id: 'imaging_drill', label: 'Imaging', desc: 'X-ray/CT/MRI' },
+                        { id: 'mini_lab', label: 'Mini Lab', desc: 'Lab results' },
+                      ].filter(match);
+                      const recallModes = [
+                        { id: 'rapid_recall', label: 'Rapid Recall', desc: 'Buzzwords' },
+                        { id: 'ddx_compare', label: 'DDx Compare', desc: 'Side-by-side' },
+                        { id: 'guideline_drill', label: 'Guidelines', desc: 'Scoring systems' },
+                        { id: 'condition_drill', label: 'Conditions', desc: '5-stage drills' },
+                      ].filter(match);
+                      const pharmModes = [
+                        { id: 'first_line_treatment', label: 'First Line', desc: 'Go-to treatments' },
+                        { id: 'pharmacology', label: 'Pharm Quiz', desc: 'Drug mechanisms' },
+                      ].filter(match);
+                      const clinicalModes = [
+                        { id: 'fluid_electrolyte', label: 'Hydro-Mode', desc: 'Fluid/lytes calc' },
+                        { id: 'antibiotic_mode', label: 'Bug-Drug', desc: 'Antibiotic choice' },
+                        { id: 'patient_encounter', label: 'Virtual OSCE', desc: 'Patient interview' },
+                      ].filter(match);
+                      const engagementModes = [
+                        { id: 'code_blue_speed', label: 'Code Blue', desc: 'ACLS/PALS speed' },
+                        { id: 'grand_rounds', label: 'Grand Rounds', desc: 'Live competition' },
+                        { id: 'cram_mode', label: 'Cram Button', desc: '50 high-yield Qs' },
+                      ].filter(match);
+
+                      const hasAny =
+                        visualModes.length > 0 ||
+                        recallModes.length > 0 ||
+                        pharmModes.length > 0 ||
+                        clinicalModes.length > 0 ||
+                        engagementModes.length > 0;
+
+                      if (q && !hasAny) {
+                        return (
+                          <div className="py-6 text-center text-sm text-[var(--color-text-muted)]">
+                            No modes match &quot;{miniModesSearch.trim()}&quot;
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <>
                     {/* Visual Modes */}
+                    {visualModes.length > 0 && (
                     <div className="mb-3">
                       <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
                         Visual Drills
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { id: 'ecg_drill', label: 'ECG', desc: 'Rhythm strips' },
-                          { id: 'derm_drill', label: 'Derm', desc: 'Skin lesions' },
-                          { id: 'imaging_drill', label: 'Imaging', desc: 'X-ray/CT/MRI' },
-                          { id: 'mini_lab', label: 'Mini Lab', desc: 'Lab results' },
-                        ].map((mode) => (
+                        {visualModes.map((mode) => (
                           <button
                             key={mode.id}
                             onClick={() => handleToggleMiniMode(mode.id)}
@@ -1970,19 +2175,16 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         ))}
                       </div>
                     </div>
+                    )}
 
                     {/* Recall Modes */}
+                    {recallModes.length > 0 && (
                     <div className="mb-3">
                       <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
                         Recall Modes
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { id: 'rapid_recall', label: 'Rapid Recall', desc: 'Buzzwords' },
-                          { id: 'ddx_compare', label: 'DDx Compare', desc: 'Side-by-side' },
-                          { id: 'guideline_drill', label: 'Guidelines', desc: 'Scoring systems' },
-                          { id: 'condition_drill', label: 'Conditions', desc: '5-stage drills' },
-                        ].map((mode) => (
+                        {recallModes.map((mode) => (
                           <button
                             key={mode.id}
                             onClick={() => handleToggleMiniMode(mode.id)}
@@ -1998,21 +2200,16 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         ))}
                       </div>
                     </div>
+                    )}
 
                     {/* Pharmacology Modes */}
+                    {pharmModes.length > 0 && (
                     <div className="mb-3">
                       <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
                         Pharmacology
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        {[
-                          {
-                            id: 'first_line_treatment',
-                            label: 'First Line',
-                            desc: 'Go-to treatments',
-                          },
-                          { id: 'pharmacology', label: 'Pharm Quiz', desc: 'Drug mechanisms' },
-                        ].map((mode) => (
+                        {pharmModes.map((mode) => (
                           <button
                             key={mode.id}
                             onClick={() => handleToggleMiniMode(mode.id)}
@@ -2028,26 +2225,16 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         ))}
                       </div>
                     </div>
+                    )}
 
                     {/* Clinical Simulation Modes */}
+                    {clinicalModes.length > 0 && (
                     <div className="mb-3">
                       <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
                         Clinical Simulation
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        {[
-                          {
-                            id: 'fluid_electrolyte',
-                            label: 'Hydro-Mode',
-                            desc: 'Fluid/lytes calc',
-                          },
-                          { id: 'antibiotic_mode', label: 'Bug-Drug', desc: 'Antibiotic choice' },
-                          {
-                            id: 'patient_encounter',
-                            label: 'Virtual OSCE',
-                            desc: 'Patient interview',
-                          },
-                        ].map((mode) => (
+                        {clinicalModes.map((mode) => (
                           <button
                             key={mode.id}
                             onClick={() => handleToggleMiniMode(mode.id)}
@@ -2063,18 +2250,16 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         ))}
                       </div>
                     </div>
+                    )}
 
                     {/* Engagement Modes (Phase 7) */}
+                    {engagementModes.length > 0 && (
                     <div className="mb-3">
                       <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
                         Engagement Modes
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { id: 'code_blue_speed', label: 'Code Blue', desc: 'ACLS/PALS speed' },
-                          { id: 'grand_rounds', label: 'Grand Rounds', desc: 'Live competition' },
-                          { id: 'cram_mode', label: 'Cram Button', desc: '50 high-yield Qs' },
-                        ].map((mode) => (
+                        {engagementModes.map((mode) => (
                           <div
                             key={mode.id}
                             className={`p-3 rounded-lg text-left text-xs cursor-not-allowed ${
@@ -2089,6 +2274,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         ))}
                       </div>
                     </div>
+                    )}
+                        </>
+                      );
+                    })()}
                   </div>
 
                   <div className="mt-3 text-xs text-[var(--color-text-muted)]">
@@ -2382,13 +2571,22 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         </div>
                         {confirmClear === 'performance' && (
                           <div className="mt-2">
+                            <label htmlFor="clear-performance-confirm" className="sr-only">
+                              Type DELETE to confirm clearing all performance data
+                            </label>
                             <input
+                              id="clear-performance-confirm"
                               type="text"
                               placeholder="Type DELETE to confirm"
                               value={clearConfirmText}
                               onChange={(e) => setClearConfirmText(e.target.value)}
+                              autoComplete="off"
                               className="mt-1 px-2 py-1 text-sm border border-[var(--color-border)] rounded"
+                              aria-describedby="clear-performance-hint"
                             />
+                            <p id="clear-performance-hint" className="text-xs text-[var(--color-text-muted)] mt-1">
+                              This permanently removes all session history. Type DELETE above to confirm.
+                            </p>
                           </div>
                         )}
                       </div>
@@ -2402,21 +2600,22 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                               ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                               : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                         }`}
+                        aria-label={confirmClear === 'performance' && clearConfirmText === 'DELETE' ? 'Confirm clear performance data' : 'Clear performance data (opens confirmation)'}
                       >
-                        <Trash2 className="w-4 h-4 inline-block mr-1" />
+                        <Trash2 className="w-4 h-4 inline-block mr-1" aria-hidden />
                         {confirmClear === 'performance' && clearConfirmText === 'DELETE'
                           ? 'Confirm Clear'
-                          : 'Clear Data…'}
+                          : 'Clear Performance Data…'}
                       </button>
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-[var(--color-bg-primary)] rounded-lg">
                       <div>
                         <div className="text-sm font-medium text-[var(--color-text-primary)]">
-                          Missed Questions
+                          To Review
                         </div>
                         <div className="text-xs text-[var(--color-text-muted)]">
-                          {missedQuestionsCount} questions
+                          {missedQuestionsCount} to review
                         </div>
                       </div>
                       <button
@@ -2429,9 +2628,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                               ? 'bg-red-600 text-white'
                               : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                         }`}
+                        aria-label={confirmClear === 'missed' ? 'Confirm clear to review' : 'Clear to review (opens confirmation)'}
                       >
-                        <Trash2 className="w-4 h-4 inline-block mr-1" />
-                        {confirmClear === 'missed' ? 'Confirm' : 'Clear'}
+                        <Trash2 className="w-4 h-4 inline-block mr-1" aria-hidden />
+                        {confirmClear === 'missed' ? 'Confirm' : 'Clear To Review…'}
                       </button>
                     </div>
 
@@ -2454,9 +2654,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                               ? 'bg-red-600 text-white'
                               : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                         }`}
+                        aria-label={confirmClear === 'flagged' ? 'Confirm clear flagged questions' : 'Clear flagged questions (opens confirmation)'}
                       >
-                        <Trash2 className="w-4 h-4 inline-block mr-1" />
-                        {confirmClear === 'flagged' ? 'Confirm' : 'Clear Flagged…'}
+                        <Trash2 className="w-4 h-4 inline-block mr-1" aria-hidden />
+                        {confirmClear === 'flagged' ? 'Confirm' : 'Clear Flagged Questions…'}
                       </button>
                     </div>
                   </div>
@@ -2516,7 +2717,63 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
             )}
           </div>
 
-          {/* Fixed Footer - Version */}
+          {/* Mobile: Bottom bar tab switcher (44px+ touch targets) */}
+          <div className="md:hidden flex-shrink-0 flex border-t border-[var(--color-border)] bg-[var(--color-bg-primary)] safe-area-pb">
+            <button
+              onClick={() => setActiveTab('stats')}
+              aria-label="Statistics"
+              aria-current={activeTab === 'stats' ? 'true' : undefined}
+              className={`flex-1 flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-3 px-2 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset ${
+                activeTab === 'stats'
+                  ? 'text-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                  : 'text-[var(--color-text-muted)] active:bg-[var(--color-bg-secondary)]'
+              }`}
+            >
+              <BarChart3 className="w-5 h-5 mb-0.5" aria-hidden />
+              <span>Stats</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('activity')}
+              aria-label="Activity"
+              aria-current={activeTab === 'activity' ? 'true' : undefined}
+              className={`flex-1 flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-3 px-2 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset ${
+                activeTab === 'activity'
+                  ? 'text-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                  : 'text-[var(--color-text-muted)] active:bg-[var(--color-bg-secondary)]'
+              }`}
+            >
+              <ActivityIcon className="w-5 h-5 mb-0.5" aria-hidden />
+              <span>Activity</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('preferences')}
+              aria-label="Preferences"
+              aria-current={activeTab === 'preferences' ? 'true' : undefined}
+              className={`flex-1 flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-3 px-2 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset ${
+                activeTab === 'preferences'
+                  ? 'text-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                  : 'text-[var(--color-text-muted)] active:bg-[var(--color-bg-secondary)]'
+              }`}
+            >
+              <LayoutDashboard className="w-5 h-5 mb-0.5" aria-hidden />
+              <span>Prefs</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              aria-label="Settings"
+              aria-current={activeTab === 'settings' ? 'true' : undefined}
+              className={`flex-1 flex flex-col items-center justify-center min-h-[44px] min-w-[44px] py-3 px-2 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset ${
+                activeTab === 'settings'
+                  ? 'text-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                  : 'text-[var(--color-text-muted)] active:bg-[var(--color-bg-secondary)]'
+              }`}
+            >
+              <Settings className="w-5 h-5 mb-0.5" aria-hidden />
+              <span>Settings</span>
+            </button>
+          </div>
+
+          {/* Fixed Footer - Version (outside scroll, always visible) */}
           <div className="flex-shrink-0 border-t border-[var(--color-border)] px-4 py-2 text-center text-xs text-[var(--color-text-muted)]">
             PANaCEa v1.0.0 • Built for PANCE Success
           </div>
