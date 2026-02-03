@@ -409,6 +409,17 @@ const App: React.FC = () => {
     [setQuestionQueue, setMissedQuestions, setFlaggedQuestions]
   );
 
+  const handleRemoveBookmark = useCallback(
+    (question: QuizQuestion) => {
+      const updater = (q: QuizQuestion) =>
+        q.question === question.question ? { ...q, isBookmarked: false } : q;
+      setQuestionQueue((prev) => prev.map(updater));
+      setMissedQuestions((prev) => prev.map(updater));
+      setFlaggedQuestions((prev) => prev.map(updater));
+    },
+    [setQuestionQueue, setMissedQuestions, setFlaggedQuestions]
+  );
+
   const clearPerformanceData = useCallback(() => setPerformanceData([]), [setPerformanceData]);
   const clearMissedQuestionsData = useCallback(() => setMissedQuestions([]), [setMissedQuestions]);
   const clearFlaggedQuestionsData = useCallback(
@@ -642,8 +653,8 @@ const App: React.FC = () => {
   }, []);
 
   const pageTransition = useAccessibleTransition({
-    duration: 0.2, // Reduced from 0.35 for snappier navigation
-    ease: [0.4, 0, 0.2, 1] as const,
+    duration: 0.25,
+    ease: [0.32, 0.72, 0, 1] as const, // Snappy ease-out
   });
 
   // Show loading state while checking auth
@@ -674,7 +685,7 @@ const App: React.FC = () => {
             className: 'sonner-toast',
           }}
         />
-        <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+        <div className="min-h-screen bg-[var(--color-canvas,#F8FAFC)] dark:bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
           {/* Loading Progress Bar */}
           <LoadingProgress isLoading={isLoading} />
 
@@ -714,8 +725,8 @@ const App: React.FC = () => {
                   >
                     Skip to main content
                   </a>
-                  {/* Premium Glass Header - Elegant and professional */}
-                  <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
+                  {/* Header - Deep Navy */}
+                  <header className="sticky top-0 z-40 bg-[#0F172A] border-b border-slate-700/50 transition-all duration-300 shadow-sm">
                     <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
                       <motion.button
                         onClick={() => {
@@ -741,7 +752,7 @@ const App: React.FC = () => {
                           transition={{ duration: 0.2 }}
                         />
                         {/* PANaCEa text – Poppins Bold via Tailwind font-poppins */}
-                        <span className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] font-poppins">
+                        <span className="text-2xl sm:text-3xl font-bold text-white font-poppins">
                           PANaCEa
                         </span>
                       </motion.button>
@@ -750,7 +761,7 @@ const App: React.FC = () => {
                         <OfflineSyncIndicator />
                         <Link
                           to={ROUTES.ADMIN}
-                          className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors duration-200 flex items-center justify-center"
+                          className="p-2 rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-white transition-colors duration-200 flex items-center justify-center"
                           aria-label="Admin Dashboard"
                         >
                           <Shield className="w-5 h-5" />
@@ -758,7 +769,7 @@ const App: React.FC = () => {
                         <motion.button
                           ref={settingsButtonRef}
                           onClick={() => setIsSettingsModalOpen(true)}
-                          className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
+                          className="p-2 rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-white transition-all duration-200"
                           aria-label="Settings and Stats"
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -894,6 +905,7 @@ const App: React.FC = () => {
                                 onOpenSettings={() => setIsSettingsModalOpen(true)}
                                 onStartSession={handleStartSession}
                                 onNavigateToDrillMode={handleNavigateToDrillMode}
+                                onNavigateToDrillWithSystem={_handleNavigateToDrillWithSystem}
                                 onNavigateToToolkit={() => setView('toolkit')}
                                 onNavigateToGapAnalysis={() => startViewTransition(() => setView('gap_analysis'))}
                                 onNavigateToClinicalProfile={() => setView('clinical_profile')}
@@ -932,6 +944,7 @@ const App: React.FC = () => {
                                 setError={setError}
                                 onStartSession={handleStartSession}
                                 onConfirmSession={handleConfirmSession}
+                                onRemoveBookmark={handleRemoveBookmark}
                                 growthAreas={growthAreas}
                                 onNavigateToDrillMode={handleNavigateToDrillMode}
                                 onNavigateToIntegrations={() => setView('integrations')}

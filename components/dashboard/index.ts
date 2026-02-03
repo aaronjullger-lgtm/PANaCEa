@@ -14,3 +14,4 @@ export { RetentionWidget } from './RetentionWidget';
 // New UX-enhanced components (Phase 14)
 export { GrandRoundsHero } from './GrandRoundsHero';
 export { GapAnalysisDashboard } from './GapAnalysisDashboard';
+export { CurriculumGrid } from './CurriculumGrid';

@@ -272,10 +272,18 @@ export function useUserStats(): UseUserStatsResult {
     };
   }, [syncToCloud]);
 
-  // Auto-sync when user signs in (only once per session). Show loading until first sync completes.
+  // Clear loading and sync state when user signs out (handles sign-out before sync completes)
   useEffect(() => {
     if (!isSignedIn || !user) {
       setIsLoading(false);
+      setIsSyncing(false);
+      setSyncError(null);
+    }
+  }, [isSignedIn, user]);
+
+  // Auto-sync when user signs in (only once per session). Show loading until first sync completes.
+  useEffect(() => {
+    if (!isSignedIn || !user) {
       return;
     }
 

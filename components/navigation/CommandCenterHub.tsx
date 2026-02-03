@@ -75,7 +75,8 @@ import { useRolling360Stats } from '@/hooks/useRolling360Stats';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { calculateDayStreak } from '@/lib/dashboardUtils';
 import { QuickStatsBarSkeleton } from '@/components/loading';
-import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { CurriculumGrid } from '@/components/dashboard/CurriculumGrid';
 import { BodyMapWidget } from '@/components/dashboard/BodyMapWidget';
 import { RoundsButton } from '@/components/dashboard/RoundsButton';
 import { HighContrastDataToggle } from '@/components/ui/HighContrastDataToggle';
@@ -463,9 +464,17 @@ const ModeCard: React.FC<{
 
   return (
     <motion.button
+      variants={{
+        initial: { opacity: 0, y: 10 },
+        animate: { opacity: 1, y: 0 },
+      }}
+      transition={
+        prefersReducedMotion
+          ? { duration: 0 }
+          : { type: 'spring', stiffness: 400, damping: 28 }
+      }
       whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.01 }}
-      whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
-      transition={{ duration: prefersReducedMotion ? 0 : 0.2, ease: 'easeOut' }}
+      whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
       onClick={onSelect}
       disabled={mode.isComingSoon}
       className={`
@@ -529,11 +538,18 @@ const CategorySection: React.FC<{
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
+        variants={{
+          animate: { transition: { staggerChildren: 0.04, delayChildren: 0.02 } },
+        }}
+        initial="initial"
+        animate="animate"
+      >
         {modes.map((mode) => (
           <ModeCard key={mode.id} mode={mode} onSelect={() => onSelectMode(mode)} />
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 };
@@ -563,11 +579,11 @@ function ResidencyCockpitSection({
       </h3>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {hasData && systemsWithData.length > 0 && (
+        {hasData && systemsWithData.length > 0 && stats?.systemStats && (
           <div className="flex-shrink-0">
             <BodyMapWidget
-              systemStats={stats!.systemStats}
-              weakestSystems={stats!.weakestSystems ?? []}
+              systemStats={stats.systemStats}
+              weakestSystems={stats.weakestSystems ?? []}
               onSystemClick={(s) => onNavigateToDrillWithSystem('system_drill', s)}
             />
           </div>
@@ -656,6 +672,16 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 }) => {
   const { user } = useUser();
   const { showPANREContent, careerStage } = useUserContext();
+  const { stats: rolling360Stats } = useRolling360Stats();
+
+  // Map Rolling 360 system stats to CurriculumGrid progressData (system -> mastery %)
+  const curriculumProgressData = useMemo(() => {
+    const sys = rolling360Stats?.systemStats;
+    if (!sys) return undefined;
+    return Object.fromEntries(
+      Object.entries(sys).map(([k, v]) => [k, Math.round(v.accuracy)])
+    ) as Record<string, number>;
+  }, [rolling360Stats?.systemStats]);
 
   // Load enabled systems from localStorage (updates when Settings modal changes them)
   const [enabledSystems, setEnabledSystems] = useState<Set<SystemCode>>(() => {
@@ -843,10 +869,21 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     return 'Good evening';
   }, []);
 
+  const prefersReducedMotion = useReducedMotion();
+  const sectionEnter = prefersReducedMotion ? false : { opacity: 0, y: 16 };
+  const sectionAnimate = prefersReducedMotion ? false : { opacity: 1, y: 0 };
+  const sectionTransition = (delay: number) =>
+    prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.32, 0.72, 0, 1] as const, delay };
+
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+      <motion.div
+        initial={sectionEnter}
+        animate={sectionAnimate}
+        transition={sectionTransition(0)}
+        className="mb-6"
+      >
         <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
           {greeting}, {user?.firstName || 'Student'}
         </h1>
@@ -855,7 +892,13 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </p>
       </motion.div>
 
-      {/* Quick Stats */}
+      {/* Quick Stats - Section 1 (delay 0) */}
+      <motion.div
+        initial={sectionEnter}
+        animate={sectionAnimate}
+        transition={sectionTransition(0)}
+        className="mb-6"
+      >
       {isLoadingStats ? (
         <QuickStatsBarSkeleton />
       ) : (
@@ -874,12 +917,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           dueLabel={careerStage === 'practicing' ? 'Maintenance Due' : 'To Review'}
         />
       )}
+      </motion.div>
 
-      {/* Primary CTA: Start review when due, else start a session */}
+      {/* Primary CTA: Start review when due, else start a session - Section 2 (delay 100ms) */}
       {!isLoadingStats && (
         <motion.div
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={sectionEnter}
+          animate={sectionAnimate}
+          transition={sectionTransition(0.1)}
           className="mb-6"
         >
           {stats.dueCount > 0 ? (
@@ -913,24 +958,36 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </motion.div>
       )}
 
-      {/* Recommended for you */}
+      {/* Recommended for you - Section 2 */}
+      <motion.div
+        initial={sectionEnter}
+        animate={sectionAnimate}
+        transition={sectionTransition(0.1)}
+      >
       <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3">
         Recommended for you
       </h2>
       <RecommendationFeed onNavigateToDrill={handleNavigateToDrillModeWithSettings} />
+      </motion.div>
 
       {/* Residency Cockpit: Study by System (body map / system grid from Rolling 360) */}
       {onNavigateToDrillWithSystem && (
         <ResidencyCockpitSection onNavigateToDrillWithSystem={onNavigateToDrillWithSystem} />
       )}
 
-      {/* Grand Rounds (Clinical/Pro) vs Targeted Daily Question (Didactic) */}
+      {/* Grand Rounds / Daily Question - Section 2 (delay 100ms) */}
+      <motion.div
+        initial={sectionEnter}
+        animate={sectionAnimate}
+        transition={sectionTransition(0.1)}
+      >
       <GrandRoundsBanner
         onStart={() => onNavigateToDrillMode('grand_rounds')}
         isDidactic={
           careerStage === 'student' && userProfile?.yearInProgram !== 'Clinical Year'
         }
       />
+      </motion.div>
 
       {/* Clinical Student: Current Rotation dropdown (presets systems) + EOR Test Date */}
       {isClinicalStudent && (
@@ -971,13 +1028,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </motion.div>
       )}
 
-      {/* Current Curriculum - Elevated for Didactic: Study Systems on dashboard + sub-label on Start Session */}
+      {/* Current Curriculum - Section 3 (delay 200ms) */}
       {careerStage === 'student' &&
         enabledSystems.size >= 0 &&
         enabledSystems.size <= Object.keys(ABBREVIATION_TO_TOPIC_MAP).length && (
           <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={sectionEnter}
+            animate={sectionAnimate}
+            transition={sectionTransition(0.2)}
             className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
           >
             <div className="flex flex-col gap-3 mb-3">
@@ -1034,37 +1092,21 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-              {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map((system) => {
-                const fullName = getSystemDisplayFullName(system);
-                const isWeak = growthAreas.some((a) => a.toUpperCase() === system || a === system);
-                return (
-                  <button
-                    key={system}
-                    type="button"
-                    onClick={() => handleToggleSystem(system)}
-                    title={fullName}
-                    data-mastery={isWeak ? 'weak' : undefined}
-                    className={`min-w-0 p-4 rounded-lg text-xs font-medium transition-all text-left ${
-                      enabledSystems.has(system)
-                        ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-2 border-[var(--color-accent)]'
-                        : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border-2 border-transparent'
-                    }`}
-                  >
-                    <div className="font-semibold truncate" title={system}>
-                      {system}
-                    </div>
-                    <div className="text-[10px] opacity-80 truncate min-w-0" title={fullName}>
-                      {fullName}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            <CurriculumGrid
+              selectedSystems={enabledSystems}
+              onSystemToggle={handleToggleSystem}
+              growthAreas={growthAreas}
+              progressData={curriculumProgressData}
+            />
           </motion.div>
         )}
 
-      {/* Core Adaptive - THE MAIN EVENT */}
+      {/* Core Adaptive - THE MAIN EVENT - Section 4 (delay 300ms) */}
+      <motion.div
+        initial={sectionEnter}
+        animate={sectionAnimate}
+        transition={sectionTransition(0.3)}
+      >
       <CoreAdaptiveHero
         onStart={() => (onNavigateToSimulation ? onNavigateToSimulation() : onStartSession())}
         accuracy={stats.accuracy}
@@ -1080,6 +1122,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         }
         growthAreas={growthAreas}
       />
+      </motion.div>
 
       {/* Virtual OSCE Section (Standalone Feature) */}
       <OSCESection onStart={() => onNavigateToDrillMode('patient_encounter')} />
@@ -1193,8 +1236,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             const isSelected = activeTab === tab.id;
             const className = `flex items-center gap-2 px-1 py-2 font-medium transition-all whitespace-nowrap border-b-2 bg-transparent ${
               isSelected
-                ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
-                : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-200'
+                ? 'text-muted-amber-500 border-muted-amber-500'
+                : 'text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-700 dark:hover:text-slate-300'
             }`;
 
             return isSelected ? (
@@ -1253,6 +1296,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     icon={Play}
                     iconRight={ChevronRight}
                     onClick={() => setStudyFocusStep('choose_focus')}
+                    hapticOnPress
                     className="gap-2"
                   >
                     Study Now

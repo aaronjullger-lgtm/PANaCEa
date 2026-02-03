@@ -28,7 +28,7 @@ import TrainingMenu from '@/components/dashboard/TrainingMenu';
 import ProgressRing from '@/components/ui/ProgressRing';
 import TopicHeatmap from '@/components/analytics/TopicHeatmap';
 import SystemDrilldownModal from '@/components/modals/SystemDrilldownModal';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
 import type { SystemDrilldownSelection } from '@/components/modals/SystemDrilldownModal';
 import type { ConditionMeta } from '@/src/types/conditions';
 import ConditionDetailModal from '@/components/modals/ConditionDetailModal';
@@ -62,25 +62,6 @@ import { calculateAccuracy, calculateDayStreak, loadWidgetPreferences } from '@/
 import { getTimeBasedGreeting } from '@/lib/utils/timeUtils';
 import type { ErrorTag } from '@/types';
 
-// System names for dynamic welcome message
-const SYSTEM_DISPLAY_NAMES: Record<string, string> = {
-  CV: 'Cardiovascular',
-  PULM: 'Pulmonary',
-  GI: 'Gastrointestinal',
-  NEURO: 'Neurology',
-  MSK: 'Musculoskeletal',
-  DERM: 'Dermatology',
-  HEME: 'Hematology',
-  ENDO: 'Endocrine',
-  HEENT: 'Head & Neck',
-  RENAL: 'Renal',
-  REPRO: 'Reproductive',
-  PSYCH: 'Psychiatry',
-  ID: 'Infectious Disease',
-  GU: 'Genitourinary',
-  PRO: 'Professional Practice',
-};
-
 interface MenuViewProps {
   performanceData: PerformanceRecord[];
   missedQuestions: Question[];
@@ -91,6 +72,8 @@ interface MenuViewProps {
   setError: (error: string | null) => void;
   onStartSession: () => void;
   onConfirmSession: (settings: SessionSettings) => void;
+  /** Callback to remove a question from bookmarks */
+  onRemoveBookmark?: (question: Question) => void;
   growthAreas: string[];
   /** Callback for navigating to dedicated drill mode views */
   onNavigateToDrillMode?: (modeId: string) => void;
@@ -128,6 +111,7 @@ const MenuView: React.FC<MenuViewProps> = ({
   hasActiveSession,
   onStartSession,
   onConfirmSession,
+  onRemoveBookmark,
   growthAreas,
   onNavigateToDrillMode,
   onNavigateToIntegrations,
@@ -479,7 +463,7 @@ const MenuView: React.FC<MenuViewProps> = ({
 
       {/* Mobile Bottom Navigation */}
       {isMobile && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-white/10 dark:border-white/10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.25)]">
           <div className="grid grid-cols-4 gap-0">
             <button
               onClick={() => setActiveTab('home')}
@@ -596,7 +580,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                         )}
                       </span>
                       <div className="flex-1 flex flex-col gap-0.5">
-                        <span className="font-semibold text-[var(--color-text-primary]">
+                        <span className="font-semibold text-[var(--color-text-primary)]">
                           {result.name}
                         </span>
                         <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
@@ -628,8 +612,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     Your recommended focus is{' '}
                     <span className="font-semibold text-[var(--color-accent)]">
-                      {SYSTEM_DISPLAY_NAMES[stats.systemComparisonData[0].system] ||
-                        stats.systemComparisonData[0].system}
+                      {getSystemDisplayFullName(stats.systemComparisonData[0].system)}
                     </span>
                     .
                   </p>
@@ -990,9 +973,7 @@ const MenuView: React.FC<MenuViewProps> = ({
         <BookmarksPanel
           bookmarkedQuestions={missedQuestions.filter((q) => q.isBookmarked) || []}
           onRemoveBookmark={(question) => {
-            // Update question bookmark status
-            // Note: Full implementation would update in parent state/database
-            const updatedQuestion = { ...question, isBookmarked: false };
+            onRemoveBookmark?.(question);
           }}
           onViewQuestion={async (question) => {
             // Open question in a review modal or navigate to it

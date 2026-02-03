@@ -98,7 +98,12 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
   };
   return (
     <motion.div
-      className="group relative overflow-hidden rounded-2xl 
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.995 }}
+      className="group relative overflow-hidden rounded-2xl cursor-pointer
                  border border-slate-200 dark:border-[var(--color-border)] 
                  bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] 
                  shadow-md shadow-slate-300/10 dark:shadow-none
@@ -143,24 +148,7 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
           {/* Optional Badge (with pulsing animation) */}
           {badge && (
             <div className="flex-shrink-0">
-              <div className="relative">
-                <style>{`
-                  @keyframes pulse-glow {
-                    0%, 100% {
-                      opacity: 1;
-                      transform: scale(1);
-                    }
-                    50% {
-                      opacity: 0.8;
-                      transform: scale(1.05);
-                    }
-                  }
-                  .pulse-badge {
-                    animation: pulse-glow 2s ease-in-out infinite;
-                  }
-                `}</style>
-                <div className="pulse-badge">{badge}</div>
-              </div>
+              <div className="relative pulse-badge">{badge}</div>
             </div>
           )}
         </div>

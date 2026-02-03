@@ -35,6 +35,22 @@ body,
   overflow-x: hidden;
 }
 
+/* Pulse glow animation for badges (e.g. DashboardActionCard) */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+.pulse-badge {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
 /* Respect OS prefers-reduced-motion: animations run instantly when user has reduced motion enabled */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -44,6 +60,53 @@ body,
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  .pulse-badge {
+    animation: none !important;
+  }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Remove tap highlight on mobile for cleaner press feedback */
+button,
+a,
+[role="button"],
+[role="tab"] {
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+}
+
+/* Utility: subtle lift on hover for interactive cards */
+.hover-lift {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.1), 0 4px 8px -2px rgba(15, 23, 42, 0.06);
+}
+.dark .hover-lift:hover {
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.3);
+}
+
+/* Glassmorphism footer - frosted glass, docked to bottom */
+.footer-glass {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+.dark .footer-glass {
+  background: rgba(15, 23, 42, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.25);
 }
 
 /* -----------------------------------------------------
@@ -51,25 +114,24 @@ body,
 ------------------------------------------------------ */
 
 @layer components {
-  /* Primary button - semantic accent with high contrast text */
+  /* Primary button - Gold CTA, visual haptics */
   .btn-primary {
-    @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200
+    @apply px-4 py-2 rounded-xl font-semibold transition-all duration-200 ease-out
            focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
            bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-sm
-           hover:bg-[var(--color-accent-hover)] hover:shadow-md
-           active:scale-[0.98]
+           hover:-translate-y-0.5 hover:brightness-90 hover:shadow-lg
+           active:scale-[0.95]
            disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-[var(--color-accent)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-accent-hover)];
+           dark:bg-[var(--color-accent)] dark:text-[var(--color-text-inverse)] dark:hover:brightness-110;
   }
 
-  /* Secondary button - high contrast with borders */
+  /* Secondary button - Deep Navy border, visual haptics */
   .btn-secondary {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200
-           bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border-2 border-[var(--color-border)] shadow-sm
-           hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-accent)] hover:shadow-md
-           active:scale-[0.98]
-           disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-[var(--color-bg-secondary)] dark:text-[var(--color-text-primary)] dark:border-[var(--color-border)] dark:hover:bg-[var(--color-bg-secondary)] dark:hover:border-[var(--color-accent)];
+    @apply px-4 py-2 rounded-xl font-medium transition-all duration-200 ease-out
+           bg-transparent text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-primary)] border-2 border-[var(--color-navy,#0F172A)] dark:border-[var(--color-border)] shadow-sm
+           hover:-translate-y-0.5 hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-navy,#0F172A)] dark:hover:border-[var(--color-accent)] hover:shadow-md
+           active:scale-[0.95]
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* Success button - for submit actions */
@@ -123,21 +185,21 @@ body,
       0 0 0 4px var(--color-focus-ring);
   }
 
-  /* Ghost button - transparent with high contrast text */
+  /* Ghost button - transparent, Deep Navy text on light, slate on dark */
   .btn-ghost {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200
-           bg-transparent text-[var(--color-text-secondary)] border border-transparent
-           hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-border)]
+    @apply px-4 py-2 rounded-xl font-medium transition-all duration-200
+           bg-transparent text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-secondary)] border-2 border-transparent
+           hover:border-[var(--color-navy,#0F172A)] dark:hover:border-[var(--color-border)]
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed
-           dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-secondary)] dark:hover:border-[var(--color-border)];
+           dark:hover:bg-[var(--color-bg-secondary)];
   }
 
-  /* Glass button - our themed PANaCEa button */
+  /* Glass button - Gold CTA */
   .btn-glass {
-    @apply px-6 py-3 rounded-lg font-bold transition-all duration-200 shadow-md
+    @apply px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-md
            bg-[var(--color-accent)] text-[var(--color-text-inverse)]
-           hover:bg-[var(--color-accent-hover)] hover:shadow-lg
+           hover:brightness-90 hover:shadow-lg
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
@@ -209,14 +271,22 @@ body,
   /* Premium noise texture for glass cards (2.5% opacity grain overlay) */
   --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 
-  /* ===== ACTION BLUE DESIGN SYSTEM ===== */
-  /* Primary action color for buttons, CTAs, and interactive elements */
-  --color-action: #2563eb; /* action-blue-600 - PRIMARY */
-  --color-action-hover: #1d4ed8; /* action-blue-700 - hover state */
-  --color-action-light: #eff6ff; /* action-blue-50 - subtle backgrounds */
-  --color-action-text: #ffffff; /* Pure white for AAA contrast */
-  --color-label-primary: #0f172a; /* Deep navy for light mode labels */
-  --color-label-secondary: #475569; /* Slate-600 for secondary text */
+  /* ===== NAVY / WHITE / GOLD DESIGN SYSTEM ===== */
+  /* Primary action color - Muted Gold for CTAs */
+  --color-action: #B09B73; /* Muted Gold - PRIMARY ACTION */
+  --color-action-hover: #9d8a63; /* Darkened gold 10% */
+  --color-action-light: #f5f2ec; /* Gold tint - subtle backgrounds */
+  --color-action-text: #ffffff; /* Pure white for text on gold */
+  --color-label-primary: #0f172a; /* Slate-900 - headings */
+  --color-label-secondary: #475569; /* Slate-600 - body text */
+
+  /* Navy / Gold palette tokens */
+  --color-navy: #0F172A; /* Deep Navy - sidebar/headers */
+  --color-canvas: #F8FAFC; /* Soft Gray - canvas (slate-50) */
+  --color-surface: #ffffff; /* Pure white - cards */
+  --color-gold: #B09B73; /* Muted Gold - primary action */
+  --color-gold-hover: #9d8a63; /* Gold darkened 10% */
+  --color-gold-text: #ffffff; /* Text on gold buttons */
 
   /* ===== SEMANTIC DESIGN SYSTEM - LIGHT MODE (DEFAULT) ===== */
 
@@ -224,12 +294,12 @@ body,
   --background: #ffffff;
   --foreground: #0f172a;
 
-  /* Card/Container system */
+  /* Card/Container system - White surfaces */
   --card: #ffffff;
   --card-foreground: #0f172a;
 
-  /* Primary brand color */
-  --primary: #0284c7;
+  /* Primary brand color - Gold */
+  --primary: #B09B73;
   --primary-foreground: #ffffff;
 
   /* Muted/Secondary */
@@ -240,21 +310,24 @@ body,
   --border: #e2e8f0;
 
   /* Legacy theme-aware variables - LIGHT MODE DEFAULTS */
-  --color-bg-primary: #ffffff; /* White background */
-  --color-bg-secondary: #f8fafc; /* slate-50 */
+  --color-bg-primary: #F8FAFC; /* Canvas - Soft Gray (slate-50) */
+  --color-bg-secondary: #ffffff; /* White surface */
   --color-bg-tertiary: #f1f5f9; /* slate-100 */
-  --color-text-primary: #0f172a; /* slate-900 - dark text */
-  --color-text-secondary: #475569; /* slate-600 */
+  --color-text-primary: #0f172a; /* slate-900 - headings */
+  --color-text-secondary: #475569; /* slate-600 - body */
   --color-text-muted: #64748b; /* slate-500 */
   --color-border: #e2e8f0; /* slate-200 */
   --color-border-light: #f1f5f9; /* slate-100 */
-  --chart-grid-stroke: #f1f5f9; /* slate-100 - subtle grid lines in light mode */
-  --color-accent: #0284c7; /* sky-600 */
-  --color-accent-hover: #0369a1; /* sky-700 */
-  --color-accent-light: #e0f2fe; /* sky-100 */
+  --chart-grid-stroke: #f1f5f9; /* slate-100 - subtle grid lines */
+  --color-accent: #B09B73; /* Muted Gold */
+  --color-accent-hover: #9d8a63; /* Gold darkened 10% */
+  --color-accent-light: #f5f2ec; /* Gold tint */
   --color-overlay: rgba(0, 0, 0, 0.5);
   --color-shadow-soft: rgba(15, 23, 42, 0.06);
-  --color-focus-ring: #0284c7;
+  --color-focus-ring: #B09B73;
+
+  /* Text on accent (buttons) - white on gold */
+  --color-text-inverse: #ffffff;
 
   /* Glass card variables - LIGHT MODE */
   --color-glass-bg: rgba(255, 255, 255, 0.85);
@@ -314,18 +387,17 @@ body,
 }
 
 .dark {
-  /* ===== ACTION BLUE DESIGN SYSTEM - DARK MODE ===== */
-  /* Action Blue stays consistent for brand recognition */
-  --color-action: #2563eb; /* action-blue-600 - stays same */
-  --color-action-hover: #3b82f6; /* action-blue-500 - lighter for dark bg hover */
-  --color-action-light: #1e3a8a; /* action-blue-900 - dark backgrounds */
-  --color-action-text: #ffffff; /* Pure white for AAA contrast */
-  --color-label-primary: #ffffff; /* White for dark mode labels */
+  /* ===== NAVY / GOLD DESIGN SYSTEM - DARK MODE ===== */
+  --color-action: #B09B73; /* Muted Gold - stays same */
+  --color-action-hover: #c4ad87; /* Slightly lighter for dark bg hover */
+  --color-action-light: #1e293b; /* Dark backgrounds */
+  --color-action-text: #ffffff; /* Pure white for text on gold */
+  --color-label-primary: #f1f5f9; /* Slate-100 for headings */
   --color-label-secondary: #94a3b8; /* Slate-400 for muted text */
 
   /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
 
-  /* Main backgrounds */
+  /* Main backgrounds - Deep Navy */
   --background: #0f172a;
   --foreground: #f1f5f9;
 
@@ -333,8 +405,8 @@ body,
   --card: #1e293b;
   --card-foreground: #f1f5f9;
 
-  /* Primary brand color */
-  --primary: #0ea5e9;
+  /* Primary brand color - Gold */
+  --primary: #B09B73;
   --primary-foreground: #ffffff;
 
   /* Muted/Secondary */
@@ -345,22 +417,23 @@ body,
   --border: #475569;
 
   /* Legacy theme-aware variables (for backward compatibility) */
-  --color-bg-primary: #0f172a;
+  --color-bg-primary: #0f172a; /* Deep Navy */
   --color-bg-secondary: #1e293b;
   --color-bg-tertiary: #334155;
-  --color-text-primary: #f0f0f0;
+  --color-text-primary: #f1f5f9; /* Slate-100 */
   --color-text-secondary: #cbd5e1;
   --color-text-muted: #94a3b8;
   --color-border: #475569;
   --color-border-light: #334155;
-  --chart-grid-stroke: rgba(71, 85, 105, 0.2); /* faint blue-gray, 10% opacity - no pure gray */
-  --color-accent: #0ea5e9;
-  --color-accent-hover: #38bdf8;
+  --chart-grid-stroke: rgba(71, 85, 105, 0.2);
+  --color-accent: #B09B73; /* Muted Gold */
+  --color-accent-hover: #c4ad87;
   --color-accent-light: #1e293b;
-  /* Dark blue tint overlay (no pure black) - keeps brand immersion in modals */
+  --color-text-inverse: #ffffff;
+  /* Dark blue tint overlay (no pure black) */
   --color-overlay: rgba(15, 23, 42, 0.85);
   --color-shadow-soft: rgba(15, 23, 42, 0.4);
-  --color-focus-ring: #38bdf8;
+  --color-focus-ring: #B09B73;
 
   /* Glass card variables */
   --color-glass-bg: rgba(30, 41, 59, 0.7);
