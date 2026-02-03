@@ -16,8 +16,14 @@ function reactJsxDevShimPlugin(isProduction: boolean): Plugin {
   return {
     name: 'react-jsx-dev-shim',
     enforce: 'pre',
-    resolveId(source) {
-      if (source === 'react/jsx-dev-runtime' || source === 'react/jsx-dev-runtime.js') {
+    resolveId(source, importer) {
+      // Catch all variations of react/jsx-dev-runtime imports
+      if (
+        source === 'react/jsx-dev-runtime' ||
+        source === 'react/jsx-dev-runtime.js' ||
+        source.endsWith('react/jsx-dev-runtime') ||
+        source.endsWith('react/jsx-dev-runtime.js')
+      ) {
         return VIRTUAL_JSX_DEV_SHIM;
       }
       return null;
@@ -30,6 +36,25 @@ export const jsxDEV = jsx;
 export { Fragment };
 export default { jsxDEV, Fragment };
 `;
+    },
+    transform(code, id) {
+      // Also catch dynamic imports and require calls that might bypass resolveId
+      if (!isProduction || id.includes('node_modules')) return null;
+      
+      // Replace any remaining references to jsx-dev-runtime in the code
+      if (code.includes('react/jsx-dev-runtime')) {
+        return {
+          code: code.replace(
+            /from\s+['"]react\/jsx-dev-runtime['"]/g,
+            "from 'react/jsx-runtime'"
+          ).replace(
+            /require\(['"]react\/jsx-dev-runtime['"]\)/g,
+            "require('react/jsx-runtime')"
+          ),
+          map: null,
+        };
+      }
+      return null;
     },
   };
 }
@@ -174,7 +199,12 @@ export default defineConfig(({ mode }) => {
     plugins: [
       prismaExcludePlugin(),
       reactJsxDevShimPlugin(isProduction),
-      react(),
+      react({
+        // Use automatic JSX runtime for React 19
+        jsxRuntime: 'automatic',
+        // Ensure proper JSX transform
+        jsxImportSource: 'react',
+      }),
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
@@ -365,6 +395,13 @@ export default defineConfig(({ mode }) => {
         '@src': path.resolve(__dirname, './src'),
         // Force ESM build of lucide-react
         'lucide-react': 'lucide-react/dist/esm/lucide-react.js',
+        // In production, alias jsx-dev-runtime to jsx-runtime to avoid "jsxDEV is not a function" errors
+        ...(isProduction
+          ? {
+              'react/jsx-dev-runtime': 'react/jsx-runtime',
+              'react/jsx-dev-runtime.js': 'react/jsx-runtime',
+            }
+          : {}),
       },
     },
     build: {
