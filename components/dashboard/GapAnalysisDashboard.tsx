@@ -421,19 +421,23 @@ export const GapAnalysisDashboard: React.FC = () => {
               <ComposedChart
                 data={chartData}
                 layout="vertical"
-                margin={{ top: 20, right: 30, bottom: 20, left: 100 }}
+                margin={{ top: 20, right: 30, bottom: 32, left: 100 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" horizontal={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--chart-grid-stroke)"
+                  horizontal={false}
+                />
 
                 <XAxis
                   type="number"
                   domain={[0, 100]}
-                  stroke="#64748b"
-                  tick={{ fill: '#64748b', fontSize: 11 }}
+                  stroke="var(--color-border)"
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                   label={{
                     value: 'Accuracy (%)',
                     position: 'bottom',
-                    fill: '#64748b',
+                    fill: 'var(--color-text-muted)',
                     fontSize: 12,
                   }}
                 />
@@ -441,8 +445,8 @@ export const GapAnalysisDashboard: React.FC = () => {
                 <YAxis
                   type="category"
                   dataKey="name"
-                  stroke="#64748b"
-                  tick={{ fill: '#64748b', fontSize: 11 }}
+                  stroke="var(--color-border)"
+                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                   width={90}
                 />
 

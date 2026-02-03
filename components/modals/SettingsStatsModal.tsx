@@ -180,7 +180,7 @@ export const ANALYTICS_PALETTES: AnalyticsPaletteConfig[] = [
     label: 'High Contrast',
     description: 'Maximum visibility',
     colors: {
-      primary: '#000000',
+      primary: '#020617', // Brand dark blue (slate-950), no pure black
       secondary: '#ffffff',
       tertiary: '#ffff00',
       quaternary: '#ff00ff',
@@ -950,14 +950,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 dark:bg-black/85 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4"
+        className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4"
         onClick={onClose}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="flex flex-col bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.6)] w-full max-w-2xl max-h-[90vh] overflow-hidden border border-slate-200 dark:border-slate-700 dark:border-white/10 ring-1 ring-black/10 dark:ring-white/10"
+          className="flex flex-col bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl shadow-brand dark:shadow-brand-lg w-full max-w-2xl max-h-[90vh] overflow-hidden border border-slate-200 dark:border-slate-700 dark:border-white/10 ring-1 ring-black/10 dark:ring-white/10"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header: title (left) and close (right) — close is modal chrome, not a tab */}

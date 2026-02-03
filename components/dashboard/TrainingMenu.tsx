@@ -516,7 +516,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
               {mode.label}
             </h3>
             <p
-              className={`text-sm text-[var(--color-text-secondary)] mt-1 line-clamp-2 ${isDisabled ? 'opacity-50' : ''}`}
+              className={`text-[15px] text-[var(--color-text-secondary)] mt-1 line-clamp-2 ${isDisabled ? 'opacity-50' : ''}`}
+              style={{ color: 'var(--color-text-secondary)' }}
             >
               {getDrillDescription(mode)}
             </p>

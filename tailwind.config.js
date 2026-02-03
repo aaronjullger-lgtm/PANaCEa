@@ -12,6 +12,11 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      boxShadow: {
+        'brand': '0 10px 40px -10px rgba(15, 23, 42, 0.5)',
+        'brand-lg': '0 20px 50px -15px rgba(15, 23, 42, 0.55)',
+        'glow-accent': '0 0 20px -2px rgba(14, 165, 233, 0.35)',
+      },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         poppins: ['Poppins', 'sans-serif'],

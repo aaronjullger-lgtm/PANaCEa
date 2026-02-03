@@ -15,6 +15,15 @@ export const chartTheme = {
     stroke: 'var(--chart-grid-stroke, var(--color-border-light))', // Very light - reduces visual vibration in light mode
     strokeDasharray: '3 3',
   },
+  /**
+   * Bar chart grid: horizontal lines only, faint blue-gray (no vertical line noise on X-axis labels)
+   */
+  gridBar: {
+    stroke: 'var(--chart-grid-stroke)',
+    strokeDasharray: '3 3',
+    horizontal: true,
+    vertical: false,
+  },
 
   /**
    * Axis styling for XAxis and YAxis components

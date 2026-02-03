@@ -1,6 +1,7 @@
 /**
- * ThemeContext – single source of truth for light/dark theme
+ * ThemeContext – single source of truth for light/dark theme and high-contrast data viz.
  * Ensures landing page and app share the same theme state and avoid UI inconsistencies.
+ * High-contrast data mode: WCAG-friendly charts (patterns, no gradients, distinct borders).
  */
 
 import React, {
@@ -23,13 +24,28 @@ function getInitialTheme(): Theme {
   return globalThis.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-type ThemeContextValue = [Theme, Dispatch<SetStateAction<Theme>>];
+function getInitialHighContrastData(): boolean {
+  if (typeof globalThis.window === 'undefined') return false;
+  const stored = globalThis.localStorage.getItem('pance-ai-high-contrast-data');
+  return stored === 'true';
+}
+
+export type ThemeContextValue = {
+  theme: Theme;
+  setTheme: Dispatch<SetStateAction<Theme>>;
+  highContrastData: boolean;
+  setHighContrastData: Dispatch<SetStateAction<boolean>>;
+};
 
 const ThemeContextInstance = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  const value = useMemo<ThemeContextValue>(() => [theme, setTheme], [theme]);
+  const [highContrastData, setHighContrastData] = useState<boolean>(getInitialHighContrastData);
+  const value = useMemo<ThemeContextValue>(
+    () => ({ theme, setTheme, highContrastData, setHighContrastData }),
+    [theme, highContrastData],
+  );
 
   useEffect(() => {
     const root = document.documentElement;
@@ -58,13 +74,36 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   }, [theme]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (highContrastData) {
+      root.classList.add('high-contrast-data');
+    } else {
+      root.classList.remove('high-contrast-data');
+    }
+    try {
+      globalThis.localStorage.setItem('pance-ai-high-contrast-data', String(highContrastData));
+    } catch {
+      // ignore
+    }
+  }, [highContrastData]);
+
   return <ThemeContextInstance.Provider value={value}>{children}</ThemeContextInstance.Provider>;
 }
 
-export function useTheme(): ThemeContextValue {
+/** @deprecated Use useTheme() and destructure { theme, setTheme } for same behavior */
+export function useTheme(): [Theme, Dispatch<SetStateAction<Theme>>] {
   const value = useContext(ThemeContextInstance);
   if (!value) {
     throw new Error('useTheme must be used within ThemeProvider');
+  }
+  return [value.theme, value.setTheme];
+}
+
+export function useThemeContext(): ThemeContextValue {
+  const value = useContext(ThemeContextInstance);
+  if (!value) {
+    throw new Error('useThemeContext must be used within ThemeProvider');
   }
   return value;
 }

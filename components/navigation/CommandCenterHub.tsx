@@ -963,7 +963,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             animate={{ opacity: 1, y: 0 }}
             className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+            <div className="flex flex-col gap-3 mb-3">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-[var(--color-accent)]/10">
                   <Layers className="w-5 h-5 text-[var(--color-accent)]" />
@@ -979,41 +979,41 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   </p>
                 </div>
               </div>
-              {onOpenSettings && (
+              {/* Unified toolbar: Enable All, Disable All, More options */}
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={onOpenSettings}
-                  className="text-sm font-medium text-[var(--color-accent)] hover:underline self-start sm:self-center"
+                  onClick={() => {
+                    const all = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+                    setEnabledSystems(all);
+                    localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(all)));
+                    window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
                 >
-                  More options
+                  Enable All
                 </button>
-              )}
-            </div>
-            {/* Inline Study Systems toggles for Didactic */}
-            <div className="flex gap-2 mb-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const all = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
-                  setEnabledSystems(all);
-                  localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(all)));
-                  window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
-                }}
-                className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
-              >
-                Enable All
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEnabledSystems(new Set());
-                  localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
-                  window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
-                }}
-                className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
-              >
-                Disable All
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEnabledSystems(new Set());
+                    localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
+                    window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
+                >
+                  Disable All
+                </button>
+                {onOpenSettings && (
+                  <button
+                    type="button"
+                    onClick={onOpenSettings}
+                    className="text-sm font-medium text-[var(--color-accent)] hover:underline"
+                  >
+                    More options
+                  </button>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
               {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map((system) => {
@@ -1024,7 +1024,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     type="button"
                     onClick={() => handleToggleSystem(system)}
                     title={fullName}
-                    className={`min-w-0 p-2 rounded-lg text-xs font-medium transition-all text-left ${
+                    className={`min-w-0 p-4 rounded-lg text-xs font-medium transition-all text-left ${
                       enabledSystems.has(system)
                         ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-2 border-[var(--color-accent)]'
                         : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border-2 border-transparent'
@@ -1145,9 +1145,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </motion.div>
       )}
 
-      {/* Study Tools / Maintenance Section Header - Sticky (terminology differs for Practicing PAs) */}
-      <div className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/95 backdrop-blur border-b border-gray-200 dark:border-slate-700 -mx-4 px-4 pb-4 mb-6">
-        <div className="mb-3">
+      {/* Study Tools / Maintenance Section Header - Sticky; aligned to same grid as content */}
+      <div className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/95 backdrop-blur border-b border-[var(--color-border)] -mx-4 px-4 pb-4 mb-6">
+        <div className="mb-3 max-w-[1200px] mx-auto">
           <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
             {careerStage === 'practicing' ? 'Maintenance & Reference' : 'Study Tools'}
           </h2>
@@ -1160,7 +1160,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
         {/* Tab Navigation - switches content below (not scroll anchors) */}
         <div
-          className="flex gap-4 overflow-x-auto -mx-1 px-1 border-b border-gray-200 dark:border-slate-800"
+          className="flex gap-4 overflow-x-auto -mx-1 px-1 border-b border-[var(--color-border)] max-w-[1200px] mx-auto"
           role="tablist"
           aria-label="Study tools view"
         >

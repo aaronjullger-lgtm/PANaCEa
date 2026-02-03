@@ -511,13 +511,13 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <AlertCircle className="w-12 h-12 mx-auto text-error-primary mb-3" />
-        <p className="text-text-primary font-medium">Failed to load analytics</p>
-        <p className="text-sm text-text-muted mt-1">{error}</p>
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 text-center">
+        <AlertCircle className="w-12 h-12 mx-auto text-[var(--color-data-fail)] mb-3" aria-hidden />
+        <p className="font-medium text-[var(--color-text-primary)]">Failed to load analytics</p>
+        <p className="text-sm text-[var(--color-text-muted)] mt-1">{error}</p>
         <button
           onClick={loadData}
-          className="mt-4 px-4 py-2 bg-action-primary text-white rounded-lg hover:bg-action-primary/90 transition-colors"
+          className="mt-4 px-4 py-2 rounded-lg font-medium bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2"
         >
           Try Again
         </button>

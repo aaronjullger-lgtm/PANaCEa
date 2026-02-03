@@ -44,6 +44,7 @@ You are a **Senior Principal Architect** and **Lead Full-Stack Engineer** specia
 ### React 19 & UI
 - Use Functional Components with strict TypeScript interfaces.
 - Use Tailwind CSS for all styling. No external CSS files unless absolutely necessary.
+- **UI/UX Design System:** See `.cursor/rules/ui-design-system.mdc`. No pure black (`#000000`); use Brand Dark Blue for dark backgrounds. Use semantic tokens (`--color-*`, `var(--color-overlay)` for modals). One primary CTA per screen; chart grid lines faint blue-gray.
 - **Refactor on Sight:** If you touch a file that uses legacy patterns, upgrade it to React 19 standards (e.g., `use()` hook where appropriate, though stick to standard hooks `useState`/`useEffect` for stability unless instructed otherwise).
 - **Icons:** Use `lucide-react`.
 

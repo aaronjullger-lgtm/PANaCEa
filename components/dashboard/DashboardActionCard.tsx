@@ -165,9 +165,11 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
           )}
         </div>
 
-        {/* Description */}
+        {/* Description - slightly larger and darker for readability (blue-gray on dark, not muddy gray) */}
         {description && (
-          <p className="mb-6 text-[var(--color-text-secondary)] leading-relaxed">{description}</p>
+          <p className="mb-6 text-[0.9375rem] leading-relaxed text-[var(--color-text-secondary)]">
+            {description}
+          </p>
         )}
 
         {/* Timer Display */}

@@ -64,8 +64,8 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
-      <div className="bg-slate-900 rounded-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden shadow-2xl flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4">
+      <div className="bg-slate-900 rounded-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden shadow-2xl shadow-brand-lg flex flex-col">
         {/* Header */}
         <div className="bg-slate-800 border-b border-slate-700 p-4 flex items-center justify-between">
           <div>
@@ -125,7 +125,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
           {/* Image Viewer */}
-          <div className="flex-1 flex items-center justify-center bg-black p-8 overflow-auto">
+          <div className="flex-1 flex items-center justify-center bg-[var(--color-bg-primary)] p-8 overflow-auto">
             <div
               className="transition-transform duration-200 ease-out"
               style={{

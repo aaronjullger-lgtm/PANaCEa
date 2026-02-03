@@ -273,29 +273,73 @@ export const QuickStatsBarSkeleton: React.FC<{ className?: string }> = ({ classN
 };
 
 /**
- * UserStatsOverviewSkeleton - Matches UserFriendlyStatsDisplay overview layout
+ * UserStatsOverviewSkeleton - Matches UserFriendlyStatsDisplay overview layout exactly.
+ * Includes tab bar, readiness gauge, 4 stat cards, 3 quick stats, and insights block.
+ * Use skeleton-shimmer-wrap for left-to-right shimmer (design-system).
  */
-export const UserStatsOverviewSkeleton: React.FC<{ className?: string }> = ({ className = '' }) => {
-  return (
-    <div className={`space-y-6 ${className}`}>
+export const UserStatsOverviewSkeleton: React.FC<{
+  className?: string;
+  /** When true, adds shimmer overlay and full layout (tabs + quick stats + insights) */
+  withShimmer?: boolean;
+}> = ({ className = '', withShimmer = true }) => {
+  const content = (
+    <>
+      {/* Tab bar - matches Overview/Insights/Systems */}
+      <div className="flex gap-2 bg-[var(--color-bg-secondary)] p-1 rounded-xl">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} height="2.5rem" className="flex-1 rounded-lg" />
+        ))}
+      </div>
       {/* Readiness gauge skeleton */}
-      <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-        <Skeleton height="1rem" width="40%" className="mb-4" />
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5">
+        <Skeleton height="1rem" width="40%" className="mb-4 bg-slate-700/50 dark:bg-slate-700/50" />
         <div className="flex gap-6">
-          <Skeleton width={96} height={96} radius="full" />
+          <Skeleton width={96} height={96} radius="full" className="bg-slate-700/50 dark:bg-slate-700/50" />
           <div className="flex-1 space-y-3">
-            <Skeleton height="1.5rem" width="60%" />
-            <Skeleton height="1rem" width="80%" />
-            <Skeleton height="0.5rem" width="100%" />
+            <Skeleton height="1.5rem" width="60%" className="bg-slate-700/50 dark:bg-slate-700/50" />
+            <Skeleton height="1rem" width="80%" className="bg-slate-700/50 dark:bg-slate-700/50" />
+            <Skeleton height="0.5rem" width="100%" className="bg-slate-700/50 dark:bg-slate-700/50" />
           </div>
         </div>
       </div>
-      {/* Stats grid skeleton */}
+      {/* Stats grid - 4 cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <StatCardSkeleton key={i} />
         ))}
       </div>
+      {/* Quick stats row - 3 cards (Lifetime Accuracy, Study Time, Questions/hour) */}
+      <div className="grid grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 text-center"
+          >
+            <Skeleton height="1.25rem" width="2rem" className="mx-auto mb-2 bg-slate-700/50 dark:bg-slate-700/50" />
+            <Skeleton height="1.5rem" width="50%" className="mx-auto mb-2 bg-slate-700/50 dark:bg-slate-700/50" />
+            <Skeleton height="0.75rem" width="70%" className="mx-auto bg-slate-700/50 dark:bg-slate-700/50" />
+          </div>
+        ))}
+      </div>
+      {/* Insights / Key Insights block */}
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5">
+        <Skeleton height="0.875rem" width="30%" className="mb-4 bg-slate-700/50 dark:bg-slate-700/50" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} height="2.5rem" width={`${90 - i * 10}%`} className="bg-slate-700/50 dark:bg-slate-700/50" />
+          ))}
+        </div>
+      </div>
+    </>
+  );
+
+  return (
+    <div
+      className={`space-y-6 ${withShimmer ? 'skeleton-shimmer-wrap' : ''} ${className}`}
+      aria-busy="true"
+      aria-label="Loading analytics"
+    >
+      {content}
     </div>
   );
 };

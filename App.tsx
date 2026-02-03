@@ -4,6 +4,7 @@ import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Shield } from 'lucide-react';
 import { ROUTES } from './config/routes';
+import { NavRail } from './components/layout/NavRail';
 import { type View, pageVariants, DRILL_MODE_IDS } from './config/appViews';
 import {
   QuizView,
@@ -69,6 +70,7 @@ import { initializeSession } from './services/core';
 import { useUserStats } from './hooks/useUserStats';
 import { preloadData } from './lib/utils/dataLoader';
 import { useAccessibleTransition } from './hooks/useReducedMotion';
+import { useViewTransition } from './hooks/useViewTransition';
 import { flushPendingToLocalStorage } from './lib/services/sync/offlineSync';
 import { WithGeminiErrorBoundary } from './components/hoc/withGeminiErrorBoundary';
 import type {
@@ -148,6 +150,7 @@ const App: React.FC = () => {
   const [theme, setTheme] = useTheme();
 
   const [view, setView] = useState<View>('command_center');
+  const startViewTransition = useViewTransition();
 
   // Sync URL to view: when path is / show command center; /menu shows menu
   useEffect(() => {
@@ -836,6 +839,9 @@ const App: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Glassmorphism quick-actions rail (persists across study views) */}
+                  <NavRail />
+
                   {/* Standard views with max-w-4xl constraint */}
                   {view !== 'reference_library' &&
                     view !== 'my_library' &&
@@ -843,6 +849,7 @@ const App: React.FC = () => {
                     <main
                       id="main-content"
                       className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24"
+                      style={{ marginLeft: 'var(--nav-rail-width, 3.5rem)' }}
                     >
                       {isLoading &&
                         (sessionSettings ? (
@@ -886,7 +893,7 @@ const App: React.FC = () => {
                                 onStartSession={handleStartSession}
                                 onNavigateToDrillMode={handleNavigateToDrillMode}
                                 onNavigateToToolkit={() => setView('toolkit')}
-                                onNavigateToGapAnalysis={() => setView('gap_analysis')}
+                                onNavigateToGapAnalysis={() => startViewTransition(() => setView('gap_analysis'))}
                                 onNavigateToClinicalProfile={() => setView('clinical_profile')}
                                 onNavigateToIntegrations={() => setView('integrations')}
                                 onNavigateToSimulation={handleNavigateToSimulation}
@@ -928,7 +935,7 @@ const App: React.FC = () => {
                                 onNavigateToIntegrations={() => setView('integrations')}
                                 onNavigateToSocial={() => setView('social_dashboard')}
                                 onNavigateToToolkit={() => setView('toolkit')}
-                                onNavigateToGapAnalysis={() => setView('gap_analysis')}
+                                onNavigateToGapAnalysis={() => startViewTransition(() => setView('gap_analysis'))}
                                 onNavigateToSimulation={handleNavigateToSimulation}
                                 isSyncing={isSyncing}
                                 lastSyncTime={lastSyncTime}
@@ -1452,7 +1459,7 @@ const App: React.FC = () => {
                                   onStartSession={handleStartSession}
                                   onNavigateToDrillMode={handleNavigateToDrillMode}
                                   onNavigateToToolkit={() => setView('toolkit')}
-                                  onNavigateToGapAnalysis={() => setView('gap_analysis')}
+                                  onNavigateToGapAnalysis={() => startViewTransition(() => setView('gap_analysis'))}
                                   onNavigateToIntegrations={() => setView('integrations')}
                                   onNavigateToReference={() => setView('reference_library')}
                                   onNavigateToMyLibrary={() => setView('my_library')}

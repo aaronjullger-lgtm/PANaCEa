@@ -49,11 +49,11 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
     if (active && payload && payload.length && firstPayload) {
       const { bucket, count } = firstPayload.payload;
       return (
-        <div className="bg-white border border-zinc-200 rounded-lg px-3 py-2 shadow-lg">
-          <p className="text-zinc-900 font-semibold text-sm">
+        <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-2 shadow-lg">
+          <p className="text-[var(--color-text-primary)] font-semibold text-sm">
             {count} {count === 1 ? 'item' : 'items'}
           </p>
-          <p className="text-zinc-600 text-xs">Stability: {bucket}</p>
+          <p className="text-[var(--color-text-muted)] text-xs">Stability: {bucket}</p>
         </div>
       );
     }
@@ -67,25 +67,30 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
         layout="vertical"
         margin={{ top: 5, right: 10, left: 60, bottom: 5 }}
       >
-        <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" horizontal={false} />
+        <CartesianGrid
+          strokeDasharray="3 3"
+          stroke="var(--chart-grid-stroke)"
+          horizontal={false}
+          vertical={true}
+        />
 
         <XAxis
           type="number"
-          stroke="#71717a"
-          tick={{ fill: '#71717a', fontSize: 11 }}
-          tickLine={{ stroke: '#e4e4e7' }}
+          stroke="var(--color-border)"
+          tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+          tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
         />
 
         <YAxis
           type="category"
           dataKey="bucket"
-          stroke="#71717a"
-          tick={{ fill: '#71717a', fontSize: 11 }}
-          tickLine={{ stroke: '#e4e4e7' }}
+          stroke="var(--color-border)"
+          tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+          tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
           width={60}
         />
 
-        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f4f4f5' }} />
+        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-bg-secondary)' }} />
 
         <Bar dataKey="count" radius={[0, 8, 8, 0]} animationDuration={1000}>
           {sortedData.map((entry, index) => (

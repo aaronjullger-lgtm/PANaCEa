@@ -607,7 +607,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
           {/* Weakest Subject Areas - Student Priority */}
           {userStats.stats.weakAreas.length > 0 && (
-            <div className="p-6 rounded-xl bg-data-provisional/10 border-2 border-data-provisional/30">
+            <div className="p-6 rounded-xl border-2 border-data-provisional/30 bg-[var(--color-bg-secondary)]">
               <div className="flex items-center gap-2 mb-3">
                 <div className="p-2 rounded-lg bg-data-provisional/10">
                   <AlertCircle className="w-5 h-5 text-data-provisional" />
@@ -618,7 +618,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 {userStats.stats.weakAreas.slice(0, 3).map((area) => (
                   <div
                     key={area.system}
-                    className="p-3 rounded-lg bg-surface-primary border border-data-provisional/30"
+                    className="p-4 rounded-lg bg-[var(--color-bg-primary)] border border-data-provisional/30"
                   >
                     <div className="text-sm font-semibold text-action-primary mb-1">
                       {area.system}
@@ -661,9 +661,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   <BarChart
                     layout="vertical"
                     data={systemPerformanceBarData}
-                    margin={{ top: 4, right: 24, left: 0, bottom: 4 }}
+                    margin={{ top: 4, right: 24, left: 0, bottom: 24 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} />
+                    <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
                     <XAxis type="number" domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
                     <YAxis
                       type="category"
@@ -849,12 +849,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </p>
             ) : (
               <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={timeData}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgb(226 232 240)"
-                    className="dark:[stroke:var(--color-border)]"
-                  />
+                <BarChart data={timeData} margin={{ bottom: 28 }}>
+                  <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
                   <XAxis
                     dataKey="system"
                     tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}

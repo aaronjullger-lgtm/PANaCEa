@@ -1,0 +1,38 @@
+---
+description: PANaCEa UI/UX design system - color, shadows, charts, components (strict enforcement)
+alwaysApply: true
+---
+
+# UI/UX DESIGN SYSTEM RULES (STRICT ENFORCEMENT)
+
+## 1. COLOR PALETTE ENFORCEMENT
+- **FORBIDDEN COLORS:** You are STRICTLY FORBIDDEN from using `#000000` (Pure Black), `bg-black`, `text-black`, `border-black`, or generic `gray-900` / `zinc-900` for dark-mode backgrounds or text.
+- **PRIMARY BACKGROUND:** The "Dark Mode" background is NOT black. It is the established **Brand Dark Blue** (see `index.css` and Tailwind: `surface.primary`, `clinical-navy`, Slate-950 `#020617`, or `#0f172a`).
+- **TEXT ON DARK:** Never use pure white (`#FFFFFF`) on the Dark Blue background for large areas (causes eye strain). Use `slate-50` or `slate-100` (off-white), or CSS variable `--color-text-primary` / `text-[var(--color-text-primary)]`.
+- **TEXT ON DARK (SECONDARY):** Never use neutral gray for secondary text on dark backgrounds. Use **Blue-tinted Grays** (e.g. Tailwind `text-slate-400`, `text-slate-500`, or `text-blue-200/50`) to prevent "muddy" contrast. Prefer `text-[var(--color-text-muted)]` which is set to slate in dark mode.
+
+## 2. SHADOWS & DEPTH
+- **NO BLACK SHADOWS:** Do not use default `shadow-lg` if it resolves to black. Use design tokens.
+- **COLORED SHADOWS:** Generate shadows using the primary brand blue with transparency (e.g. `shadow-[0_10px_40px_-10px_rgba(15,23,42,0.5)]` or the `shadow-brand` utility if defined in Tailwind).
+- **GLASSMORPHISM:** When creating overlays or modals, use `backdrop-blur-md` (or `backdrop-blur-xl`) combined with `bg-[var(--color-overlay)]` or `bg-[var(--color-bg-primary)]/80` rather than solid black. In dark mode, `--color-overlay` is a dark blue tint, not black.
+
+## 3. CHART & DATA VISUALIZATION
+- **PALETTE:** All charts (Recharts/Chart.js) must use a monochromatic or analogous color scale derived from the Brand Blue (see `lib/chartTheme.tsx` and `chartTheme.colors` / `chartTheme.gradients`).
+- **GRID LINES:** Grid lines on charts must be faint blue-gray: e.g. `stroke: rgba(71, 85, 105, 0.2)` or `var(--chart-grid-stroke)`. Never use pure gray or black. Prefer horizontal grid lines only for bar charts to reduce noise; vertical grid lines at 10% opacity or omitted.
+- **AXIS LABELS:** Ensure chart containers have sufficient bottom padding so X-axis labels (especially rotated) do not get cut off.
+
+## 4. COMPONENT CONSTRUCTION
+- **BORDERS:** Dark mode borders must be `border-slate-700` or `border-slate-800` (Dark Blue-Gray), or `border-[var(--color-border)]`. Never `border-gray-800` for cards on blue backgrounds.
+- **SKELETON LOADERS:** Skeleton pulse animations must use `bg-slate-700` to `bg-slate-800` (Blue-Gray), not generic gray.
+- **CARD PADDING:** Internal card padding must be at least 16px (e.g. `p-4` or `1rem`). Avoid tight padding (e.g. `p-2`) on curriculum or content cards so text does not touch borders.
+- **ONE PRIMARY ACTION PER SCREEN:** Only one solid primary (filled) CTA per view. Header actions like "Build Session" should be secondary (outlined or ghost). Reserve solid blue for the main page CTA.
+
+## 5. SEMANTIC TOKENS (PREFERRED)
+- Prefer CSS variables and Tailwind semantic tokens over raw colors:
+  - Use `bg-[var(--color-bg-primary)]` / `bg-surface-primary` instead of `bg-dark-blue` or raw hex for canvas.
+  - Use `text-[var(--color-text-primary)]` for primary text, `text-[var(--color-text-muted)]` for secondary.
+  - Use `border-[var(--color-border)]` for borders so theme and high-contrast modes stay consistent.
+
+## 6. FOCUS & ACCESSIBILITY
+- Override `:focus-visible` so the focus ring is a visible glow (e.g. cyan or gold complementary to blue), not the default browser outline. Use `--color-focus-ring` or `--color-accent` in `index.css` for focus rings.
+- Ensure error states (e.g. "Failed to load analytics") are contained within a card boundary matching other sections, not floating in a large empty area. Prefer a retry control on the failing component.

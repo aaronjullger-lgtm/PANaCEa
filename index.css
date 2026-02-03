@@ -92,9 +92,9 @@ body,
            dark:bg-[var(--color-data-fail)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-data-fail)]/80;
   }
 
-  /* Focus ring utility - accessible keyboard focus */
+  /* Focus ring utility - accessible keyboard focus (cyan glow, no black) */
   .focus-ring {
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)];
   }
 
   /* Global keyboard focus - visible ring on all interactive elements (accessibility) */
@@ -111,7 +111,7 @@ body,
     outline: none;
     box-shadow:
       0 0 0 2px var(--color-bg-primary),
-      0 0 0 4px var(--color-accent);
+      0 0 0 4px var(--color-focus-ring);
   }
 
   /* Checkbox/radio often need larger hit area; keep ring visible */
@@ -120,7 +120,7 @@ body,
     outline: none;
     box-shadow:
       0 0 0 2px var(--color-bg-primary),
-      0 0 0 4px var(--color-accent);
+      0 0 0 4px var(--color-focus-ring);
   }
 
   /* Ghost button - transparent with high contrast text */
@@ -253,6 +253,8 @@ body,
   --color-accent-hover: #0369a1; /* sky-700 */
   --color-accent-light: #e0f2fe; /* sky-100 */
   --color-overlay: rgba(0, 0, 0, 0.5);
+  --color-shadow-soft: rgba(15, 23, 42, 0.06);
+  --color-focus-ring: #0284c7;
 
   /* Glass card variables - LIGHT MODE */
   --color-glass-bg: rgba(255, 255, 255, 0.85);
@@ -261,6 +263,9 @@ body,
 
   /* Card background for table content */
   --color-card-bg: #ffffff;
+  /* Semantic aliases for design system docs */
+  --surface-canvas: var(--color-bg-primary);
+  --content-primary-on-canvas: var(--color-text-primary);
 
   /* ===== MUTED SEMANTIC CATEGORY ACCENTS ===== */
   --color-category-visual: #a67f7f; /* Dusty Rose */
@@ -348,11 +353,14 @@ body,
   --color-text-muted: #94a3b8;
   --color-border: #475569;
   --color-border-light: #334155;
-  --chart-grid-stroke: rgba(71, 85, 105, 0.2);
+  --chart-grid-stroke: rgba(71, 85, 105, 0.2); /* faint blue-gray, 10% opacity - no pure gray */
   --color-accent: #0ea5e9;
   --color-accent-hover: #38bdf8;
   --color-accent-light: #1e293b;
-  --color-overlay: rgba(0, 0, 0, 0.75);
+  /* Dark blue tint overlay (no pure black) - keeps brand immersion in modals */
+  --color-overlay: rgba(15, 23, 42, 0.85);
+  --color-shadow-soft: rgba(15, 23, 42, 0.4);
+  --color-focus-ring: #38bdf8;
 
   /* Glass card variables */
   --color-glass-bg: rgba(30, 41, 59, 0.7);
@@ -1341,6 +1349,30 @@ body,
 
 .dark .scrollable-area::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* Global scrollbar in dark mode: track = brand dark blue, thumb = slate (no default black/white) */
+.dark {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(71, 85, 105, 0.6) var(--color-bg-primary);
+}
+
+.dark::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.dark::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+
+.dark::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.6);
+  border-radius: 5px;
+}
+
+.dark::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.8);
 }
 
 /* ===============================================

@@ -57,6 +57,7 @@ const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
   return (
     <div
       className={`
+        relative overflow-hidden skeleton-shimmer
         ${
           isCompact
             ? 'p-4 rounded-lg'
@@ -85,22 +86,6 @@ const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
           />
         ))}
       </div>
-
-      {/* Optional shimmer effect overlay for premium feel */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-text-inverse)]/15 to-transparent"
-        animate={{
-          x: ['-100%', '100%'],
-        }}
-        transition={{
-          repeat: Infinity,
-          duration: 1.5,
-          ease: 'linear',
-        }}
-        style={{
-          maskImage: 'linear-gradient(to right, transparent, black, transparent)',
-        }}
-      />
     </div>
   );
 };
