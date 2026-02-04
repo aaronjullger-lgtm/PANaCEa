@@ -360,7 +360,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   onStartFirstSession,
 }) => {
   const { careerStage } = useUserContext();
-  const hasNoStatsData = isLoadingStats || performanceData.length === 0;
+  const perfDataIsArray = Array.isArray(performanceData);
+  const hasNoStatsData = isLoadingStats || (perfDataIsArray ? performanceData.length === 0 : true);
   const [activeTab, setActiveTab] = useState<TabId>('stats');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [confirmClear, setConfirmClear] = useState<string | null>(null);
@@ -761,8 +762,27 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     setTimeout(() => setExportStatus(null), 2000);
   };
 
+  const emptyStatsShape = {
+    totalQuestions: 0,
+    totalCorrect: 0,
+    overallAccuracy: null as number | null,
+    currentStreak: 0,
+    bestStreak: 0,
+    todayQuestions: 0,
+    todayCorrect: 0,
+    weekQuestions: 0,
+    weekCorrect: 0,
+    systemBreakdown: [] as Array<{ system: string; label: string; correct: number; total: number; accuracy: number }>,
+    recentTrend: 0,
+    studyDays: 0,
+    avgQuestionsPerDay: 0,
+    recentSessionAccuracies: [] as number[],
+  };
+
   // Calculate statistics
   const stats = useMemo(() => {
+    if (!Array.isArray(performanceData)) return emptyStatsShape;
+
     if (performanceData.length === 0) {
       return {
         totalQuestions: 0,
@@ -788,6 +808,24 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       };
     }
 
+    const emptyStats = {
+      totalQuestions: 0,
+      totalCorrect: 0,
+      overallAccuracy: null as number | null,
+      currentStreak: 0,
+      bestStreak: 0,
+      todayQuestions: 0,
+      todayCorrect: 0,
+      weekQuestions: 0,
+      weekCorrect: 0,
+      systemBreakdown: [] as Array<{ system: string; label: string; correct: number; total: number; accuracy: number }>,
+      recentTrend: 0,
+      studyDays: 0,
+      avgQuestionsPerDay: 0,
+      recentSessionAccuracies: [] as number[],
+    };
+
+    try {
     // Calculate streaks using utility function
     const { current: currentStreak, best: bestStreak } = calculateStreaks(performanceData);
 
@@ -903,6 +941,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       avgQuestionsPerDay,
       recentSessionAccuracies,
     };
+    } catch {
+      return emptyStats;
+    }
   }, [performanceData]);
 
   const handleClear = (type: string) => {
@@ -927,7 +968,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   };
 
   const handleArchiveAndReset = () => {
-    if (performanceData.length === 0) {
+    if (!Array.isArray(performanceData) || performanceData.length === 0) {
       toast.success('No performance data to archive');
       return;
     }

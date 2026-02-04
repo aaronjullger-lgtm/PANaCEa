@@ -80,86 +80,74 @@
       }
     </script>
     <style>
-      /* CSS Custom Properties for theming - Deep Navy & Soft Whites */
+      /* CSS Custom Properties - unified colorway (matches index.css). Same gold + slate family in both modes. */
       :root {
-        /* Light mode - Clean, sophisticated aesthetic with soft backgrounds */
-        --color-bg-primary: #e9ecf1;
+        /* Light mode - same colorway, light-optimized contrast */
+        --color-bg-primary: #F8FAFC;
         --color-bg-secondary: #ffffff;
-        --color-bg-tertiary: #f8f9fb;
-        --color-text-primary: #101729;
-        --color-text-secondary: #364154;
+        --color-bg-tertiary: #f1f5f9;
+        --color-text-primary: #0f172a;
+        --color-text-secondary: #475569;
         --color-text-muted: #64748b;
-        --color-border: #cbd5e1;
-        --color-border-light: #e2e8f0;
+        --color-border: #e2e8f0;
+        --color-border-light: #f1f5f9;
 
-        /* Navy accent for primary actions */
-        --color-accent: #1f283a;
-        --color-accent-hover: #364154;
-        --color-accent-light: #e9ecf1;
+        /* Gold accent - same family as dark (cooler gold), darker for light bg */
+        --color-accent: #9a8f72;
+        --color-accent-hover: #8a7f62;
+        --color-accent-light: #f5f2ec;
 
-        /* Shiny Gold - Reserved for extraordinary achievements only */
-        --color-gold: #d4af37;
-        --color-gold-light: #f4e5b8;
-        --color-gold-dark: #b8941f;
-        --color-gold-gradient: linear-gradient(135deg, #f9d423 0%, #d4af37 50%, #b8941f 100%);
-        --color-gold-glow: 0 4px 24px rgba(212, 175, 55, 0.4);
+        --color-gold: #9a8f72;
+        --color-gold-light: #c4b896;
+        --color-gold-dark: #8a7f62;
+        --color-gold-gradient: linear-gradient(135deg, #c4b896 0%, #9a8f72 50%, #8a7f62 100%);
+        --color-gold-glow: 0 4px 24px rgba(154, 143, 114, 0.35);
 
-        /* Glass effects - Enhanced for premium feel */
-        --color-card-bg: rgba(255, 255, 255, 0.7);
+        --color-card-bg: #ffffff;
         --color-input-bg: #ffffff;
-        --color-overlay: rgba(15, 23, 42, 0.6);
-
-        /* Button text colors */
-        --color-btn-primary-text: #ffffff;
+        --color-overlay: rgba(15, 23, 42, 0.5);
+        --color-btn-primary-text: #f8fafc;
         --color-btn-secondary-text: #0f172a;
-
-        /* Premium glass styling */
-        --color-glass-bg: rgba(255, 255, 255, 0.75);
-        --color-glass-border: rgba(203, 213, 225, 0.8);
+        --color-glass-bg: rgba(255, 255, 255, 0.85);
+        --color-glass-border: rgba(226, 232, 240, 0.6);
         --color-glass-shadow: rgba(0, 0, 0, 0.08);
         --color-glass-hover: rgba(255, 255, 255, 0.9);
-        --color-glass-text: #101729;
+        --color-glass-text: #0f172a;
       }
 
       .dark {
-        /* Dark mode - Slate-950 Medical/Night Shift vibe */
-        --color-bg-primary: #020617;
-        --color-bg-secondary: #1f283a;
-        --color-bg-tertiary: #364154;
-        --color-text-primary: #e9ecf1;
+        /* Dark mode - same colorway, dark-optimized contrast */
+        --color-bg-primary: #0f172a;
+        --color-bg-secondary: #1e293b;
+        --color-bg-tertiary: #334155;
+        --color-text-primary: #f1f5f9;
         --color-text-secondary: #cbd5e1;
         --color-text-muted: #94a3b8;
         --color-border: #475569;
-        --color-border-light: #364154;
+        --color-border-light: #334155;
 
-        /* Light accent for high contrast */
-        --color-accent: #e9ecf1;
-        --color-accent-hover: #ffffff;
-        --color-accent-light: rgba(233, 236, 241, 0.15);
+        /* Gold accent - same family as light, lighter for dark bg */
+        --color-accent: #a89b7a;
+        --color-accent-hover: #b8ab8a;
+        --color-accent-light: rgba(30, 41, 59, 0.8);
 
-        /* Shiny Gold - Same for dark mode, reserved for achievements */
-        --color-gold: #f4d03f;
-        --color-gold-light: #f9e79f;
-        --color-gold-dark: #d4af37;
-        --color-gold-gradient: linear-gradient(135deg, #f9e79f 0%, #f4d03f 50%, #d4af37 100%);
-        --color-gold-glow: 0 4px 32px rgba(244, 208, 63, 0.5);
+        --color-gold: #a89b7a;
+        --color-gold-light: #c4b896;
+        --color-gold-dark: #8f8262;
+        --color-gold-gradient: linear-gradient(135deg, #c4b896 0%, #a89b7a 50%, #8f8262 100%);
+        --color-gold-glow: 0 4px 24px rgba(168, 155, 122, 0.35);
 
-        /* Glass effects for dark mode */
-        --color-card-bg: #1f283a;
-        --color-input-bg: #364154;
-        --color-overlay: rgba(0, 0, 0, 0.8);
-
-        /* Button text colors */
-        --color-btn-primary-text: #101729;
-        --color-btn-secondary-text: #e9ecf1;
-        --color-tile-text: #e9ecf1;
-
-        /* Premium frosted glass styling */
-        --color-glass-bg: rgba(255, 255, 255, 0.1);
-        --color-glass-border: rgba(255, 255, 255, 0.15);
-        --color-glass-shadow: rgba(0, 0, 0, 0.4);
-        --color-glass-hover: rgba(255, 255, 255, 0.18);
-        --color-glass-text: #e9ecf1;
+        --color-card-bg: #1e293b;
+        --color-input-bg: #334155;
+        --color-overlay: rgba(15, 23, 42, 0.85);
+        --color-btn-primary-text: #f8fafc;
+        --color-btn-secondary-text: #f1f5f9;
+        --color-tile-text: #f1f5f9;
+        --color-glass-bg: rgba(30, 41, 59, 0.7);
+        --color-glass-border: rgba(255, 255, 255, 0.08);
+        --color-glass-shadow: rgba(0, 0, 0, 0.3);
+        --color-glass-hover: rgba(255, 255, 255, 0.12);
+        --color-glass-text: #f1f5f9;
       }
 
       body {

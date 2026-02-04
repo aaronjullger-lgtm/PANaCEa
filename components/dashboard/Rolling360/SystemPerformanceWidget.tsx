@@ -36,14 +36,14 @@ const BLUEPRINT_TARGETS: Record<string, number> = {
 
 function SystemPerformanceSkeleton() {
   return (
-    <div className="bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 animate-pulse">
-      <div className="h-6 bg-slate-700 rounded-lg w-48 mb-6" />
+    <div className="bg-[var(--color-bg-secondary)] backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-border)] animate-pulse">
+      <div className="h-6 bg-[var(--color-bg-tertiary)] rounded-lg w-48 mb-6" />
       <div className="space-y-3">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex items-center gap-3">
-            <div className="w-24 h-4 bg-slate-700 rounded" />
-            <div className="flex-1 h-3 bg-slate-700 rounded-full" />
-            <div className="w-12 h-4 bg-slate-700 rounded" />
+            <div className="w-24 h-4 bg-[var(--color-bg-tertiary)] rounded" />
+            <div className="flex-1 h-3 bg-[var(--color-bg-tertiary)] rounded-full" />
+            <div className="w-12 h-4 bg-[var(--color-bg-tertiary)] rounded" />
           </div>
         ))}
       </div>
@@ -74,25 +74,25 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
       className={`p-3 rounded-xl transition-colors ${
-        isUnderStudied ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-slate-700/30'
+        isUnderStudied ? 'bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/20' : 'bg-[var(--color-bg-tertiary)]/30'
       }`}
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-white">{system}</span>
+          <span className="text-sm font-medium text-[var(--color-text-primary)]">{system}</span>
           {isUnderStudied && (
-            <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 text-xs rounded-full">
+            <span className="px-2 py-0.5 bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] text-xs rounded-full">
               Under-Studied
             </span>
           )}
         </div>
         <span
-          className={`text-sm font-semibold ${
+          className={`text-sm font-semibold tabular-nums ${
             stats.accuracy >= 70
-              ? 'text-teal-400'
+              ? 'text-[var(--color-data-pass)]'
               : stats.accuracy >= 50
-                ? 'text-amber-400'
-                : 'text-red-400'
+                ? 'text-[var(--color-data-provisional)]'
+                : 'text-[var(--color-data-fail)]'
           }`}
         >
           {stats.accuracy.toFixed(0)}%
@@ -100,14 +100,14 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
       </div>
 
       {/* Accuracy bar */}
-      <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+      <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
         <motion.div
           className={`h-full ${
             stats.accuracy >= 70
-              ? 'bg-gradient-to-r from-teal-500 to-emerald-500'
+              ? 'bg-[var(--color-data-pass)]'
               : stats.accuracy >= 50
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500'
-                : 'bg-gradient-to-r from-red-500 to-pink-500'
+                ? 'bg-[var(--color-data-provisional)]'
+                : 'bg-[var(--color-data-fail)]'
           }`}
           initial={{ width: 0 }}
           animate={{ width: `${stats.accuracy}%` }}
@@ -116,11 +116,11 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
       </div>
 
       {/* Stats row */}
-      <div className="flex items-center justify-between mt-2 text-xs text-slate-400">
-        <span>
+      <div className="flex items-center justify-between mt-2 text-xs text-[var(--color-text-muted)]">
+        <span className="tabular-nums">
           {stats.correct}/{stats.total} correct
         </span>
-        <span className={deficit > 0 ? 'text-amber-400' : 'text-slate-500'}>
+        <span className={`tabular-nums ${deficit > 0 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-text-muted)]'}`}>
           {actualPercent.toFixed(0)}% / {targetPercent}% target
         </span>
       </div>
@@ -155,9 +155,9 @@ export function SystemPerformanceWidget({
   if (error) {
     return (
       <div
-        className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-red-500/30 ${className}`}
+        className={`bg-[var(--color-bg-secondary)] backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-data-fail)]/30 ${className}`}
       >
-        <p className="text-red-400 text-center">Failed to load system data</p>
+        <p className="text-[var(--color-data-fail)] text-center">Failed to load system data</p>
       </div>
     );
   }
@@ -166,13 +166,13 @@ export function SystemPerformanceWidget({
   if (!stats || stats.totalInWindow < 10) {
     return (
       <div
-        className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 ${className}`}
+        className={`bg-[var(--color-bg-secondary)] backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-border)] ${className}`}
       >
-        <h3 className="text-lg font-semibold text-white mb-4">System Performance</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">System Performance</h3>
         <div className="text-center py-6">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-700/50 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center">
             <svg
-              className="w-8 h-8 text-slate-500"
+              className="w-8 h-8 text-[var(--color-text-muted)]"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -185,11 +185,11 @@ export function SystemPerformanceWidget({
               />
             </svg>
           </div>
-          <p className="text-slate-400 mb-4">Not yet assessed</p>
+          <p className="text-[var(--color-text-muted)] mb-4">Not yet assessed</p>
           <button
             type="button"
             onClick={() => window.location.assign('/study/main-session')}
-            className="px-4 py-2.5 rounded-xl bg-teal-500/90 text-white text-sm font-medium hover:bg-teal-500 transition-colors"
+            className="px-4 py-2.5 rounded-xl bg-[var(--color-data-pass)]/90 text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-data-pass)] transition-colors"
           >
             Take a 10-question diagnostic quiz to unlock this graph
           </button>
@@ -212,16 +212,32 @@ export function SystemPerformanceWidget({
 
   return (
     <div
-      className={`bg-slate-800/60 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 ${className}`}
+      className={`bg-[var(--color-bg-secondary)] backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-border)] ${className}`}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-white">System Performance</h3>
-        {weakestCount > 0 && (
-          <span className="px-3 py-1 bg-amber-500/20 text-amber-300 text-sm rounded-full">
-            {weakestCount} weak area{weakestCount > 1 ? 's' : ''}
+      {/* Header + inline legend (Pillar I: reduce split-attention) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">System Performance</h3>
+          {weakestCount > 0 && (
+            <span className="px-3 py-1 bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] text-sm rounded-full">
+              {weakestCount} weak area{weakestCount > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-4 text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-muted)]">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-data-pass)]" aria-hidden />
+            Strong (≥70%)
           </span>
-        )}
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-data-provisional)]" aria-hidden />
+            Moderate (50–69%)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-data-fail)]" aria-hidden />
+            Weak (&lt;50%)
+          </span>
+        </div>
       </div>
 
       {/* System list */}
@@ -241,29 +257,11 @@ export function SystemPerformanceWidget({
       {hasMore && !showAll && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="w-full mt-4 py-2 text-sm text-slate-400 hover:text-white transition-colors"
+          className="w-full mt-4 py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
         >
           {expanded ? 'Show less' : `Show ${sortedSystems.length - maxSystems} more systems`}
         </button>
       )}
-
-      {/* Legend */}
-      <div className="mt-6 pt-4 border-t border-slate-700/50">
-        <div className="flex items-center justify-center gap-6 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-teal-500" />
-            <span>Strong (≥70%)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-amber-500" />
-            <span>Moderate (50-69%)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <span>Weak (&lt;50%)</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

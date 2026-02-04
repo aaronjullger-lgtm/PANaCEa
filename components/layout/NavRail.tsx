@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
+  Menu as MenuIcon,
   Play,
   BookOpen,
   BarChart3,
@@ -34,6 +35,7 @@ interface NavRailProps {
 
 const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/study' },
+  { id: 'menu', label: 'Menu', icon: MenuIcon, href: '/menu' },
   { id: 'start', label: 'Start Session', icon: Play, href: '/study' },
   { id: 'reference', label: 'Reference', icon: BookOpen, href: '/study?tab=resources' },
   { id: 'analytics', label: 'Progress', icon: BarChart3, href: '/study?tab=analytics' },
@@ -67,17 +69,17 @@ export const NavRail: React.FC<NavRailProps> = ({
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
       className={`
         fixed left-0 top-0 z-30 flex h-screen flex-col
-        border-r border-slate-700/50
-        bg-[#0F172A] shadow-[0_4px_24px_rgba(15,23,42,0.4)]
+        border-r border-[var(--color-border)]
+        bg-[var(--color-bg-primary)] shadow-[0_4px_24px_var(--color-shadow-soft)]
         ${className}
       `}
     >
       {/* Collapse toggle */}
-      <div className="flex h-14 items-center justify-end border-b border-slate-700/50 px-2">
+      <div className="flex h-14 items-center justify-end border-b border-[var(--color-border)] px-2">
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="p-2 rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F172A]"
+          className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
           aria-label={collapsed ? 'Expand rail' : 'Collapse rail'}
         >
           {collapsed ? (
@@ -100,7 +102,7 @@ export const NavRail: React.FC<NavRailProps> = ({
             const content = (
               <>
                 <Icon
-                  className={`h-5 w-5 shrink-0 ${isActive ? 'text-muted-amber-500' : 'text-slate-400 group-hover:text-slate-300'}`}
+                  className={`h-5 w-5 shrink-0 ${isActive ? 'text-muted-amber-500' : 'text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]'}`}
                   aria-hidden
                 />
                 <AnimatePresence>
@@ -110,7 +112,7 @@ export const NavRail: React.FC<NavRailProps> = ({
                       animate={{ opacity: 1, width: 'auto' }}
                       exit={{ opacity: 0, width: 0 }}
                       transition={{ duration: 0.15 }}
-                      className={`truncate ${isActive ? 'text-white font-medium' : 'text-slate-400 group-hover:text-slate-300'}`}
+                      className={`truncate ${isActive ? 'text-[var(--color-text-primary)] font-medium' : 'text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]'}`}
                     >
                       {item.label}
                     </motion.span>
@@ -120,20 +122,20 @@ export const NavRail: React.FC<NavRailProps> = ({
             );
 
             const baseClass =
-              'group relative flex w-full items-center gap-3 rounded-lg pl-4 pr-3 py-2.5 text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F172A] active:scale-[0.98]';
+              'group relative flex w-full items-center gap-3 rounded-lg pl-4 pr-3 py-2.5 text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98]';
 
             if (item.href) {
               return (
                 <li key={item.id}>
                   <Link
                     to={item.href}
-                    className={`${baseClass} ${isActive ? '' : 'hover:bg-slate-800/40'}`}
+                    className={`${baseClass} ${isActive ? '' : 'hover:bg-[var(--color-bg-tertiary)]'}`}
                   >
                     {/* Liquid pill - slides between items via layoutId */}
                     {isActive && (
                       <motion.div
                         layoutId="active-nav-pill"
-                        className="absolute inset-0 bg-slate-800/50 rounded-lg z-0 border-l-4 border-l-muted-amber-500"
+                        className="absolute inset-0 bg-[var(--color-bg-tertiary)] rounded-lg z-0 border-l-4 border-l-muted-amber-500"
                         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                         aria-hidden
                       />
@@ -147,7 +149,7 @@ export const NavRail: React.FC<NavRailProps> = ({
             }
             return (
               <li key={item.id}>
-                <button type="button" onClick={item.onClick} className={`${baseClass} text-slate-400 hover:bg-slate-800/40 hover:text-slate-300`}>
+                <button type="button" onClick={item.onClick} className={`${baseClass} text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]`}>
                   {content}
                 </button>
               </li>

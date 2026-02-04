@@ -3,6 +3,7 @@
  * Central export for all dashboard-related components
  */
 
+export { BentoGrid, BentoCell } from './BentoGrid';
 export { default as DashboardPage } from './DashboardPage';
 export { default as AlgorithmStatusWidget } from './AlgorithmStatusWidget';
 export { default as DailyTriad } from './DailyTriad';

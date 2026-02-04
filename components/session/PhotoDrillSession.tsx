@@ -497,7 +497,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
         </main>
 
         {/* Fixed Bottom Bar - Glassmorphism */}
-        <div className="fixed bottom-0 left-0 right-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-white/10 dark:border-white/10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.25)]">
+        <div className="fixed bottom-0 left-0 right-0 z-10 bg-[var(--color-bg-primary)]/80 backdrop-blur-md border-t border-[var(--color-border)] shadow-[0_-4px_6px_-1px_rgba(15,23,42,0.12)] dark:shadow-[0_-4px_6px_-1px_rgba(15,23,42,0.35)]">
           <AnimatePresence mode="wait">
             {status === 'playing' && (
               <motion.div

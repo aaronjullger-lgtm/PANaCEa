@@ -88,7 +88,7 @@ a,
   box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.1), 0 4px 8px -2px rgba(15, 23, 42, 0.06);
 }
 .dark .hover-lift:hover {
-  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.4);
 }
 
 /* Glassmorphism footer - frosted glass, docked to bottom */
@@ -106,7 +106,7 @@ a,
 .dark .footer-glass {
   background: rgba(15, 23, 42, 0.8);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 -4px 6px -1px rgba(15, 23, 42, 0.35);
 }
 
 /* -----------------------------------------------------
@@ -114,21 +114,21 @@ a,
 ------------------------------------------------------ */
 
 @layer components {
-  /* Primary button - Gold CTA, visual haptics */
+  /* Primary button - Gold CTA, high contrast for readability (students) */
   .btn-primary {
     @apply px-4 py-2 rounded-xl font-semibold transition-all duration-200 ease-out
            focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
-           bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-sm
+           bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-md border border-[var(--color-accent-hover)]
            hover:-translate-y-0.5 hover:brightness-90 hover:shadow-lg
            active:scale-[0.95]
            disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-[var(--color-accent)] dark:text-[var(--color-text-inverse)] dark:hover:brightness-110;
+           dark:bg-[var(--color-accent)] dark:text-[var(--color-text-inverse)] dark:border-[var(--color-accent-hover)] dark:hover:brightness-110;
   }
 
-  /* Secondary button - Deep Navy border, visual haptics */
+  /* Secondary button - High-contrast border and text for visibility */
   .btn-secondary {
     @apply px-4 py-2 rounded-xl font-medium transition-all duration-200 ease-out
-           bg-transparent text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-primary)] border-2 border-[var(--color-navy,#0F172A)] dark:border-[var(--color-border)] shadow-sm
+           bg-transparent text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-primary)] border-2 border-[var(--color-navy,#0F172A)] dark:border-[var(--color-text-secondary)] shadow-sm
            hover:-translate-y-0.5 hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-navy,#0F172A)] dark:hover:border-[var(--color-accent)] hover:shadow-md
            active:scale-[0.95]
            disabled:opacity-50 disabled:cursor-not-allowed;
@@ -152,6 +152,22 @@ a,
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed
            dark:bg-[var(--color-data-fail)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-data-fail)]/80;
+  }
+
+  /* Data/KPI numbers - tabular figures for aligned columns and fast scanning (Pillar V) */
+  .data-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Type scale for dashboard stats (Metric / Label / Context) */
+  .kpi-metric {
+    @apply text-2xl md:text-3xl font-bold tabular-nums;
+  }
+  .kpi-label {
+    @apply text-[10px] md:text-xs font-medium uppercase tracking-wider text-[var(--color-text-muted)];
+  }
+  .kpi-context {
+    @apply text-sm font-normal text-[var(--color-text-secondary)];
   }
 
   /* Focus ring utility - accessible keyboard focus (cyan glow, no black) */
@@ -271,36 +287,36 @@ a,
   /* Premium noise texture for glass cards (2.5% opacity grain overlay) */
   --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 
-  /* ===== NAVY / WHITE / GOLD DESIGN SYSTEM ===== */
-  /* Primary action color - Muted Gold for CTAs */
-  --color-action: #B09B73; /* Muted Gold - PRIMARY ACTION */
-  --color-action-hover: #9d8a63; /* Darkened gold 10% */
+  /* ===== UNIFIED COLORWAY: COOLER GOLD + SLATE (same family, light-optimized) ===== */
+  /* Gold: one family in both modes; light mode uses darker shade for contrast on white */
+  --color-action: #9a8f72; /* Cooler gold - accent (same hue as dark, darker for light bg) */
+  --color-action-hover: #8a7f62;
   --color-action-light: #f5f2ec; /* Gold tint - subtle backgrounds */
-  --color-action-text: #ffffff; /* Pure white for text on gold */
-  --color-label-primary: #0f172a; /* Slate-900 - headings */
-  --color-label-secondary: #475569; /* Slate-600 - body text */
+  --color-action-text: #f8fafc; /* Off-white on gold (continuity with dark) */
+  --color-label-primary: #0f172a; /* Slate-900 */
+  --color-label-secondary: #475569; /* Slate-600 */
 
-  /* Navy / Gold palette tokens */
-  --color-navy: #0F172A; /* Deep Navy - sidebar/headers */
-  --color-canvas: #F8FAFC; /* Soft Gray - canvas (slate-50) */
-  --color-surface: #ffffff; /* Pure white - cards */
-  --color-gold: #B09B73; /* Muted Gold - primary action */
-  --color-gold-hover: #9d8a63; /* Gold darkened 10% */
-  --color-gold-text: #ffffff; /* Text on gold buttons */
+  /* Navy / Gold palette tokens (same family) */
+  --color-navy: #0F172A;
+  --color-canvas: #F8FAFC; /* slate-50 */
+  --color-surface: #ffffff;
+  --color-gold: #9a8f72;
+  --color-gold-hover: #8a7f62;
+  --color-gold-text: #f8fafc;
 
-  /* ===== SEMANTIC DESIGN SYSTEM - LIGHT MODE (DEFAULT) ===== */
+  /* ===== SEMANTIC DESIGN SYSTEM - LIGHT MODE ===== */
 
   /* Main backgrounds */
   --background: #ffffff;
   --foreground: #0f172a;
 
-  /* Card/Container system - White surfaces */
+  /* Card/Container system */
   --card: #ffffff;
   --card-foreground: #0f172a;
 
-  /* Primary brand color - Gold */
-  --primary: #B09B73;
-  --primary-foreground: #ffffff;
+  /* Primary brand - same gold family */
+  --primary: #9a8f72;
+  --primary-foreground: #f8fafc;
 
   /* Muted/Secondary */
   --muted: #f1f5f9;
@@ -309,25 +325,25 @@ a,
   /* Border */
   --border: #e2e8f0;
 
-  /* Legacy theme-aware variables - LIGHT MODE DEFAULTS */
-  --color-bg-primary: #F8FAFC; /* Canvas - Soft Gray (slate-50) */
-  --color-bg-secondary: #ffffff; /* White surface */
-  --color-bg-tertiary: #f1f5f9; /* slate-100 */
-  --color-text-primary: #0f172a; /* slate-900 - headings */
-  --color-text-secondary: #475569; /* slate-600 - body */
-  --color-text-muted: #64748b; /* slate-500 */
-  --color-border: #e2e8f0; /* slate-200 */
-  --color-border-light: #f1f5f9; /* slate-100 */
-  --chart-grid-stroke: #f1f5f9; /* slate-100 - subtle grid lines */
-  --color-accent: #B09B73; /* Muted Gold */
-  --color-accent-hover: #9d8a63; /* Gold darkened 10% */
-  --color-accent-light: #f5f2ec; /* Gold tint */
-  --color-overlay: rgba(0, 0, 0, 0.5);
+  /* Legacy theme-aware variables - LIGHT MODE */
+  --color-bg-primary: #F8FAFC; /* Canvas */
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #f1f5f9;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  --chart-grid-stroke: rgba(15, 23, 42, 0.08);
+  --color-accent: #9a8f72; /* Same gold family */
+  --color-accent-hover: #8a7f62;
+  --color-accent-light: #f5f2ec;
+  --color-overlay: rgba(15, 23, 42, 0.5);
   --color-shadow-soft: rgba(15, 23, 42, 0.06);
-  --color-focus-ring: #B09B73;
+  --color-focus-ring: #9a8f72;
 
-  /* Text on accent (buttons) - white on gold */
-  --color-text-inverse: #ffffff;
+  /* Text on accent - off-white in both modes for continuity */
+  --color-text-inverse: #f8fafc;
 
   /* Glass card variables - LIGHT MODE */
   --color-glass-bg: rgba(255, 255, 255, 0.85);
@@ -336,6 +352,12 @@ a,
 
   /* Card background for table content */
   --color-card-bg: #ffffff;
+
+  /* Semantic data colors - same hue family as dark, darker for light bg contrast */
+  --color-data-pass: #0d9488;   /* teal-600 */
+  --color-data-fail: #b91c1c;   /* red-700 */
+  --color-data-provisional: #b45309; /* amber-700 */
+
   /* Semantic aliases for design system docs */
   --surface-canvas: var(--color-bg-primary);
   --content-primary-on-canvas: var(--color-text-primary);
@@ -387,17 +409,23 @@ a,
 }
 
 .dark {
-  /* ===== NAVY / GOLD DESIGN SYSTEM - DARK MODE ===== */
-  --color-action: #B09B73; /* Muted Gold - stays same */
-  --color-action-hover: #c4ad87; /* Slightly lighter for dark bg hover */
-  --color-action-light: #1e293b; /* Dark backgrounds */
-  --color-action-text: #ffffff; /* Pure white for text on gold */
-  --color-label-primary: #f1f5f9; /* Slate-100 for headings */
-  --color-label-secondary: #94a3b8; /* Slate-400 for muted text */
+  /* ===== UNIFIED COLORWAY: SAME GOLD + SLATE FAMILY (dark-optimized) ===== */
+  /* Gold: same hue as light, lighter shade for contrast on navy */
+  --color-action: #a89b7a; /* Same gold family, lighter for dark bg */
+  --color-action-hover: #b8ab8a;
+  --color-action-light: #1e293b;
+  --color-action-text: #f8fafc; /* Same as light - continuity */
+  --color-label-primary: #f1f5f9;
+  --color-label-secondary: #94a3b8;
+
+  /* Gold palette tokens (same family, dark-appropriate) */
+  --color-gold: #a89b7a;
+  --color-gold-hover: #b8ab8a;
+  --color-gold-text: #f8fafc;
 
   /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
 
-  /* Main backgrounds - Deep Navy */
+  /* Main backgrounds - same slate family, elevation ladder */
   --background: #0f172a;
   --foreground: #f1f5f9;
 
@@ -405,9 +433,9 @@ a,
   --card: #1e293b;
   --card-foreground: #f1f5f9;
 
-  /* Primary brand color - Gold */
-  --primary: #B09B73;
-  --primary-foreground: #ffffff;
+  /* Primary brand - same gold family */
+  --primary: #a89b7a;
+  --primary-foreground: #f8fafc;
 
   /* Muted/Secondary */
   --muted: #334155;
@@ -416,32 +444,34 @@ a,
   /* Border */
   --border: #475569;
 
-  /* Legacy theme-aware variables (for backward compatibility) */
-  --color-bg-primary: #0f172a; /* Deep Navy */
+  /* Legacy theme-aware variables (elevation 0-3) */
+  --color-bg-primary: #0f172a;
   --color-bg-secondary: #1e293b;
   --color-bg-tertiary: #334155;
-  --color-text-primary: #f1f5f9; /* Slate-100 */
+  --color-text-primary: #f1f5f9;
   --color-text-secondary: #cbd5e1;
   --color-text-muted: #94a3b8;
   --color-border: #475569;
   --color-border-light: #334155;
   --chart-grid-stroke: rgba(71, 85, 105, 0.2);
-  --color-accent: #B09B73; /* Muted Gold */
-  --color-accent-hover: #c4ad87;
+  --color-accent: #a89b7a; /* Same gold family */
+  --color-accent-hover: #b8ab8a;
   --color-accent-light: #1e293b;
-  --color-text-inverse: #ffffff;
-  /* Dark blue tint overlay (no pure black) */
+  --color-text-inverse: #f8fafc;
   --color-overlay: rgba(15, 23, 42, 0.85);
   --color-shadow-soft: rgba(15, 23, 42, 0.4);
-  --color-focus-ring: #B09B73;
+  --color-focus-ring: #a89b7a;
 
-  /* Glass card variables */
+  --color-modal-bg: #475569;
   --color-glass-bg: rgba(30, 41, 59, 0.7);
   --color-glass-border: rgba(255, 255, 255, 0.08);
   --color-glass-shadow: rgba(0, 0, 0, 0.3);
-
-  /* Card background for table content */
   --color-card-bg: #1e293b;
+
+  /* Semantic data - same hue family as light, lighter for dark bg (teal/red/amber) */
+  --color-data-pass: #2dd4bf;   /* teal-400 - same family as light teal */
+  --color-data-fail: #f87171;  /* red-400 */
+  --color-data-provisional: #fbbf24; /* amber-400 */
 
   /* ===== MUTED SEMANTIC CATEGORY ACCENTS (Dark Mode) ===== */
   --color-category-visual: #c09e9e; /* Dusty Rose (lighter) */

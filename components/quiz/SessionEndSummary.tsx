@@ -667,7 +667,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 resetPauseTracking();
                 onStartNewSession();
               }}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-accent)] text-white font-medium hover:bg-[var(--color-accent)]/90 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium hover:bg-[var(--color-accent)]/90 transition-colors"
             >
               <Zap className="w-5 h-5" />
               New Session

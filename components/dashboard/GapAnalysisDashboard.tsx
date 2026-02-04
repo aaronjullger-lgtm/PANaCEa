@@ -120,7 +120,7 @@ const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudy
               </div>
               <button
                 onClick={() => onStudyClick(system.name)}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/90 text-white text-sm font-semibold rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/90 text-[var(--color-text-inverse)] text-sm font-semibold rounded-lg transition-colors"
               >
                 Study Now
                 <ArrowRight className="w-4 h-4" />
@@ -279,7 +279,7 @@ export const GapAnalysisDashboard: React.FC = () => {
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => setRetryCount(retryCount + 1)}
-                className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-white font-semibold rounded-lg transition-colors"
+                className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] font-semibold rounded-lg transition-colors"
               >
                 Retry
               </button>

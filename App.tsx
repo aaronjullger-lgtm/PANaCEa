@@ -153,14 +153,28 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>('command_center');
   const startViewTransition = useViewTransition();
 
-  // Sync URL to view: when path is / show command center; /menu shows menu
+  // Sync URL to view: when path is / show command center; /menu shows menu; /study* maps so NavRail works
   useEffect(() => {
     if (location.pathname === '/' || location.pathname === '') {
       setView('command_center');
     } else if (location.pathname === '/menu') {
       setView('menu');
+    } else if (location.pathname === '/study' || location.pathname === '/study/') {
+      setView('command_center');
+    } else if (location.pathname.startsWith('/study/toolkit')) {
+      setView('toolkit');
     }
   }, [location.pathname]);
+
+  // NavRail Reference/Progress: sync ?tab= to CommandCenterHub Study Tools tab
+  const commandCenterInitialTab = useMemo((): 'training' | 'resources' | 'analytics' | undefined => {
+    if (location.pathname !== '/study' && location.pathname !== '/study/') return undefined;
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab === 'resources' || tab === 'analytics') return tab;
+    return undefined;
+  }, [location.pathname, location.search]);
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -721,12 +735,12 @@ const App: React.FC = () => {
                   {/* Skip to Main Content - hidden until focused via keyboard (screen reader + a11y) */}
                   <a
                     href="#main-content"
-                    className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:top-4 focus-visible:left-4 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-[var(--color-accent)] focus-visible:text-white focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-accent)]"
+                    className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:top-4 focus-visible:left-4 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-[var(--color-accent)] focus-visible:text-[var(--color-text-inverse)] focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-accent)]"
                   >
                     Skip to main content
                   </a>
-                  {/* Header - Deep Navy */}
-                  <header className="sticky top-0 z-40 bg-[#0F172A] border-b border-slate-700/50 transition-all duration-300 shadow-sm">
+                  {/* Header - theme-aware for light/dark contrast */}
+                  <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
                     <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
                       <motion.button
                         onClick={() => {
@@ -752,7 +766,7 @@ const App: React.FC = () => {
                           transition={{ duration: 0.2 }}
                         />
                         {/* PANaCEa text – Poppins Bold via Tailwind font-poppins */}
-                        <span className="text-2xl sm:text-3xl font-bold text-white font-poppins">
+                        <span className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] font-poppins">
                           PANaCEa
                         </span>
                       </motion.button>
@@ -761,7 +775,7 @@ const App: React.FC = () => {
                         <OfflineSyncIndicator />
                         <Link
                           to={ROUTES.ADMIN}
-                          className="p-2 rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-white transition-colors duration-200 flex items-center justify-center"
+                          className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors duration-200 flex items-center justify-center"
                           aria-label="Admin Dashboard"
                         >
                           <Shield className="w-5 h-5" />
@@ -769,7 +783,7 @@ const App: React.FC = () => {
                         <motion.button
                           ref={settingsButtonRef}
                           onClick={() => setIsSettingsModalOpen(true)}
-                          className="p-2 rounded-lg text-slate-400 hover:bg-slate-800/60 hover:text-white transition-all duration-200"
+                          className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
                           aria-label="Settings and Stats"
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -902,6 +916,7 @@ const App: React.FC = () => {
                                 flaggedQuestions={flaggedQuestions}
                                 dueCount={dueQuestionsCount}
                                 isLoadingStats={isStatsLoading}
+                                initialStudyToolsTab={commandCenterInitialTab}
                                 onOpenSettings={() => setIsSettingsModalOpen(true)}
                                 onStartSession={handleStartSession}
                                 onNavigateToDrillMode={handleNavigateToDrillMode}
@@ -919,6 +934,17 @@ const App: React.FC = () => {
                                 onNavigateToPearlDeck={() => setView('pearl_deck')}
                                 growthAreas={growthAreas}
                                 examLabel={examLabel ?? 'PANCE'}
+                                hasActiveSession={hasActiveSession}
+                                onResumeSession={handleBackToQuiz}
+                                resumeContext={
+                                  hasActiveSession && sessionSettings?.count != null && sessionSettings.count > 0 && questionQueue.length > 0
+                                    ? {
+                                        remaining: questionQueue.length,
+                                        total: sessionSettings.count,
+                                        current: Math.max(1, sessionSettings.count - questionQueue.length + 1),
+                                      }
+                                    : undefined
+                                }
                               />
                             </Suspense>
                           </motion.div>
@@ -1308,7 +1334,7 @@ const App: React.FC = () => {
                                     strokeWidth="2"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
-                                    className="w-5 h-5 text-[var(--color-text-muted)]"
+                                    className="w-5 h-5 text-[var(--color-text-secondary)]"
                                   >
                                     <path d="m15 18-6-6 6-6" />
                                   </svg>
@@ -1582,7 +1608,7 @@ const App: React.FC = () => {
                             </h2>
                             <button
                               onClick={() => setIsModalOpen(false)}
-                              className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                              className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
                               aria-label="Close modal"
                             >
                               <X className="w-6 h-6" />

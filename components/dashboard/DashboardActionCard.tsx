@@ -104,9 +104,9 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.995 }}
       className="group relative overflow-hidden rounded-2xl cursor-pointer
-                 border border-slate-200 dark:border-[var(--color-border)] 
+                 border border-[var(--color-border)] 
                  bg-gradient-to-br from-[var(--color-bg-primary)] via-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] 
-                 shadow-md shadow-slate-300/10 dark:shadow-none
+                 shadow-md shadow-[var(--color-shadow-soft)]
                  transition-all duration-300 
                  hover:border-[var(--color-accent)]/40 
                  hover:shadow-xl hover:shadow-[var(--color-accent)]/10"

@@ -272,7 +272,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="relative p-5 rounded-2xl bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-primary)] border border-slate-200 dark:border-[var(--color-border)] shadow-md shadow-slate-300/10 dark:shadow-none group hover:shadow-lg transition-shadow"
+              className="relative p-5 rounded-2xl bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-primary)] border border-[var(--color-border)] shadow-md shadow-[var(--color-shadow-soft)] group hover:shadow-lg transition-shadow"
             >
               {/* Priority Indicator */}
               {rec.priority === 'high' && (

@@ -86,13 +86,13 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
             data-mastery={isWeak ? 'weak' : undefined}
             className={`
               relative flex flex-col justify-between p-3 min-h-0 rounded-xl text-left
-              bg-white dark:bg-[var(--color-bg-secondary)] shadow-sm border
+              bg-[var(--color-bg-secondary)] shadow-sm border border-[var(--color-border)]
               transition-colors duration-300
               ${isSelected
-                ? 'border-l-4 border-l-muted-amber-500 bg-slate-50 dark:bg-[var(--color-bg-tertiary)] border-slate-200 dark:border-[var(--color-border)]'
-                : 'border-slate-200 dark:border-[var(--color-border)] hover:bg-slate-50 dark:hover:bg-[var(--color-bg-tertiary)]'
+                ? 'border-l-4 border-l-muted-amber-500 bg-[var(--color-bg-tertiary)]'
+                : 'hover:bg-[var(--color-bg-tertiary)]'
               }
-              ${isSelected ? 'text-slate-900 dark:text-[var(--color-text-primary)]' : 'text-slate-600 dark:text-[var(--color-text-muted)]'}
+              ${isSelected ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'}
             `}
           >
             <div className="flex justify-between items-start w-full gap-2">
@@ -113,11 +113,11 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
             </div>
             {progressData && (
               <div className="mt-2 w-full">
-                <div className="flex justify-between text-[10px] text-slate-500 mb-0.5">
+                <div className="flex justify-between text-[10px] text-[var(--color-text-muted)] mb-0.5">
                   <span>Mastery</span>
-                  <span>{progress}%</span>
+                  <span className="tabular-nums">{progress}%</span>
                 </div>
-                <div className="h-1 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-1 w-full bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}

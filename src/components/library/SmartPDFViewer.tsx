@@ -287,7 +287,7 @@ export function SmartPDFViewer({
             <button
               type="button"
               onClick={handleAskTutor}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity"
             >
               <MessageCircle className="w-4 h-4" aria-hidden />
               Ask the Tutor

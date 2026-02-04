@@ -118,7 +118,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
 
       {/* Fixed Footer Bar - Glassmorphism */}
       {footer && (
-        <div className="fixed bottom-0 left-0 right-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-white/10 dark:border-white/10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.25)]">
+        <div className="fixed bottom-0 left-0 right-0 z-10 bg-[var(--color-bg-primary)]/80 backdrop-blur-md border-t border-[var(--color-border)] shadow-[0_-4px_6px_-1px_rgba(15,23,42,0.12)] dark:shadow-[0_-4px_6px_-1px_rgba(15,23,42,0.35)]">
           {footer}
         </div>
       )}
@@ -317,7 +317,7 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
             onClick={onNext}
             className={`inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-sm sm:text-base w-full sm:w-auto ${
               isCorrect
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
             }`}
           >

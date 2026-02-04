@@ -22,12 +22,12 @@ const ThisDayInMedicine: React.FC<ThisDayInMedicineProps> = ({ onQuestionClick }
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-slate-700 rounded-lg">
-          <Calendar className="w-5 h-5 text-slate-200" />
+        <div className="p-2 bg-[var(--color-accent)]/20 rounded-lg">
+          <Calendar className="w-5 h-5 text-[var(--color-accent)]" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">This Day in Medicine</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <h3 className="text-lg font-bold text-[var(--color-text-primary)]">This Day in Medicine</h3>
+          <p className="text-sm text-[var(--color-text-muted)]">
             {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
           </p>
         </div>
@@ -36,12 +36,12 @@ const ThisDayInMedicine: React.FC<ThisDayInMedicineProps> = ({ onQuestionClick }
       {/* Event Content */}
       <div className="space-y-3">
         <div className="flex items-start gap-2">
-          <span className="text-3xl font-bold text-slate-700 dark:text-slate-300">
+          <span className="text-3xl font-bold text-[var(--color-text-primary)] tabular-nums">
             {event.year}
           </span>
           <div className="flex-1">
-            <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{event.title}</h4>
-            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{event.description}</p>
+            <h4 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">{event.title}</h4>
+            <p className="text-[var(--color-text-secondary)] leading-relaxed">{event.description}</p>
           </div>
         </div>
 
@@ -49,7 +49,7 @@ const ThisDayInMedicine: React.FC<ThisDayInMedicineProps> = ({ onQuestionClick }
         {event.relatedQuestions && event.relatedQuestions.length > 0 && (
           <button
             onClick={() => onQuestionClick?.(event.relatedQuestions!)}
-            className="w-full mt-4 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-800 text-white py-3 px-4 rounded-lg font-semibold transition-colors"
+            className="w-full mt-4 flex items-center justify-center gap-2 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] py-3 px-4 rounded-lg font-semibold transition-colors"
           >
             <BookOpen className="w-5 h-5" />
             Practice {event.relatedQuestions.length} Related Questions
@@ -57,12 +57,12 @@ const ThisDayInMedicine: React.FC<ThisDayInMedicineProps> = ({ onQuestionClick }
         )}
 
         {/* Learn More */}
-        <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
+        <div className="pt-3 border-t border-[var(--color-border)]">
           <a
             href={`https://en.wikipedia.org/wiki/${encodeURIComponent(event.title.replace(/\s+/g, '_'))}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400 hover:underline"
+            className="inline-flex items-center gap-1 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:underline"
           >
             Learn more on Wikipedia
             <ExternalLink className="w-4 h-4" />

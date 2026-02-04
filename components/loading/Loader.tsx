@@ -7,7 +7,7 @@ interface LoaderProps {
   forceDark?: boolean;
 }
 
-const Loader: React.FC<LoaderProps> = ({ message = 'Generating...', forceDark = false }) => {
+const Loader: React.FC<LoaderProps> = ({ message = 'Loading...', forceDark = false }) => {
   // Prevent scrolling behind the overlay
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;

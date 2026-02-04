@@ -84,7 +84,7 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)]/80 rounded-2xl p-6 text-white shadow-xl overflow-hidden relative"
+      className="bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)]/80 rounded-2xl p-6 text-[var(--color-text-inverse)] shadow-xl overflow-hidden relative"
     >
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--color-bg-primary)]/10 rounded-full blur-3xl" />
@@ -94,11 +94,11 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-[var(--color-bg-primary)]/20 rounded-lg">
-              <Brain className="w-6 h-6" />
+              <Brain className="w-6 h-6 text-[var(--color-text-inverse)]" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold">Memory Status</h3>
-              <p className="text-white/70 text-xs">Spaced Repetition</p>
+              <h3 className="text-lg font-semibold text-[var(--color-text-inverse)]">Memory Status</h3>
+              <p className="text-[var(--color-text-inverse)]/70 text-xs">Spaced Repetition</p>
             </div>
           </div>
 
@@ -115,7 +115,7 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
           <div>
             <div className="flex items-end gap-2 mb-1">
               <div className="text-5xl font-bold">{dueCount}</div>
-              <div className="text-white/70 text-sm pb-2">due now</div>
+              <div className="text-[var(--color-text-inverse)]/70 text-sm pb-2">due now</div>
             </div>
             {dueCount > 0 && (
               <button
@@ -127,38 +127,38 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
               </button>
             )}
             {dueCount === 0 && (
-              <div className="text-white/70 text-sm">All caught up! Great work!</div>
+              <div className="text-[var(--color-text-inverse)]/70 text-sm">All caught up! Great work!</div>
             )}
           </div>
 
           {/* Secondary Stats Grid */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--color-text-inverse)]/20">
             {/* Retention Rate */}
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="w-4 h-4 text-[var(--color-data-pass)]" />
-                <span className="text-xs text-white/70">Retention</span>
+                <span className="text-xs text-[var(--color-text-inverse)]/70">Retention</span>
               </div>
-              <div className="text-2xl font-bold">{retentionRate}%</div>
+              <div className="text-2xl font-bold tabular-nums">{retentionRate}%</div>
             </div>
 
             {/* Mature Cards */}
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Calendar className="w-4 h-4 text-[var(--color-accent)]" />
-                <span className="text-xs text-white/70">Learned</span>
+                <Calendar className="w-4 h-4 text-[var(--color-text-inverse)]" />
+                <span className="text-xs text-[var(--color-text-inverse)]/70">Learned</span>
               </div>
-              <div className="text-2xl font-bold">{matureCards}</div>
-              <div className="text-xs text-white/60">mature cards</div>
+              <div className="text-2xl font-bold tabular-nums">{matureCards}</div>
+              <div className="text-xs text-[var(--color-text-inverse)]/60">mature cards</div>
             </div>
           </div>
         </div>
 
         {/* Footer Stats */}
-        <div className="pt-4 border-t border-white/20">
+        <div className="pt-4 border-t border-[var(--color-text-inverse)]/20">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-white/70">Total Cards</span>
-            <span className="font-semibold">{totalCards}</span>
+            <span className="text-[var(--color-text-inverse)]/70">Total Cards</span>
+            <span className="font-semibold tabular-nums">{totalCards}</span>
           </div>
         </div>
       </div>

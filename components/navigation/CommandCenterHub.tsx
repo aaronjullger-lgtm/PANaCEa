@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
@@ -48,6 +49,7 @@ import {
   FolderTree,
   Sparkles,
   MoreHorizontal,
+  RotateCcw,
 } from 'lucide-react';
 import type { PerformanceRecord, Question, SessionSettings, SystemCode } from '@/types';
 import type { ClinicalRotation } from '@/types';
@@ -122,6 +124,14 @@ interface CommandCenterHubProps {
   onOpenSettings?: () => void;
   /** Profile-aware Reasoning Tutor chat */
   onNavigateToTutorChat?: () => void;
+  /** When true, show Continue Learning card above the fold (Zeigarnik) */
+  hasActiveSession?: boolean;
+  /** Optional: current question index and total for "Resume Question N – M remaining" */
+  resumeContext?: { current: number; total: number; remaining: number };
+  /** Callback to return to in-progress session (e.g. setView('quiz')) */
+  onResumeSession?: () => void;
+  /** Initial Study Tools tab when opened via NavRail Reference/Progress (URL ?tab=resources|analytics) */
+  initialStudyToolsTab?: 'training' | 'resources' | 'analytics';
 }
 
 // Icon mapping
@@ -212,7 +222,7 @@ const GrandRoundsBanner: React.FC<{
                 Daily Challenge • {dateStr}
               </span>
             </div>
-            <p className="text-sm text-slate-300">{subtitle}</p>
+            <p className="text-sm text-[var(--color-text-muted)]">{subtitle}</p>
           </div>
         </div>
 
@@ -444,8 +454,8 @@ const QuickStatsBar: React.FC<{
               <stat.icon className={`w-5 h-5 ${stat.color}`} />
             </div>
             <div>
-              <div className="text-lg font-bold text-[var(--color-text-primary)]">{stat.value}</div>
-              <div className="text-xs text-[var(--color-text-muted)]">{stat.label}</div>
+              <div className="text-lg font-bold text-[var(--color-text-primary)] data-nums">{stat.value}</div>
+              <div className="kpi-label">{stat.label}</div>
             </div>
           </motion.div>
         );
@@ -482,8 +492,8 @@ const ModeCard: React.FC<{
         focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
         ${
           mode.isComingSoon
-            ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900/30 border-dashed border-[var(--color-border)]'
-            : 'bg-[var(--color-bg-primary)] border-slate-200 dark:border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg shadow-md shadow-slate-400/5 dark:shadow-none dark:hover:shadow-black/10'
+            ? 'opacity-50 cursor-not-allowed bg-[var(--color-bg-tertiary)] border-dashed border-[var(--color-border)]'
+            : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg shadow-md shadow-[var(--color-shadow-soft)]'
         }
       `}
     >
@@ -669,7 +679,12 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   onNavigateToVisualizer,
   onOpenSettings,
   onNavigateToTutorChat,
+  hasActiveSession = false,
+  resumeContext,
+  onResumeSession,
+  initialStudyToolsTab,
 }) => {
+  const navigate = useNavigate();
   const { user } = useUser();
   const { showPANREContent, careerStage } = useUserContext();
   const { stats: rolling360Stats } = useRolling360Stats();
@@ -766,7 +781,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     setUserProfile((prev) => ({ ...prev, eorTestDate: date || undefined }));
   }, []);
 
-  const [activeTab, setActiveTab] = useState<'training' | 'resources' | 'analytics'>('training');
+  const [activeTab, setActiveTab] = useState<'training' | 'resources' | 'analytics'>(
+    initialStudyToolsTab ?? 'training'
+  );
+  useEffect(() => {
+    if (initialStudyToolsTab && (initialStudyToolsTab === 'resources' || initialStudyToolsTab === 'analytics' || initialStudyToolsTab === 'training')) {
+      setActiveTab(initialStudyToolsTab);
+    }
+  }, [initialStudyToolsTab]);
   const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
   const [studyFocusStep, setStudyFocusStep] = useState<'idle' | 'choose_focus'>('idle');
   const [showAllTools, setShowAllTools] = useState(false);
@@ -891,6 +913,50 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           Ready to advance your clinical knowledge?
         </p>
       </motion.div>
+
+      {/* Continue Learning (Zeigarnik) - above the fold when session in progress */}
+      {hasActiveSession && onResumeSession && (
+        <motion.div
+          initial={sectionEnter}
+          animate={sectionAnimate}
+          transition={sectionTransition(0)}
+          className="mb-6"
+        >
+          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 md:p-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
+                  <RotateCcw className="w-5 h-5 text-[var(--color-accent)]" aria-hidden />
+                  Continue Learning
+                </h2>
+                <p className="text-[var(--color-text-secondary)] text-sm mt-1">
+                  {resumeContext?.remaining != null
+                    ? `Resume question ${resumeContext.current} – ${resumeContext.remaining} remaining`
+                    : 'Pick up where you left off.'}
+                </p>
+                {resumeContext?.total != null && resumeContext.total > 0 && (
+                  <div className="mt-3 max-w-xs" role="group" aria-label="Session progress">
+                    <progress
+                      className="h-2 w-full rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-[var(--color-bg-tertiary)] [&::-webkit-progress-value]:bg-[var(--color-accent)] [&::-moz-progress-bar]:bg-[var(--color-accent)]"
+                      value={resumeContext.current}
+                      max={resumeContext.total}
+                      aria-label={`Question ${resumeContext.current} of ${resumeContext.total}`}
+                    />
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={onResumeSession}
+                className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
+              >
+                <Play className="w-4 h-4" aria-hidden />
+                Resume
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Quick Stats - Section 1 (delay 0) */}
       <motion.div
@@ -1200,7 +1266,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => onNavigateToDrillMode('panre_la')}
-              className="flex items-center gap-2 px-4 py-2 bg-deep-plum-500 hover:bg-deep-plum-600 text-white font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-deep-plum-500 hover:bg-deep-plum-600 text-[var(--color-text-inverse)] font-medium rounded-lg transition-colors"
             >
               Start Practice
               <ChevronRight className="w-4 h-4" />
@@ -1237,9 +1303,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             const className = `flex items-center gap-2 px-1 py-2 font-medium transition-all whitespace-nowrap border-b-2 bg-transparent ${
               isSelected
                 ? 'text-muted-amber-500 border-muted-amber-500'
-                : 'text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-700 dark:hover:text-slate-300'
+                : 'text-[var(--color-text-muted)] border-transparent hover:text-[var(--color-text-secondary)]'
             }`;
 
+            const handleTabClick = () => {
+              setActiveTab(tab.id);
+              const search = tab.id === 'training' ? '' : `?tab=${tab.id}`;
+              navigate(`/study${search}`, { replace: true });
+            };
             return isSelected ? (
               <button
                 key={tab.id}
@@ -1247,7 +1318,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 aria-selected="true"
                 aria-controls={`study-tools-panel-${tab.id}`}
                 id={`study-tools-tab-${tab.id}`}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={handleTabClick}
                 className={className}
               >
                 <tab.icon className="w-4 h-4" strokeWidth={1.5} />
@@ -1260,7 +1331,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 aria-selected="false"
                 aria-controls={`study-tools-panel-${tab.id}`}
                 id={`study-tools-tab-${tab.id}`}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={handleTabClick}
                 className={className}
               >
                 <tab.icon className="w-4 h-4" strokeWidth={1.5} />
@@ -1786,7 +1857,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   onClick={() => setShowAdvancedAnalytics(!showAdvancedAnalytics)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
                     showAdvancedAnalytics
-                      ? 'bg-action-blue text-white'
+                      ? 'bg-action-blue text-[var(--color-text-inverse)]'
                       : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
                   }`}
                 >

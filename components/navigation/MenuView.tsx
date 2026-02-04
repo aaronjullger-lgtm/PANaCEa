@@ -463,7 +463,7 @@ const MenuView: React.FC<MenuViewProps> = ({
 
       {/* Mobile Bottom Navigation */}
       {isMobile && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-white/10 dark:border-white/10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.25)]">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-bg-secondary)]/90 backdrop-blur-md border-t border-[var(--color-border)] shadow-[0_-4px_6px_-1px_var(--color-shadow-soft)]">
           <div className="grid grid-cols-4 gap-0">
             <button
               onClick={() => setActiveTab('home')}
@@ -603,13 +603,13 @@ const MenuView: React.FC<MenuViewProps> = ({
               <motion.section
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm"
+                className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-[var(--color-border)] shadow-sm"
               >
-                <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-slate-100 mb-2">
+                <h2 className="text-3xl font-light tracking-tight text-[var(--color-text-primary)] mb-2">
                   {getTimeBasedGreeting()}.
                 </h2>
                 {stats.systemComparisonData.length > 0 && stats.systemComparisonData[0] ? (
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                  <p className="text-sm text-[var(--color-text-muted)]">
                     Your recommended focus is{' '}
                     <span className="font-semibold text-[var(--color-accent)]">
                       {getSystemDisplayFullName(stats.systemComparisonData[0].system)}
@@ -617,7 +617,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                     .
                   </p>
                 ) : (
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                  <p className="text-sm text-[var(--color-text-muted)]">
                     Start studying to unlock personalized recommendations.
                   </p>
                 )}
@@ -674,7 +674,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 transition={{ delay: 0.23 }}
                 className="pt-2"
               >
-                <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-4">
+                <h2 className="text-lg font-bold tracking-tight text-[var(--color-text-primary)] mb-4">
                   Quick Actions
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -682,7 +682,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                   {onNavigateToGapAnalysis && (
                     <motion.button
                       onClick={onNavigateToGapAnalysis}
-                      className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left relative overflow-hidden group"
+                      className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left relative overflow-hidden group"
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -693,10 +693,10 @@ const MenuView: React.FC<MenuViewProps> = ({
                         </span>
                       </div>
                       <BarChart3 className="w-8 h-8 mb-2 text-emerald-500" />
-                      <div className="font-semibold text-sm text-slate-900 dark:text-white">
+                      <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                         Gap Analysis
                       </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                      <div className="text-xs text-[var(--color-text-muted)]">
                         Peer Benchmarks
                       </div>
                     </motion.button>
@@ -704,70 +704,70 @@ const MenuView: React.FC<MenuViewProps> = ({
 
                   <motion.button
                     onClick={() => setShowQuickReview(true)}
-                    className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                    className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <RotateCcw className="w-8 h-8 mb-2 text-blue-500" />
-                    <div className="font-semibold text-sm text-slate-900 dark:text-white">
+                    <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                       Quick Review
                     </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">Recent misses</div>
+                    <div className="text-xs text-[var(--color-text-muted)]">Recent misses</div>
                   </motion.button>
 
                   <motion.button
                     onClick={() => setShowBookmarks(true)}
-                    className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                    className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <Bookmark className="w-8 h-8 mb-2 text-slate-400" />
-                    <div className="font-semibold text-sm text-slate-900 dark:text-white">
+                    <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                       Bookmarks
                     </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                    <div className="text-xs text-[var(--color-text-muted)]">
                       Saved questions
                     </div>
                   </motion.button>
 
                   <motion.button
                     onClick={() => setShowStudyGuide(true)}
-                    className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                    className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <FileText className="w-8 h-8 mb-2 text-slate-500" />
-                    <div className="font-semibold text-sm text-slate-900 dark:text-white">
+                    <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                       Study Guide
                     </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">Print/Export</div>
+                    <div className="text-xs text-[var(--color-text-muted)]">Print/Export</div>
                   </motion.button>
 
                   <motion.button
                     onClick={() => setShowLeaderboard(true)}
-                    className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                    className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <Award className="w-8 h-8 mb-2 text-slate-400" />
-                    <div className="font-semibold text-sm text-slate-900 dark:text-white">
+                    <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                       Leaderboard
                     </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">Compare stats</div>
+                    <div className="text-xs text-[var(--color-text-muted)]">Compare stats</div>
                   </motion.button>
 
                   {onNavigateToIntegrations && (
                     <motion.button
                       onClick={onNavigateToIntegrations}
-                      className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                      className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <Link2 className="w-8 h-8 mb-2 text-indigo-500" />
-                      <div className="font-semibold text-sm text-slate-900 dark:text-white">
+                      <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                         Integrations
                       </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                      <div className="text-xs text-[var(--color-text-muted)]">
                         Anki, Calendar
                       </div>
                     </motion.button>
@@ -776,15 +776,15 @@ const MenuView: React.FC<MenuViewProps> = ({
                   {onNavigateToSocial && (
                     <motion.button
                       onClick={onNavigateToSocial}
-                      className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                      className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <Users className="w-8 h-8 mb-2 text-pink-500" />
-                      <div className="font-semibold text-sm text-slate-900 dark:text-white">
+                      <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                         Social
                       </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                      <div className="text-xs text-[var(--color-text-muted)]">
                         Groups & Friends
                       </div>
                     </motion.button>
@@ -793,15 +793,15 @@ const MenuView: React.FC<MenuViewProps> = ({
                   {onNavigateToToolkit && (
                     <motion.button
                       onClick={onNavigateToToolkit}
-                      className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                      className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all duration-200 text-left"
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <GraduationCap className="w-8 h-8 mb-2 text-emerald-500" />
-                      <div className="font-semibold text-sm text-slate-900 dark:text-white">
+                      <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                         Toolkit Hub
                       </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                      <div className="text-xs text-[var(--color-text-muted)]">
                         Learning Resources
                       </div>
                     </motion.button>
@@ -840,7 +840,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 className="pt-2"
               >
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                  <h2 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)]">
                     Analytics Dashboard
                   </h2>
                   <TimeScopeFilter value={timeScope} onChange={setTimeScope} />
@@ -895,7 +895,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
               >
-                <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-5">
+                <h2 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)] mb-5">
                   System Mastery Grid
                 </h2>
                 <TopicHeatmap
@@ -914,16 +914,16 @@ const MenuView: React.FC<MenuViewProps> = ({
             <motion.section
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm"
+              className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-[var(--color-border)] shadow-sm"
             >
-              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-6">
+              <h2 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)] mb-6">
                 Settings & Profile
               </h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
                   <div className="flex items-center gap-3">
                     <User className="w-5 h-5 text-slate-500" />
-                    <span className="font-medium text-slate-900 dark:text-white">Account</span>
+                    <span className="font-medium text-[var(--color-text-primary)]">Account</span>
                   </div>
                   <span className="text-sm text-slate-500">
                     {user?.primaryEmailAddress?.emailAddress}
@@ -935,7 +935,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 >
                   <div className="flex items-center gap-3">
                     <Settings className="w-5 h-5 text-slate-500" />
-                    <span className="font-medium text-slate-900 dark:text-white">Preferences</span>
+                    <span className="font-medium text-[var(--color-text-primary)]">Preferences</span>
                   </div>
                   <ChevronRight className="w-5 h-5 text-slate-400" />
                 </button>
@@ -1005,13 +1005,13 @@ const MenuView: React.FC<MenuViewProps> = ({
           <motion.div
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}
-            className="bg-white dark:bg-slate-800 rounded-xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+            className="bg-[var(--color-bg-secondary)] rounded-xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Trophy className="w-8 h-8 text-yellow-500" />
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Grand Rounds</h2>
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Grand Rounds</h2>
               </div>
               <button
                 onClick={() => setShowLeaderboard(false)}
@@ -1029,7 +1029,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 setShowLeaderboard(false);
                 onNavigateToDrillMode?.('grand_rounds');
               }}
-              className="w-full px-6 py-3 bg-muted-amber-500 hover:bg-muted-amber-600 text-white rounded-lg font-semibold transition-colors"
+              className="w-full px-6 py-3 bg-muted-amber-500 hover:bg-muted-amber-600 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-colors"
             >
               Go to Grand Rounds
             </button>

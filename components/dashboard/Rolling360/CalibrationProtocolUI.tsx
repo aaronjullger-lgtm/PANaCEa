@@ -303,11 +303,11 @@ export function CalibrationProtocolUI({
     <div className="space-y-5">
       {/* Header with medical workup theme */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-          <SparklesIcon className="w-5 h-5 text-amber-400" />
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
+          <SparklesIcon className="w-5 h-5 text-[var(--color-data-provisional)]" />
           Clinical Calibration Protocol
         </h3>
-        <span className="px-3 py-1 bg-amber-500/20 text-amber-300 text-xs rounded-full">
+        <span className="px-3 py-1 bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] text-xs rounded-full">
           Phase {currentStep}/4
         </span>
       </div>
@@ -315,16 +315,16 @@ export function CalibrationProtocolUI({
       {/* Main progress display */}
       <div className="text-center py-3">
         <div className="inline-flex items-center gap-3">
-          <span className="text-5xl font-bold text-white">{totalQuestions}</span>
-          <span className="text-2xl text-slate-500">/</span>
-          <span className="text-2xl text-slate-400">{CALIBRATION_TARGET}</span>
+          <span className="text-5xl font-bold text-[var(--color-text-primary)] tabular-nums">{totalQuestions}</span>
+          <span className="text-2xl text-[var(--color-text-muted)]">/</span>
+          <span className="text-2xl text-[var(--color-text-secondary)] tabular-nums">{CALIBRATION_TARGET}</span>
         </div>
-        <p className="text-sm text-slate-400 mt-2">Questions to Full Prediction</p>
+        <p className="text-sm text-[var(--color-text-muted)] mt-2">Questions to Full Prediction</p>
       </div>
 
       {/* Overall progress bar */}
       <div className="space-y-2">
-        <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+        <div className="h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-teal-500"
             initial={{ width: 0 }}
@@ -332,9 +332,9 @@ export function CalibrationProtocolUI({
             transition={{ duration: 1, ease: 'easeOut' }}
           />
         </div>
-        <div className="flex justify-between text-xs text-slate-500">
+        <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
           <span>Building your model</span>
-          <span>{Math.round(progressPercent)}% Complete</span>
+          <span className="tabular-nums">{Math.round(progressPercent)}% Complete</span>
         </div>
       </div>
 
@@ -351,10 +351,10 @@ export function CalibrationProtocolUI({
       </div>
 
       {/* Next unlock teaser */}
-      <div className="bg-slate-700/30 border border-slate-700/50 rounded-xl p-4 text-center">
-        <p className="text-sm text-slate-400">
-          <span className="text-amber-400 font-semibold">{questionsToNext} questions</span> until
-          you unlock <span className="text-white font-medium">{nextUnlock}</span>
+      <div className="bg-[var(--color-bg-tertiary)]/50 border border-[var(--color-border)] rounded-xl p-4 text-center">
+        <p className="text-sm text-[var(--color-text-secondary)]">
+          <span className="text-[var(--color-data-provisional)] font-semibold tabular-nums">{questionsToNext} questions</span> until
+          you unlock <span className="text-[var(--color-text-primary)] font-medium">{nextUnlock}</span>
         </p>
       </div>
 
