@@ -83,6 +83,19 @@ import { formatPatientAge, formatPatientAgeShort, parsePatientAge } from '@/lib/
 
 import { useClinicalFidelitySettings } from '@/hooks/useClinicalFidelitySettings';
 
+// Module 1 & Integration Imports
+import { useSystemIntegration } from '@/contexts/SystemIntegrationContext';
+import { useRealtimeSOAP } from '@/hooks/useRealtimeSOAP';
+import { useTimingAnalytics } from '@/hooks/useTimingAnalytics';
+import { SOAPDraftPanel } from '@/components/osce/SOAPDraftPanel';
+import { TimingMetricsPanel } from '@/components/osce/TimingMetricsPanel';
+import { ContextBanner } from '@/components/shared/ContextBanner';
+import { PatientAVEngine } from '@/services/av/patientAVEngine';
+import type { PatientAVStateMachine, AVState } from '@/types/patient-av-state-machine';
+
+// Gemini API Key (from environment or config)
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+
 interface PatientEncounterModeProps {
   onExit?: () => void;
 }
@@ -163,6 +176,36 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     enableScoring: true,
   });
 
+  // NEW: Integration hooks
+  const { integration } = useSystemIntegration();
+  
+  // NEW: Real-time SOAP generation
+  const { draftNote, addTranscript, addVitals: addSOAPVitals, finalize: finalizeSOAP } = useRealtimeSOAP({
+    sessionId: session?.id || null,
+    geminiApiKey: GEMINI_API_KEY,
+    enabled: viewState === 'active',
+  });
+  
+  // NEW: Timing analytics
+  const {
+    startMetric,
+    endMetric,
+    recordNode,
+    recordMilestone,
+    endSession: endTimingSession,
+    currentMetrics,
+  } = useTimingAnalytics({
+    sessionId: session?.id || null,
+    caseId: currentCase?.id || null,
+    enabled: viewState === 'active',
+  });
+  
+  // NEW: State machine for Module 1
+  const [avEngine, setAVEngine] = useState<PatientAVEngine | null>(null);
+  const [currentAVState, setCurrentAVState] = useState<AVState | null>(null);
+  const [wsUrl, setWsUrl] = useState<string | null>(null);
+  const [voiceMode, setVoiceMode] = useState(false);
+
   const fallbackVitals = useMemo(
     () => ({
       hr: 82,
@@ -231,6 +274,78 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     if (!session || session.questions.length === 0) return;
     registerTick();
   }, [session?.questions.length, registerTick, session]);
+
+  // NEW: Initialize state machine when case loads
+  useEffect(() => {
+    if (!currentCase?.stateMachine) return;
+    
+    try {
+      const stateMachine = currentCase.stateMachine as unknown as PatientAVStateMachine;
+      const engine = new PatientAVEngine(stateMachine);
+      
+      // Subscribe to state transitions
+      engine.on((event) => {
+        if (event.type === 'TRANSITION_COMPLETED') {
+          const newState = engine.getCurrentAVState();
+          setCurrentAVState(newState);
+          
+          // Emit to integration service for coordination
+          integration.emit({
+            type: 'MODULE_ENTERED',
+            timestamp: new Date().toISOString(),
+            sourceModule: 'osce',
+            sessionId: session?.id || 'unknown',
+            payload: { 
+              stateTransition: event.payload,
+              newState: newState.id
+            },
+          });
+          
+          // Show notification for critical state changes
+          if (newState.id.includes('critical') || newState.id.includes('severe')) {
+            toast.warning(`Patient state changed: ${newState.name}`);
+          }
+        }
+      });
+      
+      setAVEngine(engine);
+      setCurrentAVState(engine.getCurrentAVState());
+    } catch (error) {
+      console.error('Failed to initialize state machine:', error);
+    }
+  }, [currentCase, integration, session?.id]);
+
+  // NEW: Update state machine when vitals change
+  useEffect(() => {
+    if (!avEngine) return;
+    
+    const vitalsForEngine = {
+      hr: currentVitals.hr,
+      bp: currentVitals.bp,
+      temp: 98.6, // Default
+      rr: currentVitals.rr,
+      o2: currentVitals.o2sat,
+    };
+    
+    avEngine.updateVitals(vitalsForEngine);
+    
+    // Also update SOAP generator
+    addSOAPVitals(vitalsForEngine);
+    
+    // Check for critical vitals
+    if (currentVitals.o2sat < 88 || currentVitals.hr > 150 || currentVitals.hr < 50) {
+      integration.emit({
+        type: 'VITALS_CRITICAL' as any,
+        timestamp: new Date().toISOString(),
+        sourceModule: 'osce',
+        sessionId: session?.id || 'unknown',
+        payload: {
+          vitals: vitalsForEngine,
+          trigger: currentVitals.o2sat < 88 ? 'hypoxia_severe' : currentVitals.hr > 150 ? 'tachycardia_severe' : 'bradycardia',
+        },
+      });
+    }
+  }, [currentVitals, avEngine, addSOAPVitals, integration, session?.id]);
 
   // HUD mode: medical-monitor style UI when Live OSCE session is active
   useEffect(() => {
@@ -375,6 +490,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setIsTyping(true);
     detectInterventionIntent(currentQuestion);
 
+    // NEW: Track conversation node for echo path
+    const parentNodeId = session.questions.length > 0 
+      ? `node-${session.questions.length - 1}`
+      : undefined;
+    const nodeId = recordNode('question', currentQuestion, parentNodeId, 0.8); // 0.8 = relevance
+
     // Prepare history for AI
     const chatHistory = session.questions
       .map((q) => [
@@ -391,6 +512,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         currentQuestion,
         patientPersona
       );
+
+      // NEW: Forward to SOAP generator
+      await addTranscript('student', currentQuestion);
+      await addTranscript('patient', response);
 
       const newQuestion: PatientQuestion = {
         questionText: currentQuestion,
@@ -427,6 +552,22 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }
   };
 
+  // NEW: Start diagnosis timing when entering diagnosis phase
+  useEffect(() => {
+    if (phase === 'diagnosis' && session?.id) {
+      const metricId = startMetric(
+        'Time to diagnosis',
+        'diagnosis',
+        'critical',
+        120 // Target: 2 minutes
+      );
+      // Store metric ID in component state if needed
+      return () => {
+        // Cleanup if user exits before completing
+      };
+    }
+  }, [phase, session?.id, startMetric]);
+
   const handleSubmitDiagnosis = async () => {
     if (!session || !currentCase) return;
 
@@ -442,6 +583,31 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       );
 
       setDiagnosisFeedback(feedback);
+
+      // NEW: Emit DIAGNOSIS_MADE event for coordination
+      const isCorrect = feedback.isCorrect;
+      const timeElapsed = Date.now() - new Date(session.startTime).getTime();
+      
+      integration.emit({
+        type: 'DIAGNOSIS_MADE',
+        timestamp: new Date().toISOString(),
+        sourceModule: 'osce',
+        sessionId: session.id!,
+        payload: {
+          diagnosis: userDiagnosis,
+          correctDiagnosis: currentCase.correctDiagnosis,
+          isCorrect,
+          confidence: feedback.score / 100,
+          timeToAction: timeElapsed / 1000,
+        },
+      });
+
+      // NEW: Record milestone
+      recordMilestone(
+        isCorrect ? 'Correct Diagnosis' : 'Incorrect Diagnosis',
+        120, // 2 min target
+        isCorrect
+      );
 
       // Move to Treatment Phase
       setPhase('treatment');
@@ -1329,9 +1495,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </span>
           </nav>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Left Column: Patient Info & Inputs */}
-            <div className="space-y-4">
+          {/* NEW: Three-column layout for sidebar integration */}
+          <div className="grid md:grid-cols-12 gap-6">
+            {/* Left Column: Patient Info & Inputs (8 cols) */}
+            <div className="md:col-span-8 space-y-4">
               {/* Patient Card (Collapsible) */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
