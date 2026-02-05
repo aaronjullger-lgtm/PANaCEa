@@ -31,7 +31,7 @@ import {
   type ValidatedContext,
 } from '../../_shared/middleware';
 import { logger } from '../../_shared/secureLogger';
-import { categoryToType, type MediaCategory } from '../../../lib/mediaTypes';
+import { categoryToType, type MediaCategory } from '../../../../lib/mediaTypes';
 
 const VALID_CATEGORIES: MediaCategory[] = ['ecg', 'derm', 'radiology', 'labs', 'diagrams'];
 const MEDIA_BUCKET = 'medical-images';

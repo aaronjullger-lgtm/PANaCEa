@@ -9,10 +9,10 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
-import { validateFunctionEnv, MissingEnvError } from '../../../_shared/env-validation';
-import { createEndpointLogger } from '../../../_shared/secureLogger';
+import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
+import { createEndpointLogger } from '../../_shared/secureLogger';
 
 const RESOURCE_BUCKET = 'educational-resources';
 

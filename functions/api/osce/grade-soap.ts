@@ -5,17 +5,17 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
   type EdgePrismaClient,
-} from '../../_shared/prisma-edge';
-import { createEndpointLogger } from '../../_shared/secureLogger';
-import { resolveUserByClerkId } from '../../_shared/resolveUser';
-import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
-import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
-import { IDSchema } from '../../_shared/schemas';
+} from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveUserByClerkId } from '../_shared/resolveUser';
+import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
+import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
+import { IDSchema } from '../_shared/schemas';
 
 const GradeSoapBodySchema = z.object({
   body: z.object({
