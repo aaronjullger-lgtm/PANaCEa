@@ -248,7 +248,8 @@ export async function runCriticGrading(
       const text = result.response.text();
       const sanitized = (text || '').replace(/```json|```/g, '').trim();
       const json = JSON.parse(sanitized);
-      score = Math.min(100, Math.max(0, Number(json.score) ?? 50));
+      const rawScore = Number(json.score);
+      score = Math.min(100, Math.max(0, Number.isFinite(rawScore) ? rawScore : 50));
       feedback = typeof json.feedback === 'string' ? json.feedback : '';
       if (Array.isArray(json.issues)) issues.push(...json.issues.map(String));
     } catch (e) {

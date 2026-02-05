@@ -538,6 +538,7 @@ const ConditionPage: React.FC = () => {
 
               {/* Content sections: Expand all / Collapse all */}
               {sections.length > 0 && (
+                <>
                 <div className="flex gap-2 mb-3">
                   <button
                     type="button"
@@ -557,7 +558,6 @@ const ConditionPage: React.FC = () => {
                     Collapse all
                   </button>
                 </div>
-              )}
               <div className="condition-sections space-y-4">
             {sections.length === 0 && (
               <div className="text-center py-12">
@@ -632,8 +632,8 @@ const ConditionPage: React.FC = () => {
               </motion.section>
             ))}
               </div>
-            </div>
-          </div>
+            </>
+      )}
         </>
       )}
     </main>
