@@ -13,7 +13,9 @@ A comprehensive **event-driven, multi-modal clinical simulation platform** integ
 1. **Module 1**: Living Patient Encounter (Voice + Video + Clinical State Machine)
 2. **Module 2**: Clinical Eye (Interactive Visual Diagnostics)
 3. **Module 3**: Digital Sim Lab (Procedural Simulation)
-4. **AI Tutor System**: RAG-based tutoring with textbook citations
+4. **Module 4**: Smart Scribe & Tutor (Automation + Remediation)
+5. **Module 5**: Interface Fabric (Adaptive UI + Gamification)
+6. **AI Tutor System**: RAG-based tutoring with textbook citations (integrated throughout)
 
 ---
 
@@ -35,26 +37,46 @@ A comprehensive **event-driven, multi-modal clinical simulation platform** integ
 ┌─────────────────────────────────┼───────────────────────────────────┐
 │                        SIMULATION MODULES                            │
 │                                 │                                    │
-│  ┌─────────────────┐   ┌────────▼───────┐   ┌──────────────────┐  │
-│  │  Module 1       │   │  Module 2      │   │  Module 3        │  │
-│  │  Living Patient │   │  Clinical Eye  │   │  Digital Sim Lab │  │
-│  │                 │   │                │   │                  │  │
-│  │  - Voice (Gemini│   │  - Veo Videos  │   │  - Workflows     │  │
-│  │    Audio)       │   │  - Point&Click │   │  - Equipment Tray│  │
-│  │  - Video (Veo)  │   │  - Heatmaps    │   │  - Sterile Field │  │
-│  │  - State Machine│   │  - Spatial-    │   │  - Geometry      │  │
-│  │  - Triggers     │   │    Understanding│   │    Validation    │  │
-│  └─────────────────┘   └────────────────┘   └──────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-                                 │
-                                 │ Analytics
-                                 │
-┌─────────────────────────────────▼───────────────────────────────────┐
-│                     INVISIBLE PRECEPTOR                              │
-│  - Clinical reasoning pathways (echo_paths)                         │
-│  - Time-to-action metrics (echoscript)                              │
-│  - Multi-modal performance tracking                                 │
-└─────────────────────────────────────────────────────────────────────┘
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │  Module 1    │  │  Module 2    │  │  Module 3    │  │
+│  │  Living      │  │  Clinical    │  │  Digital     │  │
+│  │  Patient     │  │  Eye         │  │  Sim Lab     │  │
+│  │              │  │              │  │              │  │
+│  │  - Voice     │  │  - Veo Videos│  │  - Workflows │  │
+│  │  - Video     │  │  - Point&    │  │  - Equipment │  │
+│  │  - State     │  │    Click     │  │  - Sterile   │  │
+│  │    Machine   │  │  - Heatmaps  │  │    Field     │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           │ Session Data
+                           │
+┌──────────────────────────▼──────────────────────────────┐
+│                    SYNTHESIS LAYER                       │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  Module 4: Smart Scribe & Tutor                    │ │
+│  │  - SOAP generation (gemini-dictation)              │ │
+│  │  - Infographics (info_genius)                      │ │
+│  │  - Timing analytics (echoscript, echo_paths)       │ │
+│  │  - Automated case files                            │ │
+│  └────────────────────────────────────────────────────┘ │
+└──────────────────────────┬──────────────────────────────┘
+                           │
+                           │ Analytics & Assets
+                           │
+┌──────────────────────────▼──────────────────────────────┐
+│                    INTERFACE LAYER                       │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  Module 5: Interface Fabric                        │ │
+│  │  - Circadian UI (lumina)                           │ │
+│  │  - Avatar progression (svg_generator)              │ │
+│  │  - Achievement badges                              │ │
+│  │  - Phantom patient (motivation)                    │ │
+│  │  - Audio reviews (voice-library)                   │ │
+│  │  - Consult system (communication)                  │ │
+│  │  - Metacognition widgets                           │ │
+│  └────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -678,11 +700,15 @@ This architecture provides a **production-ready blueprint** for transforming PAN
 6. **Dynamic infographics** for personalized remediation
 7. **Timing analytics** with conversation tree visualization
 8. **Comprehensive case files** as learning artifacts
+9. **Circadian UI adaptation** optimizing cognitive performance
+10. **Gamification** with evolving avatars and achievement badges
+11. **Phantom patient** system for subtle motivation
+12. **Audio-first reviews** for hands-free learning
 
 **Total Scope:**
-- **~13,000+ lines** of architecture and documentation
-- **4 integrated modules** (OSCE, Visual, Procedural, Smart Scribe)
-- **AI Tutor system** woven throughout
+- **~17,000+ lines** of architecture and documentation
+- **5 integrated modules** (OSCE, Visual, Procedural, Smart Scribe, Interface)
+- **AI Tutor system** woven throughout all modules
 - **10-week implementation roadmap**
 - **$1.61/student/month** operating cost
 
@@ -691,8 +717,9 @@ This architecture provides a **production-ready blueprint** for transforming PAN
 - **Module 2**: Clinical Eye (Interactive Diagnostics) - 520 lines
 - **Module 3**: Digital Sim Lab (Procedures) - 650 lines
 - **Module 4**: Smart Scribe (Automation + Remediation) - 4,330 lines
+- **Module 5**: Interface Fabric (Adaptive UI + Gamification) - 3,350 lines
 - **AI Tutor**: ask_the_manual Integration - 1,030 lines
-- **Documentation**: Architecture Guides - 4,800 lines
+- **Documentation**: Architecture Guides - 8,100 lines
 
 **Status**: ✅ Complete Architecture - Ready for Prototype Phase
 
