@@ -1672,6 +1672,12 @@ model PatientEncounterCase {
   teachingPoints          String[]
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime
+  
+  // Module 1: Living Patient Encounter additions
+  stateMachine            Json?                     // PatientAVStateMachine for voice+video states
+  videoUrls               Json?                     // Map of state IDs to veo_cameos URLs
+  voiceConfig             Json?                     // Voice personality configuration
+  
   CaseRubric              CaseRubric?
   PatientEncounterSession PatientEncounterSession[]
 }
@@ -1701,6 +1707,8 @@ model PatientEncounterSession {
   PatientEncounterCase PatientEncounterCase @relation(fields: [caseId], references: [id])
   User                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   OsceResult           OsceResult?
+  CaseFile             CaseFile?
+  ConsultRequest       ConsultRequest[]
 
   @@index([status])
   @@index([userId])
@@ -2676,6 +2684,13 @@ model User {
   UserWordleState         UserWordleState[]
   UserTopicProgress       UserTopicProgress[]
   UserConditionAccuracy   UserConditionAccuracy[]
+  
+  // Module 5: Gamification & Interface Fabric (Multi-Modal Architecture)
+  UserAvatarV2             UserAvatar?
+  PhantomPatient           PhantomPatient?
+  AudioReview              AudioReview[]
+  ConsultRequest           ConsultRequest[]
+  GeneratedInfographic     GeneratedInfographic[]
   StudyRecommendation     StudyRecommendation[]
   ContrastiveDrillAttempt ContrastiveDrillAttempt[]
   UserProgress            UserProgress[]
@@ -3983,6 +3998,115 @@ model PersonalizedFSRSParams {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+// =============================================================================
+// Module 5: Interface Fabric & Gamification Models
+// =============================================================================
+
+/// User Avatar: Visual progression system reflecting clinical mastery
+model UserAvatar {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  stage               String   @default("student_year_1") // student_year_1, clinical_year, graduate, practicing_pa
+  equippedAccessories Json     @default("[]") // Array of AvatarAccessory IDs
+  xp                  Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([xp])
+}
+
+// Note: UserAchievement model already exists above - enhanced for Module 5
+
+/// Phantom Patient: Background "patient" whose health reflects user study activity
+model PhantomPatient {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  condition       String // e.g., "Pneumonia", "Heart Failure"
+  healthState     Int      @default(100) // 0-100
+  videoUrl        String? // Current veo_cameos video URL based on health state
+  lastInteraction DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  User            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+/// Case File: Automated learning artifact (transcript + SOAP + analytics + infographics)
+model CaseFile {
+  id                       String                   @id @default(uuid())
+  sessionId                String                   @unique
+  soapComparison           Json // SOAPComparison
+  timingAnalytics          Json // SessionTimingAnalytics
+  infographics             Json                      @default("[]") // Array of GeneratedInfographic URLs
+  pdfUrl                   String? // Generated PDF URL
+  createdAt                DateTime                  @default(now())
+  PatientEncounterSession  PatientEncounterSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+/// Audio Review: AI-generated podcast summarizing weak areas
+model AudioReview {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  audioUrl    String // voice-library generated MP3
+  duration    Int // Seconds
+  weakAreas   String[] @default([])
+  createdAt   DateTime @default(now())
+  playCount   Int      @default(0)
+  lastPlayed  DateTime?
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([createdAt])
+}
+
+/// Consult Request: SBAR training with AI consultant personas
+model ConsultRequest {
+  id               String                   @id @default(uuid())
+  sessionId        String
+  userId           String
+  consultantType   String // cardiologist, surgeon, etc.
+  sbarProvided     Json? // { situation, background, assessment, recommendation }
+  transcript       Json                      @default("[]") // Array of conversation turns
+  outcome          String                    @default("in_progress") // in_progress, advice_given, hung_up
+  feedback         Json? // { sbarQuality: number, feedback: string }
+  requestedAt      DateTime                  @default(now())
+  completedAt      DateTime?
+  User             User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  PatientEncounterSession PatientEncounterSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  @@index([sessionId])
+  @@index([userId])
+}
+
+/// Generated Infographic: Dynamic remediation graphics (info_genius)
+model GeneratedInfographic {
+  id               String   @id @default(uuid())
+  userId           String
+  sessionId        String?
+  requestId        String
+  type             String // comparison, flowchart, differential_table, etc.
+  primaryConcept   String
+  secondaryConcept String?
+  imageUrl         String
+  svgMarkup        String? @db.Text
+  title            String
+  description      String?
+  createdAt        DateTime @default(now())
+  User             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([sessionId])
+  @@index([primaryConcept])
+  @@index([createdAt])
 }
 
 // =============================================================================
