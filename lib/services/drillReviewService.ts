@@ -123,6 +123,8 @@ export interface SubmitDrillReviewInput {
   totalDwellTime?: number;
   timezone?: string;
   wakeTimeHHMM?: string;
+  /** When 'main' or omitted, review is written to UserProgress.reviewHistory (FSRS). When 'cram' or 'rapid_recall', FSRS is not updated. */
+  sessionType?: 'main' | 'cram' | 'rapid_recall';
   telemetry?: {
     duration_ms: number;
     time_to_first_interaction_ms?: number | null;
@@ -166,6 +168,8 @@ export interface DrillReviewLogger {
 
 /**
  * Submit a drill review: process answer, update FSRS, record telemetry, update progress.
+ * This path is the canonical writer for QuestionAttempt with implicitConfidence (used by calibration).
+ * When sessionType is 'main' or omitted, reviews are written to UserProgress.reviewHistory for FSRS.
  */
 export async function submitDrillReview(
   prisma: PrismaClient,
@@ -189,6 +193,7 @@ export async function submitDrillReview(
     totalDwellTime,
     timezone,
     wakeTimeHHMM,
+    sessionType,
     telemetry,
   } = input;
 
@@ -243,7 +248,31 @@ export async function submitDrillReview(
   };
 
   const implicitResult = deriveImplicitRating(behaviorMetrics);
-  const rating = implicitResult.rating;
+  let rating = implicitResult.rating;
+
+  // Implicit FSRS "Truth Engine": Override user-derived rating using behavioral honesty heuristics
+  // Rule 1: If responseTime > (parTime * 1.5) AND rating == Easy → downgrade to Good
+  if (
+    isCorrect &&
+    rating === Rating.Easy &&
+    numericTime > parTimeMs * 1.5
+  ) {
+    rating = Rating.Good;
+    logger?.info?.('Behavioral override: Easy→Good (slow response)', {
+      questionId,
+      timeSpentMs: numericTime,
+      parTimeMs,
+    });
+  }
+  // Rule 2: If answerChanges > 2 (indecision) → max rating is Hard
+  const switches = answerSwitches ?? 0;
+  if (switches > 2 && rating > Rating.Hard) {
+    rating = Rating.Hard;
+    logger?.info?.('Behavioral override: capped at Hard (indecision)', {
+      questionId,
+      answerSwitches: switches,
+    });
+  }
 
   const quality =
     rating === Rating.Again ? 1 : rating === Rating.Hard ? 2 : rating === Rating.Easy ? 5 : 4;
@@ -272,12 +301,18 @@ export async function submitDrillReview(
 
   const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
   const isRapidGuess = telemetry?.rapid_guess ?? numericTime < 1500;
+  const attemptId = `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
   try {
     await prisma.questionAttempt.create({
       data: {
+        id: attemptId,
         userId,
         questionId,
+        conditionId: question.conditionId ?? undefined,
+        medicalContentId: question.medicalContentId ?? undefined,
+        system: question.system ?? undefined,
+        isMainSession: sessionType === 'main',
         selectedAnswer: normalizedSelectedAnswer,
         wasCorrect: isCorrect,
         durationMs: effectiveDurationMs,
@@ -329,7 +364,10 @@ export async function submitDrillReview(
     });
   }
 
-  if (question.conditionId) {
+  // Only update FSRS (UserProgress.reviewHistory) for main study sessions; exclude cram/rapid_recall
+  const countForFSRS = sessionType !== 'cram' && sessionType !== 'rapid_recall';
+
+  if (question.conditionId && countForFSRS) {
     try {
       const fsrs = new FSRS();
       const existingProgress = await prisma.userProgress.findUnique({
@@ -360,6 +398,48 @@ export async function submitDrillReview(
       const { card: rawCard } = fsrs.next(currentCard, new Date(), rating);
       const modifiedStability = applyCircadianModifier(rawCard.stability, circadianContext);
       const updatedCard = { ...rawCard, stability: modifiedStability };
+
+      // Write to ReviewLog for FSRS v6 optimizer (MAIN/real sessions only)
+      try {
+        const reviewDate = new Date();
+        await prisma.reviewLog.create({
+          data: {
+            userId,
+            conditionId: question.conditionId,
+            medicalContentId: question.medicalContentId ?? undefined,
+            questionId,
+            questionType: 'pre_generated',
+            rating,
+            state: currentCard.state,
+            due_date: new Date(
+              currentCard.last_review.getTime() +
+                currentCard.scheduled_days * 86400000
+            ),
+            review_date: reviewDate,
+            duration: effectiveDurationMs,
+            review_type: 'real',
+            stability: currentCard.stability,
+            difficulty: currentCard.difficulty,
+            retrievability: null,
+            elapsedDays: currentCard.elapsed_days,
+            wasCorrect: isCorrect,
+            sessionType: 'MAIN',
+            attemptId,
+            system: question.system ?? undefined,
+            telemetry: {
+              par_time_ms: parTimeMs,
+              latency_ratio: effectiveDurationMs / parTimeMs,
+              implicit_confidence: implicitResult.confidence,
+              answer_changes: switches,
+              circadian_phase: circadianContext.circadianPhase,
+            },
+          },
+        });
+      } catch (reviewLogError) {
+        logger?.warn?.('Failed to write ReviewLog (non-fatal)', {
+          error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
+        });
+      }
 
       await updateUserProgressWithHistory(prisma, {
         userId,

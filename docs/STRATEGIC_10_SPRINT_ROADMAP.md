@@ -410,6 +410,13 @@ model ExamAttempt {
 
 ---
 
+## Next feature (post-improvement plan, Feb 2026)
+
+- **Grand Rounds:** Confirmed server-authoritative; `GrandRoundsMode.tsx` uses `fetchTodaysChallenge()` and API for challenge/leaderboard.
+- **Candidate features for next sprint:** (1) Polypharmacy activation (set `isComingSoon: false` when backend/UI ready); (2) OSCE chat persistence (verify EncounterChatHistory and `/api/osce/chat` usage); (3) Daily Rituals / Medical Wordle (see NEW_FEATURES_GUIDE.md). Pick one by backend readiness and user value.
+
+---
+
 ## 📝 Notes & Decisions
 
 ### Architectural Decisions

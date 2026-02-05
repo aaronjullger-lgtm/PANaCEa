@@ -27,25 +27,25 @@ export const BuzzwordBanner: React.FC<BuzzwordBannerProps> = ({ conditionName })
   if (!info) return null;
 
   return (
-    <div className="mb-8 relative overflow-hidden rounded-xl border border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 p-6 shadow-sm">
-      <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-blue-100 dark:bg-blue-900/30 blur-2xl" />
+    <div className="mb-8 relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 shadow-sm">
+      <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-[var(--color-accent)]/10 blur-2xl" />
 
       <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
-          <Lightbulb className="w-6 h-6 text-amber-500" />
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)]/15 border border-[var(--color-border)]">
+          <Lightbulb className="w-6 h-6 text-[var(--color-accent)]" />
         </div>
 
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-accent)]">
               High-Yield Associations
             </span>
-            <span className="inline-flex items-center rounded-full bg-white/50 dark:bg-black/20 px-2 py-0.5 text-xs font-medium text-slate-500">
+            <span className="inline-flex items-center rounded-full bg-[var(--color-bg-tertiary)]/80 px-2 py-0.5 text-xs font-medium text-[var(--color-text-muted)]">
               {info.category}
             </span>
           </div>
 
-          <p className="text-lg font-bold text-slate-900 dark:text-white">"{info.buzzword}"</p>
+          <p className="text-lg font-bold text-[var(--color-text-primary)]">&quot;{info.buzzword}&quot;</p>
         </div>
       </div>
     </div>

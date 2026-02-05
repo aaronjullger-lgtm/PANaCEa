@@ -64,10 +64,10 @@ export const OsmolarGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         <div className="flex items-center gap-3">
           <Beaker className="w-6 h-6 text-[var(--color-accent)]" />
           <div>
-            <div className="font-mono text-lg font-semibold text-slate-200">
+            <div className="font-mono text-lg font-semibold text-[var(--color-text-primary)]">
               Calculated = 2×Na + Glu/18 + BUN/2.8
             </div>
-            <div className="text-sm text-slate-300 mt-1">Gap = Measured − Calculated (normal ≤10)</div>
+            <div className="text-sm text-[var(--color-text-secondary)] mt-1">Gap = Measured − Calculated (normal ≤10)</div>
           </div>
         </div>
       </div>
@@ -107,10 +107,10 @@ export const OsmolarGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
           />
         </div>
         {calculatedOsm !== null && (
-          <div className="text-slate-300">
-            Calculated osmolarity = <strong className="text-slate-100">{calculatedOsm.toFixed(1)}</strong> mOsm/kg
+          <div className="text-[var(--color-text-secondary)]">
+            Calculated osmolarity = <strong className="text-[var(--color-text-primary)]">{calculatedOsm.toFixed(1)}</strong> mOsm/kg
             {gap !== null && (
-              <> &nbsp;| &nbsp;Osmolar gap = <strong className="text-slate-100">{gap}</strong> mOsm/kg</>
+              <> &nbsp;| &nbsp;Osmolar gap = <strong className="text-[var(--color-text-primary)]">{gap}</strong> mOsm/kg</>
             )}
           </div>
         )}

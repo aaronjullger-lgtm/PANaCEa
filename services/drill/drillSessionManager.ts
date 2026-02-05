@@ -91,9 +91,9 @@ export async function logDrillAttempt(prisma: PrismaLike, data: DrillAttemptData
         durationMs,
         isMainSession: false, // CRITICAL: Statistical isolation
         createdAt: new Date(),
-        // Store drill-specific metadata
+        // Store drill-specific metadata in telemetryJson (QuestionAttempt has no metadata column)
         ...(Object.keys(metadata).length > 0 && {
-          metadata: metadata as any,
+          telemetryJson: metadata as Record<string, unknown>,
         }),
       },
     });

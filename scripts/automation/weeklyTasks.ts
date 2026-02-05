@@ -98,10 +98,10 @@ async function runDatabaseAudit(): Promise<void> {
     const publishedContent = await prisma.medicalContent.count({ where: { status: 'published' } });
     const draftContent = await prisma.medicalContent.count({ where: { status: 'draft' } });
 
-    // Media statistics
+    // Media statistics (canonical: approvalStatus; status may be 'active' or 'approved' from scripts)
     const totalMedia = await prisma.mediaAsset.count();
-    const approvedMedia = await prisma.mediaAsset.count({ where: { status: 'approved' } });
-    const pendingMedia = await prisma.mediaAsset.count({ where: { status: 'pending_review' } });
+    const approvedMedia = await prisma.mediaAsset.count({ where: { approvalStatus: 'approved' } });
+    const pendingMedia = await prisma.mediaAsset.count({ where: { approvalStatus: 'pending' } });
 
     // User statistics
     const totalUsers = await prisma.user.count();

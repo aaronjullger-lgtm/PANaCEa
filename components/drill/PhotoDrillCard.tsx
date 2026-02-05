@@ -98,7 +98,7 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
         {!imageLoaded && question.thumbnailUrl && (
           <img
             src={question.thumbnailUrl}
-            alt="Loading..."
+            alt="Question image"
             className="absolute inset-0 w-full h-full object-contain blur-sm"
           />
         )}

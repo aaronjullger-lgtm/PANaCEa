@@ -376,3 +376,22 @@ export const TableSkeleton: React.FC<{
     </div>
   );
 };
+
+/**
+ * CommandCenterSkeleton - Dashboard-shaped skeleton for Command Center lazy load.
+ * Reduces CLS while CommandCenterHub chunk loads.
+ */
+export const CommandCenterSkeleton: React.FC<{ message?: string }> = ({
+  message = 'Loading dashboard…',
+}) => (
+  <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+    <QuickStatsBarSkeleton />
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <Skeleton height={120} radius="lg" className="bg-[var(--color-bg-secondary)]" />
+      <Skeleton height={120} radius="lg" className="bg-[var(--color-bg-secondary)]" />
+    </div>
+    <div className="flex flex-col items-center justify-center py-8">
+      <p className="text-sm font-medium text-[var(--color-text-muted)]">{message}</p>
+    </div>
+  </div>
+);

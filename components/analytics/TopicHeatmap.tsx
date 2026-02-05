@@ -71,7 +71,11 @@ const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }
               ${style.bg} ${style.border} ${style.text}
               ${hasData ? 'hover:shadow-md cursor-pointer' : 'cursor-not-allowed opacity-60'}
             `}
-            title={hasData ? `${fullName}: ${stats.score.toFixed(0)}%` : `${fullName}: No data`}
+            title={
+              hasData
+                ? `${fullName}: ${stats.score.toFixed(0)}%`
+                : `${fullName}: Complete 5+ questions per system to unlock mastery tracking`
+            }
           >
             <span className="text-xs font-bold">{abbr}</span>
             {hasData && (

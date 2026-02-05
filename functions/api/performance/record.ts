@@ -70,19 +70,19 @@ export const onRequestPost = authenticatedEndpoint<PerformanceRecordInput>(
         };
       }
 
-      // Create performance record
-      const record = await prisma.performanceRecord.create({
+      // Create drill session record (session-level; per-question data uses PerformanceRecord)
+      const record = await prisma.drillSessionRecord.create({
         data: {
           userId: user.id,
           mode: drillType,
           score: correctAnswers,
           totalQuestions: questionsAttempted,
           accuracy,
-          timeSpent,
+          timeSpentMs: timeSpent,
           streak: bestStreak ?? 0,
           sessionStart: new Date(startTime),
           sessionEnd: new Date(endTime),
-          metadata: metadata ? JSON.stringify(metadata) : null,
+          metadata: metadata ?? undefined,
         },
       });
 

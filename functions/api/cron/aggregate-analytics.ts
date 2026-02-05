@@ -76,6 +76,8 @@ export async function onRequestPost(context: any) {
       wasCorrect: boolean;
       timeSpentMs: number | null;
       system: string | null;
+      conditionId: string | null;
+      medicalContentId: string | null;
     };
     const attempts = (await prisma.questionAttempt.findMany({
       where: {
@@ -86,25 +88,38 @@ export async function onRequestPost(context: any) {
         wasCorrect: true,
         timeSpentMs: true,
         system: true,
+        conditionId: true,
+        medicalContentId: true,
       },
     })) as AttemptRow[];
 
-    // Aggregate per user in memory
-    const perUser = new Map<
-      string,
-      { total: number; correct: number; timeSum: number; systems: Set<string> }
-    >();
+    // Aggregate per user in memory (with per-system accuracy for accuracyBySystem)
+    type UserAgg = {
+      total: number;
+      correct: number;
+      timeSum: number;
+      systems: Set<string>;
+      bySystem: Map<string, { total: number; correct: number }>;
+    };
+    const perUser = new Map<string, UserAgg>();
     for (const a of attempts) {
       const cur = perUser.get(a.userId) ?? {
         total: 0,
         correct: 0,
         timeSum: 0,
         systems: new Set<string>(),
+        bySystem: new Map<string, { total: number; correct: number }>(),
       };
       cur.total += 1;
       if (a.wasCorrect) cur.correct += 1;
       cur.timeSum += a.timeSpentMs ?? 0;
-      if (a.system) cur.systems.add(a.system);
+      if (a.system) {
+        cur.systems.add(a.system);
+        const sys = cur.bySystem.get(a.system) ?? { total: 0, correct: 0 };
+        sys.total += 1;
+        if (a.wasCorrect) sys.correct += 1;
+        cur.bySystem.set(a.system, sys);
+      }
       perUser.set(a.userId, cur);
     }
 
@@ -113,6 +128,10 @@ export async function onRequestPost(context: any) {
 
     for (const [userId, agg] of perUser.entries()) {
       const avgTime = agg.total > 0 ? agg.timeSum / agg.total : 0;
+      const accuracyBySystem: Record<string, number> = {};
+      agg.bySystem.forEach((v, sys) => {
+        accuracyBySystem[sys] = v.total > 0 ? (v.correct / v.total) * 100 : 0;
+      });
       await prisma.dailyUserAnalytics.upsert({
         where: {
           userId_sessionDate: { userId, sessionDate: sessionDateOnly },
@@ -123,6 +142,7 @@ export async function onRequestPost(context: any) {
           accuracy: agg.total > 0 ? (agg.correct / agg.total) * 100 : 0,
           avgResponseTimeMs: Math.round(avgTime),
           systemsStudied: [...agg.systems],
+          accuracyBySystem: Object.keys(accuracyBySystem).length > 0 ? accuracyBySystem : undefined,
           updatedAt: new Date(),
         },
         create: {
@@ -133,9 +153,57 @@ export async function onRequestPost(context: any) {
           accuracy: agg.total > 0 ? (agg.correct / agg.total) * 100 : 0,
           avgResponseTimeMs: Math.round(avgTime),
           systemsStudied: [...agg.systems],
+          accuracyBySystem: Object.keys(accuracyBySystem).length > 0 ? accuracyBySystem : undefined,
         },
       });
     }
+
+    // Aggregate per-user per-condition accuracy for UserConditionAccuracy (yesterday's attempts)
+    const perUserCondition = new Map<
+      string,
+      Map<string, { total: number; correct: number; medicalContentId: string | null }>
+    >();
+    for (const a of attempts) {
+      const conditionId = a.conditionId ?? a.medicalContentId;
+      if (!conditionId) continue;
+      let userMap = perUserCondition.get(a.userId);
+      if (!userMap) {
+        userMap = new Map();
+        perUserCondition.set(a.userId, userMap);
+      }
+      const cur = userMap.get(conditionId) ?? {
+        total: 0,
+        correct: 0,
+        medicalContentId: a.medicalContentId,
+      };
+      cur.total += 1;
+      if (a.wasCorrect) cur.correct += 1;
+      userMap.set(conditionId, cur);
+    }
+    for (const [userId, condMap] of perUserCondition.entries()) {
+      for (const [conditionId, v] of condMap.entries()) {
+        await prisma.userConditionAccuracy.upsert({
+          where: {
+            userId_conditionId: { userId, conditionId },
+          },
+          update: {
+            attemptCount: { increment: v.total },
+            correctCount: { increment: v.correct },
+            lastAttemptedAt: sessionDateOnly,
+            updatedAt: new Date(),
+          },
+          create: {
+            userId,
+            conditionId,
+            medicalContentId: v.medicalContentId ?? undefined,
+            attemptCount: v.total,
+            correctCount: v.correct,
+            lastAttemptedAt: sessionDateOnly,
+          },
+        });
+      }
+    }
+
     const processedCount = perUser.size;
 
     // Log to audit

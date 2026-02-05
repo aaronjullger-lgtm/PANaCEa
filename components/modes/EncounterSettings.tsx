@@ -88,14 +88,14 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-[var(--color-bg-secondary)] rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-6 z-10">
+        <div className="sticky top-0 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] p-6 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Settings className="w-8 h-8 text-blue-600 dark:text-blue-400" />
               <div>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
                   Customize Your Encounter
                 </h2>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -118,7 +118,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
           <section>
             <div className="flex items-center gap-2 mb-4">
               <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 Patient Demographics
               </h3>
             </div>
@@ -132,7 +132,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) =>
                     updateSetting('patientAge', e.target.value as EncounterSettings['patientAge'])
                   }
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-focus-ring)]"
                 >
                   <option value="random">Random</option>
                   <option value="pediatric">Pediatric (0-18)</option>
@@ -150,7 +150,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) =>
                     updateSetting('patientSex', e.target.value as EncounterSettings['patientSex'])
                   }
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-focus-ring)]"
                 >
                   <option value="random">Random</option>
                   <option value="male">Male</option>
@@ -167,7 +167,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) =>
                     updateSetting('acuity', e.target.value as EncounterSettings['acuity'])
                   }
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-focus-ring)]"
                 >
                   <option value="random">Random</option>
                   <option value="low">Low (Stable)</option>
@@ -183,7 +183,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
           <section>
             <div className="flex items-center gap-2 mb-4">
               <Stethoscope className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 Clinical Focus
               </h3>
             </div>
@@ -197,7 +197,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) =>
                     updateSetting('focusArea', e.target.value as EncounterSettings['focusArea'])
                   }
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-focus-ring)]"
                 >
                   <option value="all">All Systems</option>
                   <option value="cardiology">Cardiology</option>
@@ -223,7 +223,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   onChange={(e) =>
                     updateSetting('complexity', e.target.value as EncounterSettings['complexity'])
                   }
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-focus-ring)]"
                 >
                   <option value="straightforward">Straightforward (Common)</option>
                   <option value="moderate">Moderate (Typical)</option>
@@ -239,7 +239,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   type="checkbox"
                   checked={settings.includeRedHerrings}
                   onChange={(e) => updateSetting('includeRedHerrings', e.target.checked)}
-                  className="w-5 h-5 rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+                  className="w-5 h-5 rounded border-[var(--color-border)] text-purple-600 focus:ring-[var(--color-focus-ring)]"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300">
                   Include red herrings (distractors in history)
@@ -251,7 +251,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   type="checkbox"
                   checked={settings.requireDifferential}
                   onChange={(e) => updateSetting('requireDifferential', e.target.checked)}
-                  className="w-5 h-5 rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+                  className="w-5 h-5 rounded border-[var(--color-border)] text-purple-600 focus:ring-[var(--color-focus-ring)]"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300">
                   Require differential diagnosis (3-5 diagnoses)
@@ -264,7 +264,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
           <section>
             <div className="flex items-center gap-2 mb-4">
               <BrainCircuit className="w-5 h-5 text-green-600 dark:text-green-400" />
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 Diagnostics & Imaging
               </h3>
             </div>
@@ -274,7 +274,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   type="checkbox"
                   checked={settings.imagingAvailable}
                   onChange={(e) => updateSetting('imagingAvailable', e.target.checked)}
-                  className="w-5 h-5 rounded border-slate-300 text-green-600 focus:ring-green-500"
+                  className="w-5 h-5 rounded border-[var(--color-border)] text-green-600 focus:ring-[var(--color-focus-ring)]"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300">
                   Enable imaging orders (X-ray, CT, MRI, Ultrasound)
@@ -286,7 +286,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   type="checkbox"
                   checked={settings.labsAvailable}
                   onChange={(e) => updateSetting('labsAvailable', e.target.checked)}
-                  className="w-5 h-5 rounded border-slate-300 text-green-600 focus:ring-green-500"
+                  className="w-5 h-5 rounded border-[var(--color-border)] text-green-600 focus:ring-[var(--color-focus-ring)]"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300">
                   Enable lab orders (CBC, CMP, cultures, etc.)
@@ -299,7 +299,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   checked={settings.requireInterpretation}
                   onChange={(e) => updateSetting('requireInterpretation', e.target.checked)}
                   disabled={!settings.imagingAvailable && !settings.labsAvailable}
-                  className="w-5 h-5 rounded border-slate-300 text-green-600 focus:ring-green-500 disabled:opacity-50"
+                  className="w-5 h-5 rounded border-[var(--color-border)] text-green-600 focus:ring-[var(--color-focus-ring)] disabled:opacity-50"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300">
                   Show actual images/results and require interpretation
@@ -312,7 +312,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
           <section>
             <div className="flex items-center gap-2 mb-4">
               <Globe className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 Communication
               </h3>
             </div>
@@ -329,7 +329,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                       e.target.value as EncounterSettings['patientLanguage']
                     )
                   }
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-focus-ring)]"
                 >
                   <option value="english">English</option>
                   <option value="spanish">Spanish (with interpreter)</option>
@@ -349,7 +349,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                       e.target.value as EncounterSettings['communicationStyle']
                     )
                   }
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-focus-ring)]"
                 >
                   <option value="cooperative">Cooperative (Standard)</option>
                   <option value="vague">Vague (Poor historian)</option>
@@ -363,7 +363,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
           <section>
             <div className="flex items-center gap-2 mb-4">
               <Clock className="w-5 h-5 text-red-600 dark:text-red-400" />
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 Time & Feedback
               </h3>
             </div>
@@ -387,7 +387,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                     }
                     className="flex-1"
                   />
-                  <span className="text-sm font-medium text-slate-900 dark:text-white w-20">
+                  <span className="text-sm font-medium text-[var(--color-text-primary)] w-20">
                     {settings.timeLimit ? `${settings.timeLimit} min` : 'No limit'}
                   </span>
                 </div>
@@ -398,7 +398,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   type="checkbox"
                   checked={settings.showTimer}
                   onChange={(e) => updateSetting('showTimer', e.target.checked)}
-                  className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                  className="w-5 h-5 rounded border-[var(--color-border)] text-red-600 focus:ring-[var(--color-focus-ring)]"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300">
                   Show timer during encounter
@@ -410,7 +410,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   type="checkbox"
                   checked={settings.realTimeFeedback}
                   onChange={(e) => updateSetting('realTimeFeedback', e.target.checked)}
-                  className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                  className="w-5 h-5 rounded border-[var(--color-border)] text-red-600 focus:ring-[var(--color-focus-ring)]"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300">
                   Real-time feedback (show question relevance immediately)
@@ -422,7 +422,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   type="checkbox"
                   checked={settings.showQuestionRelevance}
                   onChange={(e) => updateSetting('showQuestionRelevance', e.target.checked)}
-                  className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                  className="w-5 h-5 rounded border-[var(--color-border)] text-red-600 focus:ring-[var(--color-focus-ring)]"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300">
                   Show question relevance in results
@@ -434,7 +434,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   type="checkbox"
                   checked={settings.detailedAAR}
                   onChange={(e) => updateSetting('detailedAAR', e.target.checked)}
-                  className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                  className="w-5 h-5 rounded border-[var(--color-border)] text-red-600 focus:ring-[var(--color-focus-ring)]"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300">
                   Generate detailed After Action Report
@@ -445,11 +445,11 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 p-6">
+        <div className="sticky bottom-0 bg-[var(--color-bg-secondary)] border-t border-[var(--color-border)] p-6">
           <div className="flex items-center justify-between">
             <button
               onClick={onClose}
-              className="px-6 py-3 rounded-lg border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-slate-700 dark:text-slate-300 font-medium"
+              className="px-6 py-3 rounded-lg border border-[var(--color-border)] dark:border-slate-600 hover:bg-[var(--color-bg-tertiary)] transition-colors text-slate-700 dark:text-slate-300 font-medium"
             >
               Cancel
             </button>

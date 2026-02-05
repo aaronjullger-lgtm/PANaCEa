@@ -1,19 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Send, X, Loader2, ShieldCheck, Sparkles } from 'lucide-react';
+import { Brain, Send, X, Loader2, ShieldCheck, Sparkles, Search } from 'lucide-react';
 
 type ChatRole = 'user' | 'model';
+
+interface GroundingSource {
+  title: string;
+  uri: string;
+}
 
 interface ChatMessage {
   id: string;
   role: ChatRole;
   text: string;
+  groundingSources?: GroundingSource[];
 }
 
 interface ReasoningTutorModeProps {
   onExit?: () => void;
 }
+
+const STORAGE_KEY_GOOGLE_SEARCH = 'reasoning-tutor-google-search';
 
 const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
   const { getToken } = useAuth();
@@ -22,7 +30,26 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionCacheName, setSessionCacheName] = useState<string | undefined>(undefined);
   const [thinkingLevel] = useState<'minimal' | 'low' | 'medium' | 'high'>('high');
+  const [enableGoogleSearch, setEnableGoogleSearch] = useState(() => {
+    try {
+      return globalThis.localStorage?.getItem(STORAGE_KEY_GOOGLE_SEARCH) === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [error, setError] = useState<string | null>(null);
+
+  const toggleGoogleSearch = () => {
+    setEnableGoogleSearch((prev) => {
+      const next = !prev;
+      try {
+        globalThis.localStorage?.setItem(STORAGE_KEY_GOOGLE_SEARCH, String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -69,6 +96,8 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
           history,
           sessionCacheName,
           thinkingLevel,
+          enableGoogleSearch,
+          reasoningEffort: enableGoogleSearch ? 'high' : undefined,
         }),
       });
 
@@ -83,6 +112,7 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
 
       const replyText: string | undefined = json?.data?.reply;
       const newCacheName: string | undefined = json?.data?.sessionCacheName;
+      const groundingSources: GroundingSource[] | undefined = json?.data?.groundingSources;
 
       if (newCacheName) {
         setSessionCacheName(newCacheName);
@@ -98,6 +128,7 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
         id: `model-${Date.now()}`,
         role: 'model',
         text: replyText,
+        groundingSources,
       };
 
       setMessages((prev) => [...prev, tutorMessage]);
@@ -137,6 +168,23 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleGoogleSearch}
+              title={
+                enableGoogleSearch
+                  ? 'Google Search grounding on – answers include up-to-date guidelines'
+                  : 'Enable Google Search – check latest guidelines for treatments'
+              }
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] transition-colors ${
+                enableGoogleSearch
+                  ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                  : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/50 hover:text-[var(--color-text-primary)]'
+              }`}
+            >
+              <Search className="h-3 w-3" />
+              <span>{enableGoogleSearch ? 'Search on' : 'Search off'}</span>
+            </button>
             <div className="hidden items-center gap-1 rounded-full border border-[var(--color-border)] px-3 py-1 text-[10px] text-[var(--color-text-muted)] md:flex">
               <ShieldCheck className="h-3 w-3 text-emerald-500" />
               <span>Context-aware • Weak-spot guided</span>
@@ -144,6 +192,7 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
             <button
               type="button"
               onClick={onExit}
+              aria-label="Close Reasoning Tutor"
               className="rounded-lg p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
             >
               <X className="h-5 w-5" />
@@ -185,6 +234,21 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
                         }`}
                       >
                         {m.text}
+                        {m.role === 'model' && m.groundingSources && m.groundingSources.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {m.groundingSources.map((src, i) => (
+                              <a
+                                key={i}
+                                href={src.uri}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-accent)] hover:underline"
+                              >
+                                Source: {src.title}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   ))}

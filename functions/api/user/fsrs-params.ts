@@ -21,10 +21,15 @@ import {
   canOptimize,
   validateParameters,
   summarizeOptimization,
-  MIN_REVIEWS_FOR_OPTIMIZATION,
   type PersonalizedFSRSParams,
 } from '../../../lib/fsrs-optimizer';
 import { defaultParameters, type ReviewSnapshot } from '../../../lib/fsrs';
+import {
+  triggerFSRSOptimization,
+  useSidecar,
+  type ReviewLogRow,
+} from '../../../lib/fsrsOptimizerSidecar';
+import { resolveUserByClerkId } from '../_shared/resolveUser';
 
 // ============================================================================
 // Types
@@ -98,14 +103,24 @@ export async function onRequestGet(context: {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
+    const user = await resolveUserByClerkId(prisma, auth.userId);
+    if (!user) {
+      return createErrorResponse(request, 'User not found', 404, 'USER_NOT_FOUND', env);
+    }
+    const userId = user.id;
+
     // Fetch user's personalized params from dedicated table
     const personalizedParams = await prisma.personalizedFSRSParams.findUnique({
-      where: { userId: auth.userId },
+      where: { userId },
     });
 
-    // Get review count for optimization eligibility
-    const reviewCount = await prisma.userProgress.count({
-      where: { userId: auth.userId },
+    // Review count for optimization eligibility: Main Session (real) only.
+    const reviewCount = await prisma.reviewLog.count({
+      where: {
+        userId,
+        review_type: 'real',
+        sessionType: 'MAIN',
+      },
     });
 
     // Check optimization eligibility
@@ -215,38 +230,45 @@ export async function onRequestPost(context: {
       // No body or invalid JSON - use defaults
     }
 
-    // Fetch all user progress records with review history
-    // UserProgress links to MedicalContent via conditionId (conditionId = MedicalContent.id)
-    const userProgressRecords = await prisma.userProgress.findMany({
-      where: { userId: auth.userId },
+    const user = await resolveUserByClerkId(prisma, auth.userId);
+    if (!user) {
+      return createErrorResponse(request, 'User not found', 404, 'USER_NOT_FOUND', env);
+    }
+    const userId = user.id;
+
+    // Main Session (real) review history only – canonical source for FSRS optimization.
+    const reviewRows = await prisma.reviewLog.findMany({
+      where: {
+        userId,
+        review_type: 'real',
+        sessionType: 'MAIN',
+      },
+      orderBy: { review_date: 'asc' },
       select: {
         id: true,
-        conditionId: true,
-        reviewHistory: true,
-        MedicalContent: {
-          select: { system: true },
-        },
+        questionFkId: true,
+        review_date: true,
+        rating: true,
+        state: true,
+        duration: true,
+        stability: true,
+        difficulty: true,
+        system: true,
       },
     });
 
-    // Aggregate all review snapshots
-    const allSnapshots: ReviewSnapshot[] = [];
+    // Build snapshots and system codes for in-process optimizer fallback.
+    const allSnapshots: ReviewSnapshot[] = reviewRows.map((r) => ({
+      date: r.review_date.toISOString(),
+      stability: r.stability,
+      difficulty: r.difficulty,
+      rating: r.rating as ReviewSnapshot['rating'],
+      state: r.state as ReviewSnapshot['state'],
+    }));
     const systemCodes: Record<number, string> = {};
-    let snapshotIndex = 0;
-
-    for (const record of userProgressRecords) {
-      const history = record.reviewHistory as ReviewSnapshot[];
-      if (Array.isArray(history) && history.length > 0) {
-        const systemCode = record.MedicalContent?.system ?? null;
-        for (const snapshot of history) {
-          allSnapshots.push(snapshot);
-          if (includeSystemModifiers && systemCode) {
-            systemCodes[snapshotIndex] = systemCode;
-          }
-          snapshotIndex++;
-        }
-      }
-    }
+    reviewRows.forEach((r, i) => {
+      if (includeSystemModifiers && r.system) systemCodes[i] = r.system;
+    });
 
     // Check if we have enough data
     const optimizationStatus = canOptimize(allSnapshots.length);
@@ -263,7 +285,7 @@ export async function onRequestPost(context: {
     // Check if re-optimization is needed (unless forced)
     if (!forceReoptimize) {
       const existingParams = await prisma.personalizedFSRSParams.findUnique({
-        where: { userId: auth.userId },
+        where: { userId },
       });
 
       if (existingParams) {
@@ -271,7 +293,7 @@ export async function onRequestPost(context: {
           ? (Date.now() - existingParams.lastOptimizedAt.getTime()) / 3600000
           : Infinity;
 
-        const reviewsSinceOptimization = allSnapshots.length - existingParams.sampleSize;
+        const reviewsSinceOptimization = reviewRows.length - existingParams.sampleSize;
 
         // Skip if optimized recently (< 24h) and few new reviews (< 50)
         if (hoursSinceOptimization < 24 && reviewsSinceOptimization < 50) {
@@ -303,17 +325,50 @@ export async function onRequestPost(context: {
       select: { w: true, validationBrierScore: true },
     });
 
-    // Run L-BFGS optimization
-    console.log(
-      `[FSRS-Params] Starting optimization for user ${auth.userId} with ${allSnapshots.length} snapshots`
-    );
     const startTime = Date.now();
+    let optimizedParams: PersonalizedFSRSParams;
 
-    const optimizedParams = await runFullOptimization(
-      auth.userId,
-      allSnapshots,
-      includeSystemModifiers ? systemCodes : undefined
-    );
+    if (useSidecar(env) && env.FSRS_OPTIMIZER_URL) {
+      // Python Cloud Function sidecar
+      console.log(
+        `[FSRS-Params] Starting sidecar optimization for user ${auth.userId} with ${reviewRows.length} reviews`
+      );
+      try {
+        const sidecarResult = await triggerFSRSOptimization(
+          userId,
+          reviewRows as ReviewLogRow[],
+          env
+        );
+        optimizedParams = {
+          userId,
+          w: sidecarResult.w,
+          sampleSize: sidecarResult.sampleSize,
+          lastOptimizedAt: sidecarResult.lastOptimizedAt,
+          improvementOverDefault: sidecarResult.improvementOverDefault,
+          brierScore: sidecarResult.brierScore ?? 0,
+          defaultBrierScore: sidecarResult.defaultBrierScore ?? 0,
+          iterations: sidecarResult.optimizationIterations ?? 0,
+          systemModifiers: undefined,
+        };
+      } catch (sidecarError) {
+        console.warn('[FSRS-Params] Sidecar failed, falling back to in-process:', sidecarError);
+        optimizedParams = await runFullOptimization(
+          userId,
+          allSnapshots,
+          includeSystemModifiers ? systemCodes : undefined
+        );
+      }
+    } else {
+      // In-process TypeScript optimizer
+      console.log(
+        `[FSRS-Params] Starting in-process optimization for user ${auth.userId} with ${allSnapshots.length} snapshots`
+      );
+      optimizedParams = await runFullOptimization(
+        auth.userId,
+        allSnapshots,
+        includeSystemModifiers ? systemCodes : undefined
+      );
+    }
 
     const optimizationTime = Date.now() - startTime;
     console.log(`[FSRS-Params] Optimization completed in ${optimizationTime}ms`);
@@ -331,16 +386,17 @@ export async function onRequestPost(context: {
       );
     }
 
-    // Upsert personalized params to database
+    // Upsert personalized params to database (Prisma: optimizationIterations)
     await prisma.personalizedFSRSParams.upsert({
       where: { userId: auth.userId },
       create: {
-        userId: auth.userId,
+        userId,
         w: optimizedParams.w,
         sampleSize: optimizedParams.sampleSize,
         lastOptimizedAt: optimizedParams.lastOptimizedAt,
         improvementOverDefault: optimizedParams.improvementOverDefault,
         validationBrierScore: optimizedParams.brierScore,
+        optimizationIterations: optimizedParams.iterations ?? undefined,
         systemModifiers: optimizedParams.systemModifiers ?? undefined,
       },
       update: {
@@ -349,6 +405,7 @@ export async function onRequestPost(context: {
         lastOptimizedAt: optimizedParams.lastOptimizedAt,
         improvementOverDefault: optimizedParams.improvementOverDefault,
         validationBrierScore: optimizedParams.brierScore,
+        optimizationIterations: optimizedParams.iterations ?? undefined,
         systemModifiers: optimizedParams.systemModifiers ?? undefined,
       },
     });

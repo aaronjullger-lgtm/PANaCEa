@@ -323,7 +323,7 @@ async function uploadToSupabase(
   filename: string,
   mimeType: string
 ): Promise<string> {
-  const storagePath = `medical-images/${filename}`;
+  const storagePath = `other/${filename}`;
 
   const { error } = await supabase.storage.from('medical-images').upload(storagePath, buffer, {
     contentType: mimeType,

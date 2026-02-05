@@ -41,7 +41,8 @@ interface DrillCard {
   available: boolean;
 }
 
-// Master registry of all diagnostic drill modes
+// Master registry of all diagnostic drill modes.
+// Planned modes (available: false): Virtual OSCE, Ventilator — see STRATEGIC_10_SPRINT_ROADMAP.md; full Patient Encounter and Ventilator exist as app views.
 const DRILL_MODES: DrillCard[] = [
   // CLINICAL DIAGNOSIS MODES (Interpretation-based: OSCE, Hydro, Labs, ECG, etc.)
   {
@@ -52,7 +53,7 @@ const DRILL_MODES: DrillCard[] = [
     category: 'clinical-diagnosis',
     difficulty: 'advanced',
     estimatedTime: '10-15 min',
-    available: false, // Coming soon
+    available: false, // Planned: hub entry not yet wired; use Patient Encounter from Training Menu
   },
   {
     id: 'hydro_mode',
@@ -122,7 +123,7 @@ const DRILL_MODES: DrillCard[] = [
     category: 'clinical-diagnosis',
     difficulty: 'advanced',
     estimatedTime: '5-8 min',
-    available: false, // Coming soon
+    available: false, // Planned: hub entry not yet wired; Ventilator drill exists as app view
   },
 
   // QUICK-FIRE MODES (Rapid recall: Buzzwords, Pharm, Derm photos, Daily Term)

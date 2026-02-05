@@ -261,16 +261,19 @@ async function fetchPhotoCases(
     const body = await response.json();
     const cases = Array.isArray(body) ? body : body?.data;
 
-    if (!Array.isArray(cases) || cases.length === 0) {
-      throw new Error('No photo cases available');
+    if (!Array.isArray(cases)) {
+      throw new Error('Invalid API response');
     }
-
+    // In production, return empty array so UI can show "No questions available" instead of mocks
     return cases;
   } catch (error) {
-    console.error('[Photo Drill] Failed to fetch cases, using fallback:', error);
-    return Array.from({ length: count }).map(() =>
-      generateRandomCase((modality as CategoryType) || 'random')
-    );
+    console.error('[Photo Drill] Failed to fetch cases:', error);
+    if (isTestEnv) {
+      return Array.from({ length: count }).map(() =>
+        generateRandomCase((modality as CategoryType) || 'random')
+      );
+    }
+    throw error;
   }
 }
 
@@ -398,6 +401,10 @@ export interface UsePhotoDrillReturn {
   startSession: (category: CategoryType) => void;
   /** Exit to menu */
   exitToMenu: () => void;
+  /** Error message when fetch failed (e.g. API error); clear when retry succeeds */
+  fetchError: string | null;
+  /** Retry loading cases for current category (e.g. after empty or error) */
+  retryLoadCases: () => void;
 }
 
 /** Initial queue size when starting a session */
@@ -424,6 +431,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
   const [userAnswer, setUserAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [status, setStatus] = useState<GameStatus>('menu');
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Track recently used diagnoses to avoid repetition
   const recentDiagnosesRef = useRef<Set<string>>(new Set());
@@ -472,9 +480,9 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
   const startSession = useCallback(
     (category: CategoryType) => {
       setSelectedCategory(category);
-      recentDiagnosesRef.current.clear(); // Clear history on new session
+      setFetchError(null);
+      recentDiagnosesRef.current.clear();
 
-      // Initialize session tracking
       sessionStartRef.current = Date.now();
       sessionDataRef.current = {
         questionsAttempted: 0,
@@ -482,11 +490,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
         bestStreak: 0,
       };
 
-      const seedQueue = Array.from({ length: INITIAL_QUEUE_SIZE }).map(() =>
-        generateRandomCase(category || 'random')
-      );
-      setQueue(seedQueue);
-
+      setQueue([]);
       setCurrentCaseIndex(0);
       setScore(0);
       setStreak(0);
@@ -494,15 +498,25 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
       setIsCorrect(null);
       setStatus('playing');
 
-      // Replace seed queue with fetched cases when available
       void fetchMoreCases(category, INITIAL_QUEUE_SIZE)
-        .then((initialQueue) => setQueue(initialQueue))
+        .then((initialQueue) => {
+          setFetchError(null);
+          setQueue(initialQueue.length > 0 ? initialQueue : []);
+        })
         .catch((error) => {
           console.error('[Photo Drill] Failed to start session:', error);
+          setFetchError(error instanceof Error ? error.message : 'Failed to load questions');
+          setQueue([]);
         });
     },
     [fetchMoreCases]
   );
+
+  const retryLoadCases = useCallback(() => {
+    if (selectedCategory) {
+      startSession(selectedCategory);
+    }
+  }, [selectedCategory, startSession]);
 
   /**
    * Auto-refill queue when running low (background prefetch)
@@ -734,6 +748,8 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
     reset,
     startSession,
     exitToMenu,
+    fetchError,
+    retryLoadCases,
   };
 }
 

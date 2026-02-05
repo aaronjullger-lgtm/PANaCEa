@@ -1,36 +1,40 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  BookOpen,
+  ChevronLeft,
   ClipboardList,
-  Lightbulb,
   Dna,
-  Microscope,
-  BarChart3,
-  AlertTriangle,
-  Stethoscope,
-  ThermometerSun,
-  UserCheck,
-  Search,
-  HelpCircle,
-  Pill,
-  Hospital,
-  Gem,
-  Zap,
-  Flag,
-  TrendingUp,
+  FlaskConical,
   GraduationCap,
+  HelpCircle,
+  Microscope,
+  Pill,
+  Stethoscope,
   Target,
+  TrendingUp,
+  Zap,
   type LucideIcon,
 } from 'lucide-react';
 import FormattedSection from '../../components/conditions/FormattedSection';
 import { BuzzwordBanner } from '../../components/conditions/BuzzwordBanner';
+import { ConditionStructuredCards } from '../../components/conditions/ConditionStructuredCards';
 import {
   getConditionById,
   isMeaningfulContent,
-  type ConditionContent,
+  mergeConditionContent,
   type ConditionEntry,
 } from '../../lib/loadConditions';
+import {
+  CONDITION_SECTION_CONFIG,
+  DEFAULT_EXPANDED_SECTION_IDS,
+  type ConditionSectionConfig,
+} from '../../lib/conditionSections';
 import type { ConditionMeta } from '../../src/types/conditions';
+import { findConditionMetaById } from '../../src/lib/conditionSearch';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { useAuth } from '../../hooks/useAuth';
 
 const getConditionIdFromPath = (): string => {
   if (typeof window === 'undefined') return '';
@@ -38,41 +42,42 @@ const getConditionIdFromPath = (): string => {
   return decodeURIComponent(parts[parts.length - 1] ?? '');
 };
 
-/**
- * Standardized ordering for condition page sections (PA School focused)
- */
-const SECTION_ORDER: { key: string; title: string; Icon?: LucideIcon }[] = [
-  { key: 'overview', title: 'Overview', Icon: ClipboardList },
-  { key: 'keyPoints', title: 'Key Points', Icon: Lightbulb },
-  { key: 'etiologyPathophysiology', title: 'Pathophysiology (The Why)', Icon: Dna },
-  { key: 'etiology', title: 'Etiology', Icon: Microscope },
-  { key: 'epidemiology', title: 'Epidemiology', Icon: BarChart3 },
-  { key: 'riskFactors', title: 'Risk Factors', Icon: AlertTriangle },
-  {
-    key: 'clinicalPresentation',
-    title: 'Clinical Presentation (Signs & Symptoms)',
-    Icon: Stethoscope,
-  },
-  { key: 'symptoms', title: 'Symptoms', Icon: ThermometerSun },
-  { key: 'physicalExam', title: 'Physical Exam', Icon: UserCheck },
-  { key: 'examFindings', title: 'Exam Findings', Icon: Search },
-  { key: 'diagnostics', title: 'Diagnosis (Labs, Imaging, Special Tests)', Icon: Microscope },
-  { key: 'differentialDiagnosis', title: 'Differential Diagnosis', Icon: HelpCircle },
-  { key: 'management', title: 'Management (First Line, Second Line, Patient Ed)', Icon: Pill },
-  { key: 'treatment', title: 'Treatment', Icon: Hospital },
-  { key: 'treatmentPearls', title: 'Treatment Pearls', Icon: Gem },
-  { key: 'complications', title: 'Complications', Icon: Zap },
-  { key: 'redFlags', title: 'Red Flags', Icon: Flag },
-  { key: 'prognosis', title: 'Prognosis', Icon: TrendingUp },
-  { key: 'preventionEducation', title: 'Prevention & Education', Icon: GraduationCap },
-  { key: 'pearls', title: 'Pearls (High-Yield Facts for Exams)', Icon: Target },
-];
+/** Extract a short string from condition sections for hero/key-facts display */
+function getHeroValue(
+  sections: Record<string, import('../../lib/loadConditions').ConditionContent | undefined>,
+  keys: string[]
+): string | undefined {
+  for (const key of keys) {
+    const raw = sections[key];
+    if (typeof raw === 'string') {
+      const s = raw.trim();
+      if (s) return s;
+    }
+    if (Array.isArray(raw) && raw.length > 0 && typeof raw[0] === 'string') {
+      const s = raw[0].trim();
+      if (s) return s;
+    }
+  }
+  return undefined;
+}
 
-interface ContentSection {
-  key: string;
-  title: string;
+/** Section id -> Lucide icon for condition page */
+const SECTION_ICONS: Record<string, LucideIcon> = {
+  overview: ClipboardList,
+  pathophysiology: Dna,
+  clinicalPresentation: Stethoscope,
+  diagnostics: Microscope,
+  differentialDiagnosis: HelpCircle,
+  management: Pill,
+  complications: Zap,
+  prognosis: TrendingUp,
+  preventionEducation: GraduationCap,
+  pearls: Target,
+};
+
+interface ContentSection extends ConditionSectionConfig {
   Icon?: LucideIcon;
-  content?: ConditionContent;
+  content?: import('../../lib/loadConditions').ConditionContent | null;
 }
 
 interface SubtypeTab {
@@ -86,9 +91,63 @@ const ConditionPage: React.FC = () => {
   const [conditionContent, setConditionContent] = useState<ConditionEntry | undefined>(undefined);
   const [conditionMeta, setConditionMeta] = useState<ConditionMeta | undefined>(undefined);
   const [activeSubtype, setActiveSubtype] = useState<string>('general');
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['overview']));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    () => new Set(DEFAULT_EXPANDED_SECTION_IDS)
+  );
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const prefersReducedMotion = useReducedMotion();
+  const { getToken } = useAuth();
+
+  // IntersectionObserver: highlight TOC item for section in view (runs when sectionIds/sections exist)
+  useEffect(() => {
+    if (sectionIds.length === 0) return;
+    const visibility = new Map<string, number>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const id = entry.target.id.replace(/^section-/, '');
+          visibility.set(id, entry.isIntersecting ? entry.intersectionRatio : 0);
+        });
+        const visible = sectionIds.filter((id) => (visibility.get(id) ?? 0) > 0);
+        const byRatio = [...visible].sort((a, b) => (visibility.get(b) ?? 0) - (visibility.get(a) ?? 0));
+        setActiveSectionId(byRatio[0] ?? sectionIds[0]);
+      },
+      { rootMargin: '-80px 0px -60% 0px', threshold: [0, 0.1, 0.5, 1] }
+    );
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(`section-${id}`);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [sectionIds]);
+
+  // Keyboard: j = expand next section, k = expand previous (uses sectionIds, runs after sections exist)
+  useEffect(() => {
+    if (loading || error || sectionIds.length === 0) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+      if (e.key !== 'j' && e.key !== 'k') return;
+      const currentIdx = activeSectionId ? sectionIds.indexOf(activeSectionId) : 0;
+      const idx = currentIdx < 0 ? 0 : currentIdx;
+      if (e.key === 'j') {
+        const next = Math.min(idx + 1, sectionIds.length - 1);
+        const id = sectionIds[next];
+        setExpandedSections((prev) => new Set(prev).add(id));
+        document.getElementById(`section-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        const prev = Math.max(idx - 1, 0);
+        const id = sectionIds[prev];
+        setExpandedSections((prev) => new Set(prev).add(id));
+        document.getElementById(`section-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [loading, error, sectionIds, activeSectionId]);
 
   // Load condition content asynchronously
   useEffect(() => {
@@ -102,7 +161,7 @@ const ConditionPage: React.FC = () => {
 
       try {
         // Load metadata from registry
-        const meta = findConditionMetaById(conditionId);
+        const meta = await findConditionMetaById(conditionId);
         if (meta && mounted) {
           setConditionMeta(meta);
         }
@@ -115,8 +174,8 @@ const ConditionPage: React.FC = () => {
         }
 
         if (mounted) setConditionContent(entry);
-      } catch (error) {
-        console.error('Failed to load condition:', error);
+      } catch (err) {
+        console.error('Failed to load condition:', err);
         setError('Failed to load condition content. Please try again later.');
       } finally {
         if (mounted) setLoading(false);
@@ -128,16 +187,25 @@ const ConditionPage: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, [conditionId]);
+  }, [conditionId, retryCount]);
 
   const sections: ContentSection[] = useMemo(() => {
     if (!conditionContent?.sections) return [];
 
-    return SECTION_ORDER.map((config) => ({
-      ...config,
-      content: conditionContent.sections?.[config.key],
-    })).filter((section) => isMeaningfulContent(section.content));
+    const secs = conditionContent.sections;
+    return CONDITION_SECTION_CONFIG.map((config) => {
+      const content = mergeConditionContent(
+        config.conditionEntryKeys.map((key) => secs[key])
+      );
+      return {
+        ...config,
+        Icon: SECTION_ICONS[config.id],
+        content,
+      };
+    }).filter((section) => isMeaningfulContent(section.content));
   }, [conditionContent?.sections]);
+
+  const sectionIds = useMemo(() => sections.map((s) => s.id), [sections]);
 
   // Determine if condition has subtypes (e.g., AKI, PKD)
   const subtypes: SubtypeTab[] = useMemo(() => {
@@ -167,13 +235,13 @@ const ConditionPage: React.FC = () => {
     return tabs.length > 1 ? tabs : [];
   }, [conditionContent?.condition]);
 
-  const toggleSection = (key: string) => {
+  const toggleSection = (id: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
+      if (next.has(id)) {
+        next.delete(id);
       } else {
-        next.add(key);
+        next.add(id);
       }
       return next;
     });
@@ -185,29 +253,84 @@ const ConditionPage: React.FC = () => {
     return conditionContent.condition.replace(/\s*\([^)]*\)/g, '').trim();
   }, [conditionContent?.condition]);
 
+  const heroValues = useMemo(() => {
+    const sec = conditionContent?.sections ?? {};
+    return {
+      goldStandard: getHeroValue(sec, ['gold_standard_dx', 'gold_standard']),
+      bestInitialTest: getHeroValue(sec, ['best_initial_test']),
+      firstLineRx: getHeroValue(sec, ['first_line_rx']),
+      classicPatient: getHeroValue(sec, ['classic_patient']),
+    };
+  }, [conditionContent?.sections]);
+
   return (
     <main className="condition-page max-w-5xl mx-auto p-6">
-      {/* Loading State */}
+      {/* Loading State - skeleton aligned with design system (slate-700/800) */}
       {loading && (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent)]"></div>
-          <p className="mt-4 text-[var(--color-text-muted)]">Loading condition content...</p>
+        <div className="condition-page-loading space-y-6 py-8">
+          <div className="h-8 w-48 rounded-lg bg-slate-700/50 dark:bg-slate-800 animate-pulse" />
+          <div className="h-12 w-full max-w-2xl rounded-lg bg-slate-700/50 dark:bg-slate-800 animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-24 rounded-xl bg-slate-700/50 dark:bg-slate-800 animate-pulse"
+              />
+            ))}
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-20 rounded-lg bg-slate-700/50 dark:bg-slate-800 animate-pulse border border-[var(--color-border)]"
+              />
+            ))}
+          </div>
+          <p className="text-sm text-[var(--color-text-muted)]">Loading condition content...</p>
         </div>
       )}
 
-      {/* Error State */}
+      {/* Error State - card boundary with retry */}
       {error && !loading && (
-        <div className="text-center py-12">
-          <div className="bg-data-fail/10 border border-data-fail/30 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-data-fail mb-2">Content Not Available</h2>
-            <p className="text-data-fail">{error}</p>
-          </div>
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 max-w-2xl mx-auto">
+          <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+            Content Not Available
+          </h2>
+          <p className="text-[var(--color-text-muted)] mb-4">{error}</p>
+          <button
+            type="button"
+            onClick={() => setRetryCount((c) => c + 1)}
+            className="px-4 py-2 rounded-lg font-medium bg-[var(--color-accent)]/15 text-[var(--color-accent)] border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/25 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+          >
+            Try again
+          </button>
         </div>
       )}
 
       {/* Content - only show if not loading and no error */}
       {!loading && !error && (
         <>
+          {/* Breadcrumb and back link */}
+          <nav
+            className="flex items-center gap-2 mb-6 text-sm text-[var(--color-text-muted)]"
+            aria-label="Breadcrumb"
+          >
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-1 hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 rounded"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </button>
+            <span aria-hidden className="select-none">·</span>
+            <span>Clinical reference</span>
+            <span aria-hidden className="select-none">·</span>
+            <span className="text-[var(--color-text-primary)] font-medium truncate max-w-[12rem] sm:max-w-none">
+              {displayName}
+            </span>
+          </nav>
+
           {/* Header with category badge */}
           <header className="condition-header mb-8">
             <div className="flex items-center gap-3 mb-4">
@@ -236,7 +359,150 @@ const ConditionPage: React.FC = () => {
             )}
           </header>
 
+          {/* Key facts hero block (at-a-glance) */}
+          {(heroValues.goldStandard || heroValues.bestInitialTest || heroValues.firstLineRx || heroValues.classicPatient) && (
+            <div className="mb-8 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {heroValues.goldStandard && (
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="w-4 h-4 text-amber-400" />
+                      <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">
+                        Gold Standard Dx
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      {heroValues.goldStandard}
+                    </p>
+                  </div>
+                )}
+                {heroValues.firstLineRx && (
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Pill className="w-4 h-4 text-emerald-400" />
+                      <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">
+                        First-Line Rx
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      {heroValues.firstLineRx}
+                    </p>
+                  </div>
+                )}
+                {heroValues.bestInitialTest && (
+                  <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FlaskConical className="w-4 h-4 text-[var(--color-accent)]" />
+                      <span className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wide">
+                        Best Initial Test
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      {heroValues.bestInitialTest}
+                    </p>
+                  </div>
+                )}
+              </div>
+              {heroValues.classicPatient && (
+                <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)]">
+                  <div className="flex items-start gap-3">
+                    <BookOpen className="w-5 h-5 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-1">
+                        Classic Patient
+                      </h4>
+                      <p className="text-sm text-[var(--color-text-primary)] leading-relaxed italic">
+                        &quot;{heroValues.classicPatient}&quot;
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <BuzzwordBanner conditionName={displayName} />
+
+          {/* Smart Condition: structured cards (hide/reveal treatment, deep links, Firefly mnemonic) */}
+          <section className="mb-8" aria-label="Structured learning map">
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
+              Learning map
+            </h2>
+            <ConditionStructuredCards
+              conditionId={conditionId}
+              getToken={getToken}
+              onDeepLink={(term, type) => {
+                const base = type === 'drug' ? '/reference/treatments' : '/reference/treatments';
+                navigate(`${base}?q=${encodeURIComponent(term)}`);
+              }}
+            />
+          </section>
+
+          {/* Sticky TOC: side on large screens, horizontal "Jump to" on small */}
+          {sections.length > 1 && (
+            <>
+              <div className="lg:hidden mb-4">
+                <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+                  Jump to section
+                </p>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                  {sections.map((section) => (
+                    <a
+                      key={section.id}
+                      href={`#section-${section.id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        document.getElementById(`section-${section.id}`)?.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'start',
+                        });
+                      }}
+                      aria-current={activeSectionId === section.id ? 'location' : undefined}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                        activeSectionId === section.id
+                          ? 'bg-[var(--color-accent)]/15 border-[var(--color-accent)]/50 text-[var(--color-accent)]'
+                          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-accent)]/50'
+                      }`}
+                    >
+                      {section.title}
+                    </a>
+                  ))}
+                </div>
+              </div>
+              <aside
+                className="hidden lg:block w-52 flex-shrink-0 sticky top-24 self-start"
+                aria-label="Table of contents"
+              >
+                <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3">
+                  On this page
+                </p>
+                <p className="sr-only">Press j for next section, k for previous.</p>
+                <nav className="space-y-1">
+                  {sections.map((section) => (
+                    <a
+                      key={section.id}
+                      href={`#section-${section.id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        document.getElementById(`section-${section.id}`)?.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'start',
+                        });
+                      }}
+                      aria-current={activeSectionId === section.id ? 'location' : undefined}
+                      className={`block py-1.5 px-2 rounded-lg text-sm transition-colors border-l-2 ${
+                        activeSectionId === section.id
+                          ? 'text-[var(--color-accent)] bg-[var(--color-accent)]/10 border-[var(--color-accent)] font-medium'
+                          : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] border-transparent hover:border-[var(--color-accent)]/50'
+                      }`}
+                    >
+                      {section.title}
+                    </a>
+                  ))}
+                </nav>
+              </aside>
+            </>
+          )}
 
           {/* Tabbed interface for subtypes */}
           {subtypes.length > 0 && (
@@ -270,8 +536,29 @@ const ConditionPage: React.FC = () => {
             </div>
           )}
 
-          {/* Content sections */}
-          <div className="condition-sections space-y-4">
+              {/* Content sections: Expand all / Collapse all */}
+              {sections.length > 0 && (
+                <div className="flex gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedSections(new Set(sections.map((s) => s.id)))
+                    }
+                    className="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                  >
+                    Expand all
+                  </button>
+                  <span className="text-[var(--color-border)]">|</span>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedSections(new Set())}
+                    className="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                  >
+                    Collapse all
+                  </button>
+                </div>
+              )}
+              <div className="condition-sections space-y-4">
             {sections.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-[var(--color-text-muted)]">
@@ -280,26 +567,37 @@ const ConditionPage: React.FC = () => {
               </div>
             )}
 
-            {sections.map((section) => (
+            {sections.map((section, index) => (
               <motion.section
-                key={section.key}
+                key={section.id}
+                id={`section-${section.id}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-[var(--color-bg-secondary)] rounded-lg shadow-sm border border-[var(--color-border)] overflow-hidden"
+                transition={
+                  prefersReducedMotion
+                    ? { duration: 0 }
+                    : { duration: 0.25, delay: index * 0.04 }
+                }
+                className="bg-[var(--color-bg-secondary)] rounded-xl shadow-sm border border-[var(--color-border)] overflow-hidden"
               >
                 <button
-                  onClick={() => toggleSection(section.key)}
-                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                  onClick={() => toggleSection(section.id)}
+                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-[var(--color-bg-tertiary)] transition-colors rounded-xl"
                 >
                   <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
                     {section.Icon && (
-                      <section.Icon className="w-5 h-5 text-[var(--color-accent)]" />
+                      <section.Icon className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0" />
                     )}
                     <span>{section.title}</span>
+                    {section.id === 'pearls' && (
+                      <span className="ml-2 px-2 py-0.5 rounded-md text-xs font-semibold bg-[var(--color-accent)]/15 text-[var(--color-accent)] border border-[var(--color-accent)]/30">
+                        High-yield
+                      </span>
+                    )}
                   </h3>
                   <svg
                     className={`w-5 h-5 text-[var(--color-text-muted)] transition-transform ${
-                      expandedSections.has(section.key) ? 'rotate-180' : ''
+                      expandedSections.has(section.id) ? 'rotate-180' : ''
                     }`}
                     fill="none"
                     stroke="currentColor"
@@ -315,12 +613,14 @@ const ConditionPage: React.FC = () => {
                 </button>
 
                 <AnimatePresence>
-                  {expandedSections.has(section.key) && (
+                  {expandedSections.has(section.id) && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+                      transition={
+                        prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }
+                      }
                       className="border-t border-[var(--color-border)]"
                     >
                       <div className="px-6 py-4 condition-content">
@@ -331,6 +631,8 @@ const ConditionPage: React.FC = () => {
                 </AnimatePresence>
               </motion.section>
             ))}
+              </div>
+            </div>
           </div>
         </>
       )}

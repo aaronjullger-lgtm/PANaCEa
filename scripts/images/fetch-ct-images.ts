@@ -900,7 +900,7 @@ async function saveMediaAsset(
         qualityScore: analysis.qualityScore,
         appropriateWindow: analysis.appropriateWindow,
       },
-      status: 'approved',
+      status: 'active',
       approvalStatus: 'approved',
       modality: 'ct',
       explanation: condition.visualFindings,

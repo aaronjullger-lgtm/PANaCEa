@@ -1,8 +1,13 @@
 /**
  * API: Get OSCE chat history for a session
- * GET /api/osce/history?sessionId={sessionId}
+ * GET /api/osce/history?sessionId={sessionId}&limit={limit}
  *
- * Security: Sprint 3 - Migrated to authenticatedEndpoint middleware
+ * Query params (flat):
+ * - sessionId (required): ID of the PatientEncounterSession
+ * - limit (optional): max messages to return (1–500, default 100)
+ *
+ * Response: { data: { history: Array<{ role, content }> } }
+ * Security: Session ownership enforced; returns 404 if session not found or not owned by caller.
  */
 
 import { z } from 'zod';
@@ -12,12 +17,10 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserByClerkId } from '../_shared/resolveUser';
 import { IDSchema } from '../_shared/schemas';
 
-// Schema for history query params
+// Schema for history query params (flat keys from GET ?sessionId=...&limit=...)
 const OSCEHistoryQuerySchema = z.object({
-  query: z.object({
-    sessionId: IDSchema,
-    limit: z.coerce.number().int().min(1).max(500).default(100),
-  }),
+  sessionId: IDSchema,
+  limit: z.coerce.number().int().min(1).max(500).default(100),
 });
 
 export const onRequestOptions = withCors();
@@ -34,15 +37,13 @@ export const onRequestGet = withMiddleware(
 
     try {
       const url = new URL(context.request.url);
-      const sessionId = url.searchParams.get('sessionId');
-      const limitParam = url.searchParams.get('limit') || '100';
+      const queryParams = Object.fromEntries(url.searchParams);
+      const sessionIdParam = queryParams.sessionId ?? '';
+      const limitParam = queryParams.limit ?? '100';
 
-      // Validate query params
       const validation = OSCEHistoryQuerySchema.safeParse({
-        query: {
-          sessionId: sessionId || '',
-          limit: limitParam,
-        },
+        sessionId: sessionIdParam,
+        limit: limitParam,
       });
 
       if (!validation.success) {
@@ -53,7 +54,7 @@ export const onRequestGet = withMiddleware(
         };
       }
 
-      const { sessionId: validSessionId, limit } = validation.data.query;
+      const { sessionId: validSessionId, limit } = validation.data;
       log.info('Fetching OSCE history', { sessionId: validSessionId, limit });
 
       // Ensure the session belongs to the authenticated user

@@ -35,6 +35,7 @@ import usersRouter from './users';
 import recommendationsRouter from './recommendations';
 
 import adaptiveRouter from './adaptive';
+import drillsRouter from './drills';
 
 /**
  * Register all API routes with the Express application.
@@ -50,6 +51,7 @@ export function registerRoutes(app: Express): void {
 
   // Lab and study material routes
   app.use('/api/labs', labsRouter);
+  app.use('/api/drills', drillsRouter);
   app.use('/api/drugs', drugsRouter);
   app.use('/api/buzzwords', buzzwordsRouter);
 
@@ -74,7 +76,7 @@ export function registerRoutes(app: Express): void {
 
   console.log('✓ Route modules registered:');
   console.log('  - /api/conditions, /api/content, /api/reference');
-  console.log('  - /api/labs, /api/drugs, /api/buzzwords');
+  console.log('  - /api/labs, /api/drills, /api/drugs, /api/buzzwords');
   console.log('  - /api/analytics, /api/sync');
   console.log('  - /api/questions, /api/osce');
   console.log('  - /api/performance, /api/achievements');

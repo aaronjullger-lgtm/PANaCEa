@@ -158,7 +158,7 @@ function BrierScoreGauge({ score }: { score: number }) {
         </svg>
         {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-lg font-bold text-slate-900 dark:text-white">
+          <span className="text-lg font-bold text-[var(--color-text-primary)]">
             {score.toFixed(2)}
           </span>
         </div>
@@ -393,7 +393,7 @@ export function CalibrationPanel({
               ) : (
                 <Target className="w-4 h-4 text-sage-500" />
               )}
-              <span className="text-2xl font-bold text-slate-900 dark:text-white">
+              <span className="text-2xl font-bold text-[var(--color-text-primary)]">
                 {summary.overconfidenceBias > 0 ? '+' : ''}
                 {Math.round(summary.overconfidenceBias * 100)}%
               </span>
@@ -409,7 +409,7 @@ export function CalibrationPanel({
 
           {/* Sample Size */}
           <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-            <span className="text-2xl font-bold text-slate-900 dark:text-white">
+            <span className="text-2xl font-bold text-[var(--color-text-primary)]">
               {summary.sampleSize}
             </span>
             <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">Questions</span>

@@ -251,7 +251,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
         </div>
         <button
           onClick={onDismiss}
-          className="flex-shrink-0 p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+          className="flex-shrink-0 p-1 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
           aria-label="Dismiss notification"
         >
           <X className="w-4 h-4" />

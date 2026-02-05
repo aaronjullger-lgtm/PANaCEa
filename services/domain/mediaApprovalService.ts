@@ -46,13 +46,15 @@ export async function processUploadedMedia(
   // Determine if auto-approval is warranted
   const autoApproved = shouldAutoApprove(assessment);
 
-  // Update database with assessment results
+  // Update database with assessment results (status/folder align with admin approve)
   await prisma.mediaAsset.update({
     where: { id: mediaId },
     data: {
       qualityScore: assessment.qualityScore,
       isClinical: assessment.isClinical,
       approvalStatus: autoApproved ? 'approved' : 'pending',
+      status: autoApproved ? 'active' : 'pending_review',
+      folder: autoApproved ? 'approved' : 'inbox',
       approvedAt: autoApproved ? new Date() : null,
       approvedBy: autoApproved ? 'system' : null,
       aiMetadata: {
@@ -172,11 +174,13 @@ export async function approveMedia(decision: ApprovalDecision): Promise<void> {
     throw new Error('Media is already approved');
   }
 
-  // Update approval status
+  // Update approval status; status='active' aligns with admin approve API (canonical: approvalStatus)
   await prisma.mediaAsset.update({
     where: { id: mediaId },
     data: {
       approvalStatus: 'approved',
+      status: 'active',
+      folder: 'approved',
       approvedBy,
       approvedAt: new Date(),
       rejectionReason: null,
@@ -202,6 +206,8 @@ export async function rejectMedia(decision: ApprovalDecision): Promise<void> {
     where: { id: mediaId },
     data: {
       approvalStatus: 'rejected',
+      status: 'rejected',
+      folder: 'rejected',
       approvedBy,
       approvedAt: new Date(),
       rejectionReason: rejectionReason || 'Quality standards not met',
@@ -246,7 +252,7 @@ async function generateAndUploadThumbnail(mediaId: string, imageBuffer: Buffer):
     // Generate thumbnail
     const thumbnailBuffer = await generateThumbnail(imageBuffer, 300);
 
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage (convention: {type}/thumbnails/{filename})
     const thumbnailPath = `${media.type}/thumbnails/${media.filename}`;
     const { error } = await supabaseAdmin.storage
       .from(MEDIA_BUCKET)

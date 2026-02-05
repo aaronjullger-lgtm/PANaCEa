@@ -14,11 +14,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import useSWR from 'swr';
+import { useAuth } from '@clerk/clerk-react';
 import { Brain, CheckCircle, AlertTriangle, HelpCircle, XCircle } from 'lucide-react';
 import {
   getQuadrantLabel,
   type CalibrationQuadrant,
 } from '@/lib/calibrationQuadrants';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
 function keyToQuadrantType(
   key: keyof CalibrationQuadrantData
@@ -48,13 +50,17 @@ interface CalibrationApiResponse {
   days: number;
 }
 
-const fetcher = async (url: string): Promise<CalibrationApiResponse> => {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Failed to fetch calibration');
-  const json = await res.json();
-  // API middleware sends result.data as body, so response is { calibration, days } not { data: {...} }
-  return json as CalibrationApiResponse;
-};
+function makeCalibrationFetcher(getToken: () => Promise<string | null>) {
+  return async (url: string): Promise<CalibrationApiResponse> => {
+    const token = await getToken();
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    if (token) (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error('Failed to fetch calibration');
+    const json = await res.json();
+    return json as CalibrationApiResponse;
+  };
+}
 
 const quadrants: Array<{
   key: keyof CalibrationQuadrantData;
@@ -93,11 +99,15 @@ const quadrants: Array<{
   },
 ];
 
+const CALIBRATION_URL = `${getApiEndpoint(API_ENDPOINTS.ANALYTICS_CALIBRATION)}?days=90`;
+
 export function CalibrationQuadrantWidget({
   className = '',
 }: Readonly<{ className?: string }>) {
+  const { getToken } = useAuth();
+  const fetcher = React.useMemo(() => makeCalibrationFetcher(getToken), [getToken]);
   const { data, error, isLoading } = useSWR<CalibrationApiResponse>(
-    '/api/analytics/calibration?days=90',
+    CALIBRATION_URL,
     fetcher,
     { revalidateOnFocus: false }
   );

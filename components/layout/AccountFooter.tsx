@@ -1,7 +1,10 @@
 /**
  * Account Footer Component
- * A thin, persistent footer bar showing user profile and sync status
- * Clicking opens account menu with Settings, Profile, and Logout options
+ * Not currently used; account/sync UI lives in EnhancedSettingsTab.
+ * Kept for a future footer bar feature if needed.
+ *
+ * A thin, persistent footer bar showing user profile and sync status.
+ * Clicking opens account menu with Settings, Profile, and Logout options.
  */
 
 import React, { useState } from 'react';

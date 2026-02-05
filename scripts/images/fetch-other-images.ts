@@ -589,7 +589,7 @@ async function saveMediaAsset(
         modalityType: analysis.modalityType,
         detectedFinding: analysis.detectedFinding,
       },
-      status: 'approved',
+      status: 'active',
       approvalStatus: 'approved',
       modality: condition.type,
       explanation: condition.visualFindings,

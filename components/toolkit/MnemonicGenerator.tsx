@@ -24,6 +24,7 @@ import {
   Brain,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
 interface MnemonicGeneratorProps {
   /** The medical concept to create a mnemonic for */
@@ -53,24 +54,42 @@ interface GeneratedMnemonic {
   type: 'acronym' | 'story' | 'visual' | 'rhyme';
 }
 
-// Generate mnemonic via API
-const generateMnemonic = async (
+// Generate mnemonic via API (auth required in production)
+async function generateMnemonicWithAuth(
+  getToken: () => Promise<string | null>,
   concept: string,
   context?: string,
   existingMnemonics?: string[]
+): Promise<GeneratedMnemonic> {
+  const token = await getToken();
+  const headers: HeadersInit = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const response = await fetch(getApiEndpoint('/api/ai/generate-mnemonic'), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ concept, context, existingMnemonics }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to generate mnemonic');
+  }
+
+  const data = await response.json();
+  return data.data ?? data;
+}
+
+const generateMnemonic = async (
+  concept: string,
+  context?: string,
+  existingMnemonics?: string[],
+  getToken?: () => Promise<string | null>
 ): Promise<GeneratedMnemonic> => {
   try {
-    const response = await fetch('/api/ai/generate-mnemonic', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ concept, context, existingMnemonics }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to generate mnemonic');
+    if (getToken) {
+      return await generateMnemonicWithAuth(getToken, concept, context, existingMnemonics);
     }
-
-    return await response.json();
+    return await generateMnemonicWithAuth(async () => null, concept, context, existingMnemonics);
   } catch (error) {
     // Fallback: generate a simple acronym-based mnemonic
     const words = concept.split(' ').filter((w) => w.length > 0);
@@ -121,7 +140,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
   onSave,
   compact = false,
 }) => {
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [mnemonic, setMnemonic] = useState<GeneratedMnemonic | null>(null);
@@ -135,7 +154,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
     setError(null);
 
     try {
-      const result = await generateMnemonic(concept, context, previousMnemonics);
+      const result = await generateMnemonic(concept, context, previousMnemonics, getToken);
       setMnemonic(result);
       setPreviousMnemonics((prev) => [...prev, result.mnemonic]);
       setIsSaved(false);
@@ -144,7 +163,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
     } finally {
       setIsGenerating(false);
     }
-  }, [concept, context, previousMnemonics]);
+  }, [concept, context, previousMnemonics, getToken]);
 
   const handleCopy = useCallback(() => {
     if (mnemonic) {

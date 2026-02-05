@@ -47,7 +47,7 @@ export const onRequestPost = authenticatedEndpoint(UseFreezeSchema, async (conte
     }
 
     const prefs = await prisma.userPreferences.findUnique({
-      where: { userId: internalUserId },
+      where: { userId: auth.userId },
       select: { streakFreezes: true },
     });
     const freezes = prefs?.streakFreezes ?? 0;

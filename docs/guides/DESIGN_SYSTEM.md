@@ -2,17 +2,17 @@
 
 ## Overview
 
-PANaCEa uses a **semantic design system** with CSS variables to support flawless dark mode switching. This system eliminates hardcoded color classes (like `bg-white`, `text-gray-900`) and replaces them with semantic tokens that automatically adapt to light/dark themes.
+PANaCEa uses a **semantic design system** with CSS variables (gold + slate palette) to support flawless dark mode switching. This system eliminates hardcoded color classes (like `bg-white`, `text-gray-900`, `bg-black`) and replaces them with semantic tokens that automatically adapt to light/dark themes. **Do not use pure black (#000000) or generic gray-900/zinc-900 for dark backgrounds**; use Brand Dark Blue (slate) and blue-tinted grays.
 
 ## Architecture
 
 ### 1. CSS Variable Layer (`index.css`)
 
-The foundation is a comprehensive set of semantic CSS variables defined in `:root` (light mode) and `.dark` (dark mode):
+The foundation is a comprehensive set of semantic CSS variables defined in `:root` (light mode) and `.dark` (dark mode). The palette is **Gold + Slate** (clinical, readable):
 
 ```css
 :root {
-  /* Main backgrounds */
+  /* Main backgrounds - slate-50 / white */
   --background: #ffffff;
   --foreground: #0f172a;
 
@@ -20,9 +20,9 @@ The foundation is a comprehensive set of semantic CSS variables defined in `:roo
   --card: #ffffff;
   --card-foreground: #0f172a;
 
-  /* Primary brand color */
-  --primary: #0284c7;
-  --primary-foreground: #ffffff;
+  /* Primary brand - gold family (not blue) */
+  --primary: #9a8f72;
+  --primary-foreground: #f8fafc;
 
   /* Muted/Secondary */
   --muted: #f1f5f9;
@@ -33,201 +33,177 @@ The foundation is a comprehensive set of semantic CSS variables defined in `:roo
 }
 
 .dark {
+  /* Brand Dark Blue - NOT pure black */
   --background: #0f172a;
   --foreground: #f1f5f9;
   --card: #1e293b;
   --card-foreground: #f1f5f9;
-  --primary: #0ea5e9;
-  --primary-foreground: #ffffff;
+  --primary: #a89b7a;
+  --primary-foreground: #f8fafc;
   --muted: #334155;
   --muted-foreground: #94a3b8;
   --border: #475569;
 }
 ```
 
-### 2. Tailwind Integration (`tailwind.config.js`)
+### 2. Full `--color-*` Token Reference
 
-Semantic variables are mapped to Tailwind utility classes:
+Use these in components via `var(--color-*)` or Tailwind `bg-[var(--color-*)]` / `text-[var(--color-*)]`:
 
-```javascript
-colors: {
-  // Semantic Design System
-  background: 'var(--background)',
-  foreground: 'var(--foreground)',
-  card: 'var(--card)',
-  'card-foreground': 'var(--card-foreground)',
-  primary: 'var(--primary)',
-  'primary-foreground': 'var(--primary-foreground)',
-  muted: 'var(--muted)',
-  'muted-foreground': 'var(--muted-foreground)',
-  border: 'var(--border)',
-}
-```
+| Token | Purpose | Light | Dark |
+|-------|---------|-------|------|
+| `--color-bg-primary` | Canvas / page background | #F8FAFC | #0F172A |
+| `--color-bg-secondary` | Cards, panels | #ffffff | #1E293B |
+| `--color-bg-tertiary` | Subtle elevation | #f1f5f9 | #334155 |
+| `--color-text-primary` | Primary text | #0f172a | #f1f5f9 |
+| `--color-text-secondary` | Secondary text | #475569 | #cbd5e1 |
+| `--color-text-muted` | Labels, placeholders | #64748b | #94a3b8 |
+| `--color-text-inverse` | Text on accent (e.g. buttons) | #f8fafc | #f8fafc |
+| `--color-border` | Borders, dividers | #e2e8f0 | #475569 |
+| `--color-accent` | Primary CTA, links | #9a8f72 | #a89b7a |
+| `--color-accent-hover` | Hover on accent | #8a7f62 | #b8ab8a |
+| `--color-accent-secondary` | Charts, secondary CTAs | #728ba6 | #91a6bd |
+| `--color-overlay` | Modal/overlay backdrop | rgba(15,23,42,0.5) | rgba(15,23,42,0.85) |
+| `--color-focus-ring` | Keyboard focus ring | #9a8f72 | #a89b7a |
+| `--color-data-pass` | Success / correct | #0d9488 | #2dd4bf |
+| `--color-data-fail` | Error / incorrect | #b91c1c | #f87171 |
+| `--color-data-provisional` | Warning / building | #b45309 | #fbbf24 |
+| `--color-shadow-soft` | Card shadows (no black) | rgba(15,23,42,0.06) | rgba(15,23,42,0.4) |
+| `--chart-grid-stroke` | Chart grid lines | rgba(15,23,42,0.08) | rgba(71,85,105,0.2) |
 
-### 3. Component Usage
+### 3. Tailwind Integration (`tailwind.config.js`)
 
-Components use semantic Tailwind classes instead of hardcoded colors:
+Semantic variables are mapped to Tailwind utility classes (`background`, `foreground`, `card`, `primary`, `muted`, `border`, and legacy `bg-primary`, `text-primary`, `accent`, etc.). Prefer CSS variables for overlay, focus-ring, and data colors: `bg-[var(--color-overlay)]`, `ring-[var(--color-focus-ring)]`, `text-[var(--color-data-fail)]`.
 
-**❌ Before (hardcoded):**
+### 4. Component Usage
+
+**❌ Forbidden:**
+
+- `bg-black`, `text-black`, `border-black`
+- `bg-gray-900`, `dark:bg-gray-900`, `text-gray-900` for primary text/backgrounds
+- Modal overlays with `bg-black/40` or `bg-black/70` (use `--color-overlay` + backdrop-blur)
+
+**✅ Use semantic tokens:**
 
 ```tsx
-<div className="bg-white text-gray-900 dark:bg-slate-900 dark:text-gray-100">
-  <p className="text-gray-600 dark:text-gray-400">Subtitle</p>
+<div className="bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+  <p className="text-[var(--color-text-muted)]">Subtitle</p>
 </div>
-```
 
-**✅ After (semantic):**
+/* Modal overlay */
+<div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md" />
 
-```tsx
-<div className="bg-background text-foreground">
-  <p className="text-muted-foreground">Subtitle</p>
-</div>
+/* Error icon */
+<AlertCircle className="text-[var(--color-data-fail)]" />
 ```
 
 ## Semantic Token Reference
 
 ### Backgrounds
 
-| Token           | Usage                               | Light Mode | Dark Mode |
-| --------------- | ----------------------------------- | ---------- | --------- |
-| `bg-background` | Main app background                 | `#FFFFFF`  | `#0F172A` |
-| `bg-card`       | Cards, panels, elevated surfaces    | `#FFFFFF`  | `#1E293B` |
-| `bg-muted`      | Subtle backgrounds, disabled states | `#F1F5F9`  | `#334155` |
+| Token / Class | Usage | Light | Dark |
+|---------------|--------|-------|------|
+| `bg-background` / `--color-bg-primary` | Main app background | Slate-50 / White | #0F172A (Brand Dark Blue) |
+| `bg-card` / `--color-bg-secondary` | Cards, panels | #FFFFFF | #1E293B |
+| `bg-muted` / `--color-bg-tertiary` | Subtle backgrounds | #F1F5F9 | #334155 |
 
 ### Text
 
-| Token                     | Usage                                | Light Mode | Dark Mode |
-| ------------------------- | ------------------------------------ | ---------- | --------- |
-| `text-foreground`         | Primary text                         | `#0F172A`  | `#F1F5F9` |
-| `text-card-foreground`    | Text on cards                        | `#0F172A`  | `#F1F5F9` |
-| `text-muted-foreground`   | Secondary text, labels, placeholders | `#64748B`  | `#94A3B8` |
-| `text-primary`            | Accent text, links                   | `#0284C7`  | `#0EA5E9` |
-| `text-primary-foreground` | Text on primary backgrounds          | `#FFFFFF`  | `#FFFFFF` |
+| Token / Class | Usage | Light | Dark |
+|---------------|--------|-------|------|
+| `text-foreground` / `--color-text-primary` | Primary text | #0F172A | #F1F5F9 |
+| `text-muted-foreground` / `--color-text-muted` | Secondary, labels | #64748B | #94A3B8 |
+| `text-primary` (Tailwind) | Accent text, links | Gold | Gold |
 
 ### Borders
 
-| Token           | Usage                  | Light Mode | Dark Mode |
-| --------------- | ---------------------- | ---------- | --------- |
-| `border-border` | Dividers, card borders | `#E2E8F0`  | `#475569` |
+| Token | Usage | Light | Dark |
+|-------|--------|-------|------|
+| `border-border` / `--color-border` | Dividers, card borders | #E2E8F0 | #475569 |
+
+Use `border-slate-700` / `border-slate-800` in dark mode for cards if not using `var(--color-border)`.
+
+## Layout
+
+- **Primary shell**: App.tsx uses AppBrand + PageContainer for the header; NavRail is the only active nav. Content is view-state driven; URL sync in App.tsx and CommandCenterHub.
+- **Landing**: LandingPage uses AppBrand (size lg), PageContainer for sections, and SiteFooter for the copyright footer.
+- **Page container**: Use `PageContainer` (or `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`) for consistent section/page width. Options: `maxWidth` `4xl` | `6xl` | `7xl`.
+- **Deprecated**: MainLayout, Sidebar, and AppSidebar are not mounted; AccountFooter is unused (account/sync in EnhancedSettingsTab). See `components/layout/LAYOUT_README.md`.
 
 ## Common Patterns
 
-### Card Layout
+### Card Layout (min 16px padding)
 
 ```tsx
-<div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-  <h3 className="text-card-foreground font-bold mb-2">Card Title</h3>
-  <p className="text-muted-foreground">Card description</p>
+<div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4 shadow-sm">
+  <h3 className="text-[var(--color-text-primary)] font-bold mb-2">Card Title</h3>
+  <p className="text-[var(--color-text-muted)]">Card description</p>
 </div>
 ```
 
-### Primary Button
+### Primary Button (gold CTA)
 
 ```tsx
-<button className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg">
-  Action
-</button>
+<button className="btn-primary">Action</button>
+<!-- or -->
+<button className="bg-[var(--color-accent)] text-[var(--color-text-inverse)] ...">Action</button>
 ```
 
-### Muted Background Section
+### Modal Overlay (no black)
 
 ```tsx
-<div className="bg-muted border border-border rounded-lg p-4">
-  <p className="text-muted-foreground">Less prominent content</p>
+<div className="fixed inset-0 z-50 bg-[var(--color-overlay)] backdrop-blur-md flex items-center justify-center p-4">
+  <div className="bg-[var(--color-bg-secondary)] rounded-xl ...">...</div>
 </div>
 ```
 
-### Transparent Overlays
+### Error State
 
 ```tsx
-<div className="bg-card/50 backdrop-blur-sm border border-border/50">Glass morphism effect</div>
+<AlertCircle className="text-[var(--color-data-fail)]" />
+<p className="text-[var(--color-text-primary)]">Error message</p>
 ```
 
-## Legacy Compatibility
+## Status Colors (Semantic)
 
-For backward compatibility, the old `--color-*` variables are maintained:
+Use CSS variables for consistency and dark mode:
 
-```css
-/* Legacy (still supported) */
---color-bg-primary: #ffffff;
---color-text-primary: #0f172a;
---color-accent: #0284c7;
-```
+- **Success**: `var(--color-data-pass)`
+- **Error**: `var(--color-data-fail)`
+- **Warning / provisional**: `var(--color-data-provisional)`
 
-These map to the same values as semantic variables, so existing components continue to work. **New code should use semantic tokens.**
+## Shadows
 
-## Status Colors
+Do not use default black shadows. Use design tokens:
 
-For success/error states, use Tailwind's native color scales with appropriate dark mode variants:
+- `shadow-brand`: `0 10px 40px -10px rgba(15, 23, 42, 0.5)` (Tailwind extend)
+- `shadow-[0_4px_6px_-1px_var(--color-shadow-soft)]` for cards
 
-```tsx
-// Success (emerald)
-<div className="bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400">
-  Correct answer
-</div>
+## Charts
 
-// Error (red)
-<div className="bg-red-500/10 border-red-500 text-red-600 dark:text-red-400">
-  Incorrect answer
-</div>
-
-// Warning (amber)
-<div className="bg-amber-500/10 border-amber-500 text-amber-600 dark:text-amber-400">
-  Warning message
-</div>
-```
+Use `lib/chartTheme.tsx`: grid uses `var(--chart-grid-stroke)` (defined in `index.css` for light/dark; fallback `var(--color-border-light)` in chartTheme). Colors use `var(--color-accent)`, `var(--color-accent-secondary)`, `var(--color-data-pass)`, etc. Grid lines should be faint blue-gray, not pure gray.
 
 ## Migration Guide
 
-### Step 1: Identify Hardcoded Colors
-
-Search for patterns like:
-
-- `bg-white`, `bg-gray-*`, `bg-slate-*`
-- `text-black`, `text-gray-*`, `text-slate-*`
-- `border-gray-*`, `border-slate-*`
-
-### Step 2: Replace with Semantic Tokens
-
-| Old Pattern                             | New Pattern             |
-| --------------------------------------- | ----------------------- |
-| `bg-white dark:bg-slate-900`            | `bg-background`         |
-| `bg-white dark:bg-slate-800`            | `bg-card`               |
-| `bg-gray-100 dark:bg-slate-700`         | `bg-muted`              |
-| `text-gray-900 dark:text-white`         | `text-foreground`       |
-| `text-gray-600 dark:text-gray-400`      | `text-muted-foreground` |
-| `border-gray-200 dark:border-slate-700` | `border-border`         |
-
-### Step 3: Test Both Themes
-
-1. Toggle dark mode using system/app theme switcher
-2. Verify no color flicker or contrast issues
-3. Check all interactive states (hover, active, disabled)
+| Old Pattern | New Pattern |
+|------------|-------------|
+| `bg-white dark:bg-gray-900` | `bg-[var(--color-bg-primary)]` or `bg-background` |
+| `bg-white dark:bg-gray-800` | `bg-[var(--color-bg-secondary)]` or `bg-card` |
+| `text-gray-900 dark:text-white` | `text-[var(--color-text-primary)]` |
+| `text-gray-600 dark:text-gray-400` | `text-[var(--color-text-muted)]` |
+| `border-gray-200 dark:border-gray-700` | `border-[var(--color-border)]` |
+| `bg-black/40` (overlay) | `bg-[var(--color-overlay)] backdrop-blur-md` |
+| `text-red-500` (error icon) | `text-[var(--color-data-fail)]` |
 
 ## Benefits
 
-✅ **No dark mode duplication**: Write classes once, work in both themes  
-✅ **Semantic naming**: `text-muted-foreground` is clearer than `text-gray-600 dark:text-gray-400`  
-✅ **Centralized control**: Change theme colors in one place (`index.css`)  
-✅ **Type safety**: Tailwind autocomplete suggests semantic tokens  
-✅ **Performance**: No runtime class switching, CSS variables resolve instantly
-
-## Examples in Codebase
-
-- **`PatientEncounterMode.tsx`**: Results page using `bg-card`, `text-muted-foreground`, `border-border`
-- **`MiniDrillLayout.tsx`**: Drill layout with semantic backgrounds and success/error states
-- **`RapidRecallDrill.tsx`**: Flashcard UI with `bg-background`, `text-foreground`
-
-## Future Enhancements
-
-- [ ] Add `--destructive` and `--destructive-foreground` for delete actions
-- [ ] Add `--accent` and `--accent-foreground` for tertiary actions
-- [ ] Add `--input` and `--ring` for form controls
-- [ ] Document animation tokens (durations, easings)
-- [ ] Add component-specific tokens (e.g., `--sidebar-bg`, `--header-border`)
+- **No pure black**: Brand Dark Blue and slate reduce eye strain.
+- **One source of truth**: Change theme in `index.css` only.
+- **Accessibility**: Focus ring uses `--color-focus-ring`; contrast ratios maintained.
+- **Charts**: Single theme (chartTheme) with semantic colors.
 
 ---
 
-**Last Updated**: December 2024  
-**Status**: ✅ Production-ready  
-**Coverage**: Core UI components refactored; drill modes and admin panels complete
+**Last Updated**: February 2025  
+**Status**: Production-ready (gold/slate palette)  
+**Coverage**: Core UI; integrations, modals, and modes should use semantic tokens per this doc.

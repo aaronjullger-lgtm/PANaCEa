@@ -39,30 +39,31 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className={`flex flex-col items-center justify-center p-8 text-center ${className}`}
+      className={`flex flex-col items-center justify-center text-center ${className}`}
     >
-      {showIcon && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', delay: 0.1 }}
-        >
-          <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-        </motion.div>
-      )}
-
-      <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{title}</h3>
-
-      <p className="text-[var(--color-text-muted)] mb-6 max-w-md">{message}</p>
-
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        {onRetry && (
-          <motion.button
-            onClick={onRetry}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-6 py-3 bg-[var(--color-accent)] text-white rounded-xl font-medium hover:bg-[var(--color-accent-hover)] transition-colors shadow-lg"
+      <div className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 shadow-sm">
+        {showIcon && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', delay: 0.1 }}
           >
+            <AlertCircle className="w-12 h-12 text-[var(--color-data-fail)] mb-4 mx-auto" />
+          </motion.div>
+        )}
+
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{title}</h3>
+
+        <p className="text-[var(--color-text-muted)] mb-6 max-w-md">{message}</p>
+
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {onRetry && (
+            <motion.button
+              onClick={onRetry}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-medium hover:bg-[var(--color-accent-hover)] transition-colors shadow-sm"
+            >
             <RefreshCw className="w-4 h-4" />
             Try Again
           </motion.button>
@@ -78,6 +79,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
             {secondaryAction.label}
           </motion.button>
         )}
+        </div>
       </div>
     </motion.div>
   );

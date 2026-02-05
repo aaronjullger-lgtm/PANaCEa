@@ -43,6 +43,9 @@ export interface PreceptorFeedback {
 
   /** Specific areas for improvement */
   areasForImprovement: string[];
+
+  /** Dangerous or inappropriate actions (e.g. antibiotics for viral URI, missing critical workup); apply significant management score reduction */
+  dangerousActions: string[];
 }
 
 /**
@@ -158,6 +161,11 @@ Evaluate the student's performance across these competencies:
    - Was the treatment plan safe and appropriate?
    - Did they address immediate threats (e.g., stabilization, airway, circulation)?
    - Did they order appropriate follow-up or disposition?
+   - **Apply a significant score reduction (e.g. management ≤ 3)** if the student committed dangerous or inappropriate actions (see below).
+
+5. **Dangerous or inappropriate actions** (required when present):
+   - Identify any dangerous or inappropriate actions the student took. Examples: prescribing antibiotics for a clearly viral illness; missing critical workup (e.g. no EKG for chest pain); unsafe treatment; ignoring red flags.
+   - List each in \`dangerousActions\`. For each such action, also add a brief note to \`areasForImprovement\` and reduce the management subscore substantially (e.g. management ≤ 3 when such actions occur).
 
 **Output Requirements:**
 
@@ -175,7 +183,8 @@ Return **ONLY** a valid JSON object with NO markdown formatting, matching this e
   "missedCriticalCues": ["<string>", "<string>"],
   "differentialDiagnosis": ["<string>", "<string>", "<string>"],
   "strengths": ["<string>", "<string>"],
-  "areasForImprovement": ["<string>", "<string>"]
+  "areasForImprovement": ["<string>", "<string>"],
+  "dangerousActions": ["<string>"]
 }
 
 **Critical Instructions:**
@@ -185,6 +194,7 @@ Return **ONLY** a valid JSON object with NO markdown formatting, matching this e
 - "strengths" should acknowledge 2-3 things the student did well.
 - "areasForImprovement" should list 2-3 specific, actionable improvements.
 - "feedback" should be written as if you are speaking directly to the student in a debrief session.
+- "dangerousActions" must list any dangerous or inappropriate actions (e.g. antibiotics for viral URI, missing critical workup, unsafe treatment). If none, use an empty array []. When any are present, apply a significant reduction to the management subscore (e.g. ≤ 3).
 
 Return ONLY the JSON object. Do NOT include \`\`\`json markers or any other text.
 `;
@@ -316,6 +326,7 @@ function normalizePreceptorFeedback(raw: any): PreceptorFeedback {
     differentialDiagnosis: ensureStringArray(raw.differentialDiagnosis),
     strengths: ensureStringArray(raw.strengths),
     areasForImprovement: ensureStringArray(raw.areasForImprovement),
+    dangerousActions: ensureStringArray(raw.dangerousActions),
   };
 }
 
@@ -350,6 +361,7 @@ function generateFallbackFeedback(
     differentialDiagnosis: [],
     strengths: ['Engaged with the patient', 'Attempted a systematic approach'],
     areasForImprovement: ['Gather more focused history', 'Consider broader differentials'],
+    dangerousActions: [],
   };
 }
 

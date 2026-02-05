@@ -108,12 +108,12 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
           Mental Health & Wellness
         </h2>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 dark:text-white">
+              <h4 className="font-semibold text-[var(--color-text-primary)]">
                 Wellness Check Reminders
               </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Get gentle reminders to take breaks during intense study sessions
               </p>
             </div>
@@ -133,12 +133,12 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 dark:text-white">
+              <h4 className="font-semibold text-[var(--color-text-primary)]">
                 Circadian Performance Analytics
               </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Track when you perform best to optimize study schedule
               </p>
             </div>
@@ -161,7 +161,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
           {onOpenWellnessCheck && (
             <button
               onClick={onOpenWellnessCheck}
-              className="w-full p-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg 
+              className="w-full p-4 bg-gradient-to-r from-pink-500 to-rose-500 text-[var(--color-text-inverse)] rounded-lg 
                 font-semibold hover:shadow-lg transition-all hover:scale-105"
             >
               Take a Wellness Break Now
@@ -177,12 +177,12 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
           Hardware Integration
         </h2>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 dark:text-white">
+              <h4 className="font-semibold text-[var(--color-text-primary)]">
                 Apple Watch Micro-Dosing
               </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Receive hourly flashcards on your Apple Watch
               </p>
             </div>
@@ -209,7 +209,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
           {onOpenARMode && (
             <button
               onClick={onOpenARMode}
-              className="w-full p-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg 
+              className="w-full p-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-[var(--color-text-inverse)] rounded-lg 
                 font-semibold hover:shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
             >
               <Camera className="w-5 h-5" />
@@ -229,7 +229,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
           {onOpenForgettingCurve && (
             <button
               onClick={onOpenForgettingCurve}
-              className="w-full p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg 
+              className="w-full p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-[var(--color-text-inverse)] rounded-lg 
                 font-semibold hover:shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
             >
               <TrendingDown className="w-5 h-5" />
@@ -237,11 +237,11 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
             </button>
           )}
 
-          <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+          <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+            <h4 className="font-semibold text-[var(--color-text-primary)] mb-3">
               Virtual Attending Persona
             </h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-sm text-[var(--color-text-muted)] mb-4">
               Choose who gives you feedback after questions
             </p>
             <div className="grid grid-cols-1 gap-2">
@@ -258,10 +258,10 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{persona.icon}</span>
                     <div className="flex-1">
-                      <div className="font-semibold text-gray-900 dark:text-white">
+                      <div className="font-semibold text-[var(--color-text-primary)]">
                         {persona.name}
                       </div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                      <div className="text-xs text-[var(--color-text-muted)]">
                         {persona.description}
                       </div>
                     </div>
@@ -284,44 +284,44 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
         </h2>
         <div className="grid grid-cols-1 gap-3">
           <button
-            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
+            className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] 
             hover:border-green-400 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
               <Video className="w-5 h-5 text-[var(--color-data-pass)]" />
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">Video Vignettes</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <h4 className="font-semibold text-[var(--color-text-primary)]">Video Vignettes</h4>
+                <p className="text-sm text-[var(--color-text-muted)]">
                   Visual diagnostic challenges
                 </p>
               </div>
             </div>
           </button>
           <button
-            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
+            className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] 
             hover:border-green-400 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
               <FileText className="w-5 h-5 text-[var(--color-data-pass)]" />
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">SOAP Note Trainer</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <h4 className="font-semibold text-[var(--color-text-primary)]">SOAP Note Trainer</h4>
+                <p className="text-sm text-[var(--color-text-muted)]">
                   Practice clinical documentation
                 </p>
               </div>
             </div>
           </button>
           <button
-            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
+            className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] 
             hover:border-green-400 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
               <List className="w-5 h-5 text-[var(--color-data-pass)]" />
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">
+                <h4 className="font-semibold text-[var(--color-text-primary)]">
                   Differential Diagnosis Ranker
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Prioritization training</p>
+                <p className="text-sm text-[var(--color-text-muted)]">Prioritization training</p>
               </div>
             </div>
           </button>
@@ -338,7 +338,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
           {onOpenPANRELA && (
             <button
               onClick={onOpenPANRELA}
-              className="w-full p-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg 
+              className="w-full p-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-[var(--color-text-inverse)] rounded-lg 
                 font-semibold hover:shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
             >
               <BookOpen className="w-5 h-5" />
@@ -346,14 +346,14 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
             </button>
           )}
           <button
-            className="w-full p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
+            className="w-full p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] 
             hover:border-indigo-400 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
               <Bell className="w-5 h-5 text-[var(--color-accent)]" />
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">New Drug Newsfeed</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <h4 className="font-semibold text-[var(--color-text-primary)]">New Drug Newsfeed</h4>
+                <p className="text-sm text-[var(--color-text-muted)]">
                   Stay updated on FDA approvals
                 </p>
               </div>
@@ -369,11 +369,11 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
           Additional Features
         </h2>
         <div className="space-y-4">
-          <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+          <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+            <h4 className="font-semibold text-[var(--color-text-primary)] mb-3">
               Medical Spanish Mode
             </h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-sm text-[var(--color-text-muted)] mb-4">
               Learn clinical Spanish vocabulary in context
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -395,12 +395,12 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
             <div className="flex-1">
-              <h4 className="font-semibold text-gray-900 dark:text-white">
+              <h4 className="font-semibold text-[var(--color-text-primary)]">
                 Haptic Feedback (Mobile)
               </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Vibration patterns for correct/incorrect answers
               </p>
             </div>

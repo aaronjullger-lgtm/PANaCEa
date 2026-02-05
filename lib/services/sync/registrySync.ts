@@ -1,7 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
-import { CONDITION_REGISTRY, type ConditionMeta } from '../../../config/conditionRegistry';
-import { DRUG_REGISTRY, type DrugMeta } from '../../../src/registries/drugRegistry';
+import { DRUG_REGISTRY } from '../../../src/registries/drugRegistry';
 import { prisma } from '../../prisma';
 
 export interface SyncStats {
@@ -28,48 +27,51 @@ const normalizeAliases = (aliases?: string | string[]): string[] => {
 };
 
 /**
- * Sync conditions from the registry into the database.
- * - Upserts by (name + system) match.
- * - Preserves existing `content` field in DB (never overwritten).
+ * Sync conditions from MedicalContent (database) into the Condition table.
+ * - Sources published MedicalContent rows as single source of truth.
+ * - Upserts by conditionId; preserves existing content/aliases in Condition when updating.
  */
 export async function syncConditions(client: PrismaClient = prisma): Promise<SyncStats> {
   const stats = emptyStats();
-  stats.total = CONDITION_REGISTRY.length;
+  const rows = await client.medicalContent.findMany({
+    where: { status: 'published' },
+    select: { conditionId: true, condition: true, system: true, relatedSystems: true },
+  });
+  stats.total = rows.length;
 
-  for (const meta of CONDITION_REGISTRY) {
+  for (const row of rows) {
     try {
-      const aliases: string[] = normalizeAliases(meta.aliases);
-
-      const existing = await client.condition.findFirst({
-        where: { name: meta.condition, system: meta.system },
+      const existing = await client.condition.findUnique({
+        where: { id: row.conditionId },
         select: { id: true },
       });
 
       if (existing) {
         await client.condition.update({
-          where: { id: existing.id },
+          where: { id: row.conditionId },
           data: {
-            name: meta.condition,
-            system: meta.system,
-            displayName: meta.condition,
-            aliases,
+            name: row.condition,
+            system: row.system,
+            displayName: row.condition,
+            relatedSystems: row.relatedSystems ?? [],
           },
         });
         stats.updated += 1;
       } else {
         await client.condition.create({
           data: {
-            id: uuidv4(),
-            name: meta.condition,
-            system: meta.system,
-            displayName: meta.condition,
-            aliases,
+            id: row.conditionId,
+            name: row.condition,
+            system: row.system,
+            displayName: row.condition,
+            aliases: [],
+            relatedSystems: row.relatedSystems ?? [],
           },
         });
         stats.created += 1;
       }
     } catch (error) {
-      console.error(`❌ Condition sync failed for ${meta.condition} (${meta.system}):`, error);
+      console.error(`❌ Condition sync failed for ${row.condition} (${row.system}):`, error);
       stats.errors += 1;
     }
   }

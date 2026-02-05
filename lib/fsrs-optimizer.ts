@@ -743,6 +743,39 @@ export async function runFullOptimization(
   return baseParams;
 }
 
+/**
+ * Run full optimization from ReviewLog rows (FSRS v6 primary path).
+ * Use this when ReviewLog is the source of truth instead of UserProgress.reviewHistory.
+ *
+ * @param userId - User identifier
+ * @param rows - ReviewLog rows from prisma.reviewLog.findMany (real + MAIN only)
+ * @returns Optimized parameters
+ */
+export function runFullOptimizationFromReviewLog(
+  userId: string,
+  rows: ReviewLogRow[]
+): PersonalizedFSRSParams {
+  const allReviews = convertReviewLogRows(rows);
+
+  const baseParams = optimizeFSRSParameters(userId, allReviews);
+
+  const reviewsBySystem: Record<string, OptimizationReview[]> = {};
+  for (const review of allReviews) {
+    if (review.system) {
+      if (!reviewsBySystem[review.system]) {
+        reviewsBySystem[review.system] = [];
+      }
+      reviewsBySystem[review.system].push(review);
+    }
+  }
+
+  if (Object.keys(reviewsBySystem).length > 0) {
+    return optimizeWithSystemModifiers(userId, reviewsBySystem, baseParams);
+  }
+
+  return baseParams;
+}
+
 // ============================================================================
 // Utility Functions
 // ============================================================================

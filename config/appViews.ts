@@ -32,6 +32,9 @@ export type View =
   | 'ventilator_hero'
   | 'physiology_drill'
   | 'anatomy_review'
+  | 'contrastive_drill'
+  | 'reasoning_tutor'
+  | 'cram_mode'
   | 'admin_media'
   | 'social_dashboard'
   | 'toolkit'
@@ -44,7 +47,8 @@ export type View =
   | 'pearl_deck'
   | 'my_library'
   | 'tutor_chat'
-  | 'study_companion';
+  | 'study_companion'
+  | 'srs_flashcards';
 
 /** Drill mode IDs with dedicated view implementations */
 export const DRILL_MODE_IDS = {
@@ -69,6 +73,8 @@ export const DRILL_MODE_IDS = {
   VENTILATOR: 'ventilator_hero' as TrainingModeId,
   PHYSIOLOGY: 'physiology_drill' as TrainingModeId,
   ANATOMY: 'anatomy_review' as TrainingModeId,
+  CONTRASTIVE: 'contrastive_drill' as TrainingModeId,
+  CRAM: 'cram_mode' as TrainingModeId,
 } as const;
 
 /** Static animation variants for view transitions */

@@ -1218,20 +1218,36 @@ export interface VariantSubmitResponse {
   success: boolean;
   nextReviewDate?: string;
   queuedVariantId?: string | null;
+  /** When user rates Hard (1), backend suggests re-generating mnemonic with style "exaggerated" */
+  triggerVisualRegeneration?: boolean;
+  questionId?: string;
+  conditionId?: string;
+  topicProgressId?: string;
+  visualRegenerationHint?: string;
+}
+
+/** Optional auth: when backend requires Bearer token, pass getToken from useAuth() */
+export interface SrsAuthOptions {
+  getToken?: () => Promise<string | null>;
 }
 
 /**
  * Fetch the next SRS item using the variant-aware Second Chance API.
  * This prioritizes variants for users in Learning/Relearning states.
+ * Pass options.getToken (e.g. from useAuth()) to send Authorization when the backend requires Bearer auth.
  */
-export async function fetchNextVariantCard(): Promise<VariantNextResponse | null> {
+export async function fetchNextVariantCard(
+  options?: SrsAuthOptions
+): Promise<VariantNextResponse | null> {
   try {
+    const token = options?.getToken ? await options.getToken() : null;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const response = await fetch('/api/srs/next', {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Important for Clerk auth
+      headers,
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -1255,9 +1271,11 @@ export async function fetchNextVariantCard(): Promise<VariantNextResponse | null
  * Submit an SRS review using the variant-aware Second Chance API.
  * This updates both SRSItem and UserTopicProgress, and triggers variant generation on incorrect answers.
  * When offline, the payload is queued and synced when connectivity returns (PWA offline support).
+ * Pass options.getToken to send Authorization when the backend requires Bearer auth.
  */
 export async function submitVariantReview(
-  payload: VariantSubmitPayload
+  payload: VariantSubmitPayload,
+  options?: SrsAuthOptions
 ): Promise<VariantSubmitResponse | null> {
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
     queueOperation('srs_submit', payload);
@@ -1265,11 +1283,13 @@ export async function submitVariantReview(
   }
 
   try {
+    const token = options?.getToken ? await options.getToken() : null;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const response = await fetch('/api/srs/submit', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       credentials: 'include',
       body: JSON.stringify(payload),
     });
@@ -1284,9 +1304,74 @@ export async function submitVariantReview(
       return null;
     }
 
-    return await response.json();
+    const json = await response.json();
+    // API returns { data: { success, nextReviewDate, triggerVisualRegeneration?, ... } }
+    const data = json && typeof json === 'object' && 'data' in json ? json.data : json;
+    return data as VariantSubmitResponse;
   } catch (error) {
     console.error('[SRS] Error submitting variant review:', error);
+    return null;
+  }
+}
+
+/** Response from POST /api/srs/generate-visual */
+export interface GenerateVisualResponse {
+  imageBase64: string;
+  imageMime: string;
+  imageUrl?: string;
+  front: string;
+  back: string;
+  style: 'photorealistic' | 'exaggerated';
+  conditionId?: string;
+  questionId?: string;
+}
+
+/**
+ * Request a generative mnemonic image for a flashcard (Pillar 4: FSRS Visual).
+ * Call when submit returns triggerVisualRegeneration (user rated Hard/1) to get an exaggerated mnemonic.
+ * Pass getToken in options to send Authorization when the backend requires Bearer auth.
+ */
+export async function requestMnemonicImage(
+  front: string,
+  back: string,
+  options: {
+    style?: 'photorealistic' | 'exaggerated';
+    structureReferenceId?: string;
+    structureReferenceUrl?: string;
+    conditionId?: string;
+    questionId?: string;
+    getToken?: () => Promise<string | null>;
+  } = {}
+): Promise<{ data?: GenerateVisualResponse; error?: string } | null> {
+  try {
+    const token = options?.getToken ? await options.getToken() : null;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch('/api/srs/generate-visual', {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({
+        body: {
+          front,
+          back,
+          style: options.style ?? 'exaggerated',
+          structureReferenceId: options.structureReferenceId,
+          structureReferenceUrl: options.structureReferenceUrl,
+          conditionId: options.conditionId,
+          questionId: options.questionId,
+        },
+      }),
+    });
+    const json = await response.json().catch(() => ({}));
+    const data = json?.data ?? json;
+    if (!response.ok) {
+      return { error: data?.error ?? json?.error ?? `HTTP ${response.status}` };
+    }
+    return { data: data as GenerateVisualResponse };
+  } catch (error) {
+    console.error('[SRS] Error requesting mnemonic image:', error);
     return null;
   }
 }

@@ -238,7 +238,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
             <p className="text-sm text-blue-600 dark:text-blue-400 mb-2">
               {currentQuestion?.condition || currentQuestion?.topic}
             </p>
-            <p className="text-lg text-slate-900 dark:text-white">{currentQuestion?.question}</p>
+            <p className="text-lg text-[var(--color-text-primary)]">{currentQuestion?.question}</p>
           </div>
 
           {/* Answer Options */}
@@ -264,7 +264,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
                   <span className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-600 text-sm font-medium">
                     {String.fromCharCode(65 + index)}
                   </span>
-                  <span className="flex-1 text-slate-900 dark:text-white">{option}</span>
+                  <span className="flex-1 text-[var(--color-text-primary)]">{option}</span>
                   {phase === 'feedback' && index === currentQuestion.correctAnswerIndex && (
                     <CheckCircle className="w-5 h-5 text-green-500" />
                   )}
@@ -332,7 +332,7 @@ function IncrementComplete({ stats, onContinue, onEnd }: IncrementCompleteProps)
           <CheckCircle className="w-8 h-8 text-green-500" />
         </div>
 
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
           Round {stats?.currentIncrement} Complete!
         </h2>
 

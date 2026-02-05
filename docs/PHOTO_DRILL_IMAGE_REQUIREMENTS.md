@@ -51,7 +51,7 @@ The `/api/drills/media` endpoint now filters:
 
 ```typescript
 WHERE
-  status = 'approved'
+  approvalStatus = 'approved'   // Canonical approval field (not status)
   AND isClinical = true
   AND correctDiagnosis IS NOT NULL
   AND (isAnnotated = false OR isAnnotated IS NULL)  -- Clean images only

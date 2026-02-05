@@ -31,8 +31,7 @@ import {
   type ValidatedContext,
 } from '../../_shared/middleware';
 import { logger } from '../../_shared/secureLogger';
-
-type MediaCategory = 'ecg' | 'derm' | 'radiology' | 'labs' | 'diagrams';
+import { categoryToType, type MediaCategory } from '../../../lib/mediaTypes';
 
 const VALID_CATEGORIES: MediaCategory[] = ['ecg', 'derm', 'radiology', 'labs', 'diagrams'];
 const MEDIA_BUCKET = 'medical-images';
@@ -167,12 +166,13 @@ export const onRequestPost = withMiddleware(
             .slice(0, 20) // Max 20 tags
         : [];
 
-      // Create MediaAsset record
+      // Create MediaAsset record (type = DB type so drills/media typeFilters match)
       const mediaAsset = await prisma.mediaAsset.create({
         data: {
           id: generateId(),
-          type: category,
+          type: categoryToType(category as MediaCategory),
           filename: sanitizedFilename,
+          storagePath,
           originalUrl: publicUrl,
           conditionId: conditionId || null,
           correctDiagnosis: correctDiagnosis || null,

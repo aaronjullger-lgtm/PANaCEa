@@ -237,10 +237,10 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   // Guard: If currentQuestion is undefined during active play, show loading
   if (!isLoading && !loadError && !isComplete && !currentQuestion) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)]">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-orange-500 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading question...</p>
+          <p className="text-[var(--color-text-secondary)]">Loading question...</p>
         </div>
       </div>
     );
@@ -281,22 +281,22 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)]">
         <div className="text-center max-w-md mx-auto p-8">
           <Loader2 className="w-12 h-12 animate-spin text-orange-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
             Generating PANCE Questions
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-[var(--color-text-secondary)] mb-4">
             Creating clinical vignettes for the Top 50 High-Yield Conditions...
           </p>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+          <div className="w-full bg-[var(--color-bg-tertiary)] rounded-full h-2 mb-2">
             <div
               className="bg-orange-500 h-2 rounded-full transition-all duration-300"
               style={{ width: `${(loadingProgress.completed / loadingProgress.total) * 100}%` }}
             />
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
+          <p className="text-sm text-[var(--color-text-muted)]">
             {loadingProgress.completed} / {loadingProgress.total} questions
           </p>
         </div>
@@ -306,11 +306,11 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
 
   if (loadError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)]">
         <div className="text-center max-w-md mx-auto p-8">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Failed to Load</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">{loadError}</p>
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">Failed to Load</h2>
+          <p className="text-[var(--color-text-secondary)] mb-4">{loadError}</p>
           <div className="flex gap-4 justify-center">
             <button
               onClick={handleRestart}
@@ -321,7 +321,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
             </button>
             <button
               onClick={onExit}
-              className="flex items-center gap-2 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-semibold transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-xl font-semibold transition-colors"
             >
               Exit
             </button>
@@ -339,16 +339,16 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4"
+        className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-[var(--color-bg-primary)] dark:via-[var(--color-bg-secondary)] dark:to-[var(--color-bg-primary)] p-4"
       >
         <div className="max-w-2xl mx-auto py-12">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center"
+            className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl p-8 text-center"
           >
             <Trophy className="w-20 h-20 mx-auto mb-6 text-orange-500" />
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4 flex items-center justify-center gap-2">
+            <h2 className="text-3xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center justify-center gap-2">
               Cram Session Complete! <Trophy className="w-8 h-8 text-amber-500" />
             </h2>
 
@@ -372,7 +372,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
 
             <div className="space-y-3 mb-8">
               <div className="text-lg">
-                <span className="font-semibold text-gray-700 dark:text-gray-300">
+                <span className="font-semibold text-[var(--color-text-secondary)]">
                   Questions Correct:
                 </span>{' '}
                 <span className="text-green-600 dark:text-green-400 font-bold">
@@ -380,7 +380,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                 </span>
               </div>
               <div className="text-lg">
-                <span className="font-semibold text-gray-700 dark:text-gray-300">
+                <span className="font-semibold text-[var(--color-text-secondary)]">
                   Avg Time/Question:
                 </span>{' '}
                 <span className="text-blue-600 dark:text-blue-400 font-bold">
@@ -399,7 +399,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
               </button>
               <button
                 onClick={onExit}
-                className="flex items-center gap-2 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-semibold transition-colors"
+                className="flex items-center gap-2 px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-xl font-semibold transition-colors"
               >
                 <BookOpen className="w-5 h-5" />
                 Exit
@@ -415,9 +415,9 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   if (!currentQuestion) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-[var(--color-bg-primary)] dark:via-[var(--color-bg-secondary)] dark:to-[var(--color-bg-primary)]">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-[var(--color-bg-secondary)] shadow-lg border-b border-[var(--color-border)] p-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
@@ -425,8 +425,8 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">Cram Session</h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <h1 className="text-xl font-bold text-[var(--color-text-primary)]">Cram Session</h1>
+                <p className="text-sm text-[var(--color-text-secondary)]">
                   Top 50 High-Yield PANCE Questions
                 </p>
               </div>
@@ -437,7 +437,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                 <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                   {formatTime(elapsedTime)}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">
+                <div className="text-xs text-[var(--color-text-muted)]">
                   {currentIndex + 1} / {questions.length}
                 </div>
               </div>
@@ -445,7 +445,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
           </div>
 
           {/* Progress bar */}
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-[var(--color-bg-tertiary)] rounded-full h-2">
             <motion.div
               className="bg-gradient-to-r from-orange-500 to-amber-600 h-2 rounded-full"
               initial={{ width: 0 }}
@@ -465,28 +465,28 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
+            className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-xl p-8"
           >
             {/* System Badge */}
             <div className="flex items-center justify-between mb-6">
               <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-full text-sm font-semibold">
                 {currentQuestion.system}
               </span>
-              <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+              <span className="text-sm font-semibold text-[var(--color-text-muted)]">
                 Question {currentIndex + 1} of {questions.length}
               </span>
             </div>
 
             {/* Clinical Vignette */}
             <div className="mb-6">
-              <p className="text-lg text-gray-800 dark:text-gray-200 leading-relaxed">
+              <p className="text-lg text-[var(--color-text-primary)] leading-relaxed">
                 {currentQuestion.vignette}
               </p>
             </div>
 
             {/* Question */}
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 {currentQuestion.question}
               </h3>
             </div>
@@ -520,7 +520,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                     className={buttonClass}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-medium text-gray-900 dark:text-white">
+                      <span className="text-lg font-medium text-[var(--color-text-primary)]">
                         {option}
                       </span>
                       {showResult && isCorrect && <Check className="w-6 h-6 text-green-600" />}
@@ -547,7 +547,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                       <BookOpen className="w-5 h-5" />
                       Explanation
                     </h4>
-                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    <p className="text-[var(--color-text-secondary)] leading-relaxed">
                       {currentQuestion.explanation}
                     </p>
                   </div>
@@ -557,7 +557,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                       <Target className="w-5 h-5" />
                       High-Yield Pearl
                     </h4>
-                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    <p className="text-[var(--color-text-secondary)] leading-relaxed">
                       {currentQuestion.pearl}
                     </p>
                   </div>

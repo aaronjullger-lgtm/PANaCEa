@@ -40,7 +40,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
     }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-family: Inter, 'Poppins', system-ui, sans-serif;
       line-height: 1.6;
       color: #1a202c;
       max-width: 8.5in;
@@ -60,6 +60,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
       margin: 0 0 0.5rem 0;
       color: #1e40af;
       font-size: 2rem;
+      font-family: 'Teko', 'Poppins', sans-serif;
     }
     
     .header .subtitle {

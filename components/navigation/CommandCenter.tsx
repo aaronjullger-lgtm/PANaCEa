@@ -18,6 +18,7 @@ import {
   BookOpen,
   Stethoscope,
 } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { useSRSItems } from '@/hooks/useSRSItems';
@@ -56,6 +57,7 @@ interface StudyRecommendation {
 }
 
 const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNavigate, userId }) => {
+  const { getToken } = useAuth();
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({
     favoriteDrills: [],
     recentDrills: [],
@@ -73,10 +75,31 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
     if (saved) {
       setUserPreferences(JSON.parse(saved));
     }
-
-    const grandRounds = localStorage.getItem(`panceai_grand_rounds_${new Date().toDateString()}`);
-    setGrandRoundsCompleted(!!grandRounds);
   }, [userId]);
+
+  // Grand Rounds completion: server-authoritative (no localStorage)
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const res = await fetch('/api/grand-rounds/completed', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok || cancelled) return;
+        const json = await res.json();
+        if (json?.data?.completed === true && !cancelled) setGrandRoundsCompleted(true);
+        else if (!cancelled) setGrandRoundsCompleted(false);
+      } catch {
+        if (!cancelled) setGrandRoundsCompleted(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, getToken]);
 
   // Fetch SRS items from database
   const { dueCount: srsDueCount, loading: srsLoading } = useSRSItems();

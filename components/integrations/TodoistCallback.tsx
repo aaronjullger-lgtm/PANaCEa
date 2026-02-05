@@ -53,16 +53,16 @@ export default function TodoistCallback() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center">
+      <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] shadow-sm p-8 max-w-md w-full mx-4">
         <div className="text-center">
           {status === 'loading' && (
             <>
-              <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <Loader2 className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
                 Connecting to Todoist
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-[var(--color-text-muted)]">
                 Please wait while we complete the connection...
               </p>
             </>
@@ -70,14 +70,14 @@ export default function TodoistCallback() {
 
           {status === 'success' && (
             <>
-              <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <CheckCircle className="w-12 h-12 text-[var(--color-data-pass)] mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
                 Successfully Connected!
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-[var(--color-text-secondary)] mb-4">
                 Your Todoist account has been connected to PANaCEa.
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Redirecting you back to the app...
               </p>
             </>
@@ -85,14 +85,14 @@ export default function TodoistCallback() {
 
           {status === 'error' && (
             <>
-              <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <AlertCircle className="w-12 h-12 text-[var(--color-data-fail)] mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
                 Connection Failed
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">{errorMessage}</p>
+              <p className="text-[var(--color-text-secondary)] mb-4">{errorMessage}</p>
               <button
                 onClick={() => (window.location.href = '/')}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                className="bg-[var(--color-accent)] text-[var(--color-text-inverse)] px-4 py-2 rounded-xl hover:bg-[var(--color-accent-hover)]"
               >
                 Return to App
               </button>

@@ -582,21 +582,38 @@ export function createValidator<T>(schema: z.ZodSchema<T>) {
 // ============================================================================
 
 /**
+ * Single turn in Main Session (Deep Think) chat history
+ */
+const geminiStreamHistoryTurnSchema = z.object({
+  role: z.enum(['user', 'model']),
+  text: z.string().min(1),
+  /** From previous model turn; include in next request to preserve reasoning chain */
+  thoughtSignature: z.string().optional(),
+});
+
+/**
  * Gemini streaming API request body
- * Used by: /api/gemini/stream
+ * Used by: /api/gemini/stream (Main Session "Deep Think" Tutor)
+ * Supports Gemini 3 Reasoning: history + thoughtSignatures + systemInstruction + context cache.
  */
 export const geminiStreamRequestSchema = z
   .object({
-    modelName: z.string().min(1).max(64).default('gemini-2.5-flash'),
+    modelName: z.string().min(1).max(64).default('gemini-3-flash-preview'),
     prompt: z
       .string()
       .min(1, 'Prompt is required')
       .max(128 * 1024, 'Prompt too long'),
     temperature: z.number().min(0).max(2).default(0.8),
-    /** Optional: use Gemini context cache (e.g. cachedContents/xxx) for "Chat with your Library" */
+    /** Optional: use Gemini context cache (e.g. cachedContents/xxx) for PANCE blueprint or Smart Library */
     cachedContent: z.string().min(1).startsWith('cachedContents/').optional(),
-    /** Optional: Gemini 3 thinking level for reasoning control */
+    /** Optional: Gemini 3 thinking level; HIGH for clinical vignettes to maximize reasoning depth */
     thinkingLevel: z.enum(['MINIMAL', 'LOW', 'MEDIUM', 'HIGH']).optional(),
+    /** Multi-turn history for Deep Think; include thoughtSignature on model turns */
+    history: z.array(geminiStreamHistoryTurnSchema).max(50).optional(),
+    /** Previous model turn thought signature(s); send back to preserve reasoning chain */
+    previousThoughtSignatures: z.array(z.string()).max(10).optional(),
+    /** System instruction for PANaCEa tutor behavior (differentials, pathophysiology of error) */
+    systemInstruction: z.string().max(8192).optional(),
   })
   .strict();
 

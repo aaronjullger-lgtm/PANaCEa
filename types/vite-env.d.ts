@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_API_URL?: string;
   /** Adobe PDF Embed API client ID for SmartPDFViewer */
   readonly VITE_ADOBE_PDF_EMBED_CLIENT_ID?: string;
+  /** Adobe client ID for client-side use (e.g. Embed / Firefly) */
+  readonly VITE_ADOBE_CLIENT_ID?: string;
   readonly MODE: string;
   readonly DEV: boolean;
   readonly PROD: boolean;

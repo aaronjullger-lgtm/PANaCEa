@@ -1,3 +1,7 @@
+/**
+ * @deprecated Not mounted in App. NavRail is the active nav. Kept for future route-based layouts.
+ * See components/layout/LAYOUT_README.md and config/navigation.ts.
+ */
 import React, { useState } from 'react';
 import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';

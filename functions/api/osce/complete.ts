@@ -2,6 +2,8 @@
  * API: Complete OSCE session
  * POST /api/osce/complete
  *
+ * Data isolation: Writes only to PatientEncounterSession (status, diagnosis, treatmentPlan).
+ * Does NOT create ReviewLog. OSCE results are persisted to OsceResult via /api/osce/analysis/grade.
  * Security: Sprint 3 - Migrated to authenticatedEndpoint middleware
  */
 

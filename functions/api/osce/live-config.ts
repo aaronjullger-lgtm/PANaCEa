@@ -1,8 +1,17 @@
 /**
  * GET /api/osce/live-config
- * Returns config needed for the client to connect to Gemini Live (model, wsUrl, apiKey).
- * Auth'd. Uses ephemeral tokens: server calls Gemini v1alpha auth_tokens create, returns
- * short-lived token name to client so GEMINI_API_KEY never touches the browser.
+ * Phase 4: Simulated Patient (OSCE) — config for voice-to-voice Gemini Live WebSocket.
+ *
+ * Student benefit: Real-time voice practice for history taking; tests soft skills and
+ * efficiency. PANCE: History Taking (16%). Latency kills immersion; WebSocket + native
+ * audio avoids text round-trip.
+ *
+ * Cursor Implementation Plan (Phase 4):
+ * 1. Protocol: Client uses WebSocket (not REST) to connect to Gemini Live (BidiGenerateContent).
+ * 2. Audio: Stream raw 16 kHz PCM bi-directionally; do not transcode to text first (adds latency).
+ * 3. Barge-in: Model handles interruptions natively; if the student speaks over the AI, the AI stops.
+ * 4. Tech: Server returns ephemeral token + wsUrl + model; client connects to Gemini with token
+ *    so GEMINI_API_KEY never touches the browser.
  */
 
 import { z } from 'zod';
@@ -92,6 +101,8 @@ export const onRequestGet = authenticatedEndpoint(EmptySchema, async (context) =
         model: LIVE_MODEL,
         wsUrl: WS_URL,
         apiKey: ephemeralTokenName,
+        /** Session Resumption: When Gemini sends sessionResumptionUpdate with newHandle, store it. On reconnect (e.g. WiFi drop), send setup with sessionResumption: { handle: storedHandle } so the "Patient" remembers context (e.g. chest pain). */
+        sessionResumptionHint: 'Store sessionResumptionUpdate.newHandle from server messages; pass as setup.sessionResumption.handle when reconnecting.',
       },
     }),
     { status: 200, headers: { 'Content-Type': 'application/json' } }

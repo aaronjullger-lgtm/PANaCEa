@@ -359,7 +359,7 @@ async function saveImage(
           needsCrop: analysis.needsCrop,
           cropRegion: analysis.cropRegion,
         },
-        status: 'approved',
+        status: 'active',
         approvalStatus: 'approved',
         modality:
           analysis.imageType === 'ecg'

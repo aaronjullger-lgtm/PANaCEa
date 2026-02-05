@@ -10,10 +10,12 @@ import { prisma } from '../../lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import { processUploadedMedia } from './mediaApprovalService';
 import { optimizeImage } from './imageQualityService';
+import type { MediaCategory } from '../../lib/mediaTypes';
+import { categoryToType, typeToCategory } from '../../lib/mediaTypes';
 
 const MEDIA_BUCKET = 'medical-images';
 
-export type MediaCategory = 'ecg' | 'derm' | 'radiology' | 'labs' | 'diagrams';
+export type { MediaCategory } from '../../lib/mediaTypes';
 
 export interface UploadMediaOptions {
   file: File | Buffer;
@@ -58,8 +60,8 @@ export async function uploadMedia(
   // Sanitize filename: remove spaces, special chars, make lowercase
   const sanitizedFilename = filename
     .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9.-]/g, '');
+    .replaceAll(/\s+/g, '-')
+    .replaceAll(/[^a-z0-9.-]/g, '');
 
   // Convert file to buffer for processing
   let imageBuffer: Buffer;
@@ -74,12 +76,13 @@ export async function uploadMedia(
   // Optimize image before upload
   const optimizedBuffer = await optimizeImage(imageBuffer);
 
-  // Build storage path: category/filename
-  const storagePath = `${category}/${sanitizedFilename}`;
+  // Build storage path: category/{uniqueId}_{filename} (unified convention)
+  const uniqueId = uuidv4().slice(0, 8);
+  const storagePath = `${category}/${uniqueId}_${sanitizedFilename}`;
 
   try {
     // Upload to Supabase Storage
-    const { data, error } = await supabaseAdmin.storage
+    const { error } = await supabaseAdmin.storage
       .from(MEDIA_BUCKET)
       .upload(storagePath, optimizedBuffer, {
         contentType: getContentType(sanitizedFilename),
@@ -98,7 +101,7 @@ export async function uploadMedia(
     const mediaAsset = await prisma.mediaAsset.create({
       data: {
         id: uuidv4(),
-        type: getCategoryType(category),
+        type: categoryToType(category),
         filename: sanitizedFilename,
         originalUrl: publicUrl,
         conditionId: conditionId || null,
@@ -150,7 +153,7 @@ export async function getMediaByCondition(conditionId: string): Promise<MediaAss
   return assets.map((asset) => ({
     id: asset.id,
     filename: asset.filename,
-    category: getMediaCategory(asset.type),
+    category: typeToCategory(asset.type),
     originalUrl: asset.originalUrl || '',
     thumbnailUrl: asset.thumbnailUrl || undefined,
     tags: asset.tags,
@@ -164,7 +167,7 @@ export async function getMediaByCondition(conditionId: string): Promise<MediaAss
  * Get media assets by category
  */
 export async function getMediaByCategory(category: MediaCategory): Promise<MediaAssetInfo[]> {
-  const type = getCategoryType(category);
+  const type = categoryToType(category);
 
   const assets = await prisma.mediaAsset.findMany({
     where: { type },
@@ -200,7 +203,7 @@ export async function searchMediaByTags(tags: string[]): Promise<MediaAssetInfo[
   return assets.map((asset) => ({
     id: asset.id,
     filename: asset.filename,
-    category: getMediaCategory(asset.type),
+    category: typeToCategory(asset.type),
     originalUrl: asset.originalUrl || '',
     thumbnailUrl: asset.thumbnailUrl || undefined,
     tags: asset.tags,
@@ -227,10 +230,16 @@ export async function deleteMedia(mediaId: string): Promise<void> {
     throw new Error('Media asset has no URL');
   }
 
-  // Extract storage path from URL
-  const url = new URL(asset.originalUrl);
-  const pathParts = url.pathname.split('/');
-  const storagePath = pathParts.slice(-2).join('/'); // category/filename
+  const storagePath =
+    asset.storagePath ??
+    (() => {
+      const url = new URL(asset.originalUrl!);
+      const bucketSegment = `${MEDIA_BUCKET}/`;
+      const idx = url.pathname.indexOf(bucketSegment);
+      return idx >= 0
+        ? url.pathname.slice(idx + bucketSegment.length)
+        : url.pathname.split('/').slice(-2).join('/');
+    })();
 
   try {
     // Delete from Supabase Storage
@@ -342,24 +351,3 @@ function getContentType(filename: string): string {
   return mimeTypes[ext || ''] || 'application/octet-stream';
 }
 
-function getCategoryType(category: MediaCategory): string {
-  const typeMap: Record<MediaCategory, string> = {
-    ecg: 'ekg',
-    derm: 'photo',
-    radiology: 'imaging',
-    labs: 'labs',
-    diagrams: 'diagram',
-  };
-  return typeMap[category] || 'other';
-}
-
-function getMediaCategory(type: string): MediaCategory {
-  const categoryMap: Record<string, MediaCategory> = {
-    ekg: 'ecg',
-    photo: 'derm',
-    imaging: 'radiology',
-    labs: 'labs',
-    diagram: 'diagrams',
-  };
-  return categoryMap[type] || 'derm';
-}

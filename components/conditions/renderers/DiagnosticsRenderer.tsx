@@ -17,7 +17,7 @@ const DiagnosticsRenderer: React.FC<DiagnosticsRendererProps> = ({ items }) => {
           <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
             {key.replace(/_/g, ' ')}
           </span>
-          <span className="font-medium text-gray-900 dark:text-gray-200">{value}</span>
+          <span className="font-medium text-[var(--color-text-primary)]">{value}</span>
         </div>
       ))}
     </div>

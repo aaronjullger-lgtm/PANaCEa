@@ -13,6 +13,7 @@ import {
   type StudyTaskExport,
   type TodoistOAuthConfig,
 } from '@/lib/services/todoistService';
+import { TO_REVIEW_LABEL } from '@/config/labels';
 
 interface TodoistExportModalProps {
   isOpen: boolean;
@@ -139,7 +140,7 @@ export default function TodoistExportModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md flex items-center justify-center z-50 p-4">
       <div className="bg-[var(--color-bg-primary)] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-[var(--color-border)]">
           <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
@@ -184,7 +185,7 @@ export default function TodoistExportModal({
                   className="rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-[var(--color-text-secondary)]">
-                  To Review ({missedQuestions.length} questions)
+                  {TO_REVIEW_LABEL} ({missedQuestions.length} questions)
                 </span>
               </label>
             </div>

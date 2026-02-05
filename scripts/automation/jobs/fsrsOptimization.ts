@@ -10,13 +10,12 @@
 
 import { PrismaClient } from '@prisma/client';
 import {
-  runFullOptimization,
+  runFullOptimizationFromReviewLog,
   canOptimize,
   validateParameters,
   MIN_REVIEWS_FOR_OPTIMIZATION,
-  type PersonalizedFSRSParams as OptimizedParams,
+  type ReviewLogRow,
 } from '../../../lib/fsrs-optimizer';
-import { type ReviewSnapshot } from '../../../lib/fsrs';
 
 const prisma = new PrismaClient();
 
@@ -148,7 +147,7 @@ export async function generateOptimizationReport(): Promise<{
     prisma.user.count(),
     prisma.personalizedFSRSParams.findMany({
       select: {
-        brierScore: true,
+        validationBrierScore: true,
         improvementOverDefault: true,
         systemModifiers: true,
       },
@@ -160,7 +159,7 @@ export async function generateOptimizationReport(): Promise<{
 
   const averageBrierScore =
     optimizedUsers > 0
-      ? optimizedParams.reduce((sum, p) => sum + (p.brierScore ?? 0), 0) / optimizedUsers
+      ? optimizedParams.reduce((sum, p) => sum + (p.validationBrierScore ?? 0), 0) / optimizedUsers
       : 0;
 
   const averageImprovement =
@@ -236,26 +235,32 @@ interface EligibleUser {
 }
 
 /**
- * Find users eligible for FSRS optimization
+ * Find users eligible for FSRS optimization.
+ * Uses ReviewLog (real + MAIN) as the source of truth for FSRS v6.
  */
 async function findEligibleUsers(): Promise<EligibleUser[]> {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - MIN_DAYS_BETWEEN_OPTIMIZATION);
 
-  // Get users with enough reviews
-  const usersWithReviews = await prisma.userProgress.groupBy({
+  // Get users with enough reviews from ReviewLog (primary source for FSRS v6)
+  const reviewCounts = await prisma.reviewLog.groupBy({
     by: ['userId'],
+    where: {
+      review_type: 'real',
+      sessionType: 'MAIN',
+    },
     _count: { id: true },
     having: {
       id: { _count: { gte: MIN_REVIEWS_FOR_OPTIMIZATION } },
     },
   });
 
-  if (usersWithReviews.length === 0) {
+  if (reviewCounts.length === 0) {
     return [];
   }
 
-  const userIds = usersWithReviews.map((u) => u.userId);
+  const userIds = reviewCounts.map((r) => r.userId);
+  const reviewCountMap = new Map(reviewCounts.map((r) => [r.userId, r._count.id]));
 
   // Get existing optimization records
   const existingOptimizations = await prisma.personalizedFSRSParams.findMany({
@@ -265,19 +270,10 @@ async function findEligibleUsers(): Promise<EligibleUser[]> {
 
   const optimizationMap = new Map(existingOptimizations.map((o) => [o.userId, o]));
 
-  // Get current review counts
-  const reviewCounts = await prisma.reviewLog.groupBy({
-    by: ['userId'],
-    where: { userId: { in: userIds } },
-    _count: { id: true },
-  });
-
-  const reviewCountMap = new Map(reviewCounts.map((r) => [r.userId, r._count.id]));
-
   // Filter eligible users
   const eligible: EligibleUser[] = [];
 
-  for (const user of usersWithReviews) {
+  for (const user of reviewCounts) {
     const existing = optimizationMap.get(user.userId);
     const currentReviewCount = reviewCountMap.get(user.userId) ?? 0;
 
@@ -325,49 +321,38 @@ async function findEligibleUsers(): Promise<EligibleUser[]> {
 }
 
 /**
- * Optimize FSRS parameters for a single user
+ * Optimize FSRS parameters for a single user.
+ * Uses ReviewLog (real + MAIN) as the data source for FSRS v6.
  */
 async function optimizeUserFSRS(
   userId: string,
   _reviewCount: number,
   _lastOptimizedAt: Date | null
 ): Promise<{ optimized: boolean; improvement: number }> {
-  // Fetch user's review history with system codes
-  const userProgress = await prisma.userProgress.findMany({
-    where: { userId },
-    select: {
-      reviewHistory: true,
-      medicalContent: {
-        select: { systemCode: true },
-      },
+  // Fetch review history from ReviewLog (FSRS v6 primary source)
+  const rows = await prisma.reviewLog.findMany({
+    where: {
+      userId,
+      review_type: 'real',
+      sessionType: 'MAIN',
     },
-    orderBy: { updatedAt: 'asc' },
+    select: {
+      rating: true,
+      state: true,
+      stability: true,
+      difficulty: true,
+      elapsedDays: true,
+      wasCorrect: true,
+      system: true,
+    },
+    orderBy: { review_date: 'asc' },
   });
 
-  if (userProgress.length === 0) {
+  if (rows.length === 0) {
     return { optimized: false, improvement: 0 };
   }
 
-  // Aggregate all review snapshots
-  const allSnapshots: ReviewSnapshot[] = [];
-  const systemCodes: Record<number, string> = {};
-  let snapshotIndex = 0;
-
-  for (const progress of userProgress) {
-    const history = progress.reviewHistory as ReviewSnapshot[] | null;
-    if (!history || !Array.isArray(history)) continue;
-
-    for (const snapshot of history) {
-      allSnapshots.push(snapshot);
-      if (progress.medicalContent?.systemCode) {
-        systemCodes[snapshotIndex] = progress.medicalContent.systemCode;
-      }
-      snapshotIndex++;
-    }
-  }
-
-  // Run optimization
-  const result = await runFullOptimization(userId, allSnapshots, systemCodes);
+  const result = runFullOptimizationFromReviewLog(userId, rows as ReviewLogRow[]);
 
   // Validate results
   const validation = validateParameters(result.w);
@@ -379,7 +364,7 @@ async function optimizeUserFSRS(
     return { optimized: false, improvement: 0 };
   }
 
-  // Upsert to database
+  // Upsert to database (PersonalizedFSRSParams schema: validationBrierScore only)
   await prisma.personalizedFSRSParams.upsert({
     where: { userId },
     create: {
@@ -388,8 +373,8 @@ async function optimizeUserFSRS(
       sampleSize: result.sampleSize,
       lastOptimizedAt: result.lastOptimizedAt,
       improvementOverDefault: result.improvementOverDefault,
-      brierScore: result.brierScore,
-      validationBrierScore: result.defaultBrierScore,
+      validationBrierScore: result.brierScore,
+      optimizationIterations: result.iterations,
       systemModifiers: result.systemModifiers ?? undefined,
     },
     update: {
@@ -397,8 +382,8 @@ async function optimizeUserFSRS(
       sampleSize: result.sampleSize,
       lastOptimizedAt: result.lastOptimizedAt,
       improvementOverDefault: result.improvementOverDefault,
-      brierScore: result.brierScore,
-      validationBrierScore: result.defaultBrierScore,
+      validationBrierScore: result.brierScore,
+      optimizationIterations: result.iterations,
       systemModifiers: result.systemModifiers ?? undefined,
     },
   });

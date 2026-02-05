@@ -1,6 +1,22 @@
 # PANaCEa Build & Deployment Status
 
-**Last Updated:** Latest commit `0db7a1b` (2025-01-01)
+**Last Updated:** After 10-step improvement plan and extrapolated steps
+
+## ✅ EXTRAPOLATED STEPS (Post–10-Step Plan)
+
+| Step | Item | Status |
+|------|------|--------|
+| 1 | Remove duplicate `src/components` (NeuralLinkLog, SmartPDFViewer, RichText, ShortcutSettings moved to root `components/`; originals deleted; `src/components/README.md` added) | ✅ |
+| 2 | REPO_AUDIT conclusion updated (Primary Gaps and Overall Assessment reflect 10-step completion) | ✅ |
+| 3 | userProgressService: no manual `updatedAt` (UserProgress has `@updatedAt`; already correct) | ✅ |
+| 4 | Structured audit logging: `functions/api/_shared/auditLog.ts` added; used in `admin/media/approve.ts` | ✅ |
+| 5 | BUILD_AND_DEPLOYMENT_STATUS and docs updated (this section, type-debt note below) | ✅ |
+
+**Type debt:** CI runs `npx tsc --noEmit` and fails on type errors. Remaining type errors are tracked; reduce incrementally (functions → lib → services → components). Optional: use `tsconfig.ci.json` with targeted excludes if needed.
+
+**E2E:** CI runs E2E smoke (`e2e/api-health.spec.ts`) after build. Expand coverage (e.g. `e2e/critical-flows.spec.ts`) locally or on a schedule; see PLAYWRIGHT_QUICKSTART.md.
+
+---
 
 ## ✅ DEPLOYMENT READINESS CHECKLIST
 

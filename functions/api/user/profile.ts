@@ -19,7 +19,7 @@ const EmptySchema = z.object({});
 type ProfileUpdateValidated = z.infer<typeof profileUpdateSchema>;
 
 function buildProfileUpdateData(validated: ProfileUpdateValidated): Record<string, unknown> {
-  const data: Record<string, unknown> = { updatedAt: new Date() };
+  const data: Record<string, unknown> = {};
   if (validated.firstName !== undefined) data.firstName = validated.firstName;
   if (validated.lastName !== undefined) data.lastName = validated.lastName;
   if (validated.examDate !== undefined)

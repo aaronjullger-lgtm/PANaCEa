@@ -271,40 +271,18 @@ All API endpoints run on Cloudflare Workers edge runtime:
 
 ### 4.2 Areas for Improvement ⚠️
 
-#### 1. TypeScript Strictness Not Enabled
+#### 1. ~~TypeScript Strictness Not Enabled~~ ✅ Addressed
 
-**File:** `tsconfig.json`
+**File:** `tsconfig.json` — `strict: true`, `noUncheckedIndexedAccess`, and related strict options are enabled. CI runs `npx tsc --noEmit` and fails on type errors.
 
-```json
-{
-  "compilerOptions": {
-    // "strict": true is NOT present
-    "noEmit": true,
-    "skipLibCheck": true
-  }
-}
-```
+#### 2. ~~Deprecated Registry Imports~~ ✅ Addressed
 
-**Risk:** Allows implicit `any` types and potential null reference errors.  
-**Recommendation:** Enable `"strict": true` incrementally.
-
-#### 2. Deprecated Registry Imports
-
-**File:** `services/conditionDataLoader.ts`
-
-```typescript
-import { conditionRegistry } from '@/config/conditionRegistry';
-// This import is deprecated per .clinerules
-```
-
-**Risk:** Inconsistent data source (database vs. static registry).  
-**Recommendation:** Remove all references to `conditionRegistry.ts`.
+Runtime app code no longer imports `config/conditionRegistry.ts`. `conditionDataLoader` and `registrySync` use the database as the single source of truth. Script-only imports remain for seed/sync; see plan.
 
 #### 3. 100+ npm Scripts
 
 **File:** `package.json`
-The project has over 100 npm scripts, which increases maintenance burden.  
-**Recommendation:** Consolidate into orchestration scripts or use a task runner.
+The project has over 100 npm scripts. **Addressed:** Scripts are grouped and documented in `docs/SCRIPTS_REFERENCE.md`; high-level commands (e.g. `db:orchestrate`, `content-doctor`, `automation:daily`) are the main entry points.
 
 ---
 
@@ -349,9 +327,9 @@ The schema includes comprehensive indexes:
 
 ### ⚠️ Recommendations
 
-1. **Rate Limiting:** Add rate limiting to AI-powered endpoints (`/api/gemini`)
-2. **Audit Logging:** Add structured logging for sensitive operations
-3. **CSP Headers:** Implement Content Security Policy headers
+1. **Rate Limiting:** ✅ Implemented on `/api/gemini` and `/api/gemini/stream` via `withRateLimit(env, identifier, 'gemini')` (see `functions/api/_shared/rateLimiter.ts`).
+2. **Audit Logging:** ✅ Addressed: `functions/api/_shared/auditLog.ts` provides `auditLog(action, metadata)` for sensitive operations; used in admin/media/approve. Content-specific audit uses `lib/services/cms/auditLogger` and ContentAuditLog.
+3. **CSP Headers:** ✅ Implemented in `public/_headers` (Content-Security-Policy for Pages).
 
 ---
 
@@ -361,9 +339,9 @@ The schema includes comprehensive indexes:
 
 | #   | Task                                          | Effort | Impact |
 | --- | --------------------------------------------- | ------ | ------ |
-| 1   | Enable `strict: true` in tsconfig.json        | 2h     | High   |
-| 2   | Remove deprecated `conditionRegistry` imports | 1h     | Medium |
-| 3   | Add rate limiting to Gemini proxy             | 2h     | High   |
+| 1   | ~~Enable `strict: true` in tsconfig.json~~ ✅ Done | — | — |
+| 2   | ~~Remove deprecated `conditionRegistry` imports~~ ✅ Done (runtime) | — | — |
+| 3   | ~~Add rate limiting to Gemini proxy~~ ✅ Done | — | — |
 
 ### Priority 2: Medium Term
 
@@ -394,13 +372,13 @@ StudyPANaCEa is a **well-architected, production-ready** medical education platf
 - Strong validation and error handling patterns
 - Extensive documentation
 
-**Primary Gaps:**
+**Primary Gaps (updated after 10-step plan):**
 
-- TypeScript strictness not fully enabled
-- Some deprecated imports remain
-- Large number of npm scripts to maintain
+- TypeScript strictness is enabled; remaining type debt is tracked and reduced incrementally.
+- Runtime conditionRegistry usage removed; scripts still reference it where needed for seed/sync.
+- npm scripts are documented in `docs/SCRIPTS_REFERENCE.md`; high-level commands are the main entry points.
 
-**Overall Assessment:** The repository is in **excellent health** and ready for continued development. The recommended improvements are incremental enhancements rather than critical fixes.
+**Overall Assessment:** The repository is in **excellent health** and ready for continued development. The 10-step improvement plan has been completed; further work (E2E expansion, type-debt paydown, structured audit logging) is documented in PRODUCTION_READINESS_PLAN and BUILD_AND_DEPLOYMENT_STATUS.
 
 ---
 

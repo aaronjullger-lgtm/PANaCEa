@@ -110,6 +110,30 @@ export const onRequestPost = authenticatedEndpoint(
         },
       });
 
+      // Create SessionAnalytics row for aggregated session-level analytics (enables dashboards without re-querying StudySession)
+      const totalDurationMinutes =
+        data.totalTimeMs != null ? Math.round(data.totalTimeMs / 60000) : undefined;
+      const systemDistribution =
+        (data.systemsCovered?.length ?? 0) > 0
+          ? (data.systemsCovered as string[]).reduce(
+              (acc: Record<string, number>, s: string) => {
+                acc[s] = (acc[s] ?? 0) + 1;
+                return acc;
+              },
+              {}
+            )
+          : undefined;
+      await prisma.sessionAnalytics.create({
+        data: {
+          userId: user.id,
+          sessionId: session.id,
+          totalDurationMinutes: totalDurationMinutes ?? undefined,
+          avgResponseTime: data.avgTimePerQuestion ?? undefined,
+          systemDistribution: systemDistribution ?? undefined,
+          wasCompleted: true,
+        },
+      });
+
       // Update user learning profile (upsert)
       await updateUserLearningProfile(prisma, user.id, data);
 

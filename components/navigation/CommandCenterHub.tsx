@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -72,6 +72,7 @@ import {
   type TrainingModeConfig,
   type TrainingCategory,
 } from '@/config/training-modes';
+import { TO_REVIEW_LABEL } from '@/config/labels';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useRolling360Stats } from '@/hooks/useRolling360Stats';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -113,6 +114,8 @@ interface CommandCenterHubProps {
   onNavigateToMyLibrary?: () => void;
   /** Study Companion: PDF + citations + chat with textbook */
   onNavigateToStudyCompanion?: () => void;
+  /** SRS Flashcards: variant-aware cards + generative mnemonics (Hard → exaggerated image) */
+  onNavigateToSrsFlashcards?: () => void;
   onNavigateToCustomStudy?: () => void;
   /** Opens Pearl Deck (Rapid Review - saved pearls only) */
   onNavigateToPearlDeck?: () => void;
@@ -364,6 +367,117 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
         </PrimaryButton>
       </div>
     </GlassCard>
+  );
+};
+
+// Hero Triple: Main Session | OSCE | Analytics — above the fold focal block
+const HeroTriple: React.FC<{
+  onStartSession: (settings?: SessionSettings) => void;
+  onNavigateToSimulation?: (settings?: { initialFocus?: 'all' | 'growth' | 'flagged' | 'due' }) => void;
+  onNavigateToDrillMode: (modeId: string) => void;
+  streak: number;
+  dueCount: number;
+  accuracy: number | null;
+  questionsToday: number;
+  dueLabel: string;
+  accuracyLabel: string;
+  onOpenFullAnalytics: () => void;
+}> = ({
+  onStartSession,
+  onNavigateToSimulation,
+  onNavigateToDrillMode,
+  streak,
+  dueCount,
+  accuracy,
+  questionsToday,
+  dueLabel,
+  accuracyLabel,
+  onOpenFullAnalytics,
+}) => {
+  const handleMainSession = () => {
+    if (onNavigateToSimulation) {
+      onNavigateToSimulation();
+    } else {
+      onStartSession(dueCount > 0 ? { focus: 'review' } : undefined);
+    }
+  };
+  return (
+    <section className="mb-6" aria-label="Quick actions: Main Session, OSCE, Analytics">
+      <h2 className="sr-only">Quick actions</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Main Session */}
+        <GlassCard variant="primary" hoverable className="flex flex-col">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="p-2.5 rounded-xl bg-action-blue/20 shrink-0">
+              <Brain className="w-6 h-6 text-action-blue" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-bold text-[var(--color-text-primary)]">Build Session</h3>
+              <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+                {dueCount > 0 ? 'Review due questions' : 'Start adaptive questions'}
+              </p>
+            </div>
+          </div>
+          <PrimaryButton
+            variant="primary"
+            size="md"
+            icon={Play}
+            className="mt-auto w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2"
+            onClick={handleMainSession}
+          >
+            {dueCount > 0 ? 'Start review' : 'Start session'}
+          </PrimaryButton>
+        </GlassCard>
+
+        {/* OSCE */}
+        <GlassCard variant="info" hoverable className="flex flex-col">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="p-2.5 rounded-xl bg-steel-blue-400/20 shrink-0">
+              <MessageSquare className="w-6 h-6 text-steel-blue-500" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-bold text-[var(--color-text-primary)]">Live OSCE</h3>
+              <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+                Voice patient, SOAP grading
+              </p>
+            </div>
+          </div>
+          <PrimaryButton
+            variant="primary"
+            size="md"
+            icon={Play}
+            className="mt-auto w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2"
+            onClick={() => onNavigateToDrillMode('patient_encounter')}
+          >
+            Start Encounter
+          </PrimaryButton>
+        </GlassCard>
+
+        {/* Analytics */}
+        <GlassCard variant="info" hoverable className="flex flex-col">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="p-2.5 rounded-xl bg-sage-500/20 shrink-0">
+              <BarChart3 className="w-6 h-6 text-sage-600 dark:text-sage-400" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-bold text-[var(--color-text-primary)]">Progress & Analytics</h3>
+              <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+                Streak {streak} · {dueLabel} {dueCount} · {accuracy !== null ? `${accuracy}%` : '—'} {accuracyLabel}
+              </p>
+            </div>
+          </div>
+          <PrimaryButton
+            variant="secondary"
+            size="md"
+            icon={BarChart3}
+            className="mt-auto w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2"
+            onClick={onOpenFullAnalytics}
+          >
+            View full analytics
+          </PrimaryButton>
+        </GlassCard>
+      </div>
+    </section>
   );
 };
 
@@ -623,7 +737,7 @@ function ResidencyCockpitSection({
                       text-left p-4 rounded-xl border transition-all
                       bg-[var(--color-bg-primary)] border-[var(--color-border)]
                       hover:border-[var(--color-accent)]/50 hover:shadow-lg
-                      ${isWeak ? 'ring-1 ring-amber-500/30' : ''}
+                      ${isWeak ? 'ring-1 ring-[var(--color-accent)]/30' : ''}
                     `}
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -631,7 +745,7 @@ function ResidencyCockpitSection({
                         {system}
                       </span>
                       {isWeak && (
-                        <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs rounded">
+                        <span className="px-1.5 py-0.5 bg-[var(--color-accent)]/20 text-[var(--color-accent)] text-xs rounded">
                           Weak
                         </span>
                       )}
@@ -673,6 +787,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   onNavigateToReference,
   onNavigateToMyLibrary,
   onNavigateToStudyCompanion,
+  onNavigateToSrsFlashcards,
   onNavigateToCustomStudy,
   onNavigateToPearlDeck,
   onNavigateToClinicalEye,
@@ -782,13 +897,25 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   }, []);
 
   const [activeTab, setActiveTab] = useState<'training' | 'resources' | 'analytics'>(
-    initialStudyToolsTab ?? 'training'
+    initialStudyToolsTab ?? 'analytics'
   );
+  const studyToolsSectionRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (initialStudyToolsTab && (initialStudyToolsTab === 'resources' || initialStudyToolsTab === 'analytics' || initialStudyToolsTab === 'training')) {
       setActiveTab(initialStudyToolsTab);
     }
   }, [initialStudyToolsTab]);
+  const handleOpenFullAnalytics = useCallback(() => {
+    setActiveTab('analytics');
+    navigate('/study?tab=analytics', { replace: true });
+    // Defer scroll so React can commit the tab switch and the analytics panel is in the DOM
+    const scrollToStudyTools = () => {
+      studyToolsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    requestAnimationFrame(() => {
+      requestAnimationFrame(scrollToStudyTools);
+    });
+  }, [navigate]);
   const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
   const [studyFocusStep, setStudyFocusStep] = useState<'idle' | 'choose_focus'>('idle');
   const [showAllTools, setShowAllTools] = useState(false);
@@ -958,6 +1085,32 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </motion.div>
       )}
 
+      {/* Hero Triple: Main Session | OSCE | Analytics — above the fold */}
+      <motion.div
+        initial={sectionEnter}
+        animate={sectionAnimate}
+        transition={sectionTransition(0)}
+      >
+        <HeroTriple
+          onStartSession={onStartSession}
+          onNavigateToSimulation={onNavigateToSimulation}
+          onNavigateToDrillMode={onNavigateToDrillMode}
+          streak={stats.streak}
+          dueCount={stats.dueCount}
+          accuracy={stats.accuracy}
+          questionsToday={stats.questionsToday}
+          dueLabel={careerStage === 'practicing' ? 'Maintenance Due' : TO_REVIEW_LABEL}
+          accuracyLabel={
+            careerStage === 'student' &&
+            enabledSystems.size > 0 &&
+            enabledSystems.size < Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
+              ? 'Module Accuracy'
+              : 'Global Accuracy'
+          }
+          onOpenFullAnalytics={handleOpenFullAnalytics}
+        />
+      </motion.div>
+
       {/* Quick Stats - Section 1 (delay 0) */}
       <motion.div
         initial={sectionEnter}
@@ -980,49 +1133,42 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               ? 'Module Accuracy'
               : 'Global Accuracy'
           }
-          dueLabel={careerStage === 'practicing' ? 'Maintenance Due' : 'To Review'}
+          dueLabel={careerStage === 'practicing' ? 'Maintenance Due' : TO_REVIEW_LABEL}
         />
       )}
       </motion.div>
 
-      {/* Primary CTA: Start review when due, else start a session - Section 2 (delay 100ms) */}
-      {!isLoadingStats && (
-        <motion.div
-          initial={sectionEnter}
-          animate={sectionAnimate}
-          transition={sectionTransition(0.1)}
-          className="mb-6"
-        >
-          {stats.dueCount > 0 ? (
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-accent)]/10">
-              <p className="text-[var(--color-text-primary)] font-medium">
-                {stats.dueCount} question{stats.dueCount !== 1 ? 's' : ''} due
-                {careerStage === 'practicing' ? ' — maintenance' : ' — maintain study continuity'}
-              </p>
-              <PrimaryButton
-                onClick={() => onStartSession({ focus: 'review' })}
-                className="flex items-center gap-2"
-              >
-                <Play className="w-4 h-4" />
-                {careerStage === 'practicing' ? 'Practice due' : 'Start review'}
-              </PrimaryButton>
-            </div>
-          ) : (
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-              <p className="text-[var(--color-text-secondary)] font-medium">
-                Ready to study?
-              </p>
-              <PrimaryButton
-                onClick={() => onStartSession()}
-                className="flex items-center gap-2"
-              >
-                <Play className="w-4 h-4" />
-                Start a session
-              </PrimaryButton>
-            </div>
-          )}
-        </motion.div>
-      )}
+      {/* Core Adaptive Hero - main session (above the fold) */}
+      <motion.div
+        initial={sectionEnter}
+        animate={sectionAnimate}
+        transition={sectionTransition(0.1)}
+      >
+        <CoreAdaptiveHero
+          onStart={() => (onNavigateToSimulation ? onNavigateToSimulation() : onStartSession())}
+          accuracy={stats.accuracy}
+          questionsToday={stats.questionsToday}
+          examLabel={examLabel}
+          enabledSystemsLabel={enabledSystemsLabel}
+          accuracyLabel={
+            careerStage === 'student' &&
+            enabledSystems.size > 0 &&
+            enabledSystems.size < Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
+              ? 'Module Accuracy'
+              : 'Global Accuracy'
+          }
+          growthAreas={growthAreas}
+        />
+      </motion.div>
+
+      {/* OSCE Section - above the fold */}
+      <motion.div
+        initial={sectionEnter}
+        animate={sectionAnimate}
+        transition={sectionTransition(0.1)}
+      >
+        <OSCESection onStart={() => onNavigateToDrillMode('patient_encounter')} />
+      </motion.div>
 
       {/* Recommended for you - Section 2 */}
       <motion.div
@@ -1167,32 +1313,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           </motion.div>
         )}
 
-      {/* Core Adaptive - THE MAIN EVENT - Section 4 (delay 300ms) */}
-      <motion.div
-        initial={sectionEnter}
-        animate={sectionAnimate}
-        transition={sectionTransition(0.3)}
-      >
-      <CoreAdaptiveHero
-        onStart={() => (onNavigateToSimulation ? onNavigateToSimulation() : onStartSession())}
-        accuracy={stats.accuracy}
-        questionsToday={stats.questionsToday}
-        examLabel={examLabel}
-        enabledSystemsLabel={enabledSystemsLabel}
-        accuracyLabel={
-          careerStage === 'student' &&
-          enabledSystems.size > 0 &&
-          enabledSystems.size < Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
-            ? 'Module Accuracy'
-            : 'Global Accuracy'
-        }
-        growthAreas={growthAreas}
-      />
-      </motion.div>
-
-      {/* Virtual OSCE Section (Standalone Feature) */}
-      <OSCESection onStart={() => onNavigateToDrillMode('patient_encounter')} />
-
       {/* Custom Study Mode - System Chooser (Targeted Practice) */}
       {onNavigateToCustomStudy && (
         <GlassCard variant="primary" hoverable className="mb-6">
@@ -1276,7 +1396,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       )}
 
       {/* Study Tools / Maintenance Section Header - Sticky; aligned to same grid as content */}
-      <div className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/95 backdrop-blur border-b border-[var(--color-border)] -mx-4 px-4 pb-4 mb-6">
+      <div ref={studyToolsSectionRef} id="study-tools-section" className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/95 backdrop-blur border-b border-[var(--color-border)] -mx-4 px-4 pb-4 mb-6">
         <div className="mb-3 max-w-[1200px] mx-auto">
           <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
             {careerStage === 'practicing' ? 'Maintenance & Reference' : 'Study Tools'}
@@ -1290,14 +1410,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
         {/* Tab Navigation - switches content below (not scroll anchors) */}
         <div
-          className="flex gap-4 overflow-x-auto -mx-1 px-1 border-b border-[var(--color-border)] max-w-[1200px] mx-auto"
+          className="flex gap-4 overflow-x-auto -mx-1 px-1 border-b border-[var(--color-border)] w-full"
           role="tablist"
           aria-label="Study tools view"
         >
           {[
+            { id: 'analytics' as const, label: 'Progress & Analytics', icon: BarChart3 },
             { id: 'training' as const, label: 'Training Modes', icon: Zap },
             { id: 'resources' as const, label: 'Clinical Resources', icon: BookOpen },
-            { id: 'analytics' as const, label: 'Progress & Analytics', icon: BarChart3 },
           ].map((tab) => {
             const isSelected = activeTab === tab.id;
             const className = `flex items-center gap-2 px-1 py-2 font-medium transition-all whitespace-nowrap border-b-2 bg-transparent ${
@@ -1471,7 +1591,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   )}
                 </section>
 
-                {/* Fix My Weaknesses */}
+                {/* Fix My Weaknesses — fix.modeIds is intentionally empty; fix is handled by the weak-areas CTA only. */}
                 <section>
                   <div className="flex items-center gap-2 mb-3">
                     <AlertCircle className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -1612,11 +1732,11 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </h3>
                 <button
                   onClick={onNavigateToPearlDeck}
-                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-amber-500/50 hover:shadow-lg transition-all group"
+                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-xl bg-amber-500/10">
-                      <Sparkles className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                    <div className="p-3 rounded-xl bg-[var(--color-accent)]/20">
+                      <Sparkles className="w-6 h-6 text-[var(--color-accent)]" />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-bold text-[var(--color-text-primary)]">
@@ -1719,11 +1839,11 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </h3>
                 <button
                   onClick={onNavigateToReference}
-                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
+                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-xl bg-steel-blue-100 dark:bg-steel-blue-900/30">
-                      <BookOpen className="w-6 h-6 text-steel-blue-600 dark:text-steel-blue-400" />
+                    <div className="p-3 rounded-xl bg-[var(--color-accent)]/20">
+                      <BookOpen className="w-6 h-6 text-[var(--color-accent)]" />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-bold text-[var(--color-text-primary)]">
@@ -1733,16 +1853,16 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                         Browse Anatomy, Labs, Drugs, ECG Patterns, Procedures, Physiology & more
                       </p>
                       <div className="flex flex-wrap gap-2 mt-3">
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-steel-blue-100 dark:bg-steel-blue-900/40 text-steel-blue-700 dark:text-steel-blue-300">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
                           300+ Anatomy
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-sage-100 dark:bg-sage-900/40 text-sage-700 dark:text-sage-300">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
                           200+ Labs
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-deep-plum-100 dark:bg-deep-plum-900/40 text-deep-plum-700 dark:text-deep-plum-300">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
                           1000+ Drugs
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-dusty-rose-100 dark:bg-dusty-rose-900/40 text-dusty-rose-700 dark:text-dusty-rose-300">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
                           50+ ECG
                         </span>
                       </div>
@@ -1761,7 +1881,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </h3>
                 <button
                   onClick={onNavigateToMyLibrary}
-                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
+                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
                 >
                   <div className="flex items-start gap-4">
                     <div className="p-3 rounded-xl bg-[var(--color-accent)]/20">
@@ -1787,24 +1907,50 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 {onNavigateToStudyCompanion && (
                   <button
                     onClick={onNavigateToStudyCompanion}
-                    className="mt-3 w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
+                    className="mt-3 w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
                   >
                     <div className="flex items-start gap-4">
-                      <div className="p-3 rounded-xl bg-action-blue/15">
-                        <MessageSquare className="w-6 h-6 text-action-blue" />
+                      <div className="p-3 rounded-xl bg-[var(--color-accent)]/20">
+                        <MessageSquare className="w-6 h-6 text-[var(--color-accent)]" />
                       </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-[var(--color-text-primary)] flex items-center gap-2">
                           Study Companion
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-action-blue/15 text-action-blue">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
                             Citations
                           </span>
                         </h4>
                         <p className="text-sm text-[var(--color-text-secondary)] mt-1">
                           Chat with an approved textbook and see evidence highlighted directly on the PDF
                         </p>
-                        <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs bg-action-blue/15 text-action-blue">
+                        <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
                           PDF + Tutor
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                )}
+                {onNavigateToSrsFlashcards && (
+                  <button
+                    onClick={onNavigateToSrsFlashcards}
+                    className="mt-3 w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-xl bg-[var(--color-accent)]/20">
+                        <Layers className="w-6 h-6 text-[var(--color-accent)]" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                          SRS Flashcards
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                            Mnemonics
+                          </span>
+                        </h4>
+                        <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+                          Spaced repetition with variant cards; rate Hard to get an exaggerated mnemonic image
+                        </p>
+                        <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                          FSRS + Firefly
                         </span>
                       </div>
                     </div>

@@ -12,13 +12,14 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, RefreshCw, X, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { AlertCircle, RefreshCw, X, ChevronLeft, ChevronRight, Search, Sparkles } from 'lucide-react';
 import { LibrarySidebar } from './LibrarySidebar';
 import { LibraryBreadcrumb } from './LibraryBreadcrumb';
 import { EnhancedConditionCard } from './EnhancedConditionCard';
 import { ConditionMaster } from './ConditionMaster';
 import { LoadingOverlay } from '@/components/ui/layouts';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { useSemanticSearch } from '@/hooks/useSemanticSearch';
 import type { MedicalContentDisplay } from '@/types/medical-content';
 
 interface SystemOption {
@@ -62,6 +63,18 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   // Refs for keyboard navigation
   const contentRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Semantic search (RAG): when user types, search by embedding + optional 1-sentence answer
+  const {
+    results: semanticResults,
+    answer: semanticAnswer,
+    loading: semanticLoading,
+    error: semanticError,
+    askedForAnswer,
+  } = useSemanticSearch(searchQuery, { requestAnswer: true, limit: 20 });
+
+  const isSearchMode = searchQuery.trim().length > 0;
+  const displayContent = isSearchMode ? semanticResults : filteredContent;
 
   // Systems loading state
   const [systemsLoading, setSystemsLoading] = useState(true);
@@ -116,8 +129,8 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       const params = new URLSearchParams();
       if (activeSystem && activeSystem !== 'all') params.append('system', activeSystem);
       if (activeSubcategory) params.append('subcategory', activeSubcategory);
-      if (searchQuery) params.append('search', searchQuery);
       if (highYieldOnly) params.append('highYield', 'true');
+      // Search is handled by semantic search (useSemanticSearch), not the library API
 
       const token = await getToken();
       const res = await fetch(`/api/content/library?${params.toString()}`, {
@@ -145,7 +158,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     } finally {
       setLoading(false);
     }
-  }, [activeSystem, activeSubcategory, searchQuery, highYieldOnly, getToken, isSignedIn]);
+  }, [activeSystem, activeSubcategory, highYieldOnly, getToken, isSignedIn]);
 
   // Initial load
   useEffect(() => {
@@ -213,7 +226,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     return result;
   }, [content, activeSubcategory, highYieldOnly, searchQuery]);
 
-  // Group content by subcategory for display
+  // Group content by subcategory for display (browse mode only; search mode uses flat list)
   const groupedContent = useMemo(() => {
     const map = new Map<string, Partial<MedicalContentDisplay>[]>();
     for (const item of filteredContent) {
@@ -243,9 +256,9 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   };
 
   const handleNextCondition = () => {
-    if (selectedIndex < filteredContent.length - 1) {
+    if (selectedIndex < displayContent.length - 1) {
       const nextIndex = selectedIndex + 1;
-      const nextItem = filteredContent[nextIndex];
+      const nextItem = displayContent[nextIndex];
       if (nextItem) {
         setSelected(nextItem);
         setSelectedIndex(nextIndex);
@@ -256,7 +269,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   const handlePrevCondition = () => {
     if (selectedIndex > 0) {
       const prevIndex = selectedIndex - 1;
-      const prevItem = filteredContent[prevIndex];
+      const prevItem = displayContent[prevIndex];
       if (prevItem) {
         setSelected(prevItem);
         setSelectedIndex(prevIndex);
@@ -294,7 +307,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selected, selectedIndex, filteredContent]);
+  }, [selected, selectedIndex, displayContent]);
 
   // Get active system label
   const activeSystemLabel = useMemo(() => {
@@ -334,7 +347,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
               onSubcategoryClick={() => {}}
             />
             <span className="text-xs text-[var(--color-text-muted)] hidden sm:inline">
-              {filteredContent.length} condition{filteredContent.length !== 1 ? 's' : ''}
+              {displayContent.length} condition{displayContent.length !== 1 ? 's' : ''}
             </span>
           </div>
 
@@ -397,6 +410,62 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
               message="We couldn't find any medical systems in the database. Please try again or contact support."
               onRetry={fetchSystems}
             />
+          ) : isSearchMode ? (
+            // Semantic search mode: show answer (SGE style) + flat results
+            semanticError ? (
+              <ErrorState
+                title="Search failed"
+                message={semanticError}
+                onRetry={() => {}}
+              />
+            ) : semanticLoading ? (
+              <LoadingOverlay message="Searching reference library..." />
+            ) : displayContent.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <AlertCircle className="w-12 h-12 text-[var(--color-text-muted)] mb-4" />
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
+                  No results found
+                </h3>
+                <p className="text-sm text-[var(--color-text-muted)] max-w-md">
+                  No reference cards matched &quot;{searchQuery}&quot;. Try different wording or browse by system.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {semanticAnswer && askedForAnswer && (
+                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 backdrop-blur-sm p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[var(--color-accent)]/15 flex items-center justify-center">
+                        <Sparkles className="w-4 h-4 text-[var(--color-accent)]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-1">
+                          Answer from reference cards
+                        </p>
+                        <p className="text-[var(--color-text-primary)] font-medium">
+                          {semanticAnswer}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="flex flex-col gap-4">
+                  {displayContent.map((item, idx) => (
+                    <EnhancedConditionCard
+                      key={item.id}
+                      condition={item}
+                      isSelected={selected?.id === item.id}
+                      onClick={() => handleConditionSelect(item, idx)}
+                      badge={
+                        'similarity' in item && typeof item.similarity === 'number'
+                          ? `${Math.round(item.similarity * 100)}% match`
+                          : undefined
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            )
           ) : error ? (
             <ErrorState title="Failed to load content" message={error} onRetry={fetchContent} />
           ) : loading ? (
@@ -544,7 +613,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-40"
               onClick={() => setSelected(null)}
             />
 
@@ -619,6 +688,7 @@ import {
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 import { parseListField, parseTextField, normalizeMedicalContent } from '@/lib/utils/normalization';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
+import { LIBRARY_SECTION_TITLES } from '@/lib/conditionSections';
 
 // Types for display priority
 interface DisplayPriority {
@@ -842,8 +912,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
       {/* Header */}
       <div>
         <h2
-          className="text-3xl font-bold text-[var(--color-text-primary)] tracking-wide mb-3"
-          style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
+          className="text-3xl font-bold text-[var(--color-text-primary)] tracking-wide mb-3 font-teko"
         >
           {normalized.condition}
         </h2>
@@ -1039,7 +1108,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         {/* Section 1: Clinical Presentation */}
         <Section
           id="clinical"
-          title="Clinical Presentation"
+          title={LIBRARY_SECTION_TITLES.clinical}
           icon={Stethoscope}
           accentColor="text-blue-400"
           expandedSections={expandedSections}
@@ -1055,7 +1124,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         {/* Section 2: Workup - Diagnostics only */}
         <Section
           id="workup"
-          title="Workup & Diagnostics"
+          title={LIBRARY_SECTION_TITLES.workup}
           icon={FlaskConical}
           accentColor="text-amber-400"
           expandedSections={expandedSections}
@@ -1067,7 +1136,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         {/* Section 3: Treatment - Separate from workup */}
         <Section
           id="treatment"
-          title="Treatment"
+          title={LIBRARY_SECTION_TITLES.treatment}
           icon={Pill}
           accentColor="text-emerald-400"
           expandedSections={expandedSections}
@@ -1085,7 +1154,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         {/* Section 4: Outcomes - Complications, Prognosis, Disposition */}
         <Section
           id="outcomes"
-          title="Outcomes & Prognosis"
+          title={LIBRARY_SECTION_TITLES.outcomes}
           icon={AlertTriangle}
           accentColor="text-rose-400"
           expandedSections={expandedSections}
@@ -1100,7 +1169,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         {/* Section 5: Background & Etiology */}
         <Section
           id="background"
-          title="Background & Etiology"
+          title={LIBRARY_SECTION_TITLES.background}
           icon={Info}
           accentColor="text-purple-400"
           expandedSections={expandedSections}

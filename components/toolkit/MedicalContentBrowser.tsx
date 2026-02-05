@@ -19,6 +19,10 @@ import type { MedicalContentDisplay } from '@/types/medical-content';
 
 interface MedicalContentBrowserProps {
   onSelectCondition?: (conditionId: string) => void;
+  /** Pre-fill system filter when opening from toolkit (e.g. system grid) */
+  initialSystem?: string | null;
+  /** Optional search query from toolkit header (when Clinical tab is active) */
+  searchQuery?: string;
 }
 
 interface FilterState {
@@ -101,6 +105,8 @@ const FilterBar: React.FC<{
  */
 export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
   onSelectCondition,
+  initialSystem = null,
+  searchQuery: externalSearchQuery,
 }) => {
   const { getToken, isSignedIn } = useAuth();
 
@@ -111,8 +117,18 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<FilterState>({});
+  const [filters, setFilters] = useState<FilterState>({
+    system: initialSystem ?? undefined,
+    search: externalSearchQuery ?? undefined,
+  });
   const [availableSystems, setAvailableSystems] = useState<string[]>([]);
+
+  // Sync external search query (from toolkit header) into filters
+  useEffect(() => {
+    if (externalSearchQuery !== undefined) {
+      setFilters((prev) => ({ ...prev, search: externalSearchQuery || undefined }));
+    }
+  }, [externalSearchQuery]);
 
   // Fetch available systems from API
   useEffect(() => {

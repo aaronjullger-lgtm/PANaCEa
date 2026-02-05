@@ -208,7 +208,7 @@ async function addImage(conditionId: string, image: ImageResult): Promise<boolea
         sourceUrl: image.url,
         citation: `${image.source} - ${image.license}`,
         tags: [image.source.toLowerCase()],
-        status: 'approved',
+        status: 'active',
         approvalStatus: 'approved',
       } as any,
     });

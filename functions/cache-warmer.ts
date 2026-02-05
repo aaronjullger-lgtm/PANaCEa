@@ -99,9 +99,9 @@ export default {
       for (const system of systems) {
         const cacheKey = getQuestionPoolCacheKey({ system });
 
-        // Fetch questions for this system
+        // Fetch questions for this system (exclude kill-switch rejected)
         const questions = await prisma.preGeneratedQuestion.findMany({
-          where: { system },
+          where: { system, validationStatus: { not: 'rejected' } },
           take: 50, // Cache 50 questions per system
           orderBy: { generatedAt: 'asc' },
         });

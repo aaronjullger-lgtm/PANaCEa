@@ -13,7 +13,6 @@ import {
   initializeSession,
   getPoolStatus,
   checkAndReplenishPool,
-  getSessionSummary as getMainSessionSummary,
 } from '@/services/core';
 
 // Session services
@@ -40,6 +39,11 @@ import { generateAlternateRationale } from '@/services/ai';
 // Components
 import { FlagQuestionModal } from '@/components/modals/FlagQuestionModal';
 import AnswerChoice from '@/components/quiz/AnswerChoice';
+import {
+  useBehavioralTracker,
+  OptionHoverTracker,
+  behavioralPayloadToTelemetryData,
+} from '@/components/quiz/Tracker';
 import { QuizLabCalcModal } from '@/components/quiz/QuizLabCalcModal';
 import ErrorTagger from '@/components/quiz/ErrorTagger';
 import Loader from '@/components/loading/Loader';
@@ -49,6 +53,7 @@ import WellnessCheckModal from '@/components/wellness/WellnessCheckModal';
 import {
   SessionStatsOverlay,
   SessionEndSummary,
+  SocraticTutorChat,
   QuestionTimer,
   MomentumBadge,
   StreakBadge,
@@ -66,7 +71,7 @@ import { DrillLoadingState } from '@/components/drill/DrillLoadingState';
 // Icons
 import { CloseIcon } from '@/components/icons/CloseIcon';
 import { FlagIcon } from '@/components/icons/FlagIcon';
-import { AlertTriangle, BarChart3, Calculator } from 'lucide-react';
+import { AlertTriangle, BarChart3, Calculator, MessageCircle } from 'lucide-react';
 import { ArrowLeftIcon } from '@/components/icons/ArrowLeftIcon';
 import { ClearHighlightIcon } from '@/components/icons/ClearHighlightIcon';
 
@@ -88,6 +93,7 @@ import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdvancedAnalytics } from '@/hooks/useAdvancedAnalytics';
 import { useImplicitMetrics } from '@/hooks/useImplicitMetrics';
+import { inferQuestionType } from '@/hooks/useTelemetryCollector';
 
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
@@ -115,6 +121,8 @@ interface QuizViewProps {
   updateQuestionNote: (question: Question, note: string) => void;
   /** When true and question has vignette, use split-pane layout (vignette left, content right) */
   useSplitPane?: boolean;
+  /** Start a review session with missed questions (from SessionEndSummary) */
+  onReviewMissed?: () => void;
 }
 
 const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
@@ -185,6 +193,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       <div
         ref={containerRef}
         id="question-container"
+        tabIndex={-1}
         className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm space-y-4"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
@@ -213,6 +222,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       <div
         ref={containerRef}
         id="question-container"
+        tabIndex={-1}
         className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
@@ -229,6 +239,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
     <div
       ref={containerRef}
       id="question-container"
+      tabIndex={-1}
       className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm"
       style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
     >
@@ -259,6 +270,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   removeFlaggedQuestion,
   updateQuestionNote,
   useSplitPane = false,
+  onReviewMissed,
 }) => {
   // Validate required callback props at runtime
   useEffect(() => {
@@ -297,6 +309,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // ---- IMPLICIT METRICS TRACKING ----
   const implicitMetrics = useImplicitMetrics();
+  const behavioralTracker = useBehavioralTracker();
 
   // ---- QUEUE HANDLING ----
   const [queue, setQueue] = useState<Question[]>(initialQueue);
@@ -328,6 +341,9 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // Report issue modal state
   const [showReportModal, setShowReportModal] = useState(false);
+
+  // Socratic Tutor (Tutor Me) for incorrect answers
+  const [showSocraticTutor, setShowSocraticTutor] = useState(false);
   // Lab calculator modal (Anion Gap, Osmolar Gap, Parkland) – encourages active calculation
   const [showLabCalcModal, setShowLabCalcModal] = useState(false);
 
@@ -357,6 +373,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   const commuter = useCommuter();
   const showTimerVisible = showTimer && !commuter?.isCommuterMode;
   const [behavioralRefreshKey, setBehavioralRefreshKey] = useState(0);
+  const [replenishmentError, setReplenishmentError] = useState<string | null>(null);
 
   const noteUpdateTimeout = useRef<number | null>(null);
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
@@ -434,17 +451,35 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (isGeneratingQuestion) return; // Prevent concurrent fetches
 
     setIsGeneratingQuestion(true);
+    setReplenishmentError(null);
     try {
-      // Fetch multiple questions in parallel for better throughput
-      const fetchPromises = Array.from({ length: BATCH_SIZE }, () =>
-        getQuestionClient(sessionSettings, growthAreas, getToken).catch((err) => {
-          console.warn('Single question fetch failed:', err);
-          return null;
-        })
-      );
+      let newQuestions: Question[] = [];
+      const token = await getToken();
 
-      const results = await Promise.all(fetchPromises);
-      const newQuestions = results.filter((q): q is Question => q !== null);
+      try {
+        if (token) {
+          const result = await fetchSessionQuestions(
+            sessionSettings,
+            token,
+            BATCH_SIZE
+          );
+          newQuestions = result.questions ?? [];
+        }
+      } catch (apiErr) {
+        console.warn('[QuizView] Session API replenish failed, using fallback:', apiErr);
+      }
+
+      if (newQuestions.length === 0) {
+        // Fallback: fetch questions one at a time
+        const fetchPromises = Array.from({ length: BATCH_SIZE }, () =>
+          getQuestionClient(sessionSettings, growthAreas, getToken).catch((err) => {
+            console.warn('Single question fetch failed:', err);
+            return null;
+          })
+        );
+        const results = await Promise.all(fetchPromises);
+        newQuestions = results.filter((q): q is Question => q !== null);
+      }
 
       if (newQuestions.length > 0) {
         // Keep both queues in sync with batch update
@@ -488,6 +523,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       setSelectedAnswerIndex(null);
       setShowRationale(false);
       setAlternateRationale(null);
+      setShowSocraticTutor(false);
       setAnswerDistribution(null); // Reset peer selection stats for next question
       setIsExplainerLoading(false);
       setQuestionNumber((prev) => prev + 1);
@@ -497,9 +533,12 @@ const QuizView: React.FC<QuizViewProps> = ({
       setAnswerChangeCount(0); // Reset answer change tracking
       setFirstSelectedAnswer(null); // Reset first selected answer
 
-      // Reset implicit metrics for new question
+      // Reset implicit metrics and behavioral tracker for new question
       implicitMetrics.reset();
       implicitMetrics.startQuestion();
+      const nextQ = rest[0];
+      const qType = nextQ ? inferQuestionType(nextQ) : 'unknown';
+      behavioralTracker.start(qType);
 
       setQueue((prev) => {
         if (prev.length === 0) return prev;
@@ -516,6 +555,14 @@ const QuizView: React.FC<QuizViewProps> = ({
         }
 
         return newQueue;
+      });
+
+      // Accessibility: move focus to question content after advancing so screen readers land on new question
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el = document.getElementById('question-container');
+          if (el && typeof (el as HTMLElement).focus === 'function') (el as HTMLElement).focus();
+        });
       });
 
       // Note: Replenishment is handled by the proactive effect when queue < LOW_QUEUE_THRESHOLD
@@ -540,11 +587,13 @@ const QuizView: React.FC<QuizViewProps> = ({
     setLocalNote(initialQueue[0]?.userNote || '');
     setEliminatedAnswers(new Set()); // Reset when new question loaded
 
-    // Start tracking implicit metrics for the first question
+    // Start tracking implicit metrics and behavioral tracker for the first question
     if (initialQueue.length > 0) {
       implicitMetrics.startQuestion();
+      const q = initialQueue[0];
+      behavioralTracker.start(q ? inferQuestionType(q) : 'unknown');
     }
-  }, [initialQueue, currentQuestion, implicitMetrics]);
+  }, [initialQueue, currentQuestion, implicitMetrics, behavioralTracker]);
 
   // Handler for toggling elimination state
   const handleToggleEliminate = useCallback(
@@ -600,7 +649,12 @@ const QuizView: React.FC<QuizViewProps> = ({
     const timeToAnswer = Date.now() - questionStartTime;
     const questionId = currentQuestion.id || `temp-${questionNumber}`;
 
-    // Commuter Mode: Optimistic UI — assume save worked. Queue to Sync Manager; do not block on server.
+    const behavioralPayload = behavioralTracker.finalize();
+    const telemetryForApi =
+      behavioralPayload != null
+        ? behavioralPayloadToTelemetryData(behavioralPayload, behavioralPayload.answer_change_count)
+        : undefined;
+
     syncManager.queueAnswer({
       questionId,
       selectedAnswer: selectedAnswerIndex,
@@ -608,6 +662,9 @@ const QuizView: React.FC<QuizViewProps> = ({
       timeSpentMs: timeToAnswer,
       system: currentQuestion.system ?? undefined,
       conditionId: currentQuestion.conditionId ?? undefined,
+      telemetryJson: telemetryForApi ?? undefined,
+      answerChangedCount: behavioralPayload?.answer_change_count ?? answerChangeCount,
+      durationMs: behavioralPayload?.duration_ms ?? timeToAnswer,
     });
     // Fire-and-forget: metrics and review sync in background (or when back online).
     void implicitMetrics.submitAnswer(questionId, isCorrect, 'multiple_choice').catch((err) => {
@@ -822,6 +879,12 @@ const QuizView: React.FC<QuizViewProps> = ({
                 answerSwitches: answerChangeCount,
                 totalDwellTime: timeToAnswer,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                sessionType:
+                  sessionSettings.mode === 'rapid_recall'
+                    ? 'rapid_recall'
+                    : sessionSettings.mode === 'cram_mode' || sessionSettings.mode === 'cram'
+                      ? 'cram'
+                      : 'main',
               }),
             });
 
@@ -986,14 +1049,13 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     // Track answer changes
     if (firstSelectedAnswer === null) {
-      // First selection
       setFirstSelectedAnswer(index);
+      behavioralTracker.recordFirstInteraction();
     } else if (selectedAnswerIndex !== null && selectedAnswerIndex !== index) {
-      // Changed answer
       setAnswerChangeCount((prev) => prev + 1);
+      behavioralTracker.recordAnswerChange();
     }
 
-    // Record answer selection for implicit metrics
     implicitMetrics.recordAnswerSelection(index);
 
     // Just select the option, don't submit yet
@@ -1034,6 +1096,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       try {
         await callGeminiTextStreaming('gemini-2.5-flash', prompt, 0.7, {
           getToken,
+          systemInstruction:
+            'You are a clinical educator for PA students. Be concise (3-4 sentences), use a different angle than the original explanation, and focus on why the mistake was made.',
           onChunk: (chunk) => setAlternateRationale((prev) => prev + chunk),
           onComplete: () => setIsExplainerLoading(false),
           onError: () => setIsExplainerLoading(false),
@@ -1261,6 +1325,22 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             </button>
           </div>
         </div>
+        {replenishmentError && (
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-[var(--color-data-provisional)]/50 bg-[var(--color-data-provisional)]/10 px-3 py-2 text-sm text-[var(--color-text-secondary)]">
+            <span>{replenishmentError}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setReplenishmentError(null);
+                setError(null);
+                void replenishQueue();
+              }}
+              className="flex-shrink-0 rounded-md px-3 py-1 font-medium text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10"
+            >
+              Retry
+            </button>
+          </div>
+        )}
         <SplitPaneDrillLayout
           vignette={useSplitPane ? currentQuestion.vignette : null}
           className="mb-6"
@@ -1314,23 +1394,30 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             {(currentQuestion.options || []).map((option, index) => {
               const isCorrect = index === currentQuestion.correctAnswerIndex;
               const isSelected = index === selectedAnswerIndex;
+              const optionLabel = ['A', 'B', 'C', 'D'][index] ?? 'A';
 
               return (
-                <AnswerChoice
+                <OptionHoverTracker
                   key={index}
-                  ref={(el) => {
-                    optionButtonsRef.current[index] = el;
-                  }}
-                  text={option}
-                  index={index}
-                  isSelected={isSelected}
-                  isCorrect={isCorrect}
-                  isAnswered={isAnswered}
-                  isEliminated={eliminatedAnswers.has(index)}
-                  onSelect={handleOptionClick}
-                  onToggleEliminate={handleToggleEliminate}
-                  fontSizeAdjustment={fontSizeAdjustment}
-                />
+                  optionIndex={index}
+                  optionLabel={optionLabel}
+                  className="block"
+                >
+                  <AnswerChoice
+                    ref={(el) => {
+                      optionButtonsRef.current[index] = el;
+                    }}
+                    text={option}
+                    index={index}
+                    isSelected={isSelected}
+                    isCorrect={isCorrect}
+                    isAnswered={isAnswered}
+                    isEliminated={eliminatedAnswers.has(index)}
+                    onSelect={handleOptionClick}
+                    onToggleEliminate={handleToggleEliminate}
+                    fontSizeAdjustment={fontSizeAdjustment}
+                  />
+                </OptionHoverTracker>
               );
             })}
           </div>
@@ -1557,13 +1644,21 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 })()}
 
                 {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
-                  <div className="mt-4">
+                  <div className="mt-4 flex flex-wrap gap-2">
                     <button
                       onClick={handleExplainDifferently}
                       disabled={isExplainerLoading}
                       className="btn-glass px-4 py-2 text-sm"
                     >
                       {isExplainerLoading ? 'Thinking...' : 'Explain this differently'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowSocraticTutor(true)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-medium text-sm hover:bg-[var(--color-accent)]/20 transition-colors"
+                    >
+                      <MessageCircle className="h-4 w-4" aria-hidden />
+                      Tutor Me
                     </button>
                   </div>
                 )}
@@ -1703,6 +1798,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         }}
         performanceData={performanceData}
         sessionSummary={getSessionSummary()}
+        sessionDurationMs={Date.now() - sessionStartTime.current}
         sessionStartTime={sessionStartTime.current}
         sessionSettings={{
           mode: sessionSettings.mode,
@@ -1720,7 +1816,45 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           onEndSession();
           // The analytics view would be shown by the parent component
         }}
+        onReviewMissed={
+          onReviewMissed
+            ? () => {
+                setShowSessionEndSummary(false);
+                onReviewMissed();
+              }
+            : undefined
+        }
       />
+
+      {/* Socratic Tutor: Tutor Me for incorrect answers */}
+      <AnimatePresence>
+        {showSocraticTutor &&
+          currentQuestion &&
+          selectedAnswerIndex !== null &&
+          selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
+            <SocraticTutorChat
+              vignette={currentQuestion.vignette || ''}
+              question={currentQuestion.question}
+              correctAnswer={
+                (currentQuestion.options as string[])?.[currentQuestion.correctAnswerIndex] ?? ''
+              }
+              userWrongAnswer={
+                (currentQuestion.options as string[])?.[selectedAnswerIndex] ?? ''
+              }
+              options={currentQuestion.options as string[]}
+              fullExplanation={(() => {
+                const stripHtml = (s: string) => s.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                const r = currentQuestion.rationale;
+                if (typeof r === 'object' && r !== null && 'bottomLine' in r) {
+                  const s = r as { bottomLine?: string; whyCorrect?: string };
+                  return [s.bottomLine, s.whyCorrect].filter(Boolean).map(stripHtml).join(' ') || 'See rationale above.';
+                }
+                return stripHtml(typeof r === 'string' ? r : '') || 'See rationale above.';
+              })()}
+              onClose={() => setShowSocraticTutor(false)}
+            />
+          )}
+      </AnimatePresence>
     </div>
   );
 };

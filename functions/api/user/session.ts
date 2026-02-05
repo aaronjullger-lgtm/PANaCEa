@@ -16,6 +16,8 @@ const SessionUpdateSchema = z.object({
     action: z.enum(['end', 'update']),
     questionsAnswered: z.number().int().min(0).optional(),
     correctCount: z.number().int().min(0).optional(),
+    /** Gemini 3 Deep Think: thinking phase latency (ms), logged separately from response time */
+    thinkingTimeMs: z.number().int().min(0).optional(),
   }),
 });
 
@@ -90,7 +92,7 @@ export const onRequestPatch = authenticatedEndpoint(SessionUpdateSchema, async (
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { sessionId, action, questionsAnswered, correctCount } = validated.body;
+    const { sessionId, action, questionsAnswered, correctCount, thinkingTimeMs } = validated.body;
 
     // Get user's internal ID
     const user = await prisma.user.findUnique({
@@ -129,6 +131,10 @@ export const onRequestPatch = authenticatedEndpoint(SessionUpdateSchema, async (
       updateData.correctCount = correctCount;
     }
 
+    if (typeof thinkingTimeMs === 'number') {
+      updateData.thinkingTimeMs = thinkingTimeMs;
+    }
+
     // Update session
     const updatedSession = await prisma.studySession.update({
       where: { id: sessionId },
@@ -148,6 +154,7 @@ export const onRequestPatch = authenticatedEndpoint(SessionUpdateSchema, async (
           id: updatedSession.id,
           questionsAnswered: updatedSession.questionsAnswered,
           correctCount: updatedSession.correctCount,
+          thinkingTimeMs: updatedSession.thinkingTimeMs ?? undefined,
           endedAt: updatedSession.endedAt?.toISOString() || null,
         },
       },

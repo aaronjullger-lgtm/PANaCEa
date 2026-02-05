@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Brain, TrendingUp, Calendar, ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { EmptyState } from '../ui/EmptyState';
 
 interface SRSStats {
@@ -37,7 +38,7 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
         return;
       }
 
-      const response = await fetch('/api/srs/stats', {
+      const response = await fetch(getApiEndpoint('/api/srs/stats'), {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();

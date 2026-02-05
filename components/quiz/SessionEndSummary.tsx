@@ -66,7 +66,7 @@ interface SessionEndSummaryProps {
   performanceData: PerformanceRecord[];
   sessionDurationMs?: number;
   sessionStartTime?: number;
-  sessionSummary?: any; // PANCE distribution summary
+  sessionSummary?: ReturnType<typeof getSessionSummary>;
   /** When true, fire confetti once (e.g. user just completed daily target / streak milestone) */
   celebrateStreak?: boolean;
   onClose: () => void;
@@ -136,6 +136,51 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 }) => {
   const { getToken } = useAuth();
   const syncAttempted = useRef(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  // Accessibility: focus trap — move focus into modal when open, restore on close
+  useEffect(() => {
+    if (isOpen) {
+      previousActiveElement.current = document.activeElement as HTMLElement | null;
+      const timer = requestAnimationFrame(() => {
+        modalRef.current?.focus();
+      });
+      return () => cancelAnimationFrame(timer);
+    }
+  }, [isOpen]);
+
+  // Accessibility: keep Tab/Shift+Tab inside modal
+  useEffect(() => {
+    if (!isOpen || !modalRef.current) return;
+    const root = modalRef.current;
+    const getFocusables = () =>
+      Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => !el.hasAttribute('disabled') && el.offsetParent !== null);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const focusables = getFocusables();
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    root.addEventListener('keydown', handleKeyDown);
+    return () => root.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   // Micro-interaction: confetti when user completed daily target / streak milestone
   useEffect(() => {
@@ -346,8 +391,9 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
     getToken,
   ]);
 
-  // Clean up all session data on unmount
+  // Clean up all session data on unmount; restore focus to element that opened the modal
   const handleClose = () => {
+    previousActiveElement.current?.focus?.();
     resetSessionDistribution();
     resetAnswerPatterns();
     resetBehavioralRecords();
@@ -371,10 +417,15 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm p-4"
     >
       <motion.div
+        ref={modalRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="session-summary-title"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-2xl max-h-[90vh] bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)]"
+        className="w-full max-w-2xl max-h-[90vh] bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)] outline-none focus:outline-none"
       >
         {/* Header with Grade */}
         <div className={`${grade.bg} p-6 text-center border-b border-[var(--color-border)]`}>
@@ -386,7 +437,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           >
             <Trophy className={`w-16 h-16 mx-auto ${grade.color}`} />
           </motion.div>
-          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+          <h2 id="session-summary-title" className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
             Session Complete!
           </h2>
           <div className="flex items-center justify-center gap-4">
@@ -629,7 +680,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 disabled={loadingAiSummary}
                 className="text-sm text-[var(--color-accent)] font-medium hover:underline disabled:opacity-50"
               >
-                {loadingAiSummary ? 'Generating...' : 'Get AI summary'}
+                {loadingAiSummary ? 'Generating AI summary…' : 'Get AI summary'}
               </button>
             )}
           </div>

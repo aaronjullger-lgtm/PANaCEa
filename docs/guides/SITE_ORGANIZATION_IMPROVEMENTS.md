@@ -70,6 +70,19 @@ PANaCEa App
 
 ```
 
+## Dashboard Focal Areas (Command Center)
+
+The Command Center (`/` and `/study`) is the single home. Its layout prioritizes the most important actions above the fold:
+
+1. **Hero Triple** – Three primary cards in one glance:
+   - **Main Session** – Build Session / Start review (Core Adaptive)
+   - **Live OSCE** – Start Encounter (voice patient, SOAP grading)
+   - **Progress & Analytics** – Summary stats (streak, due, accuracy) + “View full analytics” (scrolls to Study Tools analytics tab)
+2. **Core Adaptive Hero & OSCE Section** – Full cards for main session and Live OSCE immediately below the Hero Triple and Quick Stats.
+3. **Study Tools** – Sticky tab bar with **Progress & Analytics** as the first tab, then Training Modes, then Clinical Resources. “View full analytics” from the Hero Triple scrolls to this section and opens the Analytics tab.
+
+NavRail order: Dashboard → Progress → Start Session → Reference → Calculators → Menu. One primary CTA lives in content (Hero Triple); header actions remain secondary (icon-only).
+
 ## Key Changes
 
 ### 1. Toolkit Hub (NEW)

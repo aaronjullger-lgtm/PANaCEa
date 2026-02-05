@@ -18,6 +18,7 @@ const AttemptSchema = z.object({
   wasCorrect: z.boolean().optional(),
   system: z.string().optional(),
   conditionId: z.string().optional(),
+  medicalContentId: z.string().optional(),
   questionType: z.string().optional(),
   mode: z.string().optional().default('session'),
   timeSpent: z.number().optional(),
@@ -29,6 +30,10 @@ const AttemptSchema = z.object({
     z.number().int().min(0).max(3),
     z.enum(['A', 'B', 'C', 'D']),
   ]).optional(),
+  /** Behavioral telemetry for implicit FSRS (Ghost Grader) */
+  telemetryJson: z.record(z.unknown()).optional(),
+  /** Total duration from display to submission (ms) */
+  durationMs: z.number().optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -55,6 +60,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       wasCorrect,
       system,
       conditionId,
+      medicalContentId,
       questionType,
       mode = 'session',
       timeSpent,
@@ -62,6 +68,8 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       answerChangedCount,
       isRankedAttempt = false,
       selectedAnswer: selectedAnswerRaw,
+      telemetryJson,
+      durationMs,
     } = validated;
 
     // Support both isCorrect and wasCorrect field names
@@ -79,7 +87,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
     // Transaction for atomicity
     type AttemptResult = { wasCorrect: boolean; system: string | null };
     const result = await prisma.$transaction(async (tx: typeof prisma) => {
-      // 1. Record attempt (with selectedAnswer for peer selection stats)
+      // 1. Record attempt (with selectedAnswer, telemetry for Ghost Grader)
       await tx.questionAttempt.create({
         data: {
           id: attemptId,
@@ -88,12 +96,15 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
           wasCorrect: correctness,
           system: system || null,
           conditionId: conditionId || null,
+          medicalContentId: medicalContentId || null,
           questionType: questionType || null,
           mode,
           isRankedAttempt,
-          timeSpentMs: timeSpentMillis,
-          answerChangedCount: answerChangedCount || null,
+          timeSpentMs: timeSpentMillis ?? durationMs ?? null,
+          answerChangedCount: answerChangedCount ?? null,
           selectedAnswer: selectedAnswerLetter,
+          telemetryJson: telemetryJson ?? null,
+          durationMs: durationMs ?? null,
           createdAt: new Date(),
         },
       });

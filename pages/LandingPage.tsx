@@ -18,6 +18,9 @@ import {
   Repeat,
 } from 'lucide-react';
 import ThemeToggleButton from '../components/ui/ThemeToggleButton';
+import { AppBrand } from '../components/layout/AppBrand';
+import { PageContainer } from '../components/layout/PageContainer';
+import { SiteFooter } from '../components/layout/SiteFooter';
 
 export function LandingPage() {
   const [showAuth, setShowAuth] = useState(false);
@@ -86,29 +89,8 @@ export function LandingPage() {
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-3"
-          >
-            {/* Favicon icons - opposites for light/dark mode */}
-            <img
-              src="/Favicon.svg"
-              alt="PANaCEa Icon"
-              className="h-12 sm:h-14 w-auto dark:hidden"
-            />
-            <img
-              src="/favicondarkmodeTP.svg"
-              alt="PANaCEa Icon"
-              className="h-12 sm:h-14 w-auto hidden dark:block"
-            />
-            {/* PANaCEa text – Poppins Bold via Tailwind font-poppins */}
-            <span className="text-3xl sm:text-4xl font-bold text-[var(--color-text-primary)] font-poppins">
-              PANaCEa
-            </span>
-          </motion.div>
-          <div className="flex items-center gap-2">
+        <PageContainer maxWidth="7xl" className="py-4 flex items-center justify-between">
+          <AppBrand size="lg" animate>
             <ThemeToggleButton />
             <motion.button
               initial={{ opacity: 0, x: 20 }}
@@ -117,18 +99,18 @@ export function LandingPage() {
                 setAuthMode('sign-in');
                 setShowAuth(true);
               }}
-              className="px-6 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-all duration-200 shadow-lg hover:scale-105"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="px-6 py-2.5 bg-transparent border-2 border-[var(--color-navy,#0F172A)] dark:border-[var(--color-text-secondary)] text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-primary)] rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--color-bg-secondary)]"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               Sign In
             </motion.button>
-          </div>
-        </div>
+          </AppBrand>
+        </PageContainer>
       </header>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+      <PageContainer as="section" maxWidth="7xl" className="pt-20 pb-16">
         <div className="text-center space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -192,10 +174,10 @@ export function LandingPage() {
             ))}
           </motion.div>
         </div>
-      </section>
+      </PageContainer>
 
       {/* Features Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <PageContainer as="section" maxWidth="7xl" className="py-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -231,10 +213,10 @@ export function LandingPage() {
             </motion.div>
           ))}
         </div>
-      </section>
+      </PageContainer>
 
       {/* Benefits Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <PageContainer as="section" maxWidth="7xl" className="py-20">
         <div className="bg-[var(--color-bg-secondary)] rounded-3xl p-12 text-[var(--color-text-primary)] shadow-2xl border border-[var(--color-border)]">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -253,9 +235,9 @@ export function LandingPage() {
                   setAuthMode('sign-up');
                   setShowAuth(true);
                 }}
-                className="px-8 py-4 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="px-8 py-4 bg-transparent border-2 border-[var(--color-accent)] text-[var(--color-accent)] rounded-lg font-bold text-lg hover:bg-[var(--color-accent)]/10 transition-all duration-300"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 Start Studying
               </motion.button>
@@ -286,10 +268,10 @@ export function LandingPage() {
             </motion.div>
           </div>
         </div>
-      </section>
+      </PageContainer>
 
       {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+      <PageContainer as="section" maxWidth="7xl" className="py-20 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -308,25 +290,18 @@ export function LandingPage() {
               setAuthMode('sign-up');
               setShowAuth(true);
             }}
-            className="px-10 py-5 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg font-bold text-xl shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-3 mx-auto"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className="px-10 py-5 bg-transparent border-2 border-[var(--color-accent)] text-[var(--color-accent)] rounded-lg font-bold text-xl hover:bg-[var(--color-accent)]/10 transition-all duration-300 flex items-center gap-3 mx-auto"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             Sign Up Free
             <ArrowRight className="w-6 h-6" />
           </motion.button>
         </motion.div>
-      </section>
+      </PageContainer>
 
       {/* Footer */}
-      <footer className="border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-[var(--color-text-muted)]">
-          <p>
-            © {new Date().getFullYear()} PANaCEa. Complete study resource for physician assistant
-            students.
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
 
       {/* Auth Modal */}
       <AnimatePresence>

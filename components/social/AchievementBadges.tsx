@@ -384,7 +384,7 @@ export function AchievementBadges({
               >
                 <button
                   onClick={() => setSelectedAchievement(null)}
-                  className="absolute top-3 right-3 p-1.5 rounded-full bg-black/20 hover:bg-black/30"
+                  className="absolute top-3 right-3 p-1.5 rounded-full bg-[var(--color-overlay)] hover:opacity-90"
                 >
                   <X className="h-4 w-4 text-white" />
                 </button>

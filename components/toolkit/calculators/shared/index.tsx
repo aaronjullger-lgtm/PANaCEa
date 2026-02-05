@@ -34,18 +34,18 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between">
-        <label className="text-sm font-semibold text-slate-200">
+        <label className="text-sm font-semibold text-[var(--color-text-primary)]">
           {label}
-          {unit && <span className="ml-2 text-slate-400 font-normal">({unit})</span>}
+          {unit && <span className="ml-2 text-[var(--color-text-muted)] font-normal">({unit})</span>}
         </label>
         {range && (
-          <span className="text-xs text-slate-500 px-2 py-0.5 bg-slate-800/50 rounded">
+          <span className="text-xs text-[var(--color-text-muted)] px-2 py-0.5 bg-[var(--color-bg-tertiary)] rounded">
             Normal: {range}
           </span>
         )}
       </div>
 
-      {sublabel && <p className="text-xs text-slate-400">{sublabel}</p>}
+      {sublabel && <p className="text-xs text-[var(--color-text-muted)]">{sublabel}</p>}
 
       {type === 'number' ? (
         <div className="relative">
@@ -57,10 +57,10 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
             min={min}
             max={max}
             step={step}
-            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-lg font-medium placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] text-lg font-medium placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
           />
           {unit && (
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pointer-events-none">
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm font-medium pointer-events-none">
               {unit}
             </span>
           )}
@@ -69,7 +69,7 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all appearance-none cursor-pointer"
+          className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] text-lg font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all appearance-none cursor-pointer"
         >
           <option value="">Select...</option>
           {options?.map((option) => (
@@ -107,12 +107,12 @@ export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({
             ${
               item.disabled
                 ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-slate-800/60 hover:border-slate-600'
+                : 'hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-border)]'
             }
             ${
               item.state
-                ? 'bg-slate-800/50 border-2 border-slate-700'
-                : 'bg-slate-900/50 border-2 border-slate-700'
+                ? 'bg-[var(--color-bg-tertiary)] border-2 border-[var(--color-border)]'
+                : 'bg-[var(--color-bg-secondary)]/50 border-2 border-[var(--color-border)]'
             }
           `}
         >
@@ -121,23 +121,23 @@ export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({
             checked={item.state}
             onChange={(e) => !item.disabled && item.setState(e.target.checked)}
             disabled={item.disabled}
-            className="w-5 h-5 mt-0.5 text-[var(--color-accent)] bg-slate-700 border-slate-600 rounded focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50 cursor-pointer"
+            className="w-5 h-5 mt-0.5 text-[var(--color-accent)] bg-[var(--color-bg-tertiary)] border-[var(--color-border)] rounded focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50 cursor-pointer"
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-1">
-              <div className="font-semibold text-slate-100">{item.title}</div>
+              <div className="font-semibold text-[var(--color-text-primary)]">{item.title}</div>
               {item.points !== undefined && (
                 <span
                   className={`
                   px-2 py-0.5 rounded text-xs font-bold
-                  ${item.state ? 'bg-[var(--color-accent)] text-white' : 'bg-slate-700 text-slate-400'}
+                  ${item.state ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]' : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'}
                 `}
                 >
                   +{item.points}
                 </span>
               )}
             </div>
-            <div className="text-sm text-slate-400 leading-relaxed">{item.description}</div>
+            <div className="text-sm text-[var(--color-text-muted)] leading-relaxed">{item.description}</div>
           </div>
         </label>
       ))}
@@ -215,8 +215,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.1, type: 'spring' }}
-                className="text-5xl font-bold text-slate-100"
-                style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
+                className="text-5xl font-bold text-[var(--color-text-primary)] font-teko"
               >
                 {result.score}
               </motion.span>
@@ -227,7 +226,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
 
             {/* Risk Bar */}
             {showRiskBar && (
-              <div className="relative h-3 bg-slate-800 rounded-full overflow-hidden">
+              <div className="relative h-3 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{
@@ -254,25 +253,25 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
           {/* Recommendation */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-slate-400" />
-              <h4 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
+              <TrendingUp className="w-4 h-4 text-[var(--color-text-muted)]" />
+              <h4 className="text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider">
                 Clinical Recommendation
               </h4>
             </div>
-            <p className="text-slate-300 leading-relaxed">{result.recommendation}</p>
+            <p className="text-[var(--color-text-secondary)] leading-relaxed">{result.recommendation}</p>
           </div>
 
           {/* Additional Details */}
           {result.details && (
-            <div className="pt-3 border-t border-slate-700">
-              <p className="text-sm text-slate-400 leading-relaxed">{result.details}</p>
+            <div className="pt-3 border-t border-[var(--color-border)]">
+              <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">{result.details}</p>
             </div>
           )}
 
           {/* Reference */}
           {result.reference && (
             <div className="pt-2">
-              <p className="text-xs text-slate-500 italic">Reference: {result.reference}</p>
+              <p className="text-xs text-[var(--color-text-muted)] italic">Reference: {result.reference}</p>
             </div>
           )}
         </div>
@@ -295,16 +294,15 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ title, subti
     <div className="flex items-start justify-between mb-6">
       <div>
         <h2
-          className="text-4xl font-bold text-slate-100 tracking-wide mb-1"
-          style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
+          className="text-4xl font-bold text-[var(--color-text-primary)] tracking-wide mb-1 font-teko"
         >
           {title}
         </h2>
-        <p className="text-slate-400">{subtitle}</p>
+        <p className="text-[var(--color-text-muted)]">{subtitle}</p>
       </div>
       <button
         onClick={onBack}
-        className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+        className="px-4 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
       >
         <span>← Back</span>
       </button>

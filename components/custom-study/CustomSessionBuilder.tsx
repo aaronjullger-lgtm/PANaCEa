@@ -160,7 +160,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
             Custom Study Session
           </h1>
           <p className="text-slate-600 dark:text-slate-400 mt-1">
@@ -298,7 +298,7 @@ function ContentStep({
     <div>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
             Select Organ Systems
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -347,7 +347,7 @@ function ContentStep({
                   {config.systems.includes(system.code) && <Check className="w-3 h-3" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-slate-900 dark:text-white text-sm truncate" title={system.code}>
+                  <div className="font-semibold text-[var(--color-text-primary)] text-sm truncate" title={system.code}>
                     {system.code}
                   </div>
                   <div className="text-xs text-slate-600 dark:text-slate-400 truncate" title={fullName}>
@@ -383,7 +383,7 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
         Choose Focus Areas
       </h2>
       <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
@@ -404,7 +404,7 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
             <div className="flex items-start gap-3">
               <span className="text-2xl">{meta.icon}</span>
               <div>
-                <div className="font-medium text-slate-900 dark:text-white">{meta.label}</div>
+                <div className="font-medium text-[var(--color-text-primary)]">{meta.label}</div>
                 <div className="text-sm text-slate-600 dark:text-slate-400">{meta.description}</div>
               </div>
               {config.focusAreas.includes(area) && (
@@ -433,7 +433,7 @@ interface SettingsStepProps {
 function SettingsStep({ config, onChange }: SettingsStepProps) {
   return (
     <div>
-      <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
         Session Settings
       </h2>
 
@@ -478,7 +478,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
         {/* Retry missed questions */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="font-medium text-slate-900 dark:text-white">Retry questions to review</div>
+            <div className="font-medium text-[var(--color-text-primary)]">Retry questions to review</div>
             <div className="text-sm text-slate-600 dark:text-slate-400">
               Review questions you got wrong at the end of each round
             </div>
@@ -511,7 +511,7 @@ interface ReviewStepProps {
 function ReviewStep({ config, validation }: ReviewStepProps) {
   return (
     <div>
-      <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
         Review Your Session
       </h2>
 
@@ -560,15 +560,15 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
           </div>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="text-slate-600 dark:text-slate-400">Questions per round:</div>
-            <div className="font-medium text-slate-900 dark:text-white">
+            <div className="font-medium text-[var(--color-text-primary)]">
               {config.questionsPerIncrement}
             </div>
             <div className="text-slate-600 dark:text-slate-400">Difficulty:</div>
-            <div className="font-medium text-slate-900 dark:text-white capitalize">
+            <div className="font-medium text-[var(--color-text-primary)] capitalize">
               {config.difficulty}
             </div>
             <div className="text-slate-600 dark:text-slate-400">Retry missed:</div>
-            <div className="font-medium text-slate-900 dark:text-white">
+            <div className="font-medium text-[var(--color-text-primary)]">
               {config.retryMissedQuestions ? 'Yes' : 'No'}
             </div>
           </div>

@@ -325,7 +325,7 @@ export function AuscultationMode({
         <div className="flex items-center gap-3">
           <Stethoscope className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
               Auscultation Training
             </h2>
             <p className="text-sm text-slate-500">
@@ -426,7 +426,7 @@ export function AuscultationMode({
                 </span>
               </div>
 
-              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">
+              <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-4">
                 What sound is this?
               </h3>
 
@@ -455,7 +455,7 @@ export function AuscultationMode({
                       `}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-slate-900 dark:text-white">{option}</span>
+                        <span className="font-medium text-[var(--color-text-primary)]">{option}</span>
                         {showAnswer &&
                           (isCorrect || isSelected) &&
                           (isCorrect ? (
@@ -489,7 +489,7 @@ export function AuscultationMode({
           ) : (
             // Learn Mode - Sound List
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 max-h-[500px] overflow-y-auto">
-              <h3 className="font-medium text-slate-900 dark:text-white mb-4">
+              <h3 className="font-medium text-[var(--color-text-primary)] mb-4">
                 {activeTab === 'heart' ? 'Heart' : 'Lung'} Sounds ({filteredSounds.length})
               </h3>
 
@@ -512,7 +512,7 @@ export function AuscultationMode({
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-slate-900 dark:text-white">{sound.name}</p>
+                        <p className="font-medium text-[var(--color-text-primary)]">{sound.name}</p>
                         <p className="text-xs text-slate-500">{sound.category}</p>
                       </div>
                       <span
@@ -548,7 +548,7 @@ export function AuscultationMode({
               {/* Audio Player */}
               <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
                     {selectedSound.name}
                   </h3>
                   <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-sm">
@@ -656,12 +656,12 @@ export function AuscultationMode({
               {/* Sound Info (Learn Mode) */}
               {mode === 'learn' && (
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
-                  <h4 className="font-semibold text-slate-900 dark:text-white mb-3">Description</h4>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-3">Description</h4>
                   <p className="text-slate-600 dark:text-slate-400 mb-4">
                     {selectedSound.description}
                   </p>
 
-                  <h4 className="font-semibold text-slate-900 dark:text-white mb-3">
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-3">
                     Clinical Significance
                   </h4>
                   <p className="text-slate-600 dark:text-slate-400 mb-4">
@@ -670,7 +670,7 @@ export function AuscultationMode({
 
                   {selectedSound.associatedConditions.length > 0 && (
                     <>
-                      <h4 className="font-semibold text-slate-900 dark:text-white mb-3">
+                      <h4 className="font-semibold text-[var(--color-text-primary)] mb-3">
                         Associated Conditions
                       </h4>
                       <div className="flex flex-wrap gap-2">

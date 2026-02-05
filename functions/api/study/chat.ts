@@ -141,7 +141,7 @@ async function createGeminiCache(
   apiKey: string
 ): Promise<{ cacheName: string; expireTime: string }> {
   const systemInstruction =
-    'You are a senior clinical educator for PA students. Answer using the provided cached textbook. You MUST cite your sources using the format [Page X].';
+    'You are a senior clinical educator for PA students. Answer using the provided cached textbook. Cite sources in this exact format so the frontend can highlight: {{Page:N}} for a single page or {{Pages:N-M}} for a range. You may also use [Page X] or [Pages X-Y].';
 
   const body = {
     model: `models/${STUDY_CHAT_MODEL}`,
@@ -207,11 +207,12 @@ async function generateWithCache(
 
 /**
  * Parse page citations from tutor answer. Supports:
- * [Page N], [Pages N-M], [p. N], [pp. N-M], [page N], (Page N)
+ * {{Page:N}}, {{Pages:N-M}}, [Page N], [Pages N-M], [p. N], [pp. N-M], [page N], (Page N)
  */
 function parsePageCitations(answer: string): number[] {
   const pages = new Set<number>();
   const patterns: Array<{ single: RegExp; range?: RegExp }> = [
+    { single: /\{\{Page:\s*(\d+)\}\}/g, range: /\{\{Pages:\s*(\d+)\s*[-–]\s*(\d+)\}\}/g },
     { single: /\[Page\s+(\d+)\]/gi, range: /\[Pages\s+(\d+)\s*[-–]\s*(\d+)\]/gi },
     { single: /\[p\.\s*(\d+)\]/gi, range: /\[pp\.\s*(\d+)\s*[-–]\s*(\d+)\]/gi },
     { single: /\[page\s+(\d+)\]/gi, range: /\[pages\s+(\d+)\s*[-–]\s*(\d+)\]/gi },

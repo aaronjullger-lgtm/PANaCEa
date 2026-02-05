@@ -47,23 +47,27 @@ export const ICON_MAP: Record<string, LucideIcon> = {
 };
 /**
  * Universal Medical Companion - Main Navigation Configuration
- * Used by AppSidebar (components/layout/AppSidebar.tsx).
- * Note: AppSidebar is not currently mounted; these paths are not wired to App view state.
- * If using these links, sync pathname to view in App.tsx or use in-app callbacks.
+ *
+ * NAVIGATION ARCHITECTURE:
+ * - NavRail (components/layout/NavRail.tsx) is the only active navigation in the study app.
+ *   It uses paths: /study, /menu, /study?tab=resources, /study?tab=analytics, /study/toolkit.
+ * - NAVIGATION_STRUCTURE and NAVIGATION_CONFIG are for reference or future route-based layouts.
+ *   MainLayout, Sidebar, and AppSidebar are not mounted in App; Sidebar paths do not map to view state.
+ * - App uses view state for content; URL sync happens in App.tsx and CommandCenterHub.
  */
 export const NAVIGATION_CONFIG: NavigationCategory[] = [
   {
     category: 'Overview',
     items: [
-      { label: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard' },
-      { label: 'Analytics', path: '/analytics', icon: 'LineChart' },
+      { label: 'Dashboard', path: '/study', icon: 'LayoutDashboard' },
+      { label: 'Analytics', path: '/study?tab=analytics', icon: 'LineChart' },
     ],
   },
   {
     category: 'Core Modules',
     items: [
       { label: 'Education & Retention', path: '/education', icon: 'GraduationCap' },
-      { label: 'Clinical Reference', path: '/reference', icon: 'Library' },
+      { label: 'Clinical Reference', path: '/study/reference', icon: 'Library' },
       { label: 'Skill Refinement', path: '/skills', icon: 'Zap' },
     ],
   },
@@ -77,14 +81,16 @@ export const NAVIGATION_CONFIG: NavigationCategory[] = [
 ];
 
 /**
- * Legacy navigation structure - kept for backward compatibility
- * @deprecated Use NAVIGATION_CONFIG instead
+ * Legacy navigation structure - kept for backward compatibility.
+ * Many paths (e.g. /education, /stats, /reference/conditions) do not have routes in App;
+ * only /study, /study?tab=*, /study/reference, /study/toolkit, /menu are synced to views.
+ * @deprecated Use NAVIGATION_CONFIG instead. See docs/EXTRAPOLATED_DEVELOPMENT_AUDIT.md.
  */
 export const NAVIGATION_STRUCTURE: NavigationCategory[] = [
   {
     category: 'Overview',
     items: [
-      { label: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard' },
+      { label: 'Dashboard', path: '/study', icon: 'LayoutDashboard' },
       { label: 'Performance', path: '/stats', icon: 'LineChart' },
     ],
   },
@@ -100,6 +106,7 @@ export const NAVIGATION_STRUCTURE: NavigationCategory[] = [
   {
     category: 'Reference',
     items: [
+      { label: 'Clinical Reference', path: '/study/reference', icon: 'Library' },
       { label: 'Conditions', path: '/reference/conditions', icon: 'Stethoscope' },
       { label: 'Pharmacology', path: '/reference/drugs', icon: 'Pill' },
       { label: 'Diagnostics', path: '/reference/diagnostics', icon: 'Microscope' },

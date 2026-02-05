@@ -53,5 +53,15 @@ export {
   useConditionBookmarks,
 } from './hooks';
 
+// PDF viewer (Study Companion)
+export {
+  SmartPDFViewer,
+  type SmartPDFViewerProps,
+  type CitationBounds,
+  type CitationHighlightBox,
+  type CitationHighlight,
+  type PageDimensions,
+} from './SmartPDFViewer';
+
 // Re-export types for convenience
 export type { MasteryLevel } from './MasteryBadge';

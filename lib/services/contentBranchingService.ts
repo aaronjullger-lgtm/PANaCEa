@@ -130,7 +130,6 @@ export async function addChangeToBranch(branchName: string, change: BranchChange
       where: { id: branch.id },
       data: {
         changeCount: { increment: 1 },
-        updatedAt: new Date(),
       },
     });
 
@@ -274,7 +273,6 @@ export async function mergeBranch(
             data: {
               ...(change.contentData as any),
               updatedBy: mergedBy,
-              updatedAt: new Date(),
             },
           });
           mergedCount++;
@@ -284,7 +282,6 @@ export async function mergeBranch(
             data: {
               status: 'archived',
               updatedBy: mergedBy,
-              updatedAt: new Date(),
             },
           });
           mergedCount++;

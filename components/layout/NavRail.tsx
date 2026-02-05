@@ -35,11 +35,11 @@ interface NavRailProps {
 
 const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/study' },
-  { id: 'menu', label: 'Menu', icon: MenuIcon, href: '/menu' },
-  { id: 'start', label: 'Start Session', icon: Play, href: '/study' },
-  { id: 'reference', label: 'Reference', icon: BookOpen, href: '/study?tab=resources' },
   { id: 'analytics', label: 'Progress', icon: BarChart3, href: '/study?tab=analytics' },
+  { id: 'start', label: 'Start Session', icon: Play, href: '/study' },
+  { id: 'reference', label: 'Reference', icon: BookOpen, href: '/study/reference' },
   { id: 'calculators', label: 'Calculators', icon: Calculator, href: '/study/toolkit' },
+  { id: 'menu', label: 'Menu', icon: MenuIcon, href: '/menu' },
 ];
 
 const RAIL_WIDTH_COLLAPSED = 56;
@@ -49,8 +49,21 @@ export const NavRail: React.FC<NavRailProps> = ({
   quickActions = DEFAULT_QUICK_ACTIONS,
   className = '',
 }) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches) {
+      return true;
+    }
+    return false;
+  });
   const location = useLocation();
+
+  // Collapse by default on mobile when viewport is narrow
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = () => setCollapsed((c) => (mq.matches ? true : c));
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     document.documentElement.style.setProperty(
@@ -95,10 +108,17 @@ export const NavRail: React.FC<NavRailProps> = ({
         <ul className="space-y-1">
           {quickActions.map((item) => {
             const Icon = item.icon;
+            const fullPath = location.pathname + (location.search || '');
+            // Items with query (e.g. /study?tab=resources) are active only when full path matches.
+            // /study (no query) is active when pathname is /study or /study/ and no search.
+            // /study/toolkit is active when pathname starts with /study/toolkit.
             const isActive =
               item.href &&
-              (location.pathname === item.href ||
-                (item.href !== '/study' && location.pathname.startsWith(item.href)));
+              (item.href.includes('?')
+                ? fullPath === item.href
+                : item.href === '/study'
+                  ? (location.pathname === '/study' || location.pathname === '/study/') && !location.search
+                  : location.pathname.startsWith(item.href));
             const content = (
               <>
                 <Icon
@@ -122,7 +142,7 @@ export const NavRail: React.FC<NavRailProps> = ({
             );
 
             const baseClass =
-              'group relative flex w-full items-center gap-3 rounded-lg pl-4 pr-3 py-2.5 text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98]';
+              'group relative flex w-full min-h-[44px] items-center gap-3 rounded-lg pl-4 pr-3 py-2.5 text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98]';
 
             if (item.href) {
               return (

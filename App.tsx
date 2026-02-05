@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Shield } from 'lucide-react';
 import { ROUTES } from './config/routes';
 import { NavRail } from './components/layout/NavRail';
+import { AppBrand } from './components/layout/AppBrand';
+import { PageContainer } from './components/layout/PageContainer';
 import { type View, pageVariants, DRILL_MODE_IDS } from './config/appViews';
 import {
   QuizView,
@@ -30,6 +32,9 @@ import {
   PatientEncounterMode,
   CodeBlueSpeedMode,
   GrandRoundsMode,
+  ContrastiveDrillSession,
+  ReasoningTutorMode,
+  CramMode,
   IntegrationsHub,
   SettingsStatsModal,
   KeyboardShortcutsModal,
@@ -50,6 +55,7 @@ import {
   MyLibraryPage,
   TutorChatPage,
   StudyCompanionPage,
+  SrsFlashcardView,
   CustomStudyMode,
   ClinicalProfileDashboard,
   AdminDashboard,
@@ -57,9 +63,12 @@ import {
   ClinicalEyePage,
   VisualizerPage,
 } from './config/lazyComponents';
+import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { useUser, useAuth } from '@clerk/clerk-react';
+import { useFSRSOptimizationCheck } from './hooks/useFSRSOptimizationCheck';
 import { Toaster } from 'sonner';
 import Loader from './components/loading/Loader';
+import { CommandCenterSkeleton } from './components/loading';
 import { DrillLoadingState } from './components/drill/DrillLoadingState';
 import ThemeToggleButton from './components/ui/ThemeToggleButton';
 import { MasteryHeatmapToggle } from './components/ui/MasteryHeatmapToggle';
@@ -67,7 +76,7 @@ import { useTheme } from './hooks/useTheme';
 import { LandingPage } from './pages/LandingPage';
 import { LoadingProgress } from './components/loading/LoadingProgress';
 import { getQuestionBatch } from './services/questionService';
-import { initializeSession } from './services/core';
+import { initializeSession, fetchSessionQuestions } from './services/core';
 import { useUserStats } from './hooks/useUserStats';
 import { preloadData } from './lib/utils/dataLoader';
 import { useAccessibleTransition } from './hooks/useReducedMotion';
@@ -85,6 +94,7 @@ import { hasCompletedOnboarding, saveUserProfile, getExamLabel } from './service
 import { CommuterProvider } from './contexts/CommuterContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { OfflineSyncIndicator } from './components/offline/OfflineSyncIndicator';
+import { ProductTour, useProductTourShouldShow } from './components/onboarding/ProductTour';
 
 /** Session focus options for simulation / training menu */
 type SimulationFocus = 'all' | 'growth' | 'flagged' | 'due';
@@ -111,6 +121,8 @@ const DRILL_MODE_GRAND_ROUNDS = DRILL_MODE_IDS.GRAND_ROUNDS;
 const DRILL_MODE_VENTILATOR = DRILL_MODE_IDS.VENTILATOR;
 const DRILL_MODE_PHYSIOLOGY = DRILL_MODE_IDS.PHYSIOLOGY;
 const DRILL_MODE_ANATOMY = DRILL_MODE_IDS.ANATOMY;
+const DRILL_MODE_CONTRASTIVE = DRILL_MODE_IDS.CONTRASTIVE;
+const DRILL_MODE_CRAM = DRILL_MODE_IDS.CRAM;
 
 // Batch fetch 10 questions initially to prevent session ending early
 /** Commuter Mode: buffer for trains/buses/basements — prefetch 50 cards on Start Session */
@@ -147,6 +159,9 @@ const App: React.FC = () => {
   const { isSignedIn, isLoaded: authLoaded } = useUser();
   const { getToken } = useAuth();
 
+  // Automated FSRS tuning: trigger optimization on sign-in if > 24h since last run
+  useFSRSOptimizationCheck();
+
   // Theme state for passing to child components
   const [theme, setTheme] = useTheme();
 
@@ -180,6 +195,7 @@ const App: React.FC = () => {
 
   const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
   const [questionQueue, setQuestionQueue] = useState<QuizQuestion[]>([]);
+  const [quizKey, setQuizKey] = useState(0);
 
   // Use the cloud-sync-enabled stats hook
   const {
@@ -207,6 +223,25 @@ const App: React.FC = () => {
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep | null>(null);
   const [onboardingWeakestSystems, setOnboardingWeakestSystems] = useState<string[]>([]);
   const [onboardingExamDate, setOnboardingExamDate] = useState<string | null>(null);
+  const [showProductTour, setShowProductTour] = useState(false);
+  const productTourShouldShow = useProductTourShouldShow();
+
+  // Show product tour on first visit to command center (when not from onboarding)
+  const hasScheduledTour = useRef(false);
+  useEffect(() => {
+    if (
+      view === 'command_center' &&
+      productTourShouldShow &&
+      !showProductTour &&
+      !isOnboardingModalOpen &&
+      !hasScheduledTour.current
+    ) {
+      hasScheduledTour.current = true;
+      const timer = setTimeout(() => setShowProductTour(true), 1500);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [view, productTourShouldShow, showProductTour, isOnboardingModalOpen]);
 
   // Get exam label based on user context (PANCE or PANRE)
   const examLabel = getExamLabel();
@@ -301,7 +336,8 @@ const App: React.FC = () => {
   }, []);
 
   // ---- derived: "growth areas" and heatmap data ----
-  // Heatmap uses all-topics sessions (all questions are PANCE-level)
+  // Heatmap and growth areas use synced performanceData filtered by focus === 'all'
+  // (see docs/ANALYTICS_DATA_SOURCES.md). Analytics Dashboard uses server aggregation (/api/user/stats).
   const heatmapPerformance = useMemo(
     () => performanceData.filter((r) => r.focus === 'all'),
     [performanceData]
@@ -452,20 +488,56 @@ const App: React.FC = () => {
         if (settings.focus === 'review') {
           const today = new Date().toISOString().split('T')[0] ?? '';
           const due = missedQuestions.filter((q) => q.nextReviewDate && q.nextReviewDate <= today);
+          if (due.length === 0) {
+            setError('No questions due for review right now. Check back later or start a general session.');
+            return;
+          }
           setQuestionQueue(due);
           setView('quiz');
         } else if (settings.focus === 'reviewFlagged') {
+          if (flaggedQuestions.length === 0) {
+            setError('You have no flagged questions. Flag questions during a session to review them here.');
+            return;
+          }
           setQuestionQueue(flaggedQuestions);
           setView('quiz');
         } else {
-          const initialQuestions = await getQuestionBatch(
-            settings,
-            growthAreas,
-            INITIAL_QUEUE_SIZE,
-            getToken
-          );
+          const token = await getToken();
+          let initialQuestions: QuizQuestion[];
+          try {
+            if (token) {
+              const result = await fetchSessionQuestions(
+                settings,
+                token,
+                INITIAL_QUEUE_SIZE
+              );
+              initialQuestions = result.questions as QuizQuestion[];
+            } else {
+              initialQuestions = await getQuestionBatch(
+                settings,
+                growthAreas,
+                INITIAL_QUEUE_SIZE,
+                getToken
+              );
+            }
+          } catch {
+            initialQuestions = await getQuestionBatch(
+              settings,
+              growthAreas,
+              INITIAL_QUEUE_SIZE,
+              getToken
+            );
+          }
+          if (initialQuestions.length === 0) {
+            setError(
+              'No questions available for your selection. Try adjusting focus or try again later.'
+            );
+            return;
+          }
           setQuestionQueue(initialQuestions);
           setView('quiz');
+          // Prefetch next batch in background so replenishment is faster
+          void prefetchQuestions(settings, token ?? null, 10).catch(() => {});
         }
       } catch (err: unknown) {
         const message =
@@ -486,10 +558,21 @@ const App: React.FC = () => {
       if (focus === 'flagged') sessionFocus = 'reviewFlagged';
       else if (focus === 'due') sessionFocus = 'review';
       else if (focus === 'growth') sessionFocus = 'growth';
-      handleConfirmSession({ focus: sessionFocus });
+      handleConfirmSession({
+        focus: sessionFocus,
+        count: INITIAL_QUEUE_SIZE,
+      });
     },
     [handleConfirmSession]
   );
+
+  const handleReviewMissed = useCallback(() => {
+    handleConfirmSession({
+      focus: 'review',
+      mode: sessionSettings?.mode ?? 'core_adaptive',
+    });
+    setQuizKey((k) => k + 1);
+  }, [handleConfirmSession, sessionSettings?.mode]);
 
   const handleStartSession = useCallback(
     (settings?: SessionSettings) => {
@@ -568,12 +651,14 @@ const App: React.FC = () => {
     setIsOnboardingModalOpen(false);
     setOnboardingStep(null);
     setIsModalOpen(true);
+    // Tour will show on next visit to command_center after session
   }, []);
 
   const handleYourPlanSkip = useCallback(() => {
     setIsOnboardingModalOpen(false);
     setOnboardingStep(null);
-  }, []);
+    setShowProductTour(productTourShouldShow);
+  }, [productTourShouldShow]);
 
   // Fetch exam date when showing "Your plan" step
   useEffect(() => {
@@ -624,6 +709,9 @@ const App: React.FC = () => {
       [DRILL_MODE_VENTILATOR]: 'ventilator_hero',
       [DRILL_MODE_PHYSIOLOGY]: 'physiology_drill',
       [DRILL_MODE_ANATOMY]: 'anatomy_review',
+      [DRILL_MODE_CONTRASTIVE]: 'contrastive_drill',
+      reasoning_tutor: 'reasoning_tutor',
+      [DRILL_MODE_CRAM]: 'cram_mode',
       admin_media: 'admin_media',
       toolkit: 'toolkit',
     };
@@ -707,7 +795,7 @@ const App: React.FC = () => {
             <Route
               path="/admin"
               element={
-                <Suspense fallback={<Loader />}>
+                <Suspense fallback={<Loader message="Loading admin…" />}>
                   <AdminDashboard onClose={() => navigate('/')} />
                 </Suspense>
               }
@@ -715,7 +803,7 @@ const App: React.FC = () => {
             <Route
               path="/clinical-eye"
               element={
-                <Suspense fallback={<Loader />}>
+                <Suspense fallback={<Loader message="Loading Clinical Eye…" />}>
                   <ClinicalEyePage onBack={() => navigate('/')} />
                 </Suspense>
               }
@@ -723,7 +811,7 @@ const App: React.FC = () => {
             <Route
               path="/visualizer"
               element={
-                <Suspense fallback={<Loader />}>
+                <Suspense fallback={<Loader message="Loading visualizer…" />}>
                   <VisualizerPage onBack={() => navigate('/')} />
                 </Suspense>
               }
@@ -741,37 +829,18 @@ const App: React.FC = () => {
                   </a>
                   {/* Header - theme-aware for light/dark contrast */}
                   <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
-                    <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-                      <motion.button
+                    <PageContainer
+                      maxWidth={view === 'command_center' || view === 'menu' ? '6xl' : '4xl'}
+                      className="py-3"
+                    >
+                      <AppBrand
+                        size="sm"
+                        asLink
                         onClick={() => {
                           navigate('/');
                           setView('command_center');
                         }}
-                        className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        aria-label="Return to Dashboard"
                       >
-                        {/* Favicon icons - opposites for light/dark mode */}
-                        <motion.img
-                          src="/Favicon.svg"
-                          alt="PANaCEa Icon"
-                          className="h-10 sm:h-12 w-auto dark:hidden"
-                          transition={{ duration: 0.2 }}
-                        />
-                        <motion.img
-                          src="/favicondarkmodeTP.svg"
-                          alt="PANaCEa Icon"
-                          className="h-10 sm:h-12 w-auto hidden dark:block"
-                          transition={{ duration: 0.2 }}
-                        />
-                        {/* PANaCEa text – Poppins Bold via Tailwind font-poppins */}
-                        <span className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] font-poppins">
-                          PANaCEa
-                        </span>
-                      </motion.button>
-                      <div className="flex items-center gap-2">
-                        {/* Offline Sync Status Indicator */}
                         <OfflineSyncIndicator />
                         <Link
                           to={ROUTES.ADMIN}
@@ -792,8 +861,8 @@ const App: React.FC = () => {
                         </motion.button>
                         <MasteryHeatmapToggle compact className="hidden sm:inline-flex" />
                         <ThemeToggleButton />
-                      </div>
-                    </div>
+                      </AppBrand>
+                    </PageContainer>
                   </header>
 
                   {/* Settings/Stats Modal */}
@@ -840,8 +909,13 @@ const App: React.FC = () => {
                         viewName="reference_library"
                         onRetry={() => setView('reference_library')}
                       >
-                        <Suspense fallback={<Loader />}>
-                          <ClinicalReferenceLibrary onExit={() => setView('command_center')} />
+                        <Suspense fallback={<Loader message="Loading reference library…" />}>
+                          <ClinicalReferenceLibrary
+                          onExit={() => {
+                            setView('command_center');
+                            navigate('/study');
+                          }}
+                        />
                         </Suspense>
                       </WithGeminiErrorBoundary>
                     </div>
@@ -849,7 +923,7 @@ const App: React.FC = () => {
 
                   {view === 'my_library' && (
                     <div className="w-full">
-                      <Suspense fallback={<Loader />}>
+                      <Suspense fallback={<Loader message="Loading library…" />}>
                         <MyLibraryPage onExit={() => setView('command_center')} />
                       </Suspense>
                     </div>
@@ -857,7 +931,7 @@ const App: React.FC = () => {
 
                   {view === 'pearl_deck' && (
                     <div className="w-full">
-                      <Suspense fallback={<Loader />}>
+                      <Suspense fallback={<Loader message="Loading pearl deck…" />}>
                         <MyPearlsPanel
                           onClose={() => setView('command_center')}
                           initialFilter="saved"
@@ -875,26 +949,38 @@ const App: React.FC = () => {
                     view !== 'pearl_deck' && (
                     <main
                       id="main-content"
-                      className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24"
+                      className={`mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24 ${view === 'command_center' || view === 'menu' ? 'max-w-6xl' : 'max-w-4xl'}`}
                       style={{ marginLeft: 'var(--nav-rail-width, 3.5rem)' }}
                     >
                       {isLoading &&
                         (sessionSettings ? (
                           <DrillLoadingState
-                            message="Preparing your question..."
+                            message="Preparing your question…"
                             variant="question"
                             showTimer={false}
                           />
                         ) : (
-                          <Loader forceDark={view === 'imaging_drill'} />
+                          <Loader
+                            message="Preparing your question…"
+                            forceDark={view === 'imaging_drill'}
+                          />
                         ))}
                       {error && (
                         <motion.div
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="mb-4 p-3 rounded-md bg-data-fail/10 text-data-fail text-sm border border-data-fail/30"
+                          className="mb-4 p-3 rounded-md bg-data-fail/10 text-data-fail text-sm border border-data-fail/30 flex items-center justify-between gap-3"
+                          role="alert"
+                          aria-live="assertive"
                         >
-                          {error}
+                          <span>{error}</span>
+                          <button
+                            type="button"
+                            onClick={() => setError(null)}
+                            className="flex-shrink-0 px-3 py-1 rounded-md bg-data-fail/20 hover:bg-data-fail/30 text-data-fail font-medium"
+                          >
+                            Dismiss
+                          </button>
                         </motion.div>
                       )}
 
@@ -909,7 +995,7 @@ const App: React.FC = () => {
                             exit="exit"
                             transition={pageTransition}
                           >
-                            <Suspense fallback={<Loader />}>
+                            <Suspense fallback={<CommandCenterSkeleton />}>
                               <CommandCenterHub
                                 performanceData={heatmapPerformance}
                                 missedQuestions={missedQuestions}
@@ -926,11 +1012,15 @@ const App: React.FC = () => {
                                 onNavigateToClinicalProfile={() => setView('clinical_profile')}
                                 onNavigateToIntegrations={() => setView('integrations')}
                                 onNavigateToSimulation={handleNavigateToSimulation}
-                                onNavigateToReference={() => setView('reference_library')}
+                                onNavigateToReference={() => {
+                                  setView('reference_library');
+                                  navigate('/study/reference');
+                                }}
                                 onNavigateToMyLibrary={() => setView('my_library')}
                                 onNavigateToCustomStudy={handleNavigateToCustomStudy}
                                 onNavigateToTutorChat={() => setView('tutor_chat')}
                                 onNavigateToStudyCompanion={() => setView('study_companion')}
+                                onNavigateToSrsFlashcards={() => setView('srs_flashcards')}
                                 onNavigateToPearlDeck={() => setView('pearl_deck')}
                                 growthAreas={growthAreas}
                                 examLabel={examLabel ?? 'PANCE'}
@@ -959,7 +1049,7 @@ const App: React.FC = () => {
                             exit="exit"
                             transition={pageTransition}
                           >
-                            <Suspense fallback={<Loader />}>
+                            <Suspense fallback={<Loader message="Loading menu…" />}>
                               <MenuView
                                 performanceData={heatmapPerformance}
                                 missedQuestions={missedQuestions}
@@ -988,7 +1078,7 @@ const App: React.FC = () => {
 
                         {view === 'quiz' && sessionSettings && (
                           <motion.div
-                            key="quiz"
+                            key={`quiz-${quizKey}`}
                             variants={pageVariants}
                             initial="initial"
                             animate="animate"
@@ -999,7 +1089,8 @@ const App: React.FC = () => {
                               viewName="quiz"
                               onRetry={() => setView('quiz')}
                             >
-                              <Suspense fallback={<Loader />}>
+                              <Suspense fallback={<Loader message="Loading session…" />}>
+                                <BehavioralTrackerProvider>
                                 <QuizView
                                   initialQueue={questionQueue}
                                   setParentQueue={setQuestionQueue}
@@ -1013,14 +1104,20 @@ const App: React.FC = () => {
                                   growthAreas={growthAreas}
                                   onEndSession={handleEndSession}
                                   onShowMenu={() => setView('command_center')}
-                                  performanceData={heatmapPerformance}
+                                  performanceData={performanceData}
                                   fontSizeAdjustment={fontSizeAdjustment}
                                   setFontSizeAdjustment={setFontSizeAdjustment}
                                   flaggedQuestions={flaggedQuestions}
                                   addFlaggedQuestion={addFlaggedQuestion}
                                   removeFlaggedQuestion={removeFlaggedQuestion}
                                   updateQuestionNote={updateQuestionNote}
+                                  onReviewMissed={
+                                    performanceData.some((p) => !p.isCorrect)
+                                      ? handleReviewMissed
+                                      : undefined
+                                  }
                                 />
+                                </BehavioralTrackerProvider>
                               </Suspense>
                             </WithGeminiErrorBoundary>
                           </motion.div>
@@ -1311,6 +1408,39 @@ const App: React.FC = () => {
                           </WithGeminiErrorBoundary>
                         )}
 
+                        {view === 'contrastive_drill' && (
+                          <WithGeminiErrorBoundary
+                            viewName="contrastive_drill"
+                            onRetry={() => setView('contrastive_drill')}
+                          >
+                            <Suspense fallback={<Loader />}>
+                              <ContrastiveDrillSession onExit={() => setView('command_center')} />
+                            </Suspense>
+                          </WithGeminiErrorBoundary>
+                        )}
+
+                        {view === 'reasoning_tutor' && (
+                          <WithGeminiErrorBoundary
+                            viewName="reasoning_tutor"
+                            onRetry={() => setView('reasoning_tutor')}
+                          >
+                            <Suspense fallback={<Loader />}>
+                              <ReasoningTutorMode onExit={() => setView('command_center')} />
+                            </Suspense>
+                          </WithGeminiErrorBoundary>
+                        )}
+
+                        {view === 'cram_mode' && (
+                          <WithGeminiErrorBoundary
+                            viewName="cram_mode"
+                            onRetry={() => setView('cram_mode')}
+                          >
+                            <Suspense fallback={<Loader />}>
+                              <CramMode onExit={() => setView('command_center')} />
+                            </Suspense>
+                          </WithGeminiErrorBoundary>
+                        )}
+
                         {view === 'social_dashboard' && (
                           <WithGeminiErrorBoundary
                             viewName="social_dashboard"
@@ -1369,7 +1499,7 @@ const App: React.FC = () => {
                               viewName="toolkit"
                               onRetry={() => setView('toolkit')}
                             >
-                              <Suspense fallback={<Loader />}>
+                              <Suspense fallback={<Loader message="Loading toolkit…" />}>
                                 <ToolkitHub
                                   onClose={() => setView('command_center')}
                                   onNavigateToItem={handleNavigateToDrillMode}
@@ -1393,7 +1523,16 @@ const App: React.FC = () => {
                               onRetry={() => setView('gap_analysis')}
                             >
                               <Suspense fallback={<Loader />}>
-                                <GapAnalysisDashboard />
+                                <GapAnalysisDashboard
+                                  onStudySystem={(systemName) => {
+                                    setView('command_center');
+                                    handleConfirmSession({
+                                      focus: 'topic',
+                                      topic: systemName,
+                                      count: INITIAL_QUEUE_SIZE,
+                                    });
+                                  }}
+                                />
                               </Suspense>
                             </WithGeminiErrorBoundary>
                           </motion.div>
@@ -1502,9 +1641,13 @@ const App: React.FC = () => {
                                   onNavigateToToolkit={() => setView('toolkit')}
                                   onNavigateToGapAnalysis={() => startViewTransition(() => setView('gap_analysis'))}
                                   onNavigateToIntegrations={() => setView('integrations')}
-                                  onNavigateToReference={() => setView('reference_library')}
+                                  onNavigateToReference={() => {
+                                    setView('reference_library');
+                                    navigate('/study/reference');
+                                  }}
                                   onNavigateToMyLibrary={() => setView('my_library')}
                                   onNavigateToStudyCompanion={() => setView('study_companion')}
+                                  onNavigateToSrsFlashcards={() => setView('srs_flashcards')}
                                   onBack={() => setView('command_center')}
                                 />
                               </Suspense>
@@ -1569,6 +1712,21 @@ const App: React.FC = () => {
                                 <StudyCompanionPage onExit={() => setView('command_center')} />
                               </Suspense>
                             </WithGeminiErrorBoundary>
+                          </motion.div>
+                        )}
+
+                        {view === 'srs_flashcards' && (
+                          <motion.div
+                            key="srs_flashcards"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            transition={pageTransition}
+                          >
+                            <Suspense fallback={<Loader />}>
+                              <SrsFlashcardView onExit={() => setView('command_center')} />
+                            </Suspense>
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -1658,6 +1816,12 @@ const App: React.FC = () => {
                       />
                     )}
                   </Suspense>
+
+                  {/* Post-onboarding product tour */}
+                  <ProductTour
+                    isOpen={showProductTour}
+                    onClose={() => setShowProductTour(false)}
+                  />
                 </>
               }
             />

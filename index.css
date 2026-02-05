@@ -277,6 +277,11 @@ a,
   .bg-theme-tertiary {
     @apply bg-[var(--color-bg-tertiary)] dark:bg-[var(--color-bg-tertiary)];
   }
+
+  /* Card shadow - no black; uses design token for theme-safe elevation */
+  .shadow-card {
+    box-shadow: 0 4px 6px -1px var(--color-shadow-soft), 0 2px 4px -2px var(--color-shadow-soft);
+  }
 }
 
 /* -----------------------------------------------------
@@ -337,6 +342,7 @@ a,
   --chart-grid-stroke: rgba(15, 23, 42, 0.08);
   --color-accent: #9a8f72; /* Same gold family */
   --color-accent-hover: #8a7f62;
+  --color-accent-secondary: #728ba6; /* Steel blue - charts, secondary CTAs */
   --color-accent-light: #f5f2ec;
   --color-overlay: rgba(15, 23, 42, 0.5);
   --color-shadow-soft: rgba(15, 23, 42, 0.06);
@@ -456,6 +462,7 @@ a,
   --chart-grid-stroke: rgba(71, 85, 105, 0.2);
   --color-accent: #a89b7a; /* Same gold family */
   --color-accent-hover: #b8ab8a;
+  --color-accent-secondary: #91a6bd; /* Steel blue (lighter) - charts, secondary CTAs */
   --color-accent-light: #1e293b;
   --color-text-inverse: #f8fafc;
   --color-overlay: rgba(15, 23, 42, 0.85);
@@ -1183,6 +1190,25 @@ a,
 .condition-content-item {
   margin-bottom: 0.5rem;
   line-height: 1.75;
+}
+
+/* Key point / Pearl callout - high-yield bullet with left border and background */
+.condition-callout,
+.condition-pearl {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  padding-left: 1rem;
+  border-left: 4px solid var(--color-accent);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border-radius: 0 12px 12px 0;
+  font-size: inherit;
+  line-height: 1.65;
+}
+
+.condition-callout strong,
+.condition-pearl strong {
+  color: var(--color-text-primary);
 }
 
 .condition-mnemonic-header {

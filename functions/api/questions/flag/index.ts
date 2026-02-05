@@ -42,6 +42,34 @@ export const onRequestPost = authenticatedEndpoint(
         },
       });
 
+      // Kill switch (Crowdsourced Recall): if questionId is a PreGeneratedQuestion,
+      // update flagCount, flagRate; auto-reject when flagRate > 15% and timesServed > 20.
+      let killSwitchTriggered = false;
+      try {
+        const preGen = await prisma.preGeneratedQuestion.findUnique({
+          where: { id: validated.questionId },
+          select: { id: true, flagCount: true, timesServed: true, validationStatus: true },
+        });
+        if (preGen) {
+          const newFlagCount = preGen.flagCount + 1;
+          const timesServed = Math.max(1, preGen.timesServed);
+          const flagRate = newFlagCount / timesServed;
+          const shouldReject =
+            flagRate > 0.15 && preGen.timesServed > 20 && preGen.validationStatus !== 'rejected';
+          await prisma.preGeneratedQuestion.update({
+            where: { id: validated.questionId },
+            data: {
+              flagCount: newFlagCount,
+              flagRate,
+              ...(shouldReject ? { validationStatus: 'rejected' } : {}),
+            },
+          });
+          if (shouldReject) killSwitchTriggered = true;
+        }
+      } catch (killSwitchError) {
+        console.error('[KillSwitch] Failed to update PreGeneratedQuestion flag stats:', killSwitchError);
+      }
+
       // Check for auto-demotion: if question has >= 3 pending flags, demote it
       const pendingFlagCount = await prisma.questionFlag.count({
         where: {
@@ -109,16 +137,22 @@ export const onRequestPost = authenticatedEndpoint(
         });
       }
 
+      let message = 'Question flagged successfully. We will review it soon!';
+      if (killSwitchTriggered) {
+        message =
+          'Question flagged; high flag rate triggered automatic removal from the pool. Thank you for your feedback!';
+      } else if (demoted) {
+        message = 'Question flagged and automatically removed from pool for review. Thank you for your feedback!';
+      }
       return {
         status: 200,
         data: {
           success: true,
           flagId: flag.id,
           demoted,
+          killSwitchTriggered,
           pendingFlagCount,
-          message: demoted
-            ? 'Question flagged and automatically removed from pool for review. Thank you for your feedback!'
-            : 'Question flagged successfully. We will review it soon!',
+          message,
         },
       };
     } finally {

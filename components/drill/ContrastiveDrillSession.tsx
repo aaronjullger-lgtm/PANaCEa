@@ -135,7 +135,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
                   className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-violet-400 dark:hover:border-violet-500 transition-all group text-left"
                 >
                   <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-400">
+                    <h3 className="font-semibold text-[var(--color-text-primary)] group-hover:text-violet-600 dark:group-hover:text-violet-400">
                       {set.symptom}
                     </h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">

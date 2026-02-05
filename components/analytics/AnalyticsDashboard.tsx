@@ -37,7 +37,7 @@ import { CalibrationProgress } from '@/components/analytics/CalibrationProgress'
 import { EmptyLineChart } from '@/components/analytics/EmptyChartState';
 import { PANCEReadinessTreemap, type SystemNode } from '@/components/analytics/PANCEReadinessTreemap';
 import chartTheme from '@/lib/chartTheme';
-import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { getQuadrantLabel } from '@/lib/calibrationQuadrants';
 import {
   getSpeedBenchmarkLabel,
@@ -155,7 +155,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           return;
         }
 
-        const response = await fetch(getApiEndpoint('/api/user/stats'), {
+        const response = await fetch(getApiEndpoint(API_ENDPOINTS.USER_STATS), {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -193,12 +193,15 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           return;
         }
 
-        const response = await fetch('/api/user/stability-trend?days=30', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+        const response = await fetch(
+          `${getApiEndpoint(API_ENDPOINTS.USER_STABILITY_TREND)}?days=30`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error('Failed to fetch stability trend');
@@ -240,10 +243,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     // API middleware sends result.data as body, so response is { calibration, days }
     return json as { calibration: CalibrationQuadrantData; days: number };
   };
-  const { data: calibrationData } = useSWR<{ calibration: CalibrationQuadrantData; days: number }>(
+  const calibrationUrl =
     userStats && userStats.stats?.overall?.totalAttempts > 0
-      ? '/api/analytics/calibration?days=90'
-      : null,
+      ? `${getApiEndpoint(API_ENDPOINTS.ANALYTICS_CALIBRATION)}?days=90`
+      : null;
+  const { data: calibrationData } = useSWR<{ calibration: CalibrationQuadrantData; days: number }>(
+    calibrationUrl,
     calibrationFetcher,
     { revalidateOnFocus: false }
   );

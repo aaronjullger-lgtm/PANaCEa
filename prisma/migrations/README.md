@@ -86,6 +86,10 @@ Common issues:
 | ------------------------------------- | ---------- | ----------------------------------------- | -------- |
 | 20241209000000_init_production_schema | 2024-12-09 | Initial production schema with all tables | ✅ Ready |
 
+### Duplicate session analytics migrations
+
+- **20241230_add_session_analytics** and **20251230_add_session_analytics** both create `StudySession` and `UserLearningProfile` with the same structure. Both use `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS`, so applying both is safe (no duplicate DDL). Do not remove either—Prisma migration history would break. Prefer running migrations in order; the second run is a no-op for these tables.
+
 ## Environment Variables
 
 Migrations use these environment variables:

@@ -968,7 +968,7 @@ async function saveMediaAsset(
         annotationLevel: analysis.annotationLevel,
         matchesCondition: analysis.matchesCondition,
       },
-      status: 'approved',
+      status: 'active',
       approvalStatus: 'approved',
       modality: 'ecg',
       explanation: condition.visualFindings,

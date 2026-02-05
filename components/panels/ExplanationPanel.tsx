@@ -421,6 +421,8 @@ Keep your response concise (3-5 sentences max) and supportive.`;
         getToken,
         ...(activeKnowledgeCacheName ? { cachedContent: activeKnowledgeCacheName } : {}),
         thinkingLevel: 'HIGH',
+        systemInstruction:
+          'You are a clinical tutor for PA students. Be concise (3-5 sentences), supportive, and use simple language. When citing library use {{Page:N}} or {{Pages:N-M}}.',
         onChunk: (chunk) => {
           setTutorResponse((prev) => prev + chunk);
         },
@@ -556,10 +558,10 @@ Keep your response concise (3-5 sentences max) and supportive.`;
               {loadedBasicScienceLinks.map((link) => (
                 <a
                   key={link.conceptId}
-                  href={`/concepts/${link.conceptId}`}
+                  href={`#concept-${link.conceptId}`}
                   className="flex items-center gap-2 p-3 bg-[var(--color-accent)]/10 rounded-lg border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/15 transition-colors group"
-                  target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={`Review concept: ${link.title}`}
                 >
                   <ExternalLink className="w-4 h-4 text-[var(--color-accent)] flex-shrink-0 group-hover:scale-110 transition-transform" />
                   <span className="text-sm font-medium text-[var(--color-accent)]">

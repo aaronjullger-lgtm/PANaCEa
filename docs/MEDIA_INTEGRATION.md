@@ -132,11 +132,48 @@ CLERK_SECRET_KEY=your-clerk-secret
 
 ### Drill Integration
 
-The existing `/api/drills/media.ts` endpoint returns approved media for photo drills. Categories map to modalities:
+**Single source for photo drill questions:** `GET /api/drills/media`
 
-- `ecg` → ECG drill
-- `derm` → Dermatology drill
-- `radiology` → Radiology drill
+- Query params: `modality` (`ecg` | `derm` | `radiology`), `count` (default 20)
+- Response: `{ data: PhotoCase[] }`
+- Only assets with `approvalStatus: 'approved'` are returned (canonical approval field)
+- `GET /api/drill/photo-batch` is deprecated; it returns the same data for backward compatibility
+
+### Approval vs status
+
+- **approvalStatus** (canonical): `pending` | `approved` | `rejected`. Use this for drill visibility and counts.
+- **status** (workflow): `pending_review` | `active` | `rejected`. When approving, set `status: 'active'` and `approvalStatus: 'approved'`.
+
+### Storage path convention
+
+- Bucket: `medical-images`
+- Path: `{category}/{uniqueId}_{filename}` (e.g. `ecg/abc12345_image.jpg`). Categories: `ecg`, `derm`, `radiology`, `labs`, `diagrams`, `other`
+- Thumbnails: `{type}/thumbnails/{filename}` (e.g. `ekg/thumbnails/image.jpg`)
+- MediaAsset has optional `storagePath` for reliable delete and URL construction
+
+### Post-upload processing (Node only)
+
+Admin upload (Edge) does not run optimization or quality assessment. To process pending uploads (optimize, assess, auto-approve, generate thumbnails), run:
+
+```bash
+npm run media:process-pending
+# or: npx tsx scripts/media/process-pending-uploads.ts
+```
+
+Requires Node, `DATABASE_URL`, `GEMINI_API_KEY`, and Supabase env. Run manually or via cron.
+
+### Backfill storagePath (optional)
+
+After adding `storagePath` to MediaAsset, backfill existing rows so delete and URL logic use it:
+
+```bash
+npm run media:backfill-storage-path
+# Options: --dry-run, --limit=500
+```
+
+### E2E
+
+Media API is covered by `e2e/all-modes.spec.ts` (Media API test). Run with `npm run test:e2e` or `npm run test:smoke` when the app server is available (e.g. after `npm run dev` or `npm run dev:all`).
 
 ---
 
@@ -144,6 +181,6 @@ The existing `/api/drills/media.ts` endpoint returns approved media for photo dr
 
 1. **Bulk Import Script**: Script to import existing images from external sources
 2. **AI Auto-Tagging**: Use Gemini to analyze and tag uploaded images
-3. **Thumbnail Generation**: Auto-generate thumbnails on upload
+3. **Thumbnail Generation**: Auto-generate thumbnails on upload (included in process-pending-uploads when auto-approved)
 4. **CDN Optimization**: Configure Cloudflare for image caching
 5. **Version Control**: Track image replacements/updates

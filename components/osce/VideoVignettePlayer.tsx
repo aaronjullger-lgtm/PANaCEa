@@ -145,9 +145,9 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Video Player */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl shadow-lg overflow-hidden">
             {/* Video Container */}
-            <div className="relative bg-black aspect-video">
+            <div className="relative bg-[var(--color-bg-primary)] aspect-video">
               <video
                 ref={videoRef}
                 src={videoUrl}
@@ -163,7 +163,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   onClick={togglePlay}
-                  className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors group"
+                  className="absolute inset-0 flex items-center justify-center bg-[var(--color-overlay)] hover:opacity-90 transition-opacity group"
                 >
                   <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Play className="w-10 h-10 text-purple-600 ml-1" />
@@ -173,7 +173,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
             </div>
 
             {/* Video Controls */}
-            <div className="p-4 bg-gray-50 dark:bg-gray-900">
+            <div className="p-4 bg-[var(--color-bg-tertiary)]">
               {/* Progress Bar */}
               <input
                 type="range"
@@ -181,7 +181,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
                 max={duration || 0}
                 value={currentTime}
                 onChange={handleSeek}
-                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer mb-4"
+                className="w-full h-2 bg-[var(--color-bg-tertiary)] rounded-lg appearance-none cursor-pointer mb-4"
                 style={{
                   background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${(currentTime / duration) * 100}%, #e5e7eb ${(currentTime / duration) * 100}%, #e5e7eb 100%)`,
                 }}
@@ -202,18 +202,18 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
                   </button>
                   <button
                     onClick={handleRestart}
-                    className="p-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    className="p-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] rounded-full hover:bg-[var(--color-border)] transition-colors"
                   >
                     <RotateCcw className="w-5 h-5" />
                   </button>
                   <button
                     onClick={toggleMute}
-                    className="p-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    className="p-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] rounded-full hover:bg-[var(--color-border)] transition-colors"
                   >
                     {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                   </button>
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                <div className="text-sm text-[var(--color-text-muted)] font-mono">
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </div>
               </div>
@@ -237,8 +237,8 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
 
         {/* Question & Options */}
         <div className="space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{question}</h3>
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg">
+            <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4">{question}</h3>
 
             <div className="space-y-3">
               {options.map((option, index) => (
@@ -257,7 +257,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
                         <div className="w-3 h-3 bg-current rounded-full" />
                       )}
                     </div>
-                    <span className="text-sm text-gray-900 dark:text-white font-medium">
+                    <span className="text-sm text-[var(--color-text-primary)] font-medium">
                       {option}
                     </span>
                   </div>
@@ -298,7 +298,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
                 </>
               )}
             </h4>
-            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{explanation}</p>
+            <p className="text-[var(--color-text-secondary)] whitespace-pre-line">{explanation}</p>
           </motion.div>
         )}
       </AnimatePresence>

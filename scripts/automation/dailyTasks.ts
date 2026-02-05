@@ -275,52 +275,22 @@ async function databaseCleanup(): Promise<void> {
 }
 
 /**
- * Create today's Grand Rounds challenge
+ * Grand Rounds daily challenge creation.
+ * Strategy: GET /api/grand-rounds/today creates today's challenge on first request (Question table only).
+ * This task is a no-op; creation is handled by the API. See docs/implementation/GRAND_ROUNDS_IMPLEMENTATION.md.
  */
 async function createGrandRoundsChallenge(): Promise<void> {
   const start = Date.now();
-  console.log("🏆 Creating today's Grand Rounds challenge...");
+  console.log("🏆 Grand Rounds: challenge created on first API request (today.ts)...");
 
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Check if challenge already exists
-    // const existing = await prisma.grandRoundsChallenge.findUnique({
-    //   where: { date: today },
-    // });
-
-    // if (existing) {
-    //   report.tasks.push({
-    //     name: 'Grand Rounds Challenge Creation',
-    //     status: 'skipped',
-    //     message: 'Challenge for today already exists',
-    //     duration: Date.now() - start,
-    //   });
-    //   report.summary.skipped++;
-    //   return;
-    // }
-
-    // Generate 5 random question IDs using the date as seed
-    const seed = today.getTime();
-    const questionIds = generateQuestionIds(seed, 5);
-
-    // await prisma.grandRoundsChallenge.create({
-    //   data: {
-    //     id: uuidv4(),
-    //     date: today,
-    //     questionIds,
-    //   },
-    // });
-
     report.tasks.push({
       name: 'Grand Rounds Challenge Creation',
-      status: 'completed',
-      message: "Created today's Grand Rounds challenge with 5 questions",
-      details: { date: today.toISOString(), seed, questionIds },
+      status: 'skipped',
+      message: 'Challenge created on first GET /api/grand-rounds/today request',
       duration: Date.now() - start,
     });
-    report.summary.completed++;
+    report.summary.skipped++;
   } catch (error: any) {
     report.tasks.push({
       name: 'Grand Rounds Challenge Creation',

@@ -126,8 +126,8 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
   if (!currentQuestionData) {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-2xl text-center">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+        <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 shadow-2xl text-center">
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
             No Questions Available
           </h2>
           <button
@@ -203,7 +203,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-2xl"
+          className="bg-[var(--color-bg-secondary)] rounded-xl p-8 shadow-2xl"
         >
           <div className="text-center mb-8">
             <div
@@ -212,10 +212,10 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
             >
               <Award className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
               PANRE-LA Simulator
             </h1>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-[var(--color-text-secondary)]">
               Practice the Longitudinal Assessment Format
             </p>
           </div>
@@ -263,31 +263,31 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
             </div>
 
             <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-lg p-6">
-              <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <h3 className="font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
                 Current Quarter Progress
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Quarter</div>
+                  <div className="text-sm text-[var(--color-text-muted)]">Quarter</div>
                   <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                     Q{quarterlyProgress.quarter}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Due Date</div>
-                  <div className="text-lg font-bold text-gray-900 dark:text-white">
+                  <div className="text-sm text-[var(--color-text-muted)]">Due Date</div>
+                  <div className="text-lg font-bold text-[var(--color-text-primary)]">
                     {quarterlyProgress.dueDate}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Questions</div>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <div className="text-sm text-[var(--color-text-muted)]">Questions</div>
+                  <div className="text-2xl font-bold text-[var(--color-text-primary)]">
                     {quarterlyProgress.questionsCompleted}/{quarterlyProgress.totalQuestions}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Score</div>
+                  <div className="text-sm text-[var(--color-text-muted)]">Score</div>
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {quarterlyProgress.questionsCompleted > 0
                       ? Math.round(
@@ -337,7 +337,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Question Panel */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg">
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <span
@@ -354,7 +354,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                 </button>
               </div>
 
-              <p className="text-lg text-gray-900 dark:text-white leading-relaxed">
+              <p className="text-lg text-[var(--color-text-primary)] leading-relaxed">
                 {currentQuestionData.question}
               </p>
             </div>
@@ -394,7 +394,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                         <CheckCircle className="w-4 h-4 text-white" />
                       )}
                     </div>
-                    <span className="text-gray-900 dark:text-white">{option}</span>
+                    <span className="text-[var(--color-text-primary)]">{option}</span>
                   </div>
                 </button>
               ))}
@@ -457,14 +457,14 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                     )}
                   </span>
                 </h4>
-                <p className="text-gray-700 dark:text-gray-300 mb-4">
+                <p className="text-[var(--color-text-secondary)] mb-4">
                   {currentQuestionData.rationale}
                 </p>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-                  <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4">
+                  <h5 className="font-semibold text-[var(--color-text-primary)] mb-2 flex items-center gap-2">
                     <BookOpen className="w-4 h-4" /> References:
                   </h5>
-                  <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                  <ul className="text-sm text-[var(--color-text-muted)] space-y-1">
                     {currentQuestionData.references.map((ref, i) => (
                       <li key={i}>• {ref}</li>
                     ))}
@@ -477,8 +477,8 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
 
         {/* Resources Sidebar */}
         <div className="space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg">
+            <h3 className="font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
               <Book className="w-5 h-5" /> Quick Resources
             </h3>
 
@@ -522,7 +522,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                 </a>
               </div>
             ) : (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Click "Show References" above to access clinical resources for this question.
               </p>
             )}
@@ -531,7 +531,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
           <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg p-4">
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-gray-700 dark:text-gray-300">
+              <div className="text-sm text-[var(--color-text-secondary)]">
                 <strong>Tip:</strong> PANRE-LA is open book, but time is limited. Use resources
                 wisely to verify your clinical decision-making.
               </div>

@@ -1,3 +1,7 @@
+/**
+ * @deprecated Not mounted in App. NavRail is the active nav. Kept for future route-based layouts.
+ * See components/layout/LAYOUT_README.md and config/navigation.ts.
+ */
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -31,26 +35,26 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose, className = '
         />
       )}
 
-      {/* Sidebar - Deep Navy, Gold active states */}
+      {/* Sidebar - semantic tokens for theme continuity */}
       <motion.aside
         initial={{ x: -280 }}
         animate={{ x: isOpen ? 0 : -280 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className={`fixed md:sticky top-0 left-0 h-screen w-[280px] bg-[#0F172A] border-r border-slate-700/50 z-50 flex flex-col ${className}`}
+        className={`fixed md:sticky top-0 left-0 h-screen w-[280px] bg-[var(--color-bg-primary)] border-r border-[var(--color-border)] z-50 flex flex-col ${className}`}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-700/50">
+        <div className="px-6 py-5 border-b border-[var(--color-border)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-muted-amber-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">P</span>
+              <div className="w-8 h-8 bg-[var(--color-accent)] rounded-lg flex items-center justify-center">
+                <span className="text-[var(--color-text-inverse)] font-bold text-sm">P</span>
               </div>
-              <h1 className="text-xl font-bold text-white">PANaCEa</h1>
+              <h1 className="text-xl font-bold text-[var(--color-text-primary)]">PANaCEa</h1>
             </div>
             {onClose && (
               <button
                 onClick={onClose}
-                className="md:hidden p-2 hover:bg-slate-800/60 rounded-lg transition-colors text-slate-400 hover:text-white"
+                className="md:hidden p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
                 aria-label="Close sidebar"
               >
                 <X className="w-5 h-5" />
@@ -71,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose, className = '
               >
                 {/* Category Label */}
                 <div className="px-3 mb-2">
-                  <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
                     {category.category}
                   </h2>
                 </div>
@@ -92,16 +96,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose, className = '
                           transition-all duration-200 ease-out
                           ${
                             isActive
-                              ? 'bg-slate-800/40 text-white'
-                              : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-300'
+                              ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]'
+                              : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-secondary)]'
                           }
                         `}
                       >
-                        {/* Gold vertical pill on left edge for active */}
+                        {/* Accent vertical pill on left edge for active */}
                         {isActive && (
                           <motion.div
                             layoutId="activeNav"
-                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-muted-amber-500 rounded-r-full"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[var(--color-accent)] rounded-r-full"
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                           />
                         )}
@@ -111,7 +115,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose, className = '
                           <Icon
                             className={`
                               w-5 h-5 flex-shrink-0 transition-colors
-                              ${isActive ? 'text-muted-amber-500' : 'text-slate-400 group-hover:text-slate-300'}
+                              ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)]'}
                             `}
                           />
                         )}
@@ -120,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose, className = '
                         <span
                           className={`
                             flex-1 text-sm font-medium transition-colors
-                            ${isActive ? 'font-semibold text-white' : 'font-normal'}
+                            ${isActive ? 'font-semibold text-[var(--color-text-primary)]' : 'font-normal'}
                           `}
                         >
                           {item.label}
@@ -129,8 +133,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose, className = '
                         {/* Hover Chevron */}
                         <ChevronRight
                           className={`
-                            w-4 h-4 opacity-0 group-hover:opacity-100 transition-all text-slate-400
-                            ${isActive ? 'opacity-100 text-muted-amber-500' : ''}
+                            w-4 h-4 opacity-0 group-hover:opacity-100 transition-all text-[var(--color-text-muted)]
+                            ${isActive ? 'opacity-100 text-[var(--color-accent)]' : ''}
                           `}
                         />
                       </Link>
@@ -143,8 +147,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose, className = '
         </nav>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-700/50">
-          <div className="flex items-center gap-3 text-xs text-slate-400">
+        <div className="px-6 py-4 border-t border-[var(--color-border)]">
+          <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
             <div className="w-2 h-2 bg-[var(--color-data-pass)] rounded-full animate-pulse"></div>
             <span>All systems operational</span>
           </div>

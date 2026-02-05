@@ -28,8 +28,8 @@ http://localhost:3000/drill
 
 ## 🔌 API Endpoints
 
-### GET `/api/drill/photo-batch`
-Fetch photo drill questions
+### GET `/api/drill/photo-batch` (deprecated)
+Fetch photo drill questions. **Prefer GET `/api/drills/media`** (same data, `modality` + `count` params).
 
 **Query Params:**
 - `system` (optional): Cardiology, Dermatology, etc.

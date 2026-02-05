@@ -1,6 +1,7 @@
 # PANaCEa Site Audit – UI/UX & Functionality
 
 **Date:** February 4, 2026  
+**Last Updated:** February 4, 2026 (post 10-step improvement plan)  
 **Method:** Browser-driven audit (localhost) + code review  
 **Scope:** Command Center, NavRail, Menu, Settings/Stats, Toolkit, key CTAs
 
@@ -11,7 +12,8 @@
 - **NavRail Reference/Progress:** Fixed – URL `?tab=resources` / `?tab=analytics` now sync to Command Center “Study Tools” tab.
 - **NavRail Menu:** Fixed – “Menu” link added to rail (href `/menu`) for discoverability.
 - **Theme/contrast & buttons:** Addressed in prior pass (semantic tokens, button visibility).
-- **Remaining:** Documented below for follow-up (disabled states, loading UX, a11y).
+- **Loading copy:** Addressed – context-specific Loader messages (dashboard, menu, toolkit, session, etc.) in App.tsx; DrugReferenceLibrary and PhotoDrillCard copy updated.
+- **Remaining:** Documented in §7 (optional: Study Tools tab → URL sync, E2E spot-checks).
 
 ---
 
@@ -81,6 +83,13 @@
 | **Landmarks** | `banner`, `main`, `complementary`, `navigation`, `tablist`/`tabpanel` present. |
 | **Modal close** | “Close modal” / “Close modal and return to dashboard” present. |
 | **ARIA** | Settings modal uses “Modal sections” tablist; Study tools use “Study tools view” tablist. |
+
+---
+
+## 6.1. Planned / Coming Soon (Documented in Code)
+
+- **DiagnosticDrillHub:** Virtual OSCE and Ventilator Mode are marked “Coming Soon” here; full Patient Encounter and Ventilator exist as app views. See `components/drill/DiagnosticDrillHub.tsx` and `docs/STRATEGIC_10_SPRINT_ROADMAP.md`.
+- **Polypharmacy Puzzle:** Training mode is `isComingSoon: true` until backend/UI is ready. See `config/training-modes.ts`.
 
 ---
 

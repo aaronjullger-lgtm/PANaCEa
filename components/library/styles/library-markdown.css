@@ -1,11 +1,12 @@
 /**
  * Markdown Styling for Clinical Reference Library
- * 
- * Custom styles for rendering medical content with markdown formatting.
- * Handles bolding, bullet points, numbered lists, and inline code.
+ *
+ * Library-specific overrides only. Canonical condition markdown typography,
+ * lists, tables, and hierarchy live in index.css (.condition-markdown, .condition-content).
+ * This file adjusts font size and spacing for the Library slide-over context.
  */
 
-/* Base markdown container */
+/* Base markdown container - override font size for Library context */
 .condition-markdown {
   color: var(--color-text-secondary);
   font-size: 0.875rem;

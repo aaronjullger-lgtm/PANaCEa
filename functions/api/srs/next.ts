@@ -11,16 +11,30 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { getTaskTypeFromContent } from '../../../lib/taskTypes';
 
-const SRSNextSchema = z.object({
-  query: z.object({}).optional(),
+const SRSNextQuerySchema = z.object({
+  mode: z.enum(['MAIN', 'CRAM', 'RAPID_RECALL']).optional(),
 });
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(SRSNextSchema, async (context) => {
-  const { env, auth } = context;
+export const onRequestGet = authenticatedEndpoint(
+  SRSNextQuerySchema,
+  async (context) => {
+  const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/srs/next');
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+
+  const mode = (validated as { mode?: string })?.mode ?? 'MAIN';
+
+  // FSRS gatekeeper: OSCE and drill scheduling use their own endpoints; do not use SRS/next for them.
+  if (mode === 'OSCE' || mode === 'osce' || mode === 'DRILL' || mode === 'drill') {
+    return {
+      data: {
+        error: 'OSCE and drill scheduling use their own endpoints. Use /api/osce/cases/random for OSCE.',
+      },
+      status: 400,
+    };
+  }
 
   try {
     prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -178,4 +192,6 @@ export const onRequestGet = authenticatedEndpoint(SRSNextSchema, async (context)
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+},
+  { source: 'query' }
+);

@@ -8,8 +8,9 @@
  * instead of IndexedDB functions (generateUserFriendlyStats, assessTestReadiness).
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@clerk/clerk-react';
 import {
   TrendingUp,
   TrendingDown,
@@ -32,7 +33,7 @@ import {
   RefreshCw,
   Coffee,
 } from 'lucide-react';
-import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { UserStatsOverviewSkeleton } from '@/components/loading';
 import { getSpeedBenchmarkLabel } from '@/lib/speedBenchmarks';
 
@@ -363,21 +364,23 @@ const RecommendationCard: React.FC<{ recommendation: string; index: number }> = 
 // ============================================================================
 
 export const UserFriendlyStatsDisplay: React.FC = () => {
+  const { getToken } = useAuth();
   const [userStats, setUserStats] = useState<UserStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'insights' | 'systems'>('overview');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(getApiEndpoint('/api/user/stats'), {
+      const token = await getToken();
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.USER_STATS), {
         credentials: 'include',
+        headers,
       });
 
       if (!response.ok) {
@@ -392,7 +395,11 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Transform server data for display
   const displayData = useMemo(() => {
@@ -491,7 +498,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
         improving,
         declining,
       },
-      // Placeholder values for features not yet in server
+      // Reserved for future server-backed insights (not displayed until API exists)
       firstInstinctAccuracy: null,
       answerChangeHelpfulness: null,
       shouldTrustFirstInstinct: null,

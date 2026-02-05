@@ -1,3 +1,7 @@
+/**
+ * @deprecated Not mounted in App. NavRail is the active nav. Kept for future route-based layouts.
+ * See components/layout/LAYOUT_README.md and config/navigation.ts.
+ */
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';

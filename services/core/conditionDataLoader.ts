@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma';
-import conditionRegistry from '@/config/conditionRegistry';
 
 // Import and re-export type from client-safe types file
 // This prevents client code from importing this server-only service just to get the type
@@ -31,11 +30,10 @@ export async function loadConditionData(conditionId: string): Promise<ConditionD
 
   if (!found) return null;
 
-  const registryMeta = conditionRegistry?.find((c) => c.id === found.conditionId);
   return {
     ...(found as any),
     meta: {
-      relatedSystems: found.relatedSystems || registryMeta?.relatedSystems || [],
+      relatedSystems: found.relatedSystems ?? [],
     },
   };
 }

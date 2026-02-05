@@ -21,8 +21,8 @@ import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter
 import { IDSchema } from '../../_shared/schemas';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
-// Use gemini-2.5-pro-preview or gemini-2.0-flash; set to gemini-3-pro-preview when available.
-const GEMINI_GRADE_MODEL = 'gemini-2.5-pro-preview';
+// Stable: gemini-2.5-pro; use gemini-3-pro-preview when needed for latest reasoning.
+const GEMINI_GRADE_MODEL = 'gemini-2.5-pro';
 
 const GradeBodySchema = z.object({
   body: z.object({
@@ -45,6 +45,34 @@ type GradePayload = {
   billingCodeSuggestion: string;
 };
 
+type SoftSkillsReport = {
+  empathy: { score: number; feedback: string };
+  professionalism: { score: number; feedback: string };
+  pacing: { score: number; feedback: string };
+};
+
+/** Validates a single grade checklist item from Gemini before persisting */
+const GRADE_CHECKLIST_ITEM = z.object({
+  item: z.string(),
+  status: z.enum(['PASS', 'FAIL']),
+  feedback: z.string(),
+});
+type GradeChecklistItem = z.infer<typeof GRADE_CHECKLIST_ITEM>;
+
+function validateGradeChecklist(items: unknown[], log?: (msg: string, meta?: object) => void): ChecklistItem[] {
+  if (!Array.isArray(items)) return [];
+  const validated: ChecklistItem[] = [];
+  for (let i = 0; i < items.length; i++) {
+    const result = GRADE_CHECKLIST_ITEM.safeParse(items[i]);
+    if (result.success) {
+      validated.push(result.data);
+    } else if (log) {
+      log('Dropped invalid checklist item from grade payload', { index: i, issues: result.error.issues });
+    }
+  }
+  return validated;
+}
+
 const RUBRIC_CHECKLIST_ITEM = z.object({
   item: z.string(),
   isRedFlag: z.boolean().optional(),
@@ -66,6 +94,37 @@ function inferSystemFromCase(chiefComplaint: string, correctDiagnosis: string): 
   if (/\b(infection|sepsis|uti|pneumonia)\b/.test(text)) return 'infectious_disease';
   if (/\b(psych|depression|anxiety|suicid)\b/.test(text)) return 'psychiatry';
   return 'general';
+}
+
+async function callGeminiSoftSkills(
+  apiKey: string,
+  transcript: unknown
+): Promise<SoftSkillsReport | null> {
+  const url = `${GEMINI_BASE}/v1beta/models/${GEMINI_GRADE_MODEL}:generateContent?key=${apiKey}`;
+  const systemPrompt = `You are a clinical educator evaluating bedside manner in a simulated patient encounter. Analyze the student's communication (Speaker A). Grade 1-5 (1=poor, 5=excellent) for: Empathy, Professionalism, Pacing. Provide brief specific feedback for each. Output ONLY a JSON object: {"empathy":{"score":number,"feedback":"..."},"professionalism":{"score":number,"feedback":"..."},"pacing":{"score":number,"feedback":"..."}}`;
+  const userPrompt = `Transcript (Speaker A = Student, Speaker B = Patient):\n${JSON.stringify(transcript)}\n\nOutput JSON only.`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 1024,
+        responseMimeType: 'application/json',
+      },
+    }),
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) return null;
+  try {
+    return JSON.parse(text.replace(/^```json\s*/i, '').replace(/\s*```\s*$/i, '').trim()) as SoftSkillsReport;
+  } catch {
+    return null;
+  }
 }
 
 async function callGeminiGrade(
@@ -98,13 +157,18 @@ async function callGeminiGrade(
   return text;
 }
 
-function parseGradePayload(rawText: string): GradePayload {
+function parseGradePayload(rawText: string, log?: (msg: string, meta?: object) => void): GradePayload {
   const stripped = rawText.replace(/^```json\s*/i, '').replace(/\s*```\s*$/i, '').trim();
   const parsed = JSON.parse(stripped) as GradePayload;
+  const rawChecklist = Array.isArray(parsed.checklist) ? parsed.checklist : [];
+  const checklist = validateGradeChecklist(rawChecklist, log);
+  const redFlagsMissed = Array.isArray(parsed.redFlagsMissed)
+    ? parsed.redFlagsMissed.filter((x): x is string => typeof x === 'string')
+    : [];
   return {
     score: Number(parsed.score) || 0,
-    checklist: Array.isArray(parsed.checklist) ? parsed.checklist : [],
-    redFlagsMissed: Array.isArray(parsed.redFlagsMissed) ? parsed.redFlagsMissed : [],
+    checklist,
+    redFlagsMissed,
     clinicalReasoningScore: Number(parsed.clinicalReasoningScore) || 0,
     billingCodeSuggestion:
       typeof parsed.billingCodeSuggestion === 'string' ? parsed.billingCodeSuggestion : 'N/A',
@@ -181,7 +245,8 @@ async function persistGradeAndConceptGap(
   session: {
     User?: { id: string } | null;
     PatientEncounterCase: { chiefComplaint: string; correctDiagnosis: string };
-  }
+  },
+  softSkillsReport: SoftSkillsReport | null
 ): Promise<{ resultId: string; conceptGapCreated: boolean }> {
   const existingResult = await prisma.osceResult.findUnique({ where: { sessionId } });
   const data = {
@@ -190,6 +255,7 @@ async function persistGradeAndConceptGap(
     redFlagsMissed: payload.redFlagsMissed,
     clinicalReasoningScore: payload.clinicalReasoningScore,
     billingCodeSuggestion: payload.billingCodeSuggestion || null,
+    softSkillsReport: softSkillsReport ? (softSkillsReport as unknown as object) : undefined,
   };
   if (existingResult) {
     await prisma.osceResult.update({ where: { sessionId }, data });
@@ -304,17 +370,26 @@ Output your grading as a single JSON object only.`;
 
       let payload: GradePayload;
       try {
-        payload = parseGradePayload(rawText);
+        payload = parseGradePayload(rawText, (msg, meta) => log.warn(msg, meta));
       } catch (error_) {
         log.error('Failed to parse Gemini JSON', { raw: rawText.slice(0, 300), err: error_ });
         return { status: 502, error: 'Invalid grading response format' };
+      }
+
+      // Ghost Listener: Bedside manner analysis (soft skills) - non-blocking, best-effort
+      let softSkillsReport: SoftSkillsReport | null = null;
+      try {
+        softSkillsReport = await callGeminiSoftSkills(env.GEMINI_API_KEY, transcript);
+      } catch {
+        log.warn('Soft skills analysis skipped or failed', { sessionId });
       }
 
       const { resultId, conceptGapCreated } = await persistGradeAndConceptGap(
         prisma,
         sessionId,
         payload,
-        session
+        session,
+        softSkillsReport
       );
       if (conceptGapCreated) {
         log.info('ConceptGap created for Tutor', { userId: session.User?.id, sessionId });
@@ -328,6 +403,7 @@ Output your grading as a single JSON object only.`;
           redFlagsMissed: payload.redFlagsMissed,
           clinicalReasoningScore: payload.clinicalReasoningScore,
           billingCodeSuggestion: payload.billingCodeSuggestion,
+          softSkillsReport: softSkillsReport ?? undefined,
           conceptGapCreated,
         },
       };

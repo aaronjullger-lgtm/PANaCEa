@@ -1,21 +1,26 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { MessageCircle, ChevronLeft, Sparkles, Loader2, User, Bot } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { usePreferences } from '@/hooks/usePreferences';
-import { API_ENDPOINTS, buildApiUrl } from '@/lib/utils/apiConfig';
+import { API_ENDPOINTS, buildApiUrl, getApiEndpoint } from '@/lib/utils/apiConfig';
 import { callGeminiTextStreaming } from '@/services/ai/geminiService';
+import type { StreamHistoryTurn } from '@/lib/utils/streamingClient';
 
 interface TutorChatPageProps {
   onExit: () => void;
 }
 
 interface ChatMessage {
+  id: string;
   role: 'user' | 'assistant';
   text: string;
 }
+
+const TUTOR_SYSTEM_INSTRUCTION =
+  'You are a clinical reasoning tutor for a PA student. Use Socratic dialogue and focus on high-yield PANCE reasoning. When citing library context use {{Page:N}} or {{Pages:N-M}}. Be concise and rigorous.';
 
 export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
   const { getToken } = useAuth();
@@ -25,6 +30,10 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [previousThoughtSignatures, setPreviousThoughtSignatures] = useState<string[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const streamStartTimeRef = useRef<number>(0);
+  const thinkingTimeMsReportedRef = useRef(false);
 
   const customSettings = preferences.customSettings as Record<string, unknown> | undefined;
   const activeKnowledgeCacheName = customSettings?.activeKnowledgeCacheName as string | undefined;
@@ -70,46 +79,105 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
     void fetchProfile();
   }, [getToken]);
 
+  const ensureSession = useCallback(async (): Promise<string | null> => {
+    if (sessionId) return sessionId;
+    const token = await getToken();
+    if (!token) return null;
+    try {
+      const res = await fetch(buildApiUrl(API_ENDPOINTS.USER_SESSION), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ body: { sessionType: 'mixed', systemsTargeted: [] } }),
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { data?: { session?: { id: string } } };
+      const id = data?.data?.session?.id ?? null;
+      if (id) setSessionId(id);
+      return id;
+    } catch {
+      return null;
+    }
+  }, [getToken, sessionId]);
+
+  const reportThinkingTimeMs = useCallback(
+    async (ms: number) => {
+      if (thinkingTimeMsReportedRef.current || !sessionId) return;
+      thinkingTimeMsReportedRef.current = true;
+      const token = await getToken();
+      if (!token) return;
+      try {
+        await fetch(getApiEndpoint(API_ENDPOINTS.USER_SESSION), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            body: { sessionId, action: 'update', thinkingTimeMs: ms },
+          }),
+        });
+      } catch {
+        // non-blocking
+      }
+    },
+    [getToken, sessionId]
+  );
+
   const handleSend = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || isStreaming) return;
 
-    const userMessage: ChatMessage = { role: 'user', text: trimmed };
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      text: trimmed,
+    };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsStreaming(true);
+    thinkingTimeMsReportedRef.current = false;
 
-    const historyText = messages
-      .map((m) => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.text}`)
-      .join('\n');
+    const history: StreamHistoryTurn[] = messages.map((m) => ({
+      role: m.role === 'user' ? ('user' as const) : ('model' as const),
+      text: m.text,
+    }));
 
-    const profileHeader =
+    const profilePart =
       tutorContext && tutorContext.trim().length > 0
-        ? `${tutorContext}\n\nYou are a clinical reasoning tutor for a PA student. Use the weaknesses above to target your explanations and questions.`
-        : 'You are a clinical reasoning tutor for a PA student. Use Socratic dialogue and focus on high-yield PANCE reasoning.';
+        ? `${tutorContext}\n\nUse the weaknesses above to target your explanations and questions. `
+        : '';
+    const systemInstruction = `${profilePart}${TUTOR_SYSTEM_INSTRUCTION}`;
 
-    const prompt = `${profileHeader}
+    await ensureSession();
+    streamStartTimeRef.current = Date.now();
 
-Conversation so far:
-${historyText}
-Student: ${trimmed}
-
-Tutor:`;
-
-    let assistantText = '';
     try {
-      await callGeminiTextStreaming('gemini-3-flash-preview', prompt, 0.8, {
+      await callGeminiTextStreaming('gemini-3-flash-preview', trimmed, 0.8, {
         getToken,
         cachedContent: activeKnowledgeCacheName,
-        onChunk: (chunk) => {
-          assistantText += chunk;
+        history: history.length > 0 ? history : undefined,
+        previousThoughtSignatures:
+          previousThoughtSignatures.length > 0 ? previousThoughtSignatures : undefined,
+        systemInstruction,
+        thinkingLevel: 'HIGH',
+        onThoughtSignatures(signatures) {
+          setPreviousThoughtSignatures(signatures);
+          const ms = Date.now() - streamStartTimeRef.current;
+          if (ms >= 0) void reportThinkingTimeMs(ms);
+        },
+        onChunk(chunk) {
+          const ms = Date.now() - streamStartTimeRef.current;
+          if (!thinkingTimeMsReportedRef.current && ms >= 0) {
+            void reportThinkingTimeMs(ms);
+          }
           setMessages((prev) => {
             const copy = [...prev];
-            const last = copy[copy.length - 1];
-            if (last && last.role === 'assistant') {
+            const last = copy.at(-1);
+            if (last?.role === 'assistant') {
               copy[copy.length - 1] = { ...last, text: last.text + chunk };
             } else {
-              copy.push({ role: 'assistant', text: chunk });
+              copy.push({
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                text: chunk,
+              });
             }
             return copy;
           });
@@ -120,13 +188,21 @@ Tutor:`;
         onError: () => {
           setIsStreaming(false);
         },
-        // High reasoning for complex clinical vignettes
-        thinkingLevel: 'HIGH',
       });
     } catch {
       setIsStreaming(false);
     }
-  }, [input, isStreaming, messages, tutorContext, getToken, activeKnowledgeCacheName]);
+  }, [
+    input,
+    isStreaming,
+    messages,
+    tutorContext,
+    getToken,
+    activeKnowledgeCacheName,
+    previousThoughtSignatures,
+    ensureSession,
+    reportThinkingTimeMs,
+  ]);
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -191,8 +267,26 @@ Tutor:`;
         </div>
       </div>
 
-      <div className="mb-4 h-64 sm:h-80 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 overflow-hidden flex flex-col">
-        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-3">
+      <div
+        className="mb-4 h-64 sm:h-80 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 overflow-hidden flex flex-col"
+        aria-busy={isStreaming}
+        aria-label="Tutor conversation area"
+      >
+        <div
+          className="flex-1 overflow-y-auto px-3 py-2 space-y-3"
+          role="log"
+          aria-live="polite"
+          aria-label="Tutor conversation"
+        >
+          {/* Live region so screen readers announce when the tutor is thinking */}
+          <div
+            className="sr-only"
+            aria-live="assertive"
+            aria-atomic
+            role="status"
+          >
+            {isStreaming ? 'Thinking…' : ''}
+          </div>
           {messages.length === 0 && (
             <div className="h-full flex items-center justify-center text-xs text-[var(--color-text-muted)] text-center px-6">
               {isLoadingContext ? (
@@ -205,9 +299,9 @@ Tutor:`;
               )}
             </div>
           )}
-          {messages.map((m, idx) => (
+          {messages.map((m) => (
             <div
-              key={idx}
+              key={m.id}
               className={`flex items-start gap-2 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {m.role === 'assistant' && (
@@ -245,9 +339,11 @@ Tutor:`;
             type="button"
             onClick={() => void handleSend()}
             disabled={!input.trim() || isStreaming}
+            aria-busy={isStreaming}
+            aria-label={isStreaming ? 'Tutor is thinking' : 'Send message'}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:bg-[var(--color-accent)]/90 disabled:opacity-50"
           >
-            {isStreaming && <Loader2 className="w-3 h-3 animate-spin" />}
+            {isStreaming && <Loader2 className="w-3 h-3 animate-spin" aria-hidden />}
             <span>{isStreaming ? 'Thinking…' : 'Ask'}</span>
           </button>
         </div>

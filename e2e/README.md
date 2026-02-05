@@ -215,9 +215,11 @@ npx playwright test e2e/all-modes --ui
 
 ```
 e2e/
-├── auth.setup.ts         # One-time login setup
-├── all-modes.spec.ts     # Main smoke test suite
-└── example.spec.ts       # Playwright default example
+├── auth.setup.ts           # One-time login setup
+├── all-modes.spec.ts       # Main smoke test suite
+├── critical-flows.spec.ts  # Auth, drill lifecycle, navigation
+├── srs-flashcards.spec.ts  # Study Tools → Resources → SRS Flashcards
+└── example.spec.ts         # Playwright default example
 
 playwright/
 └── .auth/

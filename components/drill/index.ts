@@ -34,3 +34,6 @@ export { default as ECGDrillSession } from './ECGDrillSession';
 // Sub-drill Components
 export { default as RapidRecallDrill } from './recall/RapidRecallDrill';
 export { default as DDxCompareDrill } from './ddx/DDxCompareDrill';
+
+// Spatial Answer (Draw-to-identify for ECG/X-ray)
+export { SpatialAnswerCanvas, type BoundingBox } from './SpatialAnswerCanvas';

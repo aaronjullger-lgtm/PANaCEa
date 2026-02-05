@@ -5,7 +5,7 @@
  * Users compete on a shared set of 5 questions with speed-weighted scoring.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Trophy,
@@ -19,6 +19,8 @@ import {
   Loader2,
   Timer,
   Target,
+  X,
+  Check,
 } from 'lucide-react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
@@ -52,6 +54,23 @@ interface SubmissionResult {
   percentile: number;
   ranking: number;
   speedBonus: number;
+}
+
+interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  userName: string;
+  score: number;
+  completionTimeMs: number;
+  correctAnswers: number;
+}
+
+interface ReviewEntry {
+  questionId: string;
+  question: string;
+  options: string[];
+  correct: boolean;
+  rationale: string;
 }
 
 const TOTAL_TIME_MS = 20 * 60 * 1000; // 20 minutes total
@@ -92,6 +111,29 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
   // Next challenge countdown
   const [nextChallengeCountdown, setNextChallengeCountdown] = useState(getTimeUntilNextChallenge());
+
+  // Leaderboard (global Grand Rounds only)
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+
+  // Review (rationales) after submit; completedChallengeId allows Review on "already completed" view
+  const [completedChallengeId, setCompletedChallengeId] = useState<string | null>(null);
+  const [reviewData, setReviewData] = useState<ReviewEntry[]>([]);
+  const [showReview, setShowReview] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  // Refs for timer auto-submit: always use latest answers/challenge, submit only once
+  const userAnswersRef = useRef<Record<string, number>>({});
+  const challengeDataRef = useRef<ChallengeData | null>(null);
+  const autoSubmittedRef = useRef(false);
+  const submitChallengeRef = useRef<(answers: Record<string, number>) => void>(() => {});
+
+  useEffect(() => {
+    userAnswersRef.current = userAnswers;
+    challengeDataRef.current = challengeData;
+  }, [userAnswers, challengeData]);
 
   // Detect targeted mode from sessionStorage (set by CommandCenter when Didactic clicks Start)
   useEffect(() => {
@@ -228,6 +270,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
       if (data.status === 'completed') {
         setCompletedStats(data.stats);
+        if (data.challengeId) setCompletedChallengeId(data.challengeId);
         setViewState('completed');
       } else if (data.status === 'active') {
         setChallengeData({
@@ -261,18 +304,52 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     return () => clearInterval(interval);
   }, [viewState]);
 
-  // Timer for active quiz
+  // Fetch leaderboard when on completed or summary (global Grand Rounds only)
+  useEffect(() => {
+    if (isTargeted || (viewState !== 'completed' && viewState !== 'summary')) return;
+    let cancelled = false;
+    setLeaderboardError(null);
+    setLeaderboardLoading(true);
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token || cancelled) return;
+        const res = await fetch('/api/grand-rounds/leaderboard?limit=20', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok || cancelled) {
+          if (!cancelled) setLeaderboardError('Failed to load leaderboard');
+          return;
+        }
+        const json = await res.json();
+        const list = json?.data?.leaderboard ?? [];
+        if (!cancelled) setLeaderboard(Array.isArray(list) ? list : []);
+      } catch {
+        if (!cancelled) setLeaderboardError('Failed to load leaderboard');
+      } finally {
+        if (!cancelled) setLeaderboardLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [viewState, isTargeted, getToken]);
+
+  // Timer for active quiz; auto-submit uses refs so latest answers are always submitted
   useEffect(() => {
     if (isTargeted) return;
     if (viewState !== 'active' || !startTime) return;
+    autoSubmittedRef.current = false;
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       setTimeElapsedMs(elapsed);
 
-      // Auto-submit if time limit reached
-      if (elapsed >= TOTAL_TIME_MS) {
-        handleAutoSubmit();
+      if (elapsed >= TOTAL_TIME_MS && !autoSubmittedRef.current) {
+        autoSubmittedRef.current = true;
+        const data = challengeDataRef.current;
+        const answers = userAnswersRef.current;
+        if (data) submitChallengeRef.current(answers);
       }
     }, 100);
 
@@ -294,6 +371,138 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     },
     [challengeData]
   );
+
+  const handleSubmitChallenge = useCallback(
+    async (answers: Record<string, number>) => {
+      if (!challengeData || isSubmitting) return;
+
+      setIsSubmitting(true);
+
+      try {
+        const timeSpentMs = Date.now() - startTime;
+
+        if (isTargeted) {
+          const questionId = challengeData.questions[0]?.id;
+          if (!questionId) throw new Error('Missing question id');
+          const answerIndex = answers[questionId];
+          if (typeof answerIndex !== 'number') throw new Error('Missing answer');
+
+          const token = await getToken();
+          if (!token) throw new Error('Authentication required. Please sign in again.');
+
+          const response = await fetch('/api/targeted-daily/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ answerIndex, timeSpentMs }),
+          });
+          if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData?.error || 'Failed to submit targeted daily');
+          }
+
+          const result = (await response.json()) as {
+            success: boolean;
+            stats: { correctCount: number; totalQuestions: number; timeSpentMs: number };
+          };
+          if (!result.success) throw new Error('Submission failed');
+
+          hapticSuccess();
+          setCompletedStats({
+            score: result.stats.correctCount * 20,
+            correctCount: result.stats.correctCount,
+            totalQuestions: result.stats.totalQuestions,
+            timeSpentMs: result.stats.timeSpentMs,
+            percentile: 0,
+            ranking: 0,
+          });
+          setViewState('summary');
+          setIsSubmitting(false);
+          return;
+        }
+
+        const token = await getToken();
+        if (!token) {
+          throw new Error('Authentication required. Please sign in again.');
+        }
+
+        const response = await fetch('/api/grand-rounds/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            challengeId: challengeData.challengeId,
+            answers,
+            timeSpentMs,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to submit challenge');
+        }
+
+        const result: SubmissionResult = await response.json();
+
+        if (result.success) {
+          hapticSuccess();
+
+          setCompletedStats({
+            score: result.score,
+            correctCount: result.correctCount,
+            totalQuestions: result.totalQuestions,
+            timeSpentMs,
+            percentile: result.percentile,
+            ranking: result.ranking,
+          });
+
+          setViewState('summary');
+        } else {
+          throw new Error('Submission failed');
+        }
+      } catch (err) {
+        console.error('Error submitting challenge:', err);
+        hapticError();
+        setError(
+          err instanceof Error ? err.message : 'Unable to submit your results. Please try again.'
+        );
+        setViewState('error');
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [challengeData, isSubmitting, startTime, isTargeted, getToken]
+  );
+
+  submitChallengeRef.current = handleSubmitChallenge;
+
+  const fetchReview = useCallback(async () => {
+    const cid = challengeData?.challengeId ?? completedChallengeId;
+    if (!cid || isTargeted) return;
+    setReviewLoading(true);
+    setReviewError(null);
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const res = await fetch(
+        `/api/grand-rounds/review?challengeId=${encodeURIComponent(cid)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) {
+        setReviewError('Failed to load review');
+        return;
+      }
+      const json = await res.json();
+      const list = json?.data?.review ?? [];
+      setReviewData(Array.isArray(list) ? list : []);
+      setShowReview(true);
+    } catch {
+      setReviewError('Failed to load review');
+    } finally {
+      setReviewLoading(false);
+    }
+  }, [challengeData?.challengeId, completedChallengeId, isTargeted, getToken]);
 
   const handleNext = useCallback(() => {
     if (!challengeData || selectedAnswer === null) return;
@@ -318,113 +527,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       // Last question - submit
       handleSubmitChallenge(updatedAnswers);
     }
-  }, [challengeData, currentQuestionIndex, selectedAnswer, userAnswers]);
-
-  const handleAutoSubmit = useCallback(() => {
-    if (!challengeData) return;
-    handleSubmitChallenge(userAnswers);
-  }, [challengeData, userAnswers]);
-
-  const handleSubmitChallenge = async (answers: Record<string, number>) => {
-    if (!challengeData || isSubmitting) return;
-
-    setIsSubmitting(true);
-
-    try {
-      const timeSpentMs = Date.now() - startTime;
-
-      // Targeted Daily Question: submit server-side (no correct answers on client)
-      if (isTargeted) {
-        const questionId = challengeData.questions[0]?.id;
-        if (!questionId) throw new Error('Missing question id');
-        const answerIndex = answers[questionId];
-        if (typeof answerIndex !== 'number') throw new Error('Missing answer');
-
-        const token = await getToken();
-        if (!token) throw new Error('Authentication required. Please sign in again.');
-
-        const response = await fetch('/api/targeted-daily/submit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ answerIndex, timeSpentMs }),
-        });
-        if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          throw new Error(errData?.error || 'Failed to submit targeted daily');
-        }
-
-        const result = (await response.json()) as {
-          success: boolean;
-          stats: { correctCount: number; totalQuestions: number; timeSpentMs: number };
-        };
-        if (!result.success) throw new Error('Submission failed');
-
-        hapticSuccess();
-        setCompletedStats({
-          score: result.stats.correctCount * 20,
-          correctCount: result.stats.correctCount,
-          totalQuestions: result.stats.totalQuestions,
-          timeSpentMs: result.stats.timeSpentMs,
-          percentile: 0,
-          ranking: 0,
-        });
-        setViewState('summary');
-        setIsSubmitting(false);
-        return;
-      }
-
-      const token = await getToken();
-      if (!token) {
-        throw new Error('Authentication required. Please sign in again.');
-      }
-
-      const response = await fetch('/api/grand-rounds/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          challengeId: challengeData.challengeId,
-          answers,
-          timeSpentMs,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to submit challenge');
-      }
-
-      const result: SubmissionResult = await response.json();
-
-      if (result.success) {
-        hapticSuccess();
-
-        setCompletedStats({
-          score: result.score,
-          correctCount: result.correctCount,
-          totalQuestions: result.totalQuestions,
-          timeSpentMs,
-          percentile: result.percentile,
-          ranking: result.ranking,
-        });
-
-        setViewState('summary');
-      } else {
-        throw new Error('Submission failed');
-      }
-    } catch (err) {
-      console.error('Error submitting challenge:', err);
-      hapticError();
-      setError(
-        err instanceof Error ? err.message : 'Unable to submit your results. Please try again.'
-      );
-      setViewState('error');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  }, [challengeData, currentQuestionIndex, selectedAnswer, userAnswers, handleSubmitChallenge]);
 
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -541,6 +644,35 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             )}
           </div>
 
+          {!isTargeted && (
+            <div className="bg-[var(--color-bg-primary)] rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+                <Users className="w-4 h-4 text-muted-amber-500" />
+                Today&apos;s Leaderboard
+              </h3>
+              {leaderboardLoading && (
+                <p className="text-sm text-[var(--color-text-muted)]">Loading...</p>
+              )}
+              {leaderboardError && (
+                <p className="text-sm text-[var(--color-text-muted)]">{leaderboardError}</p>
+              )}
+              {!leaderboardLoading && !leaderboardError && leaderboard.length > 0 && (
+                <ul className="space-y-1.5 text-sm">
+                  {leaderboard.slice(0, 10).map((entry) => (
+                    <li
+                      key={entry.userId}
+                      className="flex items-center justify-between text-[var(--color-text-primary)]"
+                    >
+                      <span className="text-[var(--color-text-muted)]">#{entry.rank}</span>
+                      <span className="truncate flex-1 mx-2">{entry.userName || 'Anonymous'}</span>
+                      <span className="font-medium text-muted-amber-500">{entry.score}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
           <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
             <div className="flex items-center justify-center gap-2 text-[var(--color-text-muted)] mb-2">
               <Calendar className="w-5 h-5" />
@@ -549,6 +681,24 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             <div className="text-2xl font-bold text-muted-amber-500">{nextChallengeCountdown}</div>
           </div>
 
+          {!isTargeted && completedChallengeId && (
+            <button
+              type="button"
+              onClick={fetchReview}
+              disabled={reviewLoading}
+              className="w-full px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              {reviewLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Review answers'
+              )}
+            </button>
+          )}
+
           <button
             onClick={onExit}
             className="w-full px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors"
@@ -556,6 +706,63 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             Back to Menu
           </button>
         </motion.div>
+
+        {showReview && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-md"
+            role="dialog"
+            aria-label="Review answers"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="max-w-2xl w-full max-h-[90vh] overflow-hidden bg-[var(--color-bg-secondary)] rounded-xl shadow-xl flex flex-col"
+            >
+              <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  Review answers
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowReview(false)}
+                  className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="overflow-y-auto p-4 space-y-4">
+                {reviewError && (
+                  <p className="text-sm text-red-500">{reviewError}</p>
+                )}
+                {reviewData.map((entry, idx) => (
+                  <div
+                    key={entry.questionId}
+                    className="p-4 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)]"
+                  >
+                    <div className="flex items-start gap-2 mb-2">
+                      {entry.correct ? (
+                        <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      )}
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Q{idx + 1}: {entry.question}
+                        </div>
+                        {entry.rationale && (
+                          <p className="text-sm text-[var(--color-text-muted)] mt-2 whitespace-pre-wrap">
+                            {entry.rationale}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     );
   }
@@ -698,21 +905,27 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               </div>
 
               {!isTargeted && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" aria-label="Time remaining">
                   <Timer
                     className={`w-5 h-5 ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-muted-amber-500'}`}
+                    aria-hidden
                   />
                   <span
                     className={`text-2xl font-bold ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-muted-amber-500'}`}
+                    aria-live="polite"
                   >
                     {formatTime(timeRemaining)}
+                  </span>
+                  <span className="sr-only" aria-live="polite">
+                    {Math.floor(timeRemaining / 60000)} minutes {Math.floor((timeRemaining % 60000) / 1000)} seconds
+                    remaining. Question {currentQuestionIndex + 1} of {challengeData.questions.length}.
                   </span>
                 </div>
               )}
             </div>
 
             {/* Progress bar */}
-            <div className="space-y-2">
+            <div className="space-y-2" aria-label={`Question ${currentQuestionIndex + 1} of ${challengeData.questions.length}`}>
               <div className="h-2 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
@@ -904,6 +1117,40 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             )}
           </div>
 
+          {!isTargeted && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.45 }}
+              className="bg-[var(--color-bg-primary)] rounded-lg p-4"
+            >
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+                <Users className="w-4 h-4 text-muted-amber-500" />
+                Today&apos;s Leaderboard
+              </h3>
+              {leaderboardLoading && (
+                <p className="text-sm text-[var(--color-text-muted)]">Loading...</p>
+              )}
+              {leaderboardError && (
+                <p className="text-sm text-[var(--color-text-muted)]">{leaderboardError}</p>
+              )}
+              {!leaderboardLoading && !leaderboardError && leaderboard.length > 0 && (
+                <ul className="space-y-1.5 text-sm">
+                  {leaderboard.slice(0, 10).map((entry) => (
+                    <li
+                      key={entry.userId}
+                      className="flex items-center justify-between text-[var(--color-text-primary)]"
+                    >
+                      <span className="text-[var(--color-text-muted)]">#{entry.rank}</span>
+                      <span className="truncate flex-1 mx-2">{entry.userName || 'Anonymous'}</span>
+                      <span className="font-medium text-muted-amber-500">{entry.score}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </motion.div>
+          )}
+
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -917,6 +1164,24 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             <div className="text-2xl font-bold text-muted-amber-500">{nextChallengeCountdown}</div>
           </motion.div>
 
+          {!isTargeted && challengeData && (
+            <button
+              type="button"
+              onClick={fetchReview}
+              disabled={reviewLoading}
+              className="w-full px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              {reviewLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                'Review answers'
+              )}
+            </button>
+          )}
+
           <button
             onClick={onExit}
             className="w-full px-6 py-3 bg-gradient-to-r from-muted-amber-500 to-muted-amber-600 hover:from-muted-amber-600 hover:to-muted-amber-700 text-white rounded-lg font-semibold transition-all"
@@ -924,6 +1189,63 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             Back to Menu
           </button>
         </motion.div>
+
+        {showReview && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-md"
+            role="dialog"
+            aria-label="Review answers"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="max-w-2xl w-full max-h-[90vh] overflow-hidden bg-[var(--color-bg-secondary)] rounded-xl shadow-xl flex flex-col"
+            >
+              <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  Review answers
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowReview(false)}
+                  className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="overflow-y-auto p-4 space-y-4">
+                {reviewError && (
+                  <p className="text-sm text-red-500">{reviewError}</p>
+                )}
+                {reviewData.map((entry, idx) => (
+                  <div
+                    key={entry.questionId}
+                    className="p-4 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)]"
+                  >
+                    <div className="flex items-start gap-2 mb-2">
+                      {entry.correct ? (
+                        <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      )}
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Q{idx + 1}: {entry.question}
+                        </div>
+                        {entry.rationale && (
+                          <p className="text-sm text-[var(--color-text-muted)] mt-2 whitespace-pre-wrap">
+                            {entry.rationale}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     );
   }

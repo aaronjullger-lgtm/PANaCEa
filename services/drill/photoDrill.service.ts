@@ -53,6 +53,8 @@ export interface PhotoDrillBatchOptions {
 /**
  * Get a batch of photo drill questions
  *
+ * @deprecated Use getMediaDrillCases from services/drill/mediaDrillCases and GET /api/drills/media instead.
+ * This function used incorrect type/modality filters; photo-batch now proxies to the same data source.
  * @param options - Filtering options for the drill batch
  * @returns Array of photo drill questions with distractors
  */

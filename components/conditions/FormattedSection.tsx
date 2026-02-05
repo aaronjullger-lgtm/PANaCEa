@@ -96,6 +96,13 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
             </li>
           ),
 
+          // Blockquotes as key-point / pearl callouts (high-yield emphasis)
+          blockquote: ({ node, children, ...props }) => (
+            <blockquote className="condition-callout" {...props}>
+              {children}
+            </blockquote>
+          ),
+
           // Style paragraphs within list items
           p: ({ node, children, ...props }) => (
             <p className="condition-paragraph" {...props}>

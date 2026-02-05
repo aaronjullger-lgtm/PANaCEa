@@ -18,7 +18,7 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
   try {
     // Authenticate request
     const auth = await authenticateRequest(context.request, context.env);
-    if (!auth || !auth.userId) {
+    if (!auth?.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
@@ -27,14 +27,28 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
 
     const userId = auth.userId;
     const url = new URL(context.request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '1000', 10);
+    const limit = Number.parseInt(url.searchParams.get('limit') ?? '1000', 10);
+    // FSRS isolation: when true, return only MAIN/session attempts (exclude cram, rapid_recall, osce, drill)
+    const mainOnly = url.searchParams.get('mainOnly') === 'true';
 
     // Connect to database
     prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
-    // Fetch review history with telemetry
+    // Resolve internal user id if needed (UserProgress/ReviewLog use internal id; QuestionAttempt may use clerkId)
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: { id: true },
+    });
+    const queryUserId = user?.id ?? userId;
+
+    // Fetch review history with telemetry. When mainOnly, exclude non-FSRS modes.
     const reviews = await prisma.questionAttempt.findMany({
-      where: { userId },
+      where: {
+        userId: queryUserId,
+        ...(mainOnly && {
+          mode: { in: ['session', 'main', 'MAIN'] },
+        }),
+      },
       select: {
         id: true,
         userId: true,

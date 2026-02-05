@@ -278,16 +278,16 @@ export function generateSampleImaging(type: MedicalImage['type'], condition: str
     },
   };
 
-  // Return sample or placeholder
+  // Intentional fallback when no sample exists: branded "No image" state (not misleading content).
   return (
     sampleImages[`${condition}_${type}`] || {
       id: 'placeholder',
       type,
       bodyPart: 'Medical Image',
       url: '/images/radiology/placeholder.png',
-      clinicalContext: 'Clinical context for imaging',
-      findings: ['Finding 1', 'Finding 2'],
-      interpretation: 'Clinical interpretation would appear here',
+      clinicalContext: 'No image available for this case.',
+      findings: ['Image not loaded'],
+      interpretation: 'Select a case with an image or add assets via media pipeline.',
     }
   );
 }

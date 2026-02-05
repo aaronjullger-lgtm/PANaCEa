@@ -39,13 +39,13 @@ export const onRequestPost = authenticatedEndpoint(QuestionFetchSchema, async (c
     const seenQuestionIds = history.map((h: HistoryItem) => h.questionId);
 
     // Build query
-    const where: any = {};
+    const where: any = { validationStatus: { not: 'rejected' } };
     if (system) where.system = system;
     if (difficulty) where.difficulty = difficulty;
     if (questionType) where.questionType = questionType;
     if (conditionId) where.conditionId = conditionId;
 
-    // Fetch questions excluding user's history
+    // Fetch questions excluding user's history and kill-switch rejected
     const questions = await prisma.preGeneratedQuestion.findMany({
       where: { ...where, id: { notIn: seenQuestionIds } },
       take: limit,

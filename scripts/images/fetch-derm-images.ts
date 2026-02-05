@@ -801,7 +801,7 @@ async function saveMediaAsset(
         qualityScore: analysis.qualityScore,
         lesionVisible: analysis.lesionVisible,
       },
-      status: 'approved',
+      status: 'active',
       approvalStatus: 'approved',
       modality: 'derm',
       explanation: condition.visualFindings,

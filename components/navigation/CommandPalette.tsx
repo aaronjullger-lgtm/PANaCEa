@@ -15,6 +15,30 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
 import { MODE_REGISTRY } from '@/config/training-modes';
 
+const RECENT_MODES_KEY = 'panceai_recent_modes';
+const MAX_RECENT = 8;
+
+function getRecentModeIds(): string[] {
+  try {
+    const raw = localStorage.getItem(RECENT_MODES_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function recordRecentMode(modeId: string): void {
+  try {
+    const recent = getRecentModeIds();
+    const updated = [modeId, ...recent.filter((id) => id !== modeId)].slice(0, MAX_RECENT);
+    localStorage.setItem(RECENT_MODES_KEY, JSON.stringify(updated));
+  } catch {
+    /* ignore */
+  }
+}
+
 interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
@@ -129,14 +153,27 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
   useEffect(() => {
     const fetchResults = async () => {
       if (!debouncedQuery.trim()) {
-        // Show popular modes when no query
+        // Show recently used modes first, then popular modes
+        const recentIds = getRecentModeIds();
+        const modeMap = new Map(MODE_REGISTRY.map((m) => [m.id, m]));
+        const recentModes = recentIds
+          .map((id) => modeMap.get(id))
+          .filter((m): m is (typeof MODE_REGISTRY)[0] => !!m);
+        const recentIdsSet = new Set(recentModes.map((m) => m.id));
+        const otherModes = MODE_REGISTRY.filter((m) => !recentIdsSet.has(m.id)).slice(
+          0,
+          Math.max(0, MAX_RECENT - recentModes.length)
+        );
+        const modesToShow = [...recentModes, ...otherModes].slice(0, MAX_RECENT);
+
         setResults(
-          MODE_REGISTRY.slice(0, 8).map((mode) => ({
+          modesToShow.map((mode) => ({
             id: mode.id,
             title: mode.label,
-            subtitle: mode.description,
+            subtitle: recentIdsSet.has(mode.id) ? 'Recently used' : mode.description,
             category: 'mode' as const,
             action: () => {
+              recordRecentMode(mode.id);
               onNavigate(mode.id);
               onClose();
             },
@@ -163,6 +200,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
             subtitle: mode.description,
             category: 'mode',
             action: () => {
+              recordRecentMode(mode.id);
               onNavigate(mode.id);
               onClose();
             },

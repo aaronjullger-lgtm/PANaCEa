@@ -113,26 +113,26 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Patient Presentation */}
         <div className="lg:col-span-1 space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg">
+            <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
               Patient Presentation
             </h3>
 
             <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">
                   Chief Complaint & History
                 </h4>
-                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                <p className="text-sm text-[var(--color-text-secondary)] whitespace-pre-line">
                   {patientPresentation}
                 </p>
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">
                   Vital Signs
                 </h4>
-                <p className="text-sm text-gray-700 dark:text-gray-300 font-mono bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
+                <p className="text-sm text-[var(--color-text-secondary)] font-mono bg-[var(--color-bg-tertiary)] p-3 rounded-lg">
                   {vitals}
                 </p>
               </div>
@@ -153,8 +153,8 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
 
         {/* Ranking Area */}
         <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg">
+            <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
               {isSubmitted ? 'Your Results' : 'Rank the Diagnoses'}
             </h3>
 
@@ -173,16 +173,14 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                   >
                     <motion.div
                       layout
-                      className="flex items-start gap-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 
-                        dark:from-gray-900 dark:to-gray-800 rounded-lg border-2 border-gray-200 
-                        dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-600 
+                      className="flex items-start gap-3 p-4 bg-gradient-to-r from-[var(--color-bg-tertiary)] to-[var(--color-bg-secondary)] rounded-lg border-2 border-[var(--color-border)] hover:border-indigo-400 dark:hover:border-indigo-600 
                         transition-colors"
                     >
-                      <GripVertical className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" />
+                      <GripVertical className="w-5 h-5 text-[var(--color-text-muted)] mt-1 flex-shrink-0" />
 
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-bold text-gray-900 dark:text-white">
+                          <h4 className="font-bold text-[var(--color-text-primary)]">
                             {diagnosis.name}
                           </h4>
                           <span
@@ -192,7 +190,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                             {getRankLabel(index)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-[var(--color-text-muted)]">
                           {diagnosis.description}
                         </p>
                       </div>
@@ -223,7 +221,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
 
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-bold text-gray-900 dark:text-white">{result.name}</h4>
+                          <h4 className="font-bold text-[var(--color-text-primary)]">{result.name}</h4>
                           <div className="flex gap-2">
                             <span
                               className={`text-xs font-semibold px-2 py-1 rounded ${
@@ -234,12 +232,12 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                             >
                               Your: #{result.userRank + 1}
                             </span>
-                            <span className="text-xs font-semibold bg-gray-600 text-white px-2 py-1 rounded">
+                            <span className="text-xs font-semibold bg-[var(--color-accent)] text-[var(--color-text-inverse)] px-2 py-1 rounded">
                               Correct: #{result.correctRank + 1}
                             </span>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-[var(--color-text-muted)]">
                           {result.description}
                         </p>
                       </div>
@@ -262,8 +260,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                   </button>
                   <button
                     onClick={handleReset}
-                    className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 
-                      rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    className="px-6 py-3 bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] rounded-lg font-semibold hover:bg-[var(--color-border)] transition-colors"
                   >
                     Shuffle
                   </button>
@@ -294,10 +291,10 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
                   Clinical Prioritization Score
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-[var(--color-text-secondary)]">
                   {score >= 90 &&
                     'Excellent diagnostic reasoning! You correctly prioritized the differentials.'}
                   {score >= 75 &&
@@ -325,13 +322,13 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg"
+          className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg"
         >
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
             <Lightbulb className="w-5 h-5 text-amber-500" />
             Teaching Points
           </h3>
-          <div className="space-y-3 text-gray-700 dark:text-gray-300">
+          <div className="space-y-3 text-[var(--color-text-secondary)]">
             <p>
               <strong>Clinical Prioritization:</strong> In real practice, you must quickly assess
               which diagnoses are most life-threatening and most likely. Consider:

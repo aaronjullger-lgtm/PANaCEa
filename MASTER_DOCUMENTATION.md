@@ -1,8 +1,17 @@
 # PANaCEa Master Documentation
 
-**Last Updated**: January 6, 2026  
+**Last Updated**: February 4, 2026  
 **Current Version**: 1.1.0  
 **Status**: Production (with Monitoring)
+
+### Recent improvements (Feb 2026)
+
+- Loading: context-specific Loader messages (dashboard, menu, toolkit, session, etc.) in App.tsx.
+- Placeholders: Dashboard mock PANCE removed; UserFriendlyStatsDisplay placeholder fields documented; ImagingViewer fallback and ContentEditor basic-science copy clarified.
+- Menu: "Start Any Session" hint "Complete 5+ questions to unlock" in DailyPrescription; DiagnosticDrillHub and Polypharmacy documented as planned (SITE_AUDIT §6.1).
+- Type safety: manual `updatedAt` removed from contentBranchingService and registrySync (Prisma auto-generates).
+- Labels: `config/labels.ts` for TO_REVIEW_LABEL, CLEAR_TO_REVIEW, ARCHIVE_AND_RESET; SettingsStatsModal uses them.
+- Audits: AUDIT_FOLLOW_UP.md and STRATEGIC_10_SPRINT_ROADMAP "Next feature" note added.
 
 ---
 

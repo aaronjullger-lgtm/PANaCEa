@@ -175,7 +175,7 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[59]"
+        className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[59]"
         onClick={onClose}
       />
     </AnimatePresence>

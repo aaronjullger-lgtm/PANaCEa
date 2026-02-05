@@ -1,8 +1,27 @@
 # Production Readiness Plan - PANaCEa
 
 **Created:** January 18, 2026  
-**Last Updated:** January 22, 2026  
-**Current Status:** P0 Security COMPLETED ✅ | P1 Type Safety in progress (93+ Prisma errors)
+**Last Updated:** February 4, 2026  
+**Current Status:** P0 Security COMPLETED ✅ | P1 Type Safety partial (manual updatedAt removed from contentBranchingService, registrySync; scripts/routes still to do)
+
+## ✅ COMPLETED IMPROVEMENTS (10-Step Plan)
+
+The following items from the repo audit 10-step improvement plan have been completed:
+
+| Step | Item | Status |
+|------|------|--------|
+| 1 | Remove runtime dependency on conditionRegistry (conditionDataLoader, registrySync use DB only) | ✅ |
+| 2 | Fix Prisma updatedAt (ContentBranch, MedicalContent @updatedAt) and environment Zod (FRONTEND_URL) | ✅ |
+| 3 | Tighten ESLint (max-warnings 2000; CI runs lint) | ✅ |
+| 4 | Consolidate and document npm scripts (docs/SCRIPTS_REFERENCE.md) | ✅ |
+| 5 | Unify component structure (canonical root `components/`; SmartPDFViewer, RichText, NeuralLinkLog moved; conventions updated) | ✅ |
+| 6 | Document legacy routes/ (README Architecture section: production API = functions/api/, routes/ = local only) | ✅ |
+| 7 | Security: Gemini proxy rate limit and CSP (already in place; documented in REPO_AUDIT) | ✅ |
+| 8 | E2E in CI (e2e-smoke job runs api-health.spec.ts after build; PLAYWRIGHT_QUICKSTART updated) | ✅ |
+| 9 | TypeScript: CI runs typecheck and fails on errors | ✅ |
+| 10 | Audit and runbook docs updated (this section, REPO_AUDIT, runbook below) | ✅ |
+
+---
 
 ## ✅ COMPLETED SECURITY FIXES (Verified January 22, 2026)
 
@@ -53,12 +72,9 @@ All question pipeline endpoints are now secured:
 
 **Risk Level:** HIGH - 93+ Prisma Exact<> type errors
 
-**Problem:** Missing `updatedAt` fields in `.create()` operations across:
+**Progress (Feb 2026):** Manual `updatedAt` removed from `lib/services/contentBranchingService.ts` and `lib/services/sync/registrySync.ts` (Prisma auto-generates with `@updatedAt`). Remaining: scripts, routes.
 
-- `lib/services/contentBranchingService.ts` (2 errors)
-- `lib/services/questionBankService.ts` (1 error)
-- `lib/services/socialService.ts` (1 error)
-- `lib/services/sync/registrySync.ts` (2 errors)
+**Problem:** Manual `updatedAt` in `.create()`/`.update()` across:
 - `routes/osce.ts` (1 error)
 - `routes/questions.ts` (1 error)
 - `scripts/condition-doctor.ts` (3 errors)

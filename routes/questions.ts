@@ -401,6 +401,116 @@ router.get('/flags', async (req: Request, res: Response): Promise<void> => {
 });
 
 // ============================================================================
+// Custom Study Session (parity with CF POST /api/questions/custom-session)
+// ============================================================================
+
+router.post(
+  '/custom-session',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ error: 'Database not configured' });
+      }
+
+      const body = req.body as { config?: Record<string, unknown>; count?: number };
+      const config = body?.config ?? {};
+      const requestedCount = Math.min(Number(body?.count) || 10, 50);
+
+      const systems = (config.systems as string[] | undefined) ?? [];
+      const subcategories = (config.subcategories as string[] | undefined) ?? [];
+      const conditions = (config.conditions as string[] | undefined) ?? [];
+      const focusAreas = (config.focusAreas as string[] | undefined) ?? [];
+      const difficulty = config.difficulty as string | undefined;
+
+      const whereConditions: Record<string, unknown>[] = [];
+
+      if (systems.length > 0) {
+        whereConditions.push({ system: { in: systems } });
+      }
+      if (subcategories.length > 0) {
+        whereConditions.push({ conditionId: { in: subcategories } });
+      }
+      if (conditions.length > 0) {
+        whereConditions.push({ conditionId: { in: conditions } });
+      }
+
+      const where = whereConditions.length > 0 ? { AND: whereConditions } : {};
+
+      const preGenRecords = await prisma.preGeneratedQuestion.findMany({
+        where,
+        take: requestedCount * 3,
+        orderBy: { generatedAt: 'asc' },
+      });
+
+      type PoolRow = (typeof preGenRecords)[0];
+      let filtered = preGenRecords as PoolRow[];
+      if (focusAreas.length > 0) {
+        filtered = preGenRecords.filter((r) => {
+          const data = (r.questionData as Record<string, unknown>) || {};
+          const fa = data.focusArea as string | undefined;
+          return !fa || focusAreas.includes(fa);
+        }) as PoolRow[];
+      }
+
+      if (difficulty && difficulty !== 'same') {
+        filtered = [...filtered].sort((a, b) => {
+          const dataA = (a.questionData as Record<string, unknown>) || {};
+          const dataB = (b.questionData as Record<string, unknown>) || {};
+          const aDiff = (typeof dataA.difficulty === 'number' ? dataA.difficulty : 50) as number;
+          const bDiff = (typeof dataB.difficulty === 'number' ? dataB.difficulty : 50) as number;
+          return difficulty === 'easier' ? aDiff - bDiff : bDiff - aDiff;
+        }) as PoolRow[];
+      }
+
+      const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, requestedCount);
+
+      const letters = ['A', 'B', 'C', 'D'];
+      const questions = selected.map((r) => {
+        const data = (r.questionData as Record<string, unknown>) || {};
+        const optsRaw = data.options ?? data.answers ?? data.choices;
+        const opts: string[] = Array.isArray(optsRaw) ? optsRaw : [];
+        let correct = (data.correctAnswer as string) || 'A';
+        if (typeof data.correctAnswerIndex === 'number') {
+          correct = letters[data.correctAnswerIndex] ?? 'A';
+        }
+        if (typeof data.correctIndex === 'number') {
+          correct = letters[data.correctIndex] ?? 'A';
+        }
+        const correctIndex = opts.findIndex((o) => o === correct || (typeof o === 'string' && o.includes(correct)));
+        return {
+          id: r.id,
+          question: (data.question as string) || (data.text as string) || 'Question text missing',
+          options: opts,
+          correctAnswerIndex: correctIndex >= 0 ? correctIndex : 0,
+          rationale: (data.explanation as string) || (data.rationale as string) || '',
+          topic: (data.topic as string) || r.system || '',
+          system: r.system ?? undefined,
+          subcategory: (data.subcategory as string) ?? null,
+          conditionId: r.conditionId ?? undefined,
+          condition: (data.condition as string) || 'Unknown',
+          pearls: (data.pearls as string[]) || [],
+          focusArea: (data.focusArea as string) ?? undefined,
+          difficulty: (data.difficulty as number) ?? undefined,
+        };
+      });
+
+      const totalAvailable = await prisma.preGeneratedQuestion.count({ where });
+      let warning: string | undefined;
+      if (questions.length < requestedCount) {
+        warning = `Only ${questions.length} questions available matching your filters. Consider broadening your selection.`;
+      }
+
+      res.json({ questions, totalAvailable, warning });
+    } catch (error) {
+      console.error('Error fetching custom session questions:', error);
+      res.status(500).json({ error: 'Failed to fetch custom session questions' });
+    }
+  }
+);
+
+// ============================================================================
 // Question Pool (parity with CF /api/questions/pool)
 // ============================================================================
 

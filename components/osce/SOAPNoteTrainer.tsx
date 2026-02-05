@@ -106,46 +106,46 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Patient Case */}
         <div className="space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Patient Case</h3>
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg">
+            <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">Patient Case</h3>
 
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <h4 className="font-semibold text-[var(--color-text-secondary)] mb-2">
                   Chief Complaint
                 </h4>
-                <p className="text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                <p className="text-[var(--color-text-muted)] bg-[var(--color-accent-light)] p-3 rounded-lg">
                   "{patientCase.chiefComplaint}"
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">History</h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm whitespace-pre-line">
+                <h4 className="font-semibold text-[var(--color-text-secondary)] mb-2">History</h4>
+                <p className="text-[var(--color-text-muted)] text-sm whitespace-pre-line">
                   {patientCase.history}
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Vitals</h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm font-mono bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
+                <h4 className="font-semibold text-[var(--color-text-secondary)] mb-2">Vitals</h4>
+                <p className="text-[var(--color-text-muted)] text-sm font-mono bg-[var(--color-bg-tertiary)] p-3 rounded-lg">
                   {patientCase.vitals}
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <h4 className="font-semibold text-[var(--color-text-secondary)] mb-2">
                   Physical Exam
                 </h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm whitespace-pre-line">
+                <p className="text-[var(--color-text-muted)] text-sm whitespace-pre-line">
                   {patientCase.physicalExam}
                 </p>
               </div>
 
               {patientCase.labs && (
                 <div>
-                  <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">Labs</h4>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm font-mono bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
+                  <h4 className="font-semibold text-[var(--color-text-secondary)] mb-2">Labs</h4>
+                  <p className="text-[var(--color-text-muted)] text-sm font-mono bg-[var(--color-bg-tertiary)] p-3 rounded-lg">
                     {patientCase.labs}
                   </p>
                 </div>
@@ -158,10 +158,10 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
             <div className="flex items-start gap-3">
               <Lightbulb className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-1 flex-shrink-0" />
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">
                   {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)} Guidance
                 </h4>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
+                <p className="text-sm text-[var(--color-text-secondary)]">
                   {getSectionGuidance(activeSection)}
                 </p>
               </div>
@@ -171,15 +171,15 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
 
         {/* SOAP Note Form */}
         <div className="space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg">
+            <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
               Write Your SOAP Note
             </h3>
 
             <div className="space-y-4">
               {/* Subjective */}
               <div>
-                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block font-semibold text-[var(--color-text-secondary)] mb-2">
                   Subjective (S)
                 </label>
                 <textarea
@@ -187,9 +187,9 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                   onChange={(e) => setSOAPNote({ ...soapNote, subjective: e.target.value })}
                   onFocus={() => setActiveSection('subjective')}
                   placeholder="Patient's chief complaint, HPI, PMH, medications, allergies..."
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg
-                    bg-white dark:bg-gray-900 text-gray-900 dark:text-white
-                    focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg
+                    bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]
+                    focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:border-transparent
                     transition-colors resize-none"
                   rows={4}
                 />
@@ -197,7 +197,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
 
               {/* Objective */}
               <div>
-                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block font-semibold text-[var(--color-text-secondary)] mb-2">
                   Objective (O)
                 </label>
                 <textarea
@@ -205,9 +205,9 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                   onChange={(e) => setSOAPNote({ ...soapNote, objective: e.target.value })}
                   onFocus={() => setActiveSection('objective')}
                   placeholder="Vital signs, physical exam findings, lab results..."
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg
-                    bg-white dark:bg-gray-900 text-gray-900 dark:text-white
-                    focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg
+                    bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]
+                    focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:border-transparent
                     transition-colors resize-none"
                   rows={4}
                 />
@@ -215,7 +215,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
 
               {/* Assessment */}
               <div>
-                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block font-semibold text-[var(--color-text-secondary)] mb-2">
                   Assessment (A)
                 </label>
                 <textarea
@@ -223,9 +223,9 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                   onChange={(e) => setSOAPNote({ ...soapNote, assessment: e.target.value })}
                   onFocus={() => setActiveSection('assessment')}
                   placeholder="Primary diagnosis, differential diagnoses, ICD-10 codes..."
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg
-                    bg-white dark:bg-gray-900 text-gray-900 dark:text-white
-                    focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg
+                    bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]
+                    focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:border-transparent
                     transition-colors resize-none"
                   rows={3}
                 />
@@ -233,7 +233,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
 
               {/* Plan */}
               <div>
-                <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block font-semibold text-[var(--color-text-secondary)] mb-2">
                   Plan (P)
                 </label>
                 <textarea
@@ -241,9 +241,9 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                   onChange={(e) => setSOAPNote({ ...soapNote, plan: e.target.value })}
                   onFocus={() => setActiveSection('plan')}
                   placeholder="Treatment plan, medications, follow-up, patient education..."
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg
-                    bg-white dark:bg-gray-900 text-gray-900 dark:text-white
-                    focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                  className="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg
+                    bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]
+                    focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:border-transparent
                     transition-colors resize-none"
                   rows={5}
                 />
@@ -284,14 +284,14 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl flex items-center gap-4"
+            className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-2xl flex items-center gap-4"
           >
             <span className="inline-flex h-10 w-10 animate-spin rounded-full border-4 border-blue-500/60 border-t-transparent" />
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-1">
                 Consulting Chief Resident...
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+              <p className="text-sm text-[var(--color-text-secondary)]">
                 Your SOAP note is being graded against the answer key.
               </p>
             </div>
@@ -306,16 +306,16 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl"
+            className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-2xl"
           >
             {/* Overall Score */}
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 mb-6">
               <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-6">
                 <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
                     Grading Results
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
+                  <p className="text-[var(--color-text-secondary)]">
                     Your SOAP note has been evaluated by a strict board-style examiner, focusing on
                     safety, completeness, and clear clinical reasoning.
                   </p>
@@ -329,7 +329,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                 <div className="flex items-center gap-4">
                   <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
                     <circle
-                      className="text-gray-200 dark:text-gray-700"
+                      className="text-[var(--color-text-muted)]"
                       stroke="currentColor"
                       strokeWidth="10"
                       fill="transparent"
@@ -356,7 +356,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                     >
                       {gradingResult.totalScore}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="text-sm text-[var(--color-text-muted)]">
                       Total Score / 100
                     </div>
                   </div>
@@ -374,8 +374,8 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                   ['plan', gradingResult.breakdown.plan],
                 ] as const
               ).map(([section, score]) => (
-                <div key={section} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-1 capitalize">
+                <div key={section} className="bg-[var(--color-bg-tertiary)] rounded-lg p-4">
+                  <div className="text-sm text-[var(--color-text-muted)] mb-1 capitalize">
                     {section}
                   </div>
                   <div className={`text-2xl font-bold ${getScoreColor((score / 25) * 100)}`}>
@@ -386,8 +386,8 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
             </div>
 
             {/* Scoring Explanation */}
-            <div className="mb-6 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 p-4 text-sm text-gray-700 dark:text-gray-300">
-              <h4 className="font-semibold mb-1 text-gray-900 dark:text-white">
+            <div className="mb-6 rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-bg-tertiary)]/60 p-4 text-sm text-[var(--color-text-secondary)]">
+              <h4 className="font-semibold mb-1 text-[var(--color-text-primary)]">
                 How your score is calculated
               </h4>
               <p>
@@ -406,13 +406,13 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  <h4 className="font-bold text-gray-900 dark:text-white">Strengths</h4>
+                  <h4 className="font-bold text-[var(--color-text-primary)]">Strengths</h4>
                 </div>
                 <ul className="space-y-2">
                   {gradingResult.feedback.strengths.map((item, i) => (
                     <li
                       key={i}
-                      className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2"
+                      className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2"
                     >
                       <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
                       {item}
@@ -425,13 +425,13 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                  <h4 className="font-bold text-gray-900 dark:text-white">Missed Concepts</h4>
+                  <h4 className="font-bold text-[var(--color-text-primary)]">Missed Concepts</h4>
                 </div>
                 <ul className="space-y-2">
                   {gradingResult.feedback.missedConcepts.map((item, i) => (
                     <li
                       key={i}
-                      className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2"
+                      className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2"
                     >
                       <span className="text-red-600 dark:text-red-400 mt-1">!</span>
                       {item}
@@ -443,10 +443,10 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
 
             {/* Suggestions */}
             {gradingResult.feedback.suggestions.length > 0 && (
-              <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+              <div className="mt-6 border-t border-[var(--color-border)] pt-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Lightbulb className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  <h4 className="font-bold text-gray-900 dark:text-white">
+                  <h4 className="font-bold text-[var(--color-text-primary)]">
                     Style & Phrasing Suggestions
                   </h4>
                 </div>
@@ -454,7 +454,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                   {gradingResult.feedback.suggestions.map((item, i) => (
                     <li
                       key={i}
-                      className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2"
+                      className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2"
                     >
                       <span className="text-purple-600 dark:text-purple-400 mt-1">→</span>
                       {item}

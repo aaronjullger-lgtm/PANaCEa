@@ -134,7 +134,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
             {data.conditionName || conditionName}
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -195,7 +195,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Icon className={`w-4 h-4 ${colors.text}`} />
-                  <span className="font-medium text-slate-900 dark:text-white">{topic.label}</span>
+                  <span className="font-medium text-[var(--color-text-primary)]">{topic.label}</span>
                 </div>
                 <span className={`text-sm ${colors.text}`}>
                   {topic.mastery === 'untested'

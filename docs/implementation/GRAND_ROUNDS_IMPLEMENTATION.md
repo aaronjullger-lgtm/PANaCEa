@@ -1,268 +1,80 @@
-# Grand Rounds Daily Challenge - Implementation Complete
+# Grand Rounds Daily Challenge - Implementation
 
 ## Overview
 
-Grand Rounds is a daily competitive mode where users compete globally on a timed challenge with speed-weighted scoring. Users get **one attempt per day**, with challenges resetting at midnight UTC.
+Grand Rounds is a daily competitive mode where users compete globally on a timed challenge with speed-weighted scoring. Users get **one attempt per day**, with challenges resetting at midnight UTC. **Targeted Daily Question** (Didactic) uses the same UI but one question from enabled systems and separate APIs (`/api/targeted-daily/*`).
 
-## Architecture
+## Question Source (Unified)
 
-### Database Models
+**Question table only.** Grand Rounds uses the **Question** table for both challenge creation and grading.
+
+- **GET /api/grand-rounds/today**: If no challenge exists for today (UTC), creates one by selecting 5 questions from the Question table (deterministic shuffle by date seed). Returns question content from Question (vignette, question, options, system, difficulty, topic, tags). **correctAnswer is never sent to the client.**
+- **POST /api/grand-rounds/submit**: Grades using Question rows (id, correctAnswer, options). Client sends `answers: Record<questionId, answerIndex>` with **numeric indices** (0–3 or 0–4).
+
+## Grading Convention (correctAnswer vs index)
+
+- **Question.correctAnswer** is stored as `String` (e.g. `"A"`, `"B"`, `"C"`, `"D"` or `"0"`, `"1"`, `"2"`, `"3"`).
+- Client sends **answerIndex** (number 0–4).
+- In submit, we normalize: if correctAnswer is a letter, map to 0-based index (`A`→0, `B`→1, …); if numeric string, parse to number. Then compare `userAnswerIndex === correctIndex`.
+
+## Database Models
 
 **GrandRoundsChallenge**
 
-```prisma
-model GrandRoundsChallenge {
-  id          String   @id @default(uuid())
-  date        DateTime @unique // UTC date, ensures one challenge per day
-  questionIds String[] // Array of Question IDs
-  createdAt   DateTime @default(now())
-
-  attempts GrandRoundsAttempt[]
-}
-```
+- `id`, `date` (UTC date, unique), `questionIds` (String[] – Question IDs), `createdAt`.
+- One challenge per day; created on first GET /api/grand-rounds/today if missing.
 
 **GrandRoundsAttempt**
 
-```prisma
-model GrandRoundsAttempt {
-  id          String   @id @default(uuid())
-  userId      String   // Internal user ID (not clerkId)
-  challengeId String
-  score       Int
-  timeSpentMs Int
-  completedAt DateTime @default(now())
+- `id`, `userId`, `challengeId`, `score`, `correctCount`, `timeSpentMs`, `answers` (Json), `completedAt`, `createdAt`.
+- Unique on `(userId, challengeId)` – one attempt per user per challenge.
 
-  challenge GrandRoundsChallenge @relation(...)
-  user      User                 @relation(...)
+**GrandRoundsHistory**
 
-  @@unique([userId, challengeId]) // One attempt per user per challenge
-}
-```
+- `id`, `userId`, `date` (UTC date), `score`, `completionTimeMs`, `correctAnswers`, `createdAt`.
+- Unique on `(userId, date)`. Populated on submit; used by leaderboard, rank, and completed APIs.
+- **Migration:** `prisma/migrations/20260205000000_add_grand_rounds_history/migration.sql`. Run `npx prisma migrate dev` (or `prisma migrate deploy`) then `npx prisma generate`.
 
-### API Endpoints
+## API Endpoints
 
-#### GET /api/grand-rounds/today
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /api/grand-rounds/today | Get or create today's challenge; returns active (questions) or completed (stats). Auth required. |
+| POST | /api/grand-rounds/submit | Submit answers; returns score, correctCount, percentile, ranking, speedBonus. Auth required. |
+| GET | /api/grand-rounds/leaderboard | Query: `date`, `limit`. Returns leaderboard for date (UTC). Auth required. |
+| GET | /api/grand-rounds/rank | Query: `userId`, `date`. Returns user's rank for date. Auth required. |
+| GET | /api/grand-rounds/completed | No query. Returns `{ completed: boolean }` for current user today. Auth required. |
+| GET | /api/grand-rounds/review | Query: `challengeId`. Returns per-question correct/incorrect and rationale for current user's attempt. Auth required. |
 
-Fetches today's challenge. Returns different responses based on completion status.
+All dates are **UTC** (e.g. `today.setUTCHours(0, 0, 0, 0)`).
 
-**Response (not completed)**:
+## Daily Challenge Creation Strategy
 
-```json
-{
-  "status": "active",
-  "challengeId": "uuid",
-  "questions": [
-    {
-      "id": "uuid",
-      "vignette": "...",
-      "question": "...",
-      "options": ["A", "B", "C", "D"],
-      "system": "CV",
-      "difficulty": "medium"
-      // Note: correctAnswer is excluded for security
-    }
-  ]
-}
-```
+- **Single source:** GET /api/grand-rounds/today creates today's challenge on first request (Question table only).
+- **dailyTasks:** Grand Rounds task is a no-op (skipped); creation is handled by the API. See `scripts/automation/dailyTasks.ts`.
+- **Generator:** `scripts/generators/grandRoundsChallenge-generator.ts` uses Question table for pre-generating challenges (optional).
 
-**Response (already completed)**:
+## Scoring
 
-```json
-{
-  "status": "completed",
-  "stats": {
-    "score": 120,
-    "correctCount": 4,
-    "totalQuestions": 5,
-    "timeSpentMs": 450000,
-    "percentile": 85.5,
-    "ranking": 12
-  }
-}
-```
+- **Base:** 20 points per correct answer.
+- **Speed bonus:** `max(0, 20 - floor(timeSpentMs / 60000))` (up to 20 points).
+- **Ranking:** By score DESC, then timeSpentMs ASC (faster = better when tied).
 
-#### POST /api/grand-rounds/submit
+## Frontend (GrandRoundsMode.tsx)
 
-Submits answers for a challenge.
+- **View states:** loading, completed, landing, active, summary, error.
+- **Features:** 20-minute timer, auto-submit on timeout (refs for latest answers), leaderboard on completed/summary, optional "Review answers" (GET review API), accessibility (aria-live for timer/progress).
+- **Completion in Command Center:** Derived from GET /api/grand-rounds/completed (server-authoritative), not localStorage.
 
-**Request**:
+## Security
 
-```json
-{
-  "challengeId": "uuid",
-  "answers": {
-    "question-id-1": 0, // Selected answer index
-    "question-id-2": 2,
-    "question-id-3": 1
-  },
-  "timeSpentMs": 450000
-}
-```
-
-**Response**:
-
-```json
-{
-  "success": true,
-  "score": 120,
-  "correctCount": 4,
-  "percentile": 85.5,
-  "ranking": 12,
-  "speedBonus": 20
-}
-```
-
-**Validation**:
-
-- Requires authentication via Clerk
-- Validates challengeId exists
-- Ensures user hasn't already submitted (@@unique constraint)
-- Validates answers object format
-- Validates timeSpentMs is a number
-
-### Services
-
-#### grandRoundsService.ts
-
-**getOrCreateDailyChallenge()**
-
-- Queries for today's challenge by UTC date
-- If none exists, creates one with 5 random questions
-- Returns GrandRoundsChallenge
-
-**getUserAttemptForChallenge(userId, challengeId)**
-
-- Checks if user has already completed this challenge
-- Returns GrandRoundsAttempt or null
-
-**calculatePercentile(challengeId, score)**
-
-- Queries all attempts for the challenge
-- Calculates percentile ranking (higher is better)
-- Returns number (0-100)
-
-**getRankingForChallenge(challengeId, userId)**
-
-- Queries attempts ordered by score DESC, timeSpentMs ASC
-- Finds user's position in leaderboard
-- Returns rank number (1-indexed)
-
-### Scoring System
-
-**Base Points**: 20 points per correct answer
-
-**Speed Bonus**: Up to 20 additional points based on completion time
-
-- Formula: `max(0, 20 - Math.floor(timeSpentMs / 60000))`
-- Complete under 1 minute: +20 points
-- Complete under 10 minutes: +10 points
-- Complete under 20 minutes: +0 points
-
-**Example**:
-
-- 5 questions, 4 correct in 8 minutes
-- Base: 4 × 20 = 80 points
-- Speed bonus: 20 - 8 = 12 points
-- **Total: 92 points**
-
-## Frontend Component
-
-### GrandRoundsMode.tsx
-
-**View States**:
-
-- `loading`: Fetching challenge data
-- `completed`: Already finished today (shows stats + countdown)
-- `landing`: Intro screen before starting
-- `active`: Quiz in progress
-- `summary`: Just finished (shows results)
-- `error`: Error state
-
-**Key Features**:
-
-1. **Global Timer**: 20-minute countdown, cannot be paused
-2. **Auto-submit**: Automatically submits when time runs out
-3. **Answer Tracking**: Saves answers in state, submits all at once
-4. **Next Challenge Countdown**: Shows HH:MM:SS until midnight UTC
-5. **Percentile Badge**: Special badge if scored in top 10%
-
-**Flow**:
-
-```
-Mount → Fetch /api/grand-rounds/today
-  ↓
-If status=completed → Show stats + countdown
-If status=active → Show landing page
-  ↓
-User clicks "Start Challenge"
-  ↓
-Active quiz (timer starts)
-  ↓
-User answers questions
-  ↓
-Last question → Submit to /api/grand-rounds/submit
-  ↓
-Show summary with score/rank/percentile
-```
-
-## Security Considerations
-
-1. **No Correct Answers in Active Response**: Server excludes `correctAnswer` field when sending questions
-2. **Server-Side Grading**: All answer validation happens on backend
-3. **One Attempt Enforcement**: Database unique constraint on (userId, challengeId)
-4. **Authentication Required**: All endpoints require Clerk auth middleware
-5. **Input Validation**: Validates request body structure and types
-
-## Testing Checklist
-
-- [ ] Challenge creation at midnight UTC
-- [ ] Duplicate challenge prevention (@@unique on date)
-- [ ] Question fetching excludes correct answers
-- [ ] Answer submission validates format
-- [ ] Score calculation includes speed bonus
-- [ ] Percentile calculation is accurate
-- [ ] Ranking calculation handles ties (by time)
-- [ ] One attempt enforcement works
-- [ ] Timer auto-submits at 20 minutes
-- [ ] Countdown to next challenge updates every second
-- [ ] Top 10% badge shows correctly
-
-## Performance Optimizations
-
-1. **Index on GrandRoundsChallenge.date**: Fast lookup for today's challenge
-2. **Index on GrandRoundsAttempt.challengeId**: Fast percentile/ranking queries
-3. **Minimal Question Fields**: Only fetch needed fields (excludes correctAnswer)
-4. **Client-Side Timer**: No server polling, reduces load
-
-## Future Enhancements
-
-- [ ] Historical leaderboards (past challenges)
-- [ ] Weekly/monthly aggregate rankings
-- [ ] Achievement badges (e.g., "5-day streak")
-- [ ] Social features (challenge friends)
-- [ ] Question difficulty balancing (ensure fair distribution)
-- [ ] Analytics dashboard (average scores over time)
-
-## Database Migration
-
-Run to add Grand Rounds tables:
-
-```bash
-npx prisma migrate dev --name add_grand_rounds
-npx prisma generate
-```
+- Correct answers never sent in today or review until after completion; grading is server-side only.
+- One attempt per user per challenge (DB unique); completed state is server-authoritative.
 
 ## Related Files
 
-- **Component**: `components/modes/GrandRoundsMode.tsx`
-- **Service**: `lib/services/grandRoundsService.ts`
-- **API**: `server.ts` lines 2721-2850
-- **Schema**: `prisma/schema.prisma` (GrandRoundsChallenge, GrandRoundsAttempt models)
-- **Types**: `src/types/index.ts` (Question interface)
-
-## Known Limitations
-
-1. **Score Approximation**: When loading completed stats, correctCount is approximated from score (doesn't account for speed bonus). Consider storing correctCount in GrandRoundsAttempt.
-2. **No Partial Saves**: If user closes browser, progress is lost. Consider adding draft/resume functionality.
-3. **No Question Preview**: Users can't see question content before starting timer.
-4. **Fixed Question Count**: Always 5 questions. Consider making configurable.
+- **Component:** `components/modes/GrandRoundsMode.tsx`
+- **APIs:** `functions/api/grand-rounds/` (today, submit, leaderboard, rank, completed, review)
+- **Schema:** `prisma/schema.prisma` (GrandRoundsChallenge, GrandRoundsAttempt, GrandRoundsHistory)
+- **Grading util:** `lib/grandRoundsGrading.ts` (correctAnswerToIndex); **tests:** `tests/grandRoundsGrading.test.ts`
+- **Daily tasks:** `scripts/automation/dailyTasks.ts` (Grand Rounds create is no-op)

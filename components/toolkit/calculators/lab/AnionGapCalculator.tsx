@@ -115,10 +115,10 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         <div className="flex items-center gap-3">
           <Beaker className="w-6 h-6 text-[var(--color-accent)]" />
           <div>
-            <div className="font-mono text-lg font-semibold text-slate-200">
+            <div className="font-mono text-lg font-semibold text-[var(--color-text-primary)]">
               AG = Na⁺ − (Cl⁻ + HCO₃⁻)
             </div>
-            <div className="text-sm text-slate-300 mt-1">Normal range: 8-12 mEq/L</div>
+            <div className="text-sm text-[var(--color-text-secondary)] mt-1">Normal range: 8-12 mEq/L</div>
           </div>
         </div>
       </div>
@@ -191,8 +191,7 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6"
           >
             <h3
-              className="text-xl font-bold text-[var(--color-text-primary)] mb-4"
-              style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
+              className="text-xl font-bold text-[var(--color-text-primary)] mb-4 font-teko"
             >
               MUDPILES Differential
             </h3>

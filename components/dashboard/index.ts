@@ -9,7 +9,7 @@ export { default as AlgorithmStatusWidget } from './AlgorithmStatusWidget';
 export { default as DailyTriad } from './DailyTriad';
 export { default as DecayCurve } from './charts/DecayCurve';
 export { default as StabilityPyramid } from './charts/StabilityPyramid';
-export { default as NeuralLinkLog } from '../../src/components/dashboard/NeuralLinkLog';
+export { default as NeuralLinkLog } from './NeuralLinkLog';
 export { RetentionWidget } from './RetentionWidget';
 
 // New UX-enhanced components (Phase 14)

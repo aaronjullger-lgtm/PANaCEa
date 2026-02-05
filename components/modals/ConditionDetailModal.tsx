@@ -332,7 +332,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               {isLoading && sections.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-64 space-y-4">
                   <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                  <p className="text-gray-500 font-medium">Loading condition details...</p>
+                  <p className="text-[var(--color-text-muted)] font-medium">Loading condition details...</p>
                 </div>
               ) : (
                 <>
@@ -397,7 +397,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
                   <div className="condition-sections">
                     {sections.length === 0 && !isLoading ? (
-                      <div className="text-center py-12 text-gray-500">
+                      <div className="text-center py-12 text-[var(--color-text-muted)]">
                         <p>No detailed content available for this condition yet.</p>
                       </div>
                     ) : (
@@ -421,13 +421,13 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                                 {extendedData.anatomyStructures.map((item: any) => (
                                   <div
                                     key={item.id}
-                                    className="p-4 bg-gray-50 rounded-lg border border-gray-100"
+                                    className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)]"
                                   >
-                                    <h4 className="font-bold text-lg text-gray-900">{item.name}</h4>
-                                    <p className="text-sm text-gray-500 mb-2">
+                                    <h4 className="font-bold text-lg text-[var(--color-text-primary)]">{item.name}</h4>
+                                    <p className="text-sm text-[var(--color-text-muted)] mb-2">
                                       {item.region} • {item.system}
                                     </p>
-                                    <p className="text-gray-700">{item.description}</p>
+                                    <p className="text-[var(--color-text-secondary)]">{item.description}</p>
                                   </div>
                                 ))}
                               </div>
@@ -436,10 +436,10 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                                 {extendedData.specialTests.map((test: any) => (
                                   <div
                                     key={test.id}
-                                    className="p-4 bg-gray-50 rounded-lg border border-gray-100"
+                                    className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)]"
                                   >
-                                    <h4 className="font-bold text-lg text-gray-900">{test.name}</h4>
-                                    <div className="flex gap-4 text-sm text-gray-600 mt-1 mb-2">
+                                    <h4 className="font-bold text-lg text-[var(--color-text-primary)]">{test.name}</h4>
+                                    <div className="flex gap-4 text-sm text-[var(--color-text-muted)] mt-1 mb-2">
                                       {test.sensitivity && (
                                         <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">
                                           Sensitivity: {test.sensitivity}%
@@ -451,13 +451,13 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-gray-700 mb-3">{test.description}</p>
+                                    <p className="text-[var(--color-text-secondary)] mb-3">{test.description}</p>
                                     {test.technique && (
-                                      <div className="mt-2 p-3 bg-white rounded border border-gray-200">
-                                        <span className="font-semibold text-xs uppercase text-gray-500 block mb-1">
+                                      <div className="mt-2 p-3 bg-[var(--color-bg-secondary)] rounded border border-[var(--color-border)]">
+                                        <span className="font-semibold text-xs uppercase text-[var(--color-text-muted)] block mb-1">
                                           Technique
                                         </span>
-                                        <p className="text-sm text-gray-800">{test.technique}</p>
+                                        <p className="text-sm text-[var(--color-text-primary)]">{test.technique}</p>
                                       </div>
                                     )}
                                   </div>

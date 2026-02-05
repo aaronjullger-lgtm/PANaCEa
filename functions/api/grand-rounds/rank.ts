@@ -31,15 +31,11 @@ export const onRequestGet = authenticatedEndpoint(RankSchema, async ({ env, vali
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     const today = dateParam ? new Date(dateParam) : new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
 
-    // Get user's history entry
     const userHistory = await prisma.grandRoundsHistory.findUnique({
       where: {
-        userId_date: {
-          userId,
-          date: today,
-        },
+        userId_date: { userId, date: today },
       },
     });
 
@@ -48,9 +44,24 @@ export const onRequestGet = authenticatedEndpoint(RankSchema, async ({ env, vali
       return { data: { rank: null } };
     }
 
-    log.info('Fetched Grand Rounds rank', { userId, rank: userHistory.rank });
+    // Compute rank: count entries with better (score, time) for this date
+    const betterCount = await prisma.grandRoundsHistory.count({
+      where: {
+        date: today,
+        OR: [
+          { score: { gt: userHistory.score } },
+          {
+            score: userHistory.score,
+            completionTimeMs: { lt: userHistory.completionTimeMs },
+          },
+        ],
+      },
+    });
+    const rank = betterCount + 1;
 
-    return { data: { rank: userHistory.rank } };
+    log.info('Fetched Grand Rounds rank', { userId, rank });
+
+    return { data: { rank } };
   } catch (error: any) {
     log.error('Error fetching Grand Rounds rank', { error: error.message });
     return { status: 500, error: 'Failed to fetch rank' };

@@ -30,8 +30,8 @@ const TreatmentRenderer: React.FC<TreatmentRendererProps> = ({ items }) => {
             {idx + 1}
           </div>
 
-          <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700/50 p-4 shadow-sm hover:shadow-md transition-shadow">
-            <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2 capitalize">
+          <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-4 shadow-sm hover:shadow-md transition-shadow">
+            <h4 className="font-bold text-[var(--color-text-primary)] mb-2 capitalize">
               {step.title}
             </h4>
             <div className="condition-markdown text-sm">

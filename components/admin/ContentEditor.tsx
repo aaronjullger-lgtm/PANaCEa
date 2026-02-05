@@ -229,7 +229,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
                 {generating ? (
                   <>
                     <div className="w-4 h-4 border-2 border-[var(--color-text-inverse)] border-t-transparent rounded-full animate-spin" />
-                    Generating...
+                    Generating content…
                   </>
                 ) : (
                   <>
@@ -349,7 +349,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
                 Connect foundational concepts for integrated learning
               </p>
               <div className="p-4 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-center text-sm text-[var(--color-text-muted)]">
-                Basic science link editor coming soon...
+                Basic science links: manage via <code className="text-xs">npm run generate:basic-science-links</code> or admin content pipeline.
               </div>
             </div>
           </div>

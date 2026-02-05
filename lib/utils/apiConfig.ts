@@ -39,6 +39,11 @@ export const API_ENDPOINTS = {
   SUBMIT_REVIEW: '/api/drills/submit-review',
   USER_STATS: '/api/user/stats',
   USER_PREFERENCES: '/api/user/preferences',
+  USER_SESSION: '/api/user/session',
+  // Analytics (use getApiEndpoint for base URL consistency)
+  ANALYTICS_CALIBRATION: '/api/analytics/calibration',
+  ANALYTICS_PERFORMANCE_DELTAS: '/api/analytics/performance-deltas',
+  USER_STABILITY_TREND: '/api/user/stability-trend',
 } as const;
 
 export type ApiEndpoint = keyof typeof API_ENDPOINTS;

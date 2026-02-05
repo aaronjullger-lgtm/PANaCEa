@@ -16,8 +16,12 @@
  *   ranking: number,
  *   speedBonus: number
  * }
+ *
+ * Grading: Client sends answerIndex (0-based). Question.correctAnswer is String
+ * (letter "A"/"B"/"C"/"D" or numeric "0"/"1"/"2"/"3"). We normalize to index before comparing.
  */
 
+import { correctAnswerToIndex } from '../../../lib/grandRoundsGrading';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
@@ -113,7 +117,7 @@ export const onRequestPost = authenticatedEndpoint(
         }
       }
 
-      // Fetch questions with correct answers for SERVER-SIDE GRADING
+      // Fetch questions with correct answers and options for SERVER-SIDE GRADING
       const questions = await prisma.question.findMany({
         where: {
           id: { in: expectedQuestionIds },
@@ -121,18 +125,20 @@ export const onRequestPost = authenticatedEndpoint(
         select: {
           id: true,
           correctAnswer: true,
+          options: true,
         },
       });
 
-      // Grade the answers
+      // Grade the answers: normalize correctAnswer (letter or numeric string) to 0-based index
       let correctCount = 0;
       const POINTS_PER_CORRECT = 20;
 
       for (const question of questions) {
         const userAnswerIndex = answers[question.id];
-
-        // Compare with correct answer
-        if (userAnswerIndex === question.correctAnswer) {
+        const optionsArr = Array.isArray(question.options) ? question.options : [];
+        const optionsLength = Math.max(optionsArr.length, 4);
+        const correctIndex = correctAnswerToIndex(question.correctAnswer, optionsLength);
+        if (typeof userAnswerIndex === 'number' && userAnswerIndex === correctIndex) {
           correctCount++;
         }
       }
@@ -151,12 +157,34 @@ export const onRequestPost = authenticatedEndpoint(
       // Save the attempt with correctCount
       await prisma.grandRoundsAttempt.create({
         data: {
+          id: crypto.randomUUID(),
           userId: user.id,
           challengeId,
           score: finalScore,
           correctCount,
           timeSpentMs,
           answers: answers as any, // Store for potential review
+        },
+      });
+
+      // Upsert GrandRoundsHistory for leaderboard/rank/completed (one row per user per day UTC)
+      const challengeDate = new Date(challenge.date);
+      challengeDate.setUTCHours(0, 0, 0, 0);
+      await prisma.grandRoundsHistory.upsert({
+        where: {
+          userId_date: { userId: user.id, date: challengeDate },
+        },
+        create: {
+          userId: user.id,
+          date: challengeDate,
+          score: finalScore,
+          completionTimeMs: timeSpentMs,
+          correctAnswers: correctCount,
+        },
+        update: {
+          score: finalScore,
+          completionTimeMs: timeSpentMs,
+          correctAnswers: correctCount,
         },
       });
 

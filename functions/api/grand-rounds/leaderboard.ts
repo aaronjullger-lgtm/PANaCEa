@@ -34,15 +34,15 @@ export const onRequestGet = authenticatedEndpoint(
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
       const today = dateParam ? new Date(dateParam) : new Date();
-      today.setHours(0, 0, 0, 0);
+      today.setUTCHours(0, 0, 0, 0);
 
-      // Get leaderboard entries for today, ordered by score (desc) then time (asc)
+      // Get leaderboard entries for today (UTC), ordered by score (desc) then time (asc)
       const entries = await prisma.grandRoundsHistory.findMany({
         where: { date: today },
         orderBy: [{ score: 'desc' }, { completionTimeMs: 'asc' }],
         take: limit,
         include: {
-          user: {
+          User: {
             select: {
               id: true,
               firstName: true,
@@ -52,15 +52,13 @@ export const onRequestGet = authenticatedEndpoint(
         },
       });
 
-      // Type for entries from Prisma query with user relation
       type LeaderboardEntry = (typeof entries)[0];
 
-      // Format leaderboard with rank
       const leaderboard = entries.map((entry: LeaderboardEntry, index: number) => ({
         rank: index + 1,
         userId: entry.userId,
-        userName: entry.user
-          ? `${entry.user.firstName || ''} ${entry.user.lastName || ''}`.trim() || 'Anonymous'
+        userName: entry.User
+          ? `${entry.User.firstName || ''} ${entry.User.lastName || ''}`.trim() || 'Anonymous'
           : 'Anonymous',
         score: entry.score,
         completionTimeMs: entry.completionTimeMs,

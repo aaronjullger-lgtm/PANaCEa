@@ -515,8 +515,15 @@ export async function callGeminiText(
  * });
  * ```
  */
+/** Single turn for Deep Think multi-turn (history + thoughtSignature). */
+export interface StreamHistoryTurn {
+  role: 'user' | 'model';
+  text: string;
+  thoughtSignature?: string;
+}
+
 export async function callGeminiTextStreaming(
-  modelName: string = 'gemini-2.5-flash',
+  modelName: string = 'gemini-3-flash-preview',
   prompt: string,
   temperature: number = 0.8,
   options: {
@@ -524,11 +531,19 @@ export async function callGeminiTextStreaming(
     cachedContent?: string;
     /** Optional: get Clerk session token for authenticated proxy requests (required when backend requires auth) */
     getToken?: () => Promise<string | null>;
-    /** Optional: Gemini 3 thinking level for reasoning depth control */
+    /** Optional: Gemini 3 thinking level for reasoning depth control (default HIGH for Deep Think) */
     thinkingLevel?: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
+    /** Multi-turn history; include thoughtSignature on model turns */
+    history?: StreamHistoryTurn[];
+    /** Previous model turn thought signature(s); send back to preserve reasoning chain */
+    previousThoughtSignatures?: string[];
+    /** System instruction (e.g. PANaCEa: rank differentials, explain pathophysiology of error) */
+    systemInstruction?: string;
     onChunk?: (chunk: string) => void;
     onComplete?: (fullText: string) => void;
     onError?: (error: Error) => void;
+    /** Called when server sends thoughtSignatures; pass them in next request as previousThoughtSignatures */
+    onThoughtSignatures?: (signatures: string[]) => void;
     signal?: AbortSignal;
   } = {}
 ): Promise<string> {
@@ -588,7 +603,6 @@ export async function callGeminiTextStreaming(
     console.log(`[callGeminiTextStreaming] Starting streaming request with model: ${modelName}`);
 
     // Dynamic import to avoid circular dependency
-    // Type assertion for the imported module
     type StreamingClientModule = {
       streamGeminiText: (
         prompt: string,
@@ -598,9 +612,13 @@ export async function callGeminiTextStreaming(
           cachedContent?: string;
           token?: string | null;
           thinkingLevel?: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
+          history?: StreamHistoryTurn[];
+          previousThoughtSignatures?: string[];
+          systemInstruction?: string;
           onChunk?: (chunk: string) => void;
           onComplete?: (fullText: string) => void;
           onError?: (error: Error) => void;
+          onThoughtSignatures?: (signatures: string[]) => void;
           signal?: AbortSignal;
         }
       ) => Promise<string>;
@@ -639,9 +657,13 @@ export async function callGeminiTextStreaming(
       cachedContent: options.cachedContent,
       token: token ?? undefined,
       thinkingLevel: options.thinkingLevel,
+      history: options.history,
+      previousThoughtSignatures: options.previousThoughtSignatures,
+      systemInstruction: options.systemInstruction,
       onChunk: options.onChunk,
       onComplete: options.onComplete,
       onError: options.onError,
+      onThoughtSignatures: options.onThoughtSignatures,
       signal: options.signal,
     });
 
@@ -1507,7 +1529,8 @@ INSTRUCTIONS:
 3. PHYSICAL EXAMS: Return ONLY the physical exam finding(s) for the specific maneuver(s) the student just described. If they said only "listen to heart", return only cardiac findings. Do not return abdominal, lung, or other system findings unless they explicitly performed or asked for that part of the exam. If the student says only "I do a physical exam" or "full exam" without specifying systems, respond with: "Which part of the exam would you like to do? (e.g. heart, lungs, abdomen)". Format findings in brackets, e.g., "[Exam Finding] The abdomen is soft, non-tender."
 4. LABS/IMAGING: If the user orders a test (e.g., "Order CBC", "Get a CXR"), provide the result from the LABS/IMAGING RESULTS section. If the test is not listed, assume it is normal/unremarkable. Format as "[Lab Result] CBC: WBC 12k...".
 5. LANGUAGE: If the user speaks Spanish, respond in Spanish.
-6. DO NOT reveal the diagnosis or the "correct" answer. You are the simulation, not the grader.
+6. RED HERRINGS: Occasionally include one irrelevant or tangential detail when answering (e.g. an unrelated past event, complaint, or aside) to simulate a real patient who goes off-topic. Do not overdo it; keep it consistent with the persona and the flow of the encounter.
+7. DO NOT reveal the diagnosis or the "correct" answer. You are the simulation, not the grader.
 
 Current conversation history is provided below. Respond to the last user message.
 `;

@@ -113,7 +113,7 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
 
         {/* Classic Patient Presentation */}
         {content.classic_patient && (
-          <div className="mt-4 p-4 bg-white/50 dark:bg-black/20 rounded-lg border border-[var(--color-border)]">
+          <div className="mt-4 p-4 bg-white/50 dark:bg-[var(--color-bg-tertiary)]/60 rounded-lg border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-2">
               <AlertCircle className="w-4 h-4 text-blue-500" />
               <div className="text-xs font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">

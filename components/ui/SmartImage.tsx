@@ -228,7 +228,7 @@ export const ZoomableImage: React.FC<SmartImageProps & { enableZoom?: boolean }>
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsZoomed(false)}
-            className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center cursor-zoom-out p-4"
+            className="fixed inset-0 z-[9999] bg-[var(--color-overlay)] backdrop-blur-md flex items-center justify-center cursor-zoom-out p-4"
             role="dialog"
             aria-modal="true"
             aria-label={`Zoomed view of ${props.alt}`}

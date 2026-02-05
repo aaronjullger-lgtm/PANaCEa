@@ -87,20 +87,20 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
   const weeksUntilExam = getWeeksUntilExam();
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl shadow-sm p-6 border border-[var(--color-border)]">
       <div className="flex items-center gap-3 mb-4">
-        <Calendar className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Life Scheduler</h2>
+        <Calendar className="w-6 h-6 text-[var(--color-accent)]" />
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Life Scheduler</h2>
       </div>
 
-      <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+      <p className="text-sm text-[var(--color-text-secondary)] mb-6">
         Set your exam date and we'll create a personalized study plan with daily blocks that sync
         directly to your Google Calendar, Outlook, or Apple Calendar.
       </p>
 
       {/* Exam Date Input */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
           When is your PANCE/PANRE exam?
         </label>
         <input
@@ -108,11 +108,11 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
           value={examDate}
           onChange={(e) => setExamDate(e.target.value)}
           min={new Date().toISOString().split('T')[0]}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
         />
 
         {weeksUntilExam && (
-          <div className="mt-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-2 flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
             <Clock className="w-4 h-4" />
             <span>{weeksUntilExam} weeks until exam</span>
           </div>
@@ -123,7 +123,7 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
       <button
         onClick={handleGeneratePlan}
         disabled={isGenerating || !examDate}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50 text-[var(--color-text-inverse)] font-semibold rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:ring-offset-2"
       >
         <Download className="w-5 h-5" />
         {isGenerating ? 'Generating...' : 'Generate Study Plan'}
@@ -134,27 +134,27 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
         <div
           className={`mt-4 p-4 rounded-lg flex items-start gap-3 ${
             generationResult.success
-              ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-              : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+              ? 'bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30'
+              : 'bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30'
           }`}
         >
           {generationResult.success ? (
-            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+            <CheckCircle className="w-5 h-5 text-[var(--color-data-pass)] flex-shrink-0 mt-0.5" />
           ) : (
-            <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+            <XCircle className="w-5 h-5 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />
           )}
           <div className="flex-1">
             <p
               className={`text-sm font-medium ${
                 generationResult.success
-                  ? 'text-green-800 dark:text-green-300'
-                  : 'text-red-800 dark:text-red-300'
+                  ? 'text-[var(--color-data-pass)]'
+                  : 'text-[var(--color-data-fail)]'
               }`}
             >
               {generationResult.message}
             </p>
             {generationResult.success && (
-              <p className="text-xs text-green-700 dark:text-green-400 mt-1">
+              <p className="text-xs text-[var(--color-data-pass)] mt-1">
                 Import the downloaded .ics file into your calendar app
               </p>
             )}
@@ -164,26 +164,26 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
 
       {/* Study Plan Preview */}
       {generationResult?.success && generationResult.plan && (
-        <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+        <div className="mt-6 p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3">
             Your Study Plan Overview:
           </h3>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {generationResult.plan.map((week) => (
               <div
                 key={week.weekNumber}
-                className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600"
+                className="p-3 bg-[var(--color-bg-secondary)] rounded border border-[var(--color-border)]"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  <span className="text-sm font-medium text-[var(--color-text-primary)]">
                     {week.weekLabel}
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-[var(--color-text-muted)]">
                     {week.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}{' '}
                     - {week.endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">{week.topics.join(', ')}</p>
+                <p className="text-xs text-[var(--color-text-secondary)]">{week.topics.join(', ')}</p>
               </div>
             ))}
           </div>
@@ -191,16 +191,16 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
       )}
 
       {/* Instructions */}
-      <div className="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-        <h3 className="text-sm font-semibold text-purple-900 dark:text-purple-300 mb-2">
+      <div className="mt-6 p-4 bg-[var(--color-accent-light)] rounded-lg border border-[var(--color-border)]">
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">
           How to Import:
         </h3>
         <div className="space-y-3">
           <div>
-            <p className="text-xs font-medium text-purple-800 dark:text-purple-400 mb-1">
+            <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-1">
               Google Calendar:
             </p>
-            <ol className="text-xs text-purple-700 dark:text-purple-400 space-y-0.5 list-decimal list-inside pl-2">
+            <ol className="text-xs text-[var(--color-text-secondary)] space-y-0.5 list-decimal list-inside pl-2">
               <li>Open Google Calendar</li>
               <li>Click the + next to "Other calendars"</li>
               <li>Select "Import"</li>
@@ -208,10 +208,10 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
             </ol>
           </div>
           <div>
-            <p className="text-xs font-medium text-purple-800 dark:text-purple-400 mb-1">
+            <p className="text-xs font-medium text-[var(--color-text-secondary)] mb-1">
               Outlook / Apple Calendar:
             </p>
-            <ol className="text-xs text-purple-700 dark:text-purple-400 space-y-0.5 list-decimal list-inside pl-2">
+            <ol className="text-xs text-[var(--color-text-secondary)] space-y-0.5 list-decimal list-inside pl-2">
               <li>Double-click the downloaded .ics file</li>
               <li>It will automatically open in your default calendar app</li>
               <li>Confirm the import</li>

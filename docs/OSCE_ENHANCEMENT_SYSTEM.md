@@ -517,3 +517,25 @@ Key test scenarios:
 4. Score calculation is accurate
 5. Order bundles expand correctly
 6. Exam findings track properly
+
+---
+
+## Grading, seeding, and API
+
+### Grading flow
+
+1. User completes encounter and clicks **End Encounter**.
+2. Front end calls `POST /api/osce/complete` with `sessionId`, then `POST /api/osce/analysis/grade` with `sessionId`.
+3. Grade API loads the completed session and its case; if no `CaseRubric` exists, it builds a checklist from `essentialQuestions` and `idealWorkup` (fallback). Gemini grades the transcript; result is persisted as `OsceResult` and optionally creates a `ConceptGap` for Tutor targeting.
+4. Results view shows Preceptor debrief, rubric checklist (PASS/FAIL per item), and red flags missed. If grading failed, the user sees **Rubric: Unavailable** and can use **Retry grading**.
+
+### Seed scripts
+
+- **Cases:** `npm run seed:osce-cases` — seeds `PatientEncounterCase` rows (run first).
+- **Rubrics:** `npm run seed:osce-rubrics` — creates `CaseRubric` for cases that don’t have one, using `essentialQuestions` and `idealWorkup`. Grading works without rubrics via the API fallback; rubrics improve consistency.
+
+### OSCE API (GET) contract
+
+- **GET /api/osce/history?sessionId=…&limit=…**  
+  Query params: `sessionId` (required), `limit` (optional, 1–500, default 100).  
+  Returns `{ data: { history } }`. Session ownership enforced; 404 if not found or not owned.

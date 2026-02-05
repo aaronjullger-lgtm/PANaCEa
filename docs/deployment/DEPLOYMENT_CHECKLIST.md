@@ -27,13 +27,29 @@ In your Cloudflare Pages project dashboard:
 
 ### 2. Environment Variables
 
-Set the following in **Settings → Environment Variables**:
+Set the following in **Settings → Environment Variables** (and Cloudflare bindings for local `wrangler pages dev`):
 
-- **Name**: `GEMINI_API_KEY`
-- **Value**: Your Google Gemini API key
-- **Environment**: Both Production and Preview
+- **GEMINI_API_KEY** – Google Gemini API key (required for AI)
+- **DATABASE_URL** – PostgreSQL connection string (Supabase; use Transaction pooling for serverless)
+- **CLERK_SECRET_KEY** – Clerk backend secret (required for auth)
+- **CLERK_WEBHOOK_SECRET** – For Clerk user sync webhook (optional but recommended)
+- **VITE_CLERK_PUBLISHABLE_KEY** – Set in build env for frontend; do not prefix other secrets with `VITE_`
 
-### 3. Node.js Version
+**Environment**: Both Production and Preview.
+
+### 3. Database
+
+- Run migrations before or after deploy: `npm run db:migrate:deploy` (or `db:push` for dev).
+- Ensure Supabase project has Transaction pooling if using serverless/edge.
+
+### 4. Post-deploy smoke test
+
+- [ ] Login (Clerk) and land on dashboard
+- [ ] Start a quiz session and answer at least one question
+- [ ] Open one drill (e.g. Rapid Recall or ECG) and confirm it loads
+- [ ] Open Settings/Stats and confirm no console errors
+
+### 5. Node.js Version
 
 - Cloudflare will auto-detect Node.js version from your package.json
 - Current requirement: Node.js 18.0.0 or higher

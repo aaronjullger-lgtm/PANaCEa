@@ -1,11 +1,13 @@
 /**
  * BodyMapWidget - Organ system mastery visualization on SVG body outline
  *
- * Residency Cockpit: Maps Rolling 360 systemStats to body regions.
- * Color-coded by accuracy (green=strong, amber=developing, rose=weak).
+ * Residency Cockpit: Maps UserRolling360Stats.systemStats to body regions.
+ * Semantic colors: Mastery (>80%) emerald, Passing (60-79%) amber,
+ * Critical (<60%) rose, No data slate. Tooltip shows accuracy % and
+ * questions remaining to master. Click deep-links to system drill.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
 export interface SystemStats {
@@ -20,6 +22,10 @@ interface BodyMapWidgetProps {
   onSystemClick?: (system: string) => void;
   className?: string;
 }
+
+const MASTERY_THRESHOLD = 80;
+const PASSING_THRESHOLD = 60;
+const MIN_QS_FOR_MASTERY = 20;
 
 // Map system codes to body regions (x, y as % of SVG, approximate)
 const SYSTEM_TO_REGION: Record<string, { cx: number; cy: number; r: number; label: string }> = {
@@ -40,11 +46,32 @@ const SYSTEM_TO_REGION: Record<string, { cx: number; cy: number; r: number; labe
   PRO: { cx: 50, cy: 72, r: 6, label: 'Pro' },
 };
 
-function getRegionColor(accuracy: number, isWeak: boolean): string {
-  if (isWeak) return 'var(--color-data-fail)';
-  if (accuracy >= 80) return 'var(--color-data-pass)';
-  if (accuracy >= 60) return 'var(--color-data-provisional)';
-  return 'var(--color-data-fail)';
+type MasteryLevel = 'mastery' | 'passing' | 'critical' | 'nodata';
+
+function getMasteryLevel(accuracy: number, total: number): MasteryLevel {
+  if (total < 2) return 'nodata';
+  if (accuracy >= MASTERY_THRESHOLD) return 'mastery';
+  if (accuracy >= PASSING_THRESHOLD) return 'passing';
+  return 'critical';
+}
+
+function getRegionColor(level: MasteryLevel): string {
+  switch (level) {
+    case 'mastery':
+      return 'var(--color-data-pass)'; // emerald
+    case 'passing':
+      return 'var(--color-data-provisional)'; // amber
+    case 'critical':
+      return 'var(--color-data-fail)'; // rose
+    default:
+      return 'var(--color-bg-tertiary)'; // slate-700 equivalent
+  }
+}
+
+function questionsToMaster(total: number, correct: number): number {
+  if (total >= MIN_QS_FOR_MASTERY && (correct / total) * 100 >= MASTERY_THRESHOLD) return 0;
+  const needed = Math.ceil((MASTERY_THRESHOLD / 100) * MIN_QS_FOR_MASTERY);
+  return Math.max(0, needed - correct);
 }
 
 export function BodyMapWidget({
@@ -55,6 +82,7 @@ export function BodyMapWidget({
 }: BodyMapWidgetProps) {
   const weakestSet = new Set(weakestSystems);
   const systemsWithData = Object.entries(systemStats).filter(([, s]) => s.total >= 2);
+  const [hoveredSystem, setHoveredSystem] = useState<string | null>(null);
 
   return (
     <div className={className}>
@@ -99,12 +127,18 @@ export function BodyMapWidget({
             strokeWidth="1"
           />
 
-          {/* System region dots */}
+          {/* System region dots with tooltips */}
           {systemsWithData.map(([system, stats]) => {
             const region = SYSTEM_TO_REGION[system];
             if (!region) return null;
             const isWeak = weakestSet.has(system);
-            const color = getRegionColor(stats.accuracy, isWeak);
+            const level = getMasteryLevel(stats.accuracy, stats.total);
+            const color = getRegionColor(level);
+            const toMaster = questionsToMaster(stats.total, stats.correct);
+            const tooltip =
+              level === 'nodata'
+                ? `${system}: No data yet`
+                : `${system}: ${stats.accuracy.toFixed(0)}% · ${stats.correct}/${stats.total} correct${toMaster > 0 ? ` · ~${toMaster} more to master` : ' (mastered)'}`;
 
             return (
               <motion.g
@@ -112,6 +146,8 @@ export function BodyMapWidget({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
+                onMouseEnter={() => setHoveredSystem(system)}
+                onMouseLeave={() => setHoveredSystem(null)}
               >
                 <circle
                   cx={region.cx}
@@ -124,6 +160,7 @@ export function BodyMapWidget({
                   className={onSystemClick ? 'cursor-pointer hover:opacity-90' : ''}
                   onClick={() => onSystemClick?.(system)}
                 />
+                <title>{tooltip}</title>
                 <text
                   x={region.cx}
                   y={region.cy + 0.5}
@@ -132,6 +169,7 @@ export function BodyMapWidget({
                   fontSize="5"
                   fill="var(--color-text-primary)"
                   fontWeight={isWeak ? 600 : 400}
+                  pointerEvents="none"
                 >
                   {region.label}
                 </text>
@@ -139,15 +177,39 @@ export function BodyMapWidget({
             );
           })}
         </svg>
+
+        {/* Hover tooltip (accessibility + mobile) */}
+        {hoveredSystem && systemStats[hoveredSystem] && (
+          <div
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1.5 rounded-lg bg-slate-800 text-slate-100 text-xs shadow-lg z-10 max-w-[200px] text-center"
+            role="tooltip"
+          >
+            {(() => {
+              const s = systemStats[hoveredSystem];
+              const toMaster = questionsToMaster(s.total, s.correct);
+              return (
+                <>
+                  <strong>{hoveredSystem}</strong>: {s.accuracy.toFixed(0)}% ({s.correct}/{s.total})
+                  {toMaster > 0 ? (
+                    <span className="block text-slate-300 mt-0.5">
+                      ~{toMaster} more to master
+                    </span>
+                  ) : null}
+                </>
+              );
+            })()}
+          </div>
+        )}
+
         <div className="flex flex-wrap justify-center gap-3 mt-2 text-xs text-[var(--color-text-muted)]">
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[var(--color-data-pass)]" /> Strong
+            <span className="w-2 h-2 rounded-full bg-emerald-500" /> Mastery
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[var(--color-data-provisional)]" /> Developing
+            <span className="w-2 h-2 rounded-full bg-amber-400" /> Passing
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[var(--color-data-fail)]" /> Weak
+            <span className="w-2 h-2 rounded-full bg-rose-500" /> Weak
           </span>
         </div>
       </div>

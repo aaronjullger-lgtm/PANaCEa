@@ -23,7 +23,14 @@ import {
   Eye,
   EyeOff,
   Stethoscope,
+  Pencil,
+  CheckCircle,
 } from 'lucide-react';
+import { SpatialAnswerCanvas } from '@/components/drill/SpatialAnswerCanvas';
+import {
+  useSpatialGrading,
+  imageUrlToBase64,
+} from '@/hooks/useSpatialGrading';
 
 export type PhotoDrillFilterType = 'ecg' | 'derm' | 'imaging' | 'all';
 
@@ -99,6 +106,8 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
     startSession,
     exitToMenu,
     validDiagnoses,
+    fetchError,
+    retryLoadCases,
   } = usePhotoDrill();
 
   // State for Clinical Presentation Mode: controls when image is revealed
@@ -107,6 +116,9 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
   const [imageErrored, setImageErrored] = useState<boolean>(false);
   /** Zoom-on-demand: when true, show high-res image (image optimization audit). */
   const [requestHighRes, setRequestHighRes] = useState<boolean>(false);
+  /** Draw to locate: spatial verification for ECG/radiology */
+  const [drawModeActive, setDrawModeActive] = useState<boolean>(false);
+  const { grade: gradeSpatial, loading: spatialLoading, result: spatialResult, reset: resetSpatial } = useSpatialGrading();
 
   // Thumbnail first (lightweight), high-res only on zoom (image optimization audit)
   const resolvedThumbnailSrc = useMemo(
@@ -126,8 +138,10 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
       setIsImageLoaded(false);
       setImageErrored(false);
       setRequestHighRes(false);
+      setDrawModeActive(false);
+      resetSpatial();
     }
-  }, [currentCase?.id]);
+  }, [currentCase?.id, resetSpatial]);
 
   // Preload next case image in background while user is on current question (image optimization audit)
   useEffect(() => {
@@ -168,10 +182,27 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
   };
 
   const handleNextCase = () => {
-    setImageRevealed(false); // Reset for next case
+    setImageRevealed(false);
     setIsImageLoaded(false);
     setImageErrored(false);
+    setDrawModeActive(false);
+    resetSpatial();
     nextCase();
+  };
+
+  const handleDrawBoxComplete = async (box: { x: number; y: number; width: number; height: number }) => {
+    if (!currentCase || !displaySrc) return;
+    try {
+      const base64 = await imageUrlToBase64(displaySrc);
+      await gradeSpatial({
+        imageBase64: base64,
+        userBox: box,
+        mediaAssetId: currentCase.id,
+        pathology: currentCase.correctDiagnosis,
+      });
+    } catch {
+      resetSpatial();
+    }
   };
 
   const handleReset = () => {
@@ -318,6 +349,39 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
 
         {/* Main Stage - Clinical Presentation Mode shows Patient Chart first, then Image */}
         <main className="flex-1 flex items-center justify-center p-4 pt-16 pb-32 overflow-y-auto">
+          {status === 'playing' && queue.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="w-full max-w-md rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 text-center shadow-lg"
+            >
+              <FileImage className="mx-auto w-12 h-12 text-[var(--color-text-muted)] mb-4" />
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
+                {fetchError ? 'Something went wrong' : 'No questions available'}
+              </h3>
+              <p className="text-[var(--color-text-muted)] text-sm mb-4">
+                {fetchError
+                  ? fetchError
+                  : 'There are no questions for this filter yet. Try another category or retry.'}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  type="button"
+                  onClick={retryLoadCases}
+                  className="px-4 py-2 rounded-xl bg-[var(--color-accent)] text-white font-medium hover:opacity-90 transition-opacity"
+                >
+                  Retry
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExit}
+                  className="px-4 py-2 rounded-xl border border-[var(--color-border)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                >
+                  Try another category
+                </button>
+              </div>
+            </motion.div>
+          )}
           <AnimatePresence mode="wait">
             {currentCase && (
               <motion.div
@@ -449,8 +513,19 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                 )}
 
                 {/* Image View (shown for non-derm cases or when revealed) — thumbnail first, high-res on zoom (image optimization audit) */}
-                {(imageRevealed || !currentCase.clinicalContext) && (
+                {(imageRevealed || !currentCase.clinicalContext) && !(drawModeActive && (currentCase.modality === 'ecg' || currentCase.modality === 'xray')) && (
                   <div className="relative bg-[var(--color-bg-tertiary)] rounded-xl overflow-hidden shadow-2xl w-full max-w-3xl mx-auto">
+                    {/* Draw to locate: for ECG and radiology */}
+                    {(currentCase.modality === 'ecg' || currentCase.modality === 'xray') && !spatialResult && (
+                      <button
+                        type="button"
+                        onClick={() => setDrawModeActive(true)}
+                        className="absolute bottom-3 left-3 px-3 py-2 bg-[var(--color-accent)]/90 hover:bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium rounded-lg flex items-center gap-2 transition-colors"
+                      >
+                        <Pencil className="w-4 h-4" aria-hidden />
+                        Draw to locate
+                      </button>
+                    )}
                     <div
                       className={`absolute inset-0 bg-[var(--color-bg-elevated)] animate-pulse transition-opacity duration-300 ${isImageLoaded ? 'opacity-0' : 'opacity-100'}`}
                       aria-hidden
@@ -491,6 +566,70 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                     </div>
                   </div>
                 )}
+
+                {/* Draw mode: SpatialAnswerCanvas for ECG/radiology (replaces image when active) */}
+                {(imageRevealed || !currentCase.clinicalContext) && drawModeActive && (currentCase.modality === 'ecg' || currentCase.modality === 'xray') && (
+                  <div className="w-full space-y-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                        Draw a box around the finding
+                      </span>
+                      {!spatialResult && (
+                        <button
+                          type="button"
+                          onClick={() => setDrawModeActive(false)}
+                          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                        >
+                          Skip
+                        </button>
+                      )}
+                    </div>
+                    <SpatialAnswerCanvas
+                      imageUrl={displaySrc}
+                      imageAlt={`Locate the finding - ${currentCase.modality}`}
+                      onBoxComplete={handleDrawBoxComplete}
+                      correctBox={spatialResult && !spatialResult.isCorrect ? spatialResult.correctBox : undefined}
+                      disabled={!!spatialResult || spatialLoading}
+                    />
+                    {spatialLoading && (
+                      <p className="text-sm text-[var(--color-text-muted)] text-center">Grading…</p>
+                    )}
+                    {spatialResult && (
+                      <div
+                        className={`rounded-xl p-4 text-center ${
+                          spatialResult.isCorrect
+                            ? 'bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30'
+                            : 'bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30'
+                        }`}
+                      >
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          {spatialResult.isCorrect ? (
+                            <CheckCircle className="w-5 h-5 text-[var(--color-data-pass)]" aria-hidden />
+                          ) : null}
+                          <span
+                            className={`font-semibold ${
+                              spatialResult.isCorrect
+                                ? 'text-[var(--color-data-pass)]'
+                                : 'text-[var(--color-data-fail)]'
+                            }`}
+                          >
+                            {spatialResult.isCorrect ? 'Correct location' : 'Incorrect — see red outline for correct area'}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDrawModeActive(false);
+                            resetSpatial();
+                          }}
+                          className="text-sm text-[var(--color-accent)] hover:underline"
+                        >
+                          Continue to diagnosis
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -501,7 +640,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
           <AnimatePresence mode="wait">
             {status === 'playing' && (
               <motion.div
-                key="playing-controls"
+                key={drawModeActive ? 'draw-controls' : 'playing-controls'}
                 variants={feedbackVariants}
                 initial="initial"
                 animate="animate"
@@ -510,11 +649,17 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                 className="p-4"
               >
                 <div className="max-w-2xl mx-auto">
+                  {drawModeActive ? (
+                    <p className="text-center text-sm text-[var(--color-text-muted)]">
+                      Click and drag on the image to draw a box around the finding
+                    </p>
+                  ) : (
                   <DiagnosisInput
                     onSubmit={handleDiagnosisSubmit}
                     autoFocus
                     options={validDiagnoses}
                   />
+                  )}
                 </div>
               </motion.div>
             )}

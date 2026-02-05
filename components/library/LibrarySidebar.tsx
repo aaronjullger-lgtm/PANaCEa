@@ -264,13 +264,13 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
 
     if (systemsError) {
       return (
-        <div className="mb-2 p-3 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 text-sm">
+        <div className="mb-2 p-3 rounded-lg border border-[var(--color-data-fail)]/40 bg-[var(--color-data-fail)]/10 text-[var(--color-text-primary)] text-sm">
           <div className="font-semibold mb-1">Unable to load systems</div>
-          <div className="text-rose-100/80 mb-2">{systemsError}</div>
+          <div className="text-[var(--color-text-muted)] mb-2">{systemsError}</div>
           {onRetrySystems && (
             <button
               onClick={onRetrySystems}
-              className="px-3 py-1.5 rounded-md bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600"
+              className="px-3 py-1.5 rounded-md bg-[var(--color-data-fail)] text-[var(--color-text-inverse)] text-xs font-semibold hover:opacity-90 transition-opacity"
             >
               Retry
             </button>
@@ -294,10 +294,7 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
     <div className="w-64 flex-shrink-0 bg-[var(--color-bg-primary)] border-r border-[var(--color-border)] flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-[var(--color-border)]">
-        <h2
-          className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2"
-          style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
-        >
+        <h2 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2 font-teko">
           <BookOpen className="w-5 h-5 text-[var(--color-accent)]" />
           Reference Library
         </h2>
@@ -326,24 +323,24 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
             w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200
             ${
               highYieldOnly
-                ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
-                : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-amber-500/30'
+                ? 'bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/40 text-[var(--color-accent)]'
+                : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/30'
             }
           `}
         >
           <span className="flex items-center gap-2 text-sm font-medium">
-            <Star className={`w-4 h-4 ${highYieldOnly ? 'fill-amber-400' : ''}`} />
+            <Star className={`w-4 h-4 ${highYieldOnly ? 'fill-[var(--color-accent)]' : ''}`} />
             High Yield Only
           </span>
           <div
             className={`
             w-8 h-5 rounded-full transition-colors relative
-            ${highYieldOnly ? 'bg-amber-500' : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)]'}
+            ${highYieldOnly ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)]'}
           `}
           >
             <div
               className={`
-              absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform
+              absolute top-0.5 w-4 h-4 rounded-full bg-[var(--color-text-inverse)] shadow-sm transition-transform
               ${highYieldOnly ? 'translate-x-3.5' : 'translate-x-0.5'}
             `}
             />

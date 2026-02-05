@@ -131,7 +131,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
       <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Stethoscope className="w-5 h-5 text-blue-500" />
-          <h3 className="font-semibold text-slate-800 dark:text-white">Physical Examination</h3>
+          <h3 className="font-semibold text-[var(--color-text-primary)]">Physical Examination</h3>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -307,7 +307,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
 
       {/* Loading Overlay */}
       {isPerformingExam && (
-        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+        <div className="absolute inset-0 bg-[var(--color-overlay)] flex items-center justify-center">
           <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-xl">
             <div className="animate-pulse flex items-center gap-2 text-slate-600 dark:text-slate-300">
               <Stethoscope className="w-5 h-5 animate-bounce" />

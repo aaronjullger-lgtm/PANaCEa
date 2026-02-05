@@ -61,7 +61,7 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
       <div className={`p-6 ${getGradeBg(report.overallScore)} border-b`}>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+            <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
               Performance Report
             </h2>
             <p className="text-slate-600 dark:text-slate-300 mt-1">Patient Encounter Assessment</p>

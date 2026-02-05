@@ -365,6 +365,11 @@ function calculateRecentActivity(
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
+/**
+ * Legacy SRS stats from SRSItem (SM-2). FSRS-based stats (UserProgress, due counts)
+ * are available via GET /api/user/stats and stability-trend; this block remains
+ * for backward compatibility until full migration to FSRS-only analytics.
+ */
 async function getSRSStats(
   prisma: ReturnType<typeof createEdgePrismaClient>,
   userId: string

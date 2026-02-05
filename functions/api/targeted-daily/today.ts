@@ -197,6 +197,7 @@ export const onRequestGet = authenticatedEndpoint(
       // Pick a question deterministically from the pre-generated pool (avoid ORDER BY random())
       const pool = await prisma.preGeneratedQuestion.findMany({
         where: {
+          validationStatus: { not: 'rejected' },
           system: { in: uniqSystems },
           difficulty: { in: ['PANCE-level', 'intermediate', 'advanced', 'medium', 'hard'] },
         },

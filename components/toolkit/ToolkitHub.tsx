@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -9,9 +9,8 @@ import {
   Activity,
   Beaker,
   FileImage,
-  Heart,
-  Droplet,
-  AlertCircle,
+  Video,
+  Headphones,
   ChevronRight,
   X,
   Menu,
@@ -20,10 +19,26 @@ import {
   StarOff,
   Clock,
   Sparkles,
+  Lightbulb,
+  FileText,
 } from 'lucide-react';
 import type { SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
+import {
+  DRUG_REGISTRY_ANTIBIOTICS,
+  DRUG_REGISTRY_CARDIOVASCULAR,
+  DRUG_REGISTRY_ENDOCRINE,
+  DRUG_REGISTRY_ANALGESICS,
+  DRUG_REGISTRY_PSYCHIATRY,
+} from '@/src/registries/drugRegistry';
 import { CalculatorHub } from './calculators/CalculatorHub';
+import { CALCULATORS as REGISTRY_CALCULATORS } from './calculators/calculatorRegistry';
+import { StorageKeys } from '@/lib/storage/storageRegistry';
+import { MedicalContentBrowser } from './MedicalContentBrowser';
+import { MnemonicGenerator } from './MnemonicGenerator';
+import { StudyGuideGenerator } from './StudyGuideGenerator';
+import { ClinicalMotionFlashcards } from './ClinicalMotionFlashcards';
+import { LectureConverter } from './LectureConverter';
 
 // ============================================================================
 // Types & Interfaces
@@ -34,21 +49,16 @@ interface ToolkitHubProps {
   onClose: () => void;
 }
 
-type TabId = 'calculators' | 'clinical' | 'pharmacopeia' | 'physiology' | 'imaging';
+type TabId =
+  | 'calculators'
+  | 'clinical'
+  | 'pharmacopeia'
+  | 'physiology'
+  | 'imaging'
+  | 'generators';
 
-interface Calculator {
-  id: string;
-  name: string;
-  description: string;
-  category: 'risk' | 'diagnosis' | 'dosing' | 'lab' | 'guidelines';
-  icon: React.ComponentType<{ className?: string }>;
-  /** Search synonyms/aliases for better discoverability */
-  synonyms?: string[];
-  /** Formula preview shown in search results */
-  formula?: string;
-  /** Keywords for search matching */
-  keywords?: string[];
-}
+/** Calculator card type (registry entries used in ToolkitHub grid) */
+type Calculator = (typeof REGISTRY_CALCULATORS)[number];
 
 interface NavTab {
   id: TabId;
@@ -67,104 +77,11 @@ const NAV_TABS: NavTab[] = [
   { id: 'pharmacopeia', label: 'Pharmacopeia', icon: Pill },
   { id: 'physiology', label: 'Physiology', icon: Activity },
   { id: 'imaging', label: 'Imaging Atlas', icon: FileImage },
+  { id: 'generators', label: 'Generators', icon: Lightbulb },
 ];
 
-/** Clinical calculators registry with enhanced search metadata */
-const CALCULATORS: Calculator[] = [
-  {
-    id: 'curb65',
-    name: 'CURB-65',
-    description: 'Pneumonia severity assessment',
-    category: 'risk',
-    icon: Activity,
-    synonyms: ['pneumonia', 'cap', 'community acquired pneumonia', 'severity'],
-    formula: 'Confusion + Urea + RR + BP + Age ≥65',
-    keywords: ['respiratory', 'infection', 'lung', 'inpatient', 'outpatient'],
-  },
-  {
-    id: 'chads2vasc',
-    name: 'CHA₂DS₂-VASc',
-    description: 'Stroke risk in atrial fibrillation',
-    category: 'risk',
-    icon: Heart,
-    synonyms: ['afib', 'a-fib', 'stroke', 'anticoagulation', 'chadsvasc'],
-    formula: 'CHF + HTN + Age + DM + Stroke + Vasc + Sex',
-    keywords: ['cardiac', 'arrhythmia', 'warfarin', 'coumadin', 'eliquis', 'xarelto'],
-  },
-  {
-    id: 'gfr',
-    name: 'GFR (MDRD)',
-    description: 'Glomerular filtration rate estimation',
-    category: 'lab',
-    icon: Droplet,
-    synonyms: ['egfr', 'kidney function', 'renal function', 'creatinine clearance', 'ckd'],
-    formula: '186 × (Cr)^-1.154 × (Age)^-0.203 × [factors]',
-    keywords: ['nephrology', 'chronic kidney disease', 'dialysis', 'renal'],
-  },
-  {
-    id: 'wells_dvt',
-    name: "Wells' DVT Criteria",
-    description: 'Deep vein thrombosis probability',
-    category: 'diagnosis',
-    icon: Activity,
-    synonyms: ['dvt', 'blood clot', 'leg swelling', 'venous thrombosis'],
-    formula: 'Clinical criteria scoring (0-9 points)',
-    keywords: ['vascular', 'thrombosis', 'ultrasound', 'd-dimer'],
-  },
-  {
-    id: 'wells_pe',
-    name: "Wells' PE Criteria",
-    description: 'Pulmonary embolism probability',
-    category: 'diagnosis',
-    icon: Activity,
-    synonyms: ['pe', 'pulmonary embolism', 'clot lung', 'sob', 'chest pain'],
-    formula: 'Clinical probability: Low/Mod/High',
-    keywords: ['respiratory', 'emergency', 'ct angio', 'vq scan'],
-  },
-  {
-    id: 'perc',
-    name: 'PERC Rule',
-    description: 'Pulmonary embolism exclusion',
-    category: 'diagnosis',
-    icon: AlertCircle,
-    synonyms: ['pe rule out', 'pulmonary embolism', 'low risk pe'],
-    formula: '8 criteria: Age, HR, O2, hemoptysis, estrogen, surgery, DVT hx, unilateral swelling',
-    keywords: ['emergency', 'exclusion', 'safe discharge'],
-  },
-  {
-    id: 'anion_gap',
-    name: 'Anion Gap',
-    description: 'Metabolic acidosis assessment',
-    category: 'lab',
-    icon: Beaker,
-    synonyms: ['ag', 'metabolic acidosis', 'mudpiles', 'dka', 'lactic acidosis'],
-    formula: 'Na⁺ - (Cl⁻ + HCO₃⁻) = Normal 8-12',
-    keywords: ['electrolytes', 'acid-base', 'abg', 'bmp'],
-  },
-  {
-    id: 'pediatric_dosing',
-    name: 'Pediatric Dosing',
-    description: 'Weight-based medication calculator',
-    category: 'dosing',
-    icon: Pill,
-    synonyms: ['kids', 'children', 'weight based', 'mg/kg', 'peds'],
-    formula: 'Dose = mg/kg × weight',
-    keywords: ['pediatrics', 'medication', 'antibiotic', 'tylenol', 'motrin'],
-  },
-  {
-    id: 'clinical_guidelines',
-    name: 'Clinical Guidelines',
-    description: 'Practice guidelines and criteria',
-    category: 'guidelines',
-    icon: BookOpen,
-    synonyms: ['protocols', 'criteria', 'recommendations', 'standards'],
-    keywords: ['evidence-based', 'treatment', 'management'],
-  },
-];
-
-// Storage keys
-const RECENT_CALCULATORS_KEY = 'panceai_recent_calculators';
-const PINNED_CALCULATORS_KEY = 'panceai_pinned_calculators';
+/** Single source of truth: use shared registry */
+const CALCULATORS = REGISTRY_CALCULATORS;
 
 // ============================================================================
 // Custom Hook: useCalculatorPreferences
@@ -205,7 +122,7 @@ function useCalculatorPreferences(): CalculatorPreferences {
         ? prev.filter((id) => id !== calcId)
         : [...prev, calcId];
       try {
-        localStorage.setItem(PINNED_CALCULATORS_KEY, JSON.stringify(newPinned));
+        localStorage.setItem(StorageKeys.PINNED_CALCULATORS, JSON.stringify(newPinned));
       } catch {
         // Ignore storage errors
       }
@@ -217,7 +134,7 @@ function useCalculatorPreferences(): CalculatorPreferences {
     setRecentCalcs((prev) => {
       const updated = [calcId, ...prev.filter((id) => id !== calcId)].slice(0, 5);
       try {
-        localStorage.setItem(RECENT_CALCULATORS_KEY, JSON.stringify(updated));
+        localStorage.setItem(StorageKeys.RECENT_CALCULATORS, JSON.stringify(updated));
       } catch {
         // Ignore storage errors
       }
@@ -362,6 +279,68 @@ const CalculatorCard: React.FC<CalculatorCardProps> = ({
   </motion.button>
 );
 
+/** Pharmacopeia tab: drug reference by class from registry */
+const PHARM_CATEGORIES: Array<{
+  id: string;
+  label: string;
+  drugs: Array<{ genericName: string; brandName?: string; drugClass: string[] }>;
+}> = [
+  { id: 'antibiotics', label: 'Antibiotics', drugs: DRUG_REGISTRY_ANTIBIOTICS },
+  { id: 'cardiovascular', label: 'Cardiovascular', drugs: DRUG_REGISTRY_CARDIOVASCULAR },
+  { id: 'endocrine', label: 'Endocrine', drugs: DRUG_REGISTRY_ENDOCRINE },
+  { id: 'analgesics', label: 'Analgesics', drugs: DRUG_REGISTRY_ANALGESICS },
+  { id: 'psychiatry', label: 'Psychiatry', drugs: DRUG_REGISTRY_PSYCHIATRY },
+];
+
+const PharmacopeiaContent: React.FC = () => {
+  const [categoryId, setCategoryId] = useState<string>(PHARM_CATEGORIES[0].id);
+  const category = PHARM_CATEGORIES.find((c) => c.id === categoryId) ?? PHARM_CATEGORIES[0];
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        {PHARM_CATEGORIES.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => setCategoryId(cat.id)}
+            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+              categoryId === cat.id
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] border-[var(--color-accent)]'
+                : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] hover:border-[var(--color-accent)]'
+            }`}
+          >
+            {cat.label} ({cat.drugs.length})
+          </button>
+        ))}
+      </div>
+      <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4">
+        <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-3">
+          {category.label}
+        </h3>
+        <ul className="space-y-2 max-h-[60vh] overflow-y-auto">
+          {category.drugs.map((drug) => (
+            <li
+              key={drug.genericName}
+              className="flex justify-between items-baseline py-2 border-b border-[var(--color-border)] last:border-0 text-sm"
+            >
+              <span className="font-medium text-[var(--color-text-primary)]">
+                {drug.genericName}
+                {drug.brandName && (
+                  <span className="text-[var(--color-text-muted)] font-normal ml-2">
+                    ({drug.brandName})
+                  </span>
+                )}
+              </span>
+              <span className="text-xs text-[var(--color-text-muted)]">
+                {drug.drugClass.slice(0, 2).join(', ')}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
 /** Sidebar navigation button */
 interface SidebarNavButtonProps {
   tab: NavTab;
@@ -400,6 +379,10 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [selectedGenerator, setSelectedGenerator] = useState<
+    'mnemonic' | 'study_guide' | 'clinical_motion' | 'lecture_script' | null
+  >(null);
+  const [mnemonicConcept, setMnemonicConcept] = useState('');
 
   const { pinnedCalcs, recentCalcs, togglePin, recordUsage } = useCalculatorPreferences();
 
@@ -465,10 +448,22 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
     setActiveTab(tabId);
     setSelectedCalculator(null);
     setSelectedSystem(null);
+    setSelectedGenerator(null);
     if (closeSidebar) {
       setSidebarOpen(false);
     }
   }, []);
+
+  // Close mobile sidebar on Escape
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSidebarOpen(false);
+    };
+    if (sidebarOpen) {
+      document.addEventListener('keydown', onKeyDown);
+      return () => document.removeEventListener('keydown', onKeyDown);
+    }
+  }, [sidebarOpen]);
 
   // Tab titles and descriptions
   const tabMeta: Record<TabId, { title: string; description: string }> = {
@@ -491,6 +486,10 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
     imaging: {
       title: 'Imaging Atlas',
       description: 'X-ray, CT, and MRI findings library',
+    },
+    generators: {
+      title: 'Generators & Study Aids',
+      description: 'Mnemonics, study guides, clinical motion, and lecture scripts',
     },
   };
 
@@ -535,17 +534,34 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
         </button>
       </div>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Sidebar Backdrop */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden fixed inset-0 z-30 bg-[var(--color-overlay)] backdrop-blur-md"
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Sidebar */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
             initial={{ x: -300 }}
             animate={{ x: 0 }}
             exit={{ x: -300 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Clinical Toolkit navigation"
             className="lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] shadow-2xl"
           >
             <div className="p-4 border-b border-[var(--color-border)]">
-              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
+              <h2 className="text-lg font-bold text-[var(--color-category-toolkit)]">
                 Clinical Toolkit
               </h2>
             </div>
@@ -593,7 +609,13 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
               <input
                 type="text"
-                placeholder="Search calculators, conditions, drugs... (try 'afib', 'pneumonia', 'pe')"
+                placeholder={
+                  activeTab === 'calculators'
+                    ? "Search calculators (e.g. 'afib', 'pneumonia', 'pe')"
+                    : activeTab === 'clinical'
+                      ? 'Search conditions...'
+                      : 'Search applies to Calculators or Clinical tab'
+                }
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -601,7 +623,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                 }}
                 onFocus={() => searchQuery.length >= 2 && setShowSearchSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
-                className="w-full pl-12 pr-4 py-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 transition-all font-['Inter']"
+                className="w-full pl-12 pr-4 py-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 transition-all font-sans"
               />
               {searchQuery && (
                 <button
@@ -671,7 +693,10 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                 exit={{ opacity: 0, y: -20 }}
               >
                 {selectedCalculator ? (
-                  <CalculatorHub onClose={() => setSelectedCalculator(null)} />
+                  <CalculatorHub
+                  initialCalculatorId={selectedCalculator}
+                  onClose={() => setSelectedCalculator(null)}
+                />
                 ) : (
                   <div className="space-y-6">
                     {/* Search Results */}
@@ -764,36 +789,13 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
+                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
               >
-                {!selectedSystem ? (
-                  <SystemGrid onSelectSystem={setSelectedSystem} />
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
-                          {ABBREVIATION_TO_TOPIC_MAP[selectedSystem]}
-                        </h2>
-                        <p className="text-sm text-[var(--color-text-muted)]">
-                          Clinical Medicine Reference
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setSelectedSystem(null)}
-                        className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-                      >
-                        Back to Systems
-                      </button>
-                    </div>
-                    <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-6 text-center">
-                      <BookOpen className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-3" />
-                      <p className="text-[var(--color-text-muted)]">
-                        Content connected to conditionRegistry.ts - displaying conditions for{' '}
-                        {selectedSystem}
-                      </p>
-                    </div>
-                  </div>
-                )}
+                <MedicalContentBrowser
+                  initialSystem={selectedSystem ?? undefined}
+                  searchQuery={activeTab === 'clinical' ? searchQuery : undefined}
+                  onSelectCondition={undefined}
+                />
               </motion.div>
             )}
 
@@ -805,33 +807,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                {!selectedSystem ? (
-                  <SystemGrid onSelectSystem={setSelectedSystem} />
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
-                          {ABBREVIATION_TO_TOPIC_MAP[selectedSystem]} Medications
-                        </h2>
-                        <p className="text-sm text-[var(--color-text-muted)]">Drug Reference</p>
-                      </div>
-                      <button
-                        onClick={() => setSelectedSystem(null)}
-                        className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-                      >
-                        Back to Systems
-                      </button>
-                    </div>
-                    <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-6 text-center">
-                      <Pill className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-3" />
-                      <p className="text-[var(--color-text-muted)]">
-                        Content connected to pharmRegistry.ts - displaying medications for{' '}
-                        {selectedSystem}
-                      </p>
-                    </div>
-                  </div>
-                )}
+                <PharmacopeiaContent />
               </motion.div>
             )}
 
@@ -843,58 +819,152 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4">
                     <div className="flex items-center gap-3 mb-4">
                       <Beaker className="w-8 h-8 text-[var(--color-data-pass)]" />
                       <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
                         Lab Normal Values
                       </h3>
                     </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                        <span className="text-[var(--color-text-muted)]">Sodium</span>
-                        <span className="font-mono text-[var(--color-text-primary)]">
-                          135-145 mEq/L
-                        </span>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+                          Electrolytes
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          {[
+                            ['Sodium', '135-145 mEq/L'],
+                            ['Potassium', '3.5-5.0 mEq/L'],
+                            ['Chloride', '96-106 mEq/L'],
+                            ['Bicarbonate', '22-28 mEq/L'],
+                            ['Calcium', '8.6-10.2 mg/dL'],
+                            ['Magnesium', '1.7-2.2 mg/dL'],
+                            ['Phosphate', '2.5-4.5 mg/dL'],
+                          ].map(([name, range]) => (
+                            <div
+                              key={name}
+                              className="flex justify-between border-b border-[var(--color-border)] pb-2"
+                            >
+                              <span className="text-[var(--color-text-muted)]">{name}</span>
+                              <span className="font-mono text-[var(--color-text-primary)]">
+                                {range}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                        <span className="text-[var(--color-text-muted)]">Potassium</span>
-                        <span className="font-mono text-[var(--color-text-primary)]">
-                          3.5-5.0 mEq/L
-                        </span>
+                      <div>
+                        <h4 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+                          CBC
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          {[
+                            ['WBC', '4-11 × 10³/μL'],
+                            ['Hemoglobin', '12-16 (F), 14-18 (M) g/dL'],
+                            ['Hematocrit', '36-46% (F), 41-50% (M)'],
+                            ['Platelets', '150-400 × 10³/μL'],
+                            ['MCV', '80-100 fL'],
+                          ].map(([name, range]) => (
+                            <div
+                              key={name}
+                              className="flex justify-between border-b border-[var(--color-border)] pb-2"
+                            >
+                              <span className="text-[var(--color-text-muted)]">{name}</span>
+                              <span className="font-mono text-[var(--color-text-primary)]">
+                                {range}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                        <span className="text-[var(--color-text-muted)]">Creatinine</span>
-                        <span className="font-mono text-[var(--color-text-primary)]">
-                          0.6-1.2 mg/dL
-                        </span>
+                      <div>
+                        <h4 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+                          Chemistry / Renal
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          {[
+                            ['Glucose (fasting)', '70-100 mg/dL'],
+                            ['BUN', '7-20 mg/dL'],
+                            ['Creatinine', '0.6-1.2 mg/dL'],
+                            ['eGFR', '>90 mL/min/1.73 m²'],
+                            ['Albumin', '3.4-5.4 g/dL'],
+                            ['Bilirubin (total)', '0.1-1.2 mg/dL'],
+                            ['ALT', '7-56 U/L'],
+                            ['AST', '10-40 U/L'],
+                            ['Alk Phos', '44-147 U/L'],
+                          ].map(([name, range]) => (
+                            <div
+                              key={name}
+                              className="flex justify-between border-b border-[var(--color-border)] pb-2"
+                            >
+                              <span className="text-[var(--color-text-muted)]">{name}</span>
+                              <span className="font-mono text-[var(--color-text-primary)]">
+                                {range}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                        <span className="text-[var(--color-text-muted)]">Hemoglobin</span>
-                        <span className="font-mono text-[var(--color-text-primary)]">
-                          12-16 (F), 14-18 (M) g/dL
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-b border-[var(--color-border)] pb-2">
-                        <span className="text-[var(--color-text-muted)]">WBC</span>
-                        <span className="font-mono text-[var(--color-text-primary)]">
-                          4-11 × 10³/μL
-                        </span>
+                      <div>
+                        <h4 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+                          Coagulation
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          {[
+                            ['PT', '11-13.5 s'],
+                            ['PTT', '25-35 s'],
+                            ['INR', '0.8-1.2'],
+                          ].map(([name, range]) => (
+                            <div
+                              key={name}
+                              className="flex justify-between border-b border-[var(--color-border)] pb-2"
+                            >
+                              <span className="text-[var(--color-text-muted)]">{name}</span>
+                              <span className="font-mono text-[var(--color-text-primary)]">
+                                {range}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-6">
+                  <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4">
                     <div className="flex items-center gap-3 mb-4">
                       <Dna className="w-8 h-8 text-[var(--color-accent)]" />
                       <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
                         Anatomy & Physiology
                       </h3>
                     </div>
-                    <p className="text-sm text-[var(--color-text-muted)]">
-                      Browse anatomical structures and physiological processes organized by system
+                    <p className="text-sm text-[var(--color-text-muted)] mb-4">
+                      Key anatomical structures and physiological processes are organized by system
+                      (MSK, CV, PULM, GI, NEURO). Use the Clinical Library tab to browse conditions
+                      by system and link to relevant anatomy.
                     </p>
+                    <div className="text-sm text-[var(--color-text-muted)] space-y-2">
+                      <p>
+                        <strong className="text-[var(--color-text-primary)]">MSK:</strong> Knee
+                        (ACL, PCL, MCL, LCL), shoulder, spine
+                      </p>
+                      <p>
+                        <strong className="text-[var(--color-text-primary)]">CV:</strong> Heart
+                        chambers, valves, coronary circulation
+                      </p>
+                      <p>
+                        <strong className="text-[var(--color-text-primary)]">PULM:</strong> Lungs,
+                        pleura, airways
+                      </p>
+                      <p>
+                        <strong className="text-[var(--color-text-primary)]">GI:</strong> Liver,
+                        pancreas, GI tract
+                      </p>
+                      <p>
+                        <strong className="text-[var(--color-text-primary)]">NEURO:</strong> Cranial
+                        nerves, CNS, PNS
+                      </p>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -928,6 +998,143 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
+              </motion.div>
+            )}
+
+            {/* GENERATORS TAB */}
+            {activeTab === 'generators' && (
+              <motion.div
+                key="generators"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                {selectedGenerator ? (
+                  <div className="space-y-4">
+                    <button
+                      onClick={() => setSelectedGenerator(null)}
+                      className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Back to Generators
+                    </button>
+                    {selectedGenerator === 'mnemonic' && (
+                      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+                        <div className="mb-4">
+                          <label
+                            htmlFor="toolkit-mnemonic-concept"
+                            className="block text-sm font-medium text-[var(--color-text-primary)] mb-2"
+                          >
+                            Medical concept
+                          </label>
+                          <input
+                            id="toolkit-mnemonic-concept"
+                            type="text"
+                            value={mnemonicConcept}
+                            onChange={(e) => setMnemonicConcept(e.target.value)}
+                            placeholder="e.g. MUDPILES, causes of DKA"
+                            className="w-full px-4 py-2 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                          />
+                        </div>
+                        <MnemonicGenerator concept={mnemonicConcept || 'Medical concept'} />
+                      </div>
+                    )}
+                    {selectedGenerator === 'study_guide' && (
+                      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+                        <StudyGuideGenerator
+                          questions={[]}
+                          onClose={() => setSelectedGenerator(null)}
+                          title="Study Guide"
+                        />
+                      </div>
+                    )}
+                    {selectedGenerator === 'clinical_motion' && (
+                      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+                        <ClinicalMotionFlashcards onClose={() => setSelectedGenerator(null)} />
+                      </div>
+                    )}
+                    {selectedGenerator === 'lecture_script' && (
+                      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+                        <LectureConverter onClose={() => setSelectedGenerator(null)} />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <motion.button
+                      type="button"
+                      onClick={() => setSelectedGenerator('mnemonic')}
+                      className="text-left p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="p-2.5 rounded-xl text-[var(--color-accent)] bg-[var(--color-accent)]/10">
+                          <Lightbulb className="w-5 h-5" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] ml-auto transition-all" />
+                      </div>
+                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-1">
+                        Mnemonic Generator
+                      </h3>
+                      <p className="text-sm text-[var(--color-text-muted)]">
+                        Generate acronyms, stories, or rhymes for medical concepts
+                      </p>
+                    </motion.button>
+                    <motion.button
+                      type="button"
+                      onClick={() => setSelectedGenerator('study_guide')}
+                      className="text-left p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="p-2.5 rounded-xl text-[var(--color-accent)] bg-[var(--color-accent)]/10">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] ml-auto transition-all" />
+                      </div>
+                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-1">
+                        Study Guide Generator
+                      </h3>
+                      <p className="text-sm text-[var(--color-text-muted)]">
+                        Export questions to a printable study guide
+                      </p>
+                    </motion.button>
+                    <motion.button
+                      type="button"
+                      onClick={() => setSelectedGenerator('clinical_motion')}
+                      className="text-left p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="p-2.5 rounded-xl text-[var(--color-accent)] bg-[var(--color-accent)]/10">
+                          <Video className="w-5 h-5" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] ml-auto transition-all" />
+                      </div>
+                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-1">
+                        Clinical Motion Flashcards
+                      </h3>
+                      <p className="text-sm text-[var(--color-text-muted)]">
+                        AI-generated video clips of gait and movement pathologies
+                      </p>
+                    </motion.button>
+                    <motion.button
+                      type="button"
+                      onClick={() => setSelectedGenerator('lecture_script')}
+                      className="text-left p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="p-2.5 rounded-xl text-[var(--color-accent)] bg-[var(--color-accent)]/10">
+                          <Headphones className="w-5 h-5" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] ml-auto transition-all" />
+                      </div>
+                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-1">
+                        Lecture Converter
+                      </h3>
+                      <p className="text-sm text-[var(--color-text-muted)]">
+                        Turn lecture text into a Host A / Host B podcast script
+                      </p>
+                    </motion.button>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

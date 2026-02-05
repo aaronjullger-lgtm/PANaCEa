@@ -96,14 +96,16 @@ function geminiErrorFromResponse(
 }
 
 /**
- * Consume Gemini SSE stream and write parsed text chunks to the given writer
+ * Consume Gemini SSE stream and write parsed text chunks + thought signatures to the given writer.
+ * Accumulates thoughtSignature from parts so the client can pass them back in the next request.
  */
 async function processGeminiStream(
   geminiStream: ReadableStream<Uint8Array>,
   writer: WritableStreamDefaultWriter<Uint8Array>,
   encoder: TextEncoder
-): Promise<{ chunksReceived: number; error?: AppError }> {
+): Promise<{ chunksReceived: number; thoughtSignatures: string[]; error?: AppError }> {
   let chunksReceived = 0;
+  const thoughtSignatures: string[] = [];
   const reader = geminiStream.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
@@ -124,11 +126,24 @@ async function processGeminiStream(
 
         try {
           const data = JSON.parse(jsonStr);
-          const text =
-            data.candidates?.[0]?.content?.parts?.[0]?.text || data.candidates?.[0]?.output || '';
-          if (text) {
-            chunksReceived++;
-            await writer.write(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
+          const parts = data.candidates?.[0]?.content?.parts ?? [];
+          for (const p of parts) {
+            if (p?.text) {
+              chunksReceived++;
+              await writer.write(encoder.encode(`data: ${JSON.stringify({ text: p.text })}\n\n`));
+            }
+            if (p?.thoughtSignature && typeof p.thoughtSignature === 'string') {
+              thoughtSignatures.push(p.thoughtSignature);
+            }
+          }
+          // Fallback: single text part at index 0 (older chunk shape)
+          if (parts.length === 0) {
+            const text =
+              data.candidates?.[0]?.content?.parts?.[0]?.text || data.candidates?.[0]?.output || '';
+            if (text) {
+              chunksReceived++;
+              await writer.write(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
+            }
           }
         } catch (parseError) {
           addBreadcrumb('JSON parse error in stream', 'gemini-stream', 'warning', {
@@ -138,10 +153,18 @@ async function processGeminiStream(
         }
       }
     }
+    if (thoughtSignatures.length > 0) {
+      await writer.write(
+        encoder.encode(`data: ${JSON.stringify({ thoughtSignatures })}\n\n`)
+      );
+    }
     await writer.write(encoder.encode('data: [DONE]\n\n'));
     await writer.close();
-    addBreadcrumb('Gemini stream completed', 'gemini-stream', 'info', { chunksReceived });
-    return { chunksReceived };
+    addBreadcrumb('Gemini stream completed', 'gemini-stream', 'info', {
+      chunksReceived,
+      thoughtSignatureCount: thoughtSignatures.length,
+    });
+    return { chunksReceived, thoughtSignatures };
   } catch (error) {
     const streamError = new ExternalServiceError(
       'Stream processing interrupted',
@@ -170,7 +193,7 @@ async function processGeminiStream(
     } catch {
       // Writer may already be closed
     }
-    return { chunksReceived, error: streamError };
+    return { chunksReceived, thoughtSignatures: [], error: streamError };
   }
 }
 
@@ -279,36 +302,76 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       return errorToResponse(validationError, corsHeaders);
     }
 
-    const { modelName, prompt, temperature, cachedContent, thinkingLevel } = parsed.data;
+    const {
+      modelName,
+      prompt,
+      temperature,
+      cachedContent: clientCachedContent,
+      thinkingLevel = 'HIGH',
+      history,
+      previousThoughtSignatures,
+      systemInstruction: clientSystemInstruction,
+    } = parsed.data;
     const apiKey = env.GEMINI_API_KEY;
+
+    // Context cache: prefer client-provided cachedContent, else env PANCE_BLUEPRINT_CACHE_NAME
+    const envCache =
+      typeof env === 'object' && env !== null && 'PANCE_BLUEPRINT_CACHE_NAME' in env
+        ? (env as { PANCE_BLUEPRINT_CACHE_NAME?: string }).PANCE_BLUEPRINT_CACHE_NAME
+        : undefined;
+    const cachedContent =
+      clientCachedContent ?? (typeof envCache === 'string' ? envCache : undefined);
 
     addBreadcrumb('Request validated, calling Gemini API', 'gemini-stream', 'info', {
       modelName,
       promptLength: prompt.length,
       temperature,
       hasCachedContent: !!cachedContent,
+      hasHistory: !!(history?.length),
     });
+
+    // Build contents: multi-turn history + current user message (with thought signatures)
+    const contents: Array<{ role: string; parts: Array<Record<string, unknown>> }> = [];
+    if (history?.length) {
+      for (const turn of history) {
+        const parts: Array<Record<string, unknown>> = [{ text: turn.text }];
+        if (turn.role === 'model' && turn.thoughtSignature) {
+          parts.push({ thoughtSignature: turn.thoughtSignature });
+        }
+        contents.push({ role: turn.role, parts });
+      }
+    }
+    const userParts: Array<Record<string, unknown>> = [{ text: prompt }];
+    if (previousThoughtSignatures?.length) {
+      for (const sig of previousThoughtSignatures) {
+        userParts.push({ thoughtSignature: sig });
+      }
+    }
+    contents.push({ role: 'user', parts: userParts });
+
+    // System instruction: PANaCEa Deep Think tutor (differentials, pathophysiology of error)
+    const defaultSystemInstruction =
+      'You are PANaCEa. Before answering, internally rank the top 3 differentials. If the user is wrong, explain the pathophysiology of their error. Be concise but rigorous.';
+    const systemInstruction = clientSystemInstruction?.trim() || defaultSystemInstruction;
 
     // Construct Gemini API URL for streaming
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?key=${apiKey}&alt=sse`;
-    // Redacted URL for logging (never log the real API key)
     const geminiUrlRedacted = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?key=[REDACTED]&alt=sse`;
 
     const streamBody: Record<string, unknown> = {
-      contents: [{ parts: [{ text: prompt }] }],
+      contents,
+      systemInstruction: { parts: [{ text: systemInstruction }] },
       generationConfig: {
         temperature,
         topK: 40,
         topP: 0.95,
         maxOutputTokens: 2048,
       },
+      // Gemini 3 reasoning: high thinking, do not include thought text in stream (only signatures)
+      thinkingConfig: { thinkingLevel, includeThoughts: false },
     };
     if (cachedContent) {
       streamBody.cachedContent = cachedContent;
-    }
-    if (thinkingLevel) {
-      // Gemini 3 thinking-level control; older models may ignore or error
-      streamBody.thinkingConfig = { thinkingLevel };
     }
 
     // Call Gemini with streaming enabled

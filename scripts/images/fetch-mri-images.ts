@@ -773,7 +773,7 @@ async function saveMediaAsset(
         sequenceType: analysis.sequenceType,
         detectedFinding: analysis.detectedFinding,
       },
-      status: 'approved',
+      status: 'active',
       approvalStatus: 'approved',
       modality: 'mri',
       explanation: condition.visualFindings,

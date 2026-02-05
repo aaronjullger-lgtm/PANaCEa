@@ -1,0 +1,5 @@
+# FSRS Optimizer sidecar for Google Cloud Functions (2nd Gen)
+# PyPI: https://pypi.org/project/fsrs-optimizer/
+fsrs-optimizer>=4.0.0
+# For local run with Functions Framework (optional; GCF provides runtime)
+functions-framework>=3.0.0

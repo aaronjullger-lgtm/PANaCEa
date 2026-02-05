@@ -13,6 +13,8 @@ interface BookmarksPanelProps {
   onRemoveBookmark: (question: Question) => void;
   onViewQuestion: (question: Question) => void;
   onClose: () => void;
+  /** Optional: Start a session when user has no bookmarks */
+  onStartSession?: () => void;
 }
 
 export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
@@ -20,6 +22,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
   onRemoveBookmark,
   onViewQuestion,
   onClose,
+  onStartSession,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -128,7 +131,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
               placeholder="Search bookmarks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:border-transparent outline-none"
             />
           </div>
 
@@ -166,20 +169,31 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
         {/* Bookmarks List */}
         <div className="flex-1 overflow-y-auto p-4">
           {sortedBookmarks.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-slate-400 dark:text-slate-600 mb-4">
-                <Bookmark className="w-16 h-16 mx-auto" />
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="p-4 rounded-full bg-[var(--color-bg-tertiary)] mb-4">
+                <Bookmark className="w-12 h-12 text-[var(--color-text-muted)]" />
               </div>
-              <p className="text-slate-600 dark:text-slate-400 text-lg mb-2">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
                 {bookmarkedQuestions.length === 0
                   ? 'No bookmarks yet'
                   : 'No bookmarks match your search'}
-              </p>
-              <p className="text-sm text-slate-500 dark:text-slate-500">
+              </h3>
+              <p className="text-sm text-[var(--color-text-muted)] mb-6 max-w-md">
                 {bookmarkedQuestions.length === 0
-                  ? 'Bookmark important questions while studying to find them quickly later'
-                  : 'Try adjusting your search or filters'}
+                  ? 'Bookmark important questions while studying to find them quickly later.'
+                  : 'Try adjusting your search or filters.'}
               </p>
+              {bookmarkedQuestions.length === 0 && onStartSession && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onStartSession();
+                  }}
+                  className="px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold rounded-xl hover:opacity-90 transition-opacity"
+                >
+                  Start your first session
+                </button>
+              )}
             </div>
           ) : (
             <div className="space-y-3">
@@ -202,7 +216,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                           <span className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-medium rounded">
                             {question.system || question.topic}
                           </span>
-                          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+                          <span className="text-sm font-semibold text-[var(--color-text-primary)]">
                             {question.condition}
                           </span>
                         </div>

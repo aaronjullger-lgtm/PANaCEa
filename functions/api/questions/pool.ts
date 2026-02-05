@@ -366,7 +366,9 @@ async function getFromPreGeneratedPool(
     preGenQuestions = cachedQuestions;
     remaining = cachedQuestions.length;
   } else {
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = {
+      validationStatus: { not: 'rejected' }, // Kill switch: rejected questions are pulled from pool
+    };
     if (systems?.length) where.system = { in: systems };
     else if (system) where.system = system;
     if (difficulty) where.difficulty = difficulty;

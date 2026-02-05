@@ -208,6 +208,53 @@ export async function loadConditions(): Promise<Record<string, ConditionEntry | 
  */
 export const CONDITIONS: Record<string, ConditionEntry | undefined> = {};
 
+/**
+ * Merge multiple ConditionContent values into one (e.g. for consolidated sections).
+ * Strings and array items are combined into a single string with paragraph/list separation.
+ */
+export function mergeConditionContent(contents: (ConditionContent | undefined)[]): ConditionContent {
+  const parts: string[] = [];
+
+  for (const content of contents) {
+    if (content == null) continue;
+    if (typeof content === 'string') {
+      const trimmed = content.trim();
+      if (trimmed && trimmed.toUpperCase() !== PLACEHOLDER_TEXT) parts.push(trimmed);
+    } else if (Array.isArray(content)) {
+      const items = content
+        .filter((item): item is string => typeof item === 'string')
+        .map((s) => s.trim())
+        .filter((s) => s && s.toUpperCase() !== PLACEHOLDER_TEXT);
+      if (items.length > 0) parts.push(items.map((s) => `- ${s}`).join('\n'));
+    } else if (
+      typeof content === 'object' &&
+      content !== null &&
+      ('type' in content && (content as { type: string }).type === 'steps')
+    ) {
+      const steps = (content as { items: { title: string; content: string }[] }).items;
+      if (steps?.length)
+        parts.push(
+          steps.map((s) => `**${s.title}**\n${s.content}`).join('\n\n')
+        );
+    } else if (
+      typeof content === 'object' &&
+      content !== null &&
+      ('type' in content && (content as { type: string }).type === 'grid')
+    ) {
+      const grid = (content as { items: Record<string, string> }).items;
+      if (grid && typeof grid === 'object')
+        parts.push(
+          Object.entries(grid)
+            .map(([k, v]) => `**${k}:** ${v}`)
+            .join('\n')
+        );
+    }
+  }
+
+  if (parts.length === 0) return null;
+  return parts.join('\n\n');
+}
+
 export function isMeaningfulContent(value?: unknown): boolean {
   if (value == null) return false;
 

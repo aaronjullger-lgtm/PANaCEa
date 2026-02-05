@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { API_ENDPOINTS, buildApiUrl } from '@/lib/utils/apiConfig';
-import { SmartPDFViewer, type CitationHighlight } from '@/src/components/library';
+import { SmartPDFViewer, type CitationHighlight } from '@/components/library';
 
 interface StudyCompanionPageProps {
   onExit: () => void;

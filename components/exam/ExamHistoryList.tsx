@@ -175,11 +175,11 @@ export function ExamHistoryList({
         <div className="grid grid-cols-4 gap-4">
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Total Exams</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
+            <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.total}</p>
           </div>
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Completed</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.completed}</p>
+            <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.completed}</p>
           </div>
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Pass Rate</p>
@@ -235,7 +235,7 @@ export function ExamHistoryList({
               {/* Left side - Info */}
               <div className="flex-grow">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-slate-900 dark:text-white">
+                  <span className="font-semibold text-[var(--color-text-primary)]">
                     {attempt.configName}
                   </span>
                   {attempt.status === 'completed' &&

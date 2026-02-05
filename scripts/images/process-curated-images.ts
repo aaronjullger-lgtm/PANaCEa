@@ -331,7 +331,7 @@ async function main() {
             quizReason: analysis.quizReason,
           },
           explanation: analysis.explanation,
-          status: analysis.quizSuitability === 'excellent' ? 'approved' : 'pending_review',
+          status: analysis.quizSuitability === 'excellent' ? 'active' : 'pending_review',
           approvalStatus: analysis.quizSuitability === 'excellent' ? 'approved' : 'pending',
           isAnnotated: analysis.hasProblematicAnnotations,
           usageType: analysis.hasProblematicAnnotations ? 'reference' : 'quiz',

@@ -176,7 +176,7 @@ export function DDxRankingStep({
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
           <Brain className="h-5 w-5 text-[var(--color-accent)]" />
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
             Rank the Differential Diagnoses
           </h3>
         </div>

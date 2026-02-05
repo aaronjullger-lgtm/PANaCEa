@@ -74,6 +74,7 @@ import {
   FlaskConical,
   Scan,
   TestTube,
+  AlertTriangle,
 } from 'lucide-react';
 import { Sparkline } from '@/components/ui/Sparkline';
 import { ChatSkeleton } from '@/components/loading/SkeletonLoader';
@@ -152,6 +153,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [showLiveSession, setShowLiveSession] = useState(false);
   const [enhancedScoreReport, setEnhancedScoreReport] = useState<OSCEScoreReport | null>(null);
   const [gradeResult, setGradeResult] = useState<OsceGradeResult | null>(null);
+  const [gradeResultLoading, setGradeResultLoading] = useState(false);
+  const [emrTab, setEmrTab] = useState<'hpi' | 'pmh' | 'meds' | 'labs'>('hpi');
 
   // Initialize Enhanced OSCE Hook
   const enhancedOSCE = useEnhancedOSCE({
@@ -214,6 +217,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         setSecretDiagnosis(persona.secretDiagnosis || null);
       } catch (error) {
         console.error('Failed to generate patient persona:', error);
+        toast.error('Could not load patient personality. Proceeding with default.');
       }
     };
 
@@ -344,6 +348,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         }
       } catch (e) {
         console.error('Failed to start OSCE session', e);
+        toast.error('Session could not be recorded. Your encounter will still run locally.');
       }
 
       setSession({
@@ -416,7 +421,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       }
     } catch (error) {
       console.error('Error getting patient response:', error);
-      // Fallback or error toast could go here
+      toast.error('Could not get patient response. Please try again.');
     } finally {
       setIsTyping(false);
     }
@@ -442,6 +447,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       setPhase('treatment');
     } catch (error) {
       console.error('Error submitting diagnosis:', error);
+      toast.error('Could not evaluate diagnosis. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -477,6 +483,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       setExamAction('');
     } catch (error) {
       console.error('Exam error:', error);
+      toast.error('Could not perform exam. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -498,6 +505,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       setDiagnosticOrder('');
     } catch (error) {
       console.error('Diagnostic error:', error);
+      toast.error('Could not order or retrieve diagnostic result. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -547,6 +555,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setIsLoading(true);
     setPreceptorFeedback(null);
     setGradeResult(null);
+    setGradeResultLoading(true);
     setStreamedDebriefText('');
     setIsStreamingDebrief(true);
     setViewState('results');
@@ -556,6 +565,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     const sessionId = session?.id;
     if (!sessionId) {
       setIsLoading(false);
+      setGradeResultLoading(false);
       setIsStreamingDebrief(false);
       toast.error('Session is missing. Please try again.');
       return;
@@ -575,6 +585,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     } catch (e) {
       console.error('Error completing or grading OSCE session:', e);
       toast.error('Could not save or grade session. Showing debrief only.');
+    } finally {
+      setGradeResultLoading(false);
     }
 
     try {
@@ -655,12 +667,33 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           score: fallback.score,
         },
         currentCase
-      ).catch(() => '');
+      ).catch((err) => {
+        console.error('After-action report failed', err);
+        toast.error('Summary report could not be generated.');
+        return '';
+      });
       setAar(report);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleRetryGrading = useCallback(async () => {
+    if (!session?.id) return;
+    setGradeResultLoading(true);
+    try {
+      const token = await getToken();
+      const authToken = token ?? '';
+      const rubricResult = await gradeOSCESession(session.id, authToken);
+      if (rubricResult) setGradeResult(rubricResult);
+      else toast.error('Grading still unavailable. Try again later.');
+    } catch (e) {
+      console.error('Retry grading failed', e);
+      toast.error('Could not load rubric. Try again later.');
+    } finally {
+      setGradeResultLoading(false);
+    }
+  }, [session?.id, getToken]);
 
   const advancePhase = (target?: EncounterPhase) => {
     if (target) {
@@ -744,7 +777,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     return (
       <div className="min-h-screen bg-slate-950 text-white transition-colors duration-300">
         {/* Header */}
-        <div className="border-b border-slate-800 bg-slate-900 sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center shadow-sm">
@@ -993,7 +1026,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   if (viewState === 'loading_encounter') {
     return (
       <div className="min-h-screen bg-slate-950 text-white">
-        <div className="border-b border-slate-800 bg-slate-900 sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center shadow-sm border border-slate-800">
@@ -1074,7 +1107,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     return (
       <div className="min-h-screen bg-slate-950 text-white">
         {/* Header */}
-        <div className="border-b border-slate-800 bg-slate-900 sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center shadow-sm border border-slate-800">
@@ -1243,6 +1276,59 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 py-6">
+          {/* Phase progression stepper */}
+          <nav
+            className="flex flex-wrap items-center gap-2 sm:gap-4 mb-6 py-3 px-4 rounded-xl bg-slate-900/80 border border-slate-800"
+            aria-label="Encounter phase"
+          >
+            {(
+              [
+                { id: 'history' as const, label: 'History' },
+                { id: 'physical' as const, label: 'Physical Exam' },
+                { id: 'diagnostic' as const, label: 'Diagnostics' },
+                { id: 'diagnosis' as const, label: 'Diagnosis' },
+                { id: 'treatment' as const, label: 'Treatment' },
+              ] as const
+            ).map((step, idx) => {
+              const isCurrent = phase === step.id;
+              const order = ['history', 'physical', 'diagnostic', 'diagnosis', 'treatment'].indexOf(phase);
+              const stepOrder = ['history', 'physical', 'diagnostic', 'diagnosis', 'treatment'].indexOf(step.id);
+              const isPast = stepOrder < order;
+              const isFuture = stepOrder > order;
+              return (
+                <React.Fragment key={step.id}>
+                  {idx > 0 && (
+                    <ChevronRight
+                      className={`w-4 h-4 flex-shrink-0 ${
+                        isPast ? 'text-slate-500' : isCurrent ? 'text-[var(--color-accent)]' : 'text-slate-600'
+                      }`}
+                      aria-hidden
+                    />
+                  )}
+                  <span
+                    className={`text-sm font-medium transition-colors ${
+                      isCurrent
+                        ? 'text-white'
+                        : isPast
+                          ? 'text-slate-400'
+                          : 'text-slate-500'
+                    }`}
+                    aria-current={isCurrent ? 'step' : undefined}
+                  >
+                    {step.label}
+                  </span>
+                </React.Fragment>
+              );
+            })}
+            <span className="ml-auto text-xs text-slate-500">
+              {phase === 'history' && 'Next: gather history and move to physical exam'}
+              {phase === 'physical' && 'Next: perform focused physical exam'}
+              {phase === 'diagnostic' && 'Next: order labs/imaging as needed'}
+              {phase === 'diagnosis' && 'Next: submit your diagnosis'}
+              {phase === 'treatment' && 'Next: submit treatment plan'}
+            </span>
+          </nav>
+
           <div className="grid md:grid-cols-2 gap-6">
             {/* Left Column: Patient Info & Inputs */}
             <div className="space-y-4">
@@ -1289,18 +1375,83 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       transition={{ duration: 0.2 }}
                       className="px-4 pb-4 md:px-6 md:pb-6 space-y-3"
                     >
-                      <div className="bg-slate-950 rounded-lg p-4 border border-slate-800">
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
-                          Chief Complaint
-                        </p>
-                        <p className="text-lg font-semibold text-white whitespace-pre-wrap">
-                          {currentCase?.chiefComplaint ? (
-                            getTranslatedText(currentCase.chiefComplaint)
-                          ) : (
-                            <span className="inline-block w-32 h-4 bg-slate-800 rounded animate-pulse"></span>
-                          )}
-                        </p>
-                      </div>
+                      {clinicalFidelity.emrInterface ? (
+                        <>
+                          <div className="flex border-b border-slate-700" role="tablist" aria-label="EMR sections">
+                            {(['hpi', 'pmh', 'meds', 'labs'] as const).map((tab) => (
+                              <button
+                                key={tab}
+                                type="button"
+                                role="tab"
+                                aria-selected={emrTab === tab ? 'true' : 'false'}
+                                onClick={() => setEmrTab(tab)}
+                                className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                                  emrTab === tab
+                                    ? 'border-[var(--color-accent)] text-white'
+                                    : 'border-transparent text-slate-400 hover:text-slate-300'
+                                }`}
+                              >
+                                {tab === 'hpi' ? 'HPI' : tab === 'pmh' ? 'PMH' : tab === 'meds' ? 'Meds' : 'Labs'}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="bg-slate-950 rounded-lg p-4 border border-slate-800 min-h-[120px]" role="tabpanel">
+                            {emrTab === 'hpi' && (
+                              <>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Chief Complaint</p>
+                                <p className="text-lg font-semibold text-white whitespace-pre-wrap mb-4">
+                                  {currentCase?.chiefComplaint ? getTranslatedText(currentCase.chiefComplaint) : '—'}
+                                </p>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">History of Present Illness</p>
+                                <p className="text-sm text-slate-300 whitespace-pre-wrap">
+                                  {currentCase?.historyData && typeof currentCase.historyData === 'object'
+                                    ? (currentCase.historyData['HPI'] ?? currentCase.historyData['hpi'] ?? currentCase.historyData['presentIllness'] ?? (Object.entries(currentCase.historyData).map(([k, v]) => `${k}: ${v}`).join('\n\n') || 'No HPI documented.'))
+                                    : 'No HPI documented.'}
+                                </p>
+                              </>
+                            )}
+                            {emrTab === 'pmh' && (
+                              <p className="text-sm text-slate-300 whitespace-pre-wrap">
+                                {currentCase?.historyData && typeof currentCase.historyData === 'object'
+                                  ? (currentCase.historyData['pastMedicalHistory'] ?? currentCase.historyData['PMH'] ?? currentCase.historyData['pmh'] ?? currentCase.historyData['Past Medical History'] ?? (Object.entries(currentCase.historyData).filter(([k]) => /pmh|past|medical|history/i.test(k)).map(([k, v]) => `${k}: ${v}`).join('\n\n') || 'No PMH documented.'))
+                                  : 'No PMH documented.'}
+                              </p>
+                            )}
+                            {emrTab === 'meds' && (
+                              <p className="text-sm text-slate-300 whitespace-pre-wrap">
+                                {currentCase?.historyData && typeof currentCase.historyData === 'object'
+                                  ? (currentCase.historyData['medications'] ?? currentCase.historyData['meds'] ?? currentCase.historyData['Meds'] ?? currentCase.historyData['Medications'] ?? (Object.entries(currentCase.historyData).filter(([k]) => /med|drug|rx/i.test(k)).map(([k, v]) => `${k}: ${v}`).join('\n\n') || 'No medications documented.'))
+                                  : 'No medications documented.'}
+                              </p>
+                            )}
+                            {emrTab === 'labs' && (
+                              <div className="text-sm text-slate-300 space-y-1">
+                                {currentCase?.labData && typeof currentCase.labData === 'object' && Object.keys(currentCase.labData).length > 0
+                                  ? Object.entries(currentCase.labData).map(([k, v]) => (
+                                      <div key={k} className="flex justify-between gap-4 py-1 border-b border-slate-800 last:border-0">
+                                        <span className="font-medium text-slate-400">{k}</span>
+                                        <span className="font-mono">{String(v)}</span>
+                                      </div>
+                                    ))
+                                  : 'No labs documented.'}
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="bg-slate-950 rounded-lg p-4 border border-slate-800">
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                            Chief Complaint
+                          </p>
+                          <p className="text-lg font-semibold text-white whitespace-pre-wrap">
+                            {currentCase?.chiefComplaint ? (
+                              getTranslatedText(currentCase.chiefComplaint)
+                            ) : (
+                              <span className="inline-block w-32 h-4 bg-slate-800 rounded animate-pulse"></span>
+                            )}
+                          </p>
+                        </div>
+                      )}
 
                       <div className="rounded-lg p-4 border border-slate-800 space-y-3 bg-slate-950">
                         <div className="flex items-center justify-between">
@@ -1823,7 +1974,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md z-50 flex items-center justify-center p-4"
               onClick={() => setShowOrderPanel(false)}
             >
               <motion.div
@@ -1865,7 +2016,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md z-50 flex items-center justify-center p-4"
               onClick={() => setShowExamPanel(false)}
             >
               <motion.div
@@ -1915,7 +2066,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     if (showStreaming && !preceptorFeedback) {
       return (
         <div className="min-h-screen bg-slate-950 text-white">
-          <div className="border-b border-slate-800 bg-slate-900 sticky top-0 z-10 shadow-sm">
+          <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
             <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Award className="w-8 h-8 text-slate-400" />
@@ -1952,7 +2103,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       return (
       <div className="min-h-screen bg-slate-950 text-white">
         {/* Header */}
-        <div className="border-b border-slate-800 bg-slate-900 sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Award className="w-8 h-8 text-slate-400" />
@@ -2144,54 +2295,145 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </motion.div>
           )}
 
-          {/* Rubric Checklist (from grade API) */}
-          {gradeResult && (gradeResult.checklist?.length > 0 || gradeResult.redFlagsMissed?.length > 0) && (
+          {/* Dangerous or inappropriate actions */}
+          {preceptorFeedback.dangerousActions?.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.52 }}
-              className="bg-slate-900 rounded-xl p-6 border border-slate-800"
+              transition={{ delay: 0.51 }}
+              className="bg-slate-900 rounded-xl p-6 border border-red-900/50"
             >
               <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
-                <ClipboardList className="w-5 h-5 text-slate-500" /> Rubric Checklist
+                <AlertTriangle className="w-5 h-5 text-red-500" /> Dangerous or Inappropriate Actions
               </h3>
-              {gradeResult.checklist?.length > 0 && (
-                <ul className="space-y-2 mb-4">
-                  {gradeResult.checklist.map((item, idx) => (
-                    <li
-                      key={idx}
-                      className={`flex items-start gap-2 text-sm rounded p-3 border ${
-                        item.status === 'PASS'
-                          ? 'bg-emerald-950/30 border-emerald-800 text-slate-300'
-                          : 'bg-slate-950 border-slate-800 text-slate-300'
-                      }`}
-                    >
-                      {item.status === 'PASS' ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                      ) : (
-                        <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                      )}
-                      <span className="font-medium">{item.item}</span>
-                      {item.feedback && (
-                        <span className="text-slate-400 text-xs block mt-1 pl-6">{item.feedback}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {gradeResult.redFlagsMissed?.length > 0 && (
-                <div>
-                  <p className="text-sm font-semibold text-red-400 mb-2">Red flags missed:</p>
-                  <ul className="space-y-1">
-                    {gradeResult.redFlagsMissed.map((flag, idx) => (
-                      <li key={idx} className="text-sm text-slate-300 flex items-center gap-2">
-                        <XCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
-                        {flag}
+              <p className="text-sm text-slate-400 mb-3">
+                The preceptor identified the following safety or appropriateness concerns:
+              </p>
+              <ul className="space-y-2">
+                {preceptorFeedback.dangerousActions.map((action, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-start gap-2 text-sm text-slate-300 bg-slate-950 rounded p-3 border border-slate-800"
+                  >
+                    <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                    <span>{action}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          )}
+
+          {/* Rubric Checklist (from grade API) – always show section: loading, unavailable, or checklist */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.52 }}
+            className="bg-slate-900 rounded-xl p-6 border border-slate-800"
+          >
+            <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-slate-500" /> Rubric Checklist
+            </h3>
+            {gradeResultLoading ? (
+              <div className="space-y-2" aria-busy="true" aria-label="Grading in progress">
+                <div className="h-4 bg-slate-700 rounded animate-pulse w-3/4" />
+                <div className="h-4 bg-slate-700 rounded animate-pulse w-1/2" />
+                <div className="h-4 bg-slate-700 rounded animate-pulse w-5/6" />
+                <p className="text-sm text-slate-400 mt-2">Grading…</p>
+              </div>
+            ) : gradeResult && (gradeResult.checklist?.length > 0 || gradeResult.redFlagsMissed?.length > 0) ? (
+              <>
+                {gradeResult.checklist?.length > 0 && (
+                  <ul className="space-y-2 mb-4">
+                    {gradeResult.checklist.map((item, idx) => (
+                      <li
+                        key={idx}
+                        className={`flex items-start gap-2 text-sm rounded p-3 border ${
+                          item.status === 'PASS'
+                            ? 'bg-emerald-950/30 border-emerald-800 text-slate-300'
+                            : 'bg-slate-950 border-slate-800 text-slate-300'
+                        }`}
+                      >
+                        {item.status === 'PASS' ? (
+                          <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                        )}
+                        <span className="font-medium">{item.item}</span>
+                        {item.feedback && (
+                          <span className="text-slate-400 text-xs block mt-1 pl-6">{item.feedback}</span>
+                        )}
                       </li>
                     ))}
                   </ul>
-                </div>
-              )}
+                )}
+                {gradeResult.redFlagsMissed?.length > 0 && (
+                  <div>
+                    <p className="text-sm font-semibold text-red-400 mb-2">Red flags missed:</p>
+                    <ul className="space-y-1">
+                      {gradeResult.redFlagsMissed.map((flag, idx) => (
+                        <li key={idx} className="text-sm text-slate-300 flex items-center gap-2">
+                          <XCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
+                          {flag}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
+                <p className="font-medium text-slate-300">Rubric: Unavailable for this case</p>
+                <p className="text-sm text-slate-400 mt-1">
+                  Grading could not be completed; you still have Preceptor feedback below.
+                </p>
+                {session?.id && (
+                  <button
+                    type="button"
+                    onClick={handleRetryGrading}
+                    disabled={gradeResultLoading}
+                    className="mt-3 px-3 py-2 text-sm font-medium rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white transition-colors"
+                  >
+                    {gradeResultLoading ? 'Grading…' : 'Retry grading'}
+                  </button>
+                )}
+              </div>
+            )}
+          </motion.div>
+
+          {/* Bedside Manner (from Ghost Listener / soft skills analysis) */}
+          {gradeResult?.softSkillsReport && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.53 }}
+              className="bg-slate-900 rounded-xl p-6 border border-slate-800"
+            >
+              <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+                <Heart className="w-5 h-5 text-slate-500" aria-hidden />
+                Bedside Manner
+              </h3>
+              <div className="grid gap-3">
+                {(['empathy', 'professionalism', 'pacing'] as const).map((key) => {
+                  const item = gradeResult.softSkillsReport![key];
+                  if (!item) return null;
+                  const pct = (item.score / 5) * 100;
+                  return (
+                    <div key={key} className="bg-slate-950 rounded-lg p-3 border border-slate-800">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-medium text-slate-300 capitalize">{key}</span>
+                        <span
+                          className={`text-sm font-bold ${
+                            pct >= 80 ? 'text-emerald-400' : pct >= 60 ? 'text-amber-400' : 'text-red-400'
+                          }`}
+                        >
+                          {item.score}/5
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400">{item.feedback}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </motion.div>
           )}
 
@@ -2307,7 +2549,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     return (
       <div className="min-h-screen bg-background text-foreground">
         {/* Header */}
-        <div className="border-b border-slate-800 bg-slate-900 sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <MessageSquare className="w-8 h-8 text-slate-400" />

@@ -48,7 +48,9 @@ const Loader: React.FC<LoaderProps> = ({ message = 'Loading...', forceDark = fal
           transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }}
         />
       </div>
-      <p className={`mt-4 ${textClass} font-semibold`}>{message}</p>
+      <p className={`mt-4 ${textClass} font-semibold`} role="status" aria-live="polite">
+        {message}
+      </p>
     </motion.div>
   );
 };

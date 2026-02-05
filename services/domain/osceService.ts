@@ -126,6 +126,13 @@ export async function completeOSCESession(
   }
 }
 
+/** Bedside manner / soft skills from Ghost Listener analysis */
+export interface SoftSkillsReport {
+  empathy: { score: number; feedback: string };
+  professionalism: { score: number; feedback: string };
+  pacing: { score: number; feedback: string };
+}
+
 /** Grade API response: checklist (item, status, feedback), redFlagsMissed, score, etc. */
 export interface OsceGradeResult {
   resultId: string;
@@ -134,6 +141,7 @@ export interface OsceGradeResult {
   redFlagsMissed: string[];
   clinicalReasoningScore: number;
   billingCodeSuggestion: string;
+  softSkillsReport?: SoftSkillsReport | null;
   conceptGapCreated?: boolean;
 }
 

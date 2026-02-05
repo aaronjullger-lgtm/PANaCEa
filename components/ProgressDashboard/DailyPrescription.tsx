@@ -107,7 +107,7 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
               Daily Prescription
             </span>
           </div>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+          <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
             Build Your Profile
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
@@ -121,6 +121,9 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
             <Target className="w-4 h-4" />
             Start Any Session to Begin
           </button>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
+            Complete 5+ questions to unlock.
+          </p>
         </div>
       </motion.div>
     );
@@ -156,7 +159,7 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
         </div>
 
         {/* Main Focus */}
-        <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-1">
+        <h3 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)] mb-1">
           Focus: <span className="text-amber-600 dark:text-amber-400">{focusSystem.label}</span>
         </h3>
 
@@ -165,7 +168,7 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
           <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
             <Target className="w-4 h-4" />
             <span>
-              <span className="font-light text-2xl text-slate-900 dark:text-white">
+              <span className="font-light text-2xl text-[var(--color-text-primary)]">
                 {focusSystem.accuracy}%
               </span>
               <span className="text-xs ml-1">accuracy</span>

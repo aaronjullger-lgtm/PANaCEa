@@ -11,6 +11,7 @@ import {
   exportMissedTodayToAnki,
   type AnkiExportOptions,
 } from '../../lib/services/ankiExportService';
+import { EXPORT_TO_REVIEW } from '@/config/labels';
 import type { Question, PerformanceRecord } from '../../types';
 
 interface AnkiExportPanelProps {
@@ -64,75 +65,75 @@ export const AnkiExportPanel: React.FC<AnkiExportPanelProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl shadow-sm p-6 border border-[var(--color-border)]">
       <div className="flex items-center gap-3 mb-4">
-        <FileDown className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Anki Export</h2>
+        <FileDown className="w-6 h-6 text-[var(--color-accent)]" />
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Anki Export</h2>
       </div>
 
-      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+      <p className="text-sm text-[var(--color-text-secondary)] mb-4">
         Export questions you missed today to your Anki deck for spaced repetition. The file will be
         downloaded in a format that Anki can import directly.
       </p>
 
       {/* Export Options */}
-      <div className="space-y-3 mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+      <div className="space-y-3 mb-6 p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Deck Name:</label>
+          <label className="text-sm font-medium text-[var(--color-text-secondary)]">Deck Name:</label>
           <input
             type="text"
             value={options.deckName}
             onChange={(e) => setOptions({ ...options, deckName: e.target.value })}
-            className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-1 text-sm border border-[var(--color-border)] rounded-md bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)]"
             placeholder="PANaCEa_Missed_Questions"
           />
         </div>
 
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="text-sm font-medium text-[var(--color-text-secondary)]">
             Include Rationale
           </label>
           <input
             type="checkbox"
             checked={options.includeRationale}
             onChange={(e) => setOptions({ ...options, includeRationale: e.target.checked })}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            className="w-4 h-4 text-[var(--color-accent)] border-[var(--color-border)] rounded focus:ring-[var(--color-focus-ring)]"
           />
         </div>
 
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="text-sm font-medium text-[var(--color-text-secondary)]">
             Include Pearls
           </label>
           <input
             type="checkbox"
             checked={options.includePearls}
             onChange={(e) => setOptions({ ...options, includePearls: e.target.checked })}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            className="w-4 h-4 text-[var(--color-accent)] border-[var(--color-border)] rounded focus:ring-[var(--color-focus-ring)]"
           />
         </div>
 
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="text-sm font-medium text-[var(--color-text-secondary)]">
             Tag with System
           </label>
           <input
             type="checkbox"
             checked={options.tagWithSystem}
             onChange={(e) => setOptions({ ...options, tagWithSystem: e.target.checked })}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            className="w-4 h-4 text-[var(--color-accent)] border-[var(--color-border)] rounded focus:ring-[var(--color-focus-ring)]"
           />
         </div>
 
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="text-sm font-medium text-[var(--color-text-secondary)]">
             Tag with Condition
           </label>
           <input
             type="checkbox"
             checked={options.tagWithCondition}
             onChange={(e) => setOptions({ ...options, tagWithCondition: e.target.checked })}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            className="w-4 h-4 text-[var(--color-accent)] border-[var(--color-border)] rounded focus:ring-[var(--color-focus-ring)]"
           />
         </div>
       </div>
@@ -141,10 +142,10 @@ export const AnkiExportPanel: React.FC<AnkiExportPanelProps> = ({
       <button
         onClick={handleSyncMissed}
         disabled={isExporting}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50 text-[var(--color-text-inverse)] font-semibold rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:ring-offset-2"
       >
         <Download className="w-5 h-5" />
-        {isExporting ? 'Exporting...' : 'Export To Review'}
+        {isExporting ? 'Exporting...' : EXPORT_TO_REVIEW}
       </button>
 
       {/* Export Result Message */}
@@ -152,27 +153,27 @@ export const AnkiExportPanel: React.FC<AnkiExportPanelProps> = ({
         <div
           className={`mt-4 p-4 rounded-lg flex items-start gap-3 ${
             exportResult.success
-              ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-              : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+              ? 'bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30'
+              : 'bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30'
           }`}
         >
           {exportResult.success ? (
-            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+            <CheckCircle className="w-5 h-5 text-[var(--color-data-pass)] flex-shrink-0 mt-0.5" />
           ) : (
-            <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+            <XCircle className="w-5 h-5 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />
           )}
           <div className="flex-1">
             <p
               className={`text-sm font-medium ${
                 exportResult.success
-                  ? 'text-green-800 dark:text-green-300'
-                  : 'text-red-800 dark:text-red-300'
+                  ? 'text-[var(--color-data-pass)]'
+                  : 'text-[var(--color-data-fail)]'
               }`}
             >
               {exportResult.message}
             </p>
             {exportResult.success && (
-              <p className="text-xs text-green-700 dark:text-green-400 mt-1">
+              <p className="text-xs text-[var(--color-data-pass)] mt-1">
                 Import the downloaded file into Anki using File → Import
               </p>
             )}
@@ -181,11 +182,11 @@ export const AnkiExportPanel: React.FC<AnkiExportPanelProps> = ({
       )}
 
       {/* Instructions */}
-      <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-        <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
+      <div className="mt-6 p-4 bg-[var(--color-accent-light)] rounded-lg border border-[var(--color-border)]">
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">
           How to Import into Anki:
         </h3>
-        <ol className="text-xs text-blue-800 dark:text-blue-400 space-y-1 list-decimal list-inside">
+        <ol className="text-xs text-[var(--color-text-secondary)] space-y-1 list-decimal list-inside">
           <li>Open Anki on your computer</li>
           <li>Go to File → Import</li>
           <li>Select the downloaded .txt file</li>

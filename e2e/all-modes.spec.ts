@@ -231,20 +231,15 @@ test.describe('Critical API Endpoint Tests', () => {
 
     console.log(`📊 Status: ${response.status()}`);
 
-    // Should not return 500
-    expect(response.status()).not.toBe(500);
+    expect(response.status()).toBe(200);
 
-    // Should return 200 or 404 (empty results)
-    expect([200, 404]).toContain(response.status());
-
-    // Should return JSON
     const contentType = response.headers()['content-type'];
     expect(contentType).toContain('application/json');
 
-    if (response.status() === 200) {
-      const data = await response.json();
-      console.log(`✅ Returned ${Array.isArray(data) ? data.length : 0} media items`);
-    }
+    const body = await response.json();
+    expect(body).toHaveProperty('data');
+    expect(Array.isArray(body.data)).toBe(true);
+    console.log(`✅ Returned ${body.data?.length ?? 0} media items`);
 
     console.log('✅ Media API endpoint - PASSED\n');
   });

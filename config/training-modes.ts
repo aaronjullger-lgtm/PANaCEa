@@ -434,6 +434,17 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
 
   // --- ADDITIONAL MODES FOR COVERAGE ---
   {
+    id: 'cram_mode',
+    label: 'Cram Mode',
+    description: '50 high-yield PANCE conditions – rapid last-minute review',
+    category: 'question_practice',
+    iconName: 'Zap',
+    theme: 'amber',
+    route: '/modes/cram-mode',
+    estimatedMinutes: 15,
+  },
+  // Polypharmacy: planned; enable when backend/UI is ready. See STRATEGIC_10_SPRINT_ROADMAP.md.
+  {
     id: 'polypharmacy_puzzle',
     label: 'Polypharmacy Puzzle',
     description: 'Manage complex med lists safely',

@@ -49,6 +49,7 @@ const TelemetrySchema = z
   .strict();
 
 // Request validation schema
+// questionId must be a PreGeneratedQuestion id (submit-review looks up via prisma.preGeneratedQuestion)
 const DrillSubmitReviewSchema = z.object({
   questionId: z.string().uuid(),
   selectedAnswer: z.union([z.string(), z.number()]),
@@ -59,6 +60,8 @@ const DrillSubmitReviewSchema = z.object({
   timezone: z.string().optional(),
   wakeTimeHHMM: z.string().optional(),
   telemetry: TelemetrySchema.optional(),
+  /** When 'main' or omitted, review is counted for FSRS (UserProgress.reviewHistory). When 'cram' or 'rapid_recall', FSRS is not updated and Card/UserTopicProgress are not modified. */
+  sessionType: z.enum(['main', 'cram', 'rapid_recall']).optional(),
 });
 
 export const onRequestOptions = async (context: any) => {
@@ -86,6 +89,7 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       timezone,
       wakeTimeHHMM,
       telemetry,
+      sessionType,
     } = validated;
 
     if (!env.DATABASE_URL) {
@@ -136,6 +140,7 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
         timezone,
         wakeTimeHHMM,
         telemetry,
+        sessionType,
       },
       question,
       { info: logger.info.bind(logger), warn: logger.warn.bind(logger) }

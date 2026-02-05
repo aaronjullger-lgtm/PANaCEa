@@ -19,6 +19,13 @@ export type StreamCompleteCallback = (fullText: string) => void;
  */
 export type StreamErrorCallback = (error: Error) => void;
 
+/** Single turn for Deep Think multi-turn (history + thoughtSignature). */
+export interface StreamHistoryTurn {
+  role: 'user' | 'model';
+  text: string;
+  thoughtSignature?: string;
+}
+
 /**
  * Options for streaming requests
  */
@@ -29,11 +36,19 @@ export interface StreamOptions {
   cachedContent?: string;
   /** Optional: Bearer token for authenticated requests (required when backend requires auth) */
   token?: string | null;
-   /** Optional: Gemini 3 thinking level for reasoning depth control */
+  /** Optional: Gemini 3 thinking level for reasoning depth control */
   thinkingLevel?: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
+  /** Multi-turn history; include thoughtSignature on model turns to preserve reasoning chain */
+  history?: StreamHistoryTurn[];
+  /** Previous model turn thought signature(s); send back to preserve reasoning chain */
+  previousThoughtSignatures?: string[];
+  /** System instruction (e.g. PANaCEa Deep Think: rank differentials, explain pathophysiology of error) */
+  systemInstruction?: string;
   onChunk?: StreamChunkCallback;
   onComplete?: StreamCompleteCallback;
   onError?: StreamErrorCallback;
+  /** Called when server sends thoughtSignatures (Gemini 3); pass them in next request as previousThoughtSignatures */
+  onThoughtSignatures?: (signatures: string[]) => void;
   signal?: AbortSignal; // For cancellation support
 }
 
@@ -61,14 +76,18 @@ export async function streamGeminiText(
   options: StreamOptions = {}
 ): Promise<string> {
   const {
-    modelName = 'gemini-2.5-flash',
+    modelName = 'gemini-3-flash-preview',
     temperature = 0.8,
     cachedContent,
     token,
-    thinkingLevel,
+    thinkingLevel = 'HIGH',
+    history,
+    previousThoughtSignatures,
+    systemInstruction,
     onChunk,
     onComplete,
     onError,
+    onThoughtSignatures,
     signal,
   } = options;
 
@@ -79,12 +98,19 @@ export async function streamGeminiText(
       modelName,
       prompt,
       temperature,
+      thinkingLevel,
     };
     if (cachedContent && cachedContent.startsWith('cachedContents/')) {
       body.cachedContent = cachedContent;
     }
-    if (thinkingLevel) {
-      body.thinkingLevel = thinkingLevel;
+    if (history?.length) {
+      body.history = history;
+    }
+    if (previousThoughtSignatures?.length) {
+      body.previousThoughtSignatures = previousThoughtSignatures;
+    }
+    if (systemInstruction?.trim()) {
+      body.systemInstruction = systemInstruction.trim();
     }
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -156,6 +182,12 @@ export async function streamGeminiText(
               // Handle error messages in stream
               if (data.error) {
                 throw new Error(data.error);
+              }
+
+              // Gemini 3: thought signatures (send back in next request as previousThoughtSignatures)
+              const thoughtSigs = data.thoughtSignatures;
+              if (Array.isArray(thoughtSigs) && thoughtSigs.length > 0) {
+                onThoughtSignatures?.(thoughtSigs);
               }
 
               // Extract text chunk

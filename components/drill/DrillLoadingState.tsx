@@ -32,6 +32,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
     <div
       className="min-h-[500px] bg-[var(--color-bg-primary)] p-6"
       role="status"
+      aria-live="polite"
       aria-label={message}
     >
       <div className="max-w-3xl mx-auto">

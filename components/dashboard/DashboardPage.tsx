@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, useAuth } from '@clerk/clerk-react';
 import useSWR from 'swr';
 import {
   Brain,
@@ -65,15 +65,21 @@ interface RetentionData {
 }
 
 // ============================================================================
-// Data Fetcher
+// Data Fetcher (auth-aware for /api/stats/retention)
 // ============================================================================
 
-const fetcher = async (url: string) => {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Failed to fetch');
-  const data = await res.json();
-  return data.data as RetentionData;
-};
+function createRetentionFetcher(getToken: () => Promise<string | null>) {
+  return async (url: string): Promise<RetentionData> => {
+    const token = await getToken();
+    if (!token) throw new Error('Not authenticated');
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch');
+    const data = await res.json();
+    return data.data as RetentionData;
+  };
+}
 
 // ============================================================================
 // Quick Stat Card Component - Enhanced Design
@@ -175,7 +181,12 @@ interface DashboardPageProps {
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   const { user } = useUser();
-  const { data, error, isLoading } = useSWR<RetentionData>('/api/stats/retention', fetcher);
+  const { getToken } = useAuth();
+  const retentionFetcher = useCallback(createRetentionFetcher(getToken), [getToken]);
+  const { data, error, isLoading } = useSWR<RetentionData>(
+    user ? '/api/stats/retention' : null,
+    retentionFetcher
+  );
 
   const [view, setView] = useState<DashboardViewId>(() => {
     if (typeof window === 'undefined') return 'pilot';
@@ -255,9 +266,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     );
   }
 
-  const mockStreak = 7; // Replace with actual streak data
+  const mockStreak = 7; // Replace with actual streak data when API available
   const mockCardsLearned = data.totalCards;
-  const mockPANCEPredictor = 78; // Placeholder
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] via-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] p-4 md:p-6">

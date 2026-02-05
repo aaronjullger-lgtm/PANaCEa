@@ -26,6 +26,7 @@ interface CommandCenterPageProps {
   onNavigateToReference?: () => void;
   onNavigateToMyLibrary?: () => void;
   onNavigateToStudyCompanion?: () => void;
+  onNavigateToSrsFlashcards?: () => void;
   onBack: () => void;
 }
 
@@ -44,6 +45,7 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
   onNavigateToReference,
   onNavigateToMyLibrary,
   onNavigateToStudyCompanion,
+  onNavigateToSrsFlashcards,
   onBack,
 }) => {
   return (
@@ -92,6 +94,7 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
             onNavigateToReference={onNavigateToReference}
             onNavigateToMyLibrary={onNavigateToMyLibrary}
             onNavigateToStudyCompanion={onNavigateToStudyCompanion}
+            onNavigateToSrsFlashcards={onNavigateToSrsFlashcards}
           />
         </motion.div>
       </div>

@@ -23,7 +23,7 @@ export const AccuracyCard = () => {
   const accuracy = 78; // 0-100
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm">
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-sm">
       <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
         Current Accuracy
       </h3>
@@ -83,7 +83,7 @@ export const SystemComparisonCard = () => {
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm">
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-sm">
       <h3 className="text-lg font-semibold mb-4">System Performance</h3>
       <MultiRadialProgress items={systems} size={100} />
     </div>
@@ -98,7 +98,7 @@ export const RecentFormCard = ({ sessionAccuracies }: { sessionAccuracies: numbe
   // Example: Last 10 sessions: [75, 80, 78, 85, 88, 82, 90, 87, 92, 95]
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm">
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-sm">
       <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Recent Form</h3>
 
       <TrendSparkline
@@ -182,9 +182,9 @@ export const StudyActivityCalendar = ({
   performanceData: PerformanceRecord[];
 }) => {
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-sm">
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Study Activity</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Study Activity</h3>
         <p className="text-xs text-gray-500 dark:text-gray-400">Last 13 weeks</p>
       </div>
 
@@ -211,8 +211,8 @@ export const ComprehensiveDashboardCard = ({
   performanceData: PerformanceRecord[];
 }) => {
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl p-6 shadow-lg">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Performance Overview</h2>
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg">
+      <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-6">Performance Overview</h2>
 
       {/* Top Row: Radial Progress + Trend */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -244,7 +244,7 @@ export const ComprehensiveDashboardCard = ({
       </div>
 
       {/* Bottom: Activity Heatmap */}
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+      <div className="border-t border-[var(--color-border)] pt-6">
         <ActivityHeatmap performanceData={performanceData} weeks={8} />
       </div>
     </div>
@@ -333,7 +333,7 @@ export const MobileStatsCard = ({
   recentScores: number[];
 }) => {
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow">
+    <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 shadow">
       {/* Compact Layout */}
       <div className="flex items-center justify-between mb-3">
         <RadialProgressCompact value={accuracy} />

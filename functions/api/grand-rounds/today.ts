@@ -5,6 +5,8 @@
  * Returns:
  * - If not attempted: { status: 'active', challengeId, questions[] } (NO correctAnswer field)
  * - If already attempted: { status: 'completed', stats: { score, correctCount, percentile, ranking } }
+ *
+ * Question source: Question table only (unified with submit grading).
  */
 
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
@@ -18,6 +20,20 @@ import { z } from 'zod';
 
 // No query params needed for this endpoint
 const TodaySchema = z.object({});
+
+const QUESTIONS_PER_CHALLENGE = 5;
+
+/** Normalize Question.options (Json) to string[] for client. */
+function normalizeOptions(options: unknown): string[] {
+  if (Array.isArray(options)) {
+    return options.filter((x): x is string => typeof x === 'string');
+  }
+  if (options && typeof options === 'object' && 'options' in options) {
+    const arr = (options as Record<string, unknown>).options;
+    return Array.isArray(arr) ? arr.filter((x): x is string => typeof x === 'string') : [];
+  }
+  return [];
+}
 
 export const onRequestOptions = withCors();
 
@@ -43,42 +59,38 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
-    // Get or create today's challenge
+    // Get or create today's challenge (Question table only)
     let challenge = await prisma.grandRoundsChallenge.findUnique({
       where: { date: today },
     });
 
     if (!challenge) {
-      // Create new challenge with 5 random questions
-      // Get a pool of questions from PreGeneratedQuestion
-      // Accept PANCE-level (standard), intermediate, advanced, medium, hard
-      const questionPool = await prisma.preGeneratedQuestion.findMany({
+      // Create new challenge with 5 questions from Question table (deterministic by date seed)
+      const questionPool = await prisma.question.findMany({
         where: {
-          difficulty: { in: ['PANCE-level', 'intermediate', 'advanced', 'medium', 'hard'] },
+          difficulty: { in: ['easy', 'medium', 'hard', 'PANCE-level', 'intermediate', 'advanced'] },
         },
         select: { id: true },
         take: 100,
       });
 
-      if (questionPool.length < 5) {
+      if (questionPool.length < QUESTIONS_PER_CHALLENGE) {
         log.error('Insufficient questions in database', { poolSize: questionPool.length });
         return { status: 500, error: 'Insufficient questions in database' };
       }
 
-      // Shuffle using today's date as seed
+      // Deterministic shuffle using today's date as seed
       const seed = today.getTime();
-      const shuffled = questionPool.sort(() => {
-        // Deterministic shuffle based on seed
+      const shuffled = [...questionPool].sort(() => {
         const x = Math.sin(seed) * 10000;
         return x - Math.floor(x) - 0.5;
       });
 
-      // Type for question pool items
-      type QuestionPoolItem = { id: string };
-      const questionIds = shuffled.slice(0, 5).map((q: QuestionPoolItem) => q.id);
+      const questionIds = shuffled.slice(0, QUESTIONS_PER_CHALLENGE).map((q) => q.id);
 
       challenge = await prisma.grandRoundsChallenge.create({
         data: {
+          id: crypto.randomUUID(),
           date: today,
           questionIds,
         },
@@ -102,7 +114,6 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
 
     if (existingAttempt) {
       // User already completed - return stats only
-      // Calculate percentile
       const allAttempts = await prisma.grandRoundsAttempt.findMany({
         where: { challengeId: challenge.id },
         select: { score: true, timeSpentMs: true },
@@ -138,6 +149,7 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
       return {
         data: {
           status: 'completed',
+          challengeId: challenge.id,
           stats: {
             score: existingAttempt.score,
             correctCount: existingAttempt.correctCount,
@@ -150,8 +162,8 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
       };
     }
 
-    // Fetch questions WITHOUT correct answers (SECURITY: Never send correct answers to client)
-    const questions = await prisma.preGeneratedQuestion.findMany({
+    // Fetch questions from Question table WITHOUT correct answers (SECURITY)
+    const questions = await prisma.question.findMany({
       where: {
         id: { in: challenge.questionIds as string[] },
       },
@@ -162,30 +174,28 @@ export const onRequestGet = authenticatedEndpoint(TodaySchema, async ({ env, aut
         options: true,
         system: true,
         difficulty: true,
-        conditionName: true,
+        topic: true,
         tags: true,
-        // CRITICAL: correctAnswer is EXCLUDED
+        // correctAnswer EXCLUDED - never sent to client
       },
     });
 
-    // Type for questions from Prisma query
-    type QuestionData = (typeof questions)[0];
+    type QuestionRow = (typeof questions)[0];
 
-    // Ensure questions are in the same order as challenge.questionIds
-    // Map to expected shape (topic -> conditionName)
+    // Return in same order as challenge.questionIds; map topic for client (topic -> conditionName equivalent)
     const orderedQuestions = (challenge.questionIds as string[])
       .map((qid: string) => {
-        const q = questions.find((q: QuestionData) => q.id === qid);
+        const q = questions.find((r: QuestionRow) => r.id === qid);
         if (!q) return null;
         return {
           id: q.id,
           vignette: q.vignette,
           question: q.question,
-          options: q.options,
+          options: normalizeOptions(q.options),
           system: q.system,
           difficulty: q.difficulty,
-          topic: q.conditionName,
-          tags: q.tags,
+          topic: q.topic ?? undefined,
+          tags: q.tags ?? undefined,
         };
       })
       .filter(Boolean);

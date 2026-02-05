@@ -70,7 +70,6 @@ export async function updateUserProgressWithHistory(
             accuracy: totalAttempts > 0 ? correctCount / totalAttempts : 0,
             lastReviewAt: new Date(),
             nextReviewAt: new Date(Date.now() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000),
-            updatedAt: new Date(),
           },
         });
         return;
@@ -116,7 +115,6 @@ export async function updateUserProgressWithHistory(
       accuracy: newAccuracy,
       lastReviewAt: new Date(),
       nextReviewAt: new Date(Date.now() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000),
-      updatedAt: new Date(),
     },
     create: {
       id: crypto.randomUUID(),

@@ -10,6 +10,11 @@ export const ROUTES = {
   ADMIN_CURATION: '/admin/curation',
   CLINICAL_EYE: '/clinical-eye',
   VISUALIZER: '/visualizer',
+  /** Study hub; path→view sync in App.tsx */
+  STUDY: '/study',
+  STUDY_REFERENCE: '/study/reference',
+  STUDY_TOOLKIT: '/study/toolkit',
+  MENU: '/menu',
 } as const;
 
 // Type for route values

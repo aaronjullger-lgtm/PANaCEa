@@ -1133,7 +1133,7 @@ async function saveMediaAsset(
         pathologyVisible: analysis.pathologyVisible,
         adequateExposure: analysis.adequateExposure,
       },
-      status: 'approved',
+      status: 'active',
       approvalStatus: 'approved',
       modality: 'xray',
       explanation: condition.visualFindings,

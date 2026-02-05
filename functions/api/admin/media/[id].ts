@@ -192,18 +192,20 @@ export const onRequestDelete = withMiddleware(
         return { status: 400, error: 'Invalid media ID' };
       }
 
-      // Get media to find the storage path
       const media = await prisma.mediaAsset.findUnique({
         where: { id },
+        select: { originalUrl: true, thumbnailUrl: true, storagePath: true },
       });
 
       if (!media) {
         return { status: 404, error: 'Media not found' };
       }
 
-      // Extract storage path from URL
-      const urlParts = media.originalUrl?.split(`/${MEDIA_BUCKET}/`);
-      const storagePath = urlParts && urlParts.length > 1 ? urlParts[1] : null;
+      const storagePath =
+        media.storagePath ??
+        (media.originalUrl?.includes(`/${MEDIA_BUCKET}/`)
+          ? media.originalUrl.split(`/${MEDIA_BUCKET}/`)[1] ?? null
+          : null);
 
       // Delete from Supabase Storage if path exists
       if (storagePath) {

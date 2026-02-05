@@ -177,7 +177,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
             >
               <Heart className="w-8 h-8 text-white" />
             </motion.div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
               Wellness Check
             </h2>
             <p className="text-gray-600 dark:text-gray-300">{reasonMessages[reason]}</p>
@@ -200,8 +200,8 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
           </div>
 
           {/* Breathing Exercise */}
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
+          <div className="bg-gradient-to-br from-[var(--color-bg-tertiary)] to-[var(--color-bg-secondary)] rounded-xl p-6 mb-6">
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 text-center">
               4-7-8 Breathing Timer
             </h3>
 
@@ -247,7 +247,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
               ) : (
                 <button
                   onClick={handleStopBreathing}
-                  className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white 
+                  className="flex-1 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-hover)] text-[var(--color-text-inverse)] 
                     py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-200"
                 >
                   Stop

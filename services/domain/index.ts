@@ -148,7 +148,7 @@ export {
   clearSession,
   calculateEncounterScore,
 } from './osceService';
-export type { OsceGradeResult } from './osceService';
+export type { OsceGradeResult, SoftSkillsReport } from './osceService';
 
 // Named exports from OSCE scoring engine
 export {

@@ -188,8 +188,7 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2
-                  className="text-3xl font-bold text-[var(--color-text-primary)] tracking-wide"
-                  style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
+                  className="text-3xl font-bold text-[var(--color-text-primary)] tracking-wide font-teko"
                 >
                   {normalized.condition}
                 </h2>

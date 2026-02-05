@@ -83,7 +83,7 @@ async function migrateMediaManifest() {
             thumbnailUrl: `/images/photo-drill/${entry.category}/${filename}`,
             description: entry.educationalCaption,
             tags: entry.keyFindings,
-            status: 'approved',
+            status: 'active',
             approvalStatus: 'approved',
             isClinical: true,
             folder: 'clinical_verified',

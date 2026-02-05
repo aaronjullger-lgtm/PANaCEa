@@ -219,7 +219,7 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                   ${
                     userStatus === 'completed'
                       ? 'bg-[var(--color-data-pass)] hover:bg-[var(--color-data-pass)]/90 text-white shadow-lg shadow-[var(--color-data-pass)]/30'
-                      : 'bg-[var(--color-bg-secondary)]/50 hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-white text-white shadow-lg transition-all'
+                      : 'bg-[var(--color-bg-secondary)]/50 hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-[var(--color-text-primary)] text-[var(--color-text-primary)] shadow-lg transition-all'
                   }
                 `}
               >
@@ -230,8 +230,8 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
 
             {/* Right: Stats Panel (only shown when completed) */}
             {content.showStats && userScore !== undefined && globalMeanScore !== undefined && (
-              <div className="lg:w-80 bg-black/20 rounded-xl p-5 border border-white/10">
-                <h3 className="text-sm font-semibold text-white/70 uppercase tracking-wide mb-4">
+              <div className="lg:w-80 bg-[var(--color-overlay)]/60 rounded-xl p-5 border border-[var(--color-border)]">
+                <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wide mb-4">
                   Your Performance
                 </h3>
 
@@ -239,38 +239,38 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                   {/* Score comparison */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-3xl font-bold text-white">{userScore}%</div>
-                      <div className="text-xs text-white/50">Your Score</div>
+                      <div className="text-3xl font-bold text-[var(--color-text-primary)]">{userScore}%</div>
+                      <div className="text-xs text-[var(--color-text-muted)]">Your Score</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xl font-semibold text-white/70">{globalMeanScore}%</div>
-                      <div className="text-xs text-white/50">Global Mean</div>
+                      <div className="text-xl font-semibold text-[var(--color-text-secondary)]">{globalMeanScore}%</div>
+                      <div className="text-xs text-[var(--color-text-muted)]">Global Mean</div>
                     </div>
                   </div>
 
                   {/* Score bar */}
-                  <div className="relative h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div className="relative h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                     <div
                       className="absolute left-0 top-0 h-full bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-accent)] rounded-full transition-all duration-500"
                       style={{ width: `${userScore}%` }}
                     />
                     <div
-                      className="absolute top-0 h-full w-0.5 bg-white/50"
+                      className="absolute top-0 h-full w-0.5 bg-[var(--color-text-primary)]/50"
                       style={{ left: `${globalMeanScore}%` }}
                     />
                   </div>
 
                   {/* Percentile */}
                   {userPercentile !== undefined && (
-                    <div className="flex items-center gap-2 p-3 bg-white/5 rounded-lg">
+                    <div className="flex items-center gap-2 p-3 bg-[var(--color-bg-tertiary)]/50 rounded-lg">
                       <TrendingUp
                         className={`w-5 h-5 ${userPercentile >= 50 ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'}`}
                       />
                       <div>
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
                           Top {100 - userPercentile}% of participants
                         </div>
-                        <div className="text-xs text-white/50">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           Ranked #{Math.ceil(participantCount * (1 - userPercentile / 100))} of{' '}
                           {participantCount}
                         </div>

@@ -25,6 +25,11 @@ export interface OfflineAnswer {
   confidence?: number;
   rating?: 1 | 2 | 3 | 4; // FSRS rating
   sessionId?: string;
+  /** Behavioral telemetry for implicit FSRS (Ghost Grader) */
+  telemetryJson?: Record<string, unknown>;
+  answerChangedCount?: number;
+  durationMs?: number;
+  attemptId?: string; // Set after first sync for SRS analyze-behavior
   timestamp: number;
   synced: boolean;
   syncAttempts: number;
@@ -296,13 +301,18 @@ class SyncManager {
             system: answer.system,
             conditionId: answer.conditionId,
             mode: 'session',
-            // Omit if out of range (prevents schema rejection)
             selectedAnswer: ['A', 'B', 'C', 'D'][answer.selectedAnswer],
+            ...(answer.telemetryJson && { telemetryJson: answer.telemetryJson }),
+            ...(answer.answerChangedCount != null && { answerChangedCount: answer.answerChangedCount }),
+            ...(answer.durationMs != null && { durationMs: answer.durationMs }),
           }),
         });
 
         if (response.ok) {
           answer.synced = true;
+          const data = await response.json().catch(() => ({}));
+          const payload = data?.data ?? data;
+          if (payload?.attemptId) answer.attemptId = payload.attemptId;
           synced++;
         } else {
           answer.syncAttempts++;

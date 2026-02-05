@@ -8,6 +8,10 @@
 
 ---
 
+## CI
+
+The main CI workflow (`.github/workflows/ci.yml`) runs an **E2E smoke** job after build: it serves the built app with `wrangler pages dev dist`, then runs `e2e/api-health.spec.ts` against it. This validates that the app and Functions runtime respond (e.g. `/api/health` returns 200, 503, or 500). Extended E2E (auth, critical flows) can be run locally or on a schedule.
+
 ## 📝 Run Instructions
 
 ### Step 1️⃣: One-Time Authentication Setup

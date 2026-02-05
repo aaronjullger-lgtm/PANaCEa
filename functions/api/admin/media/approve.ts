@@ -12,6 +12,7 @@
 import { z } from 'zod';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { logger } from '../../_shared/secureLogger';
+import { auditLog } from '../../_shared/auditLog';
 import {
   adminEndpoint,
   type AuthenticatedContext,
@@ -90,6 +91,11 @@ export const onRequestPost = adminEndpoint(
         action,
         previousStatus: media.approvalStatus,
         newStatus,
+      });
+      auditLog(action === 'approve' ? 'admin_media_approve' : 'admin_media_reject', {
+        userId: context.auth.userId,
+        mediaId,
+        previousStatus: media.approvalStatus,
       });
 
       return {

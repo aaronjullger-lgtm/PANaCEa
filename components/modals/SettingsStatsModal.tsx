@@ -74,6 +74,7 @@ import DecisionTimeAnalysis from '@/components/analytics/DecisionTimeAnalysis';
 import LongitudinalProgressDashboard from '@/components/analytics/LongitudinalProgressDashboard';
 import WeaknessCheatsheetExporter from '@/components/analytics/WeaknessCheatsheetExporter';
 import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
+import { ARCHIVE_AND_RESET, TO_REVIEW_LABEL, CLEAR_TO_REVIEW } from '@/config/labels';
 import EnhancedSettingsTab from '@/components/settings/EnhancedSettingsTab';
 import { useCommuter } from '@/contexts/CommuterContext';
 import { useUserContext } from '@/hooks/useUserContext';
@@ -2644,7 +2645,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           aria-label="Archive and reset: download backup then clear performance data"
                         >
                           <Download className="w-4 h-4 inline-block mr-1" aria-hidden />
-                          Archive & Reset
+                          {ARCHIVE_AND_RESET}
                         </button>
                         <button
                           type="button"
@@ -2689,7 +2690,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         aria-label={confirmClear === 'missed' ? 'Confirm clear to review' : 'Clear to review (opens confirmation)'}
                       >
                         <Trash2 className="w-4 h-4 inline-block mr-1" aria-hidden />
-                        {confirmClear === 'missed' ? 'Confirm' : 'Clear To Review…'}
+                        {confirmClear === 'missed' ? 'Confirm' : CLEAR_TO_REVIEW}
                       </button>
                     </div>
 

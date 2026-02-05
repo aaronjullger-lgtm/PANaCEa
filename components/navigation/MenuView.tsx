@@ -23,6 +23,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useIsMobile } from '@/lib/utils/responsive';
+import { useDatabaseStats } from '@/hooks/useDatabaseStats';
 import type { PerformanceRecord, SessionSettings, Question, TopicStats, SystemCode } from '@/types';
 import TrainingMenu from '@/components/dashboard/TrainingMenu';
 import ProgressRing from '@/components/ui/ProgressRing';
@@ -60,6 +61,7 @@ import type {
 } from '@/components/ProgressDashboard';
 import { calculateAccuracy, calculateDayStreak, loadWidgetPreferences } from '@/lib/dashboardUtils';
 import { getTimeBasedGreeting } from '@/lib/utils/timeUtils';
+import { TO_REVIEW_STUDY_GUIDE } from '@/config/labels';
 import type { ErrorTag } from '@/types';
 
 interface MenuViewProps {
@@ -148,6 +150,9 @@ const MenuView: React.FC<MenuViewProps> = ({
     loadWidgetPreferences<WidgetId>(defaultWidgets)
   );
 
+  // Server stats: when signed in, use as source of truth for topicScores/systemStats when available
+  const { stats: serverStats } = useDatabaseStats();
+
   const stats = useMemo(() => {
     // Overall score = last 360 questions (any mode) as before
     const last360 = performanceData.slice(-360);
@@ -161,7 +166,7 @@ const MenuView: React.FC<MenuViewProps> = ({
 
     const uniqueSystems = Array.from(new Set(panceAllRecords.map((r) => r.system))) as SystemCode[];
 
-    const systemStats: SystemStats[] = uniqueSystems
+    const localSystemStats: SystemStats[] = uniqueSystems
       .map((system) => {
         const rows = panceAllRecords.filter((r) => r.system === system);
         const correct = rows.filter((r) => r.isCorrect).length;
@@ -176,20 +181,43 @@ const MenuView: React.FC<MenuViewProps> = ({
           total,
         };
       })
-      // Show systems with more data first
       .sort((a, b) => b.total - a.total);
 
-    // Keep the old topicScores calc if you want it elsewhere later
-    const topics: string[] = Array.from(new Set(performanceData.map((q) => q.topic)));
-    const topicScores: TopicStats[] = topics
-      .map((topic) => {
-        const topicQuestions = performanceData.filter((q) => q.topic === topic).slice(-100);
-        const correct = topicQuestions.filter((q) => q.isCorrect).length;
-        const total = topicQuestions.length;
-        const score = total > 0 ? (correct / total) * 100 : 0;
-        return { topic, score, correct, total };
-      })
-      .sort((a, b) => b.total - a.total);
+    // Prefer server bySystems for topicScores/systemStats when available; fallback to local
+    const systemStats: SystemStats[] =
+      serverStats?.bySystems && Object.keys(serverStats.bySystems).length > 0
+        ? Object.entries(serverStats.bySystems)
+            .filter(([, s]) => s.total > 0)
+            .map(([system, s]) => ({
+              system: system as SystemCode,
+              label: ABBREVIATION_TO_TOPIC_MAP[system as SystemCode] || system,
+              score: s.accuracy,
+              correct: s.correct,
+              total: s.total,
+            }))
+            .sort((a, b) => b.total - a.total)
+        : localSystemStats;
+
+    const localTopicScores: TopicStats[] = (() => {
+      const topics: string[] = Array.from(new Set(performanceData.map((q) => q.topic)));
+      return topics
+        .map((topic) => {
+          const topicQuestions = performanceData.filter((q) => q.topic === topic).slice(-100);
+          const correct = topicQuestions.filter((q) => q.isCorrect).length;
+          const total = topicQuestions.length;
+          const score = total > 0 ? (correct / total) * 100 : 0;
+          return { topic, score, correct, total };
+        })
+        .sort((a, b) => b.total - a.total);
+    })();
+
+    const topicScores: TopicStats[] =
+      serverStats?.bySystems && Object.keys(serverStats.bySystems).length > 0
+        ? Object.entries(serverStats.bySystems)
+            .filter(([, s]) => s.total > 0)
+            .map(([topic, s]) => ({ topic, score: s.accuracy, correct: s.correct, total: s.total }))
+            .sort((a, b) => b.total - a.total)
+        : localTopicScores;
 
     // Calculate widget data
     const totalQuestions = performanceData.length;
@@ -361,7 +389,7 @@ const MenuView: React.FC<MenuViewProps> = ({
       errorCounts,
       totalIncorrect,
     };
-  }, [performanceData]);
+  }, [performanceData, serverStats]);
 
   const dueQuestionsCount = useMemo(() => {
     if (!missedQuestions) return 0;
@@ -895,9 +923,14 @@ const MenuView: React.FC<MenuViewProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35 }}
               >
-                <h2 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)] mb-5">
+                <h2 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)] mb-2">
                   System Mastery Grid
                 </h2>
+                {(!stats.topicScores || stats.topicScores.length === 0) && (
+                  <p className="text-sm text-[var(--color-text-muted)] mb-4">
+                    Complete 5+ questions per system to unlock mastery tracking.
+                  </p>
+                )}
                 <TopicHeatmap
                   topicScores={stats.topicScores || []}
                   onTopicClick={(topicStats) => {
@@ -975,6 +1008,7 @@ const MenuView: React.FC<MenuViewProps> = ({
           onRemoveBookmark={(question) => {
             onRemoveBookmark?.(question);
           }}
+          onStartSession={() => onStartSession?.()}
           onViewQuestion={async (question) => {
             // Open question in a review modal or navigate to it
             const meta = await findConditionMetaById(question.conditionId);
@@ -990,7 +1024,7 @@ const MenuView: React.FC<MenuViewProps> = ({
       {showStudyGuide && (
         <StudyGuideGenerator
           questions={missedQuestions}
-          title="To Review Study Guide"
+          title={TO_REVIEW_STUDY_GUIDE}
           onClose={() => setShowStudyGuide(false)}
         />
       )}

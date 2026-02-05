@@ -9,6 +9,7 @@ export { default as ErrorTagger } from './ErrorTagger';
 export { AnswerFeedback, useAnswerFeedback } from './AnswerFeedback';
 export { SessionStatsOverlay } from './SessionStatsOverlay';
 export { SessionEndSummary } from './SessionEndSummary';
+export { SocraticTutorChat } from './SocraticTutorChat';
 export { SRSFeedbackBadge } from './SRSFeedbackBadge';
 export { QuestionTimer } from './QuestionTimer';
 // Behavioral confidence (no manual input needed)
@@ -29,3 +30,12 @@ export { ScorePredictionCard } from './ScorePredictionCard';
 export { SmartPauseIndicator, EncouragementToast } from './SmartPauseIndicator';
 // Advanced analytics: Cognitive state tracking
 export { CognitiveStateIndicator } from './CognitiveStateIndicator';
+// Implicit FSRS: behavioral telemetry for Ghost Grader
+export {
+  BehavioralTrackerProvider,
+  useBehavioralTracker,
+  OptionHoverTracker,
+  behavioralPayloadToTelemetryData,
+  type BehavioralPayload,
+  type BehavioralTrackerApi,
+} from './Tracker';

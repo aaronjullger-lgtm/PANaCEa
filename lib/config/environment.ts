@@ -22,13 +22,20 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3001),
 
-  // Optional - Gracefully degraded if missing
-  FRONTEND_URL: z.string().url().default('http://localhost:3000').optional(),
+  // Optional - Use refine for URL validation so we never call .url() on ZodDefault (Zod schema ordering)
+  FRONTEND_URL: z
+    .string()
+    .optional()
+    .default('http://localhost:3000')
+    .refine((s) => !s || s.startsWith('http'), { message: 'FRONTEND_URL must be a valid URL' }),
   ADMIN_USER_IDS: z.string().optional(),
   SUPERADMIN_USER_IDS: z.string().optional(),
 
-  // Supabase (optional, used for storage)
-  SUPABASE_URL: z.string().url().optional(),
+  // Supabase (optional, used for storage) - refine for URL when present, not .url() after optional
+  SUPABASE_URL: z
+    .string()
+    .optional()
+    .refine((s) => !s || s.startsWith('http'), { message: 'SUPABASE_URL must be a valid URL' }),
   SUPABASE_ANON_KEY: z.string().optional(),
 
   // Sentry (optional, for error tracking)

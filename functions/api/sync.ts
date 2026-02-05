@@ -350,7 +350,6 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
         difficulty:
           item.difficulty !== undefined ? Number.parseFloat(String(item.difficulty)) : null,
         stabilityScore: item.stabilityScore ?? null,
-        updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
       }));
 
       const batches = chunk(itemsToInsert, BATCH_SIZE);

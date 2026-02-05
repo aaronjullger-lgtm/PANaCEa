@@ -19,6 +19,7 @@ import {
 } from '../../../lib/fsrs';
 import { VariantQueueService } from '../../../services/core/variantQueueService';
 import { getTaskTypeFromContent } from '../../../lib/taskTypes';
+import { analyzeBehaviorGemini, type BehaviorTelemetryInput } from '../_shared/analyzeBehaviorGemini';
 
 const SRSSubmitSchema = z.object({
   body: z.object({
@@ -30,6 +31,9 @@ const SRSSubmitSchema = z.object({
     userAnswer: z.string().optional(),
     timeSpent: z.number().optional(),
     variantId: z.string().uuid().optional(),
+    /** For Ghost Grader: use behavior to infer true difficulty */
+    attemptId: z.string().optional(),
+    telemetry: z.record(z.unknown()).optional(),
   }),
 });
 
@@ -43,7 +47,47 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
   try {
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const { srsItemId, topicProgressId, questionId, rating, isCorrect, variantId } = validated.body;
+    const { srsItemId, topicProgressId, questionId, rating, isCorrect, variantId, attemptId, telemetry } =
+      validated.body;
+
+    let effectiveRating = rating;
+    let implicitDifficulty: number | null = null;
+
+    if (telemetry != null || attemptId != null) {
+      try {
+        let wasCorrect = isCorrect;
+        let selectedAnswer: string | undefined;
+        let effectiveTelemetry: BehaviorTelemetryInput | undefined = telemetry as BehaviorTelemetryInput | undefined;
+        if (attemptId && env.DATABASE_URL) {
+          const prismaForAttempt = createEdgePrismaClient(env.DATABASE_URL);
+          const attempt = await prismaForAttempt.questionAttempt.findFirst({
+            where: { id: attemptId },
+            select: { wasCorrect: true, selectedAnswer: true, telemetryJson: true },
+          });
+          if (attempt) {
+            wasCorrect = attempt.wasCorrect;
+            selectedAnswer = attempt.selectedAnswer ?? undefined;
+            if (attempt.telemetryJson && typeof attempt.telemetryJson === 'object')
+              effectiveTelemetry = (effectiveTelemetry ?? attempt.telemetryJson) as BehaviorTelemetryInput;
+          }
+          await safePrismaDisconnect(prismaForAttempt);
+        }
+        if (effectiveTelemetry != null) {
+          const behavior = await analyzeBehaviorGemini(env, {
+            rating,
+            wasCorrect,
+            selectedAnswer,
+            telemetry: effectiveTelemetry,
+          });
+          effectiveRating = behavior.impliedRating;
+          implicitDifficulty = 1 - behavior.confidence;
+        }
+      } catch (e) {
+        logger.warn('Ghost Grader failed (using user rating)', {
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
 
     // Get user's database ID
     const user = await prisma.user.findUnique({
@@ -98,44 +142,57 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       }
     }
 
+    const ratingForFsrs = effectiveRating as 1 | 2 | 3 | 4;
+
     // Update UserTopicProgress (Primary driver for Variants)
     if (topicProgress) {
       const card = topicProgressToCard(topicProgress);
-      const scheduled = fsrs.next(card, now, rating);
+      const scheduled = fsrs.next(card, now, ratingForFsrs);
       reviewState = scheduled.card;
       nextReviewDate = scheduled.due;
+
+      let stability = reviewState.stability;
+      if (implicitDifficulty != null && implicitDifficulty > 0.5) {
+        stability = Math.max(0.1, stability * (1 - implicitDifficulty));
+      }
 
       await prisma.userTopicProgress.update({
         where: { id: topicProgress.id },
         data: {
-          stability: reviewState.stability,
+          stability,
           difficulty: reviewState.difficulty,
           state: reviewState.state,
           reps: reviewState.reps,
           lapses: reviewState.lapses,
           lastReviewDate: now,
           nextReviewDate: nextReviewDate,
+          implicitDifficulty: implicitDifficulty ?? undefined,
         },
       });
     } else if (conditionId && taskType) {
-      // Create new Topic Progress
       const emptyCard = fsrs.createEmptyCard();
-      const scheduled = fsrs.next(emptyCard, now, rating);
+      const scheduled = fsrs.next(emptyCard, now, ratingForFsrs);
       reviewState = scheduled.card;
       nextReviewDate = scheduled.due;
+
+      let stability = reviewState.stability;
+      if (implicitDifficulty != null && implicitDifficulty > 0.5) {
+        stability = Math.max(0.1, stability * (1 - implicitDifficulty));
+      }
 
       await prisma.userTopicProgress.create({
         data: {
           userId: dbUserId,
           conditionId: conditionId,
           taskType: taskType,
-          stability: reviewState.stability,
+          stability,
           difficulty: reviewState.difficulty,
           state: reviewState.state,
           reps: reviewState.reps,
           lapses: reviewState.lapses,
           lastReviewDate: now,
           nextReviewDate: nextReviewDate,
+          implicitDifficulty: implicitDifficulty ?? undefined,
         },
       });
     }
@@ -155,7 +212,7 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
           scheduled_days: 0,
         };
 
-        const scheduled = fsrs.next(card, now, rating);
+        const scheduled = fsrs.next(card, now, ratingForFsrs);
 
         await prisma.sRSItem.update({
           where: { id: srsItemId },
@@ -196,11 +253,21 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       queuedVariant: !!queuedVariantId,
     });
 
+    // Pillar 4: When user rates "Hard" (1), suggest re-generation with exaggerated mnemonic (frontend calls POST /api/srs/generate-visual with style: "exaggerated").
+    const triggerVisualRegeneration = rating === 1 && (conditionId != null || questionId != null);
+
     return {
       data: {
         success: true,
         nextReviewDate,
         queuedVariantId,
+        ...(triggerVisualRegeneration && {
+          triggerVisualRegeneration: true,
+          questionId: questionId ?? undefined,
+          conditionId: conditionId ?? undefined,
+          topicProgressId: topicProgress?.id ?? undefined,
+          visualRegenerationHint: 'Call POST /api/srs/generate-visual with front/back (or question text) and style: "exaggerated" for cartoon mnemonic; display with Flip animation.',
+        }),
       },
     };
   } catch (error) {

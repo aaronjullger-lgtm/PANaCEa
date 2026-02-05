@@ -11,6 +11,8 @@ The **SmartPDFViewer** component (`src/components/library/SmartPDFViewer.tsx`) u
 
 Register the client ID for your app’s domain (and `localhost` for dev). Without a valid client ID, the viewer may not load on non-demo domains.
 
+**Liquid Mode (mobile-friendly reflow):** SmartPDFViewer supports Liquid Mode via `enableLinearization`. Liquid Mode may fail on files **larger than ~200 pages**. For large textbooks (e.g. Harrison's), serve **chapter-level PDFs** (e.g. `Cardiology.pdf`) rather than the full book; use Adobe PDF Extract or a split pipeline to produce chapter files. See `docs/GEMINI_LIVE_AND_SMART_LIBRARY.md` (Phase 5: Liquid Mode).
+
 ## Expected JSON Shape
 
 The file should be valid JSON with at least:

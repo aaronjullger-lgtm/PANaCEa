@@ -15,6 +15,7 @@ import {
   type TodoistTask,
 } from '../../lib/services/todoistService';
 import { generateStudyPlan } from '../../lib/services/calendarSyncService';
+import { TO_REVIEW_ONLY } from '@/config/labels';
 import type { Question } from '../../types';
 
 interface TodoistExportPanelProps {
@@ -77,20 +78,20 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
   }, [tasks]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl shadow-sm p-6 border border-[var(--color-border)]">
       <div className="flex items-center gap-3 mb-4">
-        <CheckSquare className="w-6 h-6 text-red-600 dark:text-red-400" />
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Todoist Export</h2>
+        <CheckSquare className="w-6 h-6 text-[var(--color-accent)]" />
+        <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Todoist Export</h2>
       </div>
 
-      <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+      <p className="text-sm text-[var(--color-text-secondary)] mb-6">
         Export your study plan and question reviews to Todoist. Stay organized with your favorite
         task management app.
       </p>
 
       {/* Export Mode Selection */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
           What to Export:
         </label>
         <div className="flex flex-col gap-2">
@@ -98,8 +99,8 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
             onClick={() => setExportMode('study-plan')}
             className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors text-left ${
               exportMode === 'study-plan'
-                ? 'bg-red-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-primary)]'
             }`}
           >
             <div className="font-semibold">Study Plan Only</div>
@@ -109,11 +110,11 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
             onClick={() => setExportMode('missed-questions')}
             className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors text-left ${
               exportMode === 'missed-questions'
-                ? 'bg-red-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-primary)]'
             }`}
           >
-            <div className="font-semibold">To Review Only</div>
+            <div className="font-semibold">{TO_REVIEW_ONLY}</div>
             <div className="text-xs opacity-80">
               Review tasks to reinforce ({missedQuestions.length} questions)
             </div>
@@ -122,8 +123,8 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
             onClick={() => setExportMode('both')}
             className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors text-left ${
               exportMode === 'both'
-                ? 'bg-red-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-primary)]'
             }`}
           >
             <div className="font-semibold">Complete Package</div>
@@ -135,14 +136,14 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
       {/* Exam Date Input (if study plan is selected) */}
       {(exportMode === 'study-plan' || exportMode === 'both') && (
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
             Exam Date:
           </label>
           <input
             type="date"
             value={examDate}
             onChange={(e) => setExamDate(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:border-transparent"
             min={new Date().toISOString().split('T')[0]}
           />
         </div>
@@ -150,37 +151,37 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
 
       {/* Task Preview */}
       {tasks.length > 0 && (
-        <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+        <div className="mb-6 p-4 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)]">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3">
             Export Preview:
           </h3>
           <div className="grid grid-cols-4 gap-4 mb-3">
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+              <div className="text-2xl font-bold text-[var(--color-data-fail)]">
                 {taskStats.p4}
               </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">P4 (Critical)</div>
+              <div className="text-xs text-[var(--color-text-muted)]">P4 (Critical)</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              <div className="text-2xl font-bold text-[var(--color-data-provisional)]">
                 {taskStats.p3}
               </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">P3 (High)</div>
+              <div className="text-xs text-[var(--color-text-muted)]">P3 (High)</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+              <div className="text-2xl font-bold text-[var(--color-accent)]">
                 {taskStats.p2}
               </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">P2 (Medium)</div>
+              <div className="text-xs text-[var(--color-text-muted)]">P2 (Medium)</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">
+              <div className="text-2xl font-bold text-[var(--color-text-muted)]">
                 {taskStats.p1}
               </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">P1 (Normal)</div>
+              <div className="text-xs text-[var(--color-text-muted)]">P1 (Normal)</div>
             </div>
           </div>
-          <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="text-center text-sm text-[var(--color-text-muted)]">
             Total: <span className="font-semibold">{tasks.length}</span> tasks
           </div>
         </div>
@@ -190,7 +191,7 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
       <button
         onClick={handleDownloadCSV}
         disabled={tasks.length === 0}
-        className="w-full mb-4 px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+        className="w-full mb-4 px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-semibold hover:bg-[var(--color-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
       >
         <Download className="w-5 h-5" />
         Download Todoist CSV ({tasks.length} tasks)
@@ -199,7 +200,7 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
       {/* Instructions Toggle */}
       <button
         onClick={() => setShowInstructions(!showInstructions)}
-        className="w-full mb-4 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
+        className="w-full mb-4 px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-bg-primary)] transition-colors flex items-center justify-center gap-2"
       >
         <Info className="w-4 h-4" />
         {showInstructions ? 'Hide' : 'Show'} Import Instructions
@@ -207,19 +208,19 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
 
       {/* Instructions */}
       {showInstructions && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+        <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)]">
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <pre className="whitespace-pre-wrap text-xs">{TODOIST_IMPORT_INSTRUCTIONS}</pre>
+            <pre className="whitespace-pre-wrap text-xs text-[var(--color-text-secondary)]">{TODOIST_IMPORT_INSTRUCTIONS}</pre>
           </div>
         </div>
       )}
 
       {/* Feature Highlight */}
-      <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-        <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2 flex items-center gap-2">
+      <div className="mt-6 p-4 bg-[var(--color-accent-light)] rounded-lg border border-[var(--color-border)]">
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-2 flex items-center gap-2">
           <Sparkles className="w-4 h-4" /> Why Todoist?
         </h3>
-        <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-1">
+        <ul className="text-xs text-[var(--color-text-secondary)] space-y-1">
           <li>• Smart scheduling with priority levels</li>
           <li>• Cross-platform sync (mobile, desktop, web)</li>
           <li>• Natural language date parsing</li>

@@ -1,66 +1,62 @@
 /**
- * Cloudflare Function: Get Photo Drill Batch
+ * Photo Drill Batch API (deprecated: use GET /api/drills/media)
  *
- * Returns a batch of photo drill questions from MediaAsset table
+ * Returns the same photo drill cases as GET /api/drills/media for backward compatibility.
+ * Query params: modality ('ecg' | 'derm' | 'radiology'), count (default 10).
  *
- * Endpoint: GET /api/drill/photo-batch
- * Query Params:
- * - system: Optional organ system filter
- * - difficulty: Optional difficulty filter
- * - count: Number of questions (default 10)
+ * GET /api/drill/photo-batch?modality=ecg&count=10
  *
+ * @deprecated Use GET /api/drills/media?modality=ecg&count=10 instead.
  * @module functions/api/drill/photo-batch
  */
 
-import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
-import { getPhotoDrillBatch } from '../../../services/drill/photoDrill.service';
+import { getMediaDrillCases } from '../../../services/drill/mediaDrillCases';
+import type { DrillModality } from '../../../lib/mediaTypes';
+
+/** Query accepts 'ecg' | 'derm' | 'radiology'; mapped to DrillModality (radiology -> xray) */
+const MODALITY_ALIAS: Record<string, DrillModality> = {
+  ecg: 'ecg',
+  derm: 'derm',
+  radiology: 'xray',
+  imaging: 'xray',
+  xray: 'xray',
+};
 
 export async function onRequestGet(context: any) {
   const { request, env } = context;
-  let prisma: any = null;
+  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    // Create edge Prisma client
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    // Authenticate
-    const authContext = await authenticateRequest(request, env);
-    if (!authContext) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-    const userId = authContext.userId;
-
-    // Parse query params
     const url = new URL(request.url);
-    const system = url.searchParams.get('system');
-    const difficulty = url.searchParams.get('difficulty');
-    const count = parseInt(url.searchParams.get('count') || '10', 10);
+    const modalityParam = url.searchParams.get('modality');
+    const count = Math.min(
+      100,
+      Math.max(1, parseInt(url.searchParams.get('count') || '10', 10) || 10)
+    );
 
-    // Validate count
-    if (count < 1 || count > 50) {
-      return new Response(JSON.stringify({ error: 'Count must be between 1 and 50' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    let modality: DrillModality | null = null;
+    if (modalityParam) {
+      const normalized = modalityParam.toLowerCase();
+      modality = MODALITY_ALIAS[normalized] ?? null;
     }
 
-    // Get drill batch
-    const questions = await getPhotoDrillBatch({
-      prisma,
-      system: system || undefined,
-      difficulty: difficulty as any,
+    const photoCases = await getMediaDrillCases(prisma, {
+      modality,
       count,
     });
 
-    return new Response(JSON.stringify(questions), {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ data: photoCases }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
-    console.error('Error fetching photo drill batch:', error);
+    console.error('[Photo Batch] Error:', error);
     return new Response(
       JSON.stringify({
         error: 'Failed to fetch photo drill batch',
@@ -69,6 +65,6 @@ export async function onRequestGet(context: any) {
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   } finally {
-    await safePrismaDisconnect(prisma);
+    if (prisma) await safePrismaDisconnect(prisma);
   }
 }

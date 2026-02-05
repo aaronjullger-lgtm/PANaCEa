@@ -41,7 +41,7 @@ const ClinicalProfileDashboard: React.FC = () => {
           <p className="text-xs uppercase tracking-wide text-slate-400">
             Personal Clinical Profile
           </p>
-          <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
             Strengths, timing, and biases
           </h2>
         </div>

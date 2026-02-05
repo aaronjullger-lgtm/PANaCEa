@@ -72,8 +72,9 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
       ...body.metadata,
     };
 
-    // For now, we'll update all UserProgress records for this user
-    // In production, you might want to create a User.optimizedFSRSParams field
+    // Apply optimized params to all UserProgress for this user (MAIN session scheduling only).
+    // Data isolation: these params are used only for FSRS scheduler/optimizer; CRAM/RAPID_RECALL
+    // and OSCE do not use or aggregate this table.
     const updated = await prisma.userProgress.updateMany({
       where: { userId },
       data: {

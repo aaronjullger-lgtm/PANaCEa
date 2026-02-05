@@ -43,6 +43,13 @@ export const AntibioticMode = lazy(() => import('../components/modes/AntibioticM
 export const PatientEncounterMode = lazy(() => import('../components/modes/PatientEncounterMode'));
 export const CodeBlueSpeedMode = lazy(() => import('../components/modes/CodeBlueSpeedMode'));
 export const GrandRoundsMode = lazy(() => import('../components/modes/GrandRoundsMode'));
+export const ContrastiveDrillSession = lazy(
+  () => import('../components/drill/ContrastiveDrillSession').then((m) => ({ default: m.ContrastiveDrillSession }))
+);
+export const ReasoningTutorMode = lazy(() => import('../components/modes/ReasoningTutorMode'));
+export const CramMode = lazy(() =>
+  import('../components/modes').then((m) => ({ default: m.CramMode }))
+);
 export const IntegrationsHub = lazy(() => import('../components/integrations/IntegrationsHub'));
 export const SettingsStatsModal = lazy(() => import('../components/modals/SettingsStatsModal'));
 export const KeyboardShortcutsModal = lazy(
@@ -84,6 +91,9 @@ export const TutorChatPage = lazy(() =>
 );
 export const StudyCompanionPage = lazy(() =>
   import('../components/pages/StudyCompanionPage').then((m) => ({ default: m.StudyCompanionPage }))
+);
+export const SrsFlashcardView = lazy(() =>
+  import('../components/session/SrsFlashcardView').then((m) => ({ default: m.SrsFlashcardView }))
 );
 export const CustomStudyMode = lazy(() => import('../components/modes/CustomStudyMode'));
 export const QuestionCurationPanel = lazy(

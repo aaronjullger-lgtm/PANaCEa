@@ -7,6 +7,7 @@ alwaysApply: true
 
 - **Stack:** React 19, TS, Vite, Tailwind, Framer Motion. Backend: Cloudflare Pages Functions; Express is legacy/local. DB: Postgres/Supabase via Prisma.
 - **Lib locations:** `lib/` (root) = server/shared (db, auth, services, FSRS, utils). `src/lib/` = frontend-only (search, markdown). Do not put server/Prisma code in `src/lib/`.
+- **Components:** All React components live at root `components/` (canonical). Use `@/components/...` for imports. Do not add new components under `src/components/`.
 - **Imports:** Use `@/` or `@src/`. Named exports. Never bundle Prisma or `lib/db.ts`/`lib/prisma.ts` in client code.
 - **Functions:** Export `onRequestGet`/`onRequestPost`; use `authenticateRequest` and `createEdgePrismaClient`; disconnect in `finally`.
 - **UI:** Clinical palette, rounded-xl cards, Lucide icons. See `.github/copilot-instructions.md` for full guide.

@@ -116,7 +116,7 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
         transition={noMotion ? { duration: 0 } : { type: 'spring', stiffness: 300 }}
         className={`flex items-center gap-3 px-4 py-3 rounded-xl ${config.bgColor} border ${config.borderColor}`}
       >
-        <div className={`p-2 rounded-lg bg-white/50 dark:bg-black/20 ${config.color}`}>
+        <div className={`p-2 rounded-lg bg-[var(--color-bg-tertiary)]/80 ${config.color}`}>
           <Icon className="w-5 h-5" />
         </div>
 
@@ -127,7 +127,7 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
           </div>
 
           {/* Progress bar */}
-          <div className="mt-1.5 h-1.5 bg-white/50 dark:bg-black/20 rounded-full overflow-hidden">
+          <div className="mt-1.5 h-1.5 bg-[var(--color-bg-tertiary)]/80 rounded-full overflow-hidden">
             <motion.div
               initial={noMotion ? false : { width: 0 }}
               animate={{ width: `${momentum.score}%` }}

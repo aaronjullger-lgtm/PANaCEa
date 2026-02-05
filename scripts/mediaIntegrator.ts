@@ -329,7 +329,7 @@ async function saveToDatabase(links: MediaLink[]): Promise<{
               conditionId: condition.id,
               tags: link.tags,
               confidence: link.confidence,
-              status: link.confidence > 0.9 ? 'approved' : 'pending_review',
+              status: link.confidence > 0.9 ? 'active' : 'pending_review',
               folder: link.confidence > 0.9 ? 'clinical_verified' : 'inbox',
             },
           });
@@ -344,10 +344,10 @@ async function saveToDatabase(links: MediaLink[]): Promise<{
               conditionId: condition.id,
               tags: link.tags,
               confidence: link.confidence,
-              status: link.confidence > 0.9 ? 'approved' : 'pending_review',
+              status: link.confidence > 0.9 ? 'active' : 'pending_review',
               folder: link.confidence > 0.9 ? 'clinical_verified' : 'inbox',
               mediaType: 'image', // Default to image
-              approvalStatus: 'pending',
+              approvalStatus: link.confidence > 0.9 ? 'approved' : 'pending',
             } as any,
           });
           console.log(`    ✓ Created: ${link.filename}`);

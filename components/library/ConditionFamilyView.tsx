@@ -134,7 +134,7 @@ export function ConditionFamilyView({
               <h4 className="text-xs uppercase font-bold text-gray-500 mb-2 flex items-center gap-1">
                 <ChevronRight className="w-3 h-3" /> Subtypes
               </h4>
-              <div className="space-y-1 pl-2 border-l-2 border-gray-100 ml-1">
+              <div className="space-y-1 pl-2 border-l-2 border-[var(--color-border)] ml-1">
                 {subtypes.map((m) => (
                   <MemberRow key={m.id} member={m} onNavigate={onNavigate} />
                 ))}

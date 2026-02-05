@@ -5,6 +5,8 @@
  * Handles the API call to /api/questions/attempt with proper error handling.
  */
 
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+
 interface AttemptData {
   questionId: string;
   wasCorrect: boolean;
@@ -201,7 +203,7 @@ export async function getUserStats(token?: string | null): Promise<any | null> {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch('/api/user/stats', {
+    const response = await fetch(getApiEndpoint(API_ENDPOINTS.USER_STATS), {
       method: 'GET',
       headers,
     });

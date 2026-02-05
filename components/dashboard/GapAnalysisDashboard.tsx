@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import {
   ComposedChart,
   XAxis,
@@ -178,7 +179,14 @@ const CustomTooltip = ({ active, payload }: any) => {
 // Main Dashboard Component
 // ============================================================================
 
-export const GapAnalysisDashboard: React.FC = () => {
+export interface GapAnalysisDashboardProps {
+  /** When provided, "Study Now" uses this instead of navigating to /quiz (which has no route). */
+  onStudySystem?: (systemName: string) => void;
+}
+
+export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({
+  onStudySystem,
+}) => {
   const { getToken } = useAuth();
   const navigate = useNavigate();
 
@@ -199,11 +207,14 @@ export const GapAnalysisDashboard: React.FC = () => {
         return;
       }
 
-      const response = await fetch('/api/analytics/performance-deltas', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        getApiEndpoint(API_ENDPOINTS.ANALYTICS_PERFORMANCE_DELTAS),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -247,7 +258,11 @@ export const GapAnalysisDashboard: React.FC = () => {
   }, [getToken, retryCount]);
 
   const handleStudyClick = (systemName: string) => {
-    navigate(`/quiz?system=${encodeURIComponent(systemName)}`);
+    if (onStudySystem) {
+      onStudySystem(systemName);
+    } else {
+      navigate('/');
+    }
   };
 
   // Loading state
