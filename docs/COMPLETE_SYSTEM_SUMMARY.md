@@ -217,6 +217,93 @@ Procedure: Central Line Placement
 
 ---
 
+### Module 4: The Smart Scribe & Tutor
+
+**Purpose**: Automation and synthesis layer for documentation and remediation
+
+**Key Technologies:**
+- `gemini-dictation` (Real-time SOAP note generation)
+- `info_genius` (Dynamic infographic generation)
+- `echoscript + echo_paths` (Timing analytics and conversation trees)
+- `live_audio` (Enhanced audio visualization)
+
+**Core Features:**
+
+1. **Auto-Scribe System**
+   - Background SOAP note drafting during encounter
+   - 5-second update intervals
+   - Element-by-element extraction with confidence scores
+   - Side-by-side comparison (student vs. AI)
+   - Missing element highlighting with severity
+
+2. **Dynamic Remediation Graphics**
+   - On-the-fly infographic generation
+   - 7 infographic types (comparison, flowchart, differential, etc.)
+   - Pre-generated high-yield library (50+ common confusions)
+   - Interactive SVG with hover elements
+
+3. **Enhanced Audio Visualization**
+   - Vitality meter reflecting patient state
+   - Color shifting based on O2, HR, BP
+   - Haptic feedback patterns
+   - Background blur intensity = patient deterioration
+
+4. **Timing Analytics**
+   - Real-time metric tracking (time to recognition, action, diagnosis)
+   - Echo path visualization (conversation tree)
+   - Rabbit hole detection
+   - Efficiency scoring
+
+5. **Automated Case Files**
+   - Comprehensive learning artifact
+   - Transcript + SOAP comparison + analytics
+   - Personalized pearls
+   - Dynamic infographics embedded
+   - PDF/JSON/HTML export
+
+**Example:**
+
+```
+[During OSCE]
+Student asks: "What brings you in today?"
+Patient: "Chest pain"
+AI (background): Drafting SOAP note...
+  Subjective: 55yo M with chest pain (30 min onset)...
+  [Updates every 5s]
+
+Student asks: "What's your typical diet?"
+Timing Analytics: ⚠️ Rabbit hole detected (3s wasted)
+
+[Post-OSCE]
+SOAP Comparison:
+  Student: "55yo M with chest pain"
+  Gold Standard: "55yo M with sudden onset crushing substernal chest
+    pressure x 30 min, radiating to L arm..."
+  
+  ❌ MISSING: Onset (critical)
+  ❌ MISSING: Character (critical)
+  ❌ MISSING: Radiation (important)
+  Score: 25/100
+
+Infographic Generated: "STEMI vs. NSTEMI Comparison"
+[Visual side-by-side with ECG differences]
+
+Case File: [Download PDF with all analytics + personalized teaching points]
+```
+
+**Deliverables:**
+- 850-line type system (`types/smart-scribe-system.ts`)
+- 680-line SOAP service (`services/scribe/soapNoteService.ts`)
+- 420-line infographic service (`services/scribe/infographicService.ts`)
+- 580-line timing service (`services/analytics/timingAnalyticsService.ts`)
+- 1,800-line architecture doc
+
+**Cost**: $0.39 per OSCE session
+
+**Status**: ✅ Design Complete
+
+---
+
 ### AI Tutor System (ask_the_manual)
 
 **Purpose**: Replace static database with RAG-backed tutoring using clinical textbooks
@@ -417,6 +504,18 @@ Citations:
 
 **Subtotal**: **3,700 lines**
 
+### Module 4: Smart Scribe & Tutor
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `types/smart-scribe-system.ts` | 850 | Module 4 types |
+| `services/scribe/soapNoteService.ts` | 680 | Real-time SOAP generation |
+| `services/scribe/infographicService.ts` | 420 | Dynamic infographics |
+| `services/analytics/timingAnalyticsService.ts` | 580 | Timing analytics |
+| `docs/MODULE_4_SMART_SCRIBE_ARCHITECTURE.md` | 1,800 | Architecture guide |
+
+**Subtotal**: **4,330 lines**
+
 ### Summary & Meta
 
 | File | Lines | Purpose |
@@ -427,7 +526,7 @@ Citations:
 
 ---
 
-## **GRAND TOTAL: ~9,000 lines of architecture + documentation**
+## **GRAND TOTAL: ~13,000+ lines of architecture + documentation**
 
 ---
 
@@ -472,11 +571,14 @@ Citations:
 | **Veo Cameos** | 100 videos (pre-generated) | $200 |
 | **Gemini Grounding (ask_the_manual)** | 10,000 queries | $300 |
 | **Gemini Spatial Understanding** | 2,000 heatmaps | $100 |
+| **gemini-dictation** | 100 hours transcription | $200 |
+| **info_genius** | 500 infographics | $100 |
+| **echoscript** | 1000 analytics sessions | $50 |
 | **Cloudflare Workers/DO** | 1M requests | $50 |
 | **R2 Storage** | 500GB video/images | $10 |
 | **Bandwidth** | 10TB egress | $100 |
 
-**Total**: ~$1,260/month (~$1.26 per student)
+**Total**: ~$1,610/month (~$1.61 per student)
 
 ---
 
@@ -572,14 +674,27 @@ This architecture provides a **production-ready blueprint** for transforming PAN
 2. **RAG-backed tutoring** with textbook citations
 3. **Interactive visual diagnostics** replacing static MCQ
 4. **Digital procedural simulation** with sterile field tracking
+5. **Automated SOAP note generation** with gold standard comparison
+6. **Dynamic infographics** for personalized remediation
+7. **Timing analytics** with conversation tree visualization
+8. **Comprehensive case files** as learning artifacts
 
 **Total Scope:**
-- **~9,000 lines** of architecture and documentation
-- **4 integrated modules** (OSCE, Visual, Procedural, AI Tutor)
+- **~13,000+ lines** of architecture and documentation
+- **4 integrated modules** (OSCE, Visual, Procedural, Smart Scribe)
+- **AI Tutor system** woven throughout
 - **10-week implementation roadmap**
-- **$1.26/student/month** operating cost
+- **$1.61/student/month** operating cost
 
-**Status**: ✅ Design Complete - Ready for Prototype Phase
+**Module Summary:**
+- **Module 1**: Living Patient (Voice + Video + State Machine) - 4,450 lines
+- **Module 2**: Clinical Eye (Interactive Diagnostics) - 520 lines
+- **Module 3**: Digital Sim Lab (Procedures) - 650 lines
+- **Module 4**: Smart Scribe (Automation + Remediation) - 4,330 lines
+- **AI Tutor**: ask_the_manual Integration - 1,030 lines
+- **Documentation**: Architecture Guides - 4,800 lines
+
+**Status**: ✅ Complete Architecture - Ready for Prototype Phase
 
 ---
 
