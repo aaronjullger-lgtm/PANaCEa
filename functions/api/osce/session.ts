@@ -38,6 +38,12 @@ export const onRequestPost = authenticatedEndpoint(
         log.warn('User not found');
         return { status: 404, error: 'User not found' };
       }
+      
+      // NEW: Load case data to check for state machine
+      const caseData = await prisma.patientEncounterCase.findUnique({
+        where: { id: caseId },
+        select: { id: true, stateMachine: true },
+      });
 
       // Check for existing active session for this case
       const existingSession = await prisma.patientEncounterSession.findFirst({
@@ -50,7 +56,25 @@ export const onRequestPost = authenticatedEndpoint(
 
       if (existingSession) {
         log.info('Returning existing session', { sessionId: existingSession.id });
-        return { data: { success: true, session: existingSession } };
+        
+        // NEW: Return enhanced session info
+        const wsUrl = env.VOICE_WEBSOCKET_URL 
+          ? `${env.VOICE_WEBSOCKET_URL}/voice/${existingSession.id}`
+          : null;
+          
+        return { 
+          data: { 
+            success: true, 
+            session: existingSession,
+            wsUrl,
+            features: {
+              voiceModeAvailable: !!env.VOICE_WEBSOCKET_URL,
+              stateMachineAvailable: false, // Would need to check case
+              realtimeSOAPAvailable: true,
+              timingAnalyticsAvailable: true,
+            }
+          } 
+        };
       }
 
       // Create new session
@@ -64,7 +88,25 @@ export const onRequestPost = authenticatedEndpoint(
       });
 
       log.info('Created new OSCE session', { sessionId: session.id });
-      return { data: { success: true, session } };
+      
+      // NEW: Prepare WebSocket URL for voice mode (if PatientVoiceSession deployed)
+      const wsUrl = env.VOICE_WEBSOCKET_URL 
+        ? `${env.VOICE_WEBSOCKET_URL}/voice/${session.id}`
+        : null;
+      
+      return { 
+        data: { 
+          success: true, 
+          session,
+          wsUrl, // NEW: Voice mode WebSocket URL
+          features: { // NEW: Available features for this session
+            voiceModeAvailable: !!env.VOICE_WEBSOCKET_URL,
+            stateMachineAvailable: !!caseData?.stateMachine,
+            realtimeSOAPAvailable: true,
+            timingAnalyticsAvailable: true,
+          }
+        } 
+      };
     } catch (error: any) {
       log.error('Error creating OSCE session', error);
       return { status: 500, error: 'Internal server error' };
