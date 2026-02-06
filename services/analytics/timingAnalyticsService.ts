@@ -207,10 +207,13 @@ export class TimingAnalyticsService {
     this.recordMilestone(sessionId, 'Session End');
 
     // Calculate total duration
-    const sessionStart = analytics.milestones[0]?.timestamp!;
-    const sessionEnd = analytics.milestones[analytics.milestones.length - 1]?.timestamp!;
-    analytics.summary.totalDuration =
-      (new Date(sessionEnd).getTime() - new Date(sessionStart).getTime()) / 1000;
+    const firstMilestone = analytics.milestones[0];
+    const lastMilestone = analytics.milestones[analytics.milestones.length - 1];
+    
+    if (firstMilestone && lastMilestone) {
+      analytics.summary.totalDuration =
+        (new Date(lastMilestone.timestamp).getTime() - new Date(firstMilestone.timestamp).getTime()) / 1000;
+    }
 
     // Analyze conversation path
     await this.analyzeEchoPath(sessionId);
@@ -307,19 +310,20 @@ export class TimingAnalyticsService {
 
       // If relevance < 0.3, consider it a rabbit hole
       if (node.relevanceScore < 0.3) {
-        // Find the subtree from this node
-        const subtree = this.getSubtree(node, nodes);
-        const timeWasted = subtree.reduce((sum, n) => sum + n.timeSpent, 0);
+      // Find the subtree from this node
+      const subtree = this.getSubtree(node, nodes);
+      const timeWasted = subtree.reduce((sum, n) => sum + n.timeSpent, 0);
 
-        if (timeWasted > 10) {
-          // > 10 seconds wasted
-          rabbitHoles.push({
-            startNodeId: node.id,
-            endNodeId: subtree[subtree.length - 1]?.id || node.id,
-            timeWasted,
-            reason: this.identifyRabbitHoleReason(node),
-          });
-        }
+      if (timeWasted > 10) {
+        // > 10 seconds wasted
+        const lastNode = subtree[subtree.length - 1];
+        rabbitHoles.push({
+          startNodeId: node.id,
+          endNodeId: lastNode ? lastNode.id : node.id,
+          timeWasted,
+          reason: this.identifyRabbitHoleReason(node),
+        });
+      }
       }
     }
 

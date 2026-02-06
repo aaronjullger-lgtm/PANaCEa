@@ -187,7 +187,7 @@ export function AchievementNotification({
               className="w-full mt-6 px-4 py-3 rounded-lg bg-[var(--color-accent)] text-white font-semibold hover:opacity-90 transition-opacity"
             >
               Awesome!
-            </button>
+            </motion.button>
           </motion.div>
         </motion.div>
       )}

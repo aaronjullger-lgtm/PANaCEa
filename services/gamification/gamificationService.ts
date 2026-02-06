@@ -401,9 +401,10 @@ export class GamificationService {
     const req = accessory.requirement;
 
     switch (req.type) {
-      case 'mastery':
+      case 'mastery': {
         const masteryScore = userStats.masteryScores[req.target] ?? 0;
         return masteryScore >= req.threshold;
+      }
 
       case 'streak':
         return userStats.studyStreak >= req.threshold;
