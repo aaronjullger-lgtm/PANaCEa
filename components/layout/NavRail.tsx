@@ -60,7 +60,13 @@ export const NavRail: React.FC<NavRailProps> = ({
   // Collapse by default on mobile when viewport is narrow
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
-    const handler = () => setCollapsed((c) => (mq.matches ? true : c));
+    const handler = () => {
+      if (mq.matches) {
+        setCollapsed(true);
+      }
+    };
+    // Run immediately on mount
+    handler();
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);

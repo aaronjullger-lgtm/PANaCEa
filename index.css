@@ -1326,6 +1326,20 @@ a,
    MOBILE RESPONSIVE STYLES
    =============================================== */
 
+/* Layout adjustments for mobile */
+@media (max-width: 768px) {
+  :root {
+    --nav-rail-width: 56px; /* Always collapsed on mobile */
+  }
+  
+  /* Ensure main content has proper mobile spacing */
+  main#main-content {
+    margin-left: var(--nav-rail-width) !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
+
 /* Condition Modal Mobile Optimization */
 @media (max-width: 768px) {
   .condition-modal {

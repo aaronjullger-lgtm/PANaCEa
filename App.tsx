@@ -831,13 +831,10 @@ const App: React.FC = () => {
                   </a>
                   {/* Header - theme-aware for light/dark contrast */}
                   <header 
-                    className="sticky top-0 z-40 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm"
+                    className="sticky top-0 z-40 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm backdrop-blur-md bg-opacity-95 dark:bg-opacity-95"
                     style={{ height: 'var(--header-height, 56px)' }}
                   >
-                    <PageContainer
-                      maxWidth="full"
-                      className="py-3 h-full flex items-center"
-                    >
+                    <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center">
                       <AppBrand
                         size="sm"
                         asLink
@@ -867,7 +864,7 @@ const App: React.FC = () => {
                         <MasteryHeatmapToggle compact className="hidden sm:inline-flex" />
                         <ThemeToggleButton />
                       </AppBrand>
-                    </PageContainer>
+                    </div>
                   </header>
 
                   {/* Settings/Stats Modal */}
