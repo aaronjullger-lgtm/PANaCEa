@@ -93,6 +93,7 @@ export {
   getPoolStatus,
   checkAndReplenishPool,
   getSessionSummary,
+  prefetchQuestions,
 } from './mainSessionService';
 
 // ============================================================================
