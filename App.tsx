@@ -93,6 +93,7 @@ import type {
 import { hasCompletedOnboarding, saveUserProfile, getExamLabel } from './services/analytics';
 import { CommuterProvider } from './contexts/CommuterContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { SystemIntegrationProvider } from './contexts/SystemIntegrationContext';
 import { OfflineSyncIndicator } from './components/offline/OfflineSyncIndicator';
 import { ProductTour, useProductTourShouldShow } from './components/onboarding/ProductTour';
 
@@ -775,10 +776,11 @@ const App: React.FC = () => {
 
   // Main authenticated app
   return (
-    <ToastProvider>
-      <CommuterProvider>
-        {/* Sonner toast notifications */}
-        <Toaster
+    <SystemIntegrationProvider>
+      <ToastProvider>
+        <CommuterProvider>
+          {/* Sonner toast notifications */}
+          <Toaster
           position="top-right"
           richColors
           closeButton
@@ -1827,8 +1829,9 @@ const App: React.FC = () => {
             />
           </Routes>
         </div>
-      </CommuterProvider>
-    </ToastProvider>
+        </CommuterProvider>
+      </ToastProvider>
+    </SystemIntegrationProvider>
   );
 };
 

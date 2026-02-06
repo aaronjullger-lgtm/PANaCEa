@@ -1,0 +1,618 @@
+/**
+ * SOAP Note Service
+ * 
+ * Real-time SOAP note generation using gemini-dictation during OSCE sessions.
+ * Provides automated "gold standard" notes and comparison with student notes.
+ * 
+ * Features:
+ * - Background note drafting during encounter
+ * - Element-by-element tracking with confidence scores
+ * - Side-by-side comparison (student vs. AI)
+ * - Missing element highlighting
+ * - Completeness scoring
+ * 
+ * @module soapNoteService
+ */
+
+import type {
+  SOAPNote,
+  SOAPElement,
+  RealtimeSOAPGenerator,
+  SOAPComparison,
+  HPIElement,
+  GeminiDictationRequest,
+  GeminiDictationResponse,
+} from '@/types/smart-scribe-system';
+
+interface SOAPNoteServiceConfig {
+  geminiApiKey: string;
+  apiEndpoint?: string;
+  updateInterval?: number;
+  confidenceThreshold?: number;
+}
+
+export class SOAPNoteService {
+  private config: SOAPNoteServiceConfig;
+  private activeGenerators: Map<string, RealtimeSOAPGenerator> = new Map();
+
+  constructor(config: SOAPNoteServiceConfig) {
+    this.config = {
+      apiEndpoint: 'https://generativelanguage.googleapis.com/v1beta',
+      updateInterval: 5000, // 5 seconds
+      confidenceThreshold: 0.7,
+      ...config,
+    };
+  }
+
+  /**
+   * Start real-time SOAP note generation for a session.
+   */
+  async startRealtimeGeneration(sessionId: string): Promise<string> {
+    const generator: RealtimeSOAPGenerator = {
+      id: `gen-${sessionId}`,
+      sessionId,
+      draftNote: this.createEmptySOAPNote(sessionId),
+      transcriptBuffer: [],
+      vitalsHistory: [],
+      physicalFindingsHistory: [],
+      status: 'listening',
+      lastUpdateAt: new Date().toISOString(),
+      config: {
+        updateInterval: this.config.updateInterval!,
+        confidenceThreshold: this.config.confidenceThreshold!,
+        enableStreaming: true,
+      },
+    };
+
+    this.activeGenerators.set(sessionId, generator);
+
+    // Start periodic update loop
+    this.startUpdateLoop(sessionId);
+
+    return generator.id;
+  }
+
+  /**
+   * Add transcript segment to the generator.
+   */
+  async addTranscript(
+    sessionId: string,
+    speaker: 'student' | 'patient',
+    text: string
+  ): Promise<void> {
+    const generator = this.activeGenerators.get(sessionId);
+    if (!generator) return;
+
+    generator.transcriptBuffer.push({
+      speaker,
+      text,
+      timestamp: new Date().toISOString(),
+    });
+
+    // If buffer is large enough, trigger update
+    if (generator.transcriptBuffer.length >= 5) {
+      await this.updateDraftNote(sessionId);
+    }
+  }
+
+  /**
+   * Add vitals update to the generator.
+   */
+  async addVitals(
+    sessionId: string,
+    vitals: Record<string, string | number>
+  ): Promise<void> {
+    const generator = this.activeGenerators.get(sessionId);
+    if (!generator) return;
+
+    generator.vitalsHistory.push({
+      vitals,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Trigger immediate update for vitals
+    await this.updateDraftNote(sessionId);
+  }
+
+  /**
+   * Add physical findings to the generator.
+   */
+  async addPhysicalFindings(
+    sessionId: string,
+    findings: Record<string, unknown>
+  ): Promise<void> {
+    const generator = this.activeGenerators.get(sessionId);
+    if (!generator) return;
+
+    generator.physicalFindingsHistory.push({
+      findings,
+      timestamp: new Date().toISOString(),
+    });
+
+    await this.updateDraftNote(sessionId);
+  }
+
+  /**
+   * Get current draft note.
+   */
+  getDraftNote(sessionId: string): SOAPNote | null {
+    const generator = this.activeGenerators.get(sessionId);
+    return generator?.draftNote ?? null;
+  }
+
+  /**
+   * Finalize note (stop generation).
+   */
+  async finalizeNote(sessionId: string): Promise<SOAPNote> {
+    const generator = this.activeGenerators.get(sessionId);
+    if (!generator) {
+      throw new Error(`No active generator for session ${sessionId}`);
+    }
+
+    generator.status = 'generating';
+
+    // Final comprehensive update
+    await this.updateDraftNote(sessionId);
+
+    generator.status = 'complete';
+
+    // Calculate completeness
+    const completenessScore = this.calculateCompleteness(generator.draftNote);
+    generator.draftNote.metadata.completenessScore = completenessScore;
+
+    return generator.draftNote;
+  }
+
+  /**
+   * Compare student note with AI gold standard.
+   */
+  async compareNotes(studentNote: SOAPNote, goldStandardNote: SOAPNote): Promise<SOAPComparison> {
+    const elementComparison: SOAPComparison['elementComparison'] = [];
+
+    // Compare HPI elements
+    const hpiElements: HPIElement[] = [
+      'chief_complaint',
+      'onset',
+      'location',
+      'duration',
+      'character',
+      'aggravating_factors',
+      'relieving_factors',
+      'severity',
+    ];
+
+    for (const element of hpiElements) {
+      const studentElement = studentNote.subjective.hpi[element];
+      const goldElement = goldStandardNote.subjective.hpi[element];
+
+      if (!goldElement) continue;
+
+      let status: 'present' | 'missing' | 'incomplete' | 'incorrect';
+      let feedback: string;
+      let severity: 'critical' | 'important' | 'minor' = 'important';
+
+      if (!studentElement) {
+        status = 'missing';
+        feedback = `Missing ${element.replace('_', ' ')}: ${goldElement.content}`;
+        severity = goldElement.isCritical ? 'critical' : 'important';
+      } else {
+        const similarity = this.calculateSimilarity(
+          studentElement.content,
+          goldElement.content
+        );
+
+        if (similarity > 0.8) {
+          status = 'present';
+          feedback = `Good documentation of ${element.replace('_', ' ')}`;
+        } else if (similarity > 0.5) {
+          status = 'incomplete';
+          feedback = `Partially documented ${element.replace('_', ' ')}. Consider including: ${goldElement.content}`;
+        } else {
+          status = 'incorrect';
+          feedback = `Incorrect ${element.replace('_', ' ')}. Expected: ${goldElement.content}`;
+          severity = 'critical';
+        }
+      }
+
+      elementComparison.push({
+        section: 'subjective',
+        elementType: `hpi.${element}`,
+        studentContent: studentElement?.content,
+        goldStandardContent: goldElement.content,
+        status,
+        feedback,
+        severity,
+      });
+    }
+
+    // Compare vital signs
+    if (goldStandardNote.objective.vitalSigns) {
+      const studentVitals = studentNote.objective.vitalSigns;
+      const goldVitals = goldStandardNote.objective.vitalSigns;
+
+      elementComparison.push({
+        section: 'objective',
+        elementType: 'vitalSigns',
+        studentContent: studentVitals?.content,
+        goldStandardContent: goldVitals.content,
+        status: studentVitals ? 'present' : 'missing',
+        feedback: studentVitals
+          ? 'Vital signs documented'
+          : 'Missing vital signs documentation',
+        severity: 'critical',
+      });
+    }
+
+    // Compare assessment
+    if (goldStandardNote.assessment.primaryDiagnosis) {
+      const studentDx = studentNote.assessment.primaryDiagnosis;
+      const goldDx = goldStandardNote.assessment.primaryDiagnosis;
+
+      const dxCorrect = studentDx
+        ? studentDx.content.toLowerCase() === goldDx.content.toLowerCase()
+        : false;
+
+      elementComparison.push({
+        section: 'assessment',
+        elementType: 'primaryDiagnosis',
+        studentContent: studentDx?.content,
+        goldStandardContent: goldDx.content,
+        status: dxCorrect ? 'present' : studentDx ? 'incorrect' : 'missing',
+        feedback: dxCorrect
+          ? 'Correct diagnosis'
+          : `Diagnosis should be: ${goldDx.content}`,
+        severity: 'critical',
+      });
+    }
+
+    // Calculate scores
+    const scores = this.calculateComparisonScores(elementComparison);
+
+    // Extract feedback
+    const strengths = elementComparison
+      .filter((e) => e.status === 'present')
+      .map((e) => e.feedback)
+      .slice(0, 3);
+
+    const areasForImprovement = elementComparison
+      .filter((e) => e.status !== 'present')
+      .sort((a, b) => {
+        const severityOrder = { critical: 0, important: 1, minor: 2 };
+        return severityOrder[a.severity] - severityOrder[b.severity];
+      })
+      .map((e) => e.feedback)
+      .slice(0, 5);
+
+    const teachingPoints = this.generateTeachingPoints(elementComparison);
+
+    return {
+      id: `comparison-${Date.now()}`,
+      studentNote,
+      goldStandardNote,
+      elementComparison,
+      scores,
+      strengths,
+      areasForImprovement,
+      teachingPoints,
+    };
+  }
+
+  // ========================================================================
+  // PRIVATE HELPERS
+  // ========================================================================
+
+  /**
+   * Create empty SOAP note structure.
+   */
+  private createEmptySOAPNote(sessionId: string): SOAPNote {
+    return {
+      id: `note-${sessionId}`,
+      sessionId,
+      subjective: {
+        chiefComplaint: this.createEmptyElement(),
+        hpi: {
+          chief_complaint: null,
+          onset: null,
+          location: null,
+          duration: null,
+          character: null,
+          aggravating_factors: null,
+          relieving_factors: null,
+          timing: null,
+          severity: null,
+          associated_symptoms: null,
+          previous_episodes: null,
+          risk_factors: null,
+        },
+        reviewOfSystems: {},
+      },
+      objective: {
+        vitalSigns: this.createEmptyElement(),
+        physicalExam: {},
+      },
+      assessment: {
+        primaryDiagnosis: this.createEmptyElement(),
+        differentialDiagnoses: [],
+        clinicalReasoning: this.createEmptyElement(),
+      },
+      plan: {},
+      metadata: {
+        author: 'ai_gold_standard',
+        createdAt: new Date().toISOString(),
+        wordCount: 0,
+        completenessScore: 0,
+      },
+    };
+  }
+
+  /**
+   * Create empty SOAP element.
+   */
+  private createEmptyElement(): SOAPElement {
+    return {
+      content: '',
+      source: 'transcript',
+      timestamp: new Date().toISOString(),
+      confidence: 0,
+      isCritical: false,
+    };
+  }
+
+  /**
+   * Start periodic update loop.
+   */
+  private startUpdateLoop(sessionId: string): void {
+    const generator = this.activeGenerators.get(sessionId);
+    if (!generator) return;
+
+    const interval = setInterval(async () => {
+      const gen = this.activeGenerators.get(sessionId);
+      if (!gen || gen.status === 'complete') {
+        clearInterval(interval);
+        return;
+      }
+
+      await this.updateDraftNote(sessionId);
+    }, generator.config.updateInterval);
+  }
+
+  /**
+   * Update draft note from current transcript/vitals.
+   */
+  private async updateDraftNote(sessionId: string): Promise<void> {
+    const generator = this.activeGenerators.get(sessionId);
+    if (!generator) return;
+
+    generator.status = 'generating';
+
+    // Build context for Gemini
+    const context = this.buildContext(generator);
+
+    // Call Gemini to extract SOAP elements
+    const updatedNote = await this.extractSOAPElements(context, generator.draftNote);
+
+    generator.draftNote = updatedNote;
+    generator.lastUpdateAt = new Date().toISOString();
+    generator.status = 'listening';
+  }
+
+  /**
+   * Build context for Gemini extraction.
+   */
+  private buildContext(generator: RealtimeSOAPGenerator): string {
+    let context = '';
+
+    // Transcript
+    if (generator.transcriptBuffer.length > 0) {
+      context += 'Transcript:\n';
+      for (const turn of generator.transcriptBuffer) {
+        context += `${turn.speaker}: ${turn.text}\n`;
+      }
+      context += '\n';
+    }
+
+    // Latest vitals
+    if (generator.vitalsHistory.length > 0) {
+      const latestVitals = generator.vitalsHistory[generator.vitalsHistory.length - 1];
+      context += `Vital Signs: ${JSON.stringify(latestVitals.vitals)}\n\n`;
+    }
+
+    // Latest physical findings
+    if (generator.physicalFindingsHistory.length > 0) {
+      const latestFindings =
+        generator.physicalFindingsHistory[generator.physicalFindingsHistory.length - 1];
+      context += `Physical Findings: ${JSON.stringify(latestFindings.findings)}\n\n`;
+    }
+
+    return context;
+  }
+
+  /**
+   * Extract SOAP elements using Gemini.
+   */
+  private async extractSOAPElements(
+    context: string,
+    currentNote: SOAPNote
+  ): Promise<SOAPNote> {
+    const prompt = `You are a medical scribe. Extract SOAP note elements from this clinical encounter.
+
+${context}
+
+Current SOAP note (update as needed):
+${JSON.stringify(currentNote, null, 2)}
+
+Instructions:
+1. Extract all HPI elements (onset, duration, character, etc.)
+2. Document vital signs and physical exam findings
+3. Formulate assessment and differential diagnoses
+4. Create a comprehensive plan
+5. Return updated SOAP note in JSON format
+
+Important: Only include information that is explicitly stated or can be confidently inferred.`;
+
+    try {
+      const response = await fetch(
+        `${this.config.apiEndpoint}/models/gemini-2.0-flash-exp:generateContent?key=${this.config.geminiApiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.2, // Low temp for factual extraction
+              responseMimeType: 'application/json',
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Gemini API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const extractedNote = JSON.parse(
+        data.candidates?.[0]?.content?.parts?.[0]?.text || '{}'
+      );
+
+      // Merge with current note
+      return this.mergeNotes(currentNote, extractedNote);
+    } catch (error) {
+      console.error('Error extracting SOAP elements:', error);
+      return currentNote;
+    }
+  }
+
+  /**
+   * Merge extracted note with current note.
+   */
+  private mergeNotes(currentNote: SOAPNote, extractedNote: Partial<SOAPNote>): SOAPNote {
+    // Deep merge logic (simplified)
+    return {
+      ...currentNote,
+      ...extractedNote,
+      subjective: {
+        ...currentNote.subjective,
+        ...extractedNote.subjective,
+      },
+      objective: {
+        ...currentNote.objective,
+        ...extractedNote.objective,
+      },
+      assessment: {
+        ...currentNote.assessment,
+        ...extractedNote.assessment,
+      },
+      plan: {
+        ...currentNote.plan,
+        ...extractedNote.plan,
+      },
+    };
+  }
+
+  /**
+   * Calculate completeness score.
+   */
+  private calculateCompleteness(note: SOAPNote): number {
+    let total = 0;
+    let present = 0;
+
+    // Check HPI elements
+    const hpiElements: HPIElement[] = [
+      'chief_complaint',
+      'onset',
+      'location',
+      'duration',
+      'character',
+      'severity',
+    ];
+
+    for (const element of hpiElements) {
+      total++;
+      if (note.subjective.hpi[element]?.content) present++;
+    }
+
+    // Check objective
+    if (note.objective.vitalSigns.content) {
+      total++;
+      present++;
+    }
+
+    // Check assessment
+    if (note.assessment.primaryDiagnosis.content) {
+      total++;
+      present++;
+    }
+
+    return Math.round((present / total) * 100);
+  }
+
+  /**
+   * Calculate comparison scores.
+   */
+  private calculateComparisonScores(
+    elementComparison: SOAPComparison['elementComparison']
+  ): SOAPComparison['scores'] {
+    const total = elementComparison.length;
+    const present = elementComparison.filter((e) => e.status === 'present').length;
+    const incomplete = elementComparison.filter((e) => e.status === 'incomplete').length;
+
+    const completeness = Math.round((present / total) * 100);
+    const accuracy = Math.round(((present + incomplete * 0.5) / total) * 100);
+
+    return {
+      completeness,
+      accuracy,
+      organization: 85, // Placeholder
+      overall: Math.round((completeness + accuracy) / 2),
+    };
+  }
+
+  /**
+   * Calculate text similarity.
+   */
+  private calculateSimilarity(text1: string, text2: string): number {
+    // Simple word overlap similarity (Jaccard)
+    const words1 = new Set(text1.toLowerCase().split(/\s+/));
+    const words2 = new Set(text2.toLowerCase().split(/\s+/));
+
+    const intersection = new Set([...words1].filter((x) => words2.has(x)));
+    const union = new Set([...words1, ...words2]);
+
+    return intersection.size / union.size;
+  }
+
+  /**
+   * Generate teaching points from comparison.
+   */
+  private generateTeachingPoints(
+    elementComparison: SOAPComparison['elementComparison']
+  ): string[] {
+    const points: string[] = [];
+
+    const missedCritical = elementComparison.filter(
+      (e) => e.status === 'missing' && e.severity === 'critical'
+    );
+
+    if (missedCritical.length > 0) {
+      points.push(`Critical elements missed: Always document ${missedCritical.map((e) => e.elementType).join(', ')}`);
+    }
+
+    const incorrectAssessment = elementComparison.find(
+      (e) => e.elementType === 'primaryDiagnosis' && e.status === 'incorrect'
+    );
+
+    if (incorrectAssessment) {
+      points.push(`Consider the diagnostic criteria for ${incorrectAssessment.goldStandardContent}`);
+    }
+
+    return points;
+  }
+}
+
+/**
+ * Factory function.
+ */
+export function createSOAPNoteService(geminiApiKey: string): SOAPNoteService {
+  return new SOAPNoteService({ geminiApiKey });
+}
