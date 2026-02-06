@@ -39,9 +39,9 @@ export function ModuleTransition({
       }, 1500);
 
       return () => clearTimeout(timer);
-    } else {
-      onComplete?.();
     }
+    onComplete?.();
+    return undefined;
   }, [contextPreview, onComplete]);
 
   const getTransitionVariants = () => {

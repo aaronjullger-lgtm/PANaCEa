@@ -14,6 +14,7 @@ import {
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserByClerkId } from '../_shared/resolveUser';
 import { IDSchema } from '../_shared/schemas';
+import type { Prisma } from '@prisma/client';
 
 const InterveneBodySchema = z.object({
   body: z.object({
@@ -51,7 +52,8 @@ function getNumericVital(vitals: VitalSigns, key: string, altKey: string): numbe
   if (typeof v === 'string') {
     if (key === 'bp' || altKey === 'bp') {
       const parts = v.split('/').map(Number);
-      return Number.isFinite(parts[0]) ? parts[0] : 120;
+      const first = parts[0];
+      return (Number.isFinite(first) ? first : 120) as number;
     }
     return Number(v) || 0;
   }
@@ -81,8 +83,8 @@ function applyIntervention(
   if (typeof out.bp === 'string') {
     const parts = out.bp.split('/').map(Number);
     if (parts.length >= 2) {
-      sys = parts[0];
-      dia = parts[1];
+      sys = parts[0] ?? 120;
+      dia = parts[1] ?? 80;
     }
   } else if (out.bpSystolic != null) {
     sys = Number(out.bpSystolic);
@@ -138,7 +140,7 @@ function checkEmergencyValues(
   const o2 = getNumericVital(vitals, 'o2Sat', 'o2') || 98;
 
   for (const r of ranges) {
-    const ev = r.emergencyValues as Record<string, { min?: number; max?: number }> | undefined;
+    const ev = r.emergencyValues as { min?: number; max?: number } | undefined;
     if (!ev) continue;
     const key = r.vitalSign.toLowerCase();
     if (key.includes('heart') || key.includes('hr')) {
@@ -222,8 +224,8 @@ export const onRequestPost = authenticatedEndpoint(
       await prisma.patientEncounterSession.update({
         where: { id: sessionId },
         data: {
-          physicalFindings: vitals,
-          messages: updatedMessages,
+          physicalFindings: JSON.parse(JSON.stringify(vitals)) as Prisma.InputJsonValue,
+          messages: JSON.parse(JSON.stringify(updatedMessages)) as Prisma.InputJsonValue,
           status: isEmergency ? 'Unstable' : 'active',
           updatedAt: new Date(),
         },

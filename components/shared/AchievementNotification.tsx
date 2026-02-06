@@ -40,6 +40,7 @@ export function AchievementNotification({
         return () => clearTimeout(timer);
       }
     }
+    return undefined;
   }, [badge, autoDismiss, autoDismissDelay, onDismiss]);
 
   const getRarityColor = (rarity: AchievementBadge['rarity']) => {

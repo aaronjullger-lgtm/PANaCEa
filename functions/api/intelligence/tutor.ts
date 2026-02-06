@@ -467,14 +467,14 @@ export const onRequestPost = authenticatedEndpoint(
       let sessionCacheName = validated.sessionCacheName;
 
       if (!sessionCacheName && weakSpotProfile) {
-        sessionCacheName = await createWeakSpotCache(env, modelName, weakSpotProfile);
+        sessionCacheName = (await createWeakSpotCache(env, modelName, weakSpotProfile)) ?? undefined;
         if (sessionCacheName) {
           log.info('Created weak-spot context cache', { cacheName: sessionCacheName });
         }
       }
 
       // 3) Call Gemini 3 Tutor with optional cache + thinking configuration.
-      const payload = await callGeminiTutor(env, modelName, validated, sessionCacheName);
+      const payload = await callGeminiTutor(env, modelName, validated, sessionCacheName ?? undefined);
 
       // 4) Return structured payload for the frontend Reasoning Tutor UI.
       return {

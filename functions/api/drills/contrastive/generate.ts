@@ -126,15 +126,18 @@ export const onRequestPost = authenticatedEndpoint(
         otherConditionNames.push(name);
       }
 
-      const prompt = buildContrastivePrompt(set, targetConditionName, otherConditionNames);
+      const nameForPrompt: string = targetConditionName ?? targetConditionId;
+      const prompt = buildContrastivePrompt(set, nameForPrompt, otherConditionNames);
 
       logger.info('Generating contrastive question', {
         userId: auth.userId,
         setId,
-        targetCondition: targetConditionName,
+        targetCondition: nameForPrompt,
       });
 
-      const generated = await generateWithGemini(env.GEMINI_API_KEY, prompt);
+      const apiKey = env.GEMINI_API_KEY;
+      if (!apiKey) throw new Error('GEMINI_API_KEY is not configured');
+      const generated = await generateWithGemini(apiKey, prompt);
 
       logger.info('Contrastive question generated successfully', {
         userId: auth.userId,
