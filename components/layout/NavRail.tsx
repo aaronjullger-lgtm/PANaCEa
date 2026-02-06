@@ -81,14 +81,18 @@ export const NavRail: React.FC<NavRailProps> = ({
       animate={{ width: collapsed ? RAIL_WIDTH_COLLAPSED : RAIL_WIDTH_EXPANDED }}
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
       className={`
-        fixed left-0 top-0 z-30 flex h-screen flex-col
+        fixed left-0 z-30 flex flex-col
         border-r border-[var(--color-border)]
         bg-[var(--color-bg-primary)] shadow-[0_4px_24px_var(--color-shadow-soft)]
         ${className}
       `}
+      style={{
+        top: 'var(--header-height, 56px)',
+        height: 'calc(100vh - var(--header-height, 56px))',
+      }}
     >
       {/* Collapse toggle */}
-      <div className="flex h-14 items-center justify-end border-b border-[var(--color-border)] px-2">
+      <div className="flex h-12 items-center justify-end border-b border-[var(--color-border)] px-2">
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}

@@ -830,10 +830,13 @@ const App: React.FC = () => {
                     Skip to main content
                   </a>
                   {/* Header - theme-aware for light/dark contrast */}
-                  <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
+                  <header 
+                    className="sticky top-0 z-40 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm"
+                    style={{ height: 'var(--header-height, 56px)' }}
+                  >
                     <PageContainer
-                      maxWidth={view === 'command_center' || view === 'menu' ? '6xl' : '4xl'}
-                      className="py-3"
+                      maxWidth="full"
+                      className="py-3 h-full flex items-center"
                     >
                       <AppBrand
                         size="sm"
@@ -951,9 +954,14 @@ const App: React.FC = () => {
                     view !== 'pearl_deck' && (
                     <main
                       id="main-content"
-                      className={`mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24 ${view === 'command_center' || view === 'menu' ? 'max-w-6xl' : 'max-w-4xl'}`}
-                      style={{ marginLeft: 'var(--nav-rail-width, 3.5rem)' }}
+                      className={`min-h-screen transition-all duration-300 ${view === 'command_center' || view === 'menu' ? '' : ''}`}
+                      style={{ 
+                        marginLeft: 'var(--nav-rail-width, 56px)',
+                        paddingTop: '1rem',
+                        paddingBottom: '6rem',
+                      }}
                     >
+                      <div className={`mx-auto px-4 sm:px-6 lg:px-8 ${view === 'command_center' || view === 'menu' ? 'max-w-6xl' : 'max-w-4xl'}`}>
                       {isLoading &&
                         (sessionSettings ? (
                           <DrillLoadingState
@@ -1732,6 +1740,7 @@ const App: React.FC = () => {
                           </motion.div>
                         )}
                       </AnimatePresence>
+                      </div>
                     </main>
                   )}
 
