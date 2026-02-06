@@ -62,6 +62,8 @@ export interface SidecarOptimizationResult {
 export interface SidecarEnv {
   FSRS_OPTIMIZER_URL?: string;
   FSRS_OPTIMIZER_SECRET?: string;
+  /** '1' or 'true' to use Python sidecar for optimization */
+  FSRS_USE_SIDECAR?: string;
 }
 
 /** Prisma-like client with only the ReviewLog findMany we need. */
@@ -211,8 +213,9 @@ export async function triggerFSRSOptimization(
 
 /**
  * Whether to use the Python sidecar for optimization (env flag).
+ * Named to avoid React hooks lint (not a hook).
  */
-export function useSidecar(env: SidecarEnv): boolean {
+export function shouldUseSidecar(env: SidecarEnv): boolean {
   const v = env.FSRS_USE_SIDECAR;
   return v === '1' || v === 'true';
 }

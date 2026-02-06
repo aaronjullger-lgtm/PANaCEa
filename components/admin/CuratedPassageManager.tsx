@@ -54,7 +54,6 @@ export const CuratedPassageManager: React.FC<CuratedPassageManagerProps> = ({
       setPassages(list);
     } catch (e) {
       setError('Error loading passages. See console for details.');
-      // eslint-disable-next-line no-console
       console.error('[CuratedPassageManager] loadPassages error', e);
     } finally {
       setLoading(false);
@@ -63,7 +62,6 @@ export const CuratedPassageManager: React.FC<CuratedPassageManagerProps> = ({
 
   useEffect(() => {
     loadPassages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conditionId]);
 
   async function handleCreate(e: React.FormEvent) {
@@ -102,7 +100,6 @@ export const CuratedPassageManager: React.FC<CuratedPassageManagerProps> = ({
       await loadPassages();
     } catch (e) {
       setError('Error creating passage. See console for details.');
-      // eslint-disable-next-line no-console
       console.error('[CuratedPassageManager] handleCreate error', e);
     } finally {
       setSaving(false);
@@ -110,7 +107,7 @@ export const CuratedPassageManager: React.FC<CuratedPassageManagerProps> = ({
   }
 
   async function handleDelete(id: string) {
-    if (!window.confirm('Delete this curated passage? This cannot be undone.')) return;
+    if (!globalThis.window?.confirm('Delete this curated passage? This cannot be undone.')) return;
     setSaving(true);
     setError(null);
     try {
@@ -129,7 +126,6 @@ export const CuratedPassageManager: React.FC<CuratedPassageManagerProps> = ({
       await loadPassages();
     } catch (e) {
       setError('Error deleting passage. See console for details.');
-      // eslint-disable-next-line no-console
       console.error('[CuratedPassageManager] handleDelete error', e);
     } finally {
       setSaving(false);

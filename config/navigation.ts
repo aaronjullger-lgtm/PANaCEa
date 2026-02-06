@@ -48,12 +48,13 @@ export const ICON_MAP: Record<string, LucideIcon> = {
 /**
  * Universal Medical Companion - Main Navigation Configuration
  *
- * NAVIGATION ARCHITECTURE:
- * - NavRail (components/layout/NavRail.tsx) is the only active navigation in the study app.
- *   It uses paths: /study, /menu, /study?tab=resources, /study?tab=analytics, /study/toolkit.
- * - NAVIGATION_STRUCTURE and NAVIGATION_CONFIG are for reference or future route-based layouts.
- *   MainLayout, Sidebar, and AppSidebar are not mounted in App; Sidebar paths do not map to view state.
- * - App uses view state for content; URL sync happens in App.tsx and CommandCenterHub.
+ * NAVIGATION ARCHITECTURE (single source of truth):
+ * - NavRail (components/layout/NavRail.tsx) is the only active navigation.
+ *   Exactly five items, URL-driven; App.tsx syncs path → view.
+ *   Study: Home (/study), Practice (/menu), Progress (/study?tab=analytics).
+ *   Resources: Reference (/study/reference), Toolkit (/study/toolkit).
+ * - NAVIGATION_STRUCTURE and NAVIGATION_CONFIG are for reference or future layouts.
+ *   MainLayout, Sidebar, and AppSidebar are not mounted; their paths do not map to view state.
  */
 export const NAVIGATION_CONFIG: NavigationCategory[] = [
   {

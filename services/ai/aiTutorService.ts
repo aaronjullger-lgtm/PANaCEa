@@ -449,8 +449,8 @@ export class AITutorService {
     const teachingPoints: string[] = [];
 
     for (const line of lines) {
-      if (/^[\d•\-\*]\s+/.test(line.trim())) {
-        teachingPoints.push(line.trim().replace(/^[\d•\-\*]\s+/, ''));
+      if (/^[\d•\-*]\s+/.test(line.trim())) {
+        teachingPoints.push(line.trim().replace(/^[\d•\-*]\s+/, ''));
       }
     }
 

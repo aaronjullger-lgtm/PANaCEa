@@ -26,7 +26,7 @@ import {
 import { defaultParameters, type ReviewSnapshot } from '../../../lib/fsrs';
 import {
   triggerFSRSOptimization,
-  useSidecar,
+  shouldUseSidecar,
   type ReviewLogRow,
 } from '../../../lib/fsrsOptimizerSidecar';
 import { resolveUserByClerkId } from '../_shared/resolveUser';
@@ -328,7 +328,7 @@ export async function onRequestPost(context: {
     const startTime = Date.now();
     let optimizedParams: PersonalizedFSRSParams;
 
-    if (useSidecar(env) && env.FSRS_OPTIMIZER_URL) {
+    if (shouldUseSidecar(env) && env.FSRS_OPTIMIZER_URL) {
       // Python Cloud Function sidecar
       console.log(
         `[FSRS-Params] Starting sidecar optimization for user ${auth.userId} with ${reviewRows.length} reviews`

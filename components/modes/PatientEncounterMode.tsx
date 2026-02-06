@@ -275,6 +275,21 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     registerTick();
   }, [session?.questions.length, registerTick, session]);
 
+  // Rotate status message while encounter is loading (latency masking)
+  const LOADING_STATUS_MESSAGES = [
+    'Reviewing patient chart…',
+    'Nurse is paging the patient…',
+    'Pulling up vitals…',
+    'Room is being prepared…',
+  ];
+  useEffect(() => {
+    if (viewState !== 'loading_encounter') return;
+    const interval = setInterval(() => {
+      setLoadingStatusIndex((i) => (i + 1) % LOADING_STATUS_MESSAGES.length);
+    }, 2200);
+    return () => clearInterval(interval);
+  }, [viewState]);
+
   // NEW: Initialize state machine when case loads
   useEffect(() => {
     const caseWithStateMachine = currentCase as any; // Type extension for new field
@@ -1175,21 +1190,6 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       </div>
     );
   }
-
-  // Rotate status message while encounter is loading (latency masking)
-  const LOADING_STATUS_MESSAGES = [
-    'Reviewing patient chart…',
-    'Nurse is paging the patient…',
-    'Pulling up vitals…',
-    'Room is being prepared…',
-  ];
-  useEffect(() => {
-    if (viewState !== 'loading_encounter') return;
-    const interval = setInterval(() => {
-      setLoadingStatusIndex((i) => (i + 1) % LOADING_STATUS_MESSAGES.length);
-    }, 2200);
-    return () => clearInterval(interval);
-  }, [viewState]);
 
   if (viewState === 'loading_encounter') {
     return (

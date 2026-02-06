@@ -22,7 +22,6 @@ export function useSystemEvent(
   useEffect(() => {
     const unsubscribe = integration.on(eventType, callback);
     return unsubscribe;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [integration, eventType, ...deps]);
 }
 

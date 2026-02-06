@@ -76,7 +76,7 @@ import { useTheme } from './hooks/useTheme';
 import { LandingPage } from './pages/LandingPage';
 import { LoadingProgress } from './components/loading/LoadingProgress';
 import { getQuestionBatch } from './services/questionService';
-import { initializeSession, fetchSessionQuestions } from './services/core';
+import { initializeSession, fetchSessionQuestions, prefetchQuestions } from './services/core';
 import { useUserStats } from './hooks/useUserStats';
 import { preloadData } from './lib/utils/dataLoader';
 import { useAccessibleTransition } from './hooks/useReducedMotion';
@@ -169,15 +169,18 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>('command_center');
   const startViewTransition = useViewTransition();
 
-  // Sync URL to view: when path is / show command center; /menu shows menu; /study* maps so NavRail works
+  // Sync URL to view: single source of truth so NavRail and direct URLs always show correct content
   useEffect(() => {
-    if (location.pathname === '/' || location.pathname === '') {
+    const path = location.pathname;
+    if (path === '/' || path === '') {
       setView('command_center');
-    } else if (location.pathname === '/menu') {
+    } else if (path === '/menu') {
       setView('menu');
-    } else if (location.pathname === '/study' || location.pathname === '/study/') {
+    } else if (path === '/study' || path === '/study/') {
       setView('command_center');
-    } else if (location.pathname.startsWith('/study/toolkit')) {
+    } else if (path.startsWith('/study/reference')) {
+      setView('reference_library');
+    } else if (path.startsWith('/study/toolkit')) {
       setView('toolkit');
     }
   }, [location.pathname]);
@@ -839,7 +842,7 @@ const App: React.FC = () => {
                         size="sm"
                         asLink
                         onClick={() => {
-                          navigate('/');
+                          navigate(ROUTES.STUDY);
                           setView('command_center');
                         }}
                       >
@@ -1014,15 +1017,12 @@ const App: React.FC = () => {
                                 onStartSession={handleStartSession}
                                 onNavigateToDrillMode={handleNavigateToDrillMode}
                                 onNavigateToDrillWithSystem={_handleNavigateToDrillWithSystem}
-                                onNavigateToToolkit={() => setView('toolkit')}
+                                onNavigateToToolkit={() => navigate(ROUTES.STUDY_TOOLKIT)}
                                 onNavigateToGapAnalysis={() => startViewTransition(() => setView('gap_analysis'))}
                                 onNavigateToClinicalProfile={() => setView('clinical_profile')}
                                 onNavigateToIntegrations={() => setView('integrations')}
                                 onNavigateToSimulation={handleNavigateToSimulation}
-                                onNavigateToReference={() => {
-                                  setView('reference_library');
-                                  navigate('/study/reference');
-                                }}
+                                onNavigateToReference={() => navigate(ROUTES.STUDY_REFERENCE)}
                                 onNavigateToMyLibrary={() => setView('my_library')}
                                 onNavigateToCustomStudy={handleNavigateToCustomStudy}
                                 onNavigateToTutorChat={() => setView('tutor_chat')}
@@ -1072,7 +1072,7 @@ const App: React.FC = () => {
                                 onNavigateToDrillMode={handleNavigateToDrillMode}
                                 onNavigateToIntegrations={() => setView('integrations')}
                                 onNavigateToSocial={() => setView('social_dashboard')}
-                                onNavigateToToolkit={() => setView('toolkit')}
+                                onNavigateToToolkit={() => navigate(ROUTES.STUDY_TOOLKIT)}
                                 onNavigateToGapAnalysis={() => startViewTransition(() => setView('gap_analysis'))}
                                 onNavigateToSimulation={handleNavigateToSimulation}
                                 isSyncing={isSyncing}
@@ -1508,7 +1508,7 @@ const App: React.FC = () => {
                             >
                               <Suspense fallback={<Loader message="Loading toolkit…" />}>
                                 <ToolkitHub
-                                  onClose={() => setView('command_center')}
+                                  onClose={() => { navigate(ROUTES.STUDY); setView('command_center'); }}
                                   onNavigateToItem={handleNavigateToDrillMode}
                                 />
                               </Suspense>
@@ -1531,7 +1531,7 @@ const App: React.FC = () => {
                             >
                               <Suspense fallback={<Loader />}>
                                 <GapAnalysisDashboard
-                                  onStudySystem={(systemName) => {
+                                  onStudySystem={(systemName: string) => {
                                     setView('command_center');
                                     handleConfirmSession({
                                       focus: 'topic',
@@ -1645,13 +1645,10 @@ const App: React.FC = () => {
                                   examLabel={examLabel ?? 'PANCE'}
                                   onStartSession={handleStartSession}
                                   onNavigateToDrillMode={handleNavigateToDrillMode}
-                                  onNavigateToToolkit={() => setView('toolkit')}
+                                  onNavigateToToolkit={() => navigate(ROUTES.STUDY_TOOLKIT)}
                                   onNavigateToGapAnalysis={() => startViewTransition(() => setView('gap_analysis'))}
                                   onNavigateToIntegrations={() => setView('integrations')}
-                                  onNavigateToReference={() => {
-                                    setView('reference_library');
-                                    navigate('/study/reference');
-                                  }}
+                                  onNavigateToReference={() => navigate(ROUTES.STUDY_REFERENCE)}
                                   onNavigateToMyLibrary={() => setView('my_library')}
                                   onNavigateToStudyCompanion={() => setView('study_companion')}
                                   onNavigateToSrsFlashcards={() => setView('srs_flashcards')}

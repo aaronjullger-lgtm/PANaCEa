@@ -1,6 +1,7 @@
 /**
- * NavRail – Collapsible glassmorphism left rail with quick actions.
- * Persists across views; quick actions can change by active screen (e.g. Lab Values when in simulation).
+ * NavRail – Primary app navigation. One clear path to each area.
+ * Make sense: Home → Practice → Progress; Reference → Toolkit.
+ * All links are URL-driven; App.tsx syncs path → view.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -9,11 +10,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft,
   ChevronRight,
-  LayoutDashboard,
-  Menu as MenuIcon,
-  Play,
-  BookOpen,
+  Home,
+  Dumbbell,
   BarChart3,
+  BookOpen,
   Calculator,
   LucideIcon,
 } from 'lucide-react';
@@ -24,51 +24,53 @@ export interface QuickActionItem {
   icon: LucideIcon;
   href?: string;
   onClick?: () => void;
+  /** Optional section key for visual grouping (e.g. "study" vs "resources") */
+  section?: string;
 }
 
 interface NavRailProps {
-  /** Quick actions shown in rail (e.g. Resume Session, Lab Values when in clinical sim) */
   quickActions?: QuickActionItem[];
-  /** Additional class for container */
   className?: string;
 }
 
+const RAIL_SECTIONS = ['study', 'resources'] as const;
+
 const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/study' },
-  { id: 'analytics', label: 'Progress', icon: BarChart3, href: '/study?tab=analytics' },
-  { id: 'start', label: 'Start Session', icon: Play, href: '/study' },
-  { id: 'reference', label: 'Reference', icon: BookOpen, href: '/study/reference' },
-  { id: 'calculators', label: 'Calculators', icon: Calculator, href: '/study/toolkit' },
-  { id: 'menu', label: 'Menu', icon: MenuIcon, href: '/menu' },
+  { id: 'home', label: 'Home', icon: Home, href: '/study', section: 'study' },
+  { id: 'practice', label: 'Practice', icon: Dumbbell, href: '/menu', section: 'study' },
+  { id: 'progress', label: 'Progress', icon: BarChart3, href: '/study?tab=analytics', section: 'study' },
+  { id: 'reference', label: 'Reference', icon: BookOpen, href: '/study/reference', section: 'resources' },
+  { id: 'toolkit', label: 'Toolkit', icon: Calculator, href: '/study/toolkit', section: 'resources' },
 ];
 
 const RAIL_WIDTH_COLLAPSED = 56;
-const RAIL_WIDTH_EXPANDED = 200;
+const RAIL_WIDTH_EXPANDED = 208;
+
+function isPathActive(href: string, pathname: string, search: string): boolean {
+  const fullPath = pathname + search;
+  if (href.includes('?')) return fullPath === href;
+  if (href === '/study')
+    return (pathname === '/' || pathname === '' || pathname === '/study' || pathname === '/study/') && !search;
+  return pathname === href || pathname.startsWith(href + '/');
+}
 
 export const NavRail: React.FC<NavRailProps> = ({
   quickActions = DEFAULT_QUICK_ACTIONS,
   className = '',
 }) => {
   const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches) {
-      return true;
-    }
-    return false;
+    return globalThis.window?.matchMedia?.('(max-width: 768px)')?.matches === true;
   });
   const location = useLocation();
+  const { pathname, search } = location;
 
-  // Collapse by default on mobile when viewport is narrow
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 768px)');
-    const handler = () => {
-      if (mq.matches) {
-        setCollapsed(true);
-      }
-    };
-    // Run immediately on mount
-    handler();
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+    const mq = globalThis.window?.matchMedia?.('(max-width: 768px)');
+    const handler = () => setCollapsed((c) => (mq?.matches ? true : c));
+    if (mq) {
+      mq.addEventListener('change', handler);
+    }
+    return () => mq?.removeEventListener?.('change', handler);
   }, []);
 
   useEffect(() => {
@@ -81,6 +83,93 @@ export const NavRail: React.FC<NavRailProps> = ({
     };
   }, [collapsed]);
 
+  const studyItems = quickActions.filter((i) => i.section === 'study' || !i.section);
+  const resourceItems = quickActions.filter((i) => i.section === 'resources');
+
+  const renderItem = (item: QuickActionItem) => {
+    const Icon = item.icon;
+    const isActive = item.href ? isPathActive(item.href, pathname, search) : false;
+    const content = (
+      <>
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
+            isActive
+              ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
+              : 'text-[var(--color-text-secondary)] group-hover:bg-[var(--color-bg-tertiary)] group-hover:text-[var(--color-text-primary)]'
+          }`}
+        >
+          <Icon className="h-5 w-5" aria-hidden />
+        </span>
+        <AnimatePresence>
+          {!collapsed && (
+            <motion.span
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'auto' }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.15 }}
+              className={`truncate text-sm ${isActive ? 'font-semibold text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]'}`}
+            >
+              {item.label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </>
+    );
+
+    const baseClass =
+      'group relative flex w-full min-h-[44px] items-center gap-3 rounded-xl pl-3 pr-3 py-2.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98]';
+
+    if (item.href) {
+      return (
+        <li key={item.id}>
+          <Link
+            to={item.href}
+            className={`${baseClass} ${isActive ? '' : 'hover:bg-[var(--color-bg-tertiary)]'}`}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            {isActive && (
+              <motion.div
+                layoutId="active-nav-pill"
+                className="absolute inset-0 rounded-xl bg-[var(--color-bg-tertiary)] border-l-4 border-l-[var(--color-accent)] z-0"
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                aria-hidden
+              />
+            )}
+            <span className="relative z-10 flex w-full items-center gap-3">
+              {content}
+            </span>
+          </Link>
+        </li>
+      );
+    }
+    return (
+      <li key={item.id}>
+        <button
+          type="button"
+          onClick={item.onClick}
+          className={`${baseClass} text-left text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]`}
+        >
+          {content}
+        </button>
+      </li>
+    );
+  };
+
+  const renderSection = (label: string, items: QuickActionItem[]) => (
+    <div key={label} className="mb-1">
+      {!collapsed && (
+        <div className="px-3 py-2">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+            {label}
+          </span>
+        </div>
+      )}
+      <ul className="space-y-0.5">
+        {items.map(renderItem)}
+      </ul>
+    </div>
+  );
+
   return (
     <motion.aside
       initial={false}
@@ -89,21 +178,22 @@ export const NavRail: React.FC<NavRailProps> = ({
       className={`
         fixed left-0 z-30 flex flex-col
         border-r border-[var(--color-border)]
-        bg-[var(--color-bg-primary)] shadow-[0_4px_24px_var(--color-shadow-soft)]
+        bg-[var(--color-bg-primary)]/95 backdrop-blur-md
+        shadow-[0_4px_24px_var(--color-shadow-soft)]
         ${className}
       `}
       style={{
         top: 'var(--header-height, 56px)',
         height: 'calc(100vh - var(--header-height, 56px))',
       }}
+      aria-label="Main navigation"
     >
-      {/* Collapse toggle */}
-      <div className="flex h-12 items-center justify-end border-b border-[var(--color-border)] px-2">
+      <div className="flex h-12 items-center justify-end border-b border-[var(--color-border)] px-2 shrink-0">
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
-          aria-label={collapsed ? 'Expand rail' : 'Collapse rail'}
+          className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? (
             <ChevronRight className="h-5 w-5" />
@@ -113,79 +203,9 @@ export const NavRail: React.FC<NavRailProps> = ({
         </button>
       </div>
 
-      {/* Quick actions */}
-      <nav className="flex-1 overflow-y-auto p-2" aria-label="Quick actions">
-        <ul className="space-y-1">
-          {quickActions.map((item) => {
-            const Icon = item.icon;
-            const fullPath = location.pathname + (location.search || '');
-            // Items with query (e.g. /study?tab=resources) are active only when full path matches.
-            // /study (no query) is active when pathname is /study or /study/ and no search.
-            // /study/toolkit is active when pathname starts with /study/toolkit.
-            const isActive =
-              item.href &&
-              (item.href.includes('?')
-                ? fullPath === item.href
-                : item.href === '/study'
-                  ? (location.pathname === '/study' || location.pathname === '/study/') && !location.search
-                  : location.pathname.startsWith(item.href));
-            const content = (
-              <>
-                <Icon
-                  className={`h-5 w-5 shrink-0 ${isActive ? 'text-muted-amber-500' : 'text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]'}`}
-                  aria-hidden
-                />
-                <AnimatePresence>
-                  {!collapsed && (
-                    <motion.span
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: 'auto' }}
-                      exit={{ opacity: 0, width: 0 }}
-                      transition={{ duration: 0.15 }}
-                      className={`truncate ${isActive ? 'text-[var(--color-text-primary)] font-medium' : 'text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]'}`}
-                    >
-                      {item.label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </>
-            );
-
-            const baseClass =
-              'group relative flex w-full min-h-[44px] items-center gap-3 rounded-lg pl-4 pr-3 py-2.5 text-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98]';
-
-            if (item.href) {
-              return (
-                <li key={item.id}>
-                  <Link
-                    to={item.href}
-                    className={`${baseClass} ${isActive ? '' : 'hover:bg-[var(--color-bg-tertiary)]'}`}
-                  >
-                    {/* Liquid pill - slides between items via layoutId */}
-                    {isActive && (
-                      <motion.div
-                        layoutId="active-nav-pill"
-                        className="absolute inset-0 bg-[var(--color-bg-tertiary)] rounded-lg z-0 border-l-4 border-l-muted-amber-500"
-                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                        aria-hidden
-                      />
-                    )}
-                    <span className="relative z-10 flex w-full items-center gap-3">
-                      {content}
-                    </span>
-                  </Link>
-                </li>
-              );
-            }
-            return (
-              <li key={item.id}>
-                <button type="button" onClick={item.onClick} className={`${baseClass} text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]`}>
-                  {content}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-2" aria-label="App sections">
+        {renderSection('Study', studyItems)}
+        {resourceItems.length > 0 && renderSection('Resources', resourceItems)}
       </nav>
     </motion.aside>
   );

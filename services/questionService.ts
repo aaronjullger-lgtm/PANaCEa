@@ -531,7 +531,7 @@ export async function getQuestionBatch(
   const poolDifficulty = 'PANCE-level';
 
   // Didactic: use settings.systems or fallback to enabled systems from localStorage
-  let systemsFilter: string[] | undefined = settingsSystems?.length
+  const systemsFilter: string[] | undefined = settingsSystems?.length
     ? settingsSystems
     : getEnabledSystemsFromStorage();
 
