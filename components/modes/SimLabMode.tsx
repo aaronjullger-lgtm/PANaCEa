@@ -327,6 +327,10 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
   // Simulation view with sterile field
   if (viewState === 'simulation' && procedure) {
     const step = procedure.steps[currentStep];
+    
+    if (!step) {
+      return null; // Safety check
+    }
 
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">

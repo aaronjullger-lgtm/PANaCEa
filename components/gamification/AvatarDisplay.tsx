@@ -16,6 +16,11 @@ interface AvatarDisplayProps {
 }
 
 export function AvatarDisplay({ avatar, compact = false, className = '' }: AvatarDisplayProps) {
+  // Extract XP early (TODO: Update UserAvatar type in Prisma schema to include xp field)
+  const avatarXP = avatar ? ((avatar as any).xp || 0) : 0;
+  const currentLevel = Math.floor(avatarXP / 100);
+  const xpInLevel = avatarXP % 100;
+  
   if (!avatar) {
     return compact ? (
       <div className="w-10 h-10 rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center">
@@ -36,9 +41,9 @@ export function AvatarDisplay({ avatar, compact = false, className = '' }: Avata
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-secondary)] flex items-center justify-center">
           <User className="w-5 h-5 text-white" />
         </div>
-        {avatar.xp > 0 && (
+        {avatarXP > 0 && (
           <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[var(--color-accent)] text-white text-xs font-bold flex items-center justify-center border-2 border-[var(--color-bg-primary)]">
-            {Math.floor(avatar.xp / 100)}
+            {currentLevel}
           </div>
         )}
       </div>
@@ -52,9 +57,6 @@ export function AvatarDisplay({ avatar, compact = false, className = '' }: Avata
     graduate: 'Graduate',
     practicing_pa: 'Practicing PA',
   };
-
-  const currentLevel = Math.floor(avatar.xp / 100);
-  const xpInLevel = avatar.xp % 100;
 
   return (
     <div className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 ${className}`}>

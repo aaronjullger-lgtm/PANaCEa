@@ -277,10 +277,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   // NEW: Initialize state machine when case loads
   useEffect(() => {
-    if (!currentCase?.stateMachine) return;
+    const caseWithStateMachine = currentCase as any; // Type extension for new field
+    if (!caseWithStateMachine?.stateMachine) return;
     
     try {
-      const stateMachine = currentCase.stateMachine as unknown as PatientAVStateMachine;
+      const stateMachine = caseWithStateMachine.stateMachine as unknown as PatientAVStateMachine;
       const engine = new PatientAVEngine(stateMachine);
       
       // Subscribe to state transitions
@@ -321,10 +322,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     
     const vitalsForEngine = {
       hr: currentVitals.hr,
-      bp: currentVitals.bp,
+      bp: `${currentVitals.sbp}/${currentVitals.dbp}`,
       temp: 98.6, // Default
       rr: currentVitals.rr,
-      o2: currentVitals.o2sat,
+      o2: currentVitals.o2,
     };
     
     avEngine.updateVitals(vitalsForEngine);
@@ -333,7 +334,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     addSOAPVitals(vitalsForEngine);
     
     // Check for critical vitals
-    if (currentVitals.o2sat < 88 || currentVitals.hr > 150 || currentVitals.hr < 50) {
+    if (currentVitals.o2 < 88 || currentVitals.hr > 150 || currentVitals.hr < 50) {
       integration.emit({
         type: 'VITALS_CRITICAL' as any,
         timestamp: new Date().toISOString(),
@@ -341,7 +342,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         sessionId: session?.id || 'unknown',
         payload: {
           vitals: vitalsForEngine,
-          trigger: currentVitals.o2sat < 88 ? 'hypoxia_severe' : currentVitals.hr > 150 ? 'tachycardia_severe' : 'bradycardia',
+          trigger: currentVitals.o2 < 88 ? 'hypoxia_severe' : currentVitals.hr > 150 ? 'tachycardia_severe' : 'bradycardia',
         },
       });
     }
@@ -566,6 +567,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         // Cleanup if user exits before completing
       };
     }
+    return undefined;
   }, [phase, session?.id, startMetric]);
 
   const handleSubmitDiagnosis = async () => {

@@ -232,7 +232,7 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
 }
 
 // Helper function to format SOAP note
-function formatSOAPNote(note: any): JSX.Element {
+function formatSOAPNote(note: any): React.JSX.Element {
   return (
     <div className="space-y-4 text-sm">
       {/* Subjective */}
