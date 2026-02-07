@@ -52,7 +52,7 @@ import {
   syncSessionAnalytics,
 } from '@/services/analytics';
 import { ABBREVIATION_TO_TOPIC_MAP } from '../../src/constants';
-import type { PerformanceRecord, SystemCode } from '../../types';
+import type { PerformanceRecord, SessionSettings, SystemCode } from '../../types';
 import { StreakVisualization } from './StreakVisualization';
 import { ScorePredictionCard } from './ScorePredictionCard';
 import { MetacognitiveReflection } from '../session/MetacognitiveReflection';
@@ -221,9 +221,13 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       }
     }
 
+    const fallbackSettings: SessionSettings = { focus: 'all', systems: [], count: performanceData.length };
+    const mergedSettings: SessionSettings = sessionSettings
+      ? { ...fallbackSettings, ...sessionSettings, focus: (sessionSettings.focus ?? 'all') as SessionSettings['focus'] }
+      : fallbackSettings;
     saveLastSession({
       timestamp: Date.now(),
-      settings: sessionSettings || { focus: 'all' as const, systems: [], difficulty: 'medium', count: performanceData.length },
+      settings: mergedSettings,
       questionsCompleted: performanceData.length,
       questionsCorrect: correct,
       accuracy,
