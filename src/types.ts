@@ -80,6 +80,9 @@ export interface PerformanceRecord {
   // Error taxonomy for meta-cognition
   errorTag?: ErrorTag; // User-tagged reason for incorrect answer
   questionWordCount?: number; // Word count for vignette stamina analysis
+
+  // 2026 PA Student Optimization: Confidence-based learning
+  confidenceLevel?: 1 | 2 | 3 | 4 | 5; // 1=guessing, 5=certain
 }
 
 export interface TopicStats {
