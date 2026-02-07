@@ -125,6 +125,40 @@ export interface StudyPreset {
 }
 
 export const STUDY_PRESETS: StudyPreset[] = [
+  // Micro-learning presets for busy PA students (2026 optimization)
+  {
+    id: 'lightning_2min',
+    label: '⚡ Lightning (2 min)',
+    description: 'Ultra-quick: 3 questions between patients or during break',
+    iconName: 'Zap',
+    settings: {
+      count: 3,
+      focus: 'all',
+      durationMinutes: 2,
+    },
+  },
+  {
+    id: 'quick_hit_5min',
+    label: '🎯 Quick Hit (5 min)',
+    description: 'Rapid review: 5 questions before/after rotation shift',
+    iconName: 'Target',
+    settings: {
+      count: 5,
+      focus: 'incorrect',
+      durationMinutes: 5,
+    },
+  },
+  {
+    id: 'shift_prep',
+    label: '🏥 Shift Prep (5 min)',
+    description: 'Rotation-focused: Prime for your shift with relevant high-yield questions',
+    iconName: 'Stethoscope',
+    settings: {
+      count: 5,
+      focus: 'all',
+      durationMinutes: 5,
+    },
+  },
   {
     id: 'quick_review',
     label: 'Quick 10-Min Review',

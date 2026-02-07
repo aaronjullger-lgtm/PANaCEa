@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import type { SessionSettings } from '@/types';
 import { STUDY_PRESETS, type StudyPreset } from '@/config/training-modes';
 import { getAllSystems } from '@/lib/constants/blueprint';
-import { Zap, HeartPulse, TrendingDown, Sparkles, Stethoscope } from 'lucide-react';
+import { Zap, HeartPulse, TrendingDown, Sparkles, Stethoscope, Target } from 'lucide-react';
 
 const iconMap = {
   Zap,
   HeartPulse,
   TrendingDown,
   Sparkles,
+  Target,
+  Stethoscope,
 };
 
 interface SessionSetupModalProps {

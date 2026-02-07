@@ -45,6 +45,8 @@ import {
   behavioralPayloadToTelemetryData,
 } from '@/components/quiz/Tracker';
 import { QuizLabCalcModal } from '@/components/quiz/QuizLabCalcModal';
+import { ConfidenceRating } from '@/components/quiz/ConfidenceRating';
+import { DifficultyAdjustmentBanner } from '@/components/quiz/DifficultyAdjustmentBanner';
 import ErrorTagger from '@/components/quiz/ErrorTagger';
 import Loader from '@/components/loading/Loader';
 import WellnessCheckModal from '@/components/wellness/WellnessCheckModal';
@@ -94,10 +96,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdvancedAnalytics } from '@/hooks/useAdvancedAnalytics';
 import { useImplicitMetrics } from '@/hooks/useImplicitMetrics';
 import { inferQuestionType } from '@/hooks/useTelemetryCollector';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
 import { syncManager } from '@/lib/services/sync/syncManager';
+import {
+  getDifficultyRecommendation,
+  getDifficultyFeedbackMessage,
+  logDifficultyAdjustment,
+  type DifficultyLevel,
+} from '@/services/adaptiveDifficultyService';
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -318,6 +327,19 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [questionNumber, setQuestionNumber] = useState<number>(1);
+  
+  // 2026 PA Student Optimization: Confidence rating state
+  const [showConfidenceRating, setShowConfidenceRating] = useState<boolean>(false);
+  const [confidenceLevel, setConfidenceLevel] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
+  
+  // 2026 PA Student Optimization: Touch gesture state
+  const [swipeHint, setSwipeHint] = useState<'left' | 'right' | null>(null);
+  
+  // 2026 PA Student Optimization: Dynamic difficulty state
+  const [showDifficultyBanner, setShowDifficultyBanner] = useState(false);
+  const [currentDifficultyLevel, setCurrentDifficultyLevel] = useState<DifficultyLevel>('maintain');
+  const [difficultyAccuracy, setDifficultyAccuracy] = useState(0.75);
+  const lastDifficultyCheck = useRef<number>(0);
 
   // ---- SRS RESULT STATE ----
   const [srsResult, setSrsResult] = useState<SRSScheduleResult | null>(null);
@@ -532,6 +554,10 @@ const QuizView: React.FC<QuizViewProps> = ({
       setQuestionStartTime(Date.now()); // Track time for new question
       setAnswerChangeCount(0); // Reset answer change tracking
       setFirstSelectedAnswer(null); // Reset first selected answer
+      
+      // 2026 PA Student Optimization: Reset confidence rating
+      setShowConfidenceRating(false);
+      setConfidenceLevel(null);
 
       // Reset implicit metrics and behavioral tracker for new question
       implicitMetrics.reset();
@@ -643,6 +669,9 @@ const QuizView: React.FC<QuizViewProps> = ({
     }
 
     setIsAnswered(true);
+    
+    // 2026 PA Student Optimization: Show confidence rating after answering
+    setShowConfidenceRating(true);
 
     // Sprint 4: Calculate correctness IMMEDIATELY
     const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
@@ -983,11 +1012,19 @@ const QuizView: React.FC<QuizViewProps> = ({
     { enabled: isAnswered }
   );
 
-  // Keep the legacy keyboard handler for quiz-specific shortcuts (A/B/C/D, Shift+A/B/C/D, Enter, Escape)
+  // Keep the legacy keyboard handler for quiz-specific shortcuts (A/B/C/D, Shift+A/B/C/D, Enter, Escape, 1-5 for confidence)
   // These are quiz-specific and don't map to global actions
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement).tagName.toLowerCase() === 'textarea') {
+        return;
+      }
+
+      // 2026 PA Student Optimization: Handle confidence rating (1-5 keys)
+      if (showConfidenceRating && ['1', '2', '3', '4', '5'].includes(event.key)) {
+        event.preventDefault();
+        const rating = parseInt(event.key) as 1 | 2 | 3 | 4 | 5;
+        handleConfidenceRating(rating);
         return;
       }
 
@@ -1041,6 +1078,8 @@ const QuizView: React.FC<QuizViewProps> = ({
     currentQuestion,
     onShowMenu,
     handleSubmitAnswer,
+    showConfidenceRating,
+    handleConfidenceRating,
   ]);
 
   const handleOptionClick = (index: number) => {
@@ -1120,6 +1159,88 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     }
   }, [currentQuestion, selectedAnswerIndex]);
 
+  // 2026 PA Student Optimization: Handle confidence rating selection
+  const handleConfidenceRating = useCallback((rating: 1 | 2 | 3 | 4 | 5) => {
+    setConfidenceLevel(rating);
+    setShowConfidenceRating(false);
+    
+    // Update the last performance record with confidence level
+    // Note: This updates the most recent record that was just added in handleSubmitAnswer
+    addPerformanceRecord({
+      timestamp: Date.now(),
+      system: currentQuestion?.system ?? null,
+      subcategory: currentQuestion?.subcategory ?? null,
+      conditionId: currentQuestion?.conditionId ?? '',
+      condition: currentQuestion?.condition ?? '',
+      topic: currentQuestion?.topic ?? '',
+      isCorrect: selectedAnswerIndex === currentQuestion?.correctAnswerIndex,
+      focus: sessionSettings.focus,
+      confidenceLevel: rating,
+      timeSpentMs: Date.now() - questionStartTime,
+    });
+    
+    // Check if we should adjust difficulty after confidence is rated
+    checkDifficultyAdjustment();
+  }, [currentQuestion, selectedAnswerIndex, questionStartTime, sessionSettings.focus, addPerformanceRecord]);
+
+  // 2026 PA Student Optimization: Check if difficulty should be adjusted
+  const checkDifficultyAdjustment = useCallback(() => {
+    // Only check every 5 questions to avoid too frequent adjustments
+    if (questionNumber - lastDifficultyCheck.current < 5) return;
+    
+    const recommendation = getDifficultyRecommendation({
+      recentPerformance: performanceData,
+      streakCount: currentStreak,
+    });
+    
+    if (recommendation.shouldAdjust && recommendation.level !== currentDifficultyLevel) {
+      // Log adjustment for analytics
+      logDifficultyAdjustment({
+        timestamp: Date.now(),
+        fromLevel: currentDifficultyLevel,
+        toLevel: recommendation.level,
+        accuracy: recommendation.currentAccuracy,
+        confidence: recommendation.confidence,
+        reason: recommendation.reason,
+      });
+      
+      // Update UI
+      setCurrentDifficultyLevel(recommendation.level);
+      setDifficultyAccuracy(recommendation.currentAccuracy);
+      setShowDifficultyBanner(true);
+      lastDifficultyCheck.current = questionNumber;
+      
+      console.log('[AdaptiveDifficulty]', recommendation);
+    }
+  }, [questionNumber, performanceData, currentStreak, currentDifficultyLevel]);
+
+  // 2026 PA Student Optimization: Touch gesture handlers
+  const { ref: swipeRef } = useSwipeGesture({
+    enabled: isAnswered && !showConfidenceRating,
+    onSwipeRight: () => {
+      if (isAnswered && !showConfidenceRating) {
+        feedback.correct(); // Haptic feedback
+        setSwipeHint('right');
+        setTimeout(() => {
+          setSwipeHint(null);
+          showNextQuestion();
+        }, 200);
+      }
+    },
+    onSwipeLeft: () => {
+      if (isAnswered && !showConfidenceRating) {
+        feedback.incorrect(); // Haptic feedback
+        setSwipeHint('left');
+        setTimeout(() => {
+          setSwipeHint(null);
+          toggleFlag();
+        }, 200);
+      }
+    },
+    minDistance: 80,
+    maxTime: 400,
+  });
+
   const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newNote = e.target.value;
     setLocalNote(newNote);
@@ -1197,7 +1318,52 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" ref={swipeRef}>
+      {/* 2026 PA Student Optimization: Swipe hint indicator */}
+      <AnimatePresence>
+        {swipeHint && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className={`fixed inset-0 z-50 pointer-events-none flex items-center justify-center ${
+              swipeHint === 'right' ? 'bg-green-500/10' : 'bg-red-500/10'
+            }`}
+          >
+            <div
+              className={`text-6xl font-bold ${
+                swipeHint === 'right' ? 'text-green-500' : 'text-red-500'
+              }`}
+            >
+              {swipeHint === 'right' ? '→' : '←'}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Mobile swipe instructions hint (only show on first few questions) */}
+      {isAnswered && !showConfidenceRating && questionNumber <= 3 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-center"
+        >
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            <span className="font-semibold">Mobile tip:</span> Swipe right to continue, left to flag for review
+          </p>
+        </motion.div>
+      )}
+      
+      {/* 2026 PA Student Optimization: Difficulty adjustment banner */}
+      {showDifficultyBanner && (
+        <DifficultyAdjustmentBanner
+          level={currentDifficultyLevel}
+          accuracy={difficultyAccuracy}
+          onDismiss={() => setShowDifficultyBanner(false)}
+        />
+      )}
+      
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4 mt-1">
           <div className="flex items-center space-x-3 min-w-0">
@@ -1441,7 +1607,15 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           {/* FEEDBACK / RATIONALE */}
           {isAnswered && (
             <div className="mt-6 animate-fade-in space-y-4">
-              {topicStats && (
+              {/* 2026 PA Student Optimization: Confidence Rating */}
+              {showConfidenceRating && selectedAnswerIndex !== null && (
+                <ConfidenceRating
+                  onRatingSelected={handleConfidenceRating}
+                  isCorrect={selectedAnswerIndex === currentQuestion.correctAnswerIndex}
+                />
+              )}
+              
+              {!showConfidenceRating && topicStats && (
                 <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg">
                   <div className="flex justify-between items-center mb-1 text-sm">
                     <span className="font-semibold text-[var(--color-text-secondary)]">
@@ -1462,13 +1636,14 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 </div>
               )}
 
-              <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg feedback-content">
-                {/* Error Tagger - Only show when incorrect */}
-                {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
-                  <div className="mb-4 pb-4 border-b border-[var(--color-border)]">
-                    <ErrorTagger onTagError={updateLastPerformanceErrorTag} />
-                  </div>
-                )}
+              {!showConfidenceRating && (
+                <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg feedback-content">
+                  {/* Error Tagger - Only show when incorrect */}
+                  {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
+                    <div className="mb-4 pb-4 border-b border-[var(--color-border)]">
+                      <ErrorTagger onTagError={updateLastPerformanceErrorTag} />
+                    </div>
+                  )}
 
                 {/* Peer selection stats: "42% of students also chose B" — Wisdom of the Crowds (especially when wrong) */}
                 {selectedAnswerIndex !== null && answerDistribution && (() => {
@@ -1715,7 +1890,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     rows={3}
                   />
                 </div>
-              </div>
+                </div>
+              )}
             </div>
           )}
 
