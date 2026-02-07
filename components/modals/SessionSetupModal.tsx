@@ -10,6 +10,7 @@ const iconMap = {
   TrendingDown,
   Sparkles,
   Target,
+  Stethoscope,
 };
 
 interface SessionSetupModalProps {

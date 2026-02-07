@@ -149,6 +149,17 @@ export const STUDY_PRESETS: StudyPreset[] = [
     },
   },
   {
+    id: 'shift_prep',
+    label: '🏥 Shift Prep (5 min)',
+    description: 'Rotation-focused: Prime for your shift with relevant high-yield questions',
+    iconName: 'Stethoscope',
+    settings: {
+      count: 5,
+      focus: 'all',
+      durationMinutes: 5,
+    },
+  },
+  {
     id: 'quick_review',
     label: 'Quick 10-Min Review',
     description: 'A fast-paced review of 10 questions from your weak areas.',
