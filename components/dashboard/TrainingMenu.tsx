@@ -244,19 +244,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       return;
     }
 
-    // Debug logging to help troubleshoot routing issues
-    console.log('[TrainingMenu] handleDrillClick:', {
-      modeId: mode.id,
-      route: mode.route,
-      hasDedicatedRoute: MODES_WITH_DEDICATED_ROUTES.includes(mode.id as TrainingModeId),
-    });
-
-    // Log the route we're attempting to navigate to (for debugging)
-    console.log('Attempting nav to:', mode.route);
-
     // Check if this mode has a dedicated route
     if (MODES_WITH_DEDICATED_ROUTES.includes(mode.id as TrainingModeId)) {
-      console.log(`[TrainingMenu] Navigating to dedicated route: ${mode.route}`);
       if (onNavigateToMode) {
         onNavigateToMode(mode.route, mode);
       } else {
