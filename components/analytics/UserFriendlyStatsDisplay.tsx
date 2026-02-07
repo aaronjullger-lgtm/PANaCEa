@@ -383,12 +383,33 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
         headers,
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch stats: ${response.statusText}`);
+      // 404 = user not in DB yet (new user / not synced) — show "No data yet" instead of error
+      if (response.status === 404) {
+        setUserStats(null);
+        setError(null);
+        return;
       }
 
-      const data = (await response.json()) as UserStatsResponse;
-      setUserStats(data);
+      let data: UserStatsResponse & { success?: boolean; error?: string };
+      try {
+        data = (await response.json()) as UserStatsResponse & { success?: boolean; error?: string };
+      } catch {
+        if (!response.ok) throw new Error(response.statusText || 'Failed to fetch stats');
+        throw new Error('Invalid response from server');
+      }
+
+      // 200 but success: false (e.g. backend sent no-data payload) — show empty state
+      if (response.ok && data.success === false) {
+        setUserStats(null);
+        setError(null);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.error || `Failed to fetch stats: ${response.statusText}`);
+      }
+
+      setUserStats(data as UserStatsResponse);
     } catch (err) {
       console.error('Failed to load analytics:', err);
       setError(err instanceof Error ? err.message : 'Failed to load analytics');
