@@ -36,9 +36,9 @@ interface PrimaryButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'>
 const variantStyles: Record<ButtonVariant, string> = buttonVariantStyles;
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'h-9 px-4 text-sm',
-  md: 'h-12 px-6 text-base',
-  lg: 'h-14 px-8 text-lg',
+  sm: 'min-h-[44px] h-9 px-4 text-sm',
+  md: 'min-h-[44px] h-12 px-6 text-base',
+  lg: 'min-h-[44px] h-14 px-8 text-lg',
 };
 
 export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
@@ -62,7 +62,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     if (!isDisabled) onClick?.(e);
   };
   const baseStyles =
-    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-offset-2 focus:ring-offset-[var(--color-bg-primary)] active:scale-[0.95]';
+    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200 ease-out cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-offset-2 focus:ring-offset-[var(--color-bg-primary)] active:scale-[0.95]';
   const disabledStyles = isDisabled ? 'opacity-50 cursor-not-allowed' : '';
   const widthStyles = fullWidth ? 'w-full' : '';
 

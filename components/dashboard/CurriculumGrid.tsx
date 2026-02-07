@@ -86,7 +86,7 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
             data-mastery={isWeak ? 'weak' : undefined}
             className={`
               relative flex flex-col justify-between p-3 min-h-0 rounded-xl text-left
-              bg-[var(--color-bg-secondary)] shadow-sm border border-[var(--color-border)]
+              bg-[var(--color-bg-secondary)] shadow-sm
               transition-colors duration-300
               ${isSelected
                 ? 'border-l-4 border-l-muted-amber-500 bg-[var(--color-bg-tertiary)]'

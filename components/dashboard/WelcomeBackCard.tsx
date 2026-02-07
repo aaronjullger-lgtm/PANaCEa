@@ -36,10 +36,9 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={`
-        relative overflow-hidden rounded-xl 
-        border border-[var(--color-border)] 
-        bg-gradient-to-br from-[var(--color-accent)]/5 via-[var(--color-bg-secondary)] to-[var(--color-accent)]/5
-        p-5
+        relative overflow-hidden rounded-xl
+        bg-[var(--color-bg-secondary)]
+        p-5 shadow-sm
         ${className}
       `}
     >
@@ -102,7 +101,7 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
       {/* Resume button */}
       <button
         onClick={onResume}
-        className="w-full flex items-center justify-between px-4 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg font-semibold hover:bg-[var(--color-accent-hover)] transition-colors group"
+        className="w-full flex items-center justify-between px-4 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg font-semibold hover:opacity-90 transition-opacity group"
       >
         <span>Continue where you left off</span>
         <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

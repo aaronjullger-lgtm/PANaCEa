@@ -50,7 +50,7 @@ const variantStyles: Record<CardVariant, { bg: string; border: string; glow: str
   },
   neutral: {
     bg: 'bg-[var(--color-bg-secondary)]',
-    border: 'border-[var(--color-border)] hover:border-[var(--color-accent)]',
+    border: 'border-0',
     glow: 'bg-[var(--color-border)]/50',
   },
 };
@@ -65,9 +65,9 @@ export const GlassCard: React.FC<GlassCardProps> = ({
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const styles = variantStyles[variant];
-  const baseLift = 'shadow-md dark:shadow-none';
+  const baseLift = 'shadow-sm dark:shadow-none';
   const hoverStyles = hoverable
-    ? `${baseLift} hover:shadow-lg dark:hover:shadow-black/20 transition-all duration-300`
+    ? `${baseLift} hover:shadow-md dark:hover:shadow-black/20 transition-all duration-300`
     : baseLift;
   const paddingStyles = noPadding ? '' : 'p-6';
 
@@ -77,10 +77,10 @@ export const GlassCard: React.FC<GlassCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeOut' }}
       className={`
-        relative overflow-hidden rounded-2xl
+        relative overflow-hidden rounded-xl
         ${styles.bg}
         backdrop-blur-sm
-        border ${styles.border}
+        ${styles.border}
         ${paddingStyles}
         ${hoverStyles}
         ${className}

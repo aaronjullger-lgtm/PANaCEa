@@ -1154,7 +1154,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           transition={sectionTransition(0)}
           className="mb-6"
         >
-          <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] truncate max-w-full">
             {greeting}, {user?.firstName || 'Student'}
           </h1>
           <p className="text-[var(--color-text-muted)] mt-1">

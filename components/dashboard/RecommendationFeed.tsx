@@ -272,16 +272,16 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="relative p-5 rounded-2xl bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-primary)] border border-[var(--color-border)] shadow-md shadow-[var(--color-shadow-soft)] group hover:shadow-lg transition-shadow"
+              className="relative p-5 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm group transition-all duration-200"
             >
               {/* Priority Indicator */}
               {rec.priority === 'high' && (
                 <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-[var(--color-data-fail)] shadow-[0_0_8px_var(--color-data-fail)]" />
               )}
 
-              <div className="flex flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="p-3 rounded-xl bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <div className="p-3 rounded-lg bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]">
                     <Lightbulb className="w-6 h-6" />
                   </div>
                   <div className="min-w-0">
@@ -297,7 +297,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => handleAction(rec.id, 'dismiss')}
-                    className="h-10 w-10 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                    className="h-10 w-10 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                     title="Dismiss"
                   >
                     <X className="w-4 h-4 mx-auto" />
@@ -316,7 +316,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
                     size="md"
                     onClick={() => handleStart(rec)}
                     iconRight={ArrowRight}
-                    className="text-sm w-auto"
+                    className="text-sm w-full sm:w-auto"
                   >
                     Start
                   </PrimaryButton>

@@ -3,6 +3,14 @@
  * Helper functions for cleaning and formatting text for display
  */
 
+/** Format a percentage for UI: 0 or 1 decimal place, never raw floats like 51.333333% */
+export function formatPercentForDisplay(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return '—';
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '—';
+  return Number.isInteger(n) ? `${n}%` : `${n.toFixed(1)}%`;
+}
+
 /**
  * Strip all Markdown formatting from text
  * Removes: **, __, *, _, ##, etc.

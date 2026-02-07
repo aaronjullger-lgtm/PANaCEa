@@ -106,7 +106,7 @@ const QuickStat: React.FC<QuickStatProps> = ({
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.4, delay, ease: 'easeOut' }}
-    className="group relative bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 shadow-sm hover:shadow-lg hover:border-[var(--color-accent)]/30 transition-all duration-300"
+    className="group relative bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300"
   >
     {/* Gradient accent line */}
     <div
@@ -116,13 +116,13 @@ const QuickStat: React.FC<QuickStatProps> = ({
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
         <div
-          className={`p-3 rounded-xl ${accentColor.replace('bg-gradient-to-r', 'bg-opacity-15')} bg-[var(--color-bg-secondary)]/40`}
+          className={`p-3 rounded-lg ${accentColor.replace('bg-gradient-to-r', 'bg-opacity-15')} bg-[var(--color-bg-tertiary)]`}
         >
           {icon}
         </div>
         <div>
           <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-0.5">{label}</p>
-          <p className="text-2xl font-bold text-[var(--color-text-primary)] tracking-tight">
+          <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] tracking-tight">
             {value}
           </p>
         </div>
@@ -158,7 +158,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, subtitle, icon, ac
   <div className="flex items-center justify-between mb-5">
     <div className="flex items-center gap-3">
       {icon && (
-        <div className="p-2 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 rounded-xl">
+        <div className="p-2 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 rounded-lg">
           {icon}
         </div>
       )}
@@ -247,7 +247,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center bg-[var(--color-bg-primary)] rounded-2xl p-8 shadow-lg border border-[var(--color-border)] max-w-md"
+          className="text-center bg-[var(--color-bg-secondary)] rounded-xl p-8 shadow-sm max-w-md"
         >
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-data-fail)]/20 flex items-center justify-center">
             <Zap className="w-8 h-8 text-[var(--color-data-fail)]" />
@@ -263,7 +263,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2.5 bg-[var(--color-accent)] hover:opacity-90 text-white font-medium rounded-xl transition-opacity"
+            className="px-6 py-2.5 bg-[var(--color-accent)] hover:opacity-90 text-white font-medium rounded-lg transition-opacity"
           >
             {isOffline ? 'Check Connection & Retry' : 'Retry'}
           </button>
@@ -288,11 +288,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           className="pt-2"
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)] shadow-lg shadow-[var(--color-accent)]/20">
+            <div className="p-2.5 rounded-lg bg-[var(--color-accent)]/15">
               <Target className="w-6 h-6 text-[var(--color-text-inverse)]" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] truncate max-w-full">
                 {getGreeting()},{' '}
                 <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] bg-clip-text text-transparent">
                   {user?.firstName || 'Student'}
@@ -306,7 +306,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         </motion.div>
 
         {/* ===== DASHBOARD VIEW TABS ===== */}
-        <div className="flex gap-1 p-1 rounded-xl bg-[var(--color-bg-secondary)]/80 border border-[var(--color-border)]">
+        <div className="flex gap-1 p-1 rounded-xl bg-[var(--color-bg-tertiary)]">
           {DASHBOARD_VIEWS.map((v) => {
             const Icon = v.icon;
             const isActive = view === v.id;
@@ -317,8 +317,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 onClick={() => setView(v.id)}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm border border-[var(--color-border)]'
-                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
+                    ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/50'
                 }`}
               >
                 <Icon className="w-4 h-4 shrink-0" />
@@ -407,11 +407,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 */}
                 <button
                   onClick={() => handleNavigation('/drills/rapid')}
-                  className="group relative bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 hover:border-[var(--color-data-provisional)]/50 hover:shadow-lg hover:shadow-[var(--color-data-provisional)]/10 transition-all duration-300 w-full text-left overflow-hidden"
+                  className="group relative bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm hover:bg-[var(--color-bg-tertiary)]/50 transition-all duration-300 w-full text-left overflow-hidden"
                 >
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2.5 bg-gradient-to-br from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] rounded-xl shadow-lg shadow-[var(--color-data-provisional)]/20">
+                    <div className="p-2.5 rounded-lg bg-[var(--color-data-provisional)]/15">
                       <Clock className="w-5 h-5 text-[var(--color-text-inverse)]" />
                     </div>
                     <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
@@ -453,10 +453,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 icon={<TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />}
               />
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
+                <div className="bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm">
                   <DecayCurve data={data.decayCurveData} />
                 </div>
-                <div className="bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
+                <div className="bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm">
                   <StabilityPyramid data={data.stabilityBuckets} />
                 </div>
               </div>

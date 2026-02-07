@@ -23,7 +23,11 @@ interface PANCEReadinessTreemapProps {
   className?: string;
 }
 
-function getMasteryColor(pct: number): string {
+/** Neutral "Not Yet Studied" — avoid red for 0 data so we don't discourage the user */
+const NOT_YET_STUDIED_FILL = 'var(--color-bg-tertiary)';
+
+function getMasteryColor(pct: number, volume: number): string {
+  if (volume === 0) return NOT_YET_STUDIED_FILL;
   if (pct >= 80) return 'var(--color-data-pass)';
   if (pct >= 60) return 'var(--color-accent)';
   return 'var(--color-data-fail)';
@@ -39,12 +43,14 @@ function renderTreemapContent(props: {
   depth?: number;
   index?: number;
   masteryPercent?: number;
+  volume?: number;
 }) {
-  const { x = 0, y = 0, width = 0, height = 0, name = '', depth = 0, masteryPercent = 0 } = props;
+  const { x = 0, y = 0, width = 0, height = 0, name = '', depth = 0, masteryPercent = 0, volume = 0 } = props;
   if (width <= 0 || height <= 0) return <g />;
-  const fill = getMasteryColor(masteryPercent);
+  const fill = getMasteryColor(masteryPercent, volume);
   const opacity = depth === 0 ? 0.85 : 0.75;
   const showLabel = width > 60 && height > 24;
+  const isNotStudied = volume === 0;
 
   return (
     <g>
@@ -65,7 +71,7 @@ function renderTreemapContent(props: {
           y={y + height / 2}
           textAnchor="middle"
           dominantBaseline="middle"
-          fill="var(--color-text-primary)"
+          fill={isNotStudied ? 'var(--color-text-muted)' : 'var(--color-text-primary)'}
           fontSize={Math.min(12, width / 8)}
           fontWeight={600}
         >
@@ -94,7 +100,7 @@ export const PANCEReadinessTreemap: React.FC<PANCEReadinessTreemapProps> = ({
             name: c.name,
             volume: c.volume,
             masteryPercent: c.masteryPercent,
-            fill: getMasteryColor(c.masteryPercent),
+            fill: getMasteryColor(c.masteryPercent, c.volume),
           })),
         },
       ];
@@ -103,12 +109,12 @@ export const PANCEReadinessTreemap: React.FC<PANCEReadinessTreemapProps> = ({
       name: d.name,
       volume: d.volume,
       masteryPercent: d.masteryPercent,
-      fill: getMasteryColor(d.masteryPercent),
+      fill: getMasteryColor(d.masteryPercent, d.volume),
       children: d.children?.map((c) => ({
         name: c.name,
         volume: c.volume,
         masteryPercent: c.masteryPercent,
-        fill: getMasteryColor(c.masteryPercent),
+        fill: getMasteryColor(c.masteryPercent, c.volume),
       })),
     }));
   }, [data, drilled]);
@@ -148,18 +154,22 @@ export const PANCEReadinessTreemap: React.FC<PANCEReadinessTreemapProps> = ({
             aspectRatio={4 / 3}
             stroke="var(--color-border)"
             content={(props) => {
-              const p = props as unknown as { payload?: { name?: string; masteryPercent?: number }; x?: number; y?: number; width?: number; height?: number; depth?: number };
+              const p = props as unknown as { payload?: { name?: string; masteryPercent?: number; volume?: number }; x?: number; y?: number; width?: number; height?: number; depth?: number };
               return renderTreemapContent({
                 ...p,
                 name: p.payload?.name,
                 masteryPercent: p.payload?.masteryPercent ?? 0,
+                volume: p.payload?.volume ?? 0,
               });
             }}
             onClick={(node) => handleClick(node)}
           />
         </ResponsiveContainer>
       </div>
-      <div className="flex gap-4 mt-2 text-xs text-[var(--color-text-muted)]">
+      <div className="flex flex-wrap gap-4 mt-2 text-xs text-[var(--color-text-muted)]">
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded bg-[var(--color-bg-tertiary)] opacity-80" /> Not Yet Studied
+        </span>
         <span className="flex items-center gap-1">
           <span className="w-3 h-3 rounded bg-[var(--color-data-fail)] opacity-80" /> Weak
         </span>

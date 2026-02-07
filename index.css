@@ -35,6 +35,12 @@ body,
   overflow-x: hidden;
 }
 
+/* Mobile: prevent any child from causing horizontal scroll (320px viewport) */
+#root {
+  max-width: 100%;
+  min-width: 0;
+}
+
 /* Pulse glow animation for badges (e.g. DashboardActionCard) */
 @keyframes pulse-glow {
   0%,
@@ -70,13 +76,15 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Remove tap highlight on mobile for cleaner press feedback */
+/* Remove tap highlight on mobile for cleaner press feedback; ensure pointer cursor on interactive elements */
 button,
 a,
 [role="button"],
-[role="tab"] {
+[role="tab"],
+[role="link"] {
   -webkit-tap-highlight-color: transparent;
   tap-highlight-color: transparent;
+  cursor: pointer;
 }
 
 /* Utility: subtle lift on hover for interactive cards */

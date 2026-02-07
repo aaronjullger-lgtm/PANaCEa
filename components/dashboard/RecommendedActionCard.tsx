@@ -190,16 +190,15 @@ export const RecommendedActionCard: React.FC<RecommendedActionCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={`
-        relative overflow-hidden rounded-xl 
-        border-2 border-[var(--color-accent)]
-        bg-gradient-to-br ${recommendation.gradient}
-        p-5
+        relative overflow-hidden rounded-xl
+        bg-[var(--color-bg-secondary)]
+        p-5 shadow-sm
         ${className}
       `}
     >
       {/* AI Badge */}
       <div className="absolute top-3 right-3">
-        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--color-accent)]/15 border border-[var(--color-accent)]/30">
+        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--color-accent)]/15">
           <Sparkles className="w-3 h-3 text-[var(--color-accent)]" />
           <span className="text-xs font-semibold text-[var(--color-accent)]">AI</span>
         </div>
@@ -207,7 +206,7 @@ export const RecommendedActionCard: React.FC<RecommendedActionCardProps> = ({
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
-        <div className="p-2.5 rounded-xl bg-[var(--color-accent)]/15">
+        <div className="p-2.5 rounded-lg bg-[var(--color-accent)]/15">
           <Icon className="w-6 h-6 text-[var(--color-accent)]" />
         </div>
         <div className="flex-1">
@@ -228,7 +227,7 @@ export const RecommendedActionCard: React.FC<RecommendedActionCardProps> = ({
       {/* CTA */}
       <button
         onClick={recommendation.action}
-        className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-semibold hover:bg-[var(--color-accent-hover)] transition-colors shadow-sm group"
+        className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg font-semibold hover:opacity-90 transition-opacity group"
       >
         <span>Start Now</span>
         <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

@@ -73,6 +73,25 @@ export default defineConfig({
         // No authentication state - tests handle auth gracefully
       },
     },
+
+    // UX Polish: run without auth so design police runs on landing/dashboard without manual login
+    {
+      name: 'ux-polish',
+      testMatch: /ux_polish\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+    },
+
+    // Mobile layout audit: 320px viewport (iPhone SE)
+    {
+      name: 'mobile-layout',
+      testMatch: /mobile_layout_audit\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 320, height: 568 },
+      },
+    },
   ],
 
   /* Run your local dev server before starting the tests */

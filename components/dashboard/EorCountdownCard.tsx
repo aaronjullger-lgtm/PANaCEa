@@ -46,10 +46,9 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={`
-        relative overflow-hidden rounded-xl 
-        border border-[var(--color-border)] 
-        bg-gradient-to-br from-emerald-500/10 via-[var(--color-bg-secondary)] to-teal-600/10
-        p-6
+        relative overflow-hidden rounded-xl
+        bg-[var(--color-bg-secondary)]
+        p-6 shadow-sm
         ${className}
       `}
     >
@@ -85,7 +84,7 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg"
+          className="mt-4 p-3 bg-emerald-500/10 rounded-lg"
         >
           <p className="text-xs text-[var(--color-text-secondary)]">
             <span className="font-semibold">Final stretch:</span> Focus on rotation-relevant

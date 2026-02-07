@@ -1016,14 +1016,14 @@ const App: React.FC = () => {
                     view !== 'pearl_deck' && (
                     <main
                       id="main-content"
-                      className={`min-h-screen transition-all duration-300 ${view === 'command_center' || view === 'menu' ? '' : ''}`}
+                      className={`min-h-screen min-w-0 max-w-full overflow-x-hidden transition-all duration-300 ${view === 'command_center' || view === 'menu' ? '' : ''}`}
                       style={{ 
                         marginLeft: 'var(--nav-rail-width, 56px)',
                         paddingTop: '1rem',
                         paddingBottom: '6rem',
                       }}
                     >
-                      <div className={`mx-auto px-4 sm:px-6 lg:px-8 ${view === 'command_center' || view === 'menu' ? 'max-w-6xl' : 'max-w-4xl'}`}>
+                      <div className={`mx-auto min-w-0 max-w-full px-4 sm:px-6 lg:px-8 ${view === 'command_center' || view === 'menu' ? 'max-w-6xl' : 'max-w-4xl'}`}>
                       {isLoading &&
                         (sessionSettings ? (
                           <DrillLoadingState

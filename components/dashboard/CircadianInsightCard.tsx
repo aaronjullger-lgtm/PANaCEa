@@ -33,10 +33,9 @@ export const CircadianInsightCard: React.FC<CircadianInsightCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={`
-        relative overflow-hidden rounded-xl 
-        border border-[var(--color-border)] 
-        bg-gradient-to-br from-sky-500/10 via-[var(--color-bg-secondary)] to-indigo-500/10
-        p-4
+        relative overflow-hidden rounded-xl
+        bg-[var(--color-bg-secondary)]
+        p-4 shadow-sm
         ${className}
       `}
     >

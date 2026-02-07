@@ -66,7 +66,7 @@ const CustomTooltip = ({
 }) => {
   if (!active || !payload?.length || label == null) return null;
   return (
-    <div className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg px-3 py-2 shadow-lg">
+    <div className="bg-[var(--color-bg-secondary)] rounded-lg px-3 py-2 shadow-sm">
       <p className="text-[var(--color-text-primary)] font-semibold text-sm mb-1">Day {label}</p>
       <p className="text-[var(--color-text-muted)] text-xs">
         Without review: {Math.round(payload[0]?.value ?? 0)}%
@@ -91,10 +91,10 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`group bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 hover:border-[var(--color-accent)]/30 transition-all duration-300 ${className}`}
+        className={`group bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300 ${className}`}
       >
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2.5 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)] rounded-xl shadow-lg shadow-[var(--color-accent)]/20">
+          <div className="p-2.5 rounded-lg bg-[var(--color-accent)]/15">
             <Brain className="w-6 h-6 text-[var(--color-text-inverse)]" />
           </div>
           <div>
@@ -106,7 +106,7 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
             </p>
           </div>
         </div>
-        <div className="text-center py-6 bg-[var(--color-data-pass)]/10 rounded-xl border border-[var(--color-data-pass)]/30">
+        <div className="text-center py-6 bg-[var(--color-data-pass)]/10 rounded-xl">
           <Sparkles className="w-8 h-8 text-[var(--color-data-pass)] mx-auto mb-2" />
           <p className="text-sm text-[var(--color-data-pass)] font-medium">
             Your retention curve is stable. New reviews will appear when they’re due.
@@ -121,7 +121,7 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.4 }}
-      className={`group bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 hover:shadow-lg hover:border-[var(--color-accent)]/30 transition-all duration-300 ${className}`}
+      className={`group bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300 ${className}`}
     >
       <div className="flex items-center gap-3 mb-3">
         <div className="p-2.5 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)] rounded-xl shadow-lg shadow-[var(--color-accent)]/20">
@@ -213,7 +213,7 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
 
       <button
         onClick={onStartReview}
-        className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] font-semibold rounded-xl shadow-lg shadow-[var(--color-accent)]/25 hover:shadow-xl hover:shadow-[var(--color-accent)]/30 transition-all duration-300 group-hover:scale-[1.02]"
+        className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] font-semibold rounded-lg shadow-sm transition-all duration-200"
       >
         Save the memory — Start Review
         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

@@ -168,7 +168,7 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
         <button
           type="button"
           onClick={onExit}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
+          className="inline-flex items-center gap-2 min-h-[44px] min-w-[44px] px-4 py-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] cursor-pointer"
         >
           <ChevronLeft className="w-4 h-4" />
           Back
@@ -185,7 +185,7 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
         <button
           type="button"
           onClick={onExit}
-          className="p-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]"
+          className="min-h-[44px] min-w-[44px] p-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] cursor-pointer inline-flex items-center justify-center"
           aria-label="Back"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -197,7 +197,7 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
 
       <div className="flex-1 flex flex-col justify-center">
         <motion.div
-          className="relative w-full aspect-[4/3] max-h-[320px] rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] overflow-hidden cursor-pointer select-none"
+          className="relative w-full aspect-[4/3] max-h-[320px] rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] overflow-hidden cursor-pointer select-none min-h-[120px]"
           style={{ perspective: 1000 }}
           onClick={() => setFlipped((f) => !f)}
           role="button"
@@ -257,7 +257,7 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
           <button
             type="button"
             onClick={() => setFlipped((f) => !f)}
-            className="p-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]"
+            className="min-h-[44px] min-w-[44px] p-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-pointer inline-flex items-center justify-center"
             title="Flip card"
           >
             <RotateCcw className="w-5 h-5" />
@@ -271,7 +271,7 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
               type="button"
               disabled={submitting}
               onClick={() => handleSubmit(rating)}
-              className="px-4 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] text-sm font-medium disabled:opacity-50 hover:bg-[var(--color-bg-tertiary)]"
+              className="min-h-[44px] min-w-[44px] px-4 py-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] text-sm font-medium disabled:opacity-50 hover:bg-[var(--color-bg-tertiary)] cursor-pointer"
             >
               {RATING_LABELS[rating]}
             </button>
@@ -283,7 +283,7 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
             <button
               type="button"
               onClick={handleContinueAfterMnemonic}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium"
+              className="inline-flex items-center gap-2 min-h-[44px] px-4 py-3 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium cursor-pointer"
             >
               <ImagePlus className="w-4 h-4" />
               Next card

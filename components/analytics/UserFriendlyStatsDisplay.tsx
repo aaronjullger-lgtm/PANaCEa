@@ -11,6 +11,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/clerk-react';
+import { formatPercentForDisplay } from '@/lib/utils/textFormatting';
 import {
   TrendingUp,
   TrendingDown,
@@ -168,7 +169,7 @@ const StatCard: React.FC<StatCardProps> = ({
         )}
       </div>
       <div className="mt-3">
-        <p className="text-2xl font-bold text-text-primary">{value}</p>
+        <p className="text-xl sm:text-2xl font-bold text-text-primary">{value}</p>
         <p className="text-sm text-text-muted">{label}</p>
         {subtext && <p className="text-xs text-text-secondary mt-1">{subtext}</p>}
       </div>
@@ -250,7 +251,7 @@ const ReadinessGauge: React.FC<{
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {hasData ? (
               <>
-                <span className="text-2xl font-bold text-text-primary">{safeScore}</span>
+                <span className="text-xl sm:text-2xl font-bold text-text-primary">{safeScore}</span>
                 <span className="text-xs text-text-muted">/ 100</span>
               </>
             ) : (
@@ -616,7 +617,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-stretch">
               <StatCard
                 label="Lifetime Accuracy"
-                value={displayData.hasData ? `${displayData.accuracyLifetime}%` : '—'}
+                value={displayData.hasData ? formatPercentForDisplay(displayData.accuracyLifetime) : '—'}
                 icon={<Target className="w-5 h-5" />}
                 trend={
                   displayData.accuracyTrend === 'improving'
@@ -625,7 +626,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                       ? 'down'
                       : 'stable'
                 }
-                trendValue={`${displayData.accuracyChange > 0 ? '+' : ''}${displayData.accuracyChange}%`}
+                trendValue={displayData.accuracyChange > 0 ? `+${formatPercentForDisplay(displayData.accuracyChange)}` : formatPercentForDisplay(displayData.accuracyChange)}
                 color={
                   displayData.accuracyLifetime >= 80
                     ? 'green'
@@ -764,9 +765,10 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-text-secondary">Recent Accuracy</span>
                       <span className="font-medium text-text-primary">
-                        {userStats.stats.recentPerformance.last7Days.accuracy ??
-                          displayData.accuracyLifetime}
-                        %
+                        {formatPercentForDisplay(
+                          userStats.stats.recentPerformance.last7Days.accuracy ??
+                            displayData.accuracyLifetime
+                        )}
                       </span>
                     </div>
                     {userStats.stats.recentPerformance.trend !== 'insufficient_data' && (
@@ -879,7 +881,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   <Calendar className="w-6 h-6 text-text-muted" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-text-primary">
+                  <p className="text-xl sm:text-2xl font-bold text-text-primary">
                     {displayData.readinessScore >= 80
                       ? "You're Ready!"
                       : `${Math.ceil((80 - displayData.readinessScore) / 2)} days`}
