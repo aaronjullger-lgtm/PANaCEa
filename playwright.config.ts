@@ -63,6 +63,16 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
+
+    // Unauthenticated tests (for audit and basic checks)
+    {
+      name: 'chromium-no-auth',
+      testMatch: /systematic_audit\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        // No authentication state - tests handle auth gracefully
+      },
+    },
   ],
 
   /* Run your local dev server before starting the tests */
