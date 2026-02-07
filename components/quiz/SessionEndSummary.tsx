@@ -223,7 +223,12 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 
     const fallbackSettings: SessionSettings = { focus: 'all', systems: [], count: performanceData.length };
     const mergedSettings: SessionSettings = sessionSettings
-      ? { ...fallbackSettings, ...sessionSettings, focus: (sessionSettings.focus ?? 'all') as SessionSettings['focus'] }
+      ? { 
+          ...fallbackSettings, 
+          ...sessionSettings, 
+          mode: sessionSettings.mode as SessionSettings['mode'],
+          focus: (sessionSettings.focus ?? 'all') as SessionSettings['focus'] 
+        }
       : fallbackSettings;
     saveLastSession({
       timestamp: Date.now(),
