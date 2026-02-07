@@ -734,6 +734,24 @@ model DailyWordle {
   @@index([wordId])
 }
 
+model TargetedDailyAttempt {
+  id           String    @id
+  userId       String
+  date         DateTime  @db.Date
+  systems      String[]  @default([])
+  questionId   String
+  answerIndex  Int?
+  isCorrect    Boolean?
+  timeSpentMs  Int?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  User         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date], name: "userId_date")
+  @@index([userId])
+  @@index([date])
+}
+
 model DifferentialConditionLink {
   id                     String                @id
   differentialId         String
@@ -2861,6 +2879,7 @@ model User {
   StudyGroupMember        StudyGroupMember[]
   StudyRecommendation     StudyRecommendation[]
   StudySession            StudySession[]
+  TargetedDailyAttempt    TargetedDailyAttempt[]
   UserAchievement         UserAchievement[]
   UserBehaviorMetrics     UserBehaviorMetrics[]
   UserCircadianProfile    UserCircadianProfile?

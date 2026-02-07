@@ -261,6 +261,7 @@ export const onRequestPost = authenticatedEndpoint(profileRecomputeSchema, async
         estimatedScore,
         readinessLevel,
         recommendations,
+        updatedAt: new Date(),
       },
       update: {
         lifetimeQuestions,

@@ -146,6 +146,7 @@ export async function onRequestPost(context: any) {
           updatedAt: new Date(),
         },
         create: {
+          id: `daily_${userId}_${sessionDateOnly.toISOString().split('T')[0]}`,
           userId,
           sessionDate: sessionDateOnly,
           questionsAnswered: agg.total,
@@ -154,6 +155,7 @@ export async function onRequestPost(context: any) {
           avgResponseTimeMs: Math.round(avgTime),
           systemsStudied: [...agg.systems],
           accuracyBySystem: Object.keys(accuracyBySystem).length > 0 ? accuracyBySystem : undefined,
+          updatedAt: new Date(),
         },
       });
     }
@@ -193,6 +195,7 @@ export async function onRequestPost(context: any) {
             updatedAt: new Date(),
           },
           create: {
+            id: `uca_${userId}_${conditionId}`,
             userId,
             conditionId,
             medicalContentId: v.medicalContentId ?? undefined,
@@ -209,6 +212,7 @@ export async function onRequestPost(context: any) {
     // Log to audit
     await prisma.auditLog.create({
       data: {
+        id: `audit_analytics_${yesterday.toISOString().split('T')[0]}_${Date.now()}`,
         action: 'DAILY_ANALYTICS_AGGREGATION',
         entityType: 'SYSTEM',
         details: {
