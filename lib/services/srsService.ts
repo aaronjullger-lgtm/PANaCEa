@@ -103,6 +103,9 @@ export interface SRSUpdateInput {
   streakLevel?: number;
   isGoldMastery?: boolean;
   baselineTime?: number; // Expected time for this question
+  
+  // 2026 PA Student Optimization: Confidence-based learning
+  confidenceLevel?: 1 | 2 | 3 | 4 | 5; // User's self-reported confidence
 }
 
 export interface SRSScheduleResult {
@@ -246,6 +249,50 @@ function createNewSRSItem(userId: string, questionId: string): SRSItem {
 /**
  * Map quality rating (0-5) to FSRS Rating enum
  */
+/**
+ * Adjust quality score based on user confidence (2026 PA Student Optimization)
+ * 
+ * Confidence-based learning: Low confidence + correct = still needs review
+ * High confidence + incorrect = critical knowledge gap (needs immediate attention)
+ * 
+ * @param baseQuality - Original quality (0-5, typically 0=incorrect, 5=correct fast)
+ * @param confidenceLevel - User's self-reported confidence (1-5: guessing → certain)
+ * @param wasCorrect - Whether the answer was correct
+ * @returns Adjusted quality score for FSRS scheduling
+ */
+function adjustQualityByConfidence(
+  baseQuality: number,
+  confidenceLevel: 1 | 2 | 3 | 4 | 5 | undefined,
+  wasCorrect: boolean
+): number {
+  // If no confidence provided, return base quality
+  if (!confidenceLevel) return baseQuality;
+  
+  if (wasCorrect) {
+    // Correct answer: Adjust down if low confidence (lucky guess)
+    // Quality 5 (correct fast) with confidence 1 (guessing) → Quality 3 (needs review sooner)
+    // Quality 5 with confidence 5 (certain) → Quality 5 (maintain)
+    
+    const confidenceMultiplier = [0.6, 0.75, 0.9, 1.0, 1.1][confidenceLevel - 1];
+    return Math.max(2, Math.min(5, baseQuality * confidenceMultiplier));
+    
+  } else {
+    // Incorrect answer: High confidence = critical gap (needs immediate review)
+    // Quality 0 (incorrect) with confidence 5 (certain) → Quality 0 (critical failure)
+    // Quality 0 with confidence 1 (guessing) → Quality 1 (expected miss)
+    
+    if (confidenceLevel >= 4) {
+      // High confidence but wrong = critical knowledge gap
+      return 0; // Force immediate review
+    } else if (confidenceLevel <= 2) {
+      // Low confidence and wrong = expected, slightly boost quality
+      return Math.min(2, baseQuality + 0.5);
+    }
+    
+    return baseQuality;
+  }
+}
+
 function mapQualityToRating(quality: number): Rating {
   if (quality <= 1) return Rating.Again;
   if (quality === 2) return Rating.Hard;
@@ -435,7 +482,15 @@ export async function updateReviewOutcome(
 
   // FSRS Logic Integration
   if (USE_FSRS) {
-    const rating = mapQualityToRating(input.quality);
+    // 2026 PA Student Optimization: Adjust quality by confidence
+    const wasCorrect = input.quality >= 3; // Quality 3+ typically means correct
+    const adjustedQuality = adjustQualityByConfidence(
+      input.quality,
+      input.confidenceLevel,
+      wasCorrect
+    );
+    
+    const rating = mapQualityToRating(adjustedQuality);
 
     const card: FSRSCard = {
       stability: item.fsrsStability || 0,
@@ -469,7 +524,7 @@ export async function updateReviewOutcome(
       easiness,
       dueDate,
       lastReviewed: now,
-      quality: input.quality,
+      quality: adjustedQuality, // Store adjusted quality for analytics
       fsrsState: newCard.state,
       fsrsStability: newCard.stability,
       fsrsDifficulty: newCard.difficulty,
@@ -479,6 +534,18 @@ export async function updateReviewOutcome(
 
     items.set(questionId, updatedItem);
     saveSRSItems(items);
+    
+    // Track confidence modifier for analytics
+    const modifiers: string[] = [];
+    if (input.confidenceLevel) {
+      if (wasCorrect && input.confidenceLevel <= 2) {
+        modifiers.push(`confidence-lucky-guess-${input.confidenceLevel}`);
+      } else if (!wasCorrect && input.confidenceLevel >= 4) {
+        modifiers.push(`confidence-critical-gap-${input.confidenceLevel}`);
+      } else if (input.confidenceLevel !== 3) {
+        modifiers.push(`confidence-adjusted-${input.confidenceLevel}`);
+      }
+    }
 
     return {
       interval,
@@ -487,8 +554,8 @@ export async function updateReviewOutcome(
       dueDate,
       difficulty: updatedItem.difficulty,
       stabilityScore: updatedItem.stabilityScore,
-      qualityAdjusted: input.quality,
-      modifiersApplied: ['fsrs_v5'],
+      qualityAdjusted: adjustedQuality,
+      modifiersApplied: ['fsrs_v6', ...modifiers],
     };
   }
 
