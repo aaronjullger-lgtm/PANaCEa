@@ -226,8 +226,8 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       ? { 
           ...fallbackSettings, 
           ...sessionSettings, 
-          focus: (sessionSettings.focus ?? 'all') as SessionSettings['focus'],
-          mode: sessionSettings.mode as SessionSettings['mode']
+          mode: sessionSettings.mode as SessionSettings['mode'],
+          focus: (sessionSettings.focus ?? 'all') as SessionSettings['focus'] 
         }
       : fallbackSettings;
     saveLastSession({
