@@ -95,6 +95,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdvancedAnalytics } from '@/hooks/useAdvancedAnalytics';
 import { useImplicitMetrics } from '@/hooks/useImplicitMetrics';
 import { inferQuestionType } from '@/hooks/useTelemetryCollector';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
@@ -323,6 +324,9 @@ const QuizView: React.FC<QuizViewProps> = ({
   // 2026 PA Student Optimization: Confidence rating state
   const [showConfidenceRating, setShowConfidenceRating] = useState<boolean>(false);
   const [confidenceLevel, setConfidenceLevel] = useState<1 | 2 | 3 | 4 | 5 | null>(null);
+  
+  // 2026 PA Student Optimization: Touch gesture state
+  const [swipeHint, setSwipeHint] = useState<'left' | 'right' | null>(null);
 
   // ---- SRS RESULT STATE ----
   const [srsResult, setSrsResult] = useState<SRSScheduleResult | null>(null);
@@ -1163,6 +1167,33 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     });
   }, [currentQuestion, selectedAnswerIndex, questionStartTime, sessionSettings.focus, addPerformanceRecord]);
 
+  // 2026 PA Student Optimization: Touch gesture handlers
+  const { ref: swipeRef } = useSwipeGesture({
+    enabled: isAnswered && !showConfidenceRating,
+    onSwipeRight: () => {
+      if (isAnswered && !showConfidenceRating) {
+        feedback.correct(); // Haptic feedback
+        setSwipeHint('right');
+        setTimeout(() => {
+          setSwipeHint(null);
+          showNextQuestion();
+        }, 200);
+      }
+    },
+    onSwipeLeft: () => {
+      if (isAnswered && !showConfidenceRating) {
+        feedback.incorrect(); // Haptic feedback
+        setSwipeHint('left');
+        setTimeout(() => {
+          setSwipeHint(null);
+          toggleFlag();
+        }, 200);
+      }
+    },
+    minDistance: 80,
+    maxTime: 400,
+  });
+
   const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newNote = e.target.value;
     setLocalNote(newNote);
@@ -1240,7 +1271,43 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" ref={swipeRef}>
+      {/* 2026 PA Student Optimization: Swipe hint indicator */}
+      <AnimatePresence>
+        {swipeHint && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className={`fixed inset-0 z-50 pointer-events-none flex items-center justify-center ${
+              swipeHint === 'right' ? 'bg-green-500/10' : 'bg-red-500/10'
+            }`}
+          >
+            <div
+              className={`text-6xl font-bold ${
+                swipeHint === 'right' ? 'text-green-500' : 'text-red-500'
+              }`}
+            >
+              {swipeHint === 'right' ? '→' : '←'}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Mobile swipe instructions hint (only show on first few questions) */}
+      {isAnswered && !showConfidenceRating && questionNumber <= 3 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-center"
+        >
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            <span className="font-semibold">Mobile tip:</span> Swipe right to continue, left to flag for review
+          </p>
+        </motion.div>
+      )}
+      
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4 mt-1">
           <div className="flex items-center space-x-3 min-w-0">
