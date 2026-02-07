@@ -257,8 +257,9 @@ export class MainSessionQuestionSelector {
         LIMIT 1
       `;
 
-      if (results.length > 0 && results[0].weights) {
-        return results[0].weights as BlueprintWeights;
+      const first = results[0];
+      if (first?.weights) {
+        return first.weights as BlueprintWeights;
       }
     } catch (error) {
       // Table may not exist yet or other error - use defaults
@@ -679,23 +680,27 @@ export class MainSessionQuestionSelector {
       // CORNER CASE: Forced to repeat (only one system has questions left)
       if (!placed && currentOrder.length > 0) {
         const forcedSystem = currentOrder[0];
-        const pool = workingPools.get(forcedSystem)!;
-        const question = pool.shift()!;
-        result.push(question);
-        lastPlacedSystem = forcedSystem;
+        if (forcedSystem !== undefined) {
+          const pool = workingPools.get(forcedSystem);
+          const question = pool?.shift();
+          if (question) {
+            result.push(question);
+            lastPlacedSystem = forcedSystem;
 
-        // LOG WARNING (Permissive Mode - don't crash)
-        const violation: InterleavingViolation = {
-          position: result.length - 1,
-          system: forcedSystem,
-          reason: 'only_system_remaining',
-        };
-        violations.push(violation);
+            // LOG WARNING (Permissive Mode - don't crash)
+            const violation: InterleavingViolation = {
+              position: result.length - 1,
+              system: forcedSystem,
+              reason: 'only_system_remaining',
+            };
+            violations.push(violation);
 
-        console.warn(
-          `[Interleaver] FORCED REPEAT: ${forcedSystem} at position ${result.length}`,
-          `- this indicates a selection phase issue or cold start scenario`
-        );
+            console.warn(
+              `[Interleaver] FORCED REPEAT: ${forcedSystem} at position ${result.length}`,
+              `- this indicates a selection phase issue or cold start scenario`
+            );
+          }
+        }
       }
     }
 

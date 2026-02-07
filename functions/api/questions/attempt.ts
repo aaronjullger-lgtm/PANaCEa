@@ -13,27 +13,25 @@ import { scheduleConceptReview } from '../intelligence/profile';
 const LETTERS = ['A', 'B', 'C', 'D'] as const;
 
 const AttemptSchema = z.object({
-  questionId: z.string().min(1),
-  isCorrect: z.boolean().optional(),
-  wasCorrect: z.boolean().optional(),
-  system: z.string().optional(),
-  conditionId: z.string().optional(),
-  medicalContentId: z.string().optional(),
-  questionType: z.string().optional(),
-  mode: z.string().optional().default('session'),
-  timeSpent: z.number().optional(),
-  timeSpentMs: z.number().optional(),
-  answerChangedCount: z.number().optional(),
-  isRankedAttempt: z.boolean().optional().default(false),
-  /** Selected answer: 0–3 (index) or "A"–"D" — for peer selection stats */
-  selectedAnswer: z.union([
-    z.number().int().min(0).max(3),
-    z.enum(['A', 'B', 'C', 'D']),
-  ]).optional(),
-  /** Behavioral telemetry for implicit FSRS (Ghost Grader) */
-  telemetryJson: z.record(z.unknown()).optional(),
-  /** Total duration from display to submission (ms) */
-  durationMs: z.number().optional(),
+  body: z.object({
+    questionId: z.string().min(1),
+    isCorrect: z.boolean().optional(),
+    wasCorrect: z.boolean().optional(),
+    system: z.string().optional(),
+    conditionId: z.string().optional(),
+    medicalContentId: z.string().optional(),
+    questionType: z.string().optional(),
+    mode: z.string().optional().default('session'),
+    timeSpent: z.number().optional(),
+    timeSpentMs: z.number().optional(),
+    answerChangedCount: z.number().optional(),
+    isRankedAttempt: z.boolean().optional().default(false),
+    selectedAnswer: z
+      .union([z.number().int().min(0).max(3), z.enum(['A', 'B', 'C', 'D'])])
+      .optional(),
+    telemetryJson: z.record(z.string(), z.unknown()).optional(),
+    durationMs: z.number().optional(),
+  }),
 });
 
 export const onRequestOptions = withCors();
@@ -70,7 +68,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       selectedAnswer: selectedAnswerRaw,
       telemetryJson,
       durationMs,
-    } = validated;
+    } = validated.body;
 
     // Support both isCorrect and wasCorrect field names
     const correctness = isCorrect ?? wasCorrect;
@@ -84,9 +82,13 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
           ? LETTERS[selectedAnswerRaw] ?? null
           : selectedAnswerRaw;
 
-    // Transaction for atomicity
     type AttemptResult = { wasCorrect: boolean; system: string | null };
-    const result = await prisma.$transaction(async (tx: typeof prisma) => {
+    type TransactionResult = {
+      attemptId: string;
+      stats: { totalQuestionsAnswered: number; correctAnswers: number; overallAccuracy: number };
+      systemStats: { system: string; totalAttempts: number; correctAnswers: number; accuracy: number } | null;
+    };
+    const result = (await prisma.$transaction(async (tx) => {
       // 1. Record attempt (with selectedAnswer, telemetry for Ghost Grader)
       await tx.questionAttempt.create({
         data: {
@@ -94,18 +96,20 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
           userId,
           questionId,
           wasCorrect: correctness,
-          system: system || null,
-          conditionId: conditionId || null,
-          medicalContentId: medicalContentId || null,
-          questionType: questionType || null,
-          mode,
+          system: system ?? null,
+          conditionId: conditionId ?? null,
+          medicalContentId: medicalContentId ?? null,
+          questionType: questionType ?? null,
+          mode: mode ?? null,
           isRankedAttempt,
           timeSpentMs: timeSpentMillis ?? durationMs ?? null,
           answerChangedCount: answerChangedCount ?? null,
           selectedAnswer: selectedAnswerLetter,
-          telemetryJson: telemetryJson ?? null,
+          telemetryJson:
+            telemetryJson != null
+              ? (JSON.parse(JSON.stringify(telemetryJson)) as object)
+              : undefined,
           durationMs: durationMs ?? null,
-          createdAt: new Date(),
         },
       });
 
@@ -201,7 +205,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
         stats: { totalQuestionsAnswered, correctAnswers, overallAccuracy },
         systemStats,
       };
-    });
+    }) as unknown) as TransactionResult;
 
     // Get detailed system stats
     const detailedSystemStats = system ? await getUserSystemStats(prisma, userId, system) : null;

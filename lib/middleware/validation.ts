@@ -19,7 +19,7 @@ export function validateRequired(fields: string[]) {
       });
     }
 
-    next();
+    return next();
   };
 }
 
@@ -44,7 +44,7 @@ export function validateStringLength(field: string, min: number, max: number) {
       });
     }
 
-    next();
+    return next();
   };
 }
 
@@ -93,15 +93,15 @@ export function sanitizeBody(req: Request, res: Response, next: NextFunction) {
           req.body[key] = sanitizeString(req.body[key]);
         }
       });
-      next();
+      return next();
     } catch (error) {
-      res.status(400).json({
+      return res.status(400).json({
         error: 'Invalid input format',
         message: error instanceof Error ? error.message : 'Validation error',
       });
     }
   } else {
-    next();
+    return next();
   }
 }
 
@@ -126,7 +126,7 @@ export function validateArrayLength(field: string, min: number, max: number) {
       });
     }
 
-    next();
+    return next();
   };
 }
 
@@ -144,7 +144,7 @@ export function validateEnum(field: string, allowedValues: string[]) {
       });
     }
 
-    next();
+    return next();
   };
 }
 

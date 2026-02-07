@@ -125,10 +125,12 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
       },
     });
 
-    type MedicalContentResult = { conditionId: string; synonyms: string[] | null };
-    // Create a map of conditionId -> synonyms for quick lookup
+    // Create a map of conditionId -> synonyms for quick lookup (synonyms is JsonValue in schema)
     const synonymsMap = new Map(
-      medicalContent.map((mc: MedicalContentResult) => [mc.conditionId, mc.synonyms || []])
+      medicalContent.map((mc) => [
+        mc.conditionId,
+        Array.isArray(mc.synonyms) ? (mc.synonyms as string[]) : [],
+      ])
     );
 
     // Score and rank results
@@ -165,7 +167,7 @@ export const onRequestGet = publicEndpoint(SearchSchema, async ({ env, validated
       })
       .slice(0, limit);
 
-    return results;
+    return { data: results };
   } finally {
     await safePrismaDisconnect(prisma);
   }

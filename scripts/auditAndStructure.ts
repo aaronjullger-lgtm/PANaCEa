@@ -35,24 +35,26 @@ function findConditionId(name: string): string | undefined {
   // 1. Exact ID Match (if passed an ID like "CV__ecg__afib")
   if (
     CONDITION_REGISTRY.some(
-      (c) => `${c.system}__${normalize(c.subcategory)}__${normalize(c.condition)}` === name
+      (c) =>
+        `${c.system ?? ''}__${normalize(c.subcategory ?? '')}__${normalize(c.condition ?? '')}` ===
+        name
     )
   )
     return name;
 
   // 2. Condition Name Match
-  const exact = CONDITION_REGISTRY.find((c) => normalize(c.condition) === normName);
+  const exact = CONDITION_REGISTRY.find((c) => normalize(c.condition ?? '') === normName);
   if (exact)
-    return `${exact.system}__${normalize(exact.subcategory)}__${normalize(exact.condition)}`;
+    return `${exact.system ?? ''}__${normalize(exact.subcategory ?? '')}__${normalize(exact.condition ?? '')}`;
 
   // 3. Alias Match
   const aliasMatch = CONDITION_REGISTRY.find((c) => {
     if (!c.aliases) return false;
     const aliasArray = Array.isArray(c.aliases) ? c.aliases : [c.aliases];
-    return aliasArray.some((a) => normalize(a) === normName);
+    return aliasArray.some((a) => normalize(String(a ?? '')) === normName);
   });
   if (aliasMatch)
-    return `${aliasMatch.system}__${normalize(aliasMatch.subcategory)}__${normalize(aliasMatch.condition)}`;
+    return `${aliasMatch.system ?? ''}__${normalize(aliasMatch.subcategory ?? '')}__${normalize(aliasMatch.condition ?? '')}`;
 
   return undefined;
 }
@@ -78,7 +80,7 @@ async function main() {
   // 2. Registry Alignment (Create Stubs)
   let addedCount = 0;
   for (const meta of CONDITION_REGISTRY) {
-    const id = `${meta.system}__${normalize(meta.subcategory)}__${normalize(meta.condition)}`;
+    const id = `${meta.system ?? ''}__${normalize(meta.subcategory ?? '')}__${normalize(meta.condition ?? '')}`;
     if (!contentMap.has(id)) {
       contentMap.set(id, {
         conditionId: id,

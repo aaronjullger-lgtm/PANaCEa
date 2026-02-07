@@ -63,8 +63,8 @@ export function LiveInterface({
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
       if (!res.ok) throw new Error('Failed to load live config');
-      const data = await res.json();
-      setConfig(data.data);
+      const data = (await res.json()) as { data?: LiveConfig };
+      setConfig(data.data ?? null);
       return data.data as LiveConfig;
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to load config';
@@ -85,7 +85,7 @@ export function LiveInterface({
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error('Vitals fetch failed');
-      const data = await res.json();
+      const data = (await res.json()) as { data?: VitalsState };
       const v = data.data ?? {};
       setVitals({ ...v, updatedAt: Date.now() });
       return v;

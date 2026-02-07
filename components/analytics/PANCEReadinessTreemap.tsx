@@ -41,7 +41,7 @@ function renderTreemapContent(props: {
   masteryPercent?: number;
 }) {
   const { x = 0, y = 0, width = 0, height = 0, name = '', depth = 0, masteryPercent = 0 } = props;
-  if (width <= 0 || height <= 0) return null;
+  if (width <= 0 || height <= 0) return <g />;
   const fill = getMasteryColor(masteryPercent);
   const opacity = depth === 0 ? 0.85 : 0.75;
   const showLabel = width > 60 && height > 24;
@@ -140,8 +140,8 @@ export const PANCEReadinessTreemap: React.FC<PANCEReadinessTreemapProps> = ({
           {drilled ? drilled.name : 'PANCE readiness by system'}
         </h3>
       </div>
-      <div className="h-[320px]">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="h-[320px] min-h-[200px] w-full min-w-0">
+        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
           <Treemap
             data={chartData}
             dataKey="volume"

@@ -31,7 +31,9 @@ const ALLOWED_TAGS = new Set([
 function sanitizeTag(tagMatch: string): string {
   const openClose = tagMatch.match(/^(<\/?)(\w+)/);
   if (!openClose) return '';
-  const [, bracket, name] = openClose;
+  const bracket = openClose[1];
+  const name = openClose[2];
+  if (name === undefined) return '';
   const tagName = name.toLowerCase();
   if (!ALLOWED_TAGS.has(tagName)) return '';
   if (bracket === '</') return `</${tagName}>`;

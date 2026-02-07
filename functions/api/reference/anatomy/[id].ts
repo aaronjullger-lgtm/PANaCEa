@@ -60,7 +60,7 @@ export const onRequestGet = authenticatedEndpoint(
 
       const result = await prisma.anatomyStructure.findUnique({
         where: { id },
-        include: { conditions: { select: { id: true, name: true } } },
+        include: { Condition: { select: { id: true, name: true } } },
       });
 
       if (!result) {

@@ -145,7 +145,7 @@ export async function generateRecommendations(userId: string): Promise<Recommend
   });
 
   const priorityMap: Record<string, number> = { high: 3, medium: 2, low: 1 };
-  finalRecs.sort((a, b) => priorityMap[b.priority] - priorityMap[a.priority]);
+  finalRecs.sort((a, b) => (priorityMap[b.priority] ?? 0) - (priorityMap[a.priority] ?? 0));
 
   return {
     recommendations: finalRecs,

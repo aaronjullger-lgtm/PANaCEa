@@ -1408,6 +1408,7 @@ async function main() {
 
   for (let i = 0; i < NEW_CONDITIONS.length; i++) {
     const condition = NEW_CONDITIONS[i];
+    if (!condition) continue;
     const key = generateConditionKey(condition.system, condition.subcategory, condition.condition);
 
     // Skip if already exists

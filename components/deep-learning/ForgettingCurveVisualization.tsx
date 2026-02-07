@@ -51,7 +51,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
 
   if (performanceRecords.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500">
+      <div className="p-8 text-center text-[var(--color-text-muted)]">
         <TrendingDown className="w-12 h-12 mx-auto mb-4 opacity-50" />
         <p>No performance data available for this topic yet.</p>
       </div>
@@ -69,7 +69,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
       case 'critical':
         return 'text-red-600 dark:text-red-400';
       default:
-        return 'text-gray-600 dark:text-gray-400';
+        return 'text-[var(--color-text-muted)]';
     }
   };
 
@@ -105,7 +105,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
             <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
               {proficiencyData.topic}
             </h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-[var(--color-text-secondary)]">
               Last reviewed: {proficiencyData.lastReviewDate}
               <span className="text-sm ml-2">({proficiencyData.daysSinceReview} days ago)</span>
             </p>
@@ -168,7 +168,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
                 y2="0"
                 stroke="currentColor"
                 strokeWidth="1"
-                className="text-gray-200 dark:text-gray-700"
+                className="text-[var(--color-text-muted)]"
               />
               <line
                 x1="0"
@@ -177,7 +177,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
                 y2="50"
                 stroke="currentColor"
                 strokeWidth="1"
-                className="text-gray-200 dark:text-gray-700"
+                className="text-[var(--color-text-muted)]"
                 strokeDasharray="4"
               />
               <line
@@ -187,7 +187,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
                 y2="100"
                 stroke="currentColor"
                 strokeWidth="1"
-                className="text-gray-200 dark:text-gray-700"
+                className="text-[var(--color-text-muted)]"
                 strokeDasharray="4"
               />
               <line
@@ -197,7 +197,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
                 y2="150"
                 stroke="currentColor"
                 strokeWidth="1"
-                className="text-gray-200 dark:text-gray-700"
+                className="text-[var(--color-text-muted)]"
                 strokeDasharray="4"
               />
               <line
@@ -207,7 +207,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
                 y2="200"
                 stroke="currentColor"
                 strokeWidth="1"
-                className="text-gray-200 dark:text-gray-700"
+                className="text-[var(--color-text-muted)]"
               />
 
               {/* Forgetting curve */}
@@ -239,7 +239,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
                   cy={point.y}
                   r="4"
                   fill="white"
-                  stroke="#3b82f6"
+                  stroke="var(--color-accent)"
                   strokeWidth="2"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -251,12 +251,12 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
               <defs>
                 <linearGradient id="curveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#10b981" />
-                  <stop offset="50%" stopColor="#3b82f6" />
+                  <stop offset="50%" stopColor="var(--color-accent)" />
                   <stop offset="100%" stopColor="#ef4444" />
                 </linearGradient>
                 <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1" />
+                  <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0.1" />
                 </linearGradient>
               </defs>
             </svg>

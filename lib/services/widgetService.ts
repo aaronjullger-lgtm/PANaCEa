@@ -40,7 +40,7 @@ export function calculateStreak(performanceData: PerformanceRecord[]): StreakDat
   sorted.forEach((record) => {
     const date = new Date(Number(record.timestamp));
     const dateStr = date.toISOString().split('T')[0];
-    uniqueDates.add(dateStr);
+    if (dateStr != null) uniqueDates.add(dateStr);
   });
 
   const dates = Array.from(uniqueDates).sort().reverse();
@@ -64,9 +64,10 @@ export function calculateStreak(performanceData: PerformanceRecord[]): StreakDat
   const yesterdayStr = yesterday.toISOString().split('T')[0];
 
   // Check if user studied today or yesterday (to maintain streak)
-  if (dates[0] === todayStr || dates[0] === yesterdayStr) {
+  const d0 = dates[0];
+  if (d0 !== undefined && (d0 === todayStr || d0 === yesterdayStr)) {
     currentStreak = 1;
-    let checkDate = new Date(dates[0]);
+    let checkDate = new Date(d0);
 
     for (let i = 1; i < dates.length; i++) {
       const prevDate = new Date(checkDate);
@@ -87,8 +88,11 @@ export function calculateStreak(performanceData: PerformanceRecord[]): StreakDat
   let tempStreak = 1;
 
   for (let i = 0; i < dates.length - 1; i++) {
-    const currentDate = new Date(dates[i]);
-    const nextDate = new Date(dates[i + 1]);
+    const di = dates[i];
+    const di1 = dates[i + 1];
+    if (di === undefined || di1 === undefined) continue;
+    const currentDate = new Date(di);
+    const nextDate = new Date(di1);
     const daysDiff = Math.round(
       (currentDate.getTime() - nextDate.getTime()) / (24 * 60 * 60 * 1000)
     );
@@ -102,10 +106,11 @@ export function calculateStreak(performanceData: PerformanceRecord[]): StreakDat
   }
   longestStreak = Math.max(longestStreak, tempStreak);
 
+  const lastDate = dates[0];
   return {
     currentStreak,
     longestStreak,
-    lastStudyDate: new Date(dates[0]),
+    lastStudyDate: lastDate !== undefined ? new Date(lastDate) : null,
   };
 }
 
@@ -403,9 +408,9 @@ export function getQuestionOfDay(questions: Question[], date: Date = new Date())
   if (questions.length === 0) return null;
 
   // Use date as seed for consistent daily question
-  const dateStr = date.toISOString().split('T')[0];
+  const dateStr = date.toISOString().split('T')[0] ?? '';
   const seed = dateStr.split('-').reduce((acc, val) => acc + parseInt(val, 10), 0);
 
   const index = seed % questions.length;
-  return questions[index];
+  return questions[index] ?? null;
 }

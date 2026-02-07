@@ -35,6 +35,8 @@ import {
   ContrastiveDrillSession,
   ReasoningTutorMode,
   CramMode,
+  PolypharmacyPuzzleMode,
+  MedicalWordleMode,
   IntegrationsHub,
   SettingsStatsModal,
   KeyboardShortcutsModal,
@@ -167,11 +169,35 @@ const App: React.FC = () => {
   const [theme, setTheme] = useTheme();
 
   const [view, setView] = useState<View>('command_center');
+  const [showNotFound, setShowNotFound] = useState(false);
   const startViewTransition = useViewTransition();
 
   // Sync URL to view: single source of truth so NavRail and direct URLs always show correct content
   useEffect(() => {
     const path = location.pathname;
+    
+    // Known paths that map to views or are handled by explicit routes
+    const knownPaths = [
+      '/',
+      '/menu',
+      '/study',
+      '/study/',
+      '/admin',
+      '/clinical-eye',
+      '/visualizer',
+    ];
+    
+    const isKnownPath = knownPaths.includes(path) || 
+                        path.startsWith('/study/reference') || 
+                        path.startsWith('/study/toolkit');
+    
+    if (!isKnownPath) {
+      setShowNotFound(true);
+      return;
+    }
+    
+    setShowNotFound(false);
+    
     if (path === '/' || path === '') {
       setView('command_center');
     } else if (path === '/menu') {
@@ -193,6 +219,15 @@ const App: React.FC = () => {
     if (tab === 'resources' || tab === 'analytics') return tab;
     return undefined;
   }, [location.pathname, location.search]);
+
+  // Support ?modal=settings query param to open Settings modal (for nav links)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const modal = params.get('modal');
+    if (modal === 'settings') {
+      setIsSettingsModalOpen(true);
+    }
+  }, [location.search]);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -285,8 +320,9 @@ const App: React.FC = () => {
         });
       })
       .then((res) => (res?.ok ? res.json() : null))
-      .then((data: { data?: { profile?: { hasCompletedOnboarding?: boolean } } } | null) => {
+      .then((value: unknown) => {
         if (cancelled) return;
+        const data = value as { data?: { profile?: { hasCompletedOnboarding?: boolean } } } | null;
         if (data?.data?.profile?.hasCompletedOnboarding === true)
           saveUserProfile({ hasCompletedOnboarding: true });
       })
@@ -676,7 +712,8 @@ const App: React.FC = () => {
         });
       })
       .then((res) => (res?.ok ? res.json() : null))
-      .then((data: { data?: { profile?: { examDate?: string | null } } } | null) => {
+      .then((value: unknown) => {
+        const data = value as { data?: { profile?: { examDate?: string | null } } } | null;
         if (!cancelled && data?.data?.profile?.examDate)
           setOnboardingExamDate(data.data.profile.examDate);
       })
@@ -716,6 +753,8 @@ const App: React.FC = () => {
       [DRILL_MODE_CONTRASTIVE]: 'contrastive_drill',
       reasoning_tutor: 'reasoning_tutor',
       [DRILL_MODE_CRAM]: 'cram_mode',
+      polypharmacy_puzzle: 'polypharmacy_puzzle',
+      medical_wordle: 'medical_wordle',
       admin_media: 'admin_media',
       toolkit: 'toolkit',
     };
@@ -825,15 +864,38 @@ const App: React.FC = () => {
               path="*"
               element={
                 <>
-                  {/* Skip to Main Content - hidden until focused via keyboard (screen reader + a11y) */}
-                  <a
-                    href="#main-content"
-                    className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:top-4 focus-visible:left-4 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-[var(--color-accent)] focus-visible:text-[var(--color-text-inverse)] focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-accent)]"
-                  >
-                    Skip to main content
-                  </a>
-                  {/* Header - theme-aware for light/dark contrast */}
-                  <header 
+                  {showNotFound ? (
+                    // 404 Page Not Found
+                    <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center px-4">
+                      <div className="max-w-md w-full text-center">
+                        <div className="mb-8">
+                          <h1 className="text-6xl font-bold text-[var(--color-text-primary)] mb-4">404</h1>
+                          <h2 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-2">
+                            Page Not Found
+                          </h2>
+                          <p className="text-[var(--color-text-muted)]">
+                            The page you're looking for doesn't exist or has been moved.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => navigate(ROUTES.STUDY)}
+                          className="px-6 py-3 bg-[var(--color-accent)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+                        >
+                          Go to Dashboard
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Skip to Main Content - hidden until focused via keyboard (screen reader + a11y) */}
+                      <a
+                        href="#main-content"
+                        className="sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:top-4 focus-visible:left-4 focus-visible:z-[100] focus-visible:px-4 focus-visible:py-2 focus-visible:bg-[var(--color-accent)] focus-visible:text-[var(--color-text-inverse)] focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-accent)]"
+                      >
+                        Skip to main content
+                      </a>
+                      {/* Header - theme-aware for light/dark contrast */}
+                      <header 
                     className="sticky top-0 z-40 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm backdrop-blur-md bg-opacity-95 dark:bg-opacity-95"
                     style={{ height: 'var(--header-height, 56px)' }}
                   >
@@ -1071,7 +1133,8 @@ const App: React.FC = () => {
                                 growthAreas={growthAreas}
                                 onNavigateToDrillMode={handleNavigateToDrillMode}
                                 onNavigateToIntegrations={() => setView('integrations')}
-                                onNavigateToSocial={() => setView('social_dashboard')}
+                                // HIDDEN: Social feature disabled until API implemented
+                                // onNavigateToSocial={() => setView('social_dashboard')}
                                 onNavigateToToolkit={() => navigate(ROUTES.STUDY_TOOLKIT)}
                                 onNavigateToGapAnalysis={() => startViewTransition(() => setView('gap_analysis'))}
                                 onNavigateToSimulation={handleNavigateToSimulation}
@@ -1448,6 +1511,29 @@ const App: React.FC = () => {
                           </WithGeminiErrorBoundary>
                         )}
 
+                        {view === 'polypharmacy_puzzle' && (
+                          <WithGeminiErrorBoundary
+                            viewName="polypharmacy_puzzle"
+                            onRetry={() => setView('polypharmacy_puzzle')}
+                          >
+                            <Suspense fallback={<Loader />}>
+                              <PolypharmacyPuzzleMode onExit={() => setView('command_center')} />
+                            </Suspense>
+                          </WithGeminiErrorBoundary>
+                        )}
+
+                        {view === 'medical_wordle' && (
+                          <WithGeminiErrorBoundary
+                            viewName="medical_wordle"
+                            onRetry={() => setView('medical_wordle')}
+                          >
+                            <Suspense fallback={<Loader />}>
+                              <MedicalWordleMode onExit={() => setView('command_center')} />
+                            </Suspense>
+                          </WithGeminiErrorBoundary>
+                        )}
+
+                        {/* HIDDEN: Social/Study Groups view (API not implemented - see docs/GAP_ANALYSIS_AND_IMPROVEMENT_PLAN.md)
                         {view === 'social_dashboard' && (
                           <WithGeminiErrorBoundary
                             viewName="social_dashboard"
@@ -1481,6 +1567,7 @@ const App: React.FC = () => {
                             </Suspense>
                           </WithGeminiErrorBoundary>
                         )}
+                        */}
 
                         {view === 'admin_media' && (
                           <WithGeminiErrorBoundary
@@ -1762,7 +1849,7 @@ const App: React.FC = () => {
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95, y: 20 }}
                           transition={{ duration: 0.2 }}
-                          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl p-4 md:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
+                          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] p-4 md:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex items-center justify-between mb-6">
@@ -1827,6 +1914,8 @@ const App: React.FC = () => {
                     isOpen={showProductTour}
                     onClose={() => setShowProductTour(false)}
                   />
+                    </>
+                  )}
                 </>
               }
             />

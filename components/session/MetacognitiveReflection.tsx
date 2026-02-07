@@ -132,7 +132,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
       <motion.div
         initial={{ scale: 0.95, y: 20 }}
         animate={{ scale: 1, y: 0 }}
-        className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
       >
         {/* Header */}
         <div className="bg-[var(--color-accent)] p-6 rounded-t-2xl">

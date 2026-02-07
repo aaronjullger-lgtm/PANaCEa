@@ -118,13 +118,14 @@ export const onRequestGet = publicEndpoint(SmartSuggestSchema, async (context) =
       });
 
       type ConfusionResult = {
-        realConditionId: string;
-        mistakenForId: string;
+        realConditionId: string | null;
+        mistakenForId: string | null;
         count: number;
         RealCondition: { id: string; name: string } | null;
         MistakenCondition: { id: string; name: string } | null;
       };
       confusions.forEach((cp: ConfusionResult) => {
+        if (cp.realConditionId == null) return;
         const isRealCondition = cp.realConditionId === conditionId;
         const otherCondition = isRealCondition ? cp.MistakenCondition : cp.RealCondition;
         if (otherCondition) {

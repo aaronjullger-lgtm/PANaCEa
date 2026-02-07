@@ -70,7 +70,7 @@ export function OnboardingYourPlan({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-lg w-full p-8"
+        className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-lg w-full p-8 border border-[var(--color-border)]"
       >
         <div className="flex justify-center mb-6">
           <div className="p-4 bg-[var(--color-accent)]/20 rounded-full">

@@ -148,6 +148,7 @@ export const onRequestPost = authenticatedEndpoint(
 
         const created = await prisma.curatedPassage.create({
           data: {
+            id: crypto.randomUUID(),
             title,
             body,
             source: source ?? 'OpenStax',

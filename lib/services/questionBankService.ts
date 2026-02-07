@@ -141,6 +141,7 @@ async function storeGeneratedQuestion(payload: {
       tags: generated.sourceSections || [],
       difficulty: payload.difficulty || 'medium',
       source: 'ai_generated',
+      updatedAt: new Date(),
     },
   });
 

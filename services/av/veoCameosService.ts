@@ -157,7 +157,9 @@ export class VeoCameosService {
       throw new Error(`No prompt template found for state: ${stateId}`);
     }
 
-    const envDescriptor = ENVIRONMENT_DESCRIPTORS[environment];
+    const envDescriptor =
+      ENVIRONMENT_DESCRIPTORS[environment as keyof typeof ENVIRONMENT_DESCRIPTORS] ??
+      'clinical setting';
 
     return template
       .replace('{{age}}', String(demographics.age))
@@ -172,7 +174,8 @@ export class VeoCameosService {
     request: VeoGenerationRequest
   ): Promise<VeoGenerationResponse> {
     try {
-      const response = await fetch(this.config.apiEndpoint!, {
+      const endpoint = this.config.apiEndpoint ?? 'https://generativelanguage.googleapis.com/v1/models/veo-2:generate';
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.config.apiKey}`,
@@ -208,21 +211,28 @@ export class VeoCameosService {
         throw new Error(`Veo API error: ${response.status} ${errorText}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        status?: string;
+        videoId?: string;
+        videoUrl?: string;
+        uri?: string;
+        thumbnailUrl?: string;
+      };
 
       // Poll for completion if async
       if (data.status === 'pending' || data.status === 'processing') {
-        return await this.pollForCompletion(data.videoId);
+        const opId = data.videoId ?? `veo-${Date.now()}`;
+        return await this.pollForCompletion(opId);
       }
 
       return {
         videoId: data.videoId ?? `veo-${Date.now()}`,
-        status: data.status ?? 'completed',
+        status: (data.status as VeoGenerationResponse['status']) ?? 'completed',
         videoUrl: data.videoUrl ?? data.uri,
         thumbnailUrl: data.thumbnailUrl,
         duration: request.duration,
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Veo generation error:', error);
       return {
         videoId: `error-${Date.now()}`,
@@ -244,8 +254,9 @@ export class VeoCameosService {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       await new Promise((resolve) => setTimeout(resolve, intervalMs));
 
+      const endpoint = this.config.apiEndpoint ?? 'https://generativelanguage.googleapis.com/v1/models/veo-2:generate';
       const response = await fetch(
-        `${this.config.apiEndpoint}/operations/${videoId}`,
+        `${endpoint}/operations/${videoId}`,
         {
           headers: {
             'Authorization': `Bearer ${this.config.apiKey}`,
@@ -257,7 +268,14 @@ export class VeoCameosService {
         throw new Error(`Failed to poll status: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        status?: string;
+        videoUrl?: string;
+        uri?: string;
+        thumbnailUrl?: string;
+        duration?: number;
+        error?: string;
+      };
 
       if (data.status === 'completed') {
         return {

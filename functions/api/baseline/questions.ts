@@ -3,6 +3,7 @@
  * Returns 20 questions for baseline assessment (mixed systems).
  */
 
+import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { resolveUserId } from '../_shared/user-resolver';
@@ -13,7 +14,7 @@ const BASELINE_QUESTION_COUNT = 20;
 export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(
-  {},
+  z.object({}),
   async (context) => {
     const { env, auth } = context;
     const logger = createEndpointLogger('/api/baseline/questions');
@@ -63,7 +64,8 @@ export const onRequestGet = authenticatedEndpoint(
         const pool = bySystem.get(sys)!;
         const take = Math.min(perSystem, pool.length);
         for (let i = 0; i < take && selected.length < BASELINE_QUESTION_COUNT; i++) {
-          selected.push(pool[i]);
+          const q = pool[i];
+          if (q) selected.push(q);
         }
       }
       while (selected.length < BASELINE_QUESTION_COUNT && withOptions.length > selected.length) {

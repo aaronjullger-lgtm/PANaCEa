@@ -68,7 +68,7 @@ export function useAnatomyDrill(): UseAnatomyDrillReturn {
         throw new Error(`Failed to fetch questions: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { questions?: Array<Record<string, unknown>> };
 
       if (!data.questions || data.questions.length === 0) {
         throw new Error('No anatomy questions available. Please run seed script.');

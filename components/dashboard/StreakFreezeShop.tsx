@@ -37,7 +37,7 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
             <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
               Streak Freeze Insurance
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Protect your study streak</p>
+            <p className="text-sm text-[var(--color-text-muted)]">Protect your study streak</p>
           </div>
         </div>
         <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
@@ -47,9 +47,9 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
       </div>
 
       {/* Current Freezes */}
-      <div className="mb-4 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+      <div className="mb-4 p-3 bg-[var(--color-bg-primary)]/50 rounded-lg">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-sm font-medium text-[var(--color-text-primary)]">
             Streak Freezes Available
           </span>
           <div className="flex items-center gap-1">
@@ -59,7 +59,7 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
                 className={`w-5 h-5 ${
                   i < streakFreezes
                     ? 'text-slate-600 fill-slate-600 dark:text-slate-400 dark:fill-slate-400'
-                    : 'text-gray-300'
+                    : 'text-[var(--color-text-muted)]'
                 }`}
               />
             ))}
@@ -72,12 +72,12 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
 
       {/* Purchase Section */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-slate-300 dark:border-slate-600">
+        <div className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)] rounded-lg border-2 border-[var(--color-border)]">
           <div className="flex items-center gap-3">
             <Shield className="w-8 h-8 text-slate-600 dark:text-slate-400" />
             <div>
               <p className="font-semibold text-[var(--color-text-primary)]">1 Streak Freeze</p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">Protects one missed day</p>
+              <p className="text-xs text-[var(--color-text-muted)]">Protects one missed day</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -96,7 +96,7 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
             ${
               canPurchase
                 ? 'bg-slate-700 hover:bg-slate-800 text-white'
-                : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
             }
           `}
         >
@@ -150,7 +150,7 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
 
       {/* Earn More Coins */}
       <div className="mt-3 text-center">
-        <p className="text-xs text-gray-600 dark:text-gray-400">
+        <p className="text-xs text-[var(--color-text-muted)]">
           Earn{' '}
           <span className="font-bold text-yellow-600">{STREAK_FREEZE_CONFIG.coinsPerQuestion}</span>{' '}
           coins per question,

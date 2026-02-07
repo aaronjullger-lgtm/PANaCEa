@@ -95,6 +95,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
         }
 
         // Upsert user - create if doesn't exist, update if exists
+        const now = new Date();
         await prisma.user.upsert({
           where: { clerkId: id },
           create: {
@@ -102,7 +103,9 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
             email: primaryEmail.email_address,
             firstName: first_name || null,
             lastName: last_name || null,
-            role: 'USER', // Default role on creation
+            role: 'USER',
+            createdAt: now,
+            updatedAt: now,
           },
           update: {
             email: primaryEmail.email_address,

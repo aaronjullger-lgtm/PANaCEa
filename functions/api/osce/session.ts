@@ -78,10 +78,15 @@ export const onRequestPost = authenticatedEndpoint(
       }
 
       // Create new session
+      const sessionId = `osce-${user.id.slice(0, 8)}-${Date.now()}`;
+      const now = new Date();
       const session = await prisma.patientEncounterSession.create({
         data: {
+          id: sessionId,
           userId: user.id,
           caseId,
+          startTime: now,
+          updatedAt: now,
           messages: [],
           status: 'active',
         },

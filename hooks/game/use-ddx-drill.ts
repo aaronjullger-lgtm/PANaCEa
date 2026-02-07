@@ -288,8 +288,8 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
           throw new Error(`Failed to fetch differentials: ${response.statusText}`);
         }
 
-        const result = await response.json();
-        const data: DDxData[] = result.data || result;
+        const result = (await response.json()) as { data?: DDxData[] } | DDxData[];
+        const data: DDxData[] = Array.isArray(result) ? result : (result as { data?: DDxData[] }).data || [];
 
         if (!data || data.length === 0) {
           throw new Error('No differential diagnosis data available.');

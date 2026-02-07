@@ -103,9 +103,13 @@ export function QuestionQualityDashboard() {
         throw new Error('Failed to fetch quality stats');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        success?: boolean;
+        data?: unknown;
+        error?: string;
+      };
       if (data.success) {
-        setStats(data.data);
+        setStats(data.data as QualityStats);
       } else {
         throw new Error(data.error || 'Unknown error');
       }

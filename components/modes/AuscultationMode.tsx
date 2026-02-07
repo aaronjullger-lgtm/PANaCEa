@@ -556,7 +556,7 @@ export function AuscultationMode({
                   </span>
                 </div>
 
-                {/* Waveform placeholder */}
+                {/* Animated waveform visualization */}
                 <div className="h-24 bg-slate-100 dark:bg-slate-700 rounded-xl mb-4 flex items-center justify-center">
                   <div className="flex items-end gap-1">
                     {Array.from({ length: 40 }).map((_, i) => (

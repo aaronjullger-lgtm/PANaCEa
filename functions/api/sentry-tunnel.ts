@@ -28,48 +28,45 @@ export async function onRequestPost(context: any) {
     // Get the raw envelope body
     const envelopeBody = await request.text();
 
+    const corsHeaders = {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
+
     if (!envelopeBody || envelopeBody.trim() === '') {
       console.warn('[Sentry Tunnel] Empty envelope body received');
-      return new Response(JSON.stringify({ error: 'Empty envelope body' }), {
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
+      return new Response(
+        JSON.stringify({ error: 'Empty envelope body', reason: 'empty_body' }),
+        { status: 400, headers: corsHeaders }
+      );
     }
 
-    // Sentry envelopes are newline-delimited JSON
-    // First line is the header containing the DSN
+    // Sentry envelopes are newline-delimited JSON; first line is the header (may contain dsn)
     const pieces = envelopeBody.split('\n').filter((line: string) => line.trim() !== '');
 
     if (pieces.length === 0) {
       console.warn('[Sentry Tunnel] Invalid envelope format - no lines');
-      return new Response(JSON.stringify({ error: 'Invalid envelope format' }), {
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
+      return new Response(
+        JSON.stringify({ error: 'Invalid envelope format', reason: 'invalid_format' }),
+        { status: 400, headers: corsHeaders }
+      );
     }
 
-    // Parse the envelope header to extract DSN
-    let header: any;
+    // Parse the envelope header to extract DSN (optional in some envelope types)
+    let header: { dsn?: string } | null = null;
     try {
-      header = JSON.parse(pieces[0]);
+      header = JSON.parse(pieces[0]) as { dsn?: string };
     } catch (e) {
       console.warn(
         '[Sentry Tunnel] Failed to parse envelope header:',
         pieces[0]?.substring(0, 100)
       );
-      return new Response(JSON.stringify({ error: 'Failed to parse envelope header' }), {
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
+      return new Response(
+        JSON.stringify({ error: 'Failed to parse envelope header', reason: 'invalid_header' }),
+        { status: 400, headers: corsHeaders }
+      );
     }
 
     // Extract and validate DSN
@@ -89,28 +86,20 @@ export async function onRequestPost(context: any) {
         dsnUrl = new URL(dsn);
       } catch (e) {
         console.warn('[Sentry Tunnel] Invalid DSN format:', dsn?.substring(0, 50));
-        return new Response(JSON.stringify({ error: 'Invalid DSN format' }), {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        });
+        return new Response(
+          JSON.stringify({ error: 'Invalid DSN format', reason: 'invalid_dsn' }),
+          { status: 400, headers: corsHeaders }
+        );
       }
 
-      // Extract project ID from DSN path (e.g., /4510664018231296)
-      projectId = dsnUrl.pathname.replace(/^\//, '');
+      projectId = dsnUrl.pathname.replace(/^\//, '').split('/')[0] || SENTRY_PROJECT_ID;
 
-      // Security: Only allow our project
       if (projectId !== SENTRY_PROJECT_ID) {
         console.warn(`[Sentry Tunnel] Rejected envelope with wrong project ID: ${projectId}`);
-        return new Response(JSON.stringify({ error: 'Invalid project ID' }), {
-          status: 403,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        });
+        return new Response(
+          JSON.stringify({ error: 'Invalid project ID', reason: 'project_mismatch' }),
+          { status: 403, headers: corsHeaders }
+        );
       }
     }
 
@@ -131,14 +120,12 @@ export async function onRequestPost(context: any) {
     // Return Sentry's response
     const responseText = await sentryResponse.text();
 
+    const contentType = sentryResponse.headers.get('Content-Type') || 'text/plain';
     return new Response(responseText, {
       status: sentryResponse.status,
       headers: {
-        'Content-Type': sentryResponse.headers.get('Content-Type') || 'text/plain',
-        // CORS headers for browser
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        ...corsHeaders,
+        'Content-Type': contentType,
       },
     });
   } catch (error) {
@@ -146,11 +133,17 @@ export async function onRequestPost(context: any) {
     return new Response(
       JSON.stringify({
         error: 'Tunnel error',
+        reason: 'tunnel_error',
         message: error instanceof Error ? error.message : 'Unknown error',
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        },
       }
     );
   }

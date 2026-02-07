@@ -182,7 +182,7 @@ export const ProductTour: React.FC<ProductTourProps> = ({
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4 pointer-events-auto"
         >
-          <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl border border-[var(--color-border)] overflow-hidden">
+          <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)] overflow-hidden">
             <div className="p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">

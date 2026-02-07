@@ -98,11 +98,11 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string };
         throw new Error(errorData.error || `HTTP ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { goals?: UserGoal[] };
       setGoals(data.goals || []);
     } catch (err) {
       console.error('[GoalsDashboard] Fetch error:', err);
@@ -131,7 +131,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string };
           throw new Error(errorData.error || 'Failed to create goal');
         }
 
@@ -164,7 +164,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string };
           throw new Error(errorData.error || 'Failed to update goal');
         }
 
@@ -197,7 +197,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string };
           throw new Error(errorData.error || 'Failed to delete goal');
         }
 

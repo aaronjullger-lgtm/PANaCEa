@@ -63,7 +63,9 @@ const QuestionCurationPanel = () => {
       if (!response.ok) {
         throw new Error('Failed to fetch questions for curation.');
       }
-      const data = await response.json();
+      const data = (await response.json()) as
+        | PreGeneratedQuestion[]
+        | { questions?: PreGeneratedQuestion[] };
       // Handle both array response and object with questions property
       const questionArray = Array.isArray(data) ? data : data.questions || [];
       setQuestions(
@@ -107,7 +109,7 @@ const QuestionCurationPanel = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as { error?: string };
         throw new Error(errorData.error || `Failed to ${action} question.`);
       }
 

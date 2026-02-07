@@ -26,7 +26,7 @@ const GenerateBodySchema = z.object({
     /** Template key: "study-guide" uses env DOC_GEN_TEMPLATE_ASSET_ID. */
     templateKey: z.enum(['study-guide', 'mock-exam']).optional(),
     /** JSON to merge into template (keys match template tags). */
-    jsonDataForMerge: z.record(z.unknown()),
+    jsonDataForMerge: z.record(z.string(), z.unknown()),
     /** Output format. */
     outputFormat: z.enum(['pdf', 'docx']).optional().default('pdf'),
   }),

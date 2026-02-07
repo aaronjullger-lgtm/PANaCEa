@@ -54,8 +54,10 @@ describe('OfflineSyncService', () => {
 
       const queue = service.getQueue();
       expect(queue.length).toBe(1);
-      expect(queue[0].url).toBe(url);
-      expect(queue[0].options).toEqual(options);
+      const first = queue[0];
+      expect(first).toBeDefined();
+      expect(first!.url).toBe(url);
+      expect(first!.options).toEqual(options);
     });
 
     it('should persist queue to localStorage', async () => {

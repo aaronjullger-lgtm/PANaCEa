@@ -90,7 +90,17 @@ export interface TopicStats {
 }
 
 export interface SessionSettings {
-  mode?: 'standard' | 'diagnostic' | 'photo' | 'anatomy' | 'quick-review' | 'custom';
+  mode?:
+    | 'standard'
+    | 'diagnostic'
+    | 'photo'
+    | 'anatomy'
+    | 'quick-review'
+    | 'custom'
+    | 'core_adaptive'
+    | 'rapid_recall'
+    | 'cram_mode'
+    | 'cram';
   focus:
     | 'all'
     | 'growth'
@@ -99,7 +109,8 @@ export interface SessionSettings {
     | 'reviewFlagged'
     | 'unseen'
     | 'incorrect'
-    | 'bookmarked';
+    | 'bookmarked'
+    | 'due';
   topic?: string;
   count?: number;
   systems?: string[];
@@ -111,6 +122,12 @@ export interface SessionSettings {
 
   /** Optional: when present, Gemini should target this specific condition ID or name */
   conditionName?: string;
+
+  /** Optional time limit in milliseconds - session auto-ends at limit (for time-boxed study) */
+  timeLimit?: number;
+  
+  /** Question count (legacy field name, kept for compatibility with 'count') */
+  questionCount?: number;
 }
 
 // High-level systems (matches your existing tiles + PRO + hidden OTHER)

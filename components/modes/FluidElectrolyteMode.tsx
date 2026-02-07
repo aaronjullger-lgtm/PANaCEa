@@ -94,11 +94,11 @@ const fetchFluidCase = async (): Promise<FluidElectrolyteCase | null> => {
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
-    const data = await response.json();
+    const data = (await response.json()) as { cases?: FluidElectrolyteCase[] };
     if (!data.cases || data.cases.length === 0) {
       throw new Error('No cases returned from API');
     }
-    return data.cases[0];
+    return data.cases[0] ?? null;
   } catch (error) {
     console.error('Failed to fetch fluid case:', error);
     return null;

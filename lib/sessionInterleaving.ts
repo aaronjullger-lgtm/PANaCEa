@@ -116,6 +116,7 @@ export function ensureInterleaving<T extends Question>(
 
     for (let i = 0; i < remaining.length; i++) {
       const candidate = remaining[i];
+      if (candidate === undefined) continue;
       const currentCount = systemCounts.get(candidate.system) || 0;
 
       if (currentCount < maxSameSystem) {
@@ -150,7 +151,7 @@ export function ensureInterleaving<T extends Question>(
 
     // Move selected question to result
     const [selected] = remaining.splice(selectedIndex, 1);
-    result.push(selected);
+    if (selected !== undefined) result.push(selected);
   }
 
   return result;
@@ -208,7 +209,9 @@ export function getInterleavingMetrics(
   let currentConsecutive = 1;
 
   for (let i = 1; i < questions.length; i++) {
-    if (questions[i].system === questions[i - 1].system) {
+    const curr = questions[i];
+    const prev = questions[i - 1];
+    if (curr != null && prev != null && curr.system === prev.system) {
       currentConsecutive++;
       maxConsecutive = Math.max(maxConsecutive, currentConsecutive);
     } else {

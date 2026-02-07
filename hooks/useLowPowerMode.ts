@@ -26,6 +26,7 @@ const DISCHARGING_LOW_THRESHOLD = 0.3;
 export function useLowPowerMode(): boolean {
   const [reduceHeavyAnimations, setReduceHeavyAnimations] = useState(false);
   const batteryCleanupRef = useRef<(() => void) | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

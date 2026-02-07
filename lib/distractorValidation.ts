@@ -126,12 +126,14 @@ export function validateDistractors(question: QuestionForValidation): Distractor
   for (let i = 0; i < options.length; i++) {
     if (i === correctIndex) continue;
 
-    const option = options[i].toLowerCase();
+    const raw = options[i];
+    if (raw === undefined) continue;
+    const option = raw.toLowerCase();
 
     for (const pattern of obviouslyWrongPatterns) {
       if (pattern.test(option)) {
         warnings.push(
-          `Option ${String.fromCharCode(65 + i)} contains weak distractor phrase: "${option.match(pattern)?.[0]}"`
+          `Option ${String.fromCharCode(65 + i)} contains weak distractor phrase: "${option.match(pattern)?.[0] ?? option}"`
         );
         score -= 5;
         break;
@@ -143,7 +145,7 @@ export function validateDistractors(question: QuestionForValidation): Distractor
   // Example: If options are 10, 20, 30, 40 and answer is 30, it's in the middle
   const numericOptions = options.map((opt) => {
     const match = opt.match(/^(\d+(?:\.\d+)?)/);
-    return match ? parseFloat(match[1]) : null;
+    return match && match[1] != null ? parseFloat(match[1]) : null;
   });
 
   const allNumeric = numericOptions.every((n) => n !== null);

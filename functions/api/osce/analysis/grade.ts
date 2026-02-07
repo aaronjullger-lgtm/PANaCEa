@@ -175,36 +175,47 @@ function parseGradePayload(rawText: string, log?: (msg: string, meta?: object) =
   };
 }
 
-type SessionWithCase = Awaited<
-  ReturnType<EdgePrismaClient['patientEncounterSession']['findFirst']>
-> & {
-  PatientEncounterCase: NonNullable<
-    Awaited<
-      ReturnType<EdgePrismaClient['patientEncounterSession']['findFirst']>
-    >['PatientEncounterCase']
+interface SessionWithCase {
+  id: string;
+  userId: string;
+  caseId: string;
+  status: string;
+  messages: unknown;
+  PatientEncounterCase: Awaited<
+    ReturnType<EdgePrismaClient['patientEncounterCase']['findUnique']>
   >;
-};
+  User: { id: string } | null;
+}
 
 async function resolveSessionAndRubric(
   prisma: EdgePrismaClient,
   sessionId: string,
   userId: string
 ): Promise<
-  | { ok: true; session: SessionWithCase; checklistText: string; transcript: unknown; caseLabel: string }
+  | {
+      ok: true;
+      session: SessionWithCase;
+      caseRecord: { chiefComplaint: string; correctDiagnosis: string; patientName: string; age: string };
+      checklistText: string;
+      transcript: unknown;
+      caseLabel: string;
+    }
   | { ok: false; status: number; error: string }
 > {
-  const session = await prisma.patientEncounterSession.findFirst({
+  const rawSession = await prisma.patientEncounterSession.findFirst({
     where: { id: sessionId, userId },
     include: {
       PatientEncounterCase: true,
       User: { select: { id: true } },
     },
   });
-  if (!session) return { ok: false, status: 404, error: 'Session not found' };
-  if (session.status !== 'completed') {
+  if (!rawSession) return { ok: false, status: 404, error: 'Session not found' };
+  if (rawSession.status !== 'completed') {
     return { ok: false, status: 400, error: 'Session must be completed before grading' };
   }
-  const caseRecord = session.PatientEncounterCase;
+  const caseRecord = rawSession.PatientEncounterCase;
+  if (!caseRecord) return { ok: false, status: 404, error: 'Case record not found' };
+  const session = rawSession as SessionWithCase;
   const rubric = await prisma.caseRubric.findUnique({ where: { caseId: session.caseId } });
 
   let checklistText: string;
@@ -232,6 +243,12 @@ async function resolveSessionAndRubric(
   return {
     ok: true,
     session: session as SessionWithCase,
+    caseRecord: {
+      chiefComplaint: caseRecord.chiefComplaint,
+      correctDiagnosis: caseRecord.correctDiagnosis,
+      patientName: caseRecord.patientName,
+      age: String(caseRecord.age),
+    },
     checklistText,
     transcript,
     caseLabel,
@@ -332,7 +349,7 @@ export const onRequestPost = authenticatedEndpoint(
       return { status: resolved.status, error: resolved.error };
     }
 
-    const { session, checklistText, transcript, caseLabel } = resolved;
+    const { session, caseRecord, checklistText, transcript, caseLabel } = resolved;
     const systemPrompt = `You are a senior PA faculty member grading an OSCE. Evaluate the following transcript against the provided Clinical Checklist. Be strict. If the student missed a 'Red Flag' question, mark it as a critical fail.
 
 Evaluate using the 4 PANCE blueprint skill areas (weight them in your overall score):
@@ -370,7 +387,9 @@ Output your grading as a single JSON object only.`;
 
       let payload: GradePayload;
       try {
-        payload = parseGradePayload(rawText, (msg, meta) => log.warn(msg, meta));
+        payload = parseGradePayload(rawText, (msg, meta) =>
+        log.warn(msg, meta as Record<string, unknown>)
+      );
       } catch (error_) {
         log.error('Failed to parse Gemini JSON', { raw: rawText.slice(0, 300), err: error_ });
         return { status: 502, error: 'Invalid grading response format' };
@@ -384,15 +403,25 @@ Output your grading as a single JSON object only.`;
         log.warn('Soft skills analysis skipped or failed', { sessionId });
       }
 
+      const sessionForPersist = {
+        User: session.User,
+        PatientEncounterCase: {
+          chiefComplaint: caseRecord.chiefComplaint,
+          correctDiagnosis: caseRecord.correctDiagnosis,
+        },
+      };
       const { resultId, conceptGapCreated } = await persistGradeAndConceptGap(
         prisma,
         sessionId,
         payload,
-        session,
+        sessionForPersist,
         softSkillsReport
       );
       if (conceptGapCreated) {
-        log.info('ConceptGap created for Tutor', { userId: session.User?.id, sessionId });
+        log.info('ConceptGap created for Tutor', {
+        userId: session.User?.id,
+        sessionId,
+      });
       }
       log.info('OSCE grading completed', { sessionId, score: payload.score });
       return {

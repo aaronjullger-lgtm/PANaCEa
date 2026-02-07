@@ -95,7 +95,7 @@ export function AchievementNotification({
               damping: 15,
               stiffness: 300,
             }}
-            className="bg-[var(--color-bg-primary)] rounded-2xl p-8 max-w-md w-full border border-[var(--color-border)] shadow-2xl"
+            className="bg-[var(--color-bg-primary)] rounded-2xl p-8 max-w-md w-full border border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)]"
             style={{ boxShadow: getRarityGlow(badge.rarity) }}
             onClick={(e) => e.stopPropagation()}
           >

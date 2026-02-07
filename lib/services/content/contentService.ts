@@ -12,18 +12,17 @@ export class ContentService {
    * Fetch standardized condition metadata
    */
   async getConditionMeta(conditionId: string): Promise<ConditionMeta | null> {
-    const condition = await this.prisma.condition.findUnique({
-      where: { id: conditionId },
-      include: {
-        MedicalContent: {
-          select: {
-            id: true,
-            status: true,
-          },
-        },
-      },
-      ...CACHE_STRATEGY.STATIC, // 1h cache - condition metadata rarely changes
-    });
+    const [condition, medicalContent] = await Promise.all([
+      this.prisma.condition.findUnique({
+        where: { id: conditionId },
+        ...(CACHE_STRATEGY.STATIC as Record<string, unknown>),
+      }),
+      this.prisma.medicalContent.findUnique({
+        where: { conditionId },
+        select: { id: true, status: true },
+        ...(CACHE_STRATEGY.STATIC as Record<string, unknown>),
+      }),
+    ]);
 
     if (!condition) return null;
 
@@ -33,8 +32,8 @@ export class ContentService {
       name: condition.name,
       system: condition.system,
       subcategory: condition.subcategory,
-      status: condition.MedicalContent?.status || 'draft',
-      hasContent: !!condition.MedicalContent,
+      status: medicalContent?.status ?? 'draft',
+      hasContent: !!medicalContent,
     };
   }
 
@@ -44,7 +43,7 @@ export class ContentService {
   async getConditionContent(conditionId: string): Promise<MedicalContentData | null> {
     const content = await this.prisma.medicalContent.findUnique({
       where: { conditionId },
-      ...CACHE_STRATEGY.STATIC, // 1h cache - medical content rarely changes
+      ...(CACHE_STRATEGY.STATIC as Record<string, unknown>),
     });
 
     if (!content || !content.content) return null;
@@ -65,7 +64,7 @@ export class ContentService {
   async getConditionsContent(conditionIds: string[]): Promise<Map<string, MedicalContentData>> {
     const contents = await this.prisma.medicalContent.findMany({
       where: { conditionId: { in: conditionIds } },
-      ...CACHE_STRATEGY.STATIC, // 1h cache - medical content rarely changes
+      ...(CACHE_STRATEGY.STATIC as Record<string, unknown>),
     });
 
     const resultMap = new Map<string, MedicalContentData>();
@@ -101,13 +100,15 @@ export class ContentService {
   async getConditionsBySystem(system: string): Promise<ConditionMeta[]> {
     const conditions = await this.prisma.condition.findMany({
       where: { system },
-      include: {
-        MedicalContent: {
-          select: { status: true },
-        },
-      },
-      ...CACHE_STRATEGY.STATIC, // 1h cache - system conditions rarely change
+      ...(CACHE_STRATEGY.STATIC as Record<string, unknown>),
     });
+    if (conditions.length === 0) return [];
+    const contentByCondition = await this.prisma.medicalContent.findMany({
+      where: { conditionId: { in: conditions.map((c) => c.id) } },
+      select: { conditionId: true, status: true },
+      ...(CACHE_STRATEGY.STATIC as Record<string, unknown>),
+    });
+    const statusMap = new Map(contentByCondition.map((mc) => [mc.conditionId, mc.status]));
 
     return conditions.map((c) => ({
       id: c.id,
@@ -115,8 +116,8 @@ export class ContentService {
       name: c.name,
       system: c.system,
       subcategory: c.subcategory,
-      status: c.MedicalContent?.status || 'draft',
-      hasContent: !!c.MedicalContent,
+      status: statusMap.get(c.id) ?? 'draft',
+      hasContent: statusMap.has(c.id),
     }));
   }
 
@@ -154,7 +155,7 @@ export class ContentService {
         updatedAt: true,
       },
       orderBy: [{ system: 'asc' }, { subcategory: 'asc' }, { name: 'asc' }],
-      ...CACHE_STRATEGY.STATIC, // 1h cache - conditions list rarely changes
+      ...(CACHE_STRATEGY.STATIC as Record<string, unknown>),
     });
 
     return conditions;

@@ -73,8 +73,9 @@ describe('ReviewService', () => {
       const result = await reviewService.getReviewQuestions('flagged', 10, null);
 
       expect(result.length).toBeGreaterThan(0);
-      expect(result[0].reviewReason).toBe('flagged');
-      expect(result[0].priority).toBe(80);
+      const first = result[0]!;
+      expect(first.reviewReason).toBe('flagged');
+      expect(first.priority).toBe(80);
     });
   });
 
@@ -104,8 +105,9 @@ describe('ReviewService', () => {
       const result = await reviewService.getReviewQuestions('missed', 10, null);
 
       expect(result.length).toBeGreaterThan(0);
-      expect(result[0].reviewReason).toBe('missed');
-      expect(result[0].priority).toBe(70);
+      const first = result[0]!;
+      expect(first.reviewReason).toBe('missed');
+      expect(first.priority).toBe(70);
     });
   });
 
@@ -137,8 +139,9 @@ describe('ReviewService', () => {
       const result = await reviewService.getReviewQuestions('weak', 10, null);
 
       expect(result.length).toBeGreaterThan(0);
-      expect(result[0].reviewReason).toBe('weak_area');
-      expect(result[0].accuracy).toBeLessThan(60);
+      const first = result[0]!;
+      expect(first.reviewReason).toBe('weak_area');
+      expect(first.accuracy).toBeLessThan(60);
     });
   });
 

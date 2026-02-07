@@ -40,10 +40,11 @@ const mapPayloadToGame = (payload: WordleApiResponse): MedicalWordleGame => {
 };
 
 const parseApiResponse = async (response: Response) => {
-  const payload = await response.json().catch(() => null);
+  const payload = (await response.json().catch(() => null)) as { error?: string; message?: string } | WordleApiResponse | null;
 
   if (!response.ok) {
-    const errorMessage = payload?.error || payload?.message || 'Wordle request failed';
+    const err = payload as { error?: string; message?: string } | null;
+    const errorMessage = err?.error || err?.message || 'Wordle request failed';
     throw new Error(errorMessage);
   }
 

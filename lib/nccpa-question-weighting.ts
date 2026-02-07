@@ -88,7 +88,7 @@ export function normalizeSystemCode(system: string): string {
   if (upper in NCCPA_BLUEPRINT_WEIGHTS) return upper;
 
   // Check aliases
-  if (upper in SYSTEM_ALIASES) return SYSTEM_ALIASES[upper];
+  if (upper in SYSTEM_ALIASES) return SYSTEM_ALIASES[upper] ?? upper;
 
   // Return as-is if not found (will get 0% weight)
   return upper;
@@ -126,7 +126,9 @@ export function calculateSessionDistribution(sessionSize: number): Map<string, n
 
     // Add/subtract from largest systems
     for (let i = 0; i < Math.abs(diff); i++) {
-      const [system, count] = systems[i % systems.length];
+      const entry = systems[i % systems.length];
+      if (entry == null) continue;
+      const [system, count] = entry;
       distribution.set(system, count + Math.sign(diff));
     }
   }
@@ -150,14 +152,15 @@ export function selectWeightedSystems(count: number, exclude: Set<string> = new 
   const cumulativeWeights = systems.map((s, i) =>
     systems.slice(0, i + 1).reduce((sum, sys) => sum + sys.weight, 0)
   );
-  const totalWeight = cumulativeWeights[cumulativeWeights.length - 1];
+  const totalWeight = cumulativeWeights[cumulativeWeights.length - 1] ?? 0;
 
   for (let i = 0; i < count; i++) {
     const rand = Math.random() * totalWeight;
     const index = cumulativeWeights.findIndex((w) => w >= rand);
 
     if (index !== -1) {
-      selected.push(systems[index].system);
+      const sys = systems[index];
+      if (sys) selected.push(sys.system);
     }
   }
 

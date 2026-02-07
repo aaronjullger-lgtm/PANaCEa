@@ -96,6 +96,7 @@ async function fixPreGeneratedQuestions(): Promise<FixResult> {
     // Update questions
     for (let i = 0; i < questions.length; i++) {
       const question = questions[i];
+      if (!question) continue;
 
       if (!isFakeConditionId(question.conditionId)) {
         result.alreadyValid++;
@@ -122,7 +123,7 @@ async function fixPreGeneratedQuestions(): Promise<FixResult> {
           if (result.fixed % 10 === 0) {
             console.log(`   Fixed ${result.fixed}/${toResolve.length}...`);
           }
-        } catch (error) {
+        } catch (error: unknown) {
           console.error(`   ❌ Error updating question ${question.id}:`, error);
           result.errors++;
         }
@@ -135,7 +136,7 @@ async function fixPreGeneratedQuestions(): Promise<FixResult> {
     console.log(`   ✓ Already valid: ${result.alreadyValid}`);
     console.log(`   ⚠️  Unresolved: ${result.unresolved}`);
     console.log(`   ❌ Errors: ${result.errors}`);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('   ❌ Error fixing PreGeneratedQuestion:', error);
   }
 
@@ -195,7 +196,9 @@ async function fixMainQuestions(): Promise<FixResult> {
 
     for (let i = 0; i < questions.length; i++) {
       const question = questions[i];
-      const conditionName = toResolve[i].name;
+      if (!question) continue;
+      const resolveEntry = toResolve[i];
+      const conditionName = resolveEntry?.name ?? 'unknown';
       const match = resolutions.get(conditionName);
 
       if (match && match.confidence >= 0.8) {
@@ -208,7 +211,7 @@ async function fixMainQuestions(): Promise<FixResult> {
           });
 
           result.fixed++;
-        } catch (error) {
+        } catch (error: unknown) {
           result.errors++;
         }
       } else {
@@ -219,7 +222,7 @@ async function fixMainQuestions(): Promise<FixResult> {
     console.log(`   ✅ Fixed ${result.fixed} questions`);
     console.log(`   ⚠️  Unresolved: ${result.unresolved}`);
     console.log(`   ❌ Errors: ${result.errors}`);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('   ❌ Error fixing Question:', error);
   }
 
@@ -251,7 +254,7 @@ async function main() {
     console.log(`Question: ${mainResult.fixed} fixed, ${mainResult.unresolved} unresolved`);
     console.log(`\nTotal fixed: ${preGenResult.fixed + mainResult.fixed}`);
     console.log(`Duration: ${duration}s`);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('\n❌ Fatal error:', error);
     process.exit(1);
   } finally {

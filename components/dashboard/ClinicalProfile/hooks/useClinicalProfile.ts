@@ -38,8 +38,8 @@ export function useClinicalProfile() {
         const msg = await res.text();
         throw new Error(msg || 'Failed to load profile');
       }
-      const payload = await res.json();
-      setState({ data: payload.data as ClinicalProfileData, isLoading: false, error: null });
+      const payload = (await res.json()) as { data?: ClinicalProfileData };
+      setState({ data: payload.data ?? null, isLoading: false, error: null });
     } catch (error) {
       setState({
         data: null,

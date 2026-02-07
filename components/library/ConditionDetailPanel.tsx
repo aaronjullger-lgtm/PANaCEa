@@ -264,7 +264,7 @@ export const ConditionDetailPanel: React.FC<ConditionDetailPanelProps> = ({ cont
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.95, y: 20 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
         <div className="p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">

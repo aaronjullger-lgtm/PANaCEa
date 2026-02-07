@@ -4,9 +4,10 @@
  * Modal for creating new goals with form validation.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Target, Calendar, TrendingUp } from 'lucide-react';
+import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
+import { X, Target } from 'lucide-react';
 import type { UserGoal } from './GoalsDashboard';
 
 interface GoalCreateModalProps {
@@ -15,8 +16,13 @@ interface GoalCreateModalProps {
 }
 
 export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCreate }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Accessibility: focus trap and escape key (always active since modal is rendered)
+  useFocusTrap(modalRef as React.RefObject<HTMLElement>, true);
+  useKeyboardNavigation(onClose);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -88,14 +94,18 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)]">
         <motion.div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="goal-create-title"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white dark:bg-slate-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+          className="bg-[var(--color-bg-primary)] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <h2 id="goal-create-title" className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Target className="w-6 h-6 text-blue-600" />
               Create New Goal
             </h2>
@@ -110,32 +120,36 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {error && (
-              <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-400 text-sm">
+              <div id="goal-create-error" role="alert" className="p-3 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-lg text-[var(--color-data-fail)] text-sm">
                 {error}
               </div>
             )}
 
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label htmlFor="goal-title" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Goal Title *
               </label>
               <input
+                id="goal-title"
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
                 placeholder="e.g., Complete 40 questions daily"
+                aria-invalid={!!error && !formData.title.trim()}
+                aria-describedby={!!error && !formData.title.trim() ? 'goal-create-error' : undefined}
                 required
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label htmlFor="goal-description" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Description
               </label>
               <textarea
+                id="goal-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
@@ -300,16 +314,18 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 disabled={isSubmitting}
+                aria-busy={isSubmitting}
               >
+                {isSubmitting && <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true" />}
                 {isSubmitting ? 'Creating...' : 'Create Goal'}
               </button>
             </div>

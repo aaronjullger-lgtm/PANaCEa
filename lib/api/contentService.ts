@@ -19,7 +19,7 @@ export async function loadAllContent(): Promise<MedicalContent[]> {
       const response = await fetch(apiUrl);
 
       if (response.ok) {
-        const data = await response.json();
+        const data = (await response.json()) as Record<string, unknown>;
         return transformToMedicalContent(data);
       }
     } else {

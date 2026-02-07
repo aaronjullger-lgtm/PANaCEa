@@ -57,7 +57,6 @@ export const onRequestGet = authenticatedEndpoint(
             OR: [
               { name: { contains: searchQuery, mode: 'insensitive' } },
               { description: { contains: searchQuery, mode: 'insensitive' } },
-              { indication: { contains: searchQuery, mode: 'insensitive' } },
             ],
           },
           orderBy: { name: 'asc' },

@@ -16,8 +16,7 @@ interface AvatarDisplayProps {
 }
 
 export function AvatarDisplay({ avatar, compact = false, className = '' }: AvatarDisplayProps) {
-  // Extract XP early (TODO: Update UserAvatar type in Prisma schema to include xp field)
-  const avatarXP = avatar ? ((avatar as any).xp || 0) : 0;
+  const avatarXP = avatar?.xp || 0;
   const currentLevel = Math.floor(avatarXP / 100);
   const xpInLevel = avatarXP % 100;
   

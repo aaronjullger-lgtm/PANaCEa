@@ -63,9 +63,8 @@ export const onRequestGet = authenticatedEndpoint(
         results = await prisma.differentialDiagnosis.findMany({
           where: {
             OR: [
-              { name: { contains: query, mode: 'insensitive' } },
               { presentingComplaint: { contains: query, mode: 'insensitive' } },
-              { description: { contains: query, mode: 'insensitive' } },
+              { category: { contains: query, mode: 'insensitive' } },
             ],
           },
           orderBy: { presentingComplaint: 'asc' },
@@ -78,7 +77,7 @@ export const onRequestGet = authenticatedEndpoint(
           where: {
             presentingComplaint: { contains: presentingComplaint, mode: 'insensitive' },
           },
-          orderBy: { name: 'asc' },
+          orderBy: { presentingComplaint: 'asc' },
         });
       } else {
         // List mode with optional category filter

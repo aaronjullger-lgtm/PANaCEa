@@ -175,7 +175,7 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ onExit,
               <img
                 src={currentCase.imageUrl}
                 alt="Clinical case"
-                className="w-full rounded-xl shadow-2xl"
+                className="w-full rounded-xl shadow-[0_18px_42px_var(--color-shadow-soft)]"
               />
             )}
           </motion.div>

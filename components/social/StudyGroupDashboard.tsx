@@ -74,7 +74,7 @@ export default function StudyGroupDashboard() {
         throw new Error(`Failed to fetch groups: ${res.status} ${res.statusText}`);
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as StudyGroup[];
       setGroups(data);
     } catch (err) {
       console.error('Error fetching groups:', err);
@@ -98,7 +98,7 @@ export default function StudyGroupDashboard() {
         throw new Error(`Failed to fetch leaderboard: ${res.status} ${res.statusText}`);
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as { entries?: LeaderboardEntry[] };
       setLeaderboard(data?.entries || []);
     } catch (err) {
       console.error('Error fetching leaderboard:', err);
@@ -156,7 +156,7 @@ export default function StudyGroupDashboard() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as { error?: string };
         throw new Error(data.error || 'Failed to join group');
       }
 

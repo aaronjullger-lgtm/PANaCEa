@@ -52,13 +52,14 @@ import {
   syncSessionAnalytics,
 } from '@/services/analytics';
 import { ABBREVIATION_TO_TOPIC_MAP } from '../../src/constants';
-import type { PerformanceRecord } from '../../types';
+import type { PerformanceRecord, SystemCode } from '../../types';
 import { StreakVisualization } from './StreakVisualization';
 import { ScorePredictionCard } from './ScorePredictionCard';
 import { MetacognitiveReflection } from '../session/MetacognitiveReflection';
 import { callGeminiText } from '@/services/ai/geminiService';
 import { GEMINI_FLASH_MODEL } from '@/src/constants';
 import { fireStreakCelebration } from '@/lib/streakCelebration';
+import { saveLastSession } from '@/lib/utils/sessionStorage';
 import styles from './SessionEndSummary.module.css';
 
 interface SessionEndSummaryProps {
@@ -148,6 +149,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       });
       return () => cancelAnimationFrame(timer);
     }
+    return undefined;
   }, [isOpen]);
 
   // Accessibility: keep Tab/Shift+Tab inside modal
@@ -188,7 +190,48 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       const t = setTimeout(() => fireStreakCelebration(), 400);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [celebrateStreak, isOpen]);
+
+  // Quick Wins: Save session data for "Resume" and "Welcome back" features
+  useEffect(() => {
+    if (!isOpen || performanceData.length === 0) return;
+
+    const correct = performanceData.filter((p) => p.isCorrect).length;
+    const accuracy = correct / performanceData.length;
+    
+    // Find weakest system from this session
+    const systemStats: Record<string, { correct: number; total: number }> = {};
+    for (const p of performanceData) {
+      const sys = p.system || p.topic;
+      if (!sys) continue;
+      systemStats[sys] ??= { correct: 0, total: 0 };
+      systemStats[sys].total++;
+      if (p.isCorrect) systemStats[sys].correct++;
+    }
+    
+    let weakSystem: SystemCode | undefined;
+    let lowestAccuracy = 1;
+    for (const [sys, stats] of Object.entries(systemStats)) {
+      if (stats.total < 2) continue; // Need at least 2 questions
+      const acc = stats.correct / stats.total;
+      if (acc < lowestAccuracy) {
+        lowestAccuracy = acc;
+        weakSystem = sys as SystemCode;
+      }
+    }
+
+    saveLastSession({
+      timestamp: Date.now(),
+      settings: sessionSettings || { focus: 'all' as const, systems: [], difficulty: 'medium', count: performanceData.length },
+      questionsCompleted: performanceData.length,
+      questionsCorrect: correct,
+      accuracy,
+      weakSystem,
+      weakSystemName: weakSystem ? ABBREVIATION_TO_TOPIC_MAP[weakSystem] : undefined,
+      duration: sessionDurationMs || 0,
+    });
+  }, [isOpen, performanceData, sessionSettings, sessionDurationMs]);
   const [syncStatus, setSyncStatus] = React.useState<'pending' | 'synced' | 'failed' | null>(null);
   const [showReflection, setShowReflection] = React.useState(false);
   const [aiSummary, setAiSummary] = React.useState<string | null>(null);
@@ -425,7 +468,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-2xl max-h-[90vh] bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)] outline-none focus:outline-none"
+        className="w-full max-w-2xl max-h-[90vh] bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)] outline-none focus:outline-none"
       >
         {/* Header with Grade */}
         <div className={`${grade.bg} p-6 text-center border-b border-[var(--color-border)]`}>

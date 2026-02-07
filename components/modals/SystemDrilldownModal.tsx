@@ -200,7 +200,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-sm">
-      <div className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col border border-[var(--color-border)] ring-1 ring-black/10 dark:ring-white/10">
+      <div className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col border border-[var(--color-border)]">
         {/* HEADER */}
         <div className="px-6 py-4 border-b border-[var(--color-border)] flex items-center justify-between">
           <div>

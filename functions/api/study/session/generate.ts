@@ -4,11 +4,15 @@
  * Generates a new study session with questions selected using the
  * Priority Waterfall algorithm (Blueprint + FSRS + Interleaving).
  *
+ * **IMPORTANT:** Only 'mainSession' mode is currently implemented.
+ * 'review' and 'focused' modes return 501 Not Implemented.
+ * For review/SRS sessions, use GET /api/questions/session with focus: 'review'.
+ *
  * Request Body:
  * {
- *   mode: 'mainSession' | 'review' | 'focused',
+ *   mode: 'mainSession' | 'review' | 'focused',  // Only 'mainSession' implemented
  *   size: number (default 20),
- *   systemFocus?: string (for focused mode)
+ *   systemFocus?: string (for focused mode - not implemented)
  * }
  */
 
@@ -41,10 +45,13 @@ export const onRequestPost = authenticatedEndpoint(SessionGenerationSchema, asyn
         const result = await selector.generateSession(auth.userId, size);
 
         // Create StudySession record
+        const now = new Date();
         const session = await prisma.studySession.create({
           data: {
+            id: crypto.randomUUID(),
             userId: auth.userId,
-            startedAt: new Date(),
+            startedAt: now,
+            updatedAt: now,
             sessionType: 'mixed',
             mode: 'mainSession',
             difficulty: 'adaptive',

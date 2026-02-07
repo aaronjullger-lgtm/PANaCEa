@@ -188,7 +188,7 @@ async function fetchDatabaseContent(
     const searchTerms = getAlternativeSearchTerms(diagnosis);
     console.log(`   🔎 Searching for: ${searchTerms.join(', ')}`);
 
-    let condition = null;
+    let condition: { id: string; name: string; system: string; aliases: unknown } | null = null;
 
     // Try each search term
     for (const term of searchTerms) {
@@ -245,7 +245,7 @@ async function fetchDatabaseContent(
       });
 
       // Score each candidate by how many words match
-      let bestMatch: typeof condition = null;
+      let bestMatch: { id: string; name: string; system: string; aliases: unknown } | null = null;
       let bestScore = 0;
 
       for (const candidate of candidates) {
@@ -390,7 +390,7 @@ function buildClinicalContextFromDb(
 ): ClinicalContext {
   const sexOptions: Array<'M' | 'F'> = ['M', 'F'];
   const defaultAge = 45 + Math.floor(Math.random() * 30);
-  const defaultSex = sexOptions[Math.floor(Math.random() * 2)];
+  const defaultSex: 'M' | 'F' = sexOptions[Math.floor(Math.random() * 2)] ?? 'M';
 
   if (!dbContent) {
     return {
@@ -471,7 +471,7 @@ function buildClinicalContextFromDb(
 
   return {
     age: defaultAge,
-    sex: defaultSex,
+    sex: defaultSex ?? 'M',
     chiefComplaint,
     vitals,
     history,
@@ -498,7 +498,7 @@ function buildExplanationFromDb(
   // Add overview excerpt
   if (dbContent.overview) {
     const cleanOverview = dbContent.overview.replace(/\*\*/g, '').replace(/\n+/g, ' ');
-    const firstParagraph = cleanOverview.split(/\n\n/)[0].substring(0, 300);
+    const firstParagraph = (cleanOverview.split(/\n\n/)[0] ?? '').substring(0, 300);
     parts.push(firstParagraph);
   }
 
@@ -508,7 +508,7 @@ function buildExplanationFromDb(
     Array.isArray(dbContent.clinicalPearls) &&
     dbContent.clinicalPearls.length > 0
   ) {
-    const pearl = dbContent.clinicalPearls[0].replace(/\*\*/g, '').substring(0, 150);
+    const pearl = (dbContent.clinicalPearls[0] ?? '').replace(/\*\*/g, '').substring(0, 150);
     parts.push(`Key pearl: ${pearl}`);
   }
 
@@ -583,7 +583,7 @@ function buildDescriptionFromDb(
 
   // Extract key features from overview
   const cleanOverview = dbContent.overview.replace(/\*\*/g, '');
-  const firstSentence = cleanOverview.split(/[.!?]/)[0].trim();
+  const firstSentence = (cleanOverview.split(/[.!?]/)[0] ?? '').trim();
 
   return `Clinical ${modalityName} demonstrating ${diagnosis}. ${firstSentence}.`.substring(0, 300);
 }
@@ -628,6 +628,10 @@ function getImageDimensions(buffer: ArrayBuffer): { width: number; height: numbe
           continue;
         }
         const marker = uint8[offset + 1];
+        if (marker === undefined) {
+          offset++;
+          continue;
+        }
         // SOF0, SOF1, SOF2 markers contain dimensions
         if (marker >= 0xc0 && marker <= 0xc2) {
           const height = view.getUint16(offset + 5, false);
@@ -1088,6 +1092,7 @@ async function uploadBatch(items: BatchItem[]): Promise<void> {
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
+    if (!item) continue;
     console.log(`\n[${i + 1}/${items.length}] ${item.correctDiagnosis}`);
 
     const result = await uploadSingleImage(

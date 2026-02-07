@@ -12,7 +12,7 @@
 
 import { z } from 'zod';
 import { adminEndpoint } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, CACHE_STRATEGY } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const AdminTargetedDailyQuery = z.object({
@@ -45,7 +45,6 @@ export const onRequestGet = adminEndpoint(AdminTargetedDailyQuery, async ({ env,
     const user = await prisma.user.findUnique({
       where: { clerkId: targetClerkId },
       select: { id: true, email: true, role: true },
-      ...CACHE_STRATEGY.USER_DATA,
     });
     if (!user) {
       return { status: 404, error: 'Target user not found' };
@@ -70,7 +69,6 @@ export const onRequestGet = adminEndpoint(AdminTargetedDailyQuery, async ({ env,
         completedAt: true,
         createdAt: true,
       },
-      ...CACHE_STRATEGY.USER_DATA,
     });
 
     if (!attempt) {
@@ -96,7 +94,6 @@ export const onRequestGet = adminEndpoint(AdminTargetedDailyQuery, async ({ env,
         difficulty: true,
         questionData: true,
       },
-      ...CACHE_STRATEGY.QUESTIONS,
     });
 
     const meta =

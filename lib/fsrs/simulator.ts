@@ -211,7 +211,7 @@ export function calculateRecommendedRetention(
   // Find highest retention that fits within time budget
   for (let i = simulations.length - 1; i >= 0; i--) {
     const sim = simulations[i];
-    if (sim.timeInvestmentMinutes <= dailyTimeAvailableMinutes) {
+    if (sim != null && sim.timeInvestmentMinutes <= dailyTimeAvailableMinutes) {
       return {
         recommendedRetention: sim.retention,
         explanation: `With ${dailyTimeAvailableMinutes} min/day available and ${dailyNewCards} new cards/day, ${(sim.retention * 100).toFixed(0)}% retention is sustainable (requires ~${sim.timeInvestmentMinutes} min/day).`,

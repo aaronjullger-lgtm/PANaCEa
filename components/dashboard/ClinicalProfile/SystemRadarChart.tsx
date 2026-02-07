@@ -16,7 +16,7 @@ interface Props {
 export const SystemRadarChart: React.FC<Props> = ({ systems }) => {
   if (!systems.length) {
     return (
-      <div className="h-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 flex items-center justify-center text-sm text-slate-500">
+      <div className="h-64 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] flex items-center justify-center text-sm text-[var(--color-text-muted)]">
         No system data yet.
       </div>
     );
@@ -29,19 +29,19 @@ export const SystemRadarChart: React.FC<Props> = ({ systems }) => {
 
   return (
     <div
-      className="h-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4"
+      className="h-64 min-h-[200px] w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
       style={{ transform: 'translateZ(0)' }}
     >
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minHeight={200}>
         <RadarChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
-          <PolarGrid stroke="#e2e8f0" strokeOpacity={0.4} />
-          <PolarAngleAxis dataKey="system" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#cbd5e1', fontSize: 10 }} />
+          <PolarGrid stroke="var(--chart-grid-stroke)" strokeOpacity={0.4} />
+          <PolarAngleAxis dataKey="system" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} />
           <Radar
             name="Accuracy"
             dataKey="accuracy"
-            stroke="#2563eb"
-            fill="#2563eb"
+            stroke="var(--color-accent)"
+            fill="var(--color-accent)"
             fillOpacity={0.25}
           />
         </RadarChart>

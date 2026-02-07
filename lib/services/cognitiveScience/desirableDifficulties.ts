@@ -122,7 +122,7 @@ export function calculateInterleavingSchedule(
     } else {
       // Blocked: Single topic focus
       const topic = topics[i % topics.length];
-      topicMix = [{ topic, weight: 1 }];
+      topicMix = [{ topic: topic ?? '', weight: 1 }];
     }
 
     // Retrieval cue strength - weaker cues = stronger memories (desirable difficulty)
@@ -221,7 +221,7 @@ export function createGenerationPrompt(
     promptTypes.length - 1,
     Math.floor(learnerProfile.averageAccuracy * promptTypes.length * 0.8)
   );
-  const promptType = promptTypes[typeIndex];
+  const promptType = promptTypes[typeIndex] ?? 'cloze';
 
   // Scaffolding inversely related to expertise
   const scaffoldingLevel: 'none' | 'minimal' | 'moderate' | 'high' =
@@ -299,8 +299,8 @@ export function calculateVariationSchedule(
 
   for (let i = 0; i < numVariations; i++) {
     variations.push({
-      format: otherFormats[i % otherFormats.length],
-      context: otherContexts[i % otherContexts.length],
+      format: otherFormats[i % otherFormats.length] ?? '',
+      context: otherContexts[i % otherContexts.length] ?? '',
       presentation: i % 2 === 0 ? 'standard' : 'time-pressure',
       useForPercentage: perVariation,
     });

@@ -222,12 +222,12 @@ function parsePageCitations(answer: string): number[] {
   for (const { single, range } of patterns) {
     let m: RegExpExecArray | null;
     single.lastIndex = 0;
-    while ((m = single.exec(answer)) !== null) pages.add(Number.parseInt(m[1], 10));
+    while ((m = single.exec(answer)) !== null) pages.add(Number.parseInt(m[1] ?? '0', 10));
     if (range) {
       range.lastIndex = 0;
       while ((m = range.exec(answer)) !== null) {
-        const a = Number.parseInt(m[1], 10);
-        const b = Number.parseInt(m[2], 10);
+        const a = Number.parseInt(m[1] ?? '0', 10);
+        const b = Number.parseInt(m[2] ?? '0', 10);
         for (let p = Math.min(a, b); p <= Math.max(a, b); p++) pages.add(p);
       }
     }

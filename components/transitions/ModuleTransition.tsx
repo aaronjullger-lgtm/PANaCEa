@@ -87,7 +87,7 @@ export function ModuleTransition({
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-[var(--color-bg-primary)] rounded-2xl p-8 max-w-md border border-[var(--color-border)] shadow-2xl"
+              className="bg-[var(--color-bg-primary)] rounded-2xl p-8 max-w-md border border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)]"
             >
               <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
                 Transitioning: {fromModule} → {toModule}

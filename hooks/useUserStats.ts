@@ -161,21 +161,22 @@ export function useUserStats(): UseUserStatsResult {
         throw new Error(`Sync failed with status ${response.status}: ${errorText}`);
       }
 
-      const result = await response.json();
+      const result = (await response.json()) as {
+        success?: boolean;
+        data?: { performanceRecords?: PerformanceRecord[]; srsItems?: Parameters<typeof loadSRSItemsFromCloud>[0]; savedQuestions?: SavedQuestionWithType[] };
+      };
 
       // Process server response and update local state with merged data
       if (result.success && result.data) {
-        // Update local state with merged data from server
-        if (result.data.performanceRecords) {
-          setPerformanceDataState(result.data.performanceRecords);
+        const d = result.data;
+        if (d.performanceRecords?.length) {
+          setPerformanceDataState(d.performanceRecords);
         }
-
-        if (result.data.srsItems) {
-          loadSRSItemsFromCloud(result.data.srsItems);
+        if (d.srsItems?.length) {
+          loadSRSItemsFromCloud(d.srsItems);
         }
-
-        if (result.data.savedQuestions) {
-          const { missed, flagged } = separateSavedQuestions(result.data.savedQuestions);
+        if (d.savedQuestions?.length) {
+          const { missed, flagged } = separateSavedQuestions(d.savedQuestions);
           setMissedQuestionsState(missed);
           setFlaggedQuestionsState(flagged);
         }
@@ -230,20 +231,21 @@ export function useUserStats(): UseUserStatsResult {
         throw new Error(`Sync failed: ${response.status}`);
       }
 
-      const result = await response.json();
+      const result = (await response.json()) as {
+        success?: boolean;
+        data?: { performanceRecords?: PerformanceRecord[]; srsItems?: Parameters<typeof loadSRSItemsFromCloud>[0]; savedQuestions?: SavedQuestionWithType[] };
+      };
 
       if (result.success && result.data) {
-        // Merge cloud data with local data (keep most recent)
-        if (result.data.performanceRecords) {
-          setPerformanceDataState(result.data.performanceRecords);
+        const d = result.data;
+        if (d.performanceRecords?.length) {
+          setPerformanceDataState(d.performanceRecords);
         }
-
-        if (result.data.srsItems) {
-          loadSRSItemsFromCloud(result.data.srsItems);
+        if (d.srsItems?.length) {
+          loadSRSItemsFromCloud(d.srsItems);
         }
-
-        if (result.data.savedQuestions) {
-          const { missed, flagged } = separateSavedQuestions(result.data.savedQuestions);
+        if (d.savedQuestions?.length) {
+          const { missed, flagged } = separateSavedQuestions(d.savedQuestions);
           setMissedQuestionsState(missed);
           setFlaggedQuestionsState(flagged);
         }

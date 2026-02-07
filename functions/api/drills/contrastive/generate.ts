@@ -126,7 +126,7 @@ export const onRequestPost = authenticatedEndpoint(
         otherConditionNames.push(name);
       }
 
-      const nameForPrompt: string = targetConditionName ?? targetConditionId;
+      const nameForPrompt: string = targetConditionName ?? targetConditionId ?? 'Unknown';
       const prompt = buildContrastivePrompt(set, nameForPrompt, otherConditionNames);
 
       logger.info('Generating contrastive question', {

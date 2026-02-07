@@ -26,6 +26,7 @@ alwaysApply: true
 - **SKELETON LOADERS:** Skeleton pulse animations must use `bg-slate-700` to `bg-slate-800` (Blue-Gray), not generic gray.
 - **CARD PADDING:** Internal card padding must be at least 16px (e.g. `p-4` or `1rem`). Avoid tight padding (e.g. `p-2`) on curriculum or content cards so text does not touch borders.
 - **ONE PRIMARY ACTION PER SCREEN:** Only one solid primary (filled) CTA per view. Header actions like "Build Session" should be secondary (outlined or ghost). Reserve solid blue for the main page CTA.
+- **TOUCH TARGETS:** Primary interactive controls (buttons, nav items, toggles) should have at least 44×44px touch target on mobile. Use `min-h-[44px] min-w-[44px]` or adequate padding to achieve this for accessibility and mobile usability (WCAG 2.5.5).
 
 ## 5. SEMANTIC TOKENS (PREFERRED)
 - Prefer CSS variables and Tailwind semantic tokens over raw colors:

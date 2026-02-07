@@ -151,14 +151,24 @@ function transformLabCase(dbCase: { id: string; clinicalVignette: string; correc
 router.get('/lab-cases', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.status(503).json({ success: false, error: 'Database not configured' });
+      res.status(503).json({ success: false, error: 'Database not configured' });
+      return;
     }
     const category = (req.query.category as string) || undefined;
     const limit = Math.min(Number(req.query.limit) || 20, 100);
     const shuffle = req.query.shuffle !== 'false';
 
     const dbCases = await prisma.labCase.findMany({ take: limit * 2 });
-    let transformed = dbCases.map((c) => transformLabCase(c)).filter((c) => c.panels.length > 0);
+    let transformed = dbCases
+      .map((c) =>
+        transformLabCase({
+          id: c.id,
+          clinicalVignette: c.clinicalVignette,
+          correctDiagnosis: c.correctDiagnosis,
+          labs: (c.labs ?? {}) as Record<string, unknown>,
+        })
+      )
+      .filter((c) => c.panels.length > 0);
 
     if (category && category !== 'random') {
       transformed = transformed.filter((c) => c.category === category);
@@ -178,11 +188,13 @@ router.get('/lab-cases', requireAuth, async (req: Request, res: Response): Promi
 router.post('/lab-cases', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.status(503).json({ success: false, error: 'Database not configured' });
+      res.status(503).json({ success: false, error: 'Database not configured' });
+      return;
     }
     const action = req.body?.action;
     if (action !== 'getDiagnoses') {
-      return res.status(400).json({ success: false, error: 'Invalid action' });
+      res.status(400).json({ success: false, error: 'Invalid action' });
+      return;
     }
     const cases = await prisma.labCase.findMany({ select: { correctDiagnosis: true } });
     const diagnoses = [...new Set(cases.map((c) => c.correctDiagnosis))].sort();

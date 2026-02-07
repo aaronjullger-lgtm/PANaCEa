@@ -64,6 +64,7 @@ const SyncSavedQuestionSchema = z.object({
   userNote: z.string().max(2000).nullable().optional(),
   repetitionLevel: z.number().int().optional(),
   nextReviewDate: z.string().optional(),
+  createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
   // Allow additional fields from client
   id: z.string().optional(),
@@ -172,10 +173,12 @@ async function resolveUserId(prisma: EdgePrismaClient, clerkId: string): Promise
   }
 
   // User doesn't exist, create them
+  const now = new Date();
   const newUser = await prisma.user.create({
     data: {
       clerkId,
       email: `${clerkId}@placeholder.panacea.app`,
+      updatedAt: now,
     },
     select: { id: true },
   });
@@ -337,6 +340,7 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       );
 
       // Insert all items fresh (single createMany per batch)
+      const now = new Date();
       const itemsToInsert = payload.srsItems.map((item) => ({
         id: crypto.randomUUID(),
         userId: internalUserId,
@@ -348,8 +352,12 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
         lastReviewed: new Date(item.lastReviewed),
         quality: item.quality,
         difficulty:
-          item.difficulty !== undefined ? Number.parseFloat(String(item.difficulty)) : null,
-        stabilityScore: item.stabilityScore ?? null,
+          item.difficulty !== undefined && item.difficulty !== null
+            ? Number.parseFloat(String(item.difficulty))
+            : 0,
+        stabilityScore: item.stabilityScore ?? 0,
+        createdAt: now,
+        updatedAt: now,
       }));
 
       const batches = chunk(itemsToInsert, BATCH_SIZE);
@@ -416,20 +424,22 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
 
           if (!questionText) return null;
 
+          const updatedAt = item.updatedAt ? new Date(item.updatedAt) : new Date();
           return {
             id: crypto.randomUUID(),
             userId: internalUserId,
             questionId,
             questionText,
-            correctAnswer,
+            correctAnswer: correctAnswer || '',
             explanation,
-            topic,
+            topic: topic || 'general',
             system: item.system ?? null,
             type: item.type,
             userNote: item.userNote ?? null,
-            repetitionLevel: item.repetitionLevel ?? null,
+            repetitionLevel: item.repetitionLevel ?? 1,
             nextReviewDate: item.nextReviewDate ?? null,
-            updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
+            createdAt: item.createdAt ? new Date(item.createdAt) : updatedAt,
+            updatedAt,
           };
         })
         .filter((item): item is NonNullable<typeof item> => item !== null);

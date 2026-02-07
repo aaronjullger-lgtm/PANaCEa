@@ -196,9 +196,9 @@ export async function getSystemOptions(): Promise<SystemCode[]> {
       return [];
     }
 
-    const conditions = await response.json();
+    const conditions = (await response.json()) as Array<{ system?: string }>;
     const systems = new Set<SystemCode>();
-    conditions.forEach((c: any) => {
+    conditions.forEach((c) => {
       if (c.system) systems.add(c.system as SystemCode);
     });
 
@@ -224,9 +224,9 @@ export async function getSubcategoryOptions(system?: SystemCode): Promise<string
       return [];
     }
 
-    const conditions = await response.json();
+    const conditions = (await response.json()) as Array<{ subcategory?: string }>;
     const subcategories = new Set<string>();
-    conditions.forEach((c: any) => {
+    conditions.forEach((c) => {
       if (c.subcategory) subcategories.add(c.subcategory);
     });
 

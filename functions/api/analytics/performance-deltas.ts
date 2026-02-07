@@ -134,18 +134,15 @@ export const onRequestGet = authenticatedEndpoint(PerformanceDeltasSchema, async
 
     try {
       const platformStats = await prisma.platformStatistics.findFirst({
-        orderBy: { computedAt: 'desc' },
+        orderBy: { date: 'desc' },
       });
-
-      if (platformStats?.systemPerformance) {
-        const systemPerf = platformStats.systemPerformance as Record<string, any>;
-        for (const [system, data] of Object.entries(systemPerf)) {
-          if (data && typeof data === 'object' && 'accuracy' in data) {
-            cohortBenchmarks[system] = {
-              average: data.accuracy || DEFAULT_BENCHMARKS[system]?.average || 70,
-              p90: Math.min(95, (data.accuracy || 70) + 15),
-            };
-          }
+      if (platformStats && platformStats.averageAccuracy != null) {
+        const avg = Number(platformStats.averageAccuracy);
+        for (const system of Object.keys(DEFAULT_BENCHMARKS)) {
+          cohortBenchmarks[system] = {
+            average: avg,
+            p90: Math.min(95, avg + 15),
+          };
         }
       }
     } catch (e) {

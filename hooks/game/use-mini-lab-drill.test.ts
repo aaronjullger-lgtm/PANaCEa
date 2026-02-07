@@ -45,6 +45,7 @@ describe('useMiniLabDrill', () => {
 
       const initialPanelCount = initialCase.panels.length;
       const testToOrder = result.current.availableTests[0];
+      if (testToOrder == null) return;
 
       act(() => {
         result.current.orderTest(testToOrder);
@@ -58,7 +59,8 @@ describe('useMiniLabDrill', () => {
 
         // The new panel should match the ordered test
         const addedPanel = updatedCase.panels[updatedCase.panels.length - 1];
-        expect(addedPanel.name).toBe(testToOrder);
+        expect(addedPanel).toBeDefined();
+        expect(addedPanel!.name).toBe(testToOrder);
 
         // The test should be marked as ordered
         expect(updatedCase.orderedTests).toContain(testToOrder);
@@ -81,6 +83,7 @@ describe('useMiniLabDrill', () => {
       }
 
       const testToOrder = result.current.availableTests[0];
+      if (testToOrder == null) return;
 
       act(() => {
         result.current.orderTest(testToOrder);

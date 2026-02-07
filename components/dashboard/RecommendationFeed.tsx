@@ -98,10 +98,10 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
         );
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as unknown[] | { data?: unknown[] };
 
       // Handle both shapes: Cloudflare list returns { data }, legacy may return array at root
-      const list = Array.isArray(data) ? data : (data && data.data) ? data.data : [];
+      const list = (Array.isArray(data) ? data : (data && typeof data === 'object' && 'data' in data && data.data) ? data.data : []) as StudyRecommendation[];
       const now = Date.now();
       setRecommendations(list);
       setLastUpdated(now);
@@ -145,7 +145,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
         throw new Error(`Expected JSON but received ${contentType || 'unknown content type'}`);
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as { data?: { recommendations?: unknown[] }; recommendations?: unknown[] };
 
       // Handle response structure from generate endpoint: { data: { success, count, recommendations } }
       const payload = data?.data ?? data;

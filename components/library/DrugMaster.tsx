@@ -243,7 +243,7 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="relative w-full max-w-5xl max-h-[90vh] mx-4 bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl overflow-hidden"
+          className="relative w-full max-w-5xl max-h-[90vh] mx-4 bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

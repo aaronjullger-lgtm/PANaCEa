@@ -28,7 +28,8 @@ const router = Router();
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.status(503).json({ error: 'Database not configured' });
+      res.status(503).json({ error: 'Database not configured' });
+      return;
     }
 
     const { system, difficulty } = req.query;
@@ -53,7 +54,8 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 router.post('/fetch', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.status(503).json({ error: 'Database not configured' });
+      res.status(503).json({ error: 'Database not configured' });
+      return;
     }
 
     const { system, difficulty, limit = 10 } = req.body || {};
@@ -81,7 +83,7 @@ router.post(
       const { system, difficulty, limit = 10 } = req.body;
 
       if (!process.env.DATABASE_URL) {
-        return res.json({ success: true, questions: [] });
+        res.json({ success: true, questions: [] });
       }
 
       const { getQuestionsWithNoRepeat } = await import('../services/core/noRepeatService');
@@ -106,7 +108,8 @@ router.post(
       const { ids } = req.body;
 
       if (!ids || !Array.isArray(ids)) {
-        return res.status(400).json({ error: 'Invalid request: ids array required' });
+        res.status(400).json({ error: 'Invalid request: ids array required' });
+        return;
       }
 
       if (process.env.DATABASE_URL) {
@@ -131,11 +134,11 @@ router.post(
           };
         });
 
-        return res.json({ success: true, questions: mappedQuestions });
+        res.json({ success: true, questions: mappedQuestions });
       }
 
       // Mock response if no DB
-      return res.json({
+      res.json({
         success: true,
         questions: ids.map((id) => ({
           id,
@@ -161,7 +164,8 @@ router.post(
   async (req: Request, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
-        return res.status(503).json({ success: false, error: 'Database not configured' });
+        res.status(503).json({ success: false, error: 'Database not configured' });
+        return;
       }
 
       const { getQuestionsWithNoRepeat } = await import('../services/core/noRepeatService');
@@ -183,7 +187,8 @@ router.post(
   async (req: Request, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
-        return res.status(503).json({ success: false, error: 'Database not configured' });
+        res.status(503).json({ success: false, error: 'Database not configured' });
+        return;
       }
 
       const { recordQuestionSeen } = await import('../services/core/noRepeatService');
@@ -202,7 +207,7 @@ router.post(
 router.get('/repository/stats', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true, stats: { totalQuestions: 0 } });
+      res.json({ success: true, stats: { totalQuestions: 0 } });
     }
 
     const { getRepositoryStats } = await import('../services/core/noRepeatService');
@@ -219,7 +224,8 @@ router.get('/repository/stats', async (req: Request, res: Response): Promise<voi
 router.get('/stats', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.status(503).json({ error: 'Database not configured' });
+      res.status(503).json({ error: 'Database not configured' });
+      return;
     }
 
     const { getRepositoryStats } = await import('../services/core/noRepeatService');
@@ -261,10 +267,11 @@ router.post(
       } = req.body;
 
       if (!process.env.DATABASE_URL) {
-        return res.status(503).json({
+        res.status(503).json({
           success: false,
           error: 'Database not configured',
         });
+        return;
       }
 
       const { sendAdminFlagNotification } = await import('../lib/services/notificationService');
@@ -284,6 +291,7 @@ router.post(
           flagType,
           description,
           priority: priority || 'medium',
+          updatedAt: new Date(),
         },
       });
 
@@ -324,10 +332,11 @@ router.post(
       const { reviewedBy, resolutionNote } = req.body;
 
       if (!process.env.DATABASE_URL) {
-        return res.status(503).json({
+        res.status(503).json({
           success: false,
           error: 'Database not configured',
         });
+        return;
       }
 
       const { sendFlagResolvedNotification } = await import('../lib/services/notificationService');
@@ -382,7 +391,7 @@ router.get('/flags', async (req: Request, res: Response): Promise<void> => {
     const { status, priority } = req.query;
 
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true, flags: [] });
+      res.json({ success: true, flags: [] });
     }
 
     const flags = await prisma.questionFlag.findMany({
@@ -410,7 +419,8 @@ router.post(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
-        return res.status(503).json({ error: 'Database not configured' });
+        res.status(503).json({ error: 'Database not configured' });
+      return;
       }
 
       const body = req.body as { config?: Record<string, unknown>; count?: number };
@@ -517,7 +527,8 @@ router.post(
 router.get('/pool', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.status(503).json({ error: 'Database not configured' });
+      res.status(503).json({ error: 'Database not configured' });
+      return;
     }
 
     const count = Math.min(Number(req.query.count) || 10, 50);
@@ -577,9 +588,9 @@ router.get('/pool', async (req: Request, res: Response): Promise<void> => {
       questions = fallbackQs.map((q) => {
         const opts = q.options || [];
         const correctIdx = opts.findIndex(
-          (o) => o === q.correctAnswer || o.includes(q.correctAnswer)
+          (o) => o === (q as { correctAnswer?: string }).correctAnswer || o.includes((q as { correctAnswer?: string }).correctAnswer ?? '')
         );
-        const letter = correctIdx >= 0 ? letters[correctIdx] : 'A';
+        const letter = (correctIdx >= 0 ? letters[correctIdx] : undefined) ?? 'A';
         return {
           id: q.id,
           vignette: q.vignette || undefined,
@@ -590,6 +601,7 @@ router.get('/pool', async (req: Request, res: Response): Promise<void> => {
           system: q.system || 'General',
           difficulty: q.difficulty || 'medium',
           tags: q.tags || [],
+          conditionId: (q as { conditionId?: string }).conditionId ?? undefined,
           source: 'pool',
         };
       });
@@ -597,7 +609,7 @@ router.get('/pool', async (req: Request, res: Response): Promise<void> => {
     }
 
     const POOL_LOW_THRESHOLD = 20;
-    return res.json({
+    res.json({
       questions,
       poolStatus: {
         available,
@@ -635,7 +647,7 @@ router.post(
       });
 
       if (cached) {
-        return res.json({
+        res.json({
           success: true,
           question: cached.question,
           cached: true,
@@ -744,7 +756,8 @@ router.post(
   async (req: Request, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
-        return res.status(503).json({ success: false, error: 'Database not configured' });
+        res.status(503).json({ success: false, error: 'Database not configured' });
+        return;
       }
 
       const { createQuestionSeed } = await import('../services/core/questionSeedService');
@@ -761,11 +774,17 @@ router.post(
 router.get('/seeds/:id/assemble', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.status(503).json({ success: false, error: 'Database not configured' });
+      res.status(503).json({ success: false, error: 'Database not configured' });
+      return;
     }
 
+    const seedId = req.params.id;
+    if (!seedId) {
+      res.status(400).json({ success: false, error: 'Seed id is required' });
+      return;
+    }
     const { assembleQuestionFromSeed } = await import('../services/core/questionSeedService');
-    const question = await assembleQuestionFromSeed(req.params.id);
+    const question = await assembleQuestionFromSeed(seedId);
 
     res.json({ success: true, question });
   } catch (error) {
@@ -780,7 +799,8 @@ router.post(
   async (req: Request, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
-        return res.status(503).json({ success: false, error: 'Database not configured' });
+        res.status(503).json({ success: false, error: 'Database not configured' });
+        return;
       }
 
       const { assembleQuestionsFromSeeds } = await import('../services/core/questionSeedService');
@@ -798,7 +818,7 @@ router.post(
 router.get('/seeds/stats', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true, stats: {} });
+      res.json({ success: true, stats: {} });
     }
 
     const { getSeedStats } = await import('../services/core/questionSeedService');

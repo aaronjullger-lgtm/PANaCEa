@@ -74,18 +74,15 @@ export const onRequestPost = authenticatedEndpoint(SystemDrillSchema, async (con
       select: {
         id: true,
         question: true,
+        vignette: true,
         options: true,
-        correctAnswerIndex: true,
-        rationale: true,
-        pearls: true,
-        condition: true,
+        correctAnswer: true,
+        explanation: true,
         conditionId: true,
         system: true,
-        subcategory: true,
+        category: true,
         topic: true,
         difficulty: true,
-        panceYield: true,
-        imageUrl: true,
       },
     });
 

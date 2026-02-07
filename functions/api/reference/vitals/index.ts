@@ -46,7 +46,7 @@ export const onRequestGet = authenticatedEndpoint(
       log.info('Fetching vital sign ranges', { ageGroup: ageGroup || 'all' });
 
       const results = await prisma.vitalSignRange.findMany({
-        where: ageGroup ? { ageGroup } : undefined,
+        where: ageGroup ? { category: ageGroup } : undefined,
         orderBy: { vitalSign: 'asc' },
       });
 

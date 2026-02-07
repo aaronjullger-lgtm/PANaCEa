@@ -29,6 +29,7 @@ export const recommendationService = {
         clerkId: userId,
         email: '', // Will be updated by Clerk webhook later
         role: UserRole.USER,
+        updatedAt: new Date(),
       },
       update: {}, // No-op if user already exists
     });

@@ -38,7 +38,7 @@ export function useContrastiveDrill(drillId: string | null, set: ContrastiveSet 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ setId: set.id, conditionIndex: index }),
         });
-        const data = await res.json();
+        const data = (await res.json()) as ContrastiveQuestion | null;
         setCurrentQuestion(data);
       } catch (e) {
         console.error('Failed to generate', e);
@@ -63,7 +63,7 @@ export function useContrastiveDrill(drillId: string | null, set: ContrastiveSet 
           timeSpentMs,
         }),
       });
-      const result = await res.json();
+      const result = (await res.json()) as { isCorrect?: boolean };
 
       // Update local stats
       if (result.isCorrect) setStats((s) => ({ ...s, correct: s.correct + 1 }));

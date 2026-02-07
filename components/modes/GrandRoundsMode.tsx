@@ -25,6 +25,7 @@ import {
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import type { Question } from '@/types';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 interface GrandRoundsModeProps {
   onExit?: () => void;
@@ -199,7 +200,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
+          const errData = (await response.json().catch(() => ({}))) as { error?: string };
           throw new Error(errData?.error || `HTTP ${response.status}: Failed to fetch targeted daily`);
         }
         const data = (await response.json()) as
@@ -266,16 +267,18 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         throw new Error(`HTTP ${response.status}: Failed to fetch challenge`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as
+        | { status: 'completed'; stats: unknown; challengeId?: string }
+        | { status: 'active'; challengeId: string; questions: unknown[] };
 
       if (data.status === 'completed') {
-        setCompletedStats(data.stats);
-        if (data.challengeId) setCompletedChallengeId(data.challengeId);
+        setCompletedStats(data.stats as CompletedStats);
+        if ('challengeId' in data && data.challengeId) setCompletedChallengeId(data.challengeId);
         setViewState('completed');
       } else if (data.status === 'active') {
         setChallengeData({
           challengeId: data.challengeId,
-          questions: data.questions,
+          questions: data.questions as Question[],
         });
         setViewState('landing');
       } else {
@@ -321,9 +324,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           if (!cancelled) setLeaderboardError('Failed to load leaderboard');
           return;
         }
-        const json = await res.json();
+        const json = (await res.json()) as { data?: { leaderboard?: unknown[] } };
         const list = json?.data?.leaderboard ?? [];
-        if (!cancelled) setLeaderboard(Array.isArray(list) ? list : []);
+        if (!cancelled) setLeaderboard((Array.isArray(list) ? list : []) as LeaderboardEntry[]);
       } catch {
         if (!cancelled) setLeaderboardError('Failed to load leaderboard');
       } finally {
@@ -396,7 +399,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             body: JSON.stringify({ answerIndex, timeSpentMs }),
           });
           if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
+            const errData = (await response.json().catch(() => ({}))) as { error?: string };
             throw new Error(errData?.error || 'Failed to submit targeted daily');
           }
 
@@ -439,11 +442,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+          const errorData = (await response.json().catch(() => ({}))) as { error?: string };
           throw new Error(errorData.error || 'Failed to submit challenge');
         }
 
-        const result: SubmissionResult = await response.json();
+        const result = (await response.json()) as SubmissionResult;
 
         if (result.success) {
           hapticSuccess();
@@ -493,9 +496,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         setReviewError('Failed to load review');
         return;
       }
-      const json = await res.json();
+      const json = (await res.json()) as { data?: { review?: unknown[] } };
       const list = json?.data?.review ?? [];
-      setReviewData(Array.isArray(list) ? list : []);
+      setReviewData((Array.isArray(list) ? list : []) as ReviewEntry[]);
       setShowReview(true);
     } catch {
       setReviewError('Failed to load review');
@@ -559,27 +562,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   if (viewState === 'error') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 text-center space-y-4">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
-          <h2 className="text-2xl font-bold">Error</h2>
-          <p className="text-[var(--color-text-muted)]">
-            {error || `Something went wrong loading ${modeLabel}.`}
-          </p>
-          <div className="flex gap-3">
-            <button
-              onClick={fetchTodaysChallenge}
-              className="flex-1 px-6 py-3 bg-muted-amber-500 hover:bg-muted-amber-600 text-white rounded-lg font-semibold transition-colors"
-            >
-              Retry
-            </button>
-            <button
-              onClick={onExit}
-              className="flex-1 px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors"
-            >
-              Exit
-            </button>
-          </div>
-        </div>
+        <ErrorState
+          title="Error"
+          message={error || `Something went wrong loading ${modeLabel}.`}
+          onRetry={fetchTodaysChallenge}
+          secondaryAction={{ label: 'Exit', onClick: onExit ?? (() => {}) }}
+        />
       </div>
     );
   }
@@ -733,7 +721,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               </div>
               <div className="overflow-y-auto p-4 space-y-4">
                 {reviewError && (
-                  <p className="text-sm text-red-500">{reviewError}</p>
+                  <p className="text-sm text-[var(--color-data-fail)]">{reviewError}</p>
                 )}
                 {reviewData.map((entry, idx) => (
                   <div
@@ -744,7 +732,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                       {entry.correct ? (
                         <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                       ) : (
-                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                        <AlertCircle className="w-5 h-5 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />
                       )}
                       <div className="flex-1">
                         <div className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -907,11 +895,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               {!isTargeted && (
                 <div className="flex items-center gap-2" aria-label="Time remaining">
                   <Timer
-                    className={`w-5 h-5 ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-muted-amber-500'}`}
+                    className={`w-5 h-5 ${timeRemainingPercent < 25 ? 'text-[var(--color-data-fail)]' : 'text-muted-amber-500'}`}
                     aria-hidden
                   />
                   <span
-                    className={`text-2xl font-bold ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-muted-amber-500'}`}
+                    className={`text-2xl font-bold ${timeRemainingPercent < 25 ? 'text-[var(--color-data-fail)]' : 'text-muted-amber-500'}`}
                     aria-live="polite"
                   >
                     {formatTime(timeRemaining)}
@@ -938,7 +926,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                   <motion.div
                     animate={{ width: `${timeRemainingPercent}%` }}
                     className={`h-full ${
-                      timeRemainingPercent < 25 ? 'bg-red-500' : 'bg-muted-amber-500'
+                      timeRemainingPercent < 25 ? 'bg-[var(--color-data-fail)]' : 'bg-muted-amber-500'
                     }`}
                   />
                 </div>
@@ -1216,7 +1204,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               </div>
               <div className="overflow-y-auto p-4 space-y-4">
                 {reviewError && (
-                  <p className="text-sm text-red-500">{reviewError}</p>
+                  <p className="text-sm text-[var(--color-data-fail)]">{reviewError}</p>
                 )}
                 {reviewData.map((entry, idx) => (
                   <div
@@ -1227,7 +1215,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                       {entry.correct ? (
                         <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                       ) : (
-                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                        <AlertCircle className="w-5 h-5 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />
                       )}
                       <div className="flex-1">
                         <div className="text-sm font-medium text-[var(--color-text-primary)]">

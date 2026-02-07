@@ -338,16 +338,19 @@ function normalizeName(name: string): string {
 function levenshteinDistance(a: string, b: string): number {
   const matrix: number[][] = [];
   for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+  for (let j = 0; j <= a.length; j++) matrix[0]![j] = j;
   for (let i = 1; i <= b.length; i++) {
     for (let j = 1; j <= a.length; j++) {
-      matrix[i][j] =
+      const prev = matrix[i - 1]?.[j - 1] ?? 0;
+      const left = matrix[i]?.[j - 1] ?? 0;
+      const top = matrix[i - 1]?.[j] ?? 0;
+      matrix[i]![j] =
         b.charAt(i - 1) === a.charAt(j - 1)
-          ? matrix[i - 1][j - 1]
-          : Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+          ? prev
+          : Math.min(prev + 1, left + 1, top + 1);
     }
   }
-  return matrix[b.length][a.length];
+  return matrix[b.length]?.[a.length] ?? 0;
 }
 
 function similarityScore(a: string, b: string): number {
@@ -566,7 +569,8 @@ async function runGapAnalysis(): Promise<GapReport[]> {
       drugsProcessed++;
     }
 
-    cursor = drugs[drugs.length - 1].id;
+    const lastDrug = drugs[drugs.length - 1];
+    if (lastDrug) cursor = lastDrug.id;
     process.stdout.write(`\r   Processed: ${drugsProcessed}/${totalCount}`);
   }
 
@@ -690,7 +694,8 @@ async function cleanupNonPharmEntries(
       }
     }
 
-    cursor = drugs[drugs.length - 1].id;
+    const lastDrug = drugs[drugs.length - 1];
+    if (lastDrug) cursor = lastDrug.id;
   }
 
   console.log(`\n   Found ${suspiciousEntries.length} suspicious entries to verify with AI...\n`);
@@ -804,7 +809,8 @@ async function findFuzzyDuplicates(
 
     if (batch.length === 0) break;
     allDrugs.push(...batch);
-    cursor = batch[batch.length - 1].id;
+    const lastBatch = batch[batch.length - 1];
+    if (lastBatch) cursor = lastBatch.id;
   }
 
   console.log(`   Loaded ${allDrugs.length} drug names for comparison\n`);
@@ -813,27 +819,29 @@ async function findFuzzyDuplicates(
   const processed = new Set<string>();
 
   for (let i = 0; i < allDrugs.length; i++) {
-    if (processed.has(allDrugs[i].id)) continue;
+    const drugI = allDrugs[i];
+    if (!drugI || processed.has(drugI.id)) continue;
 
     const group: DuplicateGroup = {
-      drugs: [{ id: allDrugs[i].id, genericName: allDrugs[i].genericName, score: 0 }],
+      drugs: [{ id: drugI.id, genericName: drugI.genericName, score: 0 }],
       similarity: 1,
     };
 
     for (let j = i + 1; j < allDrugs.length; j++) {
-      if (processed.has(allDrugs[j].id)) continue;
+      const drugJ = allDrugs[j];
+      if (!drugJ || processed.has(drugJ.id)) continue;
 
-      const sim = similarityScore(allDrugs[i].genericName, allDrugs[j].genericName);
+      const sim = similarityScore(drugI.genericName, drugJ.genericName);
       if (sim >= threshold) {
-        group.drugs.push({ id: allDrugs[j].id, genericName: allDrugs[j].genericName, score: sim });
+        group.drugs.push({ id: drugJ.id, genericName: drugJ.genericName, score: sim });
         group.similarity = Math.min(group.similarity, sim);
-        processed.add(allDrugs[j].id);
+        processed.add(drugJ.id);
       }
     }
 
     if (group.drugs.length > 1) {
       duplicateGroups.push(group);
-      processed.add(allDrugs[i].id);
+      processed.add(drugI.id);
     }
   }
 
@@ -845,10 +853,12 @@ async function findFuzzyDuplicates(
     for (const group of duplicateGroups) {
       // Compare first drug against all others in group
       const baseDrug = group.drugs[0];
-      const verifiedDrugs = [baseDrug];
+      if (!baseDrug) continue;
+      const verifiedDrugs: { id: string; genericName: string; score: number }[] = [baseDrug];
 
       for (let i = 1; i < group.drugs.length; i++) {
         const candidate = group.drugs[i];
+        if (!candidate) continue;
         console.log(`   Checking: "${baseDrug.genericName}" vs "${candidate.genericName}"...`);
 
         const verification = await verifyDuplicatesWithAI(
@@ -917,6 +927,7 @@ async function mergeDuplicateGroup(group: DuplicateGroup, dryRun: boolean): Prom
   });
 
   const survivor = fullDrugs[0];
+  if (!survivor) return 0;
   const victims = fullDrugs.slice(1);
 
   console.log(`  🔄 Merging ${fullDrugs.length} records into "${survivor.genericName}"`);
@@ -1575,7 +1586,8 @@ async function formatAllNames(dryRun: boolean): Promise<void> {
       }
     }
 
-    cursor = drugs[drugs.length - 1].id;
+    const lastDrug = drugs[drugs.length - 1];
+    if (lastDrug) cursor = lastDrug.id;
   }
 
   console.log(`\n   Formatted ${updated} drug names.`);
@@ -2039,9 +2051,9 @@ async function main(): Promise<void> {
   const skipDiscovery = args.includes('--skip-discovery');
   const discoveryOnly = args.includes('--discovery-only');
   const limitArg = args.find((a) => a.startsWith('--limit='));
-  const limit = limitArg ? parseInt(limitArg.split('=')[1], 10) : undefined;
+  const limit = limitArg ? parseInt(limitArg.split('=')[1] ?? '', 10) : undefined;
   const batchArg = args.find((a) => a.startsWith('--batch='));
-  const batchSize = batchArg ? parseInt(batchArg.split('=')[1], 10) : 50;
+  const batchSize = batchArg ? parseInt(batchArg.split('=')[1] ?? '50', 10) || 50 : 50;
 
   console.log('\n' + '═'.repeat(70));
   console.log('🩺 DRUG DOCTOR ENHANCED v3');
@@ -2075,7 +2087,8 @@ async function main(): Promise<void> {
         });
         if (batch.length === 0) break;
         existingDrugs.push(...batch.map((d) => d.genericName));
-        discoveryCursor = batch[batch.length - 1].id;
+        const lastBatch = batch[batch.length - 1];
+        discoveryCursor = lastBatch?.id;
       }
 
       await discoverMissingPANCEDrugs(existingDrugs, dryRun);
@@ -2137,7 +2150,8 @@ async function main(): Promise<void> {
         });
         if (batch.length === 0) break;
         existingDrugs.push(...batch.map((d) => d.genericName));
-        discoveryCursor = batch[batch.length - 1].id;
+        const lastBatch = batch[batch.length - 1];
+        discoveryCursor = lastBatch?.id;
       }
 
       await discoverMissingPANCEDrugs(existingDrugs, dryRun);

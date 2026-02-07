@@ -222,9 +222,9 @@ async function getPoolStats(
   const [totalPregen, usedPregen, last24h, last7d, last30d, bySystem] = await Promise.all([
     prisma.preGeneratedQuestion.count(),
     prisma.preGeneratedQuestion.count({ where: { usedAt: { not: null } } }),
-    prisma.preGeneratedQuestion.count({ where: { createdAt: { gte: oneDayAgo } } }),
-    prisma.preGeneratedQuestion.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
-    prisma.preGeneratedQuestion.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
+    prisma.preGeneratedQuestion.count({ where: { generatedAt: { gte: oneDayAgo } } }),
+    prisma.preGeneratedQuestion.count({ where: { generatedAt: { gte: sevenDaysAgo } } }),
+    prisma.preGeneratedQuestion.count({ where: { generatedAt: { gte: thirtyDaysAgo } } }),
     prisma.preGeneratedQuestion.groupBy({
       by: ['system'],
       _count: { id: true },
@@ -238,14 +238,16 @@ async function getPoolStats(
   });
 
   const usedMap = new Map<string, number>(
-    usedBySystem.map((u: { system: string; _count: { id: number } }) => [u.system, u._count.id])
+    usedBySystem.map((u) => [u.system ?? '', u._count.id])
   );
 
   const systemBreakdown: Record<string, { total: number; used: number; unused: number }> = {};
   for (const s of bySystem) {
+    const key = s.system ?? '';
+    if (key === '') continue;
     const total = s._count.id;
-    const used: number = usedMap.get(s.system) || 0;
-    systemBreakdown[s.system] = {
+    const used: number = usedMap.get(key) || 0;
+    systemBreakdown[key] = {
       total,
       used,
       unused: total - used,
@@ -349,7 +351,7 @@ async function getQuestionDetails(
     question: {
       id: question.id,
       system: question.system,
-      condition: question.condition,
+      conditionId: question.conditionId,
       difficulty: question.difficulty,
       createdAt: question.createdAt,
     },

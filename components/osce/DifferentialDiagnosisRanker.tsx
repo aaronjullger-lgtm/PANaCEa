@@ -287,7 +287,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 
-              rounded-xl p-8 shadow-2xl"
+              rounded-xl p-8 shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
           >
             <div className="flex items-center justify-between">
               <div>

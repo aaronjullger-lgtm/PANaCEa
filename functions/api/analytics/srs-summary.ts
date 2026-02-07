@@ -61,22 +61,21 @@ export const onRequestGet = authenticatedEndpoint(
         };
       }
 
-      // Fetch user progress data
+      // Fetch user progress data (UserProgress has lastReviewAt/nextReviewAt; FSRS S/D/state in fsrsCard/fsrsParams JSON)
       const progressData = await prisma.userProgress.findMany({
         where: { userId },
         select: {
           id: true,
-          stability: true,
-          difficulty: true,
-          lastReviewDate: true,
-          nextReviewDate: true,
-          reviewCount: true,
-          state: true,
+          fsrsCard: true,
+          fsrsParams: true,
+          lastReviewAt: true,
+          nextReviewAt: true,
+          totalAttempts: true,
           createdAt: true,
-          medicalContent: {
+          MedicalContent: {
             select: {
               system: true,
-              name: true,
+              condition: true,
             },
           },
         },
@@ -131,17 +130,26 @@ export const onRequestGet = authenticatedEndpoint(
         }
       > = {};
 
+      // Helper to read S/D/state from FSRS JSON
+      const getFsrsValues = (card: (typeof progressData)[0]) => {
+        const params = card.fsrsParams as { S?: number; D?: number; state?: number } | null;
+        const fc = card.fsrsCard as { s?: number; d?: number; state?: number } | null;
+        return {
+          stability: params?.S ?? fc?.s ?? 0,
+          difficulty: params?.D ?? fc?.d ?? 5,
+          state: params?.state ?? fc?.state ?? 0,
+        };
+      };
+
       // Process each card
       for (const card of progressData) {
-        const stability = card.stability || 0;
-        const difficulty = card.difficulty || 5;
-        const state = card.state || 0;
+        const { stability, difficulty, state } = getFsrsValues(card);
 
         totalStability += stability;
         totalDifficulty += difficulty;
 
         // Check if review is due
-        if (card.nextReviewDate && new Date(card.nextReviewDate) <= now) {
+        if (card.nextReviewAt && new Date(card.nextReviewAt) <= now) {
           reviewsDue++;
         }
 
@@ -164,7 +172,7 @@ export const onRequestGet = authenticatedEndpoint(
         }
 
         // System breakdown
-        const system = card.medicalContent?.system || 'Unknown';
+        const system = card.MedicalContent?.system || 'Unknown';
         if (!systemMap[system]) {
           systemMap[system] = {
             cardCount: 0,
@@ -176,7 +184,7 @@ export const onRequestGet = authenticatedEndpoint(
         systemMap[system].cardCount++;
         systemMap[system].totalStability += stability;
         systemMap[system].totalDifficulty += difficulty;
-        if (card.nextReviewDate && new Date(card.nextReviewDate) <= now) {
+        if (card.nextReviewAt && new Date(card.nextReviewAt) <= now) {
           systemMap[system].reviewsDue++;
         }
       }
@@ -188,8 +196,9 @@ export const onRequestGet = authenticatedEndpoint(
       // Calculate projected retention using FSRS formula
       // R = (1 + t/S)^-1 where t is days since review, S is stability
       const retentionSum = progressData.reduce((sum: number, card: (typeof progressData)[0]) => {
-        const stability = card.stability || 1;
-        const lastReview = card.lastReviewDate ? new Date(card.lastReviewDate) : now;
+        const { stability: s } = getFsrsValues(card);
+        const stability = s || 1;
+        const lastReview = card.lastReviewAt ? new Date(card.lastReviewAt) : now;
         const daysSinceReview = (now.getTime() - lastReview.getTime()) / (1000 * 60 * 60 * 24);
         const retention = Math.pow(1 + daysSinceReview / stability, -1);
         return sum + retention;
@@ -199,7 +208,7 @@ export const onRequestGet = authenticatedEndpoint(
       // Recent reviews count (cards reviewed in last 7 days)
       const recentReviews = progressData.filter(
         (card: (typeof progressData)[0]) =>
-          card.lastReviewDate && new Date(card.lastReviewDate) >= sevenDaysAgo
+          card.lastReviewAt && new Date(card.lastReviewAt) >= sevenDaysAgo
       ).length;
 
       // Learning velocity (cards reaching review state per day)

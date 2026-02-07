@@ -28,9 +28,9 @@ export const onRequestGet = authenticatedEndpoint(
       condition = await prisma.condition.findUnique({
         where: { id: identifier },
         include: {
-          anatomyStructures: true,
-          specialTests: true,
-          media: true,
+          AnatomyStructure: true,
+          SpecialTest: true,
+          MediaAsset: true,
         },
       });
 
@@ -45,9 +45,9 @@ export const onRequestGet = authenticatedEndpoint(
             },
           },
           include: {
-            anatomyStructures: true,
-            specialTests: true,
-            media: true,
+            AnatomyStructure: true,
+            SpecialTest: true,
+            MediaAsset: true,
           },
         });
 
@@ -67,9 +67,9 @@ export const onRequestGet = authenticatedEndpoint(
             },
           },
           include: {
-            anatomyStructures: true,
-            specialTests: true,
-            media: true,
+            AnatomyStructure: true,
+            SpecialTest: true,
+            MediaAsset: true,
           },
         });
         if (conditions.length > 0) {
@@ -80,7 +80,7 @@ export const onRequestGet = authenticatedEndpoint(
       if (!condition) {
         return {
           error: 'Condition not found',
-          statusCode: 404,
+          status: 404,
         };
       }
 
@@ -96,8 +96,9 @@ export const onRequestGet = authenticatedEndpoint(
       });
 
       return {
-        ...condition,
-        coreContent: coreContent
+        data: {
+          ...condition,
+          coreContent: coreContent
           ? {
               ...coreContent,
               etiology: coreContent.etiology,
@@ -114,6 +115,7 @@ export const onRequestGet = authenticatedEndpoint(
                   .join('\n\n') || undefined,
             }
           : null,
+        },
       };
     } finally {
       await safePrismaDisconnect(prisma);

@@ -12,7 +12,7 @@ interface YieldBadgeProps {
  * YieldBadge - Displays PANCE yield score with color coding
  *
  * Supports both numeric (1-3) and text ('HIGH', 'MEDIUM', 'LOW') formats.
- * Uses sportsbook-style color coding: red for high yield, amber for medium, gray for low.
+ * Uses clinical color coding: red for high yield, amber for medium, gray for low.
  */
 export const YieldBadge: React.FC<YieldBadgeProps> = ({
   yield: yieldValue,

@@ -132,11 +132,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
         );
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+          const errorData = (await response.json().catch(() => ({}))) as { message?: string };
           throw new Error(errorData.message || 'Search failed');
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as { results?: ApiSearchResult[] };
         return data.results || [];
       } catch (error) {
         console.error('Search API error:', error);
@@ -157,7 +157,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
         const recentIds = getRecentModeIds();
         const modeMap = new Map(MODE_REGISTRY.map((m) => [m.id, m]));
         const recentModes = recentIds
-          .map((id) => modeMap.get(id))
+          .map((id) => modeMap.get(id as import('@/config/training-modes').TrainingModeId))
           .filter((m): m is (typeof MODE_REGISTRY)[0] => !!m);
         const recentIdsSet = new Set(recentModes.map((m) => m.id));
         const otherModes = MODE_REGISTRY.filter((m) => !recentIdsSet.has(m.id)).slice(
@@ -314,7 +314,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: -20 }}
           transition={{ duration: 0.15 }}
-          className="relative w-full max-w-2xl bg-[var(--color-bg-primary)] rounded-xl shadow-2xl overflow-hidden"
+          className="relative w-full max-w-2xl bg-[var(--color-bg-primary)] rounded-xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)]"
         >
           {/* Search Input */}
           <div className="flex items-center px-4 py-3 border-b border-[var(--color-border)]">

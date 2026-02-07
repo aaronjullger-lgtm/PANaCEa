@@ -212,10 +212,13 @@ export function useTelemetry(
     finalTelemetry.dwellTimeMs = finalTelemetry.endTime - finalTelemetry.startTime;
 
     // Final quartile dwell update
-    const currentQuartile = lastQuartile.current;
-    if (currentQuartile >= 0 && currentQuartile < 4) {
-      const quartileDwell = Date.now() - quartileStartTime.current;
-      finalTelemetry.quartileDwells[currentQuartile] += quartileDwell;
+    const currentQuartile = lastQuartile.current ?? -1;
+    const startTime = quartileStartTime.current;
+    if (currentQuartile >= 0 && currentQuartile < 4 && typeof startTime === 'number') {
+      const quartileDwell = Date.now() - startTime;
+      const arr = finalTelemetry.quartileDwells;
+      const current = arr[currentQuartile];
+      if (typeof current === 'number') arr[currentQuartile] = current + quartileDwell;
     }
 
     // Calculate final metrics

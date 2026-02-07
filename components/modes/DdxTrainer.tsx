@@ -24,7 +24,7 @@ const DdxTrainer = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Failed to fetch new DDx problem.');
-      const data = await response.json();
+      const data = (await response.json()) as DdxProblem;
       setProblem(data);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'An unknown error occurred.');

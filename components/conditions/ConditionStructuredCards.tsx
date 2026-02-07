@@ -66,7 +66,7 @@ export function ConditionStructuredCards({
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (res.ok) {
-        const json = await res.json();
+        const json = (await res.json()) as { data?: ConditionStructuredData | null };
         setData(json.data ?? null);
       } else {
         setData(null);
@@ -101,7 +101,7 @@ export function ConditionStructuredCards({
         }),
       });
       if (res.ok) {
-        const json = await res.json();
+        const json = (await res.json()) as { data?: { imageUrl?: string } };
         const urlFromApi = json.data?.imageUrl;
         if (typeof urlFromApi === 'string' && urlFromApi.startsWith('http'))
           setMnemonicUrl(urlFromApi);

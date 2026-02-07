@@ -76,18 +76,25 @@ export const onRequestGet = publicEndpoint(
         whereClause.category = category;
       }
 
-      // Fetch all matching questions (we'll shuffle and limit client-side)
-      const allQuestions = await prisma.aCLSQuestion.findMany({
+      // Fetch all matching questions (ACLSAlgorithm model: algorithm text, correctIndex, category, explanation)
+      const rows = await prisma.aCLSAlgorithm.findMany({
         where: whereClause,
         select: {
           id: true,
-          question: true,
-          options: true,
+          algorithm: true,
           correctIndex: true,
           category: true,
           explanation: true,
         },
       });
+      const allQuestions = rows.map((r) => ({
+        id: r.id,
+        question: r.algorithm,
+        options: [] as string[],
+        correctIndex: r.correctIndex,
+        explanation: r.explanation,
+        category: r.category as CodeBlueQuestion['category'],
+      }));
 
       // Check if we have questions
       if (allQuestions.length === 0) {

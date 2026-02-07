@@ -129,7 +129,7 @@ export async function streamGeminiText(
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
       try {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as { error?: string; message?: string };
         errorMessage = errorData.error || errorData.message || errorMessage;
       } catch {
         errorMessage = response.statusText || errorMessage;

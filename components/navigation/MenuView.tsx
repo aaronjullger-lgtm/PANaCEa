@@ -663,6 +663,29 @@ const MenuView: React.FC<MenuViewProps> = ({
                 />
               </motion.section>
 
+              {/* Micro-study chips - 5–15 min sessions for clinical students */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.18 }}
+                  className="flex flex-wrap gap-2 justify-center"
+                >
+                  <button
+                    type="button"
+                    onClick={() => onConfirmSession({ focus: 'all', count: 10 })}
+                    className="px-4 py-2 rounded-xl text-sm font-medium bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] transition-colors min-h-[44px]"
+                  >
+                    Quick 10 (~5 min)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onConfirmSession({ focus: 'all', count: 30 })}
+                    className="px-4 py-2 rounded-xl text-sm font-medium bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] transition-colors min-h-[44px]"
+                  >
+                    Quick 30 (~15 min)
+                  </button>
+                </motion.div>
+
               {/* Session controls */}
               <motion.section
                 initial={{ opacity: 0, y: 10 }}
@@ -801,6 +824,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                     </motion.button>
                   )}
 
+                  {/* HIDDEN: Social/Study Groups feature (API not implemented in Cloudflare Functions)
                   {onNavigateToSocial && (
                     <motion.button
                       onClick={onNavigateToSocial}
@@ -817,6 +841,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                       </div>
                     </motion.button>
                   )}
+                  */}
 
                   {onNavigateToToolkit && (
                     <motion.button

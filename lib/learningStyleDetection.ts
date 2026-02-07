@@ -219,10 +219,11 @@ function detectErrorRecovery(attempts: LearningBehaviorData['attempts']): {
     // Find next few attempts
     const nextAttempts = attempts.slice(errorAttempt.idx + 1, errorAttempt.idx + 4);
 
-    if (nextAttempts.length > 0) {
+    const firstNext = nextAttempts[0];
+    if (firstNext != null && nextAttempts.length > 0) {
       // Time delay (in minutes) before next attempt
       const delay =
-        (nextAttempts[0].createdAt.getTime() - errorAttempt.createdAt.getTime()) / (1000 * 60);
+        (firstNext.createdAt.getTime() - errorAttempt.createdAt.getTime()) / (1000 * 60);
       totalPostErrorDelay += delay;
 
       // Check if performance improved

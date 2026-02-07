@@ -309,3 +309,26 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ title, subti
     </div>
   );
 };
+
+/**
+ * Simple result display component for calculators
+ */
+interface SimpleResultProps {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}
+
+export const SimpleCalculatorResult: React.FC<SimpleResultProps> = ({ label, value, highlight = false }) => {
+  return (
+    <div className={`p-4 rounded-lg border ${highlight ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/50' : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)]'}`}>
+      <div className="text-sm text-[var(--color-text-muted)] mb-1">{label}</div>
+      <div className={`text-2xl font-bold ${highlight ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-primary)]'}`}>
+        {value}
+      </div>
+    </div>
+  );
+};
+
+// Aliases for backward compatibility
+export const CalculatorInput = ClinicalInput;

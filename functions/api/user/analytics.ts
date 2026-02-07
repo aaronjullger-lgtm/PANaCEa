@@ -115,8 +115,13 @@ async function buildUserAnalytics(
     (a: (typeof attempts)[0]) => new Date(a.createdAt) >= weekStart
   ).length;
   const streaks = await calculateStreaks(prisma, userId);
-  const systemPerformance = calculateSystemPerformance(attempts);
-  const conditionMastery = await calculateConditionMastery(prisma, attempts);
+  const systemPerformance = calculateSystemPerformance(
+    attempts.map((a) => ({ system: a.system ?? undefined, wasCorrect: a.wasCorrect, timeSpentMs: a.timeSpentMs }))
+  );
+  const conditionMastery = await calculateConditionMastery(
+    prisma,
+    attempts.map((a) => ({ conditionId: a.conditionId, system: a.system ?? undefined, wasCorrect: a.wasCorrect }))
+  );
   const weakAreas = identifyWeakAreas(systemPerformance, conditionMastery);
   const recentActivity = calculateRecentActivity(attempts);
   const srsStats = await getSRSStats(prisma, userId);
@@ -345,11 +350,12 @@ function calculateRecentActivity(
   for (let i = 0; i < 14; i++) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
-    activityMap.set(date.toISOString().split('T')[0], { questions: 0, correct: 0 });
+    const key = date.toISOString().split('T')[0] ?? '';
+    if (key) activityMap.set(key, { questions: 0, correct: 0 });
   }
   for (const attempt of attempts) {
-    const dateStr = new Date(attempt.createdAt).toISOString().split('T')[0] as string;
-    if (activityMap.has(dateStr)) {
+    const dateStr = new Date(attempt.createdAt).toISOString().split('T')[0] ?? '';
+    if (dateStr && activityMap.has(dateStr)) {
       const stats = activityMap.get(dateStr)!;
       stats.questions++;
       if (attempt.wasCorrect) stats.correct++;

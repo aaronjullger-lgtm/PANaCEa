@@ -171,11 +171,11 @@ export const onRequestGet = publicEndpoint(WorkupSchema, async (context) => {
               buzzwords: string[];
             } | null;
             likelihood: string | null;
-            distinguishingFeatures: string[];
+            distinguishingFeatures: string[] | string | null;
           }) => ({
             condition: lc.Condition,
             likelihood: lc.likelihood,
-            distinguishingFeatures: lc.distinguishingFeatures,
+            distinguishingFeatures: Array.isArray(lc.distinguishingFeatures) ? lc.distinguishingFeatures : (lc.distinguishingFeatures ? [lc.distinguishingFeatures] : []),
             goldStandardDx: lc.MedicalContent?.gold_standard_dx,
             bestInitialTest: lc.MedicalContent?.best_initial_test,
             buzzwords: lc.MedicalContent?.buzzwords,

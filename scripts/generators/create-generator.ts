@@ -292,6 +292,7 @@ async function analyzeSchema() {
   }
 
   const modelContent = match[1];
+  if (modelContent == null) return { fields: [] };
   const fields: Array<{ name: string; type: string; isOptional: boolean; isArray: boolean }> = [];
 
   // Parse fields
@@ -299,10 +300,12 @@ async function analyzeSchema() {
 
   for (const line of fieldLines) {
     const fieldMatch = line.match(/^\s*(\w+)\s+(\w+)(\[\])?(\\?)?/);
-    if (fieldMatch && !['id', 'createdAt', 'updatedAt'].includes(fieldMatch[1])) {
+    const f1 = fieldMatch?.[1];
+    const f2 = fieldMatch?.[2];
+    if (f1 && f2 && !['id', 'createdAt', 'updatedAt'].includes(f1)) {
       fields.push({
-        name: fieldMatch[1],
-        type: fieldMatch[2],
+        name: f1,
+        type: f2,
         isOptional: !!fieldMatch[4],
         isArray: !!fieldMatch[3],
       });
@@ -368,8 +371,9 @@ function generateItemsList(tableName: string) {
     { name: 'Chest X-Ray', category: 'Radiology' }`,
   };
 
+  const ex = examples as Record<string, string>;
   return (
-    examples[tableName] ||
+    ex[tableName] ||
     `    { name: 'Example Item 1', category: 'Category A' },
     { name: 'Example Item 2', category: 'Category B' },
     { name: 'Example Item 3', category: 'Category C' }`
@@ -377,18 +381,23 @@ function generateItemsList(tableName: string) {
 }
 
 async function generateScript() {
+  const tableName = TABLE_NAME ?? '';
+  if (!tableName) {
+    console.error('Table name is required');
+    process.exit(1);
+  }
   const { fields } = await analyzeSchema();
 
   console.log(`✅ Found ${fields.length} fields\n`);
 
-  const tableLower = TABLE_NAME.charAt(0).toLowerCase() + TABLE_NAME.slice(1);
+  const tableLower = tableName.charAt(0).toLowerCase() + tableName.slice(1);
 
-  const script = GENERATOR_TEMPLATE.replace(/{{TABLE_NAME}}/g, TABLE_NAME)
-    .replace(/{{TABLE_NAME_LOWER}}/g, tableLower)
+  const script = GENERATOR_TEMPLATE.replace(/\{\{TABLE_NAME\}\}/g, tableName)
+    .replace(/\{\{TABLE_NAME_LOWER\}\}/g, tableLower)
     .replace('{{INTERFACE_FIELDS}}', generateInterfaceFields(fields))
     .replace('{{JSON_STRUCTURE}}', generateJSONStructure(fields))
     .replace('{{SIMPLIFIED_JSON_STRUCTURE}}', generateJSONStructure(fields))
-    .replace('{{ITEMS_LIST}}', generateItemsList(TABLE_NAME));
+    .replace('{{ITEMS_LIST}}', generateItemsList(tableName));
 
   const outputPath = path.join(
     process.cwd(),

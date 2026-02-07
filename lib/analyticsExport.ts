@@ -132,7 +132,7 @@ function prepareAnalyticsSummary(performanceData: PerformanceRecord[]): Analytic
   // Daily progress
   const dailyMap = new Map<string, { correct: number; total: number }>();
   for (const record of performanceData) {
-    const date = new Date(record.timestamp).toISOString().split('T')[0];
+    const date = new Date(record.timestamp).toISOString().split('T')[0] ?? '';
     const existing = dailyMap.get(date) || { correct: 0, total: 0 };
     dailyMap.set(date, {
       correct: existing.correct + (record.isCorrect ? 1 : 0),
@@ -142,7 +142,7 @@ function prepareAnalyticsSummary(performanceData: PerformanceRecord[]): Analytic
 
   const dailyProgress = Array.from(dailyMap.entries())
     .map(([date, data]) => ({
-      date,
+      date: date ?? '',
       questions: data.total,
       correct: data.correct,
       accuracy: calculateAccuracy(data.correct, data.total),
@@ -195,6 +195,7 @@ export function exportUserAnalytics(
       const systemName = systemCode
         ? (ABBREVIATION_TO_TOPIC_MAP[systemCode as SystemCode] ?? systemCode)
         : '';
+      const rec = record as PerformanceRecord & { difficulty?: string };
       return {
         timestamp: new Date(record.timestamp).toISOString(),
         date: datePart,
@@ -206,7 +207,7 @@ export function exportUserAnalytics(
         topic: record.topic ?? '',
         isCorrect: record.isCorrect ? 'TRUE' : 'FALSE',
         focus: record.focus ?? '',
-        difficulty: record.difficulty ?? '',
+        difficulty: rec.difficulty ?? '',
       };
     });
 

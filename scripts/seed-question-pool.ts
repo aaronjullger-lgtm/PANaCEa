@@ -104,10 +104,10 @@ function robustJsonParse(jsonString: string) {
   try {
     // 2. Attempt to parse the cleaned JSON
     return JSON.parse(cleanedString);
-  } catch (error) {
+  } catch (error: unknown) {
     // 3. If parsing fails, log the error and the problematic raw text
     console.error(' robustJsonParse: Failed to parse JSON.');
-    console.error('  - Error:', error.message);
+    console.error('  - Error:', error instanceof Error ? error.message : String(error));
     console.error('  - Raw Text (first 500 chars):', cleanedString.substring(0, 500));
     return null; // Return null to indicate failure
   }
@@ -197,7 +197,7 @@ Return ONLY a JSON array with this exact structure (no markdown, no code blocks)
         ...q,
         conditionName: condition.name, // Ensure condition name is set
       }));
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error generating questions with Gemini:', error);
     return [];
   }
@@ -306,8 +306,8 @@ async function seedPool() {
 
         // Rate limiting - wait between API calls
         await new Promise((resolve) => setTimeout(resolve, 1500));
-      } catch (error) {
-        console.error(`      ❌ Error: ${error}`);
+      } catch (error: unknown) {
+        console.error(`      ❌ Error: ${error instanceof Error ? error.message : String(error)}`);
         totalFailed += needed;
       }
     }

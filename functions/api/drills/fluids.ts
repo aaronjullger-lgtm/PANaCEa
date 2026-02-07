@@ -76,7 +76,12 @@ export const onRequestGet = publicEndpoint(
       const shuffled = [...allCases];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        const a = shuffled[i];
+        const b = shuffled[j];
+        if (a != null && b != null) {
+          shuffled[i] = b;
+          shuffled[j] = a;
+        }
       }
 
       // Return requested number of cases (or all if fewer available)

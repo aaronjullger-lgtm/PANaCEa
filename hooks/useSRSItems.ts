@@ -44,11 +44,12 @@ async function fetchDueFromApi(): Promise<{ items: SRSItem[]; totalDue: number }
     throw new Error(`Failed to fetch due items: ${response.status}`);
   }
 
-  const data = await response.json();
-  const items = (data.items ?? []).map((item: { dueDate: string; [k: string]: unknown }) => ({
+  const data = (await response.json()) as { items?: Array<{ dueDate: string; [k: string]: unknown }>; totalDue?: number };
+  const rawItems = data.items ?? [];
+  const items: SRSItem[] = rawItems.map((item: { dueDate: string; [k: string]: unknown }) => ({
     ...item,
     dueDate: new Date(item.dueDate),
-  }));
+  })) as SRSItem[];
 
   return { items, totalDue: data.totalDue ?? items.length };
 }

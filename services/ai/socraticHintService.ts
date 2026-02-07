@@ -279,7 +279,7 @@ export class SocraticHintService {
 
     for (const pattern of buzzwordPatterns) {
       const match = stem.match(pattern);
-      if (match) return match[0];
+      if (match && match[0]) return match[0];
     }
 
     return 'the key finding';

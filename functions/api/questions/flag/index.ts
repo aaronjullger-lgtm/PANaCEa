@@ -25,20 +25,30 @@ export const onRequestPost = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true, email: true, firstName: true },
+      });
+      if (!user) {
+        return { status: 404, error: 'User not found' };
+      }
+
       // Create flag in database
       const flag = await prisma.questionFlag.create({
         data: {
-          userId: auth.userId,
-          userEmail: validated.userEmail || null,
-          userFirstName: validated.userFirstName || null,
+          id: `flag-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          userId: user.id,
+          userEmail: validated.userEmail ?? user.email ?? null,
+          userFirstName: validated.userFirstName ?? user.firstName ?? null,
           questionId: validated.questionId,
-          questionText: validated.questionText || '',
-          correctAnswer: validated.correctAnswer || null,
-          topic: validated.topic || null,
-          system: validated.system || null,
+          questionText: validated.questionText ?? '',
+          correctAnswer: validated.correctAnswer ?? null,
+          topic: validated.topic ?? null,
+          system: validated.system ?? null,
           flagType: validated.flagType,
           description: validated.description,
-          priority: validated.priority || 'medium',
+          priority: validated.priority ?? 'medium',
+          updatedAt: new Date(),
         },
       });
 
@@ -87,20 +97,26 @@ export const onRequestPost = authenticatedEndpoint(
           });
 
           if (preGenQuestion) {
-            // Create staging question for review
+            const qd = (preGenQuestion.questionData as Record<string, unknown>) || {};
+            const question = typeof qd.question === 'string' ? qd.question : '';
+            const options = Array.isArray(qd.options) ? qd.options : [];
+            const correctAnswer =
+              typeof qd.correctAnswer === 'string' ? qd.correctAnswer : 'A';
+            const explanation =
+              typeof qd.explanation === 'string' ? qd.explanation : 'See review.';
+            const vignette = typeof qd.vignette === 'string' ? qd.vignette : '';
+
             await prisma.stagingQuestion.create({
               data: {
                 id: `staging-${validated.questionId}`,
-                questionText: preGenQuestion.questionText,
-                answers: preGenQuestion.answers as string[],
-                correctIndex: preGenQuestion.correctIndex,
-                explanation: preGenQuestion.explanation,
-                system: preGenQuestion.system,
-                conditionId: preGenQuestion.conditionId,
+                question,
+                vignette,
+                options,
+                correctAnswer,
+                explanation,
+                system: preGenQuestion.system ?? 'other',
                 difficulty: preGenQuestion.difficulty,
-                tags: preGenQuestion.tags as string[],
-                status: 'flagged_for_review',
-                rejectionReason: `Auto-demoted: ${pendingFlagCount} user flags received`,
+                status: 'pending',
               },
             });
 

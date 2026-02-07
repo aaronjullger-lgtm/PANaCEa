@@ -74,7 +74,7 @@ export function AchievementsDashboard({
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-[var(--color-border)]"
         >
           {/* Header */}
           <div className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] p-6">

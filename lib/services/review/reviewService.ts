@@ -102,7 +102,7 @@ export class ReviewService {
     const originalQuestionIds = srsItems.map((item: { questionId: string }) => item.questionId);
     const originalQuestions = await this.prisma.question.findMany({
       where: { id: { in: originalQuestionIds } },
-      select: { id: true, conditionId: true, condition: true, system: true },
+      select: { id: true, conditionId: true, system: true, Condition: { select: { name: true } } },
     });
 
     interface QuestionConditionInfo {
@@ -112,14 +112,14 @@ export class ReviewService {
     }
 
     const questionConditionMap = new Map<string, QuestionConditionInfo>(
-      originalQuestions.map(
-        (q: {
-          id: string;
-          conditionId: string | null;
-          condition: string | null;
-          system: string;
-        }) => [q.id, { conditionId: q.conditionId, condition: q.condition, system: q.system }]
-      )
+      originalQuestions.map((q) => [
+        q.id,
+        {
+          conditionId: q.conditionId,
+          condition: q.Condition?.name ?? null,
+          system: q.system,
+        },
+      ])
     );
 
     const seenHistory = await this.prisma.userQuestionSeen.findMany({
@@ -201,7 +201,7 @@ export class ReviewService {
           ...(system ? { system } : {}),
         },
         take: 5,
-      })) as DBQuestion[];
+      })) as unknown as DBQuestion[];
 
       const freshFromMain =
         mainCandidates.length > 0
@@ -286,22 +286,22 @@ export class ReviewService {
       take: limit,
     });
 
-    const questionIds = savedQuestions.map((sq: { questionId: string }) => sq.questionId);
+    const questionIds = savedQuestions.map((sq) => sq.questionId);
     const questions =
       questionIds.length > 0
-        ? ((await this.prisma.question.findMany({
+        ? (await this.prisma.question.findMany({
             where: {
               id: { in: questionIds },
               ...(system ? { system } : {}),
             },
-          })) as DBQuestion[])
+          })) as unknown as DBQuestion[]
         : [];
 
     const questionMap = new Map(questions.map((q) => [q.id, q as DBQuestion]));
 
     return savedQuestions
-      .filter((sq: { questionId: string }) => questionMap.has(sq.questionId))
-      .map((sq: { questionId: string }) => {
+      .filter((sq) => questionMap.has(sq.questionId))
+      .map((sq: { questionId: string; updatedAt: Date }) => {
         const q = questionMap.get(sq.questionId)!;
         return {
           id: q.id,
@@ -314,7 +314,7 @@ export class ReviewService {
           conditionId: q.conditionId ?? undefined,
           difficulty: q.difficulty ?? undefined,
           reviewReason: 'flagged' as const,
-          priority: 80, // High priority for user-flagged
+          priority: 80,
           lastSeen: sq.updatedAt,
         };
       });
@@ -344,19 +344,19 @@ export class ReviewService {
       })
       .slice(0, limit);
 
-    const questionIds = uniqueAttempts.map((a: { questionId: string }) => a.questionId);
+    const questionIds = uniqueAttempts.map((a) => a.questionId);
     const questions =
       questionIds.length > 0
-        ? ((await this.prisma.question.findMany({
+        ? (await this.prisma.question.findMany({
             where: { id: { in: questionIds } },
-          })) as DBQuestion[])
+          })) as unknown as DBQuestion[]
         : [];
 
     const questionMap = new Map(questions.map((q) => [q.id, q as DBQuestion]));
 
     return uniqueAttempts
-      .filter((a: { questionId: string }) => questionMap.has(a.questionId))
-      .map((a: { questionId: string }) => {
+      .filter((a) => questionMap.has(a.questionId))
+      .map((a: { questionId: string; createdAt: Date }) => {
         const q = questionMap.get(a.questionId)!;
         return {
           id: q.id,
@@ -369,7 +369,7 @@ export class ReviewService {
           conditionId: q.conditionId ?? undefined,
           difficulty: q.difficulty ?? undefined,
           reviewReason: 'missed' as const,
-          priority: 70, // Medium-high priority
+          priority: 70,
           lastSeen: a.createdAt,
         };
       });
@@ -420,7 +420,7 @@ export class ReviewService {
       },
       take: limit,
       orderBy: { id: 'asc' },
-    })) as DBQuestion[];
+    })) as unknown as DBQuestion[];
 
     return questions.map((q: DBQuestion) => {
       const stats = systemStats.get(q.system);

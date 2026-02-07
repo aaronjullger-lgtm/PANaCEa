@@ -60,9 +60,10 @@ export function getApiEndpoint(endpoint: ApiEndpoint | string): string {
     return '/api';
   }
 
-  // If it's a known endpoint constant, use it
+  // If it's a known endpoint constant, use it (only string values; some keys are functions)
   if (endpoint in API_ENDPOINTS) {
-    return API_ENDPOINTS[endpoint as ApiEndpoint];
+    const value = API_ENDPOINTS[endpoint as ApiEndpoint];
+    if (typeof value === 'string') return value;
   }
 
   // If it's already a full path, return as-is

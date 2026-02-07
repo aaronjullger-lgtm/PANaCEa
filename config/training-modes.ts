@@ -44,8 +44,8 @@ export type TrainingModeId =
   | 'polypharmacy_puzzle'
   | 'physiology_drill'
   | 'anatomy_review'
-  | 'medical_wordle' // Future mode - not yet in MODE_REGISTRY
-  | 'cram_mode' // Future mode - not yet in MODE_REGISTRY
+  | 'medical_wordle'
+  | 'cram_mode'
   | 'radiology_scroll'; // Future mode - not yet in MODE_REGISTRY
 
 /**
@@ -443,17 +443,25 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     route: '/modes/cram-mode',
     estimatedMinutes: 15,
   },
-  // Polypharmacy: planned; enable when backend/UI is ready. See STRATEGIC_10_SPRINT_ROADMAP.md.
   {
     id: 'polypharmacy_puzzle',
     label: 'Polypharmacy Puzzle',
-    description: 'Manage complex med lists safely',
+    description: 'Manage complex med lists - identify interactions and optimize therapy',
     category: 'clinical_simulation',
-    iconName: 'PillBottle',
+    iconName: 'Pill',
     theme: 'emerald',
     route: '/modes/polypharmacy-puzzle',
     estimatedMinutes: 12,
-    isComingSoon: true,
+  },
+  {
+    id: 'medical_wordle',
+    label: 'Medical Wordle',
+    description: 'Daily medical term puzzle - guess in 6 tries',
+    category: 'specialty_drills',
+    iconName: 'Grid3x3',
+    theme: 'violet',
+    route: '/modes/medical-wordle',
+    estimatedMinutes: 5,
   },
 ];
 

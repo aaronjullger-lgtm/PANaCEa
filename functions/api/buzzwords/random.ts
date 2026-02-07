@@ -29,11 +29,11 @@ export const onRequestGet = publicEndpoint(BuzzwordsRandomSchema, async (context
   try {
     // Use raw query for random selection
     // Note: RANDOM() is PostgreSQL specific. If using MySQL/SQLite, syntax differs.
-    const buzzwords = await prisma.$queryRaw`
+    const buzzwords = (await prisma.$queryRaw`
       SELECT * FROM "Buzzword"
       ORDER BY RANDOM()
       LIMIT ${countValue}
-    `;
+    `) as unknown[];
 
     logger.info(`Fetched ${buzzwords.length} random buzzwords`, { count: countValue });
     return { data: buzzwords };

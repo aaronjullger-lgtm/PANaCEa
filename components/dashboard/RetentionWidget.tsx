@@ -41,10 +41,10 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
       const response = await fetch(getApiEndpoint('/api/srs/stats'), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await response.json();
+      const data = (await response.json()) as { success?: boolean; stats?: unknown };
 
-      if (data.success) {
-        setStats(data.stats);
+      if (data.success && data.stats != null) {
+        setStats(data.stats as SRSStats);
       }
     } catch (error) {
       console.error('Failed to load SRS stats:', error);

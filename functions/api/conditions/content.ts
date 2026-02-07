@@ -6,11 +6,7 @@
  */
 
 import { publicEndpoint, withCors } from '../_shared/middleware';
-import {
-  createEdgePrismaClient,
-  safePrismaDisconnect,
-  CACHE_STRATEGY,
-} from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { z } from 'zod';
 
 // Flattened schema for query params
@@ -34,7 +30,6 @@ export const onRequestGet = publicEndpoint(
           condition: { equals: conditionName, mode: 'insensitive' },
           status: 'published',
         },
-        ...CACHE_STRATEGY.STATIC, // 1h cache - medical content rarely changes
       });
 
       // Fallback: try searching by conditionId
@@ -44,7 +39,6 @@ export const onRequestGet = publicEndpoint(
             conditionId: conditionName,
             status: 'published',
           },
-          ...CACHE_STRATEGY.STATIC, // 1h cache
         });
       }
 
@@ -69,24 +63,21 @@ export const onRequestGet = publicEndpoint(
             overview: record.overview,
             pathophysiology: record.pathophysiology,
             symptoms: record.symptoms,
-            signs: record.signs,
+            signs: record.physicalExam ?? undefined,
             diagnostics: record.diagnostics,
             treatment: record.treatment,
             differentialDiagnosis: record.differentialDiagnosis,
             complications: record.complications,
             prognosis: record.prognosis,
-            classicTriad: record.classicTriad,
+            classicTriad: record.classic_triad ?? undefined,
             buzzwords: record.buzzwords,
-            clinicalPearls: record.clinicalPearls,
-            examFindings: record.examFindings,
+            clinicalPearls: record.clinical_pearls ?? undefined,
+            examFindings: record.physicalExam ?? undefined,
             riskFactors: record.riskFactors,
-            firstLineTests: record.firstLineTests,
-            goldStandardTest: record.goldStandardTest,
-            firstLineTreatment: record.firstLineTreatment,
-            contraindications: record.contraindications,
-            monitoring: record.monitoring,
-            patientEducation: record.patientEducation,
-            aiConfidence: record.aiConfidence,
+            firstLineTests: record.best_initial_test ?? undefined,
+            goldStandardTest: record.gold_standard_dx ?? undefined,
+            firstLineTreatment: record.first_line_rx ?? undefined,
+            patientEducation: record.patient_education ?? undefined,
           },
         },
       };

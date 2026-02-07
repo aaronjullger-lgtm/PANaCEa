@@ -24,7 +24,7 @@ export const AccuracyCard = () => {
 
   return (
     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-sm">
-      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
+      <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4">
         Current Accuracy
       </h3>
 
@@ -65,7 +65,7 @@ export const CustomColorAccuracy = () => {
 export const CompactAccuracyBadge = () => {
   return (
     <div className="inline-flex items-center gap-3">
-      <span className="text-sm text-gray-600">Quick Stats:</span>
+      <span className="text-sm text-[var(--color-text-secondary)]">Quick Stats:</span>
       <RadialProgressCompact value={82} />
     </div>
   );
@@ -99,7 +99,7 @@ export const RecentFormCard = ({ sessionAccuracies }: { sessionAccuracies: numbe
 
   return (
     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-sm">
-      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Recent Form</h3>
+      <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4">Recent Form</h3>
 
       <TrendSparkline
         data={sessionAccuracies}
@@ -122,10 +122,10 @@ export const InlinePerformanceTrend = () => {
   const recentScores = [70, 75, 72, 80, 85, 83, 88, 90];
 
   return (
-    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+    <div className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)] rounded-lg">
       <div>
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Performance Trend</h4>
-        <p className="text-xs text-gray-500 dark:text-gray-400">Last 8 sessions</p>
+        <h4 className="text-sm font-medium text-[var(--color-text-primary)]">Performance Trend</h4>
+        <p className="text-xs text-[var(--color-text-muted)]">Last 8 sessions</p>
       </div>
 
       <TrendSparkline
@@ -185,12 +185,12 @@ export const StudyActivityCalendar = ({
     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Study Activity</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">Last 13 weeks</p>
+        <p className="text-xs text-[var(--color-text-muted)]">Last 13 weeks</p>
       </div>
 
       <ActivityHeatmap performanceData={performanceData} weeks={13} />
 
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+      <p className="text-xs text-[var(--color-text-muted)] mt-4">
         Click any day to view detailed statistics
       </p>
     </div>
@@ -217,7 +217,7 @@ export const ComprehensiveDashboardCard = ({
       {/* Top Row: Radial Progress + Trend */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Accuracy Circle */}
-        <div className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+        <div className="flex flex-col items-center justify-center p-4 bg-[var(--color-bg-secondary)] rounded-xl">
           <RadialProgress
             value={accuracy}
             size={140}
@@ -228,8 +228,8 @@ export const ComprehensiveDashboardCard = ({
         </div>
 
         {/* Recent Form Sparkline */}
-        <div className="flex flex-col justify-center p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-          <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">
+        <div className="flex flex-col justify-center p-4 bg-[var(--color-bg-secondary)] rounded-xl">
+          <h3 className="text-sm font-medium text-[var(--color-text-secondary)]  mb-3">
             Recent Sessions
           </h3>
           <TrendSparkline
@@ -273,7 +273,7 @@ export const StatisticsTab = ({
         {/* Recent Form with Sparkline */}
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            <span className="text-sm font-medium text-[var(--color-text-secondary)] ">
               Recent Form
             </span>
             <span
@@ -297,11 +297,11 @@ export const StatisticsTab = ({
 
         {/* Current Streak */}
         <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl p-4 text-center">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400 block mb-2">
+          <span className="text-sm font-medium text-[var(--color-text-secondary)]  block mb-2">
             Active Streak
           </span>
           <div className="text-4xl font-bold text-orange-500">{currentStreak}</div>
-          <span className="text-xs text-gray-500 dark:text-gray-400">questions in a row</span>
+          <span className="text-xs text-[var(--color-text-muted)]">questions in a row</span>
         </div>
 
         {/* Overall Accuracy with Radial */}

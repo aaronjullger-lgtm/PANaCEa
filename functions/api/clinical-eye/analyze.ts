@@ -24,7 +24,11 @@ const AnalyzeBodySchema = z.object({
 
 interface Env {
   GEMINI_API_KEY: string;
-  RATE_LIMIT_KV?: KVNamespace;
+  RATE_LIMIT_KV?: {
+    get(key: string, type?: 'text'): Promise<string | null>;
+    get(key: string, type: 'json'): Promise<unknown>;
+    put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
+  };
 }
 
 export const onRequestOptions = withCors();
@@ -47,7 +51,7 @@ export const onRequestPost = authenticatedEndpoint(AnalyzeBodySchema, async (con
 
   const identifier = getRateLimitIdentifier(request);
   const { response: rateLimitResponse, headers: rateLimitHeaders } = await withRateLimit(
-    env as { RATE_LIMIT_KV?: KVNamespace },
+    env,
     identifier,
     'gemini'
   );

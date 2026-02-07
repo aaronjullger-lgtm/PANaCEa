@@ -88,15 +88,16 @@ function analyzeService(filepath: string): ServiceAnalysis | null {
       /export\s+(const|function|class|async function|type|interface)\s+(\w+)/g
     );
     for (const match of exportMatches) {
-      exports.push(match[2]);
+      if (match[2]) exports.push(match[2]);
     }
 
     // Extract imports from local services
     const imports: string[] = [];
     const importMatches = content.matchAll(/from\s+['"](\.\.?\/?[^'"]+)['"]/g);
     for (const match of importMatches) {
-      if (match[1].includes('service') || match[1].includes('Service')) {
-        imports.push(match[1]);
+      const path = match[1];
+      if (path && (path.includes('service') || path.includes('Service'))) {
+        imports.push(path);
       }
     }
 

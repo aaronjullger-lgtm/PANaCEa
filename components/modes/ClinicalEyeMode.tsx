@@ -96,13 +96,39 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
 
   // Load sample diagnostic question
   const handleStartExercise = useCallback(() => {
-    // Sample diagnostic (in production, fetch from API)
+    // Sample diagnostic (in production, fetch from /api/clinical-eye/question)
+    // For demo: using data URL with simple gradient to show UI/interaction pattern
+    const placeholderImageUrl = 'data:image/svg+xml;base64,' + btoa(`
+      <svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="1024" height="1024" fill="url(#bg)"/>
+        <text x="512" y="450" font-family="Arial" font-size="24" fill="#94a3b8" text-anchor="middle">
+          Demo: Chest X-Ray - Pneumothorax
+        </text>
+        <text x="512" y="490" font-family="Arial" font-size="18" fill="#64748b" text-anchor="middle">
+          Click regions to identify findings
+        </text>
+        <text x="512" y="530" font-family="Arial" font-size="16" fill="#475569" text-anchor="middle">
+          (Production uses real medical images from database)
+        </text>
+        <ellipse cx="700" cy="280" rx="80" ry="120" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="5,5"/>
+        <text x="700" y="420" font-family="Arial" font-size="14" fill="#ef4444" text-anchor="middle">
+          Target: Pneumothorax Line
+        </text>
+      </svg>
+    `);
+    
     const sampleDiagnostic: PointAndClickDiagnostic = {
       questionId: 'clinical-eye-001',
       image: {
         id: 'xray-pneumothorax-001',
         modality: 'chest_xray',
-        imageUrl: '/sample-chest-xray.jpg', // Placeholder
+        imageUrl: placeholderImageUrl,
         dimensions: { width: 1024, height: 1024 },
         findings: [
           {

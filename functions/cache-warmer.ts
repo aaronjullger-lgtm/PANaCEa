@@ -42,7 +42,7 @@ export default {
           status: 'published',
         },
         orderBy: {
-          viewCount: 'desc',
+          updatedAt: 'desc',
         },
         take: 50,
       });
@@ -60,7 +60,7 @@ export default {
       const highYieldConditions = await prisma.medicalContent.findMany({
         where: {
           status: 'published',
-          panceYield: {
+          pance_yield: {
             gte: 90,
           },
         },

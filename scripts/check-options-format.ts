@@ -1,8 +1,10 @@
 import { prisma } from './_shared/db';
+import type { PrismaClient } from '@prisma/client';
 
 async function check() {
+  const db = prisma as PrismaClient;
   // Check main Question table raw data
-  const mainQuestions = await prisma.question.findMany({
+  const mainQuestions = await db.question.findMany({
     take: 5,
     select: { id: true, question: true, options: true, correctAnswer: true },
   });
@@ -17,7 +19,7 @@ async function check() {
   }
 
   // Try to find a question with valid string array options
-  const allQuestions = await prisma.question.findMany({
+  const allQuestions = await db.question.findMany({
     take: 50,
     select: { id: true, options: true },
   });
@@ -41,7 +43,7 @@ async function check() {
   console.log('Objects:', withObjectOptions);
   console.log('Strings:', withStringOptions);
 
-  await prisma.$disconnect();
+  await db.$disconnect();
 }
 
 check().catch(console.error);

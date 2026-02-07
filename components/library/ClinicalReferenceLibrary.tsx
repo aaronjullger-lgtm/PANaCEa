@@ -12,14 +12,36 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, RefreshCw, X, ChevronLeft, ChevronRight, Search, Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import {
+  AlertCircle,
+  RefreshCw,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Sparkles,
+  Info,
+  Stethoscope,
+  ClipboardList,
+  Activity,
+  Lightbulb,
+  Target,
+  Pill,
+  FlaskConical,
+  AlertTriangle,
+  BookOpen,
+} from 'lucide-react';
 import { LibrarySidebar } from './LibrarySidebar';
 import { LibraryBreadcrumb } from './LibraryBreadcrumb';
 import { EnhancedConditionCard } from './EnhancedConditionCard';
-import { ConditionMaster } from './ConditionMaster';
 import { LoadingOverlay } from '@/components/ui/layouts';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { YieldBadge, SystemBadge } from '@/components/ui/badges';
+import { ContentFieldRenderer } from '@/components/ui/content-renderers';
 import { useSemanticSearch } from '@/hooks/useSemanticSearch';
+import { parseListField, parseTextField, normalizeMedicalContent } from '@/lib/utils/normalization';
+import { LIBRARY_SECTION_TITLES } from '@/lib/conditionSections';
 import type { MedicalContentDisplay } from '@/types/medical-content';
 
 interface SystemOption {
@@ -74,7 +96,6 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   } = useSemanticSearch(searchQuery, { requestAnswer: true, limit: 20 });
 
   const isSearchMode = searchQuery.trim().length > 0;
-  const displayContent = isSearchMode ? semanticResults : filteredContent;
 
   // Systems loading state
   const [systemsLoading, setSystemsLoading] = useState(true);
@@ -225,6 +246,8 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
     return result;
   }, [content, activeSubcategory, highYieldOnly, searchQuery]);
+
+  const displayContent = isSearchMode ? semanticResults : filteredContent;
 
   // Group content by subcategory for display (browse mode only; search mode uses flat list)
   const groupedContent = useMemo(() => {
@@ -623,7 +646,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-[60%] min-w-[500px] max-w-4xl bg-[var(--color-bg-primary)] border-l border-[var(--color-border)] shadow-2xl z-50 flex flex-col"
+              className="fixed top-0 right-0 h-full w-[60%] min-w-[500px] max-w-4xl bg-[var(--color-bg-primary)] border-l border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)] z-50 flex flex-col"
             >
               {/* Panel Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
@@ -672,24 +695,6 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 /**
  * ConditionMasterEmbedded - Enhanced deep-dive view for condition details
  */
-import ReactMarkdown from 'react-markdown';
-import {
-  Info,
-  Stethoscope,
-  ClipboardList,
-  Activity,
-  Lightbulb,
-  Target,
-  Pill,
-  FlaskConical,
-  AlertTriangle,
-  BookOpen,
-} from 'lucide-react';
-import { YieldBadge, SystemBadge } from '@/components/ui/badges';
-import { parseListField, parseTextField, normalizeMedicalContent } from '@/lib/utils/normalization';
-import { ContentFieldRenderer } from '@/components/ui/content-renderers';
-import { LIBRARY_SECTION_TITLES } from '@/lib/conditionSections';
-
 // Types for display priority
 interface DisplayPriority {
   primary: string;
@@ -1108,7 +1113,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         {/* Section 1: Clinical Presentation */}
         <Section
           id="clinical"
-          title={LIBRARY_SECTION_TITLES.clinical}
+          title={LIBRARY_SECTION_TITLES.clinical ?? 'Clinical Presentation'}
           icon={Stethoscope}
           accentColor="text-blue-400"
           expandedSections={expandedSections}
@@ -1124,7 +1129,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         {/* Section 2: Workup - Diagnostics only */}
         <Section
           id="workup"
-          title={LIBRARY_SECTION_TITLES.workup}
+          title={LIBRARY_SECTION_TITLES.workup ?? 'Workup'}
           icon={FlaskConical}
           accentColor="text-amber-400"
           expandedSections={expandedSections}
@@ -1136,7 +1141,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         {/* Section 3: Treatment - Separate from workup */}
         <Section
           id="treatment"
-          title={LIBRARY_SECTION_TITLES.treatment}
+          title={LIBRARY_SECTION_TITLES.treatment ?? 'Treatment'}
           icon={Pill}
           accentColor="text-emerald-400"
           expandedSections={expandedSections}
@@ -1154,7 +1159,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         {/* Section 4: Outcomes - Complications, Prognosis, Disposition */}
         <Section
           id="outcomes"
-          title={LIBRARY_SECTION_TITLES.outcomes}
+          title={LIBRARY_SECTION_TITLES.outcomes ?? 'Outcomes'}
           icon={AlertTriangle}
           accentColor="text-rose-400"
           expandedSections={expandedSections}
@@ -1169,7 +1174,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         {/* Section 5: Background & Etiology */}
         <Section
           id="background"
-          title={LIBRARY_SECTION_TITLES.background}
+          title={LIBRARY_SECTION_TITLES.background ?? 'Background'}
           icon={Info}
           accentColor="text-purple-400"
           expandedSections={expandedSections}

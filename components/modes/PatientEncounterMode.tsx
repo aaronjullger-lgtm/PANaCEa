@@ -958,7 +958,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   // Landing Page View - Clinical White/Navy Theme
   if (viewState === 'landing') {
     return (
-      <div className="min-h-screen bg-slate-950 text-white transition-colors duration-300">
+      <div className="min-h-screen bg-slate-950 text-slate-100 transition-colors duration-300">
         {/* Header */}
         <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -991,7 +991,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           >
             {/* Hero Section */}
             <div className="text-center space-y-4 mb-12">
-              <h2 className="text-4xl font-bold text-white">Virtual Patient Encounter</h2>
+              <h2 className="text-4xl font-bold text-slate-100">Virtual Patient Encounter</h2>
               <p className="text-xl text-slate-400 max-w-2xl mx-auto">
                 Practice clinical reasoning in a realistic patient interview simulation. Gather
                 history, perform exams, order tests, and make your diagnosis.
@@ -1001,7 +1001,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             {/* What You'll Practice */}
             <div className="grid md:grid-cols-2 gap-6 mb-8">
               <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
                   <Stethoscope className="w-5 h-5 text-slate-400" />
                   Clinical Skills Practiced
                 </h3>
@@ -1030,7 +1030,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </div>
 
               <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
                   <Award className="w-5 h-5 text-slate-400" />
                   How You're Evaluated
                 </h3>
@@ -1193,7 +1193,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   if (viewState === 'loading_encounter') {
     return (
-      <div className="min-h-screen bg-slate-950 text-white">
+      <div className="min-h-screen bg-slate-950 text-slate-100">
         <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1201,7 +1201,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <MessageSquare className="w-6 h-6 text-slate-500" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">Virtual OSCE</h1>
+                <h1 className="text-xl font-bold text-slate-100">Virtual OSCE</h1>
                 <p className="text-sm text-slate-400">Preparing your encounter…</p>
               </div>
             </div>
@@ -1273,7 +1273,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     const seconds = elapsedSeconds % 60;
 
     return (
-      <div className="min-h-screen bg-slate-950 text-white">
+      <div className="min-h-screen bg-slate-950 text-slate-100">
         {/* Header */}
         <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -1282,7 +1282,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <MessageSquare className="w-6 h-6 text-slate-500" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">Virtual OSCE</h1>
+                <h1 className="text-xl font-bold text-slate-100">Virtual OSCE</h1>
                 <p className="text-sm text-slate-400">
                   Phase: <span className="font-semibold text-slate-300 uppercase">{phase}</span>
                 </p>
@@ -1516,7 +1516,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-xl font-bold text-white truncate">
+                      <h2 className="text-xl font-bold text-slate-100 truncate">
                         {currentCase.patientName}
                       </h2>
                       <button className="text-slate-400 p-1">
@@ -1743,7 +1743,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.1 }}
                   className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-white">Ask a Question</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-slate-100">Ask a Question</h3>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -1752,7 +1752,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onKeyPress={(e) => e.key === 'Enter' && handleAskQuestion()}
                       placeholder="e.g., When did the chest pain start?"
                       className="flex-1 px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg 
-                               text-white placeholder-slate-500 
+                               text-slate-100 placeholder-slate-500 
                                focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-transparent shadow-sm"
                       autoComplete="off"
                     />
@@ -1769,7 +1769,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   <div className="mt-4 flex justify-end">
                     <button
                       onClick={() => advancePhase('physical')}
-                      className="text-sm text-slate-400 hover:text-white hover:underline flex items-center gap-1"
+                      className="text-sm text-slate-400 hover:text-slate-100 hover:underline flex items-center gap-1"
                     >
                       Move to Physical Exam <ArrowRight className="w-4 h-4" />
                     </button>
@@ -1785,7 +1785,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.1 }}
                   className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-white">Perform Physical Exam</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-slate-100">Perform Physical Exam</h3>
                   <p className="text-sm text-slate-400 mb-3">
                     Describe the maneuver you want to perform (e.g., "Auscultate heart", "Palpate
                     abdomen").
@@ -1798,7 +1798,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onKeyPress={(e) => e.key === 'Enter' && handlePhysicalExam()}
                       placeholder="e.g., Auscultate lungs"
                       className="flex-1 px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg 
-                               text-white placeholder-slate-500 
+                               text-slate-100 placeholder-slate-500 
                                focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-transparent shadow-sm"
                       autoComplete="off"
                     />
@@ -1835,7 +1835,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.1 }}
                   className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-white">Order Diagnostics</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-slate-100">Order Diagnostics</h3>
                   <p className="text-sm text-slate-400 mb-3">
                     Order labs or imaging (e.g., "CBC", "Chest X-Ray").
                   </p>
@@ -1847,7 +1847,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onKeyPress={(e) => e.key === 'Enter' && handleOrderTest()}
                       placeholder="e.g., CBC, BMP, CXR"
                       className="flex-1 px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg 
-                               text-white placeholder-slate-500 
+                               text-slate-100 placeholder-slate-500 
                                focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-transparent shadow-sm"
                       autoComplete="off"
                     />
@@ -1868,7 +1868,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   <div className="mt-4 flex justify-end">
                     <button
                       onClick={() => advancePhase('diagnosis')}
-                      className="text-sm text-slate-400 hover:text-white hover:underline flex items-center gap-1"
+                      className="text-sm text-slate-400 hover:text-slate-100 hover:underline flex items-center gap-1"
                     >
                       Move to Diagnosis <ArrowRight className="w-4 h-4" />
                     </button>
@@ -1884,14 +1884,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.2 }}
                   className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-white">Final Diagnosis</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-slate-100">Final Diagnosis</h3>
                   <input
                     type="text"
                     value={userDiagnosis}
                     onChange={(e) => setUserDiagnosis(e.target.value)}
                     placeholder="Enter your primary diagnosis..."
                     className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-lg mb-4
-                             text-white placeholder-slate-500 
+                             text-slate-100 placeholder-slate-500 
                              focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-transparent shadow-sm"
                     autoComplete="off"
                   />
@@ -1923,7 +1923,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md space-y-4"
                 >
                   <div>
-                    <h3 className="text-lg font-semibold mb-4 text-white">Treatment Plan</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-slate-100">Treatment Plan</h3>
                     <p className="text-sm text-slate-400 mb-3">
                       Outline your management plan (medications, disposition, follow-up).
                     </p>
@@ -2009,7 +2009,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-slate-950 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md h-[600px] flex flex-col"
               >
-                <h3 className="text-lg font-semibold mb-4 text-white">Encounter Log</h3>
+                <h3 className="text-lg font-semibold mb-4 text-slate-100">Encounter Log</h3>
 
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                   {/* History Log */}
@@ -2234,7 +2234,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
     if (showStreaming && !preceptorFeedback) {
       return (
-        <div className="min-h-screen bg-slate-950 text-white">
+        <div className="min-h-screen bg-slate-950 text-slate-100">
           <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
             <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -2270,7 +2270,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
     if (preceptorFeedback) {
       return (
-      <div className="min-h-screen bg-slate-950 text-white">
+      <div className="min-h-screen bg-slate-950 text-slate-100">
         {/* Header */}
         <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -2400,7 +2400,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 transition={{ delay: 0.3 }}
                 className="bg-slate-900 rounded-xl p-6 border border-slate-800"
               >
-                <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+                <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-slate-500" /> Strengths
                 </h3>
                 <ul className="space-y-2">
@@ -2421,7 +2421,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 transition={{ delay: 0.4 }}
                 className="bg-slate-900 rounded-xl p-6 border border-slate-800"
               >
-                <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+                <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
                   <ArrowRight className="w-5 h-5 text-slate-500" /> Areas for Improvement
                 </h3>
                 <ul className="space-y-2">
@@ -2444,7 +2444,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               transition={{ delay: 0.5 }}
               className="bg-slate-900 rounded-xl p-6 border border-slate-800"
             >
-              <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
                 <XCircle className="w-5 h-5 text-slate-500" /> Missed Critical Cues
               </h3>
               <p className="text-sm text-slate-400 mb-3">
@@ -2472,7 +2472,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               transition={{ delay: 0.51 }}
               className="bg-slate-900 rounded-xl p-6 border border-red-900/50"
             >
-              <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-red-500" /> Dangerous or Inappropriate Actions
               </h3>
               <p className="text-sm text-slate-400 mb-3">
@@ -2499,7 +2499,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             transition={{ delay: 0.52 }}
             className="bg-slate-900 rounded-xl p-6 border border-slate-800"
           >
-            <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+            <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-slate-500" /> Rubric Checklist
             </h3>
             {gradeResultLoading ? (
@@ -2577,7 +2577,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               transition={{ delay: 0.53 }}
               className="bg-slate-900 rounded-xl p-6 border border-slate-800"
             >
-              <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
                 <Heart className="w-5 h-5 text-slate-500" aria-hidden />
                 Bedside Manner
               </h3>
@@ -2614,7 +2614,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               transition={{ delay: 0.6 }}
               className="bg-slate-900 rounded-xl p-6 border border-slate-800"
             >
-              <h3 className="text-lg font-semibold mb-4 text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-slate-500" /> Differential Diagnoses to Consider
               </h3>
               <p className="text-sm text-slate-400 mb-3">

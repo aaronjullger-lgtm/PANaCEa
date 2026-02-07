@@ -14,15 +14,20 @@ const router = Router();
 
 // API sync endpoint with authentication
 // GET: Fetch user data (PerformanceRecords, SRSItems, SavedQuestions)
-router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.auth.userId;
+    const userId = req.auth?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
 
     if (!process.env.DATABASE_URL) {
-      return res.json({
+      res.json({
         success: true,
         data: { performanceRecords: [], srsItems: [], savedQuestions: [] },
       });
+      return;
     }
 
     // Ensure user exists (create if needed) - handles case where Clerk webhook hasn't fired yet
@@ -64,13 +69,18 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
 });
 
 // POST: Push local changes to server (PerformanceRecords, SRSItems, SavedQuestions)
-router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.auth.userId;
+    const userId = req.auth?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
     const { performanceRecords, srsItems, savedQuestions } = req.body;
 
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true, message: 'Sync acknowledged (No DB configured)' });
+      res.json({ success: true, message: 'Sync acknowledged (No DB configured)' });
+      return;
     }
 
     const user = await prisma.user.findUnique({
@@ -78,7 +88,8 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User profile not found. Please log in again.' });
+      res.status(404).json({ error: 'User profile not found. Please log in again.' });
+      return;
     }
 
     const internalUserId = user.id;

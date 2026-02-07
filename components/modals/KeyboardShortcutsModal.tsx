@@ -74,8 +74,11 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen,
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-hidden border border-[var(--color-border)] ring-1 ring-black/10 dark:ring-white/10"
+            className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] w-full max-w-lg max-h-[85vh] overflow-hidden border border-[var(--color-border)]"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="keyboard-shortcuts-title"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
@@ -83,7 +86,7 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen,
                 <div className="p-2 bg-[var(--color-bg-secondary)] rounded-lg">
                   <Keyboard className="w-5 h-5 text-[var(--color-text-secondary)]" />
                 </div>
-                <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+                <h2 id="keyboard-shortcuts-title" className="text-xl font-bold text-[var(--color-text-primary)]">
                   Keyboard Shortcuts
                 </h2>
               </div>

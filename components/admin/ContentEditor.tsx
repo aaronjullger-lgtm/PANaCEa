@@ -136,22 +136,26 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to generate content');
+        const errBody = (await response.json()) as { error?: string };
+        throw new Error(errBody.error || 'Failed to generate content');
       }
 
-      const result = await response.json();
+      const result = (await response.json()) as { content?: { content?: string } };
       const generatedContent = result.content;
 
       // Update the editor with AI-generated content
-      setEditedContent((prev) => ({
-        ...prev,
-        content: generatedContent.content,
-      }));
+      if (generatedContent?.content != null) {
+        setEditedContent((prev) => ({
+          ...prev,
+          content: generatedContent.content as string,
+        }));
+      }
       setHasChanges(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to generate content:', error);
-      setValidationErrors([error.message || 'Failed to generate content with AI']);
+      setValidationErrors([
+        error instanceof Error ? error.message : 'Failed to generate content with AI',
+      ]);
     } finally {
       setGenerating(false);
     }
@@ -167,7 +171,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl max-w-6xl w-full my-8"
+          className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-6xl w-full my-8 border border-[var(--color-border)]"
         >
           {/* Header */}
           <div className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] p-6 rounded-t-2xl">

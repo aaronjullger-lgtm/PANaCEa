@@ -119,7 +119,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
       case 'exhale':
         return 'from-green-400 to-green-600';
       default:
-        return 'from-gray-400 to-gray-600';
+        return 'from-slate-400 to-slate-600';
     }
   };
 
@@ -159,13 +159,16 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-xl flex items-center justify-center z-50 p-4"
         onClick={handleDismiss}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="wellness-modal-title"
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: 'spring', damping: 20 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-8"
+          className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-md w-full p-8 border border-[var(--color-border)]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -177,23 +180,23 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
             >
               <Heart className="w-8 h-8 text-white" />
             </motion.div>
-            <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+            <h2 id="wellness-modal-title" className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
               Wellness Check
             </h2>
-            <p className="text-gray-600 dark:text-gray-300">{reasonMessages[reason]}</p>
+            <p className="text-[var(--color-text-secondary)]">{reasonMessages[reason]}</p>
           </div>
 
           {/* Wellness Tips */}
           <div className="space-y-4 mb-6">
             <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <Coffee className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <p className="text-sm text-[var(--color-text-secondary)]">
                 Take a moment to drink water or grab a healthy snack
               </p>
             </div>
             <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <Wind className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <p className="text-sm text-[var(--color-text-secondary)]">
                 Try the 4-7-8 breathing technique to reset your focus
               </p>
             </div>
@@ -229,7 +232,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
             </div>
 
             {/* Instructions */}
-            <p className="text-center text-gray-700 dark:text-gray-300 mb-4 min-h-[1.5rem]">
+            <p className="text-center text-[var(--color-text-secondary)] mb-4 min-h-[1.5rem]">
               {getBreathingInstruction()}
             </p>
 
@@ -259,8 +262,9 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
           {/* Dismiss Button */}
           <button
             onClick={handleDismiss}
-            className="w-full py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 
-              rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            className="w-full py-3 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] 
+              rounded-lg font-semibold hover:bg-[var(--color-bg-secondary)] transition-colors"
+            aria-label="Dismiss and continue studying"
           >
             I'm Ready to Continue
           </button>

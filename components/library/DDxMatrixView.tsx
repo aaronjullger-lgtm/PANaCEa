@@ -180,12 +180,15 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="relative w-full max-w-[95vw] max-h-[95vh] bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] shadow-2xl overflow-hidden flex flex-col"
+        className="relative w-full max-w-[95vw] max-h-[95vh] bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden flex flex-col"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ddx-matrix-title"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[var(--color-border)] bg-gradient-to-r from-[var(--color-bg-secondary)] to-transparent">
           <div>
-            <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+            <h2 id="ddx-matrix-title" className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
               <ArrowLeftRight className="w-5 h-5 text-[var(--color-accent)]" />
               DDx Matrix Comparison
             </h2>

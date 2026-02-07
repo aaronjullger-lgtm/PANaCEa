@@ -52,7 +52,9 @@ export const onRequestGet = authenticatedEndpoint(
       const category = validated?.query?.category;
 
       const results = await prisma.clinicalGuideline.findMany({
-        where: category ? { category } : undefined,
+        where: category
+          ? { name: { contains: category, mode: 'insensitive' } }
+          : undefined,
         orderBy: { name: 'asc' },
       });
 

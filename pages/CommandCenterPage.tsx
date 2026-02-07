@@ -88,13 +88,13 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
             examLabel={examLabel}
             onStartSession={onStartSession}
             onNavigateToDrillMode={onNavigateToDrillMode}
-            onNavigateToToolkit={onNavigateToToolkit}
-            onNavigateToGapAnalysis={onNavigateToGapAnalysis}
-            onNavigateToIntegrations={onNavigateToIntegrations}
-            onNavigateToReference={onNavigateToReference}
-            onNavigateToMyLibrary={onNavigateToMyLibrary}
-            onNavigateToStudyCompanion={onNavigateToStudyCompanion}
-            onNavigateToSrsFlashcards={onNavigateToSrsFlashcards}
+            onNavigateToToolkit={onNavigateToToolkit ?? (() => {})}
+            onNavigateToGapAnalysis={onNavigateToGapAnalysis ?? (() => {})}
+            onNavigateToIntegrations={onNavigateToIntegrations ?? (() => {})}
+            onNavigateToReference={onNavigateToReference ?? (() => {})}
+            onNavigateToMyLibrary={onNavigateToMyLibrary ?? (() => {})}
+            onNavigateToStudyCompanion={onNavigateToStudyCompanion ?? (() => {})}
+            onNavigateToSrsFlashcards={onNavigateToSrsFlashcards ?? (() => {})}
           />
         </motion.div>
       </div>

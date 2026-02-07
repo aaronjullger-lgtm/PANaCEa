@@ -389,7 +389,7 @@ export function generateMnemonic(condition: string): string {
   );
 
   if (partialMatch) {
-    return MNEMONIC_DATABASE[partialMatch];
+    return MNEMONIC_DATABASE[partialMatch] ?? '[Mnemonic: None]';
   }
 
   return '[Mnemonic: None]';

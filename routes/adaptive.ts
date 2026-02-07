@@ -21,14 +21,13 @@ const router = Router();
  * GET /api/adaptive/recommendations
  * Generates and returns current study recommendations
  */
-router.get('/recommendations', requireAuth, async (req: Request, res: Response) => {
+router.get('/recommendations', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.auth?.userId;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-
-    // Ensure user exists in our DB (sync if needed, though clerkAuth usually handles this)
-    // For performance, we assume user exists if they have a valid token
-
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
     const result = await generateRecommendations(userId);
     res.json(result);
   } catch (error) {
@@ -41,11 +40,13 @@ router.get('/recommendations', requireAuth, async (req: Request, res: Response) 
  * GET /api/adaptive/next-action
  * Quick endpoint for "Just tell me what to do" button
  */
-router.get('/next-action', requireAuth, async (req: Request, res: Response) => {
+router.get('/next-action', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.auth?.userId;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
     const action = await getNextBestAction(userId);
     res.json({ action });
   } catch (error) {
@@ -58,11 +59,13 @@ router.get('/next-action', requireAuth, async (req: Request, res: Response) => {
  * GET /api/adaptive/profile
  * Returns the raw strength profile for visualization
  */
-router.get('/profile', requireAuth, async (req: Request, res: Response) => {
+router.get('/profile', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.auth?.userId;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
     const profile = await getUserStrengthProfile(userId);
     res.json({ profile });
   } catch (error) {
@@ -75,12 +78,15 @@ router.get('/profile', requireAuth, async (req: Request, res: Response) => {
  * POST /api/adaptive/feedback
  * Log user feedback on a recommendation (e.g. "Too easy", "Not now")
  */
-router.post('/feedback', requireAuth, async (req: Request, res: Response) => {
+router.post('/feedback', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.auth?.userId;
     const { recommendationId, action } = req.body; // action: 'completed' | 'dismissed'
 
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
 
     await prisma.studyRecommendation.updateMany({
       where: { id: recommendationId, userId },

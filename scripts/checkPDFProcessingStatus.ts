@@ -6,7 +6,7 @@
  * Reports on the current status of PDF processing in the system
  */
 
-import { getProcessingStatus } from '../services/educationalResourceService';
+import { getProcessingStatus } from '../services/domain/educationalResourceService';
 import { logger } from '../lib/logging/structuredLogger';
 
 async function main() {

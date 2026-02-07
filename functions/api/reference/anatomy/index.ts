@@ -71,7 +71,7 @@ export const onRequestGet = authenticatedEndpoint(
         log.info('Listing anatomy structures', { system });
         results = await prisma.anatomyStructure.findMany({
           where: system ? { system } : undefined,
-          include: { conditions: { select: { id: true, name: true } } },
+          include: { Condition: { select: { id: true, name: true } } },
           orderBy: { name: 'asc' },
         });
       }

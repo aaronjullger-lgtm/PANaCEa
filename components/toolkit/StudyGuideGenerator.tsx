@@ -355,7 +355,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl max-w-2xl w-full"
+        className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full border border-[var(--color-border)]"
       >
         {/* Header */}
         <div className="bg-[var(--color-accent)] p-6 text-[var(--color-text-inverse)] dark:text-[var(--color-bg-primary)] rounded-t-2xl">

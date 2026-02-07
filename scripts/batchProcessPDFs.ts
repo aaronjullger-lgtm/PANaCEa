@@ -7,7 +7,7 @@
  * Uses the new pdf-parse library instead of AI vision for cost efficiency
  */
 
-import { batchProcessExistingPDFs } from '../services/educationalResourceService';
+import { batchProcessExistingPDFs } from '../services/domain/educationalResourceService';
 import { logger } from '../lib/logging/structuredLogger';
 
 async function main() {

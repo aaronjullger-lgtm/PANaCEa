@@ -42,17 +42,12 @@ export const onRequestGet = authenticatedEndpoint(ContextWidgetsSchema, async (c
     if (widgetType === 'pharm') {
       contextData.treatment = condition.treatment;
       const drugs = await prisma.medicalContent.findMany({
-        where: {
-          content_type: 'drug',
-          OR: [{ associatedConditions: { has: condition.condition } }],
-        },
+        where: { system: condition.system, status: 'published' },
         select: {
           id: true,
-          name: true,
-          drugClass: true,
-          mechanism: true,
-          indications: true,
-          adverseEffects: true,
+          condition: true,
+          conditionId: true,
+          treatment: true,
         },
         take: 5,
       });

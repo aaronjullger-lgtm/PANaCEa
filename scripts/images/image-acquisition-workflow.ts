@@ -275,9 +275,11 @@ async function generateImagePlan(conditionId: string): Promise<ConditionImagePla
   // 1. Parse explicit image_query (may have multiple)
   const explicitQueries = parseImageQueries(content.image_query);
   for (let i = 0; i < explicitQueries.length; i++) {
+    const q = explicitQueries[i];
+    if (q == null) continue;
     addRequirement({
-      query: explicitQueries[i],
-      modality: determineModality(explicitQueries[i]),
+      query: q,
+      modality: determineModality(q),
       purpose: i === 0 ? 'primary' : 'supplementary',
       priority: i === 0 ? 1 : 2,
       source: 'image_query',
@@ -409,6 +411,7 @@ async function planCondition(conditionId: string): Promise<void> {
 
   for (let i = 0; i < plan.requirements.length; i++) {
     const req = plan.requirements[i];
+    if (!req) continue;
     const priorityIcon = req.priority === 1 ? '🔴' : req.priority === 2 ? '🟡' : '🟢';
     console.log(`\n${i + 1}. ${priorityIcon} [${req.modality.toUpperCase()}] ${req.purpose}`);
     console.log(`   🔎 Search: "${req.query}"`);
@@ -625,6 +628,7 @@ async function listConditions(systemFilter?: string, limit = 20): Promise<void> 
 
   for (let i = 0; i < needingImages.length; i++) {
     const c = needingImages[i];
+    if (!c) continue;
     const existing = imageMap.get(c.conditionId) || 0;
     const queries = parseImageQueries(c.image_query);
 

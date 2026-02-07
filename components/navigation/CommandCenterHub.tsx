@@ -84,6 +84,15 @@ import { BodyMapWidget } from '@/components/dashboard/BodyMapWidget';
 import { RoundsButton } from '@/components/dashboard/RoundsButton';
 import { HighContrastDataToggle } from '@/components/ui/HighContrastDataToggle';
 import { SmartSchedulerGantt, type ScheduleBlock } from '@/components/analytics/SmartSchedulerGantt';
+import { getLastSession, clearLastSession, type LastSessionData } from '@/lib/utils/sessionStorage';
+import { WelcomeBackCard } from '@/components/dashboard/WelcomeBackCard';
+import { ExamCountdownCard } from '@/components/dashboard/ExamCountdownCard';
+import { EorCountdownCard } from '@/components/dashboard/EorCountdownCard';
+import { CircadianInsightCard } from '@/components/dashboard/CircadianInsightCard';
+import { TimeBoxButtons } from '@/components/dashboard/TimeBoxButtons';
+import { ProgressRingWidget } from '@/components/dashboard/ProgressRingWidget';
+import { RecommendedActionCard } from '@/components/dashboard/RecommendedActionCard';
+import { usePullToRefresh } from '@/hooks/useSwipeGestures';
 
 // ============================================================================
 // Types
@@ -601,6 +610,8 @@ const ModeCard: React.FC<{
       whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
       onClick={onSelect}
       disabled={mode.isComingSoon}
+      title={mode.isComingSoon ? `${mode.label} - Feature in development, available soon` : mode.description}
+      aria-label={mode.isComingSoon ? `${mode.label} - Coming soon` : mode.label}
       className={`
         w-full text-left p-4 rounded-xl border transition-all duration-200 group min-h-0
         focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
@@ -804,6 +815,95 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   const { showPANREContent, careerStage } = useUserContext();
   const { stats: rolling360Stats } = useRolling360Stats();
 
+  // Quick Wins: Last session and welcome back state
+  const [lastSession] = useState<LastSessionData | null>(() => getLastSession());
+  const [showWelcomeBack, setShowWelcomeBack] = useState(() => getLastSession() !== null);
+
+  // Handler: Resume last session
+  const handleResumeLastSession = useCallback(() => {
+    if (!lastSession) return;
+    clearLastSession();
+    setShowWelcomeBack(false);
+    onStartSession(lastSession.settings);
+  }, [lastSession, onStartSession]);
+
+  // Handler: Dismiss welcome back card
+  const handleDismissWelcomeBack = useCallback(() => {
+    setShowWelcomeBack(false);
+    // Optionally clear localStorage so it doesn't reappear
+    clearLastSession();
+  }, []);
+
+  // Calculate curriculum progress for exam countdown
+  const curriculumProgressPercent = useMemo(() => {
+    if (!rolling360Stats) return 0;
+    const totalSystems = Object.keys(ABBREVIATION_TO_TOPIC_MAP).length;
+    const systemsWithGoodMastery = Object.values(rolling360Stats.systemStats || {}).filter(
+      (s) => s.accuracy >= 0.7 && s.total >= 5
+    ).length;
+    return Math.round((systemsWithGoodMastery / totalSystems) * 100);
+  }, [rolling360Stats]);
+
+  // Sprint 2: Pull-to-refresh
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      // In production: trigger parent data reload
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  const pullToRefreshRef = usePullToRefresh(handleRefresh, {
+    threshold: 80,
+    enabled: true,
+  });
+
+  // Sprint 3: System stats for AI recommendation and progress ring
+  const systemStatsForAI = useMemo(() => {
+    if (!rolling360Stats?.systemStats) return [];
+    return Object.entries(rolling360Stats.systemStats).map(([system, stats]) => ({
+      system: system as SystemCode,
+      name: ABBREVIATION_TO_TOPIC_MAP[system] || system,
+      accuracy: stats.accuracy,
+      totalAttempts: stats.total,
+    }));
+  }, [rolling360Stats]);
+
+  // Sprint 3: System progress for Progress Ring detail
+  const systemProgressData = useMemo(() => {
+    if (!rolling360Stats?.systemStats) return [];
+    return Object.entries(rolling360Stats.systemStats).map(([system, stats]) => ({
+      system: system as SystemCode,
+      name: ABBREVIATION_TO_TOPIC_MAP[system] || system,
+      reviewed: stats.total,
+      total: 100, // TODO: Get actual condition count per system from registry
+      percent: stats.total >= 5 ? Math.min(stats.accuracy * 100, 100) : 0,
+      accuracy: stats.accuracy,
+    }));
+  }, [rolling360Stats]);
+
+  // Load user profile first (needed by other hooks)
+  const [userProfile, setUserProfile] = useState(() => loadUserProfile() || { hasCompletedOnboarding: false });
+  
+  useEffect(() => {
+    const sync = () => setUserProfile(loadUserProfile() || { hasCompletedOnboarding: false });
+    sync();
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+
+  // Sprint 3: Days until exam for AI recommendation
+  const daysUntilExam = useMemo(() => {
+    if (!userProfile?.graduationDate) return null;
+    const examDate = new Date(userProfile.graduationDate);
+    const now = new Date();
+    const diffTime = examDate.getTime() - now.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }, [userProfile]);
+
   // Map Rolling 360 system stats to CurriculumGrid progressData (system -> mastery %)
   const curriculumProgressData = useMemo(() => {
     const sys = rolling360Stats?.systemStats;
@@ -862,14 +962,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
       return next;
     });
-  }, []);
-
-  const [userProfile, setUserProfile] = useState(() => loadUserProfile() || { hasCompletedOnboarding: false });
-  useEffect(() => {
-    const sync = () => setUserProfile(loadUserProfile() || { hasCompletedOnboarding: false });
-    sync();
-    window.addEventListener('storage', sync);
-    return () => window.removeEventListener('storage', sync);
   }, []);
 
   const isClinicalStudent = careerStage === 'student' && userProfile?.yearInProgram === 'Clinical Year';
@@ -1025,21 +1117,66 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.32, 0.72, 0, 1] as const, delay };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <motion.div
-        initial={sectionEnter}
-        animate={sectionAnimate}
-        transition={sectionTransition(0)}
-        className="mb-6"
-      >
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
-          {greeting}, {user?.firstName || 'Student'}
-        </h1>
-        <p className="text-[var(--color-text-muted)] mt-1">
-          Ready to advance your clinical knowledge?
-        </p>
-      </motion.div>
+    <>
+      {/* Sprint 3: Progress Ring Widget (floating, persistent) */}
+      {curriculumProgressPercent > 0 && systemProgressData.length > 0 && (
+        <ProgressRingWidget
+          percent={curriculumProgressPercent}
+          systemProgress={systemProgressData}
+          onSystemClick={(system) => onNavigateToDrillWithSystem?.('system_drill', system)}
+        />
+      )}
+
+      <div ref={pullToRefreshRef} className="max-w-6xl mx-auto">
+        {/* Refresh indicator */}
+        {isRefreshing && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-center py-4"
+          >
+            <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 rounded-full">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              >
+                <RotateCcw className="w-4 h-4 text-[var(--color-accent)]" />
+              </motion.div>
+              <span className="text-sm font-medium text-[var(--color-accent)]">Refreshing...</span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Header */}
+        <motion.div
+          initial={sectionEnter}
+          animate={sectionAnimate}
+          transition={sectionTransition(0)}
+          className="mb-6"
+        >
+          <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
+            {greeting}, {user?.firstName || 'Student'}
+          </h1>
+          <p className="text-[var(--color-text-muted)] mt-1">
+            Ready to advance your clinical knowledge?
+          </p>
+        </motion.div>
+
+      {/* Welcome Back Card - shows last completed session (not same as active session resume) */}
+      {!hasActiveSession && showWelcomeBack && lastSession && (
+        <motion.div
+          initial={sectionEnter}
+          animate={sectionAnimate}
+          transition={sectionTransition(0)}
+          className="mb-6"
+        >
+          <WelcomeBackCard
+            lastSession={lastSession}
+            onResume={handleResumeLastSession}
+            onDismiss={handleDismissWelcomeBack}
+          />
+        </motion.div>
+      )}
 
       {/* Continue Learning (Zeigarnik) - above the fold when session in progress */}
       {hasActiveSession && onResumeSession && (
@@ -1085,11 +1222,51 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </motion.div>
       )}
 
+      {/* Quick Wins: PANCE / EOR Countdown + Time-Box Buttons (for students) */}
+      {careerStage === 'student' && (userProfile?.graduationDate || (eorTestDate && currentRotation && isEorRotation(currentRotation))) && (
+        <motion.div
+          initial={sectionEnter}
+          animate={sectionAnimate}
+          transition={sectionTransition(0)}
+          className="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-4"
+        >
+          {userProfile?.graduationDate && (
+            <div className={eorTestDate && currentRotation && isEorRotation(currentRotation) ? '' : 'lg:col-span-2'}>
+              <ExamCountdownCard
+                examDate={userProfile.graduationDate}
+                curriculumPercent={curriculumProgressPercent}
+                questionsAnswered={performanceData.length}
+              />
+            </div>
+          )}
+          {eorTestDate && currentRotation && isEorRotation(currentRotation) && (
+            <div className={userProfile?.graduationDate ? '' : 'lg:col-span-2'}>
+              <EorCountdownCard examDate={eorTestDate} rotation={currentRotation} />
+            </div>
+          )}
+          <div>
+            <TimeBoxButtons onStartSession={onStartSession} />
+          </div>
+        </motion.div>
+      )}
+
+      {/* Time-Box Buttons only (for users without exam date) */}
+      {((!userProfile?.graduationDate && !(eorTestDate && currentRotation && isEorRotation(currentRotation))) || careerStage === 'practicing') && (
+        <motion.div
+          initial={sectionEnter}
+          animate={sectionAnimate}
+          transition={sectionTransition(0)}
+          className="mb-6"
+        >
+          <TimeBoxButtons onStartSession={onStartSession} />
+        </motion.div>
+      )}
+
       {/* Hero Triple: Main Session | OSCE | Analytics — above the fold */}
       <motion.div
         initial={sectionEnter}
         animate={sectionAnimate}
-        transition={sectionTransition(0)}
+        transition={sectionTransition(0.05)}
       >
         <HeroTriple
           onStartSession={onStartSession}
@@ -1137,6 +1314,18 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         />
       )}
       </motion.div>
+
+      {/* Circadian insight (when enough data) */}
+      {performanceData.length >= 20 && (
+        <motion.div
+          initial={sectionEnter}
+          animate={sectionAnimate}
+          transition={sectionTransition(0)}
+          className="mb-6"
+        >
+          <CircadianInsightCard performanceRecords={performanceData} className="max-w-xs" />
+        </motion.div>
+      )}
 
       {/* Core Adaptive Hero - main session (above the fold) */}
       <motion.div
@@ -2115,7 +2304,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         )}
         </AnimatePresence>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

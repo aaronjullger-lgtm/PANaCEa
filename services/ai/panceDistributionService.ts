@@ -163,7 +163,7 @@ export function getWeightedRandomSystem(enabledSystems?: Set<string>): string {
   }
 
   // Fallback (should never reach here)
-  return availableSystems[0];
+  return availableSystems[0] ?? 'Cardiovascular';
 }
 
 /**

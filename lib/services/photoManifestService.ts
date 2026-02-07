@@ -55,6 +55,7 @@ export async function getImageForCondition(
 
     if (approvedMedia && approvedMedia.length > 0) {
       const firstImage = approvedMedia[0];
+      if (!firstImage) return getPlaceholderImage(conditionName, category);
 
       return {
         imageUrl: firstImage.originalUrl || '',

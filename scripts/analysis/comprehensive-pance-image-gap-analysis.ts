@@ -513,10 +513,12 @@ async function main() {
 
   const systemGroups: Record<string, ConditionAnalysis[]> = {};
   for (const item of analysis) {
-    if (!systemGroups[item.system]) {
-      systemGroups[item.system] = [];
+    const sys = item.system;
+    if (!sys) continue;
+    if (!systemGroups[sys]) {
+      systemGroups[sys] = [];
     }
-    systemGroups[item.system].push(item);
+    systemGroups[sys].push(item);
   }
 
   // Sort systems by PANCE weight
@@ -527,10 +529,10 @@ async function main() {
   });
 
   for (const system of sortedSystems) {
-    const items = systemGroups[system];
+    const items = systemGroups[system] ?? [];
     const noImg = items.filter((i) => i.imageCount === 0).length;
     const total = items.length;
-    const coverage = (((total - noImg) / total) * 100).toFixed(0);
+    const coverage = total > 0 ? (((total - noImg) / total) * 100).toFixed(0) : '0';
     const blueprintData = PANCE_BLUEPRINT_WEIGHTS[system as keyof typeof PANCE_BLUEPRINT_WEIGHTS];
 
     console.log(
@@ -580,10 +582,12 @@ async function main() {
 
   const sourceGroups: Record<string, ConditionAnalysis[]> = {};
   for (const item of noImages) {
-    if (!sourceGroups[item.imageSource]) {
-      sourceGroups[item.imageSource] = [];
+    const src = item.imageSource;
+    if (!src) continue;
+    if (!sourceGroups[src]) {
+      sourceGroups[src] = [];
     }
-    sourceGroups[item.imageSource].push(item);
+    sourceGroups[src].push(item);
   }
 
   const sourcePriority = [

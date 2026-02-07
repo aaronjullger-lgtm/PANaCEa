@@ -203,7 +203,13 @@ export function usePatientVitals(options: UsePatientVitalsOptions): UsePatientVi
           }),
         });
 
-        const json = await res.json();
+        const json = (await res.json()) as {
+          error?: string;
+          message?: string;
+          data?: { vitals?: VitalsDisplay; isEmergency?: boolean };
+          vitals?: VitalsDisplay;
+          isEmergency?: boolean;
+        };
         if (!res.ok) {
           return {
             success: false,

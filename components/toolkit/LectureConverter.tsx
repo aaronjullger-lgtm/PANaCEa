@@ -57,7 +57,11 @@ export function LectureConverter({ onClose }: LectureConverterProps) {
         }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as {
+        error?: string;
+        details?: string;
+        data?: { script?: string; summary_points?: unknown[] };
+      };
 
       if (!res.ok) {
         setStatus('error');
@@ -73,7 +77,7 @@ export function LectureConverter({ onClose }: LectureConverterProps) {
       }
 
       setScript(scriptText);
-      setSummaryPoints(Array.isArray(data?.data?.summary_points) ? data.data.summary_points : []);
+      setSummaryPoints((Array.isArray(data?.data?.summary_points) ? data.data!.summary_points : []) as string[]);
       setStatus('ready');
     } catch (err) {
       setStatus('error');

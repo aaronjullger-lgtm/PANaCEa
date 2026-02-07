@@ -671,6 +671,7 @@ export class Rolling360Service {
 
       for (let i = 0; i < attempts.length; i++) {
         const attempt = attempts[i];
+        if (attempt == null) continue;
         finalStats = await this.updateRolling360OnSubmitInTransaction(tx, {
           attemptId: attempt.id,
           userId,

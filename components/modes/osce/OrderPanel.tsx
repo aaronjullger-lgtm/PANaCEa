@@ -95,7 +95,10 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
           `/api/osce/orderable-items?category=${activeTab}&search=${searchQuery}`
         );
         if (response.ok) {
-          const data = await response.json();
+          const data = (await response.json()) as {
+            items?: OrderableItemWithMeta[];
+            bundles?: OrderBundle[];
+          };
           setOrderableItems(data.items || []);
           setBundles(data.bundles || []);
         }
@@ -257,7 +260,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-[var(--color-bg-primary)] rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden border border-[var(--color-border)]"
+          className="bg-[var(--color-bg-primary)] rounded-xl shadow-[0_18px_42px_var(--color-shadow-soft)] w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden border border-[var(--color-border)]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

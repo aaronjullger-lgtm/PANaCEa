@@ -83,7 +83,7 @@ export async function recomputePeakStudyHours(prisma: any, userId: string) {
     LIMIT 3;
   `;
 
-  return rows.map((row) => Number(row.hour));
+  return rows.map((row: { hour: unknown }) => Number(row.hour));
 }
 
 export async function recomputeAvgSessionLength(prisma: any, userId: string) {
@@ -95,15 +95,15 @@ export async function recomputeAvgSessionLength(prisma: any, userId: string) {
   });
 
   const durations = sessions
-    .map((s) => {
+    .map((s: { startedAt: Date; endedAt: Date | null }) => {
       if (!s.endedAt) return null;
       const ms = s.endedAt.getTime() - s.startedAt.getTime();
       return ms > 0 ? ms : null;
     })
-    .filter((ms): ms is number => ms !== null);
+    .filter((ms: number | null): ms is number => ms !== null);
 
   if (!durations.length) return null;
-  const avgMs = durations.reduce((sum, ms) => sum + ms, 0) / durations.length;
+  const avgMs = durations.reduce((sum: number, ms: number) => sum + ms, 0) / durations.length;
   return avgMs / 60000; // minutes
 }
 

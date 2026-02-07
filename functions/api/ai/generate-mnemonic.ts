@@ -69,7 +69,7 @@ export const onRequestPost = authenticatedEndpoint(
     };
 
     try {
-      validateFunctionEnv(env, 'GEMINI');
+      validateFunctionEnv(env as unknown as Record<string, unknown>, 'GEMINI');
     } catch (error) {
       if (error instanceof MissingEnvError) {
         return error.toResponse();
@@ -79,7 +79,11 @@ export const onRequestPost = authenticatedEndpoint(
 
     const { request } = context;
     const identifier = getRateLimitIdentifier(request);
-    const { response: rateLimitResponse } = await withRateLimit(env, identifier, 'gemini');
+    const { response: rateLimitResponse } = await withRateLimit(
+      env as { RATE_LIMIT_KV?: KVNamespace },
+      identifier,
+      'gemini'
+    );
     if (rateLimitResponse) {
       return rateLimitResponse;
     }

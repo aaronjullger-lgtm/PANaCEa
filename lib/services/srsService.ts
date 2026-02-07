@@ -677,6 +677,7 @@ export function postponeDueQuestions(userId: string): number {
   // Postpone each item by its position in the queue (1 day, 2 days, etc.)
   for (let i = 0; i < dueItems.length; i++) {
     const item = dueItems[i];
+    if (item == null) continue;
     const daysToAdd = i; // First item: today, second: tomorrow, etc.
     const newDueDate = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
     item.dueDate = newDueDate;
@@ -1182,9 +1183,12 @@ export function getCramSessionQuestions(
   // Select top N items based on maxItems limit
   const maxItems = scoredItems.length;
   for (let i = 0; i < Math.min(maxItems, scoredItems.length); i++) {
-    const questionId = scoredItems[i].item.questionId;
-    selectedIds.add(questionId);
-    questionIds.push(questionId);
+    const entry = scoredItems[i];
+    const questionId = entry?.item?.questionId;
+    if (questionId) {
+      selectedIds.add(questionId);
+      questionIds.push(questionId);
+    }
   }
 
   return questionIds;
@@ -1364,10 +1368,10 @@ export async function requestMnemonicImage(
         },
       }),
     });
-    const json = await response.json().catch(() => ({}));
+    const json = (await response.json().catch(() => ({}))) as { data?: GenerateVisualResponse; error?: string };
     const data = json?.data ?? json;
     if (!response.ok) {
-      return { error: data?.error ?? json?.error ?? `HTTP ${response.status}` };
+      return { error: (data as { error?: string })?.error ?? json?.error ?? `HTTP ${response.status}` };
     }
     return { data: data as GenerateVisualResponse };
   } catch (error) {

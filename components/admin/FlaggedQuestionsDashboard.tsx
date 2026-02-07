@@ -130,7 +130,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
         throw new Error('Failed to fetch flags');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { flags?: QuestionFlag[] };
       setFlags(data.flags || []);
 
       // Calculate stats from flags

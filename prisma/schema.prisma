@@ -1,12 +1,9 @@
 generator client {
   provider = "prisma-client-js"
-  // Note: engineType removed for Edge/Accelerate compatibility
 }
 
 datasource db {
   provider = "postgresql"
-  // Note: Connection URLs are configured in prisma.config.ts for Prisma 7+
-  // Runtime connections use PrismaClient constructor with accelerateUrl or adapter
 }
 
 model ACLSAlgorithm {
@@ -50,11 +47,11 @@ model AnatomyConditionLink {
   id               String           @id
   anatomyId        String
   conditionId      String
-  medicalContentId String?
   relationshipType String
   clinicalContext  String?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime
+  medicalContentId String?
   AnatomyStructure AnatomyStructure @relation(fields: [anatomyId], references: [id], onDelete: Cascade)
   Condition        Condition        @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   MedicalContent   MedicalContent?  @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
@@ -118,89 +115,36 @@ model AnatomyStructure {
   vesselPath           String?
   videoUrl             String?
   AnatomyConditionLink AnatomyConditionLink[]
-  Condition            Condition[]
   MediaAsset           MediaAsset[]
+  Condition            Condition[]
 
-  Anatomy3DModelConditionLink Anatomy3DModelConditionLink[]
   @@index([name])
   @@index([panceYield])
   @@index([region])
   @@index([system])
 }
 
-enum AnatomySystem3D {
-  SKELETAL
-  MUSCULAR
-  NERVOUS
-  CARDIOVASCULAR
-  RESPIRATORY
-  DIGESTIVE
-  REPRODUCTIVE
-  ENDOCRINE
-  LYMPHATIC
-  INTEGUMENTARY
-  URINARY
-}
-
-model Anatomy3DModel {
-  id                  String    @id
-  name                String    @unique
-  displayName         String?
-  description         String?
-  system              AnatomySystem3D
-  fileUrl             String
-  thumbnailUrl         String?
-  format              String    @default("glb")
-  fileSize            Int?
-  isCompressed        Boolean   @default(false)
-  cameraPosition      Json?
-  cameraTarget        Json?
-  defaultZoom         Float?
-  structures          String[]  @default([])
-  highlightableRegions Json?
-  clinicalPearls      String[]  @default([])
-  clinicalRelevance   String[]  @default([])
-  sourceId            String?
-  sourceName          String?   @default("NIH 3D Print Exchange")
-  sourceUrl           String?
-  license             String?   @default("Public Domain")
-  author              String?
-  institution         String?
-  status              String    @default("pending")
-  qualityScore        Float?
-  approvedBy          String?
-  approvedAt          DateTime?
-  isHighYield         Boolean   @default(false)
-  panceYield          Int?
-  boardYieldFacts     String[]  @default([])
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime
-  Anatomy3DModelConditionLink Anatomy3DModelConditionLink[]
-
-  @@index([system])
-  @@index([status])
-  @@index([isHighYield])
-  @@index([panceYield])
-}
-
-model Anatomy3DModelConditionLink {
-  id                  String    @id
-  modelId             String
+model AntibioticConditionLink {
+  id                  String              @id
+  antibioticId        String
   conditionId         String
-  anatomyStructureId  String?
-  clinicalContext     String?
-  viewingHint         String?
-  highlightRegions    String[]  @default([])
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime
-  Anatomy3DModel      Anatomy3DModel     @relation(fields: [modelId], references: [id], onDelete: Cascade)
-  Condition           Condition          @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  AnatomyStructure    AnatomyStructure?   @relation(fields: [anatomyStructureId], references: [id], onDelete: SetNull)
+  isFirstLine         Boolean             @default(false)
+  evidenceLevel       String?
+  dosing              String?
+  duration            String?
+  notes               String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @default(now())
+  medicalContentId    String?
+  AntibioticGuideline AntibioticGuideline @relation(fields: [antibioticId], references: [id], onDelete: Cascade)
+  Condition           Condition           @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent      MedicalContent?     @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
-  @@unique([modelId, conditionId])
-  @@index([modelId])
+  @@unique([antibioticId, conditionId])
+  @@index([antibioticId])
   @@index([conditionId])
-  @@index([anatomyStructureId])
+  @@index([isFirstLine])
+  @@index([medicalContentId])
 }
 
 model AntibioticGuideline {
@@ -246,13 +190,25 @@ model AntibioticGuideline {
   vaccines                String[]                  @default([])
   vancomycinResistant     Boolean                   @default(false)
   virulenceFactors        String[]                  @default([])
-  // New deep relations
   AntibioticConditionLink AntibioticConditionLink[]
 
   @@index([class])
   @@index([gramStain])
   @@index([organism])
   @@index([panceYield])
+}
+
+model AuditLog {
+  id         String   @id
+  action     String
+  entityType String   @default("SYSTEM")
+  entityId   String?
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
+  @@index([entityId])
 }
 
 model BackgroundJob {
@@ -277,25 +233,6 @@ model BackgroundJob {
   @@index([status])
 }
 
-model Podcast {
-  id              String   @id @default(uuid())
-  userId          String
-  jobId           String?  @unique
-  title           String
-  durationSeconds Int?
-  audioUrl        String?
-  script          Json?
-  takeaways       Json?
-  chapters        Json?
-  sourceFileName  String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, createdAt])
-}
-
 model BaselineAssessment {
   id               String   @id
   userId           String   @unique
@@ -308,6 +245,18 @@ model BaselineAssessment {
   strongestSystems String[]
 
   @@index([userId])
+}
+
+model BehaviorLog {
+  id                String          @id
+  questionAttemptId String
+  confidenceScore   Float
+  impliedRating     Int?
+  rawResponse       String?
+  createdAt         DateTime        @default(now())
+  QuestionAttempt   QuestionAttempt @relation(fields: [questionAttemptId], references: [id], onDelete: Cascade)
+
+  @@index([questionAttemptId])
 }
 
 model BranchChange {
@@ -343,6 +292,38 @@ model Buzzword {
   @@index([system])
 }
 
+model Card {
+  id             String    @id
+  userId         String
+  questionId     String
+  due            DateTime
+  stability      Float     @default(0.0)
+  difficulty     Float     @default(0.0)
+  elapsed_days   Float     @default(0.0)
+  scheduled_days Float     @default(0.0)
+  reps           Int       @default(0)
+  lapses         Int       @default(0)
+  state          Int       @default(0)
+  last_review    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime
+  User           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([questionId])
+  @@index([userId, due])
+  @@index([userId, state])
+}
+
+model CaseRubric {
+  id                   String               @id
+  caseId               String               @unique
+  checklist            Json
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime
+  PatientEncounterCase PatientEncounterCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+}
+
 model ClinicalGuideline {
   id              String   @id
   name            String
@@ -369,13 +350,12 @@ model ClinicalPearl {
   usefulVotes        Int                  @default(0)
   viewCount          Int                  @default(0)
   tags               String[]
-  // New FK for deep relations
   conditionId        String?
   medicalContentId   String?
-  Condition          Condition?           @relation(fields: [conditionId], references: [id], onDelete: SetNull)
-  MedicalContent     MedicalContent?      @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
-  UserPearl          UserPearl[]
+  Condition          Condition?           @relation(fields: [conditionId], references: [id])
+  MedicalContent     MedicalContent?      @relation(fields: [medicalContentId], references: [id])
   PearlConditionLink PearlConditionLink[]
+  UserPearl          UserPearl[]
 
   @@index([category])
   @@index([conditionId])
@@ -414,106 +394,122 @@ model CohortMember {
   @@index([userId])
 }
 
+model ConceptGap {
+  id         String   @id
+  userId     String
+  system     String
+  sourceType String
+  sourceId   String?
+  createdAt  DateTime @default(now())
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, system])
+}
+
 model Condition {
-  id                         String                       @id
-  name                       String
-  system                     String
-  createdAt                  DateTime                     @default(now())
-  updatedAt                  DateTime
-  aliases                    String[]                     @default([])
-  content                    Json?
-  displayName                String?
-  mediaUrl                   String?                      @map("media_url")
-  parentId                   String?
-  relatedSystems             String[]                     @default([])
-  status                     String                       @default("published")
-  subcategory                String?
-  parent_category            String?
-  isHighYield                Boolean                      @default(false)
-  panceYield                 Int?
-  AnatomyConditionLink       AnatomyConditionLink[]
-  Condition                  Condition?                   @relation("ConditionToCondition", fields: [parentId], references: [id], onDelete: Cascade)
-  other_Condition            Condition[]                  @relation("ConditionToCondition")
-  DrugConditionLink          DrugConditionLink[]
-  ECGConditionLink           ECGConditionLink[]
-  FindingConditionLink       FindingConditionLink[]
-  ImagingConditionLink       ImagingConditionLink[]
-  LabConditionLink           LabConditionLink[]
-  MediaAsset                 MediaAsset[]
-  PhysiologyConditionLink    PhysiologyConditionLink[]
-  ProcedureConditionLink     ProcedureConditionLink[]
-  TreatmentConditionLink     TreatmentConditionLink[]
-  AnatomyStructure           AnatomyStructure[]
-  SpecialTest                SpecialTest[]
-  Anatomy3DModelConditionLink Anatomy3DModelConditionLink[]
-  // New deep relations
-  DifferentialConditionLink  DifferentialConditionLink[]
-  AntibioticConditionLink    AntibioticConditionLink[]
-  VitalSignConditionLink     VitalSignConditionLink[]
-  ScoringSystemConditionLink ScoringSystemConditionLink[]
-  PearlConditionLink         PearlConditionLink[]
-  ConditionRelation1         ConditionRelation[]          @relation("ConditionRelation1")
-  ConditionRelation2         ConditionRelation[]          @relation("ConditionRelation2")
-  Question                   Question[]
-  ClinicalPearl              ClinicalPearl[]
-  ScoringSystem              ScoringSystem[]
-  ConfusionPairReal          ConfusionPair[]              @relation("ConfusionPairReal")
-  ConfusionPairMistaken      ConfusionPair[]              @relation("ConfusionPairMistaken")
-  WeaknessPattern            WeaknessPattern[]
-  DifferentialDiagnosis      DifferentialDiagnosis[]
-  PreGeneratedQuestion       PreGeneratedQuestion[]
-  QuestionSeed               QuestionSeed[]
-  SavedQuestion              SavedQuestion[]
-  Guideline                  Guideline[]
+  id                                                          String                       @id
+  name                                                        String
+  system                                                      String
+  createdAt                                                   DateTime                     @default(now())
+  updatedAt                                                   DateTime
+  aliases                                                     String[]                     @default([])
+  content                                                     Json?
+  displayName                                                 String?
+  parentId                                                    String?
+  relatedSystems                                              String[]                     @default([])
+  status                                                      String                       @default("published")
+  subcategory                                                 String?
+  media_url                                                   String?
+  parent_category                                             String?
+  AnatomyConditionLink                                        AnatomyConditionLink[]
+  AntibioticConditionLink                                     AntibioticConditionLink[]
+  ClinicalPearl                                               ClinicalPearl[]
+  Condition                                                   Condition?                   @relation("ConditionToCondition", fields: [parentId], references: [id], onDelete: Cascade)
+  other_Condition                                             Condition[]                  @relation("ConditionToCondition")
+  ConditionRelation_ConditionRelation_conditionId1ToCondition ConditionRelation[]          @relation("ConditionRelation_conditionId1ToCondition")
+  ConditionRelation_ConditionRelation_conditionId2ToCondition ConditionRelation[]          @relation("ConditionRelation_conditionId2ToCondition")
+  ConfusionPair_ConfusionPair_mistakenForIdToCondition        ConfusionPair[]              @relation("ConfusionPair_mistakenForIdToCondition")
+  ConfusionPair_ConfusionPair_realConditionIdToCondition      ConfusionPair[]              @relation("ConfusionPair_realConditionIdToCondition")
+  DifferentialConditionLink                                   DifferentialConditionLink[]
+  DifferentialDiagnosis                                       DifferentialDiagnosis[]
+  DrugConditionLink                                           DrugConditionLink[]
+  ECGConditionLink                                            ECGConditionLink[]
+  FindingConditionLink                                        FindingConditionLink[]
+  Guideline                                                   Guideline[]
+  ImagingConditionLink                                        ImagingConditionLink[]
+  LabConditionLink                                            LabConditionLink[]
+  MediaAsset                                                  MediaAsset[]
+  PearlConditionLink                                          PearlConditionLink[]
+  PhysiologyConditionLink                                     PhysiologyConditionLink[]
+  PreGeneratedQuestion                                        PreGeneratedQuestion[]
+  ProcedureConditionLink                                      ProcedureConditionLink[]
+  Question                                                    Question[]
+  QuestionSeed                                                QuestionSeed[]
+  SavedQuestion                                               SavedQuestion[]
+  ScoringSystem                                               ScoringSystem[]
+  ScoringSystemConditionLink                                  ScoringSystemConditionLink[]
+  TreatmentConditionLink                                      TreatmentConditionLink[]
+  VitalSignConditionLink                                      VitalSignConditionLink[]
+  WeaknessPattern                                             WeaknessPattern[]
+  AnatomyStructure                                            AnatomyStructure[]
+  SpecialTest                                                 SpecialTest[]
 
   @@index([displayName])
   @@index([name])
   @@index([parentId])
+  @@index([parent_category])
   @@index([status])
   @@index([subcategory])
   @@index([system])
-  @@index([parent_category])
   @@index([system, parent_category])
   @@index([system, subcategory, parent_category])
-  @@index([panceYield])
-  @@index([isHighYield])
+}
+
+model ConditionRelation {
+  id                                                  String    @id
+  conditionId1                                        String
+  conditionId2                                        String
+  relationType                                        String
+  bidirectional                                       Boolean   @default(true)
+  clinicalContext                                     String?
+  createdAt                                           DateTime  @default(now())
+  Condition_ConditionRelation_conditionId1ToCondition Condition @relation("ConditionRelation_conditionId1ToCondition", fields: [conditionId1], references: [id], onDelete: Cascade)
+  Condition_ConditionRelation_conditionId2ToCondition Condition @relation("ConditionRelation_conditionId2ToCondition", fields: [conditionId2], references: [id], onDelete: Cascade)
+
+  @@unique([conditionId1, conditionId2, relationType])
+  @@index([conditionId1])
+  @@index([conditionId2])
+  @@index([relationType])
 }
 
 model ConfusionPair {
-  id     String @id @default(cuid())
-  userId String
+  id                                                               String          @id
+  userId                                                           String
+  realCondition                                                    String
+  mistakenFor                                                      String
+  count                                                            Int             @default(1)
+  lastOccurrence                                                   DateTime
+  createdAt                                                        DateTime        @default(now())
+  mistakenForId                                                    String?
+  realConditionId                                                  String?
+  correctConditionId                                               String?
+  selectedConditionId                                              String?
+  MedicalContent_ConfusionPair_correctConditionIdToMedicalContent  MedicalContent? @relation("ConfusionPair_correctConditionIdToMedicalContent", fields: [correctConditionId], references: [id])
+  Condition_ConfusionPair_mistakenForIdToCondition                 Condition?      @relation("ConfusionPair_mistakenForIdToCondition", fields: [mistakenForId], references: [id])
+  Condition_ConfusionPair_realConditionIdToCondition               Condition?      @relation("ConfusionPair_realConditionIdToCondition", fields: [realConditionId], references: [id])
+  MedicalContent_ConfusionPair_selectedConditionIdToMedicalContent MedicalContent? @relation("ConfusionPair_selectedConditionIdToMedicalContent", fields: [selectedConditionId], references: [id])
+  User                                                             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Legacy string labels kept for compatibility with existing analytics/UI
-  realCondition String
-  mistakenFor   String
-
-  count          Int      @default(1)
-  lastOccurrence DateTime @updatedAt
-  createdAt      DateTime @default(now())
-
-  // Legacy Condition relations
-  realConditionId   String?
-  mistakenForId     String?
-  RealCondition     Condition? @relation("ConfusionPairReal", fields: [realConditionId], references: [id], onDelete: SetNull)
-  MistakenCondition Condition? @relation("ConfusionPairMistaken", fields: [mistakenForId], references: [id], onDelete: SetNull)
-
-  // New MedicalContent-linked relations for precise comparisons
-  correctConditionId  String?
-  selectedConditionId String?
-  CorrectCondition    MedicalContent? @relation("CorrectCondition", fields: [correctConditionId], references: [id], onDelete: SetNull)
-  SelectedCondition   MedicalContent? @relation("SelectedCondition", fields: [selectedConditionId], references: [id], onDelete: SetNull)
-
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, realCondition, mistakenFor])
   @@unique([userId, correctConditionId, selectedConditionId])
-  @@index([mistakenForId])
-  @@index([realCondition])
-  @@index([realConditionId])
+  @@unique([userId, realCondition, mistakenFor])
   @@index([correctConditionId])
+  @@index([mistakenForId])
+  @@index([realConditionId])
+  @@index([realCondition])
   @@index([selectedConditionId])
-  @@index([userId])
   @@index([userId, correctConditionId])
+  @@index([userId])
   @@index([userId, realCondition])
 }
 
@@ -549,7 +545,7 @@ model ContentBranch {
   status        String         @default("active")
   createdBy     String
   createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @default(now()) @updatedAt
+  updatedAt     DateTime
   mergedAt      DateTime?
   mergedBy      String?
   mergeCommitId String?
@@ -575,6 +571,24 @@ model ContentHealthReport {
   @@index([timestamp])
 }
 
+model ContentIndex {
+  id           String   @id
+  entityId     String
+  entityType   String
+  title        String
+  body         String
+  panceYield   Int?
+  system       String?
+  searchVector String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+
+  @@index([entityType, entityId])
+  @@index([entityType, panceYield])
+  @@index([system])
+  @@index([title])
+}
+
 model ContentLock {
   id        String   @id
   contentId String   @unique
@@ -585,6 +599,30 @@ model ContentLock {
   @@index([contentId])
   @@index([expiresAt])
   @@index([lockedBy])
+}
+
+model ContentStatistics {
+  id                String         @id
+  conditionId       String
+  date              DateTime       @db.Date
+  views             Int            @default(0)
+  questionsAnswered Int            @default(0)
+  questionsCorrect  Int            @default(0)
+  uniqueUsers       Int            @default(0)
+  averageAccuracy   Decimal?       @db.Decimal(5, 4)
+  averageTimeSpent  Int?
+  bookmarkCount     Int            @default(0)
+  flagCount         Int            @default(0)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime
+  MedicalContent    MedicalContent @relation(fields: [conditionId], references: [conditionId], onDelete: Cascade)
+
+  @@unique([conditionId, date])
+  @@index([conditionId])
+  @@index([date])
+  @@index([questionsAnswered])
+  @@index([uniqueUsers])
+  @@index([views])
 }
 
 model ContentVersion {
@@ -604,6 +642,54 @@ model ContentVersion {
   @@index([contentId])
 }
 
+model ContrastiveDrillAttempt {
+  id               String         @id
+  userId           String
+  setId            String
+  questionsAsked   Int            @default(0)
+  correctAnswers   Int            @default(0)
+  conditionsMissed String[]
+  timeSpentMs      Int?
+  completedAt      DateTime       @default(now())
+  ContrastiveSet   ContrastiveSet @relation(fields: [setId], references: [id])
+  User             User           @relation(fields: [userId], references: [id])
+
+  @@index([userId, setId])
+}
+
+model ContrastiveSet {
+  id                      String                    @id
+  symptom                 String
+  conditionIds            String[]
+  distinguishers          Json
+  system                  String?
+  difficulty              String                    @default("medium")
+  highYield               Boolean                   @default(false)
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime
+  ContrastiveDrillAttempt ContrastiveDrillAttempt[]
+
+  @@index([symptom])
+  @@index([system])
+}
+
+model CuratedPassage {
+  id           String   @id
+  title        String
+  body         String
+  source       String
+  sourceUrl    String
+  license      String
+  systemCodes  String[] @default([])
+  conditionIds String[] @default([])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+
+  @@index([conditionIds])
+  @@index([source])
+  @@index([systemCodes])
+}
+
 model DailyStreak {
   id                String   @id
   userId            String
@@ -619,6 +705,24 @@ model DailyStreak {
   @@index([userId])
 }
 
+model DailyUserAnalytics {
+  id                String   @id
+  userId            String
+  sessionDate       DateTime @db.Date
+  questionsAnswered Int      @default(0)
+  correctAnswers    Int      @default(0)
+  accuracy          Float    @default(0)
+  avgResponseTimeMs Int?
+  systemsStudied    String[] @default([])
+  updatedAt         DateTime
+  accuracyBySystem  Json?
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sessionDate])
+  @@index([sessionDate])
+  @@index([userId])
+}
+
 model DailyWordle {
   id        String   @id
   date      DateTime @unique @db.Date
@@ -628,6 +732,27 @@ model DailyWordle {
   Buzzword  Buzzword @relation(fields: [wordId], references: [id], onDelete: Cascade)
 
   @@index([wordId])
+}
+
+model DifferentialConditionLink {
+  id                     String                @id
+  differentialId         String
+  conditionId            String
+  rankOrder              Int                   @default(0)
+  likelihood             String?
+  distinguishingFeatures String?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @default(now())
+  medicalContentId       String?
+  Condition              Condition             @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  DifferentialDiagnosis  DifferentialDiagnosis @relation(fields: [differentialId], references: [id], onDelete: Cascade)
+  MedicalContent         MedicalContent?       @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
+
+  @@unique([differentialId, conditionId])
+  @@index([conditionId])
+  @@index([differentialId])
+  @@index([likelihood])
+  @@index([medicalContentId])
 }
 
 model DifferentialDiagnosis {
@@ -659,10 +784,9 @@ model DifferentialDiagnosis {
   reassuringFeatures        String[]                    @default([])
   redFlags                  String[]                    @default([])
   typicalPresentation       String?
-  // New FK for deep relations
   primaryConditionId        String?
-  PrimaryCondition          Condition?                  @relation(fields: [primaryConditionId], references: [id], onDelete: SetNull)
   DifferentialConditionLink DifferentialConditionLink[]
+  Condition                 Condition?                  @relation(fields: [primaryConditionId], references: [id])
 
   @@index([category])
   @@index([isEmergency])
@@ -670,94 +794,113 @@ model DifferentialDiagnosis {
   @@index([primaryConditionId])
 }
 
-model Drug {
-  id                  String              @id
-  genericName         String              @unique
-  brandName           String?
-  drugClass           String[]
-  mechanismOfAction   String?
-  indications         String[]
-  contraindications   String[]
-  dosing              String?
-  tags                String[]
-  isHighYield         Boolean             @default(false)
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime
-  aliases             String[]
-  antidote            String?
-  clinicalNotes       String?
-  displayName         String?
-  elimination         String?
-  metabolism          String?
-  sideEffects         String[]
-  interactions        String[]
-  absorption          String?
-  administrationTips  String?
-  bioavailability     String?
-  blackBoxWarnings    String[]            @default([])
-  boardYieldFacts     String[]            @default([])
-  clinicalPearls      String[]            @default([])
-  commonMistakes      String[]            @default([])
-  cyp450Effects       Json?
-  distribution        String?
-  duration            String?
-  eliminationRoute    String?
-  foodInteractions    String[]            @default([])
-  formulations        String[]            @default([])
-  genericAvailable    Boolean             @default(false)
-  geriatricDosing     String?
-  geriatricNotes      String?
-  halfLife            String?
-  hepaticDosing       String?
-  insuranceTier       Int?
-  isFirstLine         Boolean             @default(false)
-  lactationNotes      String?
-  lactationSafety     String?
-  majorInteractions   Json?
-  maxDailyDose        String?
-  mechanismDetailed   String?
-  metabolismDetail    String?
-  mnemonics           String[]            @default([])
-  monitoringParams    String[]            @default([])
-  onsetOfAction       String?
-  panceYield          Int?
-  peakEffect          String?
-  pediatricDosing     String?
-  pediatricNotes      String?
-  pharmacokinetics    Json?
-  pregnancyCategory   String?
-  pregnancyNotes      String?
-  renalDosing         String?
-  reversalAgent       String?
-  riskStrategies      String[]            @default([])
-  routesOfAdmin       String[]            @default([])
-  storageRequirements String?
-  testQuestionTips    String[]            @default([])
-  toxicity            String?
-  typicalCost         String?
-  DrugConditionLink   DrugConditionLink[]
-  MediaAsset          MediaAsset[]
-  // New deep relations
-  DrugInteraction1    DrugInteraction[]   @relation("DrugInteraction1")
-  DrugInteraction2    DrugInteraction[]   @relation("DrugInteraction2")
+model DrillSessionRecord {
+  id             String   @id
+  userId         String
+  mode           String
+  score          Int
+  totalQuestions Int
+  accuracy       Float
+  timeSpentMs    Int
+  streak         Int      @default(0)
+  sessionStart   DateTime
+  sessionEnd     DateTime
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([mode])
+  @@index([userId])
+  @@index([userId, sessionStart])
+}
+
+model Drug {
+  id                                            String              @id
+  genericName                                   String              @unique
+  brandName                                     String?
+  drugClass                                     String[]
+  mechanismOfAction                             String?
+  indications                                   String[]
+  contraindications                             String[]
+  dosing                                        String?
+  tags                                          String[]
+  isHighYield                                   Boolean             @default(false)
+  createdAt                                     DateTime            @default(now())
+  updatedAt                                     DateTime
+  aliases                                       String[]
+  antidote                                      String?
+  clinicalNotes                                 String?
+  displayName                                   String?
+  elimination                                   String?
+  metabolism                                    String?
+  sideEffects                                   String[]
+  interactions                                  String[]
+  absorption                                    String?
+  administrationTips                            String?
+  bioavailability                               String?
+  blackBoxWarnings                              String[]            @default([])
+  boardYieldFacts                               String[]            @default([])
+  clinicalPearls                                String[]            @default([])
+  commonMistakes                                String[]            @default([])
+  cyp450Effects                                 Json?
+  distribution                                  String?
+  duration                                      String?
+  eliminationRoute                              String?
+  foodInteractions                              String[]            @default([])
+  formulations                                  String[]            @default([])
+  genericAvailable                              Boolean             @default(false)
+  geriatricDosing                               String?
+  geriatricNotes                                String?
+  halfLife                                      String?
+  hepaticDosing                                 String?
+  insuranceTier                                 Int?
+  isFirstLine                                   Boolean             @default(false)
+  lactationNotes                                String?
+  lactationSafety                               String?
+  majorInteractions                             Json?
+  maxDailyDose                                  String?
+  mechanismDetailed                             String?
+  metabolismDetail                              String?
+  mnemonics                                     String[]            @default([])
+  monitoringParams                              String[]            @default([])
+  onsetOfAction                                 String?
+  panceYield                                    Int?
+  peakEffect                                    String?
+  pediatricDosing                               String?
+  pediatricNotes                                String?
+  pharmacokinetics                              Json?
+  pregnancyCategory                             String?
+  pregnancyNotes                                String?
+  renalDosing                                   String?
+  reversalAgent                                 String?
+  riskStrategies                                String[]            @default([])
+  routesOfAdmin                                 String[]            @default([])
+  storageRequirements                           String?
+  testQuestionTips                              String[]            @default([])
+  toxicity                                      String?
+  typicalCost                                   String?
+  DrugConditionLink                             DrugConditionLink[]
+  DrugInteraction_DrugInteraction_drugId1ToDrug DrugInteraction[]   @relation("DrugInteraction_drugId1ToDrug")
+  DrugInteraction_DrugInteraction_drugId2ToDrug DrugInteraction[]   @relation("DrugInteraction_drugId2ToDrug")
+  MediaAsset                                    MediaAsset[]
+
+  @@index([drugClass])
   @@index([genericName])
   @@index([isFirstLine])
   @@index([panceYield])
-  @@index([drugClass])
 }
 
 model DrugConditionLink {
   id               String          @id
   drugId           String
   conditionId      String
-  medicalContentId String?
   relationshipType String
   evidenceLevel    String?
   notes            String?
   isFirstLine      Boolean         @default(false)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime
+  medicalContentId String?
   Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   Drug             Drug            @relation(fields: [drugId], references: [id], onDelete: Cascade)
   MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
@@ -768,11 +911,30 @@ model DrugConditionLink {
   @@index([relationshipType])
 }
 
+model DrugInteraction {
+  id                                 String   @id
+  drugId1                            String
+  drugId2                            String
+  severity                           String
+  mechanism                          String?
+  clinicalEffect                     String?
+  management                         String?
+  isContraindicated                  Boolean  @default(false)
+  createdAt                          DateTime @default(now())
+  updatedAt                          DateTime @default(now())
+  Drug_DrugInteraction_drugId1ToDrug Drug     @relation("DrugInteraction_drugId1ToDrug", fields: [drugId1], references: [id], onDelete: Cascade)
+  Drug_DrugInteraction_drugId2ToDrug Drug     @relation("DrugInteraction_drugId2ToDrug", fields: [drugId2], references: [id], onDelete: Cascade)
+
+  @@unique([drugId1, drugId2])
+  @@index([drugId1])
+  @@index([drugId2])
+  @@index([severity])
+}
+
 model ECGConditionLink {
   id                 String          @id
   ecgPatternId       String
   conditionId        String
-  medicalContentId   String?
   relationshipType   String
   findingDescription String?
   exampleImageUrls   String[]        @default([])
@@ -781,6 +943,7 @@ model ECGConditionLink {
   panceYield         Int?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @default(now())
+  medicalContentId   String?
   Condition          Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   ECGPattern         ECGPattern      @relation(fields: [ecgPatternId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   MedicalContent     MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
@@ -868,13 +1031,10 @@ model EducationalResource {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime
   viewCount            Int       @default(0)
-  lastAccessedAt      DateTime?
-  // Study Companion: Supabase path for PDF download (bucket-relative)
+  lastAccessedAt       DateTime?
   storagePath          String?
-  // Gemini context cache for "Chat with your Textbook"
   geminiCacheName      String?
   geminiCacheExpiresAt DateTime?
-  // Adobe Extract JSON path in Supabase for citation highlight coordinates
   adobeDataPath        String?
 
   @@index([approvalStatus])
@@ -883,62 +1043,6 @@ model EducationalResource {
   @@index([resourceType])
   @@index([systemCodes])
   @@index([uploadedBy])
-}
-
-/// Textbook chunks for RAG retrieval (e.g. OpenStax)
-model TextbookChunk {
-  id          String   @id
-  source      String
-  bookTitle   String
-  chapter     String?
-  section     String?
-  text        String
-  systemCodes String[] @default([])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now())
-  // Optional full-text search index (if enabled via SQL migration)
-  searchVector Unsupported("tsvector")?
-
-  @@index([source])
-  @@index([bookTitle])
-  @@index([systemCodes])
-}
-
-/// Curated passages for direct textbook excerpts (e.g. OpenStax)
-model CuratedPassage {
-  id           String   @id
-  title        String
-  body         String
-  source       String
-  sourceUrl    String
-  license      String
-  systemCodes  String[] @default([])
-  conditionIds String[] @default([])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now())
-
-  @@index([source])
-  @@index([systemCodes])
-  @@index([conditionIds])
-}
-
-/// Per-user Gemini context cache for "Chat with your Library" and student-context tutor.
-/// source: 'upload' | 'drive' | 'student-context'
-model KnowledgeCache {
-  id               String   @id @default(cuid())
-  userId           String
-  displayName      String
-  geminiCacheName  String   // e.g. cachedContents/xxx
-  geminiFileIds    String[] @default([]) // file names/URIs used in cache (optional)
-  expiresAt        DateTime
-  source           String   // 'upload' | 'drive' | 'student-context'
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime
-  User             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([userId, source])
-  @@index([userId, expiresAt])
 }
 
 model EncounterResult {
@@ -965,58 +1069,17 @@ model ExplanationReaction {
   @@index([userId, questionId])
 }
 
-model ContrastiveSet {
-  id           String   @id @default(cuid())
-  symptom      String // "Chest Pain", "Dyspnea", "Abdominal Pain"
-  conditionIds String[] // Array of 5 MedicalContent IDs
-
-  // Pre-computed distinguishing features
-  distinguishers Json // { "MI": ["troponin", "ST elevation"], "PE": ["pleuritic", "Wells score"] }
-
-  // Metadata
-  system     String? // Primary system (CARDIO, PULM, etc.)
-  difficulty String  @default("medium")
-  highYield  Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  ContrastiveDrillAttempt ContrastiveDrillAttempt[]
-
-  @@index([symptom])
-  @@index([system])
-}
-
-model ContrastiveDrillAttempt {
-  id     String @id @default(cuid())
-  userId String
-  setId  String // ContrastiveSet ID
-
-  // Performance tracking
-  questionsAsked   Int      @default(0)
-  correctAnswers   Int      @default(0)
-  conditionsMissed String[] // Which conditions were confused
-  timeSpentMs      Int?
-
-  completedAt DateTime @default(now())
-
-  user User           @relation(fields: [userId], references: [id])
-  set  ContrastiveSet @relation(fields: [setId], references: [id])
-
-  @@index([userId, setId])
-}
-
 model FindingConditionLink {
   id                  String              @id
   findingId           String
   conditionId         String
-  medicalContentId    String?
   relationshipType    String
   clinicalContext     String?
   sensitivity         Float?
   specificity         Float?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime
+  medicalContentId    String?
   Condition           Condition           @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   PhysicalExamFinding PhysicalExamFinding @relation(fields: [findingId], references: [id], onDelete: Cascade)
   MedicalContent      MedicalContent?     @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
@@ -1060,11 +1123,11 @@ model GrandRoundsAttempt {
   userId               String
   challengeId          String
   score                Int
-  correctCount         Int // Number of correct answers (out of 5)
   timeSpentMs          Int
-  answers              Json? // Store user's answers for potential review
   completedAt          DateTime             @default(now())
   createdAt            DateTime             @default(now())
+  answers              Json?
+  correctCount         Int
   GrandRoundsChallenge GrandRoundsChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
   User                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1081,9 +1144,8 @@ model GrandRoundsChallenge {
   GrandRoundsAttempt GrandRoundsAttempt[]
 }
 
-/// Daily leaderboard snapshot: one row per user per day (UTC). Populated on Grand Rounds submit.
 model GrandRoundsHistory {
-  id               String   @id @default(cuid())
+  id               String   @id
   userId           String
   date             DateTime @db.Date
   score            Int
@@ -1097,29 +1159,26 @@ model GrandRoundsHistory {
   @@index([date, score])
 }
 
-/**
- * Targeted Daily Question (Didactic)
- * Server-authoritative “one per day” attempt, filtered by client-provided enabled systems.
- * Integrity: we never send correct answers to the client; scoring happens on submit.
- */
-model TargetedDailyAttempt {
-  id         String   @id
-  userId     String
-  date       DateTime @db.Date
-  systems    String[]
-  questionId String
+model Guideline {
+  id               String     @id
+  name             String
+  type             String
+  organization     String?
+  conditionId      String?
+  criteria         Json?
+  grade            String?
+  frequency        String?
+  targetPopulation String?
+  evidenceLevel    String?
+  panceYield       Int?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime
+  Condition        Condition? @relation(fields: [conditionId], references: [id])
 
-  answerIndex Int?
-  isCorrect   Boolean?
-  timeSpentMs Int?
-  completedAt DateTime?
-  createdAt   DateTime @default(now())
-
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, date])
-  @@index([userId])
-  @@index([date])
+  @@index([conditionId])
+  @@index([organization])
+  @@index([panceYield])
+  @@index([type])
 }
 
 model HistoryComponent {
@@ -1161,7 +1220,6 @@ model ImagingConditionLink {
   id                 String          @id
   imagingId          String
   conditionId        String
-  medicalContentId   String?
   relationshipType   String
   expectedFindings   String[]        @default([])
   classicFindings    String?
@@ -1175,6 +1233,7 @@ model ImagingConditionLink {
   findingDescription String?
   isFirstLine        Boolean?        @default(false)
   panceYield         Int?
+  medicalContentId   String?
   Condition          Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   ImagingStudy       ImagingStudy    @relation(fields: [imagingId], references: [id], onDelete: Cascade)
   MedicalContent     MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
@@ -1221,7 +1280,6 @@ model ImagingStudy {
   scanDuration         String?
   testQuestionTips     String[]               @default([])
   whenToAvoid          String[]               @default([])
-  // Image fields for visual learning
   exampleImageUrls     String[]               @default([])
   annotatedImageUrls   String[]               @default([])
   thumbnailUrl         String?
@@ -1232,6 +1290,23 @@ model ImagingStudy {
   @@index([bodyRegion])
   @@index([modality])
   @@index([panceYield])
+}
+
+model KnowledgeCache {
+  id              String   @id
+  userId          String
+  displayName     String
+  geminiCacheName String
+  geminiFileIds   String[] @default([])
+  expiresAt       DateTime
+  source          String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  User            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([userId])
+  @@index([userId, source])
 }
 
 model LabCase {
@@ -1247,7 +1322,6 @@ model LabConditionLink {
   id               String          @id
   labTestId        String
   conditionId      String
-  medicalContentId String?
   relationshipType String
   expectedResult   String?
   significance     String?
@@ -1255,6 +1329,7 @@ model LabConditionLink {
   specificity      Float?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime
+  medicalContentId String?
   Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   LabTest          LabTest         @relation(fields: [labTestId], references: [id], onDelete: Cascade)
   MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
@@ -1303,8 +1378,8 @@ model LabTest {
   units               String?
   whenToOrder         String[]           @default([])
   LabConditionLink    LabConditionLink[]
-  NormalLabValue      NormalLabValue[]
   MediaAsset          MediaAsset[]
+  NormalLabValue      NormalLabValue[]
 
   @@index([category])
   @@index([panceYield])
@@ -1328,21 +1403,13 @@ model MasteryProgress {
   @@index([userId])
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model MediaAsset {
   id                  String                @id
   conditionId         String?
-  imagingStudyId      String?
-  medicalContentId    String?
-  // New FK fields for deeper linking
-  drugId              String?
-  procedureId         String?
-  findingId           String?
-  anatomyId           String?
-  labTestId           String?
   type                String
   filename            String
-  /// Storage object path in bucket (e.g. ecg/abc123_file.jpg); use for delete/URL construction
-  storagePath          String?
   originalUrl         String?
   thumbnailUrl        String?
   tags                String[]
@@ -1353,9 +1420,7 @@ model MediaAsset {
   dimensions          Json?
   confidence          Float                 @default(0)
   aiMetadata          Json?
-  /// Canonical approval: pending | approved | rejected. Use this for drill visibility.
   approvalStatus      String                @default("pending")
-  /// Workflow state: pending_review | active | rejected. When approving, set status='active'.
   status              String                @default("pending_review")
   approvedBy          String?
   approvedAt          DateTime?
@@ -1376,281 +1441,312 @@ model MediaAsset {
   clinicalContext     Json?
   correctDiagnosis    String?
   distractors         Json?
-  // Photo Drill fields
-  difficulty          String                @default("medium") /// easy, medium, hard
-  sourceQuality       String                @default("high") /// low, medium, high
-  modality            String? /// Normalized: ecg, derm, radiology
-  explanation         String? /// Explanation shown after answering
-  // Annotation tracking for quiz vs reference images
-  isAnnotated         Boolean               @default(false) /// Has arrows/labels that give away diagnosis
-  usageType           String                @default("quiz") /// quiz = clean image, reference = annotated, both = either
-  /// Vault: Correct bounding box [ymin, xmin, ymax, xmax] normalized 0-1000 for draw-to-answer; avoids re-calling Vision API
-  spatialAnswerCoords Json?
-  // Relations
-  Condition           Condition?            @relation(fields: [conditionId], references: [id])
-  ImagingStudy        ImagingStudy?         @relation(fields: [imagingStudyId], references: [id])
-  MedicalContent      MedicalContent?       @relation(fields: [medicalContentId], references: [id])
-  Drug                Drug?                 @relation(fields: [drugId], references: [id])
-  Procedure           Procedure?            @relation(fields: [procedureId], references: [id])
-  PhysicalExamFinding PhysicalExamFinding?  @relation(fields: [findingId], references: [id])
+  imagingStudyId      String?
+  difficulty          String                @default("medium")
+  sourceQuality       String                @default("high")
+  modality            String?
+  explanation         String?
+  isAnnotated         Boolean               @default(false)
+  usageType           String                @default("quiz")
+  anatomyId           String?
+  drugId              String?
+  findingId           String?
+  labTestId           String?
+  procedureId         String?
+  medicalContentId    String?
+  storagePath         String?
   AnatomyStructure    AnatomyStructure?     @relation(fields: [anatomyId], references: [id])
+  Condition           Condition?            @relation(fields: [conditionId], references: [id])
+  Drug                Drug?                 @relation(fields: [drugId], references: [id])
+  PhysicalExamFinding PhysicalExamFinding?  @relation(fields: [findingId], references: [id])
+  ImagingStudy        ImagingStudy?         @relation(fields: [imagingStudyId], references: [id])
   LabTest             LabTest?              @relation(fields: [labTestId], references: [id])
+  MedicalContent      MedicalContent?       @relation(fields: [medicalContentId], references: [id])
+  Procedure           Procedure?            @relation(fields: [procedureId], references: [id])
   MedicalContentMedia MedicalContentMedia[]
 
+  @@index([anatomyId])
   @@index([approvalStatus])
   @@index([approvedAt])
   @@index([conditionId])
   @@index([difficulty])
+  @@index([drugId])
   @@index([filename])
+  @@index([findingId])
   @@index([folder])
   @@index([imagingStudyId])
-  @@index([medicalContentId])
-  @@index([drugId])
-  @@index([procedureId])
-  @@index([findingId])
-  @@index([anatomyId])
   @@index([labTestId])
   @@index([mediaType])
+  @@index([medicalContentId])
   @@index([modality])
+  @@index([procedureId])
   @@index([status])
   @@index([tags])
   @@index([type])
   @@index([uploadedBy])
 }
 
-/// Anatomy Painter (Phase 3): Firefly-generated anatomy image metadata. Asset stored in Supabase (visualizer/).
-model VisualizerGeneration {
-  id                  String    @id @default(cuid())
-  userId              String
-  conditionId         String?
-  prompt              String
-  contentClass        String    @default("art") // art | photo
-  storagePath         String
-  storageUrl          String?
-  referenceAnatomyId  String?
-  createdAt           DateTime  @default(now())
-  User                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model MedicalContent {
+  id                                                              String                       @id
+  conditionId                                                     String                       @unique
+  system                                                          String
+  subcategory                                                     String
+  condition                                                       String
+  status                                                          String                       @default("draft")
+  version                                                         Int                          @default(1)
+  createdAt                                                       DateTime                     @default(now())
+  createdBy                                                       String
+  updatedAt                                                       DateTime
+  updatedBy                                                       String
+  publishedAt                                                     DateTime?
+  publishedBy                                                     String?
+  approvedAt                                                      DateTime?
+  approvedBy                                                      String?
+  relatedSystems                                                  String[]                     @default([])
+  buzzwords                                                       String[]                     @default([])
+  complications                                                   String?
+  diagnostics                                                     String?
+  differentialDiagnosis                                           String?
+  epidemiology                                                    String?
+  etiology                                                        String?
+  overview                                                        String?
+  pathophysiology                                                 String?
+  physicalExam                                                    String?
+  prognosis                                                       String?
+  riskFactors                                                     String?
+  symptoms                                                        String?
+  treatment                                                       String?
+  classic_triad                                                   Json?
+  clinical_pearls                                                 Json?
+  first_line_rx                                                   String?
+  gold_standard_dx                                                String?
+  age_demographic                                                 Json?
+  best_initial_test                                               String?
+  classic_patient                                                 String?
+  differentials                                                   Json?
+  disposition                                                     String?
+  gender_bias                                                     String?
+  guidelines                                                      String?
+  image_query                                                     String?
+  mnemonic                                                        String?
+  pance_yield                                                     Int?
+  patient_education                                               String?
+  prevention                                                      String?
+  synonyms                                                        Json?
+  content                                                         Json?
+  parent_category                                                 String?
+  search_vector                                                   Unsupported("tsvector")?
+  canonicalName                                                   String?
+  parentId                                                        String?
+  relationshipType                                                String?
+  AnatomyConditionLink                                            AnatomyConditionLink[]
+  AntibioticConditionLink                                         AntibioticConditionLink[]
+  ClinicalPearl                                                   ClinicalPearl[]
+  ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent  ConfusionPair[]              @relation("ConfusionPair_correctConditionIdToMedicalContent")
+  ConfusionPair_ConfusionPair_selectedConditionIdToMedicalContent ConfusionPair[]              @relation("ConfusionPair_selectedConditionIdToMedicalContent")
+  ContentAuditLog                                                 ContentAuditLog[]
+  ContentStatistics                                               ContentStatistics[]
+  ContentVersion                                                  ContentVersion[]
+  DifferentialConditionLink                                       DifferentialConditionLink[]
+  DrugConditionLink                                               DrugConditionLink[]
+  ECGConditionLink                                                ECGConditionLink[]
+  FindingConditionLink                                            FindingConditionLink[]
+  ImagingConditionLink                                            ImagingConditionLink[]
+  LabConditionLink                                                LabConditionLink[]
+  MediaAsset                                                      MediaAsset[]
+  MedicalContent                                                  MedicalContent?              @relation("MedicalContentToMedicalContent", fields: [parentId], references: [id])
+  other_MedicalContent                                            MedicalContent[]             @relation("MedicalContentToMedicalContent")
+  MedicalContentEmbedding                                         MedicalContentEmbedding?
+  MedicalContentMedia                                             MedicalContentMedia[]
+  PearlConditionLink                                              PearlConditionLink[]
+  PhysiologyConditionLink                                         PhysiologyConditionLink[]
+  PreGeneratedQuestion                                            PreGeneratedQuestion[]
+  ProcedureConditionLink                                          ProcedureConditionLink[]
+  Question                                                        Question[]
+  QuestionSeed                                                    QuestionSeed[]
+  ReviewLog                                                       ReviewLog[]
+  SavedQuestion                                                   SavedQuestion[]
+  ScoringSystemConditionLink                                      ScoringSystemConditionLink[]
+  TreatmentConditionLink                                          TreatmentConditionLink[]
+  UserProgress                                                    UserProgress[]
+  VitalSignConditionLink                                          VitalSignConditionLink[]
+  WeaknessPattern                                                 WeaknessPattern[]
 
-  @@index([userId])
+  @@index([canonicalName])
   @@index([conditionId])
-  @@index([createdAt])
+  @@index([createdBy])
+  @@index([parentId])
+  @@index([parent_category])
+  @@index([relatedSystems])
+  @@index([status, conditionId])
+  @@index([status])
+  @@index([system])
+  @@index([system, pance_yield])
+  @@index([system, parent_category])
+  @@index([system, subcategory, parent_category])
+  @@index([updatedAt])
+  @@index([search_vector], map: "idx_medical_content_search", type: Gin)
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model MedicalContent {
-  id                    String                   @id
-  conditionId           String                   @unique
-  system                String
-  subcategory           String
-  condition             String
-  status                String                   @default("draft")
-  version               Int                      @default(1)
-  createdAt             DateTime                 @default(now())
-  createdBy             String
-  updatedAt             DateTime                 @default(now()) @updatedAt
-  updatedBy             String
-  publishedAt           DateTime?
-  publishedBy           String?
-  approvedAt            DateTime?
-  approvedBy            String?
-  content               Json?
-  relatedSystems        String[]                 @default([])
-  parent_category       String?
-  buzzwords             String[]                 @default([])
-  complications         String?
-  diagnostics           String?
-  differentialDiagnosis String?
-  epidemiology          String?
-  etiology              String?
-  overview              String?
-  pathophysiology       String?
-  physicalExam          String?
-  prognosis             String?
-  riskFactors           String?
-  symptoms              String?
-  treatment             String?
-  classic_triad         Json?
-  clinical_pearls       Json?
-  first_line_rx         String?
-  gold_standard_dx      String?
-  age_demographic       Json?
-  best_initial_test     String?
-  classic_patient       String?
-  differentials         Json?
-  disposition           String?
-  gender_bias           String?
-  guidelines            String?
-  image_query           String?
-  mnemonic              String?
-  pance_yield           Int?
-  patient_education     String?
-  prevention            String?
-  synonyms              Json?
-  search_vector         Unsupported("tsvector")?
+model MedicalContentEmbedding {
+  id               String                @id @default(dbgenerated("(gen_random_uuid())::text"))
+  medicalContentId String                @unique
+  embedding        Unsupported("vector")
+  updatedAt        DateTime              @default(now())
+  MedicalContent   MedicalContent        @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
-  // Hierarchy fields
-  parentId         String?
-  relationshipType String? // "manifestation" | "subtype" | "complication" | "variant"
-  canonicalName    String?
-
-  // Hierarchy relations
-  parent   MedicalContent?  @relation("ConditionHierarchy", fields: [parentId], references: [id])
-  children MedicalContent[] @relation("ConditionHierarchy")
-
-  // Inverse relations from junction tables with medicalContentId
-  ContentAuditLog             ContentAuditLog[]
-  ContentVersion              ContentVersion[]
-  MedicalContentMedia         MedicalContentMedia[]
-  AnatomyConditionLinks       AnatomyConditionLink[]
-  DrugConditionLinks          DrugConditionLink[]
-  ECGConditionLinks           ECGConditionLink[]
-  FindingConditionLinks       FindingConditionLink[]
-  ImagingConditionLinks       ImagingConditionLink[]
-  LabConditionLinks           LabConditionLink[]
-  PhysiologyConditionLinks    PhysiologyConditionLink[]
-  ProcedureConditionLinks     ProcedureConditionLink[]
-  TreatmentConditionLinks     TreatmentConditionLink[]
-  DifferentialConditionLinks  DifferentialConditionLink[]
-  AntibioticConditionLinks    AntibioticConditionLink[]
-  VitalSignConditionLinks     VitalSignConditionLink[]
-  ScoringSystemConditionLinks ScoringSystemConditionLink[]
-  PearlConditionLinks         PearlConditionLink[]
-  // Inverse relations from direct entity models with medicalContentId
-  ClinicalPearls              ClinicalPearl[]
-  MediaAssets                 MediaAsset[]
-  Questions                   Question[]
-  PreGeneratedQuestions       PreGeneratedQuestion[]
-  QuestionSeeds               QuestionSeed[]
-  SavedQuestions              SavedQuestion[]
-  WeaknessPatterns            WeaknessPattern[]
-  UserProgress                UserProgress[]
-  ContentStatistics           ContentStatistics[]
-  ConfusionPairsCorrect       ConfusionPair[]              @relation("CorrectCondition")
-  ConfusionPairsSelected      ConfusionPair[]              @relation("SelectedCondition")
-  ReviewLog                   ReviewLog[]
-
-  @@index([conditionId])
-  @@index([createdBy])
-  @@index([relatedSystems])
-  @@index([parentId])
-  @@index([canonicalName])
-  @@index([status])
-  @@index([system])
-  @@index([updatedAt])
-  @@index([system, pance_yield])
-  @@index([parent_category])
-  @@index([system, parent_category])
-  @@index([system, subcategory, parent_category])
-  @@index([status, conditionId])
+  @@index([embedding])
 }
 
-// =============================================================================
-// UserProgress: DEPRECATED - Replaced by ReviewLog for performance (500ms → 5ms)
-// The reviewHistory Json[] field is a major anti-pattern for large datasets
-// TODO: Remove after confirming ReviewLog is fully operational
-// =============================================================================
-model UserProgress {
-  id             String         @id @default(uuid())
-  userId         String
-  conditionId    String
-  fsrsCard       Json
-  fsrsParams     Json?
-  reviewHistory  Json[]         @default([])
-  totalAttempts  Int            @default(0)
-  correctCount   Int            @default(0)
-  accuracy       Float          @default(0)
-  lastReviewAt   DateTime?
-  nextReviewAt   DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  User           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  MedicalContent MedicalContent @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, conditionId])
-  @@index([userId, nextReviewAt])
-  @@index([conditionId])
-  @@index([userId, conditionId])
-}
-
-// =============================================================================
-// REVIEWLOG: High-Performance Time-Series Table for FSRS v6 Optimization
-// Replaces UserProgress.reviewHistory Json[] for 100x speedup (500ms → 5ms).
-// New review data MUST be written here; UserProgress.reviewHistory is legacy.
-// Algorithm-facing fields: rating, state, due_date, review_date, duration, review_type
-// =============================================================================
-
-model ReviewLog {
-  id     String @id @default(cuid())
-  userId String
-
-  // Question/Content identification
-  conditionId      String? // MedicalContent.conditionId
-  medicalContentId String? // Direct FK to MedicalContent
-  questionId       String? // Source question ID (polymorphic: Question | PreGeneratedQuestion | QuestionSeed)
-  questionType     String? // 'pre_generated' | 'question' | 'seed'
-  questionFkId     String? // FK to Question when questionType='question' (enables proper relation)
-
-  // === Algorithm-facing fields (exact names for FSRS integration) ===
-  rating     Int       @map("grade") // FSRS rating: 1 (Again), 2 (Hard), 3 (Good), 4 (Easy)
-  state      Int       // 0=New, 1=Learning, 2=Review, 3=Relearning
-  due_date   DateTime? @map("scheduledAt") // When this review was scheduled
-  review_date DateTime @default(now()) @map("reviewedAt") // When reviewed
-  duration   Int?      @map("responseTimeMs") // Milliseconds to answer
-  review_type String   @default("real") // "real" (MAIN) vs "cram" (CRAM/RAPID_RECALL) - filter for algorithm
-
-  // FSRS v6 extended state (for optimizer)
-  stability      Float  // S value at time of review
-  difficulty     Float  // D value at time of review
-  retrievability Float? // R value at time of review (calculated)
-  elapsedDays    Float? // Days since last review
-  wasCorrect     Boolean // Actual correctness
-
-  // Context
-  sessionType SessionType @default(MAIN) // Kept for backward compat; maps to review_type
-  sessionId   String? // FK to StudySession
-  attemptId   String? // FK to QuestionAttempt
-  deviceType  String? // 'mobile' | 'tablet' | 'desktop'
-  system      String? // Normalized system code (e.g., 'CV', 'PULM')
-  telemetry   Json? // Compact behavioral metrics
-
-  // Metadata
-  fsrsVersion String   @default("6.0")
-  createdAt   DateTime @default(now())
-
-  // Relations
-  User           User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  MedicalContent MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
-  Question       Question?       @relation(fields: [questionFkId], references: [id], onDelete: SetNull)
-
-  // === 8 CRITICAL INDEXES FOR FSRS OPTIMIZER ===
-  @@index([userId, review_date])
-  @@index([userId, conditionId, review_date])
-  @@index([userId, system, review_date])
-  @@index([review_date])
-  @@index([conditionId, review_date])
-  @@index([medicalContentId])
-  @@index([userId, state, review_date])
-  @@index([userId, review_type, review_date]) // CRITICAL: Fast filtering of "real" vs "cram"
-  @@index([userId, rating, review_date])
-  @@index([questionFkId])
-}
-
-/// Junction table linking MedicalContent to MediaAsset
 model MedicalContentMedia {
   id               String         @id
   medicalContentId String
   mediaAssetId     String
-  relationship     String         @default("illustration") // illustration, diagram, clinical_image, reference
+  relationship     String         @default("illustration")
   displayOrder     Int            @default(0)
   caption          String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @default(now())
-  MedicalContent   MedicalContent @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
   MediaAsset       MediaAsset     @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@unique([medicalContentId, mediaAssetId])
-  @@index([medicalContentId])
   @@index([mediaAssetId])
+  @@index([medicalContentId])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model NCCPABlueprintConfig {
+  id             String    @id
+  version        String    @unique
+  isActive       Boolean   @default(false)
+  weights        Json
+  systemCount    Int
+  effectiveDate  DateTime  @db.Date
+  expirationDate DateTime? @db.Date
+  createdAt      DateTime  @default(now())
+
+  @@index([isActive])
+}
+
+model NormalImagingFinding {
+  id                String        @id
+  imagingStudyId    String?
+  imagingStudyName  String
+  modality          String
+  bodyRegion        String
+  findingName       String
+  normalAppearance  String
+  normalMeasurement String?
+  measurementUnit   String?
+  measurementLow    Float?
+  measurementHigh   Float?
+  view              String?
+  protocol          String?
+  significance      String?
+  abnormalIndicates String[]      @default([])
+  clinicalPearls    String[]      @default([])
+  source            String?
+  lastVerified      DateTime?
+  isHighYield       Boolean       @default(false)
+  panceRelevance    Int?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime
+  ImagingStudy      ImagingStudy? @relation(fields: [imagingStudyId], references: [id])
+
+  @@unique([imagingStudyName, findingName, view])
+  @@index([bodyRegion])
+  @@index([imagingStudyId])
+  @@index([isHighYield])
+  @@index([modality])
+}
+
+model NormalLabValue {
+  id               String    @id
+  labTestId        String?
+  labTestName      String
+  category         String
+  normalRangeLow   Float?
+  normalRangeHigh  Float?
+  normalRangeText  String?
+  units            String?
+  siUnits          String?
+  siRangeLow       Float?
+  siRangeHigh      Float?
+  conversionFactor Float?
+  sex              String?
+  ageGroup         String?
+  ageRangeLow      Int?
+  ageRangeHigh     Int?
+  criticalLow      Float?
+  criticalHigh     Float?
+  clinicalNotes    String?
+  commonCauses     String[]  @default([])
+  source           String?
+  lastVerified     DateTime?
+  isHighYield      Boolean   @default(false)
+  panceRelevance   Int?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+  LabTest          LabTest?  @relation(fields: [labTestId], references: [id])
+
+  @@unique([labTestName, sex, ageGroup])
+  @@index([category])
+  @@index([isHighYield])
+  @@index([labTestId])
+  @@index([labTestName])
+}
+
+model NormalPhysicalExamFinding {
+  id                 String   @id
+  system             String
+  examComponent      String
+  normalFinding      String
+  technique          String?
+  ageGroup           String?
+  abnormalVariations String[] @default([])
+  clinicalPearls     String[] @default([])
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime
+
+  @@unique([system, examComponent, ageGroup])
+  @@index([examComponent])
+  @@index([system])
+}
+
+model NormalVitalSign {
+  id                String   @id
+  vitalName         String
+  normalRangeLow    Float?
+  normalRangeHigh   Float?
+  units             String
+  sex               String?
+  ageGroup          String?
+  ageRangeLow       Int?
+  ageRangeHigh      Int?
+  context           String?
+  clinicalNotes     String?
+  abnormalIndicates String[] @default([])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime
+
+  @@unique([vitalName, sex, ageGroup, context])
+  @@index([ageGroup])
+  @@index([vitalName])
+}
+
+model OsceResult {
+  id                      String                  @id
+  sessionId               String                  @unique
+  score                   Float
+  checklist               Json
+  redFlagsMissed          String[]
+  clinicalReasoningScore  Float
+  billingCodeSuggestion   String?
+  createdAt               DateTime                @default(now())
+  PatientEncounterSession PatientEncounterSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
 model PatientEncounterCase {
@@ -1672,24 +1768,8 @@ model PatientEncounterCase {
   teachingPoints          String[]
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime
-  
-  // Module 1: Living Patient Encounter additions
-  stateMachine            Json?                     // PatientAVStateMachine for voice+video states
-  videoUrls               Json?                     // Map of state IDs to veo_cameos URLs
-  voiceConfig             Json?                     // Voice personality configuration
-  
   CaseRubric              CaseRubric?
   PatientEncounterSession PatientEncounterSession[]
-}
-
-/// Clinical checklist for grading an OSCE encounter (critical items + red flags).
-model CaseRubric {
-  id         String                 @id @default(uuid())
-  caseId     String                 @unique
-  checklist  Json                   // [{ item: string, isRedFlag?: boolean }]
-  createdAt  DateTime               @default(now())
-  updatedAt  DateTime               @updatedAt
-  PatientEncounterCase PatientEncounterCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
 }
 
 model PatientEncounterSession {
@@ -1697,39 +1777,37 @@ model PatientEncounterSession {
   userId               String
   caseId               String
   startTime            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
+  updatedAt            DateTime
   status               String               @default("active")
   messages             Json
   physicalFindings     Json?
   diagnosticOrders     Json?
   diagnosis            String?
   treatmentPlan        String?
+  OsceResult           OsceResult?
   PatientEncounterCase PatientEncounterCase @relation(fields: [caseId], references: [id])
   User                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  OsceResult           OsceResult?
-  CaseFile             CaseFile?
-  ConsultRequest       ConsultRequest[]
 
   @@index([status])
   @@index([userId])
-  @@index([userId, startTime]) // Clinical Competency Trend: sessions by user ordered by time
 }
 
-/// Post-encounter grading result (faculty-style rubric + Gemini assessment).
-/// Siloed from FSRS: OSCE stats (pass rate, clinicalReasoningScore) query this table only.
-model OsceResult {
-  id                    String                    @id @default(uuid())
-  sessionId             String                   @unique
-  score                 Float
-  checklist             Json                      // [{ item, status: "PASS"|"FAIL", feedback }]
-  redFlagsMissed        String[]
-  clinicalReasoningScore Float
-  billingCodeSuggestion String?
-  softSkillsReport      Json?                     // Bedside manner: { empathy, professionalism, pacing: { score 1-5, feedback } }
-  createdAt             DateTime                 @default(now())
-  PatientEncounterSession PatientEncounterSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+model PearlConditionLink {
+  id               String          @id
+  pearlId          String
+  conditionId      String
+  relevance        String?
+  createdAt        DateTime        @default(now())
+  medicalContentId String?
+  updatedAt        DateTime        @default(now())
+  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
+  ClinicalPearl    ClinicalPearl   @relation(fields: [pearlId], references: [id], onDelete: Cascade)
 
-  @@index([score]) // Pass-rate and score-band aggregations without scanning ReviewLog
+  @@unique([pearlId, conditionId])
+  @@index([conditionId])
+  @@index([medicalContentId])
+  @@index([pearlId])
 }
 
 model PeerStatistic {
@@ -1770,39 +1848,22 @@ model PerformanceRecord {
   @@index([userId, timestamp])
 }
 
-/// Session-level drill performance (e.g. from /api/performance/record). Distinct from per-question PerformanceRecord.
-model DrillSessionRecord {
-  id          String    @id @default(cuid())
-  userId      String
-  mode        String    // drillType from client (e.g. "pharmacology", "contrastive")
-  score       Int       // correctAnswers
-  totalQuestions Int
-  accuracy    Float
-  timeSpentMs Int
-  streak      Int       @default(0)
-  sessionStart DateTime
-  sessionEnd   DateTime
-  metadata    Json?
-  createdAt   DateTime  @default(now())
-  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+model PersonalizedFSRSParams {
+  id                     String    @id
+  userId                 String    @unique
+  sampleSize             Int?
+  lastOptimizedAt        DateTime?
+  improvementOverDefault Float?
+  optimizationIterations Int?
+  systemModifiers        Json?
+  validationBrierScore   Float?
+  parameterBounds        Json?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime
+  w                      Float[]
+  User                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([userId, sessionStart])
-  @@index([mode])
-}
-
-/// System/cron audit trail (e.g. daily aggregation, replenish-pool). Not user-facing.
-model AuditLog {
-  id         String   @id @default(cuid())
-  action     String   // e.g. "DAILY_ANALYTICS_AGGREGATION", "REPLENISH_POOL"
-  entityType String   @default("SYSTEM")
-  entityId   String?  // e.g. user id for DAILY_PRESCRIPTION_GENERATED
-  details    Json?
-  createdAt  DateTime @default(now())
-
-  @@index([action])
-  @@index([entityId])
-  @@index([createdAt])
 }
 
 model PhysicalExamFinding {
@@ -1899,19 +1960,66 @@ model PhysiologyConditionLink {
   id                String            @id
   physiologyId      String
   conditionId       String
-  medicalContentId  String?
   relationshipType  String
   explanation       String?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime
+  medicalContentId  String?
   Condition         Condition         @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  PhysiologyConcept PhysiologyConcept @relation(fields: [physiologyId], references: [id], onDelete: Cascade)
   MedicalContent    MedicalContent?   @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
+  PhysiologyConcept PhysiologyConcept @relation(fields: [physiologyId], references: [id], onDelete: Cascade)
 
   @@unique([physiologyId, conditionId])
   @@index([conditionId])
   @@index([medicalContentId])
   @@index([relationshipType])
+}
+
+model PlatformStatistics {
+  id                     String   @id
+  date                   DateTime @unique @db.Date
+  dau                    Int      @default(0)
+  wau                    Int      @default(0)
+  mau                    Int      @default(0)
+  newUsers               Int      @default(0)
+  returningUsers         Int      @default(0)
+  retention7Day          Decimal? @db.Decimal(5, 4)
+  retention30Day         Decimal? @db.Decimal(5, 4)
+  questionsAnswered      Int      @default(0)
+  questionsCorrect       Int      @default(0)
+  questionsIncorrect     Int      @default(0)
+  averageAccuracy        Decimal? @db.Decimal(5, 4)
+  sessionsStarted        Int      @default(0)
+  sessionsCompleted      Int      @default(0)
+  averageSessionDuration Int?
+  totalStudyTime         Int      @default(0)
+  fsrsCardsReviewed      Int      @default(0)
+  fsrsCardsMature        Int      @default(0)
+  fsrsAverageRetention   Decimal? @db.Decimal(5, 4)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime
+
+  @@index([createdAt])
+  @@index([date])
+  @@index([dau])
+}
+
+model Podcast {
+  id              String   @id
+  userId          String
+  jobId           String?  @unique
+  title           String
+  durationSeconds Int?
+  audioUrl        String?
+  script          Json?
+  takeaways       Json?
+  chapters        Json?
+  sourceFileName  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  User            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model PracticeGuideline {
@@ -1927,56 +2035,46 @@ model PracticeGuideline {
 }
 
 model PreGeneratedQuestion {
-  id               String    @id
-  questionType     String
-  system           String?
-  conditionId      String?
-  medicalContentId String?
-  difficulty       String
-  questionData     Json
-  generatedAt      DateTime  @default(now())
-  usedAt           DateTime?
-  usedBy           String?
-  quality          Int?
-
-  // Quality scoring (Phase 3)
-  qualityScore      Float? // AI-assessed quality 0-100
-  conditionAccuracy Float? // How well question tests the linked condition 0-1
-  contentRelevance  Float? // How relevant to PANCE content 0-1
-  distracorQuality  Float? // Quality of wrong answer options 0-1
-
-  // Validation tracking
-  validatedAt      DateTime? // When human validated
-  validatedBy      String? // Admin userId who validated
-  validationStatus String    @default("pending") // 'pending' | 'approved' | 'rejected' | 'needs_revision'
-  validationNotes  String? // Admin notes on quality
-
-  // Usage statistics
-  timesServed    Int    @default(0) // How many times served to users
-  timesCorrect   Int    @default(0) // Times answered correctly
-  timesIncorrect Int    @default(0) // Times answered incorrectly
-  avgTimeMs      Int? // Average time to answer
-  flagCount      Int    @default(0) // Number of times flagged by users
-  flagRate       Float? // flagCount / timesServed
-
-  // Duplicate detection
-  semanticHash       String? // Hash for duplicate detection
-  similarQuestionIds String[] @default([]) // IDs of similar questions
-
-  // FK relations
-  Condition      Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
-  MedicalContent MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  id                 String          @id
+  questionType       String
+  system             String?
+  conditionId        String?
+  difficulty         String
+  questionData       Json
+  generatedAt        DateTime        @default(now())
+  usedAt             DateTime?
+  usedBy             String?
+  quality            Int?
+  medicalContentId   String?
+  avgTimeMs          Int?
+  conditionAccuracy  Float?
+  contentRelevance   Float?
+  distracorQuality   Float?
+  flagCount          Int             @default(0)
+  flagRate           Float?
+  qualityScore       Float?
+  semanticHash       String?
+  similarQuestionIds String[]        @default([])
+  timesCorrect       Int             @default(0)
+  timesIncorrect     Int             @default(0)
+  timesServed        Int             @default(0)
+  validatedAt        DateTime?
+  validatedBy        String?
+  validationNotes    String?
+  validationStatus   String          @default("pending")
+  Condition          Condition?      @relation(fields: [conditionId], references: [id])
+  MedicalContent     MedicalContent? @relation(fields: [medicalContentId], references: [id])
 
   @@index([conditionId])
-  @@index([medicalContentId])
   @@index([difficulty])
+  @@index([flagRate])
   @@index([generatedAt])
+  @@index([medicalContentId])
+  @@index([qualityScore])
   @@index([questionType])
   @@index([system])
   @@index([usedAt])
   @@index([validationStatus])
-  @@index([qualityScore])
-  @@index([flagRate])
 }
 
 model Procedure {
@@ -2019,8 +2117,8 @@ model Procedure {
   videoUrl                  String?
   createdAt                 DateTime                 @default(now())
   updatedAt                 DateTime
-  ProcedureConditionLink    ProcedureConditionLink[]
   MediaAsset                MediaAsset[]
+  ProcedureConditionLink    ProcedureConditionLink[]
 
   @@index([category])
   @@index([panceYield])
@@ -2031,15 +2129,15 @@ model ProcedureConditionLink {
   id               String          @id
   procedureId      String
   conditionId      String
-  medicalContentId String?
   relationshipType String
   indication       String?
   isFirstLine      Boolean         @default(false)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime
+  medicalContentId String?
   Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  Procedure        Procedure       @relation(fields: [procedureId], references: [id], onDelete: Cascade)
   MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
+  Procedure        Procedure       @relation(fields: [procedureId], references: [id], onDelete: Cascade)
 
   @@unique([procedureId, conditionId])
   @@index([conditionId])
@@ -2062,96 +2160,64 @@ model Question {
   timesCorrect     Int             @default(0)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime
-  // Content granularity (2nd/3rd tier hierarchy)
-  category         String?         // 2nd tier hierarchy
-  topic            String?         // 3rd tier hierarchy
-  cognitiveLevel   CognitiveLevel  @default(LEVEL_1_RECALL)
-  clinicalSettings String[]        @default([]) // Rotation tags (e.g., Surgery, ER)
-  relatedDrugs     String[]        @default([]) // Entity linking
-  relatedDiseases  String[]        @default([]) // Entity linking
-  // New FK for deep relations
   conditionId      String?
   medicalContentId String?
-  Condition        Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
-  ReviewLog        ReviewLog[]     // Reviews when questionFkId references this Question
+  category         String?
+  topic            String?
+  cognitiveLevel   CognitiveLevel  @default(LEVEL_1_RECALL)
+  clinicalSettings String[]        @default([])
+  relatedDrugs     String[]        @default([])
+  relatedDiseases  String[]        @default([])
+  Condition        Condition?      @relation(fields: [conditionId], references: [id])
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id])
+  ReviewLog        ReviewLog[]
 
-  @@index([conditionId])
-  @@index([medicalContentId])
-  @@index([difficulty])
-  @@index([system])
   @@index([category])
-  @@index([topic])
   @@index([cognitiveLevel])
+  @@index([conditionId])
+  @@index([difficulty])
+  @@index([medicalContentId])
+  @@index([system])
+  @@index([topic])
 }
 
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model QuestionAttempt {
-  id                 String   @id
+  id                 String        @id
   userId             String
   questionId         String
   questionType       String?
   system             String?
   conditionId        String?
-  medicalContentId   String?
   mode               String?
-  wasCorrect         Boolean  @default(false)
-  isRankedAttempt    Boolean  @default(false)
-  // Time on question: timeSpentMs = session/attempt APIs; durationMs = drill submit (telemetry)
-  timeSpentMs        Int? // Time spent on question in milliseconds (questions/attempt, review)
-  answerChangedCount Int? // Number of times answer was changed before submission
-  createdAt          DateTime @default(now())
+  wasCorrect         Boolean       @default(false)
+  isRankedAttempt    Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  answerChangedCount Int?
+  timeSpentMs        Int?
+  isMainSession      Boolean       @default(false)
+  systemNormalized   String?
+  durationMs         Int?
+  telemetryJson      Json?
+  selectedAnswer     String?
+  implicitConfidence Float?
+  medicalContentId   String?
+  BehaviorLog        BehaviorLog[]
 
-  // Rolling 360 Support
-  isMainSession    Boolean @default(false) // True for Main Session mode only
-  systemNormalized String? // Pre-computed normalized system name for fast aggregation
-
-  // Phase 3: Telemetry Injection (Cognitive Fidelity)
-  telemetryJson   Json?   // Detailed behavioral telemetry: MVRT, time_to_first_interaction, rapid_guess, etc.
-  durationMs      Int?    // Total duration from display to submission (ms); set by drill submit-review
-  selectedAnswer  String? // Answer choice selected (e.g. A, B, C, D) for drill/analytics
-
-  // Metacognition: implicit confidence (0-1) from behavior for Calibration / Illusion of Competence
-  implicitConfidence Float? // 0-1; high+right=mastered, high+wrong=dangerous, low+right=lucky, low+wrong=unconfident
-
-  BehaviorLog BehaviorLog[]
-
+  @@index([conditionId, createdAt])
+  @@index([createdAt(sort: Desc)])
   @@index([isRankedAttempt])
+  @@index([medicalContentId, createdAt])
   @@index([mode])
   @@index([questionId])
-  @@index([userId, createdAt])
   @@index([system])
-  @@index([userId, isMainSession, createdAt])
-  // === 7 ADDITIONAL INDEXES FOR ROLLING 360 ANALYTICS ===
-  // These indexes enable:
-  // 1. Fast DESC sorting for latest attempts
-  // 2. System-specific performance queries
-  // 3. Correctness-based filtering
-  // 4. Question type analytics
-  // 5. Mode-based performance tracking
-  // 6. Global time-series queries
-  // 7. Condition-specific tracking
+  @@index([userId, createdAt])
   @@index([userId, isMainSession, createdAt(sort: Desc)], map: "QuestionAttempt_userId_isMainSession_createdAt_desc_idx")
+  @@index([userId, isMainSession, createdAt])
+  @@index([userId, mode, createdAt])
+  @@index([userId, questionType, createdAt])
   @@index([userId, systemNormalized, createdAt])
   @@index([userId, wasCorrect, createdAt])
-  @@index([userId, questionType, createdAt])
-  @@index([userId, mode, createdAt])
-  @@index([createdAt(sort: Desc)])
-  @@index([conditionId, createdAt])
-  @@index([medicalContentId, createdAt])
-}
-
-/// Behavioral analysis from "Ghost Grader" (Gemini) for implicit FSRS adjustment.
-model BehaviorLog {
-  id               String   @id @default(cuid())
-  questionAttemptId String
-  confidenceScore  Float    // 0-1 from Gemini
-  impliedRating    Int?     // 1-4 FSRS rating suggested by behavior
-  rawResponse      String?  // Gemini raw text for audit
-  createdAt        DateTime @default(now())
-
-  QuestionAttempt QuestionAttempt @relation(fields: [questionAttemptId], references: [id], onDelete: Cascade)
-
-  @@index([questionAttemptId])
 }
 
 model QuestionFlag {
@@ -2204,7 +2270,6 @@ model QuestionHistory {
 model QuestionSeed {
   id               String          @id
   conditionId      String
-  medicalContentId String?
   questionType     String
   system           String?
   corePathology    String
@@ -2219,23 +2284,115 @@ model QuestionSeed {
   lastUsedAt       DateTime?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime
-  // FK relations
-  Condition        Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  medicalContentId String?
+  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id])
 
   @@index([conditionId])
   @@index([medicalContentId])
   @@index([system])
 }
 
-// DEPRECATED: Legacy SRSItem - use Card model instead
-// This model mixes SM-2 and FSRS fields creating architectural drift
-// TODO: Migrate to Card model after data migration
-// =============================================================================
-// SRSItem: DEPRECATED - Use Card model instead
-// This model mixes SM-2 and FSRS fields creating architectural drift
-// TODO: Migrate to Card model after data migration
-// =============================================================================
+model QuestionVariant {
+  id             String   @id
+  baseQuestionId String
+  variantType    String
+  vignette       String?
+  question       String
+  options        String[]
+  correctAnswer  String
+  explanation    String
+  difficulty     String   @default("medium")
+  taskType       String?
+  usedByUsers    String[]
+  createdAt      DateTime @default(now())
+
+  @@index([baseQuestionId])
+  @@index([taskType])
+}
+
+model QuestionVersion {
+  id              String   @id
+  questionId      String
+  questionType    String
+  version         Int
+  questionData    Json
+  changedFields   String[]
+  changeReason    String?
+  changeSummary   String?
+  editedBy        String
+  editedByEmail   String?
+  distractorScore Int?
+  qualityScore    Int?
+  createdAt       DateTime @default(now())
+
+  @@unique([questionId, questionType, version])
+  @@index([createdAt])
+  @@index([editedBy])
+  @@index([questionId, questionType])
+  @@index([questionId, version])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ReviewLog {
+  id               String          @id
+  userId           String
+  conditionId      String?
+  medicalContentId String?
+  questionId       String?
+  questionType     String?
+  grade            Int
+  state            Int
+  stability        Float
+  difficulty       Float
+  retrievability   Float?
+  reviewedAt       DateTime        @default(now())
+  scheduledAt      DateTime?
+  elapsedDays      Float?
+  responseTimeMs   Int?
+  wasCorrect       Boolean
+  sessionId        String?
+  attemptId        String?
+  deviceType       String?
+  system           String?
+  telemetry        Json?
+  fsrsVersion      String          @default("6.0")
+  createdAt        DateTime        @default(now())
+  questionFkId     String?
+  review_type      String          @default("real")
+  sessionType      SessionType     @default(MAIN)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id])
+  Question         Question?       @relation(fields: [questionFkId], references: [id])
+  User             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([conditionId, reviewedAt])
+  @@index([medicalContentId])
+  @@index([questionFkId])
+  @@index([reviewedAt])
+  @@index([userId, conditionId, reviewedAt])
+  @@index([userId, grade, reviewedAt])
+  @@index([userId, review_type, reviewedAt])
+  @@index([userId, reviewedAt])
+  @@index([userId, state, reviewedAt])
+  @@index([userId, system, reviewedAt])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model Rolling360Buffer {
+  id               String    @id
+  userId           String
+  slotIndex        Int
+  attemptId        String?
+  isCorrect        Boolean?
+  systemNormalized String?
+  answeredAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+
+  @@unique([userId, slotIndex])
+  @@index([userId, slotIndex])
+}
+
 model SRSItem {
   id             String    @id
   userId         String
@@ -2262,39 +2419,6 @@ model SRSItem {
   @@index([userId])
 }
 
-// =============================================================================
-// CARD: FSRS v6 Compliant Model (Replaces SRSItem)
-// Matches ts-fsrs Card interface exactly for seamless integration
-// =============================================================================
-model Card {
-  id         String @id @default(cuid())
-  userId     String
-  questionId String // Connects to Question/MedicalContent
-
-  // FSRS v6 State (matches ts-fsrs Card interface)
-  due            DateTime // Next review date
-  stability      Float     @default(0.0) // S - memory stability in days
-  difficulty     Float     @default(0.0) // D - item difficulty [0-10]
-  elapsed_days   Float     @default(0.0) // Days since card creation
-  scheduled_days Float     @default(0.0) // Days until next review
-  reps           Int       @default(0) // Total review count
-  lapses         Int       @default(0) // Number of failed reviews
-  state          Int       @default(0) // 0=New, 1=Learning, 2=Review, 3=Relearning
-  last_review    DateTime? // Timestamp of last review
-
-  // Metadata
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, questionId])
-  @@index([userId, due]) // CRITICAL: Fast "Due Today" queries
-  @@index([userId, state]) // Filter by learning state
-  @@index([questionId]) // Lookup by content
-}
-
 model SavedQuestion {
   id               String          @id
   userId           String
@@ -2310,11 +2434,10 @@ model SavedQuestion {
   nextReviewDate   String?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime
-  // New FK for deep relations
   conditionId      String?
   medicalContentId String?
-  Condition        Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  Condition        Condition?      @relation(fields: [conditionId], references: [id])
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id])
   User             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, questionId, type])
@@ -2354,15 +2477,32 @@ model ScoringSystem {
   calculatorUrl              String?
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime
-  // New FK for deep relations
   conditionId                String?
-  Condition                  Condition?                   @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  Condition                  Condition?                   @relation(fields: [conditionId], references: [id])
   ScoringSystemConditionLink ScoringSystemConditionLink[]
 
   @@index([category])
-  @@index([condition])
   @@index([conditionId])
+  @@index([condition])
   @@index([panceYield])
+}
+
+model ScoringSystemConditionLink {
+  id               String          @id
+  scoringSystemId  String
+  conditionId      String
+  usageContext     String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @default(now())
+  medicalContentId String?
+  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
+  ScoringSystem    ScoringSystem   @relation(fields: [scoringSystemId], references: [id], onDelete: Cascade)
+
+  @@unique([scoringSystemId, conditionId])
+  @@index([conditionId])
+  @@index([medicalContentId])
+  @@index([scoringSystemId])
 }
 
 model SemanticCache {
@@ -2382,6 +2522,36 @@ model SemanticCache {
   @@index([queryText(ops: raw("gin_trgm_ops"))], type: Gin)
   @@index([questionType])
   @@index([system])
+}
+
+model SessionAnalytics {
+  id                     String       @id
+  userId                 String
+  sessionId              String       @unique
+  accuracyQ1             Float?
+  accuracyQ2             Float?
+  accuracyQ3             Float?
+  accuracyQ4             Float?
+  accuracyTrend          String?
+  fatiguePointIndex      Int?
+  avgResponseTime        Int?
+  responseTimeVariance   Float?
+  responseTimeTrend      String?
+  totalDurationMinutes   Float?
+  sessionBrierScore      Float?
+  calibrationState       String?
+  overconfidenceBias     Float?
+  flowStateMinutes       Float?
+  interruptionCount      Int          @default(0)
+  wasCompleted           Boolean      @default(true)
+  systemDistribution     Json?
+  difficultyDistribution Json?
+  computedAt             DateTime     @default(now())
+  StudySession           StudySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  User                   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([computedAt])
+  @@index([userId])
 }
 
 model SpecialTest {
@@ -2428,6 +2598,17 @@ model StagingQuestion {
   @@index([system])
 }
 
+model StreakFreezeUse {
+  id        String   @id
+  userId    String
+  date      DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+  @@index([date])
+  @@index([userId])
+}
+
 model StudyGroup {
   id               String             @id
   name             String
@@ -2456,6 +2637,83 @@ model StudyGroupMember {
   @@index([groupId])
 }
 
+model StudyRecommendation {
+  id          String    @id
+  userId      String
+  type        String
+  topic       String
+  reason      String
+  priority    String
+  status      String
+  data        Json?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  User        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, priority])
+  @@index([userId, status])
+}
+
+model StudySession {
+  id                     String            @id
+  userId                 String
+  startedAt              DateTime          @default(now())
+  endedAt                DateTime?
+  totalQuestions         Int               @default(0)
+  correctAnswers         Int               @default(0)
+  accuracy               Float             @default(0)
+  totalTimeMs            Int               @default(0)
+  avgTimePerQuestion     Int?
+  bestStreak             Int               @default(0)
+  finalStreak            Int               @default(0)
+  avgStreak              Float?
+  errorClusters          Int               @default(0)
+  peakMomentum           Float?
+  avgMomentum            Float?
+  momentumTrend          String?
+  totalAnswerChanges     Int               @default(0)
+  helpfulChanges         Int               @default(0)
+  harmfulChanges         Int               @default(0)
+  firstInstinctAccuracy  Float?
+  avgInferredConfidence  Float?
+  highConfidenceAccuracy Float?
+  lowConfidenceAccuracy  Float?
+  calibrationScore       Float?
+  questionsUnderPar      Int               @default(0)
+  questionsOverPar       Int               @default(0)
+  rushingAccuracy        Float?
+  deliberateAccuracy     Float?
+  early10Accuracy        Float?
+  late10Accuracy         Float?
+  staminaFade            Float?
+  distributionScore      Float?
+  systemsCovered         String[]          @default([])
+  predictedScore         Int?
+  scoreConfidence        String?
+  passLikelihood         Float?
+  mode                   String?
+  focus                  String?
+  difficulty             String?
+  deviceType             String?
+  browserName            String?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime
+  screenSize             String?
+  connectionType         String?
+  likelyContext          String?
+  isQuickSession         Boolean           @default(false)
+  wasInterrupted         Boolean           @default(false)
+  sessionType            String?
+  systemsTargeted        String[]          @default([])
+  thinkingTimeMs         Int?
+  SessionAnalytics       SessionAnalytics?
+  User                   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([startedAt])
+  @@index([userId])
+  @@index([userId, startedAt])
+}
+
 model SyncQueue {
   id               String    @id
   userId           String
@@ -2477,6 +2735,24 @@ model SyncQueue {
   @@index([userId])
 }
 
+model TextbookChunk {
+  id           String                   @id
+  source       String
+  bookTitle    String
+  chapter      String?
+  section      String?
+  text         String
+  systemCodes  String[]                 @default([])
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @default(now())
+  searchVector Unsupported("tsvector")?
+
+  @@index([bookTitle])
+  @@index([source])
+  @@index([systemCodes])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model Treatment {
   id                     String                   @id
   name                   String                   @unique
@@ -2514,79 +2790,469 @@ model Treatment {
   @@index([type])
 }
 
-model Guideline {
-  id               String     @id
-  name             String
-  type             String // 'screening', 'prevention', 'treatment'
-  organization     String? // 'USPSTF', 'AHA', 'IDSA'
-  conditionId      String?
-  criteria         Json? // age, risk factors, frequency
-  grade            String? // A, B, C, D, I
-  frequency        String?
-  targetPopulation String?
+model TreatmentConditionLink {
+  id               String          @id
+  treatmentId      String
+  conditionId      String
+  relationshipType String
   evidenceLevel    String?
-  panceYield       Int?
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  Condition        Condition? @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  isFirstLine      Boolean         @default(false)
+  notes            String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime
+  medicalContentId String?
+  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
+  Treatment        Treatment       @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
 
-  @@index([type])
-  @@index([organization])
-  @@index([panceYield])
+  @@unique([treatmentId, conditionId, relationshipType])
   @@index([conditionId])
+  @@index([isFirstLine])
+  @@index([medicalContentId])
+  @@index([relationshipType])
 }
 
-model PlatformStatistics {
-  id                     String   @id
-  date                   DateTime @unique @db.Date
-  dau                    Int      @default(0)
-  wau                    Int      @default(0)
-  mau                    Int      @default(0)
-  newUsers               Int      @default(0)
-  returningUsers         Int      @default(0)
-  retention7Day          Decimal? @db.Decimal(5, 4)
-  retention30Day         Decimal? @db.Decimal(5, 4)
-  questionsAnswered      Int      @default(0)
-  questionsCorrect       Int      @default(0)
-  questionsIncorrect     Int      @default(0)
-  averageAccuracy        Decimal? @db.Decimal(5, 4)
-  sessionsStarted        Int      @default(0)
-  sessionsCompleted      Int      @default(0)
-  averageSessionDuration Int?
-  totalStudyTime         Int      @default(0)
-  fsrsCardsReviewed      Int      @default(0)
-  fsrsCardsMature        Int      @default(0)
-  fsrsAverageRetention   Decimal? @db.Decimal(5, 4)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+model User {
+  id                      String                    @id
+  clerkId                 String                    @unique
+  email                   String                    @unique
+  firstName               String?
+  lastName                String?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime
+  emailVerified           DateTime?
+  resetToken              String?
+  resetTokenExpiry        DateTime?
+  verifyToken             String?
+  verifyTokenExpiry       DateTime?
+  hasCompletedBaseline    Boolean                   @default(false)
+  hasCompletedOnboarding  Boolean                   @default(false)
+  examDate                DateTime?
+  graduationDate          DateTime?
+  school                  String?
+  currentRotation         String?
+  yearInProgram           String?
+  isAnonymous             Boolean                   @default(false)
+  role                    UserRole                  @default(USER)
+  lifecycleRole           UserLifecycleRole         @default(STUDENT)
+  trainingPhase           TrainingPhase?
+  rotationExamDate        DateTime?
+  activeSystems           String[]                  @default([])
+  Card                    Card[]
+  CohortMember            CohortMember[]
+  ConceptGap              ConceptGap[]
+  ConfusionPair           ConfusionPair[]
+  ContrastiveDrillAttempt ContrastiveDrillAttempt[]
+  DailyStreak             DailyStreak[]
+  DailyUserAnalytics      DailyUserAnalytics[]
+  DrillSessionRecord      DrillSessionRecord[]
+  GrandRoundsAttempt      GrandRoundsAttempt[]
+  GrandRoundsHistory      GrandRoundsHistory[]
+  KnowledgeCache          KnowledgeCache[]
+  PatientEncounterSession PatientEncounterSession[]
+  PeerStatistic           PeerStatistic[]
+  PerformanceRecord       PerformanceRecord[]
+  PersonalizedFSRSParams  PersonalizedFSRSParams?
+  Podcast                 Podcast[]
+  ReviewLog               ReviewLog[]
+  SRSItem                 SRSItem[]
+  SavedQuestion           SavedQuestion[]
+  SessionAnalytics        SessionAnalytics[]
+  StudyGroupMember        StudyGroupMember[]
+  StudyRecommendation     StudyRecommendation[]
+  StudySession            StudySession[]
+  UserAchievement         UserAchievement[]
+  UserBehaviorMetrics     UserBehaviorMetrics[]
+  UserCircadianProfile    UserCircadianProfile?
+  UserConditionAccuracy   UserConditionAccuracy[]
+  UserConfusionPattern    UserConfusionPattern[]
+  UserGoal                UserGoal[]
+  UserLearningProfile     UserLearningProfile?
+  UserPearl               UserPearl[]
+  UserPreferences         UserPreferences?
+  UserProgress            UserProgress[]
+  UserQuestionHistory     UserQuestionHistory[]
+  UserQuestionSeen        UserQuestionSeen[]
+  UserRolling360Stats     UserRolling360Stats?
+  UserSRSConfig           UserSRSConfig?
+  UserStatistics          UserStatistics?
+  UserStatisticsSnapshot  UserStatisticsSnapshot[]
+  UserTopicProgress       UserTopicProgress[]
+  UserWordleState         UserWordleState[]
+  VisualizerGeneration    VisualizerGeneration[]
+  WeaknessPattern         WeaknessPattern[]
 
-  @@index([date])
-  @@index([dau])
-  @@index([createdAt])
+  @@index([clerkId])
+  @@index([email])
+  @@index([lifecycleRole])
+  @@index([role])
+  @@index([trainingPhase])
 }
 
-model ContentStatistics {
-  id                String         @id
-  conditionId       String
-  date              DateTime       @db.Date
-  views             Int            @default(0)
-  questionsAnswered Int            @default(0)
-  questionsCorrect  Int            @default(0)
-  uniqueUsers       Int            @default(0)
-  averageAccuracy   Decimal?       @db.Decimal(5, 4)
-  averageTimeSpent  Int?
-  bookmarkCount     Int            @default(0)
-  flagCount         Int            @default(0)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  MedicalContent    MedicalContent @relation(fields: [conditionId], references: [conditionId], onDelete: Cascade)
+model UserAchievement {
+  id            String   @id
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  progress      Int      @default(100)
+  User          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([conditionId, date])
+  @@unique([userId, achievementId])
+  @@index([achievementId])
+  @@index([userId])
+}
+
+model UserBehaviorMetrics {
+  id                String   @id
+  userId            String
+  questionId        String
+  questionType      String?
+  timeToFirstClick  Int
+  dwellTime         Int
+  totalResponseTime Int
+  answerChanges     Int      @default(0)
+  optionHovers      Int      @default(0)
+  scrollDepth       Int?
+  hesitationEvents  Int      @default(0)
+  backtrackCount    Int      @default(0)
+  timeOfDay         Int
+  deviceType        String?
+  wasCorrect        Boolean
+  confidenceLevel   Int?
+  derivedRating     Int?
+  ratingConfidence  Float?
+  trajectoryData    Json?
+  typingRhythm      Json?
+  createdAt         DateTime @default(now())
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@index([userId, createdAt])
+  @@index([userId, timeOfDay])
+  @@index([wasCorrect])
+}
+
+model UserCircadianProfile {
+  id                   String   @id
+  userId               String   @unique
+  hourlyAccuracy       Json
+  hourlyAttempts       Json
+  hourlyAvgTime        Json?
+  peakHours            Int[]    @default([])
+  avoidHours           Int[]    @default([])
+  optimalStudyWindow   String?
+  chronotype           String?
+  chronotypeConfidence Float?
+  studyDaysOfWeek      Int[]    @default([])
+  weekdayAccuracy      Float?
+  weekendAccuracy      Float?
+  avgDailyMinutes      Int?
+  avgDailyQuestions    Int?
+  mostProductiveDay    Int?
+  dataPoints           Int      @default(0)
+  lastAnalyzed         DateTime @default(now())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime
+  User                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([chronotype])
+  @@index([userId])
+}
+
+model UserConditionAccuracy {
+  id               String    @id
+  userId           String
+  conditionId      String
+  medicalContentId String?
+  attemptCount     Int       @default(0)
+  correctCount     Int       @default(0)
+  lastAttemptedAt  DateTime?
+  updatedAt        DateTime  @default(now())
+  User             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conditionId])
   @@index([conditionId])
-  @@index([date])
-  @@index([views])
-  @@index([questionsAnswered])
-  @@index([uniqueUsers])
+  @@index([medicalContentId])
+  @@index([userId])
+}
+
+model UserConfusionPattern {
+  id               String    @id
+  userId           String
+  conditionA       String
+  conditionB       String
+  conditionAId     String?
+  conditionBId     String?
+  occurrences      Int       @default(1)
+  lastOccurrence   DateTime  @default(now())
+  wasResolved      Boolean   @default(false)
+  resolvedAt       DateTime?
+  resolutionMethod String?
+  questionIds      String[]  @default([])
+  severityScore    Float?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+  User             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conditionA, conditionB])
+  @@index([conditionA])
+  @@index([conditionB])
+  @@index([userId, severityScore])
+  @@index([userId, wasResolved])
+}
+
+model UserGoal {
+  id                 String    @id
+  userId             String
+  title              String
+  description        String?
+  goalType           String
+  targetValue        Int?
+  targetUnit         String?
+  targetDate         DateTime?
+  targetSystem       String?
+  targetStability    Float?
+  currentValue       Int       @default(0)
+  progressPercentage Float     @default(0)
+  status             String    @default("active")
+  isRecurring        Boolean   @default(false)
+  milestones         Json?
+  currentStreak      Int       @default(0)
+  bestStreak         Int       @default(0)
+  lastMetDate        DateTime?
+  motivationNotes    String?
+  rewardMessage      String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime
+  completedAt        DateTime?
+  User               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([targetDate])
+  @@index([userId, goalType])
+  @@index([userId, status])
+}
+
+model UserLearningProfile {
+  id                      String    @id
+  userId                  String    @unique
+  lifetimeQuestions       Int       @default(0)
+  lifetimeCorrect         Int       @default(0)
+  lifetimeAccuracy        Float     @default(0)
+  lifetimeStudyTimeMs     BigInt    @default(0)
+  bestEverStreak          Int       @default(0)
+  currentStreak           Int       @default(0)
+  longestDailyStreak      Int       @default(0)
+  avgAnswerChanges        Float?
+  changeHelpfulRatio      Float?
+  firstInstinctTrustScore Float?
+  overallCalibrationScore Float?
+  overconfidenceIndex     Float?
+  underconfidenceIndex    Float?
+  avgTimePerQuestion      Int?
+  optimalTimeRange        String?
+  rushingTendency         Float?
+  avgSessionLength        Int?
+  fatigueOnsetQuestion    Int?
+  optimalSessionLength    Int?
+  strongestSystems        String[]  @default([])
+  weakestSystems          String[]  @default([])
+  mostImprovedSystem      String?
+  estimatedScore          Int?
+  scoreHistory            Json?
+  readinessLevel          String?
+  targetExamDate          DateTime?
+  learningInsights        String[]  @default([])
+  recommendations         String[]  @default([])
+  bestStudyHour           Int?
+  worstStudyHour          Int?
+  weekendVsWeekday        Float?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime
+  User                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([estimatedScore])
+  @@index([userId])
+}
+
+model UserPearl {
+  id            String        @id
+  userId        String
+  pearlId       String
+  isSaved       Boolean       @default(false)
+  savedAt       DateTime?
+  viewedAt      DateTime?
+  markedUseful  Boolean       @default(false)
+  notes         String?
+  ClinicalPearl ClinicalPearl @relation(fields: [pearlId], references: [id])
+  User          User          @relation(fields: [userId], references: [id])
+
+  @@unique([userId, pearlId])
+}
+
+model UserPreferences {
+  id                  String   @id
+  userId              String   @unique
+  dailyGoal           Int      @default(40)
+  preferredSystems    String[] @default([])
+  sessionLength       Int      @default(20)
+  difficulty          String   @default("adaptive")
+  wakeTime            String?
+  studyReminders      Boolean  @default(true)
+  reminderTime        String?
+  reminderDays        Int[]    @default([1, 2, 3, 4, 5])
+  theme               String   @default("light")
+  soundEnabled        Boolean  @default(true)
+  hapticFeedback      Boolean  @default(true)
+  animationsEnabled   Boolean  @default(true)
+  fontSize            String   @default("medium")
+  showHints           Boolean  @default(true)
+  autoAdvance         Boolean  @default(false)
+  explanationDepth    String   @default("standard")
+  showPearls          Boolean  @default(true)
+  showRelatedConcepts Boolean  @default(true)
+  fsrsEnabled         Boolean  @default(true)
+  reviewBeforeExam    Boolean  @default(true)
+  mixNewAndReview     Boolean  @default(true)
+  keyboardShortcuts   Boolean  @default(true)
+  developerMode       Boolean  @default(false)
+  betaFeatures        Boolean  @default(false)
+  emailDigest         Boolean  @default(true)
+  emailFrequency      String   @default("weekly")
+  pushNotifications   Boolean  @default(false)
+  shareAnonymousData  Boolean  @default(true)
+  showOnLeaderboard   Boolean  @default(true)
+  customSettings      Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime
+  streakFreezes       Int      @default(0)
+  streakGoalDays      String   @default("all")
+  userCoins           Int      @default(0)
+  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserProgress {
+  id             String         @id
+  userId         String
+  conditionId    String
+  fsrsCard       Json
+  fsrsParams     Json?
+  reviewHistory  Json[]         @default([])
+  totalAttempts  Int            @default(0)
+  correctCount   Int            @default(0)
+  accuracy       Float          @default(0)
+  lastReviewAt   DateTime?
+  nextReviewAt   DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime
+  MedicalContent MedicalContent @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  User           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conditionId])
+  @@index([conditionId])
+  @@index([userId, conditionId])
+  @@index([userId, nextReviewAt])
+}
+
+model UserQuestionHistory {
+  id         String   @id
+  userId     String
+  questionId String
+  seenAt     DateTime @default(now())
+  isCorrect  Boolean
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId])
+}
+
+model UserQuestionSeen {
+  id             String   @id
+  userId         String
+  questionId     String
+  questionType   String
+  firstSeenAt    DateTime @default(now())
+  lastSeenAt     DateTime @default(now())
+  timesShown     Int      @default(1)
+  timesCorrect   Int      @default(0)
+  timesIncorrect Int      @default(0)
+  avgTimeMs      Int?
+  lastAnswerMs   Int?
+  correctOnFirst Boolean?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId, questionType])
+  @@index([questionId])
+  @@index([questionType])
+  @@index([userId, lastSeenAt])
+  @@index([userId, questionType])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model UserRolling360Stats {
+  id                      String    @id
+  userId                  String    @unique
+  totalInWindow           Int       @default(0)
+  correctInWindow         Int       @default(0)
+  accuracyPercent         Decimal?  @db.Decimal(5, 2)
+  systemStats             Json      @default("{}")
+  predictedScore          Int?
+  scoreConfidence         String?
+  passLikelihood          Decimal?  @db.Decimal(5, 2)
+  blueprintAdherence      Decimal?  @db.Decimal(5, 4)
+  isValidExamDistribution Boolean   @default(false)
+  weakestSystems          String[]  @default([])
+  strongestSystems        String[]  @default([])
+  windowStartAttemptId    String?
+  windowEndAttemptId      String?
+  windowStartTime         DateTime?
+  windowEndTime           DateTime?
+  currentSlotIndex        Int       @default(0)
+  lastRecalculatedAt      DateTime  @default(now())
+  recalculationVersion    Int       @default(1)
+  createdAt               DateTime  @default(now())
+  User                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([predictedScore])
+  @@index([userId])
+}
+
+model UserSRSConfig {
+  id               String   @id
+  userId           String   @unique
+  requestRetention Float    @default(0.9)
+  wWeights         Json
+  lastTuned        DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime
+  User             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([lastTuned])
+  @@index([userId])
+}
+
+model UserStatistics {
+  id                  String   @id
+  userId              String   @unique
+  totalQuestions      Int      @default(0)
+  correctAnswers      Int      @default(0)
+  avgTimePerQuestion  Float?
+  systemStats         Json?
+  rushedSystems       String[] @default([])
+  overthinkingSystems String[] @default([])
+  diagnosisBias       Json?
+  strongestSystems    String[] @default([])
+  weakestSystems      String[] @default([])
+  peakStudyHours      Int[]    @default([])
+  avgSessionLength    Float?
+  updatedAt           DateTime
+  createdAt           DateTime @default(now())
+  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model UserStatisticsSnapshot {
@@ -2609,229 +3275,32 @@ model UserStatisticsSnapshot {
   User                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, snapshotDate])
-  @@index([userId])
-  @@index([snapshotDate])
   @@index([accuracy])
-}
-
-model TreatmentConditionLink {
-  id               String          @id
-  treatmentId      String
-  conditionId      String
-  medicalContentId String?
-  relationshipType String
-  evidenceLevel    String?
-  isFirstLine      Boolean         @default(false)
-  notes            String?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime
-  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  Treatment        Treatment       @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
-
-  @@unique([treatmentId, conditionId, relationshipType])
-  @@index([conditionId])
-  @@index([isFirstLine])
-  @@index([medicalContentId])
-  @@index([relationshipType])
-}
-
-model User {
-  id                      String                    @id @default(uuid())
-  clerkId                 String                    @unique
-  email                   String                    @unique
-  firstName               String?
-  lastName                String?
-  createdAt               DateTime                  @default(now())
-  updatedAt               DateTime
-  emailVerified           DateTime?
-  resetToken              String?
-  resetTokenExpiry        DateTime?
-  verifyToken             String?
-  verifyTokenExpiry       DateTime?
-  hasCompletedBaseline    Boolean                   @default(false)
-  hasCompletedOnboarding  Boolean                   @default(false)
-  examDate                DateTime?
-  graduationDate          DateTime?
-  school                  String?
-  currentRotation         String?                   // Clinical rotation name (e.g., Surgery, ER)
-  rotationExamDate        DateTime?                 // Exam date for current rotation
-  yearInProgram           String?
-  isAnonymous             Boolean                   @default(false)
-  role                    UserRole                  @default(USER)
-  // User Lifecycle (student vs. practicing PA)
-  lifecycleRole           UserLifecycleRole         @default(STUDENT)
-  trainingPhase           TrainingPhase?            // DIDACTIC | CLINICAL | GRADUATED
-  activeSystems           String[]                  @default([]) // Enabled didactic modules (e.g., ["CV", "PULM"])
-  CohortMember            CohortMember[]
-  DailyStreak             DailyStreak[]
-  GrandRoundsAttempt      GrandRoundsAttempt[]
-  GrandRoundsHistory      GrandRoundsHistory[]
-  TargetedDailyAttempt    TargetedDailyAttempt[]
-  PatientEncounterSession PatientEncounterSession[]
-  PeerStatistic           PeerStatistic[]
-  PerformanceRecord       PerformanceRecord[]
-  DrillSessionRecord      DrillSessionRecord[]
-  SRSItem                 SRSItem[]
-  Card                    Card[] // FSRS v6 compliant cards
-  SavedQuestion           SavedQuestion[]
-  StudyGroupMember        StudyGroupMember[]
-  UserAchievement         UserAchievement[]
-  UserPearl               UserPearl[]
-  UserQuestionHistory     UserQuestionHistory[]
-  VisualizerGeneration    VisualizerGeneration[]
-  UserSRSConfig           UserSRSConfig?
-  UserWordleState         UserWordleState[]
-  UserTopicProgress       UserTopicProgress[]
-  UserConditionAccuracy   UserConditionAccuracy[]
-  
-  // Module 5: Gamification & Interface Fabric (Multi-Modal Architecture)
-  UserAvatarV2             UserAvatar?
-  PhantomPatient           PhantomPatient?
-  AudioReview              AudioReview[]
-  ConsultRequest           ConsultRequest[]
-  GeneratedInfographic     GeneratedInfographic[]
-  StudyRecommendation     StudyRecommendation[]
-  ContrastiveDrillAttempt ContrastiveDrillAttempt[]
-  UserProgress            UserProgress[]
-  // New deep relations
-  ConfusionPair           ConfusionPair[]
-  WeaknessPattern         WeaknessPattern[]
-  StudySession            StudySession[]
-  UserLearningProfile     UserLearningProfile?
-  UserQuestionSeen        UserQuestionSeen[]
-  UserStatisticsSnapshot  UserStatisticsSnapshot[]
-  UserBehaviorMetrics     UserBehaviorMetrics[]
-  UserPreferences         UserPreferences?
-  UserGoal                UserGoal[]
-  UserConfusionPattern    UserConfusionPattern[]
-  UserCircadianProfile    UserCircadianProfile?
-  SessionAnalytics        SessionAnalytics[]
-  DailyUserAnalytics      DailyUserAnalytics[]
-  PersonalizedFSRSParams  PersonalizedFSRSParams?
-  UserStatistics          UserStatistics?
-  UserRolling360Stats     UserRolling360Stats?
-  ReviewLog               ReviewLog[]
-  KnowledgeCache          KnowledgeCache[]
-  ConceptGap              ConceptGap[]
-  Podcast                 Podcast[]
-
-  @@index([clerkId])
-  @@index([email])
-  @@index([role])
-  @@index([lifecycleRole])
-  @@index([trainingPhase])
-}
-
-/// Identified knowledge gap (e.g. from OSCE differential-diagnosis failure) for Tutor to target.
-model ConceptGap {
-  id         String   @id @default(uuid())
-  userId     String
-  system     String   // e.g. "cardiovascular", "pulmonary" (lowercase, matches OrganSystemSchema)
-  sourceType String   // e.g. "osce"
-  sourceId   String?  // e.g. OsceResult id
-  createdAt  DateTime @default(now())
-  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([userId, system])
-}
-
-model UserStatistics {
-  id     String @id @default(cuid())
-  userId String @unique
-
-  // Overall Performance
-  totalQuestions     Int    @default(0)
-  correctAnswers     Int    @default(0)
-  avgTimePerQuestion Float?
-
-  // System-level breakdown (stored as JSON for flexibility)
-  systemStats Json?
-
-  // Behavioral Patterns
-  rushedSystems       String[] @default([])
-  overthinkingSystems String[] @default([])
-
-  // Diagnosis Bias (conditions frequently over-selected as wrong answers)
-  diagnosisBias Json?
-
-  // Strengths/Weaknesses (auto-calculated)
-  strongestSystems String[] @default([])
-  weakestSystems   String[] @default([])
-
-  // Time tracking
-  peakStudyHours   Int[]  @default([])
-  avgSessionLength Float?
-
-  updatedAt DateTime @updatedAt
-  createdAt DateTime @default(now())
-
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  @@index([snapshotDate])
   @@index([userId])
 }
 
-model UserAchievement {
-  id            String   @id
-  userId        String
-  achievementId String
-  unlockedAt    DateTime @default(now())
-  progress      Int      @default(100)
-  User          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model UserTopicProgress {
+  id                 String    @id
+  userId             String
+  conditionId        String
+  taskType           String
+  stability          Float     @default(1.0)
+  difficulty         Float     @default(5.0)
+  lastReviewDate     DateTime?
+  nextReviewDate     DateTime?
+  state              Int       @default(0)
+  reps               Int       @default(0)
+  lapses             Int       @default(0)
+  variantsUsed       String[]
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime
+  implicitDifficulty Float?
+  User               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, achievementId])
-  @@index([achievementId])
-  @@index([userId])
-}
-
-model UserPearl {
-  id            String        @id
-  userId        String
-  pearlId       String
-  isSaved       Boolean       @default(false)
-  savedAt       DateTime?
-  viewedAt      DateTime?
-  markedUseful  Boolean       @default(false)
-  notes         String?
-  ClinicalPearl ClinicalPearl @relation(fields: [pearlId], references: [id])
-  User          User          @relation(fields: [userId], references: [id])
-
-  @@unique([userId, pearlId])
-}
-
-model UserQuestionHistory {
-  id         String   @id
-  userId     String
-  questionId String
-  seenAt     DateTime @default(now())
-  isCorrect  Boolean
-  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, questionId])
-  @@index([userId])
-}
-
-// DEPRECATED: Use PersonalizedFSRSParams instead
-// This model is redundant and will be removed after data migration
-// TODO: Migrate wWeights to PersonalizedFSRSParams.w and drop this table
-// =============================================================================
-// UserSRSConfig: DEPRECATED - Use PersonalizedFSRSParams instead
-// This model is redundant and will be removed after data migration
-// TODO: Migrate wWeights to PersonalizedFSRSParams.w and drop this table
-// =============================================================================
-model UserSRSConfig {
-  id               String   @id
-  userId           String   @unique
-  requestRetention Float    @default(0.9)
-  wWeights         Json
-  lastTuned        DateTime @default(now())
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime
-  User             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([lastTuned])
-  @@index([userId])
+  @@unique([userId, conditionId, taskType])
+  @@index([userId, nextReviewDate])
+  @@index([userId, state, nextReviewDate])
 }
 
 model UserWordleState {
@@ -2846,6 +3315,45 @@ model UserWordleState {
   @@unique([userId, date])
   @@index([date])
   @@index([userId])
+}
+
+model VisualizerGeneration {
+  id                 String   @id
+  userId             String
+  conditionId        String?
+  prompt             String
+  contentClass       String   @default("art")
+  storagePath        String
+  storageUrl         String?
+  referenceAnatomyId String?
+  createdAt          DateTime @default(now())
+  User               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([conditionId])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model VitalSignConditionLink {
+  id                   String          @id
+  vitalSignId          String
+  conditionId          String
+  expectedChange       String?
+  typicalRange         String?
+  clinicalSignificance String?
+  isEmergency          Boolean         @default(false)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @default(now())
+  medicalContentId     String?
+  Condition            Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent       MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
+  VitalSignRange       VitalSignRange  @relation(fields: [vitalSignId], references: [id], onDelete: Cascade)
+
+  @@unique([vitalSignId, conditionId])
+  @@index([conditionId])
+  @@index([isEmergency])
+  @@index([medicalContentId])
+  @@index([vitalSignId])
 }
 
 model VitalSignRange {
@@ -2865,7 +3373,6 @@ model VitalSignRange {
   testQuestionTips       String[]                 @default([])
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime
-  // New deep relations
   VitalSignConditionLink VitalSignConditionLink[]
 
   @@index([category])
@@ -2875,14 +3382,13 @@ model WeaknessPattern {
   id               String          @id
   userId           String
   conditionId      String
-  medicalContentId String?
   wasCorrect       Boolean
   timestamp        DateTime        @default(now())
   consecutiveWrong Int             @default(0)
-  // New FKs for deep relations
-  User             User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Condition        Condition?      @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  medicalContentId String?
+  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id])
+  User             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([conditionId])
   @@index([medicalContentId])
@@ -2890,253 +3396,32 @@ model WeaknessPattern {
   @@index([userId])
 }
 
-// =============================================================================
-// NEW JUNCTION TABLES FOR DEEP FOREIGN KEY RELATIONSHIPS
-// =============================================================================
-
-/// Links DifferentialDiagnosis to multiple conditions
-model DifferentialConditionLink {
-  id                     String                @id
-  differentialId         String
-  conditionId            String
-  medicalContentId       String?
-  rankOrder              Int                   @default(0)
-  likelihood             String? // 'common', 'less_common', 'rare', 'must_not_miss'
-  distinguishingFeatures String?
-  createdAt              DateTime              @default(now())
-  updatedAt              DateTime              @default(now())
-  DifferentialDiagnosis  DifferentialDiagnosis @relation(fields: [differentialId], references: [id], onDelete: Cascade)
-  Condition              Condition             @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  MedicalContent         MedicalContent?       @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
-
-  @@unique([differentialId, conditionId])
-  @@index([differentialId])
-  @@index([conditionId])
-  @@index([medicalContentId])
-  @@index([likelihood])
-}
-
-/// Links antibiotics to conditions they treat
-model AntibioticConditionLink {
-  id                  String              @id
-  antibioticId        String
-  conditionId         String
-  medicalContentId    String?
-  isFirstLine         Boolean             @default(false)
-  evidenceLevel       String?
-  dosing              String?
-  duration            String?
-  notes               String?
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @default(now())
-  AntibioticGuideline AntibioticGuideline @relation(fields: [antibioticId], references: [id], onDelete: Cascade)
-  Condition           Condition           @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  MedicalContent      MedicalContent?     @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
-
-  @@unique([antibioticId, conditionId])
-  @@index([antibioticId])
-  @@index([conditionId])
-  @@index([medicalContentId])
-  @@index([isFirstLine])
-}
-
-/// Links vital signs to conditions that affect them
-model VitalSignConditionLink {
-  id                   String          @id
-  vitalSignId          String
-  conditionId          String
-  medicalContentId     String?
-  expectedChange       String? // 'elevated', 'decreased', 'variable'
-  typicalRange         String?
-  clinicalSignificance String?
-  isEmergency          Boolean         @default(false)
-  createdAt            DateTime        @default(now())
-  updatedAt            DateTime        @default(now())
-  VitalSignRange       VitalSignRange  @relation(fields: [vitalSignId], references: [id], onDelete: Cascade)
-  Condition            Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  MedicalContent       MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
-
-  @@unique([vitalSignId, conditionId])
-  @@index([vitalSignId])
-  @@index([conditionId])
-  @@index([medicalContentId])
-  @@index([isEmergency])
-}
-
-/// Links scoring systems to conditions they evaluate
-model ScoringSystemConditionLink {
-  id               String          @id
-  scoringSystemId  String
-  conditionId      String
-  medicalContentId String?
-  usageContext     String? // 'diagnosis', 'prognosis', 'risk_stratification'
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @default(now())
-  ScoringSystem    ScoringSystem   @relation(fields: [scoringSystemId], references: [id], onDelete: Cascade)
-  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
-
-  @@unique([scoringSystemId, conditionId])
-  @@index([scoringSystemId])
-  @@index([conditionId])
-  @@index([medicalContentId])
-}
-
-/// Links clinical pearls to conditions
-model PearlConditionLink {
-  id               String          @id
-  pearlId          String
-  conditionId      String
-  medicalContentId String?
-  relevance        String? // 'diagnostic', 'therapeutic', 'general'
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @default(now())
-  ClinicalPearl    ClinicalPearl   @relation(fields: [pearlId], references: [id], onDelete: Cascade)
-  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
-
-  @@unique([pearlId, conditionId])
-  @@index([pearlId])
-  @@index([conditionId])
-  @@index([medicalContentId])
-}
-
-// =============================================================================
-// NEW MODELS FOR "SECOND CHANCE" SYSTEM
-// =============================================================================
-
-model QuestionVariant {
-  id             String @id @default(cuid())
-  baseQuestionId String // Link to original Question or conditionId
-  variantType    String // "rephrased" | "different_distractors" | "different_vitals" | "different_scenario"
-
-  // Question content
-  vignette      String?
-  question      String
-  options       String[] // 4 answer choices
-  correctAnswer String
-  explanation   String
-
-  // Metadata
-  difficulty String  @default("medium")
-  taskType   String? // "diagnosis" | "treatment" | "mechanism" | "next_step"
-
-  usedByUsers String[] // UserIds who have seen this variant
-  createdAt   DateTime @default(now())
-
-  @@index([baseQuestionId])
-  @@index([taskType])
-}
-
-model UserTopicProgress {
-  id          String @id @default(cuid())
-  userId      String
-  conditionId String // MedicalContent ID
-  taskType    String // "diagnosis" | "treatment" | "mechanism" | "workup" | "prevention"
-
-  // FSRS state per topic
-  stability      Float     @default(1.0)
-  difficulty     Float     @default(5.0)
-  lastReviewDate DateTime?
-  nextReviewDate DateTime?
-  state          Int       @default(0) // 0=New, 1=Learning, 2=Review, 3=Relearning
-  reps           Int       @default(0)
-  lapses         Int       @default(0)
-
-  // Track variants used
-  variantsUsed String[] // QuestionVariant IDs already shown
-
-  // Implicit FSRS: behavioral analysis can lower stability so card is seen sooner
-  implicitDifficulty Float? // 0-1; higher = harder implied by behavior (used to cap stability)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, conditionId, taskType])
-  @@index([userId, nextReviewDate])
-  @@index([userId, state, nextReviewDate])
-}
-
-/// Per-user per-condition accuracy snapshot for dashboards. Updated by cron or on attempt.
-model UserConditionAccuracy {
-  id             String   @id @default(cuid())
-  userId         String
-  conditionId    String   // Condition or MedicalContent.conditionId
-  medicalContentId String? // Optional direct FK for content-level analytics
-  attemptCount   Int      @default(0)
-  correctCount   Int      @default(0)
-  lastAttemptedAt DateTime?
-  updatedAt      DateTime @updatedAt
-  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, conditionId])
-  @@index([userId])
-  @@index([conditionId])
-  @@index([medicalContentId])
-}
-
-model StudyRecommendation {
-  id          String    @id @default(cuid())
-  userId      String
-  type        String // "drill_session" | "review" | "new_topic"
-  topic       String // e.g., "Cardiology", "Beta Blockers" (or conditionId)
-  reason      String // "Fading memory", "Low accuracy"
-  priority    String // "high", "medium", "low"
-  status      String // "pending", "completed", "dismissed"
-  data        Json? // Optional context (e.g., list of question IDs)
-  createdAt   DateTime  @default(now())
-  completedAt DateTime?
-
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, status])
-  @@index([userId, priority])
-}
-
-/// Drug-drug interactions (self-referential many-to-many)
-model DrugInteraction {
-  id                String   @id
-  drugId1           String
-  drugId2           String
-  severity          String // 'major', 'moderate', 'minor'
-  mechanism         String?
-  clinicalEffect    String?
-  management        String?
-  isContraindicated Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @default(now())
-  Drug1             Drug     @relation("DrugInteraction1", fields: [drugId1], references: [id], onDelete: Cascade)
-  Drug2             Drug     @relation("DrugInteraction2", fields: [drugId2], references: [id], onDelete: Cascade)
-
-  @@unique([drugId1, drugId2])
-  @@index([drugId1])
-  @@index([drugId2])
-  @@index([severity])
-}
-
-/// Condition-to-condition relationships (differentials, complications, etc.)
-model ConditionRelation {
-  id              String    @id
-  conditionId1    String
-  conditionId2    String
-  relationType    String // 'differential', 'complication', 'precursor', 'associated'
-  bidirectional   Boolean   @default(true)
-  clinicalContext String?
-  createdAt       DateTime  @default(now())
-  Condition1      Condition @relation("ConditionRelation1", fields: [conditionId1], references: [id], onDelete: Cascade)
-  Condition2      Condition @relation("ConditionRelation2", fields: [conditionId2], references: [id], onDelete: Cascade)
-
-  @@unique([conditionId1, conditionId2, relationType])
-  @@index([conditionId1])
-  @@index([conditionId2])
-  @@index([relationType])
+enum CognitiveLevel {
+  LEVEL_1_RECALL
+  LEVEL_2_CONCEPT
+  LEVEL_3_VIGNETTE
 }
 
 enum CohortRole {
   ADMIN
   MEMBER
+}
+
+enum SessionType {
+  MAIN
+  CRAM
+  RAPID_RECALL
+}
+
+enum TrainingPhase {
+  DIDACTIC
+  CLINICAL
+  GRADUATED
+}
+
+enum UserLifecycleRole {
+  STUDENT
+  PRACTICING_PA
 }
 
 enum UserRole {
@@ -3148,990 +3433,8 @@ enum UserRole {
   SUPERADMIN
 }
 
-/// User Lifecycle: Student vs. practicing PA (distinct from RBAC UserRole)
-enum UserLifecycleRole {
-  STUDENT
-  PRACTICING_PA
-}
-
-/// Training phase for PA program progression
-enum TrainingPhase {
-  DIDACTIC
-  CLINICAL
-  GRADUATED
-}
-
-/// Bloom's taxonomy / cognitive demand level for questions
-enum CognitiveLevel {
-  LEVEL_1_RECALL
-  LEVEL_2_CONCEPT
-  LEVEL_3_VIGNETTE
-}
-
 enum WordleStatus {
   playing
   won
   lost
-}
-
-enum SessionType {
-  MAIN // Only these count for FSRS optimization
-  CRAM // Practice mode - excluded from stats
-  RAPID_RECALL // Quick review - excluded from stats
-}
-
-// ============================================================================
-// Sprint 4: Enhanced Session Analytics
-// ============================================================================
-
-model StudySession {
-  id        String    @id
-  userId    String
-  startedAt DateTime  @default(now())
-  endedAt   DateTime?
-
-  // Core metrics
-  totalQuestions     Int   @default(0)
-  correctAnswers     Int   @default(0)
-  accuracy           Float @default(0)
-  totalTimeMs        Int   @default(0)
-  avgTimePerQuestion Int?
-  thinkingTimeMs     Int?  // Gemini 3 "thinking" latency (Deep Think Tutor), logged separately from response time
-
-  // Streak data
-  bestStreak    Int    @default(0)
-  finalStreak   Int    @default(0)
-  avgStreak     Float?
-  errorClusters Int    @default(0) // Count of 3+ errors in 5 questions
-
-  // Momentum metrics
-  peakMomentum  Float? // Highest momentum reached (0-100)
-  avgMomentum   Float?
-  momentumTrend String? // 'peaked' | 'rising' | 'steady' | 'cooling' | 'cold'
-
-  // Behavioral signals
-  totalAnswerChanges    Int    @default(0)
-  helpfulChanges        Int    @default(0) // Changed to correct
-  harmfulChanges        Int    @default(0) // Changed to wrong
-  firstInstinctAccuracy Float? // Accuracy if never changed answers
-
-  // Confidence calibration
-  avgInferredConfidence  Float? // Average behavioral confidence
-  highConfidenceAccuracy Float? // Accuracy when high confidence
-  lowConfidenceAccuracy  Float? // Accuracy when low confidence
-  calibrationScore       Float? // How well confidence matches accuracy
-
-  // Time pressure analysis
-  questionsUnderPar  Int    @default(0)
-  questionsOverPar   Int    @default(0)
-  rushingAccuracy    Float? // Accuracy when under 60% of par time
-  deliberateAccuracy Float? // Accuracy when over par time
-
-  // Fatigue indicators
-  early10Accuracy Float? // First 10 questions accuracy
-  late10Accuracy  Float? // Last 10 questions accuracy
-  staminaFade     Float? // Difference (negative = fatigue)
-
-  // PANCE distribution
-  distributionScore Float? // How closely session matched PANCE blueprint
-  systemsCovered    String[] @default([]) // Systems practiced
-  systemsTargeted   String[] @default([]) // Explicitly selected systems for the session
-
-  // Predicted score
-  predictedScore  Int? // Estimated PANCE score (200-800)
-  scoreConfidence String? // 'low' | 'medium' | 'high'
-  passLikelihood  Float? // 0-100%
-
-  // Session settings
-  sessionType String? // 'mixed' | 'focused' | 'review'
-  mode        String? // 'drill' | 'review' | 'exam'
-  focus       String? // 'new' | 'review' | 'missed'
-  difficulty  String? // 'easy' | 'medium' | 'hard' | 'random'
-
-  // Metadata & Context (Step 7: Session Context Tracking)
-  deviceType     String? // 'mobile' | 'tablet' | 'desktop'
-  browserName    String?
-  screenSize     String? // e.g., "1920x1080"
-  connectionType String? // 'wifi' | 'cellular' | 'unknown'
-  likelyContext  String? // 'commute' | 'home' | 'library' | 'unknown'
-  isQuickSession Boolean @default(false) // < 10 questions
-  wasInterrupted Boolean @default(false) // Large gaps detected
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // New FK for deep relations
-  User             User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  SessionAnalytics SessionAnalytics?
-
-  @@index([userId])
-  @@index([userId, startedAt])
-  @@index([startedAt])
-}
-
-model UserLearningProfile {
-  id     String @id
-  userId String @unique
-
-  // Cumulative performance
-  lifetimeQuestions   Int    @default(0)
-  lifetimeCorrect     Int    @default(0)
-  lifetimeAccuracy    Float  @default(0)
-  lifetimeStudyTimeMs BigInt @default(0)
-
-  // Streak records
-  bestEverStreak     Int @default(0)
-  currentStreak      Int @default(0) // Consecutive days studied
-  longestDailyStreak Int @default(0)
-
-  // Test-taking patterns (aggregated)
-  avgAnswerChanges        Float?
-  changeHelpfulRatio      Float? // Ratio of helpful to total changes
-  firstInstinctTrustScore Float? // Should they trust first instinct?
-
-  // Confidence calibration (lifetime)
-  overallCalibrationScore Float?
-  overconfidenceIndex     Float? // How often high confidence = wrong
-  underconfidenceIndex    Float? // How often low confidence = right
-
-  // Time patterns
-  avgTimePerQuestion Int?
-  optimalTimeRange   String? // e.g., "45-75 seconds"
-  rushingTendency    Float? // 0-1, higher = tends to rush
-
-  // Stamina profile
-  avgSessionLength     Int? // Questions per session
-  fatigueOnsetQuestion Int? // When accuracy typically drops
-  optimalSessionLength Int? // Recommended questions per session
-
-  // System strengths/weaknesses
-  strongestSystems   String[] @default([])
-  weakestSystems     String[] @default([])
-  mostImprovedSystem String?
-
-  // PANCE readiness
-  estimatedScore Int? // Rolling PANCE estimate
-  scoreHistory   Json? // Array of {date, score, confidence}
-  readinessLevel String? // 'not_ready' | 'progressing' | 'almost_ready' | 'ready'
-  targetExamDate DateTime?
-
-  // Learning style insights
-  learningInsights String[] @default([]) // AI-generated insights
-  recommendations  String[] @default([]) // Personalized recommendations
-
-  // Circadian patterns
-  bestStudyHour    Int? // 0-23, best performance hour
-  worstStudyHour   Int? // 0-23, worst performance hour
-  weekendVsWeekday Float? // Performance difference
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // New FK for deep relations
-  User User? @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([estimatedScore])
-}
-
-// =============================================================================
-// NORMAL REFERENCE VALUES
-// Stores normal lab values and imaging findings for case generation
-// =============================================================================
-
-model NormalLabValue {
-  id          String  @id @default(cuid())
-  labTestId   String?
-  labTestName String // e.g., "Hemoglobin", "BUN", "Sodium"
-  category    String // e.g., "CBC", "BMP", "LFT", "Lipid Panel", "Cardiac Markers"
-
-  // Normal ranges
-  normalRangeLow  Float?
-  normalRangeHigh Float?
-  normalRangeText String? // For qualitative results like "Negative"
-  units           String? // e.g., "g/dL", "mg/dL", "mEq/L"
-
-  // SI Units conversion
-  siUnits          String?
-  siRangeLow       Float?
-  siRangeHigh      Float?
-  conversionFactor Float?
-
-  // Demographics for different ranges
-  sex          String? // 'male', 'female', 'all'
-  ageGroup     String? // 'neonate', 'infant', 'child', 'adult', 'elderly'
-  ageRangeLow  Int? // Age in years
-  ageRangeHigh Int? // Age in years
-
-  // Critical values (panic values)
-  criticalLow  Float?
-  criticalHigh Float?
-
-  // Clinical context
-  clinicalNotes String?
-  commonCauses  String[] @default([]) // Causes of abnormal results
-
-  // Metadata
-  source         String? // e.g., "UpToDate", "Harrison's"
-  lastVerified   DateTime?
-  isHighYield    Boolean   @default(false)
-  panceRelevance Int? // 1-5 relevance score
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  LabTest LabTest? @relation(fields: [labTestId], references: [id])
-
-  @@unique([labTestName, sex, ageGroup])
-  @@index([category])
-  @@index([labTestId])
-  @@index([labTestName])
-  @@index([isHighYield])
-}
-
-model NormalImagingFinding {
-  id               String  @id @default(cuid())
-  imagingStudyId   String?
-  imagingStudyName String // e.g., "Chest X-ray", "CT Head", "Echocardiogram"
-  modality         String // e.g., "X-ray", "CT", "MRI", "Ultrasound", "Echo"
-  bodyRegion       String // e.g., "Chest", "Abdomen", "Head", "Spine"
-
-  // Normal finding description
-  findingName       String // e.g., "Cardiac silhouette", "Lung fields", "Mediastinum"
-  normalAppearance  String // Description of normal appearance
-  normalMeasurement String? // e.g., "CTR < 0.5", "Aortic root < 4.0 cm"
-  measurementUnit   String? // e.g., "cm", "mm", "ratio"
-  measurementLow    Float?
-  measurementHigh   Float?
-
-  // View/Protocol specific
-  view     String? // e.g., "PA", "Lateral", "AP", "Axial"
-  protocol String? // e.g., "With contrast", "Without contrast"
-
-  // Clinical context
-  significance      String? // Why this finding matters
-  abnormalIndicates String[] @default([]) // What abnormal suggests
-  clinicalPearls    String[] @default([])
-
-  // Metadata
-  source         String?
-  lastVerified   DateTime?
-  isHighYield    Boolean   @default(false)
-  panceRelevance Int?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  ImagingStudy ImagingStudy? @relation(fields: [imagingStudyId], references: [id])
-
-  @@unique([imagingStudyName, findingName, view])
-  @@index([bodyRegion])
-  @@index([imagingStudyId])
-  @@index([modality])
-  @@index([isHighYield])
-}
-
-model NormalVitalSign {
-  id        String @id @default(cuid())
-  vitalName String // e.g., "Heart Rate", "Blood Pressure", "Temperature"
-
-  // Normal ranges
-  normalRangeLow  Float?
-  normalRangeHigh Float?
-  units           String // e.g., "bpm", "mmHg", "°F", "breaths/min"
-
-  // Demographics
-  sex          String? // 'male', 'female', 'all'
-  ageGroup     String? // 'neonate', 'infant', 'child', 'adult', 'elderly'
-  ageRangeLow  Int?
-  ageRangeHigh Int?
-
-  // Context-specific variations
-  context String? // e.g., "at rest", "sleeping", "exercising", "pregnant"
-
-  // Clinical notes
-  clinicalNotes     String?
-  abnormalIndicates String[] @default([])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([vitalName, sex, ageGroup, context])
-  @@index([vitalName])
-  @@index([ageGroup])
-}
-
-model NormalPhysicalExamFinding {
-  id            String @id @default(cuid())
-  system        String // e.g., "Cardiovascular", "Respiratory", "Neurological"
-  examComponent String // e.g., "Heart Sounds", "Breath Sounds", "Pupils"
-
-  // Normal finding
-  normalFinding String // e.g., "S1, S2 regular without murmurs"
-  technique     String? // How to examine
-
-  // Demographics
-  ageGroup String?
-
-  // Clinical context
-  abnormalVariations String[] @default([]) // What abnormal looks like
-  clinicalPearls     String[] @default([])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([system, examComponent, ageGroup])
-  @@index([system])
-  @@index([examComponent])
-}
-
-// =============================================================================
-// QUESTION TRACKING IMPROVEMENTS
-// Tracks which questions each user has seen to prevent repetition
-// =============================================================================
-
-/// Tracks which questions each user has seen for no-repeat functionality
-model UserQuestionSeen {
-  id           String @id @default(cuid())
-  userId       String
-  questionId   String // ID from Question, PreGeneratedQuestion, etc.
-  questionType String // 'question' | 'pre_generated' | 'seed' | 'staging'
-
-  // Timing
-  firstSeenAt DateTime @default(now())
-  lastSeenAt  DateTime @default(now())
-  timesShown  Int      @default(1)
-
-  // Performance on this specific question
-  timesCorrect   Int  @default(0)
-  timesIncorrect Int  @default(0)
-  avgTimeMs      Int? // Average time to answer
-  lastAnswerMs   Int? // Most recent answer time
-
-  // Was the question answered correctly on first attempt?
-  correctOnFirst Boolean?
-
-  // User relation
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, questionId, questionType])
-  @@index([userId, questionType])
-  @@index([userId, lastSeenAt])
-  @@index([questionId])
-  @@index([questionType])
-}
-
-// Sprint C - Step 8: Question Versioning
-model QuestionVersion {
-  id           String @id @default(cuid())
-  questionId   String // References PreGeneratedQuestion or Question
-  questionType String // 'pre_generated' | 'question' | 'staging'
-  version      Int // Version number (1, 2, 3, ...)
-
-  // Snapshot of question data at this version
-  questionData Json // Full question snapshot
-
-  // Change tracking
-  changedFields String[] // Array of field names that changed
-  changeReason  String? // Why was this edit made?
-  changeSummary String? // Brief description of changes
-
-  // Editor info
-  editedBy      String // User ID who made the edit
-  editedByEmail String? // User email for audit trail
-
-  // Validation scores
-  distractorScore Int? // Score from distractor validation (0-100)
-  qualityScore    Int? // Overall quality score (0-100)
-
-  // Timestamps
-  createdAt DateTime @default(now())
-
-  @@unique([questionId, questionType, version])
-  @@index([questionId, version])
-  @@index([questionId, questionType])
-  @@index([editedBy])
-  @@index([createdAt])
-}
-
-// User Data Improvement Plan - Sprint A
-
-// Step 1: Persist Implicit Behavioral Metrics
-model UserBehaviorMetrics {
-  id           String  @id @default(cuid())
-  userId       String
-  questionId   String
-  questionType String? // 'pre_generated' | 'question' | 'staging'
-
-  // Core timing metrics
-  timeToFirstClick  Int // Time from display to first selection (ms)
-  dwellTime         Int // Total time on question before submission (ms)
-  totalResponseTime Int // Total time including pauses (ms)
-
-  // Interaction patterns
-  answerChanges Int  @default(0) // Number of times answer was changed
-  optionHovers  Int  @default(0) // Number of option hover events
-  scrollDepth   Int? // Max scroll depth percentage (0-100)
-
-  // Behavioral signals
-  hesitationEvents Int @default(0) // Pauses > 3 seconds
-  backtrackCount   Int @default(0) // Times returned to previous options
-
-  // Context
-  timeOfDay       Int // Hour of day (0-23)
-  deviceType      String? // 'mobile' | 'tablet' | 'desktop'
-  wasCorrect      Boolean
-  confidenceLevel Int? // 1-5 if collected
-
-  // FSRS derivation
-  derivedRating    Int? // FSRS rating (1-4) derived from behavior
-  ratingConfidence Float? // Confidence in derived rating (0-1)
-
-  // Advanced metrics (optional)
-  trajectoryData Json? // Mouse trajectory metrics
-  typingRhythm   Json? // Keystroke timing patterns
-
-  // Relations
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([userId, createdAt])
-  @@index([questionId])
-  @@index([userId, timeOfDay])
-  @@index([wasCorrect])
-}
-
-// Step 2: User Preferences Storage
-model UserPreferences {
-  id     String @id @default(cuid())
-  userId String @unique
-
-  // Study preferences
-  dailyGoal        Int      @default(40) // Questions per day
-  preferredSystems String[] @default([]) // e.g., ['CV', 'PULM']
-  sessionLength    Int      @default(20) // Questions per session
-  difficulty       String   @default("adaptive") // 'easy' | 'medium' | 'hard' | 'adaptive'
-
-  // Timing preferences
-  wakeTime       String? // HH:MM format, e.g., "07:00"
-  studyReminders Boolean @default(true)
-  reminderTime   String? // HH:MM format
-  reminderDays   Int[]   @default([1, 2, 3, 4, 5]) // 0=Sunday, 1=Monday, etc.
-
-  // UI preferences
-  theme             String  @default("light") // 'light' | 'dark' | 'auto'
-  soundEnabled      Boolean @default(true)
-  hapticFeedback    Boolean @default(true)
-  animationsEnabled Boolean @default(true)
-  fontSize          String  @default("medium") // 'small' | 'medium' | 'large'
-
-  // Learning preferences
-  showHints           Boolean @default(true)
-  autoAdvance         Boolean @default(false) // Auto-advance after answering
-  explanationDepth    String  @default("standard") // 'brief' | 'standard' | 'detailed'
-  showPearls          Boolean @default(true)
-  showRelatedConcepts Boolean @default(true)
-
-  // Review preferences
-  fsrsEnabled      Boolean @default(true)
-  reviewBeforeExam Boolean @default(true)
-  mixNewAndReview  Boolean @default(true)
-
-  // Advanced settings
-  keyboardShortcuts Boolean @default(true)
-  developerMode     Boolean @default(false)
-  betaFeatures      Boolean @default(false)
-
-  // Notification preferences
-  emailDigest       Boolean @default(true)
-  emailFrequency    String  @default("weekly") // 'daily' | 'weekly' | 'never'
-  pushNotifications Boolean @default(false)
-
-  // Privacy preferences
-  shareAnonymousData Boolean @default(true)
-  showOnLeaderboard  Boolean @default(true)
-
-  // Streak resilience (see docs/AUDIT_STREAK_FRAGILITY.md)
-  streakFreezes   Int    @default(0) // Earn by studying or buy with coins; max per config
-  userCoins       Int    @default(0) // Earn from questions; spend on freezes
-  streakGoalDays  String @default("all") // "all" | "weekdays" — weekdays only = no streak break on Sat/Sun
-
-  // Custom JSON for future extensibility
-  customSettings Json?
-
-  // Relations
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-/// Streak freeze use: one row per date the user used a freeze (so that day does not break the streak).
-/// userId is Clerk ID to match DailyStreak lookup in streak APIs.
-model StreakFreezeUse {
-  id        String   @id @default(cuid())
-  userId    String   // Clerk ID (same as DailyStreak in API)
-  date      DateTime @db.Date
-  createdAt DateTime @default(now())
-
-  @@unique([userId, date])
-  @@index([userId])
-  @@index([date])
-}
-
-// Step 5: User Goal Tracking
-model UserGoal {
-  id     String @id @default(cuid())
-  userId String
-
-  // Goal identification
-  title       String // e.g., "Complete 40 questions daily"
-  description String? // Optional detailed description
-  goalType    String // 'daily' | 'weekly' | 'exam_date' | 'mastery'
-
-  // Goal targets
-  targetValue     Int? // Numeric target (e.g., 40 questions)
-  targetUnit      String? // 'questions' | 'minutes' | 'conditions' | 'accuracy'
-  targetDate      DateTime? // For exam-date goals
-  targetSystem    String? // For mastery goals (e.g., "CV")
-  targetStability Float? // For FSRS mastery goals (e.g., 0.9)
-
-  // Progress tracking
-  currentValue       Int   @default(0)
-  progressPercentage Float @default(0) // 0-100
-
-  // Status
-  status      String  @default("active") // 'active' | 'completed' | 'paused' | 'failed'
-  isRecurring Boolean @default(false) // Daily/weekly goals recur
-
-  // Milestones (JSON array)
-  milestones Json? // [{ value: 20, reached: true, date: "2026-01-10" }, ...]
-
-  // Streak tracking (for recurring goals)
-  currentStreak Int       @default(0) // Consecutive days/weeks met
-  bestStreak    Int       @default(0)
-  lastMetDate   DateTime?
-
-  // Motivation
-  motivationNotes String? // User's personal motivation
-  rewardMessage   String? // Custom message when completed
-
-  // Relations
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  completedAt DateTime?
-
-  @@index([userId, status])
-  @@index([userId, goalType])
-  @@index([targetDate])
-}
-
-// User Data Improvement Plan - Sprint C
-
-// Step 6: Per-User Confusion Patterns
-model UserConfusionPattern {
-  id     String @id @default(cuid())
-  userId String
-
-  // Confusion pair
-  conditionA   String // Real condition
-  conditionB   String // Mistaken for
-  conditionAId String? // FK to Condition
-  conditionBId String? // FK to Condition
-
-  // Tracking
-  occurrences    Int      @default(1)
-  lastOccurrence DateTime @default(now())
-
-  // Resolution status
-  wasResolved      Boolean   @default(false)
-  resolvedAt       DateTime?
-  resolutionMethod String? // 'practice' | 'study_guide' | 'time'
-
-  // Trigger questions
-  questionIds String[] @default([]) // Questions that triggered confusion
-
-  // Pattern severity
-  severityScore Float? // 0-1, based on frequency and recency
-
-  // Relations
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, conditionA, conditionB])
-  @@index([userId, wasResolved])
-  @@index([userId, severityScore])
-  @@index([conditionA])
-  @@index([conditionB])
-}
-
-// Step 8: Circadian Performance Profile
-model UserCircadianProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-
-  // Hourly performance (0-23)
-  hourlyAccuracy Json // { "0": 0.75, "1": 0.80, ... }
-  hourlyAttempts Json // { "0": 15, "1": 20, ... }
-  hourlyAvgTime  Json? // Average response time by hour
-
-  // Peak performance
-  peakHours          Int[]   @default([]) // Hours with best accuracy
-  avoidHours         Int[]   @default([]) // Hours with worst accuracy
-  optimalStudyWindow String? // e.g., "09:00-11:00, 19:00-21:00"
-
-  // Chronotype classification
-  chronotype           String? // 'morning' | 'afternoon' | 'evening' | 'night' | 'variable'
-  chronotypeConfidence Float? // 0-1
-
-  // Day of week patterns
-  studyDaysOfWeek Int[]  @default([]) // 0=Sunday, 1=Monday, etc.
-  weekdayAccuracy Float?
-  weekendAccuracy Float?
-
-  // Volume patterns
-  avgDailyMinutes   Int?
-  avgDailyQuestions Int?
-  mostProductiveDay Int? // 0-6
-
-  // Last analysis
-  dataPoints   Int      @default(0) // Total attempts analyzed
-  lastAnalyzed DateTime @default(now())
-
-  // Relations
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([chronotype])
-}
-
-// UNIFIED_ANALYTICS Implementation - Sprint 1
-
-// SessionAnalytics: Aggregated session-level analytics
-model SessionAnalytics {
-  id        String @id @default(cuid())
-  userId    String
-  sessionId String @unique
-
-  // Performance curve
-  accuracyQ1        Float? // First quarter accuracy
-  accuracyQ2        Float?
-  accuracyQ3        Float?
-  accuracyQ4        Float?
-  accuracyTrend     String? // 'improving' | 'stable' | 'declining'
-  fatiguePointIndex Int? // Question index where accuracy drops
-
-  // Timing metrics
-  avgResponseTime      Int?
-  responseTimeVariance Float?
-  responseTimeTrend    String? // 'speeding_up' | 'stable' | 'slowing_down'
-  totalDurationMinutes Float?
-
-  // Metacognition (from JOL)
-  sessionBrierScore  Float? // 0-1, lower is better
-  calibrationState   String? // 'overconfident' | 'underconfident' | 'calibrated'
-  overconfidenceBias Float? // -1 to 1
-
-  // Flow state
-  flowStateMinutes  Float? // Time in optimal challenge zone
-  interruptionCount Int     @default(0)
-  wasCompleted      Boolean @default(true)
-
-  // System distribution
-  systemDistribution     Json? // {"CV": 5, "PULM": 3}
-  difficultyDistribution Json? // {"easy": 3, "medium": 5, "hard": 2}
-
-  // Relations
-  User         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  StudySession StudySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-
-  computedAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([computedAt])
-}
-
-// Daily per-user rollup for cron aggregate-analytics (per-user, per-day stats)
-model DailyUserAnalytics {
-  id                 String   @id @default(cuid())
-  userId             String
-  sessionDate        DateTime @db.Date // UTC date (midnight) for the day
-  questionsAnswered  Int      @default(0)
-  correctAnswers     Int      @default(0)
-  accuracy           Float    @default(0)
-  avgResponseTimeMs  Int?
-  systemsStudied     String[] @default([])
-  accuracyBySystem   Json?    // e.g. {"CV": 0.85, "PULM": 0.72} for per-system daily accuracy
-  updatedAt          DateTime @updatedAt
-
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, sessionDate])
-  @@index([userId])
-  @@index([sessionDate])
-}
-
-// =============================================================================
-// ROLLING 360 STATISTICAL ENGINE
-// User-facing "Current Form" metrics based on last 360 Main Session questions
-// =============================================================================
-
-/// NCCPA PANCE Blueprint configuration for exam distribution validation
-model NCCPABlueprintConfig {
-  id             String    @id @default(cuid())
-  version        String    @unique // "2024", "2025", etc.
-  isActive       Boolean   @default(false)
-  weights        Json // {"Cardiovascular": 0.11, "Pulmonary": 0.09, ...}
-  systemCount    Int
-  effectiveDate  DateTime  @db.Date
-  expirationDate DateTime? @db.Date
-  createdAt      DateTime  @default(now())
-
-  @@index([isActive])
-}
-
-/// Cache table for O(1) dashboard reads of Rolling 360 metrics
-model UserRolling360Stats {
-  id     String @id @default(cuid())
-  userId String @unique
-
-  // Rolling Aggregates (max 360)
-  totalInWindow   Int      @default(0)
-  correctInWindow Int      @default(0)
-  accuracyPercent Decimal? @db.Decimal(5, 2)
-
-  // System Breakdown (JSONB)
-  // Format: {"Cardiovascular": {"total": 42, "correct": 35}, ...}
-  systemStats Json @default("{}")
-
-  // PANCE Score Prediction (200-800 scale)
-  predictedScore  Int?
-  scoreConfidence String? // 'collecting' | 'provisional' | 'confident'
-  passLikelihood  Decimal? @db.Decimal(5, 2) // 0-100%
-
-  // Blueprint Adherence
-  blueprintAdherence      Decimal? @db.Decimal(5, 4) // 0-1 (cosine similarity)
-  isValidExamDistribution Boolean  @default(false)
-
-  // Weakness Detection
-  weakestSystems   String[] @default([])
-  strongestSystems String[] @default([])
-
-  // Window Tracking
-  windowStartAttemptId String? // Oldest attempt in window
-  windowEndAttemptId   String? // Newest attempt in window
-  windowStartTime      DateTime?
-  windowEndTime        DateTime?
-
-  // Circular Buffer Index
-  currentSlotIndex Int @default(0) // 0-359
-
-  // Metadata
-  lastRecalculatedAt   DateTime @default(now())
-  recalculationVersion Int      @default(1)
-  createdAt            DateTime @default(now())
-
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([predictedScore])
-}
-
-/// Circular buffer table for O(1) sliding window updates (360 slots per user)
-model Rolling360Buffer {
-  id        String @id @default(cuid())
-  userId    String
-  slotIndex Int // 0-359
-
-  // Cached data from original QuestionAttempt
-  attemptId        String? // FK to QuestionAttempt
-  isCorrect        Boolean?
-  systemNormalized String?
-  answeredAt       DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, slotIndex])
-  @@index([userId, slotIndex])
-}
-
-// PersonalizedFSRSParams: Per-user FSRS optimization
-model PersonalizedFSRSParams {
-  id     String @id @default(cuid())
-  userId String @unique
-
-  // Optimized w[] array (21 parameters for FSRS v6)
-  // Changed from Json to Float[] for direct Rust optimizer compatibility
-  w Float[] // The 21 FSRS weights (v6) - Postgres array for performance
-
-  // Optimization metadata
-  sampleSize             Int? // Reviews used for optimization
-  lastOptimizedAt        DateTime?
-  improvementOverDefault Float? // % Brier score reduction
-  optimizationIterations Int?
-
-  // Per-system adjustments
-  systemModifiers Json? // {"CV": {"stabilityMult": 1.1, "diffOffset": 0.2}}
-
-  // Validation
-  validationBrierScore Float? // Score on holdout set
-  parameterBounds      Json? // Constraints used
-
-  // Relations
-  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-}
-
-// =============================================================================
-// Module 5: Interface Fabric & Gamification Models
-// =============================================================================
-
-/// User Avatar: Visual progression system reflecting clinical mastery
-model UserAvatar {
-  id                  String   @id @default(uuid())
-  userId              String   @unique
-  stage               String   @default("student_year_1") // student_year_1, clinical_year, graduate, practicing_pa
-  equippedAccessories Json     @default("[]") // Array of AvatarAccessory IDs
-  xp                  Int      @default(0)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
-  @@index([xp])
-}
-
-// Note: UserAchievement model already exists above - enhanced for Module 5
-
-/// Phantom Patient: Background "patient" whose health reflects user study activity
-model PhantomPatient {
-  id              String   @id @default(uuid())
-  userId          String   @unique
-  condition       String // e.g., "Pneumonia", "Heart Failure"
-  healthState     Int      @default(100) // 0-100
-  videoUrl        String? // Current veo_cameos video URL based on health state
-  lastInteraction DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  User            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
-}
-
-/// Case File: Automated learning artifact (transcript + SOAP + analytics + infographics)
-model CaseFile {
-  id                       String                   @id @default(uuid())
-  sessionId                String                   @unique
-  soapComparison           Json // SOAPComparison
-  timingAnalytics          Json // SessionTimingAnalytics
-  infographics             Json                      @default("[]") // Array of GeneratedInfographic URLs
-  pdfUrl                   String? // Generated PDF URL
-  createdAt                DateTime                  @default(now())
-  PatientEncounterSession  PatientEncounterSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
-  @@index([sessionId])
-  @@index([createdAt])
-}
-
-/// Audio Review: AI-generated podcast summarizing weak areas
-model AudioReview {
-  id          String   @id @default(uuid())
-  userId      String
-  title       String
-  description String?
-  audioUrl    String // voice-library generated MP3
-  duration    Int // Seconds
-  weakAreas   String[] @default([])
-  createdAt   DateTime @default(now())
-  playCount   Int      @default(0)
-  lastPlayed  DateTime?
-  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
-  @@index([createdAt])
-}
-
-/// Consult Request: SBAR training with AI consultant personas
-model ConsultRequest {
-  id               String                   @id @default(uuid())
-  sessionId        String
-  userId           String
-  consultantType   String // cardiologist, surgeon, etc.
-  sbarProvided     Json? // { situation, background, assessment, recommendation }
-  transcript       Json                      @default("[]") // Array of conversation turns
-  outcome          String                    @default("in_progress") // in_progress, advice_given, hung_up
-  feedback         Json? // { sbarQuality: number, feedback: string }
-  requestedAt      DateTime                  @default(now())
-  completedAt      DateTime?
-  User             User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  PatientEncounterSession PatientEncounterSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
-  @@index([sessionId])
-  @@index([userId])
-}
-
-/// Generated Infographic: Dynamic remediation graphics (info_genius)
-model GeneratedInfographic {
-  id               String   @id @default(uuid())
-  userId           String
-  sessionId        String?
-  requestId        String
-  type             String // comparison, flowchart, differential_table, etc.
-  primaryConcept   String
-  secondaryConcept String?
-  imageUrl         String
-  svgMarkup        String? @db.Text
-  title            String
-  description      String?
-  createdAt        DateTime @default(now())
-  User             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
-  @@index([sessionId])
-  @@index([primaryConcept])
-  @@index([createdAt])
-}
-
-// =============================================================================
-// ContentIndex: Global Search Index (OPTIONAL - For Hybrid Content Engine)
-// Enables unified search across all content types without multiple JOINs
-// Populate via background job or triggers for 2,195+ content items
-// =============================================================================
-model ContentIndex {
-  id         String  @id @default(cuid())
-  entityId   String // ID of Drug, Condition, Anatomy, etc.
-  entityType String // "Drug", "Condition", "Anatomy", "Symptom", "ECGPattern"
-  title      String // Searchable title/name
-  body       String  @db.Text // Full-text searchable content
-  panceYield Int? // PANCE priority score
-  system     String? // Organ system (CV, PULM, etc.)
-
-  // Search optimization
-  searchVector String? @db.Text // Optional: For PostgreSQL full-text search
-
-  // Metadata
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([entityType, entityId])
-  @@index([title])
-  @@index([entityType, panceYield])
-  @@index([system])
 }

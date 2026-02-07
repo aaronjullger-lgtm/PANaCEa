@@ -83,6 +83,10 @@ const NAV_TABS: NavTab[] = [
 /** Single source of truth: use shared registry */
 const CALCULATORS = REGISTRY_CALCULATORS;
 
+/** Local alias for storage key (avoids undefined if chunk loads before StorageKeys) */
+const PINNED_CALCULATORS_KEY = StorageKeys.PINNED_CALCULATORS;
+const RECENT_CALCULATORS_KEY = StorageKeys.RECENT_CALCULATORS;
+
 // ============================================================================
 // Custom Hook: useCalculatorPreferences
 // ============================================================================
@@ -122,7 +126,7 @@ function useCalculatorPreferences(): CalculatorPreferences {
         ? prev.filter((id) => id !== calcId)
         : [...prev, calcId];
       try {
-        localStorage.setItem(StorageKeys.PINNED_CALCULATORS, JSON.stringify(newPinned));
+        localStorage.setItem(PINNED_CALCULATORS_KEY, JSON.stringify(newPinned));
       } catch {
         // Ignore storage errors
       }
@@ -134,7 +138,7 @@ function useCalculatorPreferences(): CalculatorPreferences {
     setRecentCalcs((prev) => {
       const updated = [calcId, ...prev.filter((id) => id !== calcId)].slice(0, 5);
       try {
-        localStorage.setItem(StorageKeys.RECENT_CALCULATORS, JSON.stringify(updated));
+        localStorage.setItem(RECENT_CALCULATORS_KEY, JSON.stringify(updated));
       } catch {
         // Ignore storage errors
       }
@@ -293,8 +297,9 @@ const PHARM_CATEGORIES: Array<{
 ];
 
 const PharmacopeiaContent: React.FC = () => {
-  const [categoryId, setCategoryId] = useState<string>(PHARM_CATEGORIES[0].id);
-  const category = PHARM_CATEGORIES.find((c) => c.id === categoryId) ?? PHARM_CATEGORIES[0];
+  const firstCategory = PHARM_CATEGORIES[0];
+  const [categoryId, setCategoryId] = useState<string>(firstCategory?.id ?? 'antibiotics');
+  const category = PHARM_CATEGORIES.find((c) => c.id === categoryId) ?? firstCategory ?? PHARM_CATEGORIES[0];
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
@@ -314,10 +319,10 @@ const PharmacopeiaContent: React.FC = () => {
       </div>
       <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4">
         <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-3">
-          {category.label}
+          {category?.label ?? 'Pharmacopeia'}
         </h3>
         <ul className="space-y-2 max-h-[60vh] overflow-y-auto">
-          {category.drugs.map((drug) => (
+          {(category?.drugs ?? []).map((drug) => (
             <li
               key={drug.genericName}
               className="flex justify-between items-baseline py-2 border-b border-[var(--color-border)] last:border-0 text-sm"
@@ -463,6 +468,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
       document.addEventListener('keydown', onKeyDown);
       return () => document.removeEventListener('keydown', onKeyDown);
     }
+    return undefined;
   }, [sidebarOpen]);
 
   // Tab titles and descriptions
@@ -558,7 +564,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
             role="dialog"
             aria-modal="true"
             aria-label="Clinical Toolkit navigation"
-            className="lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] shadow-2xl"
+            className="lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)]"
           >
             <div className="p-4 border-b border-[var(--color-border)]">
               <h2 className="text-lg font-bold text-[var(--color-category-toolkit)]">
@@ -992,7 +998,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                   </div>
                   <button
                     onClick={() => onNavigateToItem?.('radiology_scroll')}
-                    className="w-full p-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-white rounded-lg transition-all flex items-center justify-center gap-2"
+                    className="w-full p-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg transition-all flex items-center justify-center gap-2"
                   >
                     <span>Open Imaging Library</span>
                     <ChevronRight className="w-4 h-4" />

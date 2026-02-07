@@ -17,11 +17,16 @@ router.post(
   async (req: Request, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
-        return res.status(503).json({ success: false, error: 'Database not configured' });
+        res.status(503).json({ success: false, error: 'Database not configured' });
+        return;
       }
 
       const { createClinicalPearl } = await import('../services/domain/clinicalPearlService');
       const { questionId, explanation, metadata } = req.body;
+      if (typeof questionId !== 'string') {
+        res.status(400).json({ success: false, error: 'questionId is required' });
+        return;
+      }
       const pearl = await createClinicalPearl(questionId, explanation, metadata);
 
       res.json({ success: true, pearl });
@@ -36,12 +41,13 @@ router.post(
 router.get('/daily', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true, pearl: null });
+      res.json({ success: true, pearl: null });
+      return;
     }
 
     const { getDailyPearl } = await import('../services/domain/clinicalPearlService');
-    const { userId } = req.query;
-    const pearl = await getDailyPearl(userId as string);
+    const userId = req.query.userId as string | undefined;
+    const pearl = await getDailyPearl(userId ?? '');
 
     res.json({ success: true, pearl });
   } catch (error) {
@@ -54,11 +60,16 @@ router.get('/daily', async (req: Request, res: Response): Promise<void> => {
 router.get('/user/:userId', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true, pearls: [] });
+      res.json({ success: true, pearls: [] });
+      return;
     }
 
     const { getUserPearls } = await import('../services/domain/clinicalPearlService');
-    const { userId } = req.params;
+    const userId = req.params.userId;
+    if (!userId) {
+      res.status(400).json({ success: false, error: 'userId is required' });
+      return;
+    }
     const { limit = 20 } = req.query;
     const pearls = await getUserPearls(userId, Number(limit));
 
@@ -73,11 +84,16 @@ router.get('/user/:userId', async (req: Request, res: Response): Promise<void> =
 router.get('/user/:userId/favorites', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true, pearls: [] });
+      res.json({ success: true, pearls: [] });
+      return;
     }
 
     const { getUserFavoritePearls } = await import('../services/domain/clinicalPearlService');
-    const { userId } = req.params;
+    const userId = req.params.userId;
+    if (!userId) {
+      res.status(400).json({ success: false, error: 'userId is required' });
+      return;
+    }
     const pearls = await getUserFavoritePearls(userId);
 
     res.json({ success: true, pearls });
@@ -94,12 +110,17 @@ router.post(
   async (req: Request, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
-        return res.status(503).json({ success: false, error: 'Database not configured' });
+        res.status(503).json({ success: false, error: 'Database not configured' });
+        return;
       }
 
       const { markPearlUseful } = await import('../services/domain/clinicalPearlService');
-      const { pearlId } = req.params;
+      const pearlId = req.params.pearlId;
       const { userId, notes } = req.body;
+      if (!pearlId || typeof userId !== 'string') {
+        res.status(400).json({ success: false, error: 'pearlId and userId are required' });
+        return;
+      }
       await markPearlUseful(userId, pearlId, notes);
 
       res.json({ success: true });
@@ -114,7 +135,8 @@ router.post(
 router.post('/search', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true, pearls: [] });
+      res.json({ success: true, pearls: [] });
+      return;
     }
 
     const { searchPearls } = await import('../services/domain/clinicalPearlService');
@@ -131,7 +153,8 @@ router.post('/search', async (req: Request, res: Response): Promise<void> => {
 router.get('/stats', async (req: Request, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true, stats: {} });
+      res.json({ success: true, stats: {} });
+      return;
     }
 
     const { getPearlStats } = await import('../services/domain/clinicalPearlService');

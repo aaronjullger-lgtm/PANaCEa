@@ -47,13 +47,13 @@ export function useQuestionFlag() {
         body: JSON.stringify(data),
       });
 
-      const result = await response.json();
+      const result = (await response.json()) as FlagResult & { error?: string };
 
       if (!response.ok) {
         throw new Error(result.error || 'Failed to flag question');
       }
 
-      return result;
+      return result as FlagResult;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to flag question';
       setError(errorMessage);
@@ -95,7 +95,7 @@ export function useQuestionFlags() {
       const response = await fetch(`/api/questions/flags?${params.toString()}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
-      const result = await response.json();
+      const result = (await response.json()) as { error?: string; flags?: unknown[] };
 
       if (!response.ok) {
         throw new Error(result.error || 'Failed to fetch flags');
@@ -132,7 +132,7 @@ export function useQuestionFlags() {
         }),
       });
 
-      const result = await response.json();
+      const result = (await response.json()) as { error?: string };
 
       if (!response.ok) {
         throw new Error(result.error || 'Failed to resolve flag');

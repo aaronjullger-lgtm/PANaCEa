@@ -20,20 +20,32 @@ export async function onRequestGet(context: EventContext<Env, string, unknown>):
 
   try {
     // Authenticate user
-    const authResult = await authenticateRequest(context.request, context.env);
-    if (!authResult.authenticated || !authResult.userId) {
+    const authResult = await authenticateRequest(
+      context.request as unknown as Request,
+      context.env
+    );
+    if (!authResult?.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    const userId = authResult.userId;
+    const user = await prisma.user.findUnique({
+      where: { clerkId: authResult.userId },
+      select: { id: true },
+    });
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    const userId = user.id;
     const url = new URL(context.request.url);
     const limit = parseInt(url.searchParams.get('limit') || '50', 10);
     const system = url.searchParams.get('system');
 
-    // Get questions the user has seen
     const userHistory = await prisma.userQuestionSeen.findMany({
       where: { userId },
       select: { questionId: true },

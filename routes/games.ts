@@ -33,7 +33,8 @@ router.get(
       res.json(payload);
     } catch (error) {
       if (error instanceof WordleServiceError) {
-        return res.status(400).json({ error: error.message });
+        res.status(400).json({ error: error.message });
+        return;
       }
       console.error('Error fetching Wordle daily word:', error);
       res.status(500).json({ error: 'Failed to load Wordle challenge' });
@@ -52,7 +53,8 @@ router.post(
       res.json(payload);
     } catch (error) {
       if (error instanceof WordleServiceError) {
-        return res.status(400).json({ error: error.message });
+        res.status(400).json({ error: error.message });
+        return;
       }
       console.error('Error submitting Wordle guess:', error);
       res.status(500).json({ error: 'Failed to submit Wordle guess' });
@@ -70,14 +72,16 @@ router.get(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
-        return res.status(503).json({ error: 'Database not configured' });
+        res.status(503).json({ error: 'Database not configured' });
+        return;
       }
 
       const userId = req.auth!.userId;
 
       const user = await prisma.user.findUnique({ where: { clerkId: userId } });
       if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+        res.status(404).json({ error: 'User not found' });
+        return;
       }
 
       const { getOrCreateDailyChallenge, getUserAttemptForChallenge } =
@@ -99,7 +103,7 @@ router.get(
         const totalQuestions = challenge.questionIds.length;
         const correctCount = Math.floor(existingAttempt.score / 20);
 
-        return res.json({
+        res.json({
           status: 'completed',
           stats: {
             score: existingAttempt.score,
@@ -110,6 +114,7 @@ router.get(
             ranking,
           },
         });
+        return;
       }
 
       const questions = await prisma.question.findMany({
@@ -132,7 +137,7 @@ router.get(
         options: normalizeOptionsToArray(q.options),
       }));
 
-      return res.json({
+      res.json({
         status: 'active',
         challengeId: challenge.id,
         questions: normalizedQuestions,
@@ -151,19 +156,22 @@ router.post(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       if (!process.env.DATABASE_URL) {
-        return res.status(503).json({ error: 'Database not configured' });
+        res.status(503).json({ error: 'Database not configured' });
+        return;
       }
 
       const userId = req.auth!.userId;
       const { challengeId, answers, timeSpentMs } = req.body;
 
       if (typeof answers !== 'object' || Array.isArray(answers)) {
-        return res.status(400).json({ error: 'Invalid answers format' });
+        res.status(400).json({ error: 'Invalid answers format' });
+        return;
       }
 
       const user = await prisma.user.findUnique({ where: { clerkId: userId } });
       if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+        res.status(404).json({ error: 'User not found' });
+        return;
       }
 
       const { getUserAttemptForChallenge, calculatePercentile, getRankingForChallenge } =
@@ -171,7 +179,8 @@ router.post(
 
       const existingAttempt = await getUserAttemptForChallenge(user.id, challengeId);
       if (existingAttempt) {
-        return res.status(400).json({ error: 'Challenge already completed' });
+        res.status(400).json({ error: 'Challenge already completed' });
+        return;
       }
 
       const challenge = await prisma.grandRoundsChallenge.findUnique({
@@ -179,7 +188,8 @@ router.post(
       });
 
       if (!challenge) {
-        return res.status(404).json({ error: 'Challenge not found' });
+        res.status(404).json({ error: 'Challenge not found' });
+        return;
       }
 
       const questions = await prisma.question.findMany({
@@ -221,7 +231,7 @@ router.post(
       const percentile = await calculatePercentile(challengeId, finalScore);
       const ranking = await getRankingForChallenge(challengeId, finalScore, timeSpentMs);
 
-      return res.json({
+      res.json({
         success: true,
         score: finalScore,
         correctCount,

@@ -248,7 +248,7 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
           throw new Error('Failed to fetch questions');
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as { success?: boolean; questions?: QuestionDTO[] };
 
         if (!data.success || !data.questions) {
           throw new Error('Invalid response from server');
@@ -377,17 +377,21 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
         });
 
         if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
+          const errData = (await response.json().catch(() => ({}))) as { error?: string };
           throw new Error(errData.error || 'Failed to submit answer');
         }
 
-        const result = await response.json();
-        setIsCorrect(result.isCorrect);
+        const result = (await response.json()) as {
+          isCorrect?: boolean;
+          implicitMetrics?: { rating?: number; confidence?: number };
+        };
+        setIsCorrect(result.isCorrect ?? null);
 
         // Check metacognition trigger (only for incorrect answers on first attempt)
-        if (!result.isCorrect && attemptNumber === 1) {
+        const isCorrect = result.isCorrect === true;
+        if (!isCorrect && attemptNumber === 1) {
           const metacogResult = shouldShowMetacognition({
-            isCorrect: result.isCorrect,
+            isCorrect,
             conditionId: currentQuestion.conditionId || currentQuestion.id,
             conditionName: currentQuestion.conditionName,
             subcategory: currentQuestion.subcategory || currentQuestion.system,
@@ -402,7 +406,7 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
         } else {
           // Track correct answer in metacognition tracker
           shouldShowMetacognition({
-            isCorrect: result.isCorrect,
+            isCorrect,
             conditionId: currentQuestion.conditionId || currentQuestion.id,
             conditionName: currentQuestion.conditionName,
             subcategory: currentQuestion.subcategory || currentQuestion.system,
@@ -413,7 +417,7 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
         }
 
         // Coaching interception: First attempt and incorrect
-        if (attemptNumber === 1 && !result.isCorrect) {
+        if (attemptNumber === 1 && !isCorrect) {
           setStreak(0);
           setStatus('coaching');
           setIsLoadingHint(true);
@@ -428,14 +432,15 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
           );
           setSocraticHint(hint);
           setIsLoadingHint(false);
-        } else if (result.isCorrect) {
+        } else if (isCorrect) {
           // Correct answer: award full or partial points
           if (attemptNumber === 1) {
             setScore((prev) => prev + 1);
           } else {
             setScore((prev) => prev + 0.5);
           }
-          setStreak(result.implicitMetrics?.rating >= 3 ? streak + 1 : 1);
+          const rating = result.implicitMetrics?.rating;
+          setStreak(typeof rating === 'number' && rating >= 3 ? streak + 1 : 1);
 
           // Show metacognition modal if triggered, otherwise go to feedback
           if (metacognitionPrompt?.shouldShow) {
@@ -456,12 +461,13 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
         }
 
         // Log implicit metrics result for debugging
-        if (result.implicitMetrics) {
+        const im = result.implicitMetrics;
+        if (im) {
           console.log(
             '[FSRS] Implicit rating:',
-            result.implicitMetrics.rating,
+            im.rating,
             'confidence:',
-            result.implicitMetrics.confidence
+            im.confidence
           );
         }
 

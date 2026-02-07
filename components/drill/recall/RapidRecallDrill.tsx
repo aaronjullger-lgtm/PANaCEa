@@ -91,7 +91,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
             });
 
             if (response.ok) {
-              const data = await response.json();
+              const data = (await response.json()) as { pearls?: PearlQuestion[] };
               if (data.pearls && data.pearls.length > 0) {
                 setPearlQuestions(data.pearls);
                 setUsePearls(true);

@@ -144,6 +144,7 @@ export async function generateQuestionsFromCondition(
   for (let i = 0; i < count; i++) {
     // Rotate types
     const type = types[i % types.length];
+    if (type == null) continue;
     const q = await generateSingleQuestion(condition, type);
     if (q) questions.push(q);
   }

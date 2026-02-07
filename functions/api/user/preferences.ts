@@ -184,19 +184,23 @@ export const onRequestPost = authenticatedEndpoint<z.infer<typeof UserPreference
     try {
       logger.addContext({ userId: auth.userId });
 
-      const payload = validated;
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
+      });
+      if (!user) {
+        return { status: 404, error: 'User not found' };
+      }
+      const payload = validated as Record<string, unknown>;
 
-      // Upsert preferences
+      type CreateInput = Parameters<typeof prisma.userPreferences.create>[0]['data'];
+      type UpdateInput = Parameters<typeof prisma.userPreferences.update>[0]['data'];
+      const createData: CreateInput = { userId: user.id, ...payload };
+      const updateData: UpdateInput = { ...payload };
       const preferences = await prisma.userPreferences.upsert({
-        where: { userId: auth.userId },
-        create: {
-          userId: auth.userId,
-          ...payload,
-        },
-        update: {
-          ...payload,
-          updatedAt: new Date(),
-        },
+        where: { userId: user.id },
+        create: createData,
+        update: updateData,
       });
 
       logger.info('Preferences saved successfully', {
@@ -234,20 +238,24 @@ export const onRequestPatch = authenticatedEndpoint<z.infer<typeof PartialPrefer
     try {
       logger.addContext({ userId: auth.userId });
 
-      const payload = validated;
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
+      });
+      if (!user) {
+        return { status: 404, error: 'User not found' };
+      }
+      const payload = validated as Record<string, unknown>;
 
-      // Check if preferences exist
       const existing = await prisma.userPreferences.findUnique({
-        where: { userId: auth.userId },
+        where: { userId: user.id },
       });
 
       if (!existing) {
-        // Create with partial data
+        type CreateInput = Parameters<typeof prisma.userPreferences.create>[0]['data'];
+        const createData: CreateInput = { userId: user.id, ...payload };
         const preferences = await prisma.userPreferences.create({
-          data: {
-            userId: auth.userId,
-            ...payload,
-          },
+          data: createData,
         });
 
         logger.info('Preferences created (partial)', {
@@ -269,7 +277,10 @@ export const onRequestPatch = authenticatedEndpoint<z.infer<typeof PartialPrefer
       if (payload.customSettings !== undefined) {
         const existingCustom =
           (existing.customSettings as Record<string, unknown>) ?? {};
-        const merged = { ...existingCustom, ...payload.customSettings };
+        const merged: Record<string, unknown> = {
+          ...existingCustom,
+          ...(payload.customSettings as Record<string, unknown>),
+        };
         // Remove keys explicitly set to null (client "clear" semantics)
         for (const key of Object.keys(merged)) {
           if (merged[key] === null) delete merged[key];
@@ -278,7 +289,7 @@ export const onRequestPatch = authenticatedEndpoint<z.infer<typeof PartialPrefer
       }
 
       const preferences = await prisma.userPreferences.update({
-        where: { userId: auth.userId },
+        where: { userId: user.id },
         data: updateData as Parameters<typeof prisma.userPreferences.update>[0]['data'],
       });
 

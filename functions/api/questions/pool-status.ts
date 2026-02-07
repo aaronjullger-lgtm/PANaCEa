@@ -99,7 +99,9 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
     const mainQuestionCount = await prisma.question.count();
 
     // Identify systems that need more questions in the pool
-    const lowSystems = SYSTEMS.filter((s) => systemCounts[s].total < POOL_LOW_THRESHOLD);
+    const lowSystems = SYSTEMS.filter(
+      (s) => (systemCounts[s]?.total ?? 0) < POOL_LOW_THRESHOLD
+    );
 
     logger.info('Pool status fetched', { userId: auth.userId, totalInPool, lowSystems });
 

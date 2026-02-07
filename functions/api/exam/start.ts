@@ -34,16 +34,26 @@ export const onRequestPost = authenticatedEndpoint(
 
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
+      });
+      if (!user) {
+        log.warn('User not found', { clerkId: auth.userId });
+        return { status: 404, error: 'User not found' };
+      }
+      const userId = user.id;
+
       // Check for resume
       if (resumeAttemptId) {
         const existingAttempt = await prisma.examAttempt.findFirst({
           where: {
             id: resumeAttemptId,
-            userId: auth.userId,
+            userId,
             status: { in: ['in_progress', 'paused'] },
           },
           include: {
-            config: true,
+            ExamConfig: true,
           },
         });
 
@@ -70,7 +80,7 @@ export const onRequestPost = authenticatedEndpoint(
             isResume: true,
             attempt: existingAttempt,
             answers,
-            config: existingAttempt.config,
+            config: existingAttempt.ExamConfig,
           };
         }
       }
@@ -88,7 +98,7 @@ export const onRequestPost = authenticatedEndpoint(
       // Check for existing in-progress exam
       const inProgressExam = await prisma.examAttempt.findFirst({
         where: {
-          userId: auth.userId,
+          userId,
           status: { in: ['in_progress', 'paused'] },
         },
       });
@@ -106,22 +116,29 @@ export const onRequestPost = authenticatedEndpoint(
       // Calculate blueprint distribution
       const distribution = ExamService.calculateSystemDistribution(config.totalQuestions);
 
-      // Get available questions from pool
-      const availableQuestions = await prisma.question.findMany({
-        where: {
-          isActive: true,
-          approvalStatus: 'approved',
-        },
+      // Get available questions from pool (Question model: system, question/vignette; no isActive/approvalStatus)
+      const questionRows = await prisma.question.findMany({
+        where: { system: { not: '' } },
         select: {
           id: true,
-          stem: true,
+          vignette: true,
+          question: true,
           options: true,
           correctAnswer: true,
-          organSystem: true,
+          system: true,
           difficulty: true,
           conditionId: true,
         },
       });
+      const availableQuestions = questionRows.map((q) => ({
+        id: q.id,
+        stem: [q.vignette, q.question].filter(Boolean).join('\n'),
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        organSystem: q.system,
+        difficulty: q.difficulty,
+        conditionId: q.conditionId,
+      }));
 
       if (availableQuestions.length < config.totalQuestions) {
         log.error('Insufficient questions in pool', {
@@ -144,13 +161,13 @@ export const onRequestPost = authenticatedEndpoint(
       );
 
       // Create exam attempt
-      const attemptId = `exam-${auth.userId.slice(0, 8)}-${Date.now()}`;
+      const attemptId = `exam-${userId.slice(0, 8)}-${Date.now()}`;
       const now = new Date();
 
       const attempt = await prisma.examAttempt.create({
         data: {
           id: attemptId,
-          userId: auth.userId,
+          userId,
           configId: config.id,
           startedAt: now,
           lastActiveAt: now,
@@ -163,7 +180,8 @@ export const onRequestPost = authenticatedEndpoint(
       });
 
       // Create exam answers (pre-populate for all questions)
-      const answerRecords = selectedQuestions.map((q, idx) => {
+      type QuestionWithSystem = { id: string; organSystem?: string };
+      const answerRecords = (selectedQuestions as QuestionWithSystem[]).map((q, idx) => {
         const blockNumber = Math.floor(idx / config.questionsPerBlock) + 1;
         const questionNumber = (idx % config.questionsPerBlock) + 1;
 
@@ -175,7 +193,7 @@ export const onRequestPost = authenticatedEndpoint(
           questionNumber,
           isFlagged: false,
           timeSpentSeconds: 0,
-          organSystem: (q as any).organSystem || 'other',
+          organSystem: q.organSystem ?? 'other',
         };
       });
 

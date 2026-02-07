@@ -72,12 +72,13 @@ router.get('/random', async (req, res) => {
  * GET /api/drugs/search
  * Search drugs by name or class
  */
-router.get('/search', async (req, res) => {
+router.get('/search', async (req, res): Promise<void> => {
   try {
     const query = (req.query.q as string) || '';
 
     if (!query) {
-      return res.status(400).json({ error: 'Search query is required' });
+      res.status(400).json({ error: 'Search query is required' });
+      return;
     }
 
     const drugs = await prisma.drug.findMany({

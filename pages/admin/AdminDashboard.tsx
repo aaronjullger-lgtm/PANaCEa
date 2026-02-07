@@ -77,8 +77,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       const statsResponse = await fetch('/api/admin/stats', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const res = await statsResponse.json();
-
+      const res = (await statsResponse.json()) as {
+        data?: { totalUsers?: number; activeUsersToday?: number; totalStudySessions?: number; averageAccuracy?: number; pendingFlags?: number };
+      };
       // API returns { success, data: { totalUsers, activeUsersToday, ... } }
       const statsData = res?.data ?? {};
       setStats({
@@ -113,14 +114,14 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         });
 
         if (accessResponse.ok) {
-          const accessJson = await accessResponse.json();
-          const role = (accessJson?.data?.role ?? accessJson?.role) as string | undefined;
+          const accessJson = (await accessResponse.json()) as { data?: { role?: string }; role?: string };
+          const role = accessJson?.data?.role ?? accessJson?.role;
           setHasAccess(true);
           setUserRole(role === 'superadmin' ? 'superadmin' : 'admin');
           await fetchStats(token);
         } else {
           setHasAccess(false);
-          const errBody = await accessResponse.json().catch(() => ({}));
+          const errBody = (await accessResponse.json().catch(() => ({}))) as { error?: string; message?: string };
           setAccessError(errBody?.error ?? errBody?.message ?? 'Access denied');
         }
       } catch (error) {
@@ -138,7 +139,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="bg-[var(--color-bg-tertiary)] rounded-2xl p-8 shadow-2xl">
+        <div className="bg-[var(--color-bg-tertiary)] rounded-2xl p-8 shadow-[0_18px_42px_var(--color-shadow-soft)]">
           <div className="flex items-center gap-3">
             <div className="w-6 h-6 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
             <span className="text-[var(--color-text-primary)]">Verifying access...</span>
@@ -154,7 +155,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[var(--color-bg-tertiary)] rounded-2xl p-8 shadow-2xl max-w-md text-center"
+          className="bg-[var(--color-bg-tertiary)] rounded-2xl p-8 shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-md text-center"
         >
           <AlertCircle className="w-16 h-16 text-data-fail mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
@@ -185,7 +186,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl max-w-6xl w-full my-8"
+        className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-6xl w-full my-8"
       >
         {/* Header */}
         <div className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] p-6">

@@ -126,7 +126,7 @@ const fetchAntibioticGuidelines = async (): Promise<AntibioticGuideline[]> => {
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
-    const data = await response.json();
+    const data = (await response.json()) as { guidelines?: AntibioticGuideline[] };
     return data.guidelines || [];
   } catch (error) {
     console.error('Failed to fetch antibiotic guidelines:', error);

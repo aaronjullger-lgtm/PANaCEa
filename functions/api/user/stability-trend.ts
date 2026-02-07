@@ -64,7 +64,7 @@ export const onRequestGet = authenticatedEndpoint(
 
       for (const progress of allProgress) {
         if (!Array.isArray(progress.reviewHistory)) continue;
-        const snapshots = (progress.reviewHistory as ReviewSnapshot[])
+        const snapshots = (progress.reviewHistory as unknown as ReviewSnapshot[])
           .filter((snapshot: ReviewSnapshot) => {
             if (!snapshot.date) return false;
             const snapshotDate = new Date(snapshot.date);

@@ -72,12 +72,14 @@ function calculateCognitiveLoadThreshold(
   }
 
   // Find where accuracy drops significantly
-  const initialAccuracy = rollingAccuracies[0].accuracy;
+  const first = rollingAccuracies[0];
+  const initialAccuracy = first?.accuracy ?? 0;
   const dropThreshold = initialAccuracy * 0.85; // 15% drop
 
   for (let i = 1; i < rollingAccuracies.length; i++) {
-    if (rollingAccuracies[i].accuracy < dropThreshold) {
-      return rollingAccuracies[i].position;
+    const r = rollingAccuracies[i];
+    if (r && r.accuracy < dropThreshold) {
+      return r.position;
     }
   }
 
@@ -221,8 +223,9 @@ async function enrichUserProfile(prisma: PrismaClient, userId: string): Promise<
 
   // Calculate best/worst study hours
   const sortedHours = [...hourlyAccuracies].sort((a, b) => b.accuracy - a.accuracy);
-  const bestStudyHour = sortedHours.length > 0 ? sortedHours[0].hour : null;
-  const worstStudyHour = sortedHours.length > 0 ? sortedHours[sortedHours.length - 1].hour : null;
+  const bestStudyHour = sortedHours.length > 0 ? sortedHours[0]?.hour ?? null : null;
+  const worstStudyHour =
+    sortedHours.length > 0 ? sortedHours[sortedHours.length - 1]?.hour ?? null : null;
 
   // Update UserLearningProfile with new fields
   await prisma.userLearningProfile.update({

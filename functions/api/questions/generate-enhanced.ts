@@ -351,8 +351,13 @@ CRITICAL RULES:
         continue; // Retry
       }
 
-      // Build Question object for verification
-      const questionForVerification: Question = {
+      type QuestionForVerification = Question & {
+        correctAnswerIndex?: number;
+        rationale?: string;
+        pearls?: unknown;
+        conditionName?: string;
+      };
+      const questionForVerification: QuestionForVerification = {
         id: `temp-${Date.now()}`,
         question: `${questionData.vignette}\n\n${questionData.question}`,
         options: questionData.options.map((opt: string) => opt.replace(/^[A-D]\.\s*/, '')),
@@ -362,7 +367,7 @@ CRITICAL RULES:
         system: system as SystemCode,
         conditionId,
         conditionName,
-      };
+      } as QuestionForVerification;
 
       // Run CoVe verification
       try {
@@ -370,7 +375,7 @@ CRITICAL RULES:
           // Full 4-step verification pipeline
           logger.info(`[CoVe] Running full verification pipeline`, { userId: auth.userId });
           verificationResult = await runCoVePipeline(
-            questionForVerification,
+            questionForVerification as Question,
             verificationContext,
             geminiApiCall
           );
@@ -407,7 +412,7 @@ CRITICAL RULES:
           // Quick verification (lightweight)
           logger.info(`[CoVe] Running quick verification`, { userId: auth.userId });
           quickVerifyResult = await quickVerify(
-            questionForVerification,
+            questionForVerification as Question,
             verificationContext,
             geminiApiCall
           );
@@ -457,18 +462,20 @@ CRITICAL RULES:
     const questionId = `enh-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     // Store in database with verification metadata
+    const now = new Date();
     try {
       await prisma.question.create({
         data: {
           id: questionId,
           vignette: questionData.vignette,
           question: `${questionData.vignette}\n\n${questionData.question}`,
-          options: questionData.options,
-          correctAnswer: ['A', 'B', 'C', 'D'][questionData.correctAnswerIndex] || 'A',
-          explanation: questionData.rationale,
-          system: system,
-          difficulty: difficulty,
+          options: questionData.options as object,
+          correctAnswer: ['A', 'B', 'C', 'D'][questionData.correctAnswerIndex] ?? 'A',
+          explanation: questionData.rationale ?? '',
+          system,
+          difficulty,
           source: 'enhanced-generation',
+          updatedAt: now,
           tags: {
             conditionId,
             conditionName,
@@ -476,7 +483,7 @@ CRITICAL RULES:
             coveVerified: verificationPassed,
             coveConfidence: verificationConfidence,
             coveAttempts: attempt,
-          },
+          } as object,
         },
       });
     } catch (dbError) {

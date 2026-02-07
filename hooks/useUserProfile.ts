@@ -86,11 +86,11 @@ export async function fetchUserProfile(
   });
 
   if (!res.ok) {
-    const body: ProfileErrorResponse = await res.json().catch(() => ({ error: res.statusText }));
+    const body = (await res.json().catch(() => ({ error: res.statusText }))) as ProfileErrorResponse;
     throw new Error(body.error || `Profile fetch failed: ${res.status}`);
   }
 
-  const data: ProfileGetResponse = await res.json();
+  const data = (await res.json()) as ProfileGetResponse;
   if (!data.success || !data.profile) {
     throw new Error('Invalid profile response');
   }
@@ -120,11 +120,11 @@ export async function updateUserProfile(
   });
 
   if (!res.ok) {
-    const body: ProfileErrorResponse = await res.json().catch(() => ({ error: res.statusText }));
+    const body = (await res.json().catch(() => ({ error: res.statusText }))) as ProfileErrorResponse;
     throw new Error(body.error || `Profile update failed: ${res.status}`);
   }
 
-  const data: ProfilePutResponse = await res.json();
+  const data = (await res.json()) as ProfilePutResponse;
   if (!data.success || !data.profile) {
     throw new Error('Invalid profile response');
   }

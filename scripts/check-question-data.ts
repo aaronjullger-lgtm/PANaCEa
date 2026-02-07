@@ -1,7 +1,9 @@
 import { prisma } from './_shared/db';
+import type { PrismaClient } from '@prisma/client';
 
 async function check() {
-  const questions = await prisma.preGeneratedQuestion.findMany({
+  const db = prisma as PrismaClient;
+  const questions = await db.preGeneratedQuestion.findMany({
     take: 50,
     select: { id: true, questionData: true, conditionId: true, system: true, difficulty: true },
   });
@@ -52,10 +54,10 @@ async function check() {
   console.log(JSON.stringify(missingExamples.slice(0, 5), null, 2));
 
   // Check total count
-  const total = await prisma.preGeneratedQuestion.count();
+  const total = await db.preGeneratedQuestion.count();
   console.log(`\nTotal questions in DB: ${total}`);
 
-  await prisma.$disconnect();
+  await db.$disconnect();
 }
 
 check().catch(console.error);

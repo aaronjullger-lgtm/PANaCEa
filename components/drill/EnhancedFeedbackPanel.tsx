@@ -116,18 +116,21 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
         });
 
         if (response.ok) {
-          const result = await response.json();
-          if (result.success) {
+          const result = (await response.json()) as {
+            success?: boolean;
+            data?: { primary?: unknown; related?: Array<{ id?: string; displayName?: string; name?: string; description?: string; normalRange?: string; category?: string }> };
+          };
+          if (result.success && result.data) {
             if (result.data.primary) {
               setRelatedData(result.data.primary);
             }
             if (result.data.related && result.data.related.length > 0) {
               setRelatedReferences(
-                result.data.related.map((item: any) => ({
+                result.data.related.map((item) => ({
                   type: category as RelatedReference['type'],
-                  id: item.id,
-                  name: item.displayName || item.name,
-                  preview: item.description?.slice(0, 100) || item.normalRange || item.category,
+                  id: item.id ?? '',
+                  name: item.displayName ?? item.name ?? '',
+                  preview: item.description?.slice(0, 100) ?? item.normalRange ?? item.category ?? '',
                 }))
               );
             }

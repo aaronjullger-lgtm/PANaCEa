@@ -216,6 +216,7 @@ export async function batchGenerateContent(
 
   for (let i = 0; i < conditions.length; i++) {
     const condition = conditions[i];
+    if (condition == null) continue;
     console.log(`   [${i + 1}/${conditions.length}] Generating: ${condition.conditionName}...`);
 
     const result = await generateConditionContent(apiKey, condition);

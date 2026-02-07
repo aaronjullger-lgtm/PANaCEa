@@ -55,6 +55,7 @@ function tryRecoverMalformedJson(value: string): string[] | null {
   const match = value.match(/\[([^\]]*)/);
   if (match) {
     const inner = match[1];
+    if (inner === undefined) return null;
     // Try to extract quoted strings
     const quotedItems = inner.match(/["']([^"']+)["']/g);
     if (quotedItems && quotedItems.length > 0) {

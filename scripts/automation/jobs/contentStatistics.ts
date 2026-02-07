@@ -260,7 +260,7 @@ export async function runContentStatisticsJob(targetDate: Date = new Date()) {
 
   try {
     const { yesterday, today } = getDateRange(targetDate);
-    const dateString = yesterday.toISOString().split('T')[0];
+    const dateString = yesterday.toISOString().split('T')[0] ?? '';
 
     console.log('\n🔍 Finding active conditions...');
     const activeConditions = await getActiveConditions(prisma, yesterday, today);
@@ -282,9 +282,11 @@ export async function runContentStatisticsJob(targetDate: Date = new Date()) {
       const batch = activeConditions.slice(i, i + batchSize);
 
       const results = await Promise.all(
-        batch.map((conditionId) =>
-          processCondition(prisma, conditionId, yesterday, today, dateString)
-        )
+        batch
+          .filter((id): id is string => id != null)
+          .map((conditionId) =>
+            processCondition(prisma, conditionId, yesterday, today, dateString)
+          )
       );
 
       // Count results

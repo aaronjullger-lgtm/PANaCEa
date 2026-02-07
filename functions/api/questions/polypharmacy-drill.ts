@@ -164,12 +164,14 @@ function generatePolypharmacyCase(
 }
 
 function generatePatientInfo(age: number, scenario: (typeof DEPRESCRIBING_SCENARIOS)[0]): string {
+  const riskFactors = scenario.riskFactors ?? [];
+  const concern = scenario.concern ?? 'medication review';
   const templates = [
-    `${age}-year-old patient presents to clinic for medication review. ${scenario.riskFactors.map((r) => r.replace('age >', 'Patient has')).join(', ')}.`,
-    `Patient is a ${age}-year-old with concerns about ${scenario.concern.toLowerCase()}. Risk factors include ${scenario.riskFactors.slice(1).join(' and ')}.`,
-    `${age}yo patient admitted after recent adverse event. History significant for ${scenario.riskFactors.slice(1).join(', ')}.`,
+    `${age}-year-old patient presents to clinic for medication review. ${riskFactors.map((r) => r.replace('age >', 'Patient has')).join(', ')}.`,
+    `Patient is a ${age}-year-old with concerns about ${concern.toLowerCase()}. Risk factors include ${riskFactors.slice(1).join(' and ')}.`,
+    `${age}yo patient admitted after recent adverse event. History significant for ${riskFactors.slice(1).join(', ')}.`,
   ];
-  return templates[Math.floor(Math.random() * templates.length)];
+  return templates[Math.floor(Math.random() * templates.length)] ?? '';
 }
 
 function getCommonIndication(drugClasses: string[]): string {

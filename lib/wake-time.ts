@@ -85,7 +85,9 @@ export interface StudyRecommendation {
  * Parse time string to minutes since midnight
  */
 export function parseTimeToMinutes(timeStr: string): number {
-  const [hours, minutes] = timeStr.split(':').map(Number);
+  const parts = timeStr.split(':');
+  const hours = Number(parts[0]) || 0;
+  const minutes = Number(parts[1]) || 0;
   return hours * 60 + minutes;
 }
 

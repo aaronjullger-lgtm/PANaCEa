@@ -13,7 +13,7 @@ const router = Router();
 
 // Get all medical content (Replacement for static JSON file)
 // Public endpoint to allow loading content before auth
-router.get('/all', async (req: Request, res: Response) => {
+router.get('/all', async (req: Request, res: Response): Promise<void> => {
   try {
     const allContent = await prisma.medicalContent.findMany({
       where: { status: 'published' },
@@ -64,12 +64,13 @@ router.get('/all', async (req: Request, res: Response) => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
     if (errorMessage.includes('connect') || errorMessage.includes('ECONNREFUSED')) {
-      return res.status(503).json({
+      res.status(503).json({
         error: 'Database unavailable',
         message:
           'Unable to connect to database. Please ensure DATABASE_URL is configured and the database is accessible.',
         details: errorMessage,
       });
+      return;
     }
 
     res.status(500).json({
@@ -84,15 +85,16 @@ router.get('/all', async (req: Request, res: Response) => {
 router.get(
   '/condition/:conditionId',
   requireAuth,
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
       const { conditionId } = req.params;
 
       if (!conditionId || typeof conditionId !== 'string' || conditionId.trim() === '') {
-        return res.status(400).json({
+        res.status(400).json({
           error: 'Invalid request',
           message: 'conditionId parameter is required and must be a valid string',
         });
+        return;
       }
 
       const sanitizedId = conditionId.trim().replace(/[<>"'`;]/g, '');
@@ -108,11 +110,12 @@ router.get(
       });
 
       if (!content) {
-        return res.status(404).json({
+        res.status(404).json({
           error: 'Content not found',
           message: `No published medical content found for condition: ${sanitizedId}`,
           conditionId: sanitizedId,
         });
+        return;
       }
 
       res.json(content);
@@ -130,15 +133,16 @@ router.get(
 );
 
 // Alias route for simpler frontend access
-router.get('/:conditionId', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/:conditionId', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { conditionId } = req.params;
 
     if (!conditionId || typeof conditionId !== 'string' || conditionId.trim() === '') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Invalid request',
         message: 'conditionId parameter is required and must be a valid string',
       });
+      return;
     }
 
     const sanitizedId = conditionId.trim().replace(/[<>"'`;]/g, '');
@@ -154,11 +158,12 @@ router.get('/:conditionId', requireAuth, async (req: AuthenticatedRequest, res: 
     });
 
     if (!content) {
-      return res.status(404).json({
+      res.status(404).json({
         error: 'Content not found',
         message: `No published medical content found for condition: ${sanitizedId}`,
         conditionId: sanitizedId,
       });
+      return;
     }
 
     res.json(content);
@@ -175,12 +180,13 @@ router.get('/:conditionId', requireAuth, async (req: AuthenticatedRequest, res: 
 });
 
 // Content Search Endpoint
-router.get('/search', async (req: Request, res: Response) => {
+router.get('/search', async (req: Request, res: Response): Promise<void> => {
   try {
     const { q, system, limit = 30 } = req.query;
 
     if (!q) {
-      return res.status(400).json({ error: 'Query parameter "q" is required' });
+      res.status(400).json({ error: 'Query parameter "q" is required' });
+      return;
     }
 
     const query = String(q);

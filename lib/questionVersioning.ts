@@ -88,7 +88,8 @@ export async function createQuestionVersion(
       take: 1,
     });
 
-    const nextVersion = existingVersions.length > 0 ? existingVersions[0].version + 1 : 1;
+    const firstExisting = existingVersions[0];
+    const nextVersion = firstExisting != null ? firstExisting.version + 1 : 1;
 
     // Create version snapshot
     const version = await prisma.questionVersion.create({
@@ -148,7 +149,17 @@ export async function getQuestionVersions(
       },
     });
 
-    return versions;
+    return versions.map((v): VersionMetadata => ({
+      version: v.version,
+      changedFields: v.changedFields,
+      changeReason: v.changeReason ?? undefined,
+      changeSummary: v.changeSummary ?? undefined,
+      editedBy: v.editedBy,
+      editedByEmail: v.editedByEmail ?? undefined,
+      distractorScore: v.distractorScore ?? undefined,
+      qualityScore: v.qualityScore ?? undefined,
+      createdAt: v.createdAt,
+    }));
   } catch (error) {
     console.error('[Versioning] Failed to get versions:', error);
     return [];

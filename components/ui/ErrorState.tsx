@@ -120,46 +120,11 @@ export const ErrorBoundaryFallback: React.FC<{
 };
 
 /**
- * EmptyState - Friendly empty state component (not an error, but related pattern)
+ * EmptyState - Re-export from the main EmptyState component
+ * 
+ * @deprecated Use the full-featured EmptyState from '@/components/ui/EmptyState' instead.
+ * This export is kept for backward compatibility but delegates to the main implementation.
  */
-export const EmptyState: React.FC<{
-  title?: string;
-  message?: string;
-  icon?: React.ReactNode;
-  action?: React.ReactNode;
-  className?: string;
-}> = ({
-  title = 'No data yet',
-  message = 'Content will appear here once available',
-  icon,
-  action,
-  className = '',
-}) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
-      className={`flex flex-col items-center justify-center p-12 text-center ${className}`}
-    >
-      {icon && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', delay: 0.1 }}
-          className="text-[var(--color-text-muted)] mb-4"
-        >
-          {icon}
-        </motion.div>
-      )}
-
-      <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{title}</h3>
-
-      <p className="text-[var(--color-text-muted)] mb-6 max-w-md">{message}</p>
-
-      {action && action}
-    </motion.div>
-  );
-};
+export { EmptyState, EmptyStates } from '@/components/ui/EmptyState';
 
 export default ErrorState;

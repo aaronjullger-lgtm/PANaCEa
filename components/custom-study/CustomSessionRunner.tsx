@@ -253,7 +253,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
                     ? index === currentQuestion.correctAnswerIndex
                       ? 'bg-green-100 dark:bg-green-900/30 border-2 border-green-500'
                       : index === selectedAnswer && !isCorrect
-                        ? 'bg-red-100 dark:bg-red-900/30 border-2 border-red-500'
+                        ? 'bg-[var(--color-data-fail)]/10 border-2 border-[var(--color-data-fail)]'
                         : 'bg-slate-100 dark:bg-slate-700 opacity-50'
                     : selectedAnswer === index
                       ? 'bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-500'
@@ -269,7 +269,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
                     <CheckCircle className="w-5 h-5 text-green-500" />
                   )}
                   {phase === 'feedback' && index === selectedAnswer && !isCorrect && (
-                    <XCircle className="w-5 h-5 text-red-500" />
+                    <XCircle className="w-5 h-5 text-[var(--color-data-fail)]" />
                   )}
                 </div>
               </button>

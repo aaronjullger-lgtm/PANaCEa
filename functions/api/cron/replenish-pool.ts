@@ -73,10 +73,7 @@ export async function onRequestPost(context: any) {
     // Check each system
     for (const system of ORGAN_SYSTEMS) {
       const count = await prisma.question.count({
-        where: {
-          system,
-          status: 'active',
-        },
+        where: { system },
       });
 
       let status: 'healthy' | 'low' | 'critical' = 'healthy';
@@ -96,12 +93,10 @@ export async function onRequestPost(context: any) {
     }
 
     // Get total pool stats
-    const totalActive = await prisma.question.count({
-      where: { status: 'active' },
-    });
+    const totalActive = await prisma.question.count();
 
-    const totalPending = await prisma.question.count({
-      where: { status: 'pending' },
+    const totalPending = await prisma.preGeneratedQuestion.count({
+      where: { validationStatus: 'pending' },
     });
 
     // Check for questions with high skip/flag rates
@@ -109,7 +104,6 @@ export async function onRequestPost(context: any) {
       SELECT q.id, COUNT(f.id) as "flagCount"
       FROM "Question" q
       LEFT JOIN "QuestionFlag" f ON q.id = f."questionId"
-      WHERE q.status = 'active'
       GROUP BY q.id
       HAVING COUNT(f.id) >= 3
       LIMIT 10

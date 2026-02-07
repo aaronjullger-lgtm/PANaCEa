@@ -48,7 +48,7 @@ Successfully extracted 7 clinical calculators from the monolithic `ToolkitHub.ts
 
 - Number/select input types with unit labels (mEq/L, mg/dL, years)
 - Range hints (bg-slate-800/50 badge with text-xs)
-- Dark sportsbook styling (bg-slate-800, border-slate-700, focus:ring-blue-500)
+- Dark clinical styling (bg-slate-800, border-slate-700, focus:ring-blue-500)
 - Responsive sizing (w-full, py-2.5 px-3.5)
 
 **Usage:**
@@ -517,7 +517,7 @@ Total: 14 files, 1,796 lines
 
 ## Design System
 
-### Color Palette (Dark Sportsbook Theme)
+### Color Palette (Professional Dark Mode Theme)
 
 **Backgrounds:**
 
@@ -692,7 +692,7 @@ Total: 14 files, 1,796 lines
 
 ### Design Consistency ✅
 
-- Dark sportsbook theme (slate-950/900/800) throughout
+- Dark clinical theme (slate-950/900/800) throughout
 - Blue-600 accent color for all interactive elements
 - Teko font for all scores and calculator titles
 - Consistent hover states (translate-y-[-2px], border-blue-500)
@@ -817,7 +817,7 @@ Total: 14 files, 1,796 lines
 ### Design System Compliance
 
 - ✅ **100%** of calculators use shared components
-- ✅ **100%** of calculators use dark sportsbook palette
+- ✅ **100%** of calculators use dark clinical palette
 - ✅ **100%** of calculators use Teko font for scores
 - ✅ **100%** of calculators use consistent animation patterns
 - ✅ **100%** of calculators have responsive layouts
@@ -940,7 +940,7 @@ Phase 3 successfully extracted 7 clinical calculators from a 2014-line monolith 
 **Key Achievements:**
 
 - ✅ 100% type safety (zero TypeScript errors)
-- ✅ 100% design consistency (dark sportsbook theme, Teko font, shared components)
+- ✅ 100% design consistency (dark clinical theme, Teko font, shared components)
 - ✅ 100% functional parity (all calculators work identically to before)
 - ✅ 85% code duplication reduction (shared components vs inline UI)
 - ✅ 84% largest component reduction (2014 lines → 315 lines for shared/index.tsx)

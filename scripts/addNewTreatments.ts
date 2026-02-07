@@ -684,6 +684,7 @@ async function main() {
 
   for (let i = 0; i < NEW_TREATMENTS.length; i++) {
     const treatment = NEW_TREATMENTS[i];
+    if (!treatment) continue;
     const key = generateTreatmentKey(treatment.category, treatment.treatmentName);
 
     // Skip if already exists

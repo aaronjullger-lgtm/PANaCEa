@@ -101,7 +101,10 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
         }),
       });
 
-      const json = await response.json();
+      const json = (await response.json()) as {
+        error?: string;
+        data?: { reply?: string; sessionCacheName?: string; groundingSources?: GroundingSource[] };
+      };
 
       if (!response.ok) {
         const message = json?.error || 'Tutor failed to respond. Please try again.';

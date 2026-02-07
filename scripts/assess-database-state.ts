@@ -134,9 +134,10 @@ async function assessDatabaseState() {
     console.log(`Total UserProgress Records: ${totalProgress}`);
 
     if (totalAttempts > 0) {
+      const { Prisma } = await import('@prisma/client');
       const attemptsWithTelemetry = await prisma.questionAttempt.count({
         where: {
-          telemetryJson: { not: null },
+          telemetryJson: { not: Prisma.DbNull },
         },
       });
       console.log(
@@ -161,7 +162,7 @@ async function assessDatabaseState() {
         })
       ).reduce(
         (acc, { system, _count }) => {
-          acc[system] = _count.id;
+          if (system != null) acc[system] = _count.id;
           return acc;
         },
         {} as Record<string, number>

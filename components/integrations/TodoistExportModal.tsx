@@ -168,7 +168,7 @@ export default function TodoistExportModal({
                   onChange={(e) =>
                     setOptions((prev) => ({ ...prev, includeStudyPlan: e.target.checked }))
                   }
-                  className="rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
+                  className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-focus-ring)]"
                 />
                 <span className="ml-2 text-[var(--color-text-secondary)]">
                   Study Plan ({weeklyPlan.length} weeks)
@@ -182,7 +182,7 @@ export default function TodoistExportModal({
                   onChange={(e) =>
                     setOptions((prev) => ({ ...prev, includeMissedQuestions: e.target.checked }))
                   }
-                  className="rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
+                  className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-focus-ring)]"
                 />
                 <span className="ml-2 text-[var(--color-text-secondary)]">
                   {TO_REVIEW_LABEL} ({missedQuestions.length} questions)
@@ -245,7 +245,7 @@ export default function TodoistExportModal({
                     </>
                   ) : (
                     <>
-                      <AlertCircle className="w-5 h-5 text-orange-500 mr-2" />
+                      <AlertCircle className="w-5 h-5 text-[var(--color-data-provisional)] mr-2" />
                       <span className="text-orange-700 dark:text-orange-300">
                         Not connected to Todoist
                       </span>
@@ -320,10 +320,10 @@ export default function TodoistExportModal({
           )}
 
           {exportStatus === 'error' && errorMessage && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <div className="bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-lg p-4">
               <div className="flex items-center">
-                <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-                <span className="text-red-700 dark:text-red-300">{errorMessage}</span>
+                <AlertCircle className="w-5 h-5 text-[var(--color-data-fail)] mr-2" />
+                <span className="text-[var(--color-data-fail)]">{errorMessage}</span>
               </div>
             </div>
           )}

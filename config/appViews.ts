@@ -35,6 +35,8 @@ export type View =
   | 'contrastive_drill'
   | 'reasoning_tutor'
   | 'cram_mode'
+  | 'polypharmacy_puzzle'
+  | 'medical_wordle'
   | 'admin_media'
   | 'social_dashboard'
   | 'toolkit'
@@ -75,6 +77,8 @@ export const DRILL_MODE_IDS = {
   ANATOMY: 'anatomy_review' as TrainingModeId,
   CONTRASTIVE: 'contrastive_drill' as TrainingModeId,
   CRAM: 'cram_mode' as TrainingModeId,
+  POLYPHARMACY: 'polypharmacy_puzzle' as TrainingModeId,
+  MEDICAL_WORDLE: 'medical_wordle' as TrainingModeId,
 } as const;
 
 /** Static animation variants for view transitions */

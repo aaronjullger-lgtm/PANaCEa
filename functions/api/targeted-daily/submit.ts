@@ -13,7 +13,7 @@
 
 import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, CACHE_STRATEGY } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const SubmitSchema = z.object({
@@ -72,7 +72,6 @@ export const onRequestPost = authenticatedEndpoint(
           questionId: true,
           completedAt: true,
         },
-        ...CACHE_STRATEGY.USER_DATA,
       });
 
       if (!attempt) return { status: 404, error: 'No targeted daily question found for today.' };
@@ -82,7 +81,6 @@ export const onRequestPost = authenticatedEndpoint(
       const pre = await prisma.preGeneratedQuestion.findUnique({
         where: { id: attempt.questionId },
         select: { id: true, questionData: true },
-        ...CACHE_STRATEGY.QUESTIONS,
       });
 
       let correctIndex = 0;
@@ -92,7 +90,6 @@ export const onRequestPost = authenticatedEndpoint(
         const main = await prisma.question.findUnique({
           where: { id: attempt.questionId },
           select: { id: true, correctAnswer: true },
-          ...CACHE_STRATEGY.QUESTIONS,
         });
         if (!main) return { status: 404, error: 'Question not found.' };
         correctIndex = normalizeCorrectIndexFromAny({ correctAnswer: main.correctAnswer });

@@ -16,9 +16,11 @@ async function getConditions(): Promise<Record<string, unknown>> {
 
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      conditionsCache = await response.json();
-      console.log(`✓ Loaded ${Object.keys(conditionsCache).length} conditions from database`);
-      return conditionsCache;
+      const json = await response.json();
+      const cache = json && typeof json === 'object' && !Array.isArray(json) ? (json as Record<string, unknown>) : {};
+      conditionsCache = cache;
+      console.log(`✓ Loaded ${Object.keys(cache).length} conditions from database`);
+      return cache;
     }
 
     // Database API returned non-OK response
@@ -27,7 +29,7 @@ async function getConditions(): Promise<Record<string, unknown>> {
     // Try to get error details from response
     const contentType = response.headers.get('content-type');
     if (contentType?.includes('application/json')) {
-      const errorData = await response.json();
+      const errorData = (await response.json()) as { message?: string };
       console.error('API Error:', errorData);
 
       if (response.status === 503) {

@@ -46,8 +46,8 @@ export const DailyPearlWidget: React.FC<DailyPearlWidgetProps> = ({
         });
 
         if (response.ok) {
-          const data = await response.json();
-          setPearl(data.pearl);
+          const data = (await response.json()) as { pearl?: DailyPearl | null };
+          setPearl(data.pearl ?? null);
         } else {
           // Use fallback pearl for demo/development
           handleError();

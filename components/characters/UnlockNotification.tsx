@@ -35,7 +35,7 @@ const UnlockNotification: React.FC<UnlockNotificationProps> = ({
       exit={{ opacity: 0, y: 50 }}
       className="fixed bottom-4 right-4 z-[60] max-w-sm"
     >
-      <div className="bg-[var(--color-accent)] rounded-xl shadow-2xl p-6 text-[var(--color-text-inverse)]">
+      <div className="bg-[var(--color-accent)] rounded-xl shadow-[0_18px_42px_var(--color-shadow-soft)] p-6 text-[var(--color-text-inverse)] border border-[var(--color-accent-hover)]">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-6 h-6" />

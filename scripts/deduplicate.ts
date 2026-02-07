@@ -120,43 +120,45 @@ async function findDuplicates(): Promise<DuplicateGroup[]> {
   const processed = new Set<string>();
 
   for (let i = 0; i < records.length; i++) {
-    if (processed.has(records[i].id)) continue;
+    const recI = records[i];
+    if (!recI || processed.has(recI.id)) continue;
 
     const group: DuplicateGroup = {
-      canonicalName: records[i].condition,
+      canonicalName: recI.condition,
       records: [],
       similarity: 1.0,
     };
 
-    const completeness1 = calculateCompleteness(records[i]);
+    const completeness1 = calculateCompleteness(recI);
     group.records.push({
-      id: records[i].id,
-      conditionId: records[i].conditionId,
-      condition: records[i].condition,
-      system: records[i].system,
-      status: records[i].status,
+      id: recI.id,
+      conditionId: recI.conditionId,
+      condition: recI.condition,
+      system: recI.system,
+      status: recI.status,
       completeness: completeness1,
     });
 
     // Compare with all other records
     for (let j = i + 1; j < records.length; j++) {
-      if (processed.has(records[j].id)) continue;
+      const recJ = records[j];
+      if (!recJ || processed.has(recJ.id)) continue;
 
-      const similarity = calculateSimilarity(records[i].condition, records[j].condition);
+      const similarity = calculateSimilarity(recI.condition, recJ.condition);
 
       // Consider duplicates if similarity > 0.7 and same system
-      if (similarity > 0.7 && records[i].system === records[j].system) {
-        const completeness2 = calculateCompleteness(records[j]);
+      if (similarity > 0.7 && recI.system === recJ.system) {
+        const completeness2 = calculateCompleteness(recJ);
         group.records.push({
-          id: records[j].id,
-          conditionId: records[j].conditionId,
-          condition: records[j].condition,
-          system: records[j].system,
-          status: records[j].status,
+          id: recJ.id,
+          conditionId: recJ.conditionId,
+          condition: recJ.condition,
+          system: recJ.system,
+          status: recJ.status,
           completeness: completeness2,
         });
         group.similarity = Math.min(group.similarity, similarity);
-        processed.add(records[j].id);
+        processed.add(recJ.id);
       }
     }
 
@@ -164,7 +166,7 @@ async function findDuplicates(): Promise<DuplicateGroup[]> {
       // Sort by completeness (highest first)
       group.records.sort((a, b) => b.completeness - a.completeness);
       duplicateGroups.push(group);
-      processed.add(records[i].id);
+      processed.add(recI.id);
     }
   }
 
@@ -199,8 +201,8 @@ async function mergeRecords(keepId: string, deleteIds: string[], dryRun: boolean
     });
 
     console.log(`   ✅ Merged successfully`);
-  } catch (error: any) {
-    console.error(`   ❌ Merge failed:`, error.message);
+  } catch (error: unknown) {
+    console.error(`   ❌ Merge failed:`, error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -220,6 +222,7 @@ async function generateDuplicateReport(duplicates: DuplicateGroup[]) {
 
   for (let i = 0; i < Math.min(duplicates.length, 20); i++) {
     const group = duplicates[i];
+    if (!group) continue;
     console.log(
       `\nGroup ${i + 1}: ${group.canonicalName} (${group.records.length} variants, ${(group.similarity * 100).toFixed(0)}% similar)`
     );
@@ -234,9 +237,11 @@ async function generateDuplicateReport(duplicates: DuplicateGroup[]) {
     }
 
     const bestRecord = group.records[0];
-    console.log(
-      `\n  💡 Suggested action: Keep "${bestRecord.condition}" (${bestRecord.completeness.toFixed(0)}% complete)`
-    );
+    if (bestRecord) {
+      console.log(
+        `\n  💡 Suggested action: Keep "${bestRecord.condition}" (${bestRecord.completeness.toFixed(0)}% complete)`
+      );
+    }
   }
 
   if (duplicates.length > 20) {
@@ -279,11 +284,13 @@ async function generateDuplicateReport(duplicates: DuplicateGroup[]) {
 
   for (let i = 0; i < duplicates.length; i++) {
     const group = duplicates[i];
-    const keepId = group.records[0].id;
+    const firstRecord = group?.records[0];
+    if (!group || !firstRecord) continue;
+    const keepId = firstRecord.id;
     const deleteIds = group.records.slice(1).map((r) => r.id);
 
     mergeScript += `# Group ${i + 1}: ${group.canonicalName}\n`;
-    mergeScript += `# Keep: ${group.records[0].condition} (${group.records[0].completeness.toFixed(0)}% complete)\n`;
+    mergeScript += `# Keep: ${firstRecord.condition} (${firstRecord.completeness.toFixed(0)}% complete)\n`;
     mergeScript += `# Delete: ${group.records
       .slice(1)
       .map((r) => r.condition)
@@ -308,9 +315,10 @@ async function main() {
   try {
     if (merge && keepArg && deleteArg) {
       // Merge specific records
-      const keepId = keepArg.split('=')[1];
-      const deleteIds = deleteArg.split('=')[1].split(',');
-      await mergeRecords(keepId, deleteIds, dryRun);
+      const keepId = keepArg.split('=')[1] ?? '';
+      const deleteIdsRaw = deleteArg.split('=')[1];
+      const deleteIds = (deleteIdsRaw ?? '').split(',').filter(Boolean);
+      if (keepId) await mergeRecords(keepId, deleteIds, dryRun);
     } else {
       // Find and report duplicates
       const duplicates = await findDuplicates();

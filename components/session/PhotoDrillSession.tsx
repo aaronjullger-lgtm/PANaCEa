@@ -514,7 +514,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
 
                 {/* Image View (shown for non-derm cases or when revealed) — thumbnail first, high-res on zoom (image optimization audit) */}
                 {(imageRevealed || !currentCase.clinicalContext) && !(drawModeActive && (currentCase.modality === 'ecg' || currentCase.modality === 'xray')) && (
-                  <div className="relative bg-[var(--color-bg-tertiary)] rounded-xl overflow-hidden shadow-2xl w-full max-w-3xl mx-auto">
+                  <div className="relative bg-[var(--color-bg-tertiary)] rounded-xl overflow-hidden shadow-[0_18px_42px_var(--color-shadow-soft)] w-full max-w-3xl mx-auto">
                     {/* Draw to locate: for ECG and radiology */}
                     {(currentCase.modality === 'ecg' || currentCase.modality === 'xray') && !spatialResult && (
                       <button
@@ -743,7 +743,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
-          className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl text-center"
+          className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
         >
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
             Session Complete

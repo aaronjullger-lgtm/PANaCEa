@@ -233,6 +233,11 @@ class SyncManager {
     localStorage.setItem(STORAGE_KEYS.OFFLINE_PEARL_ACTIONS, JSON.stringify(actions));
   }
 
+  private removePearlAction(id: string): void {
+    const actions = this.getOfflinePearlActions().filter((a) => a.id !== id);
+    this.saveOfflinePearlActions(actions);
+  }
+
   // ===========================================================================
   // SYNC OPERATIONS
   // ===========================================================================
@@ -310,7 +315,7 @@ class SyncManager {
 
         if (response.ok) {
           answer.synced = true;
-          const data = await response.json().catch(() => ({}));
+          const data = (await response.json().catch(() => ({}))) as { data?: { attemptId?: string }; attemptId?: string };
           const payload = data?.data ?? data;
           if (payload?.attemptId) answer.attemptId = payload.attemptId;
           synced++;
@@ -343,14 +348,21 @@ class SyncManager {
 
     for (const action of pending) {
       try {
+        // Cloudflare Functions use /api/user/pearls/* paths (not /api/pearls/*)
+        // Supported actions: 'save' (toggle saved), 'useful' (mark useful/mastered)
+        // Map legacy actions: mark_mastered/view → 'useful', review_later → skip, else → 'save'
         const endpoint =
-          action.action === 'view'
-            ? `/api/pearls/${action.pearlId}/view`
-            : action.action === 'mark_mastered'
-              ? `/api/pearls/${action.pearlId}/mastered`
-              : action.action === 'review_later'
-                ? `/api/pearls/${action.pearlId}/schedule`
-                : `/api/pearls/${action.pearlId}/save`;
+          action.action === 'mark_mastered' || action.action === 'view'
+            ? `/api/user/pearls/${action.pearlId}/useful`
+            : action.action === 'review_later'
+              ? null // No CF endpoint for schedule; skip sync
+              : `/api/user/pearls/${action.pearlId}/save`;
+
+        if (!endpoint) {
+          // Skip unsupported action (review_later/schedule not implemented in CF)
+          await this.removePearlAction(action.id);
+          continue;
+        }
 
         const response = await fetch(endpoint, {
           method: 'POST',

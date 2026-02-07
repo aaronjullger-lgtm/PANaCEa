@@ -385,7 +385,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="absolute inset-x-4 bottom-32 sm:bottom-40 mx-auto max-w-md bg-slate-800 rounded-xl p-6 shadow-2xl border border-slate-700"
+            className="absolute inset-x-4 bottom-32 sm:bottom-40 mx-auto max-w-md bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
           >
             <div className="text-center space-y-4">
               {status === 'won' ? (

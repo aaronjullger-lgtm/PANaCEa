@@ -32,7 +32,7 @@ export const ConditionPreviewGrid: React.FC<ConditionPreviewGridProps> = ({
         const response = await fetch(apiUrl);
 
         if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-          const allContent = await response.json();
+          const allContent = (await response.json()) as Record<string, unknown>;
           setContentMap(allContent);
         }
       } catch (error) {

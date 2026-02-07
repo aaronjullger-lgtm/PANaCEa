@@ -60,8 +60,8 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
         const text = await res.text();
         throw new Error(text || `Request failed (${res.status})`);
       }
-      const data = await res.json();
-      const list = data?.data?.questions ?? data?.questions ?? [];
+      const data = (await res.json()) as { data?: { questions?: unknown[] }; questions?: unknown[] };
+      const list = (data?.data?.questions ?? data?.questions ?? []) as BaselineQuestion[];
       if (!Array.isArray(list) || list.length === 0) {
         setError('No baseline questions available. Try again later.');
         setPhase('intro');
@@ -116,13 +116,13 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
         const text = await res.text();
         throw new Error(text || `Submit failed (${res.status})`);
       }
-      const data = await res.json();
+      const data = (await res.json()) as { data?: Record<string, unknown>; totalQuestions?: number; correctAnswers?: number; accuracy?: number; systemBreakdown?: Record<string, unknown>; weakestSystems?: unknown[]; strongestSystems?: unknown[] };
       const payload = data?.data ?? data;
       const baselineResults: BaselineResults = {
-        totalQuestions: payload.totalQuestions ?? finalAnswers.length,
-        correctAnswers: payload.correctAnswers ?? 0,
-        accuracy: payload.accuracy ?? 0,
-        systemBreakdown: payload.systemBreakdown ?? {},
+        totalQuestions: typeof payload.totalQuestions === 'number' ? payload.totalQuestions : finalAnswers.length,
+        correctAnswers: typeof payload.correctAnswers === 'number' ? payload.correctAnswers : 0,
+        accuracy: typeof payload.accuracy === 'number' ? payload.accuracy : 0,
+        systemBreakdown: (payload.systemBreakdown && typeof payload.systemBreakdown === 'object' ? payload.systemBreakdown : {}) as Record<string, { correct: number; total: number; accuracy: number }>,
         weakestSystems: Array.isArray(payload.weakestSystems) ? payload.weakestSystems : [],
         strongestSystems: Array.isArray(payload.strongestSystems) ? payload.strongestSystems : [],
       };
@@ -141,7 +141,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-2xl w-full p-8"
+          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full p-8"
         >
           <div className="flex justify-center mb-6">
             <div className="p-4 bg-[var(--color-accent)]/20 rounded-full">
@@ -220,7 +220,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-md w-full p-8 text-center"
+          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-md w-full p-8 text-center border border-[var(--color-border)]"
         >
           <Loader2 className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
           <p className="text-[var(--color-text-primary)] font-medium">Loading assessment...</p>
@@ -241,7 +241,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-3xl w-full p-8 max-h-[90vh] overflow-y-auto"
+          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-3xl w-full p-8 max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
         >
           <div className="mb-6">
             <div className="flex justify-between text-sm text-[var(--color-text-muted)] mb-2">
@@ -289,7 +289,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-md w-full p-8 text-center"
+          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-md w-full p-8 text-center border border-[var(--color-border)]"
         >
           <Loader2 className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
           <p className="text-[var(--color-text-primary)] font-medium">Calculating your results...</p>
@@ -304,7 +304,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-2xl w-full p-8"
+          className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full p-8"
         >
           <motion.div
             initial={{ scale: 0 }}

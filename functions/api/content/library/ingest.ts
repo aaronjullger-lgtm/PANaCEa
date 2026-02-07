@@ -20,7 +20,7 @@ const RESOURCE_BUCKET = 'educational-resources';
 const IngestBodySchema = z.object({
   body: z.object({
     resourceId: z.string().min(1),
-    structuredData: z.record(z.unknown()),
+    structuredData: z.record(z.string(), z.unknown()),
   }),
 });
 

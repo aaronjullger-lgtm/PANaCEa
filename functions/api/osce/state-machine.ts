@@ -103,7 +103,9 @@ Return ONLY valid JSON (no markdown):
         return { status: 500, error: 'Failed to generate state machine' };
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      };
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       const cleaned = text.replace(/```json|```/gi, '').trim();
       const stateMachine = JSON.parse(cleaned);

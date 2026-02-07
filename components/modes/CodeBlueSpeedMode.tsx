@@ -49,11 +49,11 @@ async function fetchCodeBlueQuestions(count: number = 10): Promise<CodeBlueQuest
     const response = await fetch(`/api/drills/code-blue?count=${count}`);
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string };
       throw new Error(errorData.error || `API request failed: ${response.status}`);
     }
 
-    const questions = await response.json();
+    const questions = (await response.json()) as CodeBlueQuestion[];
 
     if (!Array.isArray(questions) || questions.length === 0) {
       throw new Error('No Code Blue questions available');

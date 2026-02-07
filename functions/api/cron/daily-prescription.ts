@@ -44,7 +44,7 @@ export async function onRequestPost(context: any) {
 
     const activeUsers = await prisma.user.findMany({
       where: {
-        lastActiveAt: { gte: weekAgo },
+        updatedAt: { gte: weekAgo },
       },
       select: { id: true, email: true },
     });
@@ -68,25 +68,33 @@ export async function onRequestPost(context: any) {
       system: string | null;
       dueDate: Date | null;
     };
-    const [allProgress, allAttempts] = await Promise.all([
-      prisma.userProgress.findMany({
-        where: { userId: { in: activeUserIds } },
-        select: {
-          userId: true,
-          stability: true,
-          retrievability: true,
-          system: true,
-          dueDate: true,
-        },
-      }) as Promise<ProgressRecord[]>,
-      prisma.questionAttempt.findMany({
-        where: {
-          userId: { in: activeUserIds },
-          createdAt: { gte: weekAgo },
-        },
-        select: { userId: true, system: true, wasCorrect: true },
-      }),
-    ]);
+    const progressRows = await prisma.userProgress.findMany({
+      where: { userId: { in: activeUserIds } },
+      select: {
+        userId: true,
+        nextReviewAt: true,
+        fsrsParams: true,
+        fsrsCard: true,
+        MedicalContent: { select: { system: true } },
+      },
+    });
+    const allProgress: ProgressRecord[] = progressRows.map((p) => {
+      const params = (p.fsrsParams ?? p.fsrsCard) as { S?: number; R?: number } | null;
+      return {
+        userId: p.userId,
+        stability: params?.S ?? null,
+        retrievability: params?.R ?? null,
+        system: p.MedicalContent?.system ?? null,
+        dueDate: p.nextReviewAt,
+      };
+    });
+    const allAttempts = await prisma.questionAttempt.findMany({
+      where: {
+        userId: { in: activeUserIds },
+        createdAt: { gte: weekAgo },
+      },
+      select: { userId: true, system: true, wasCorrect: true },
+    });
 
     // Key progress by userId; sort by stability asc per user and take 20
     const progressByUser = new Map<string, ProgressRecord[]>();

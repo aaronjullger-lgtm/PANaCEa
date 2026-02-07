@@ -72,7 +72,7 @@ export const onRequestGet = authenticatedEndpoint(
         prisma.anatomyConditionLink.findMany({
           where: { conditionId },
           include: {
-            AnatomyStructure: { select: { id: true, name: true, displayName: true, system: true } },
+            AnatomyStructure: { select: { id: true, name: true, system: true } },
           },
         }),
         prisma.differentialConditionLink.findMany({
@@ -120,7 +120,7 @@ export const onRequestGet = authenticatedEndpoint(
       for (const link of anatomyLinks) {
         const anat = link.AnatomyStructure;
         if (anat) {
-          addNode(anat.id, NODE_ANATOMY, anat.displayName ?? anat.name, anat.system);
+          addNode(anat.id, NODE_ANATOMY, anat.name, anat.system);
           edges.push({
             source: condition.id,
             target: anat.id,

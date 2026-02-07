@@ -66,7 +66,7 @@ export function useFSRSOptimizationCheck(): void {
         });
         if (!res.ok) return;
 
-        const data = await res.json();
+        const data = (await res.json()) as { data?: { canOptimize?: boolean; params?: { lastOptimizedAt?: string } }; canOptimize?: boolean; params?: { lastOptimizedAt?: string } };
         const payload = data?.data ?? data;
         const canOptimize = payload?.canOptimize === true;
         const lastOptimizedAt = payload?.params?.lastOptimizedAt;

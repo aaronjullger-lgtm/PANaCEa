@@ -276,6 +276,7 @@ async function main() {
   // Process each image
   for (let i = 0; i < allImages.length; i++) {
     const img = allImages[i];
+    if (!img) continue;
     const progress = `[${i + 1}/${allImages.length}]`;
 
     process.stdout.write(`${progress} ${img.filename.substring(0, 50)}... `);

@@ -217,7 +217,7 @@ export function LandingPage() {
 
       {/* Benefits Section */}
       <PageContainer as="section" maxWidth="7xl" className="py-20">
-        <div className="bg-[var(--color-bg-secondary)] rounded-3xl p-12 text-[var(--color-text-primary)] shadow-2xl border border-[var(--color-border)]">
+        <div className="bg-[var(--color-bg-secondary)] rounded-3xl p-12 text-[var(--color-text-primary)] shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -320,7 +320,7 @@ export function LandingPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md my-8"
             >
-              <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)]">
+              <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)]">
                 {/* Modal Header */}
                 <div className="bg-[var(--color-bg-tertiary)] px-6 py-5 text-[var(--color-text-primary)]">
                   <div className="flex items-center justify-between mb-2">

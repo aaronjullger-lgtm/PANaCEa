@@ -88,13 +88,17 @@ export const onRequestPost = authenticatedEndpoint(
         };
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        imageUrl?: string;
+        uri?: string;
+        svgMarkup?: string;
+      };
 
       const infographic = {
         id: `infographic-${Date.now()}`,
         title: `${primaryConcept}${secondaryConcept ? ` vs. ${secondaryConcept}` : ''}`,
         description: confusionPoint,
-        imageUrl: data.imageUrl || data.uri,
+        imageUrl: data.imageUrl ?? data.uri,
         svgMarkup: data.svgMarkup,
         keyTakeaways: teachingPoints,
         status: 'ready' as const,

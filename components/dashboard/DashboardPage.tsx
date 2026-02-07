@@ -76,7 +76,7 @@ function createRetentionFetcher(getToken: () => Promise<string | null>) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error('Failed to fetch');
-    const data = await res.json();
+    const data = (await res.json()) as { data?: RetentionData };
     return data.data as RetentionData;
   };
 }
@@ -239,35 +239,43 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   }
 
   if (error || !data) {
+    const isOffline = !navigator.onLine;
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center bg-[var(--color-bg-primary)] rounded-2xl p-8 shadow-lg border border-[var(--color-border)]"
+          className="text-center bg-[var(--color-bg-primary)] rounded-2xl p-8 shadow-lg border border-[var(--color-border)] max-w-md"
         >
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-data-fail)]/20 flex items-center justify-center">
             <Zap className="w-8 h-8 text-[var(--color-data-fail)]" />
           </div>
           <p className="text-[var(--color-text-primary)] font-semibold mb-2">
-            Failed to load dashboard
+            {isOffline ? 'No Internet Connection' : 'Failed to Load Dashboard'}
           </p>
           <p className="text-[var(--color-text-secondary)] text-sm mb-4">
-            Unable to retrieve your study data
+            {isOffline 
+              ? 'Check your connection and try again' 
+              : `Unable to retrieve your study data${errorMessage !== 'Unknown error' ? `: ${errorMessage}` : ''}`
+            }
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] font-medium rounded-xl transition-colors"
+            className="px-6 py-2.5 bg-[var(--color-accent)] hover:opacity-90 text-white font-medium rounded-xl transition-opacity"
           >
-            Retry
+            {isOffline ? 'Check Connection & Retry' : 'Retry'}
           </button>
         </motion.div>
       </div>
     );
   }
 
-  const mockStreak = 7; // Replace with actual streak data when API available
-  const mockCardsLearned = data.totalCards;
+  // Streak data comes from separate streaks API, not retention API
+  // For now, use a static value or fetch separately if needed
+  const currentStreak = 0; // TODO: Fetch from /api/streaks/[userId] if displaying streak
+  const totalCardsLearned = data.totalCards || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] via-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] p-4 md:p-6">
@@ -336,22 +344,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 <QuickStat
                   icon={<Flame className="w-5 h-5 text-[var(--color-data-provisional)]" />}
                   label="Day Streak"
-                  value={mockStreak}
-                  trend={{ value: 14, isPositive: true }}
+                  value={currentStreak}
+                  trend={currentStreak > 0 ? { value: currentStreak, isPositive: true } : undefined}
                   accentColor="bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]"
                   delay={0}
                 />
                 <QuickStat
                   icon={<Brain className="w-5 h-5 text-[var(--color-accent)]" />}
                   label="Due Reviews"
-                  value={data.dueCount}
+                  value={data.dueCount || 0}
                   accentColor="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]"
                   delay={0.05}
                 />
                 <QuickStat
                   icon={<Target className="w-5 h-5 text-[var(--color-data-pass)]" />}
                   label="Cards Learned"
-                  value={mockCardsLearned}
+                  value={totalCardsLearned}
                   accentColor="bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)]"
                   delay={0.1}
                 />
@@ -374,6 +382,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 icon={<Zap className="w-5 h-5 text-[var(--color-accent)]" />}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* HIDDEN: Medical Wordle (API not implemented in Cloudflare Functions - /api/games/wordle/*)
                 <button
                   onClick={() => handleNavigation('/drills/wordle')}
                   className="group relative bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 hover:border-[var(--color-data-pass)]/50 hover:shadow-lg hover:shadow-[var(--color-data-pass)]/10 transition-all duration-300 w-full text-left overflow-hidden"
@@ -395,6 +404,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                     <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </button>
+                */}
                 <button
                   onClick={() => handleNavigation('/drills/rapid')}
                   className="group relative bg-[var(--color-bg-primary)] backdrop-blur-sm border border-[var(--color-border)] rounded-2xl p-6 hover:border-[var(--color-data-provisional)]/50 hover:shadow-lg hover:shadow-[var(--color-data-provisional)]/10 transition-all duration-300 w-full text-left overflow-hidden"

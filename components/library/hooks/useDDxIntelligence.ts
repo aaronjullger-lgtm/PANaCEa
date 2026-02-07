@@ -144,13 +144,17 @@ export function useDDxIntelligence(
         throw new Error('Failed to fetch suggestions');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        suggestions?: unknown[];
+        studyRecommendation?: unknown;
+        summary?: unknown;
+      };
 
       setState((prev) => ({
         ...prev,
-        suggestions: data.suggestions || [],
-        studyRecommendation: data.studyRecommendation || null,
-        summary: data.summary || null,
+        suggestions: (data.suggestions || []) as SmartSuggestion[],
+        studyRecommendation: (data.studyRecommendation ?? null) as string | null,
+        summary: (data.summary ?? null) as DDxIntelligenceState['summary'],
         isLoading: false,
       }));
     } catch (error) {
@@ -175,21 +179,32 @@ export function useDDxIntelligence(
         throw new Error('Failed to fetch workup');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        complaint?: string;
+        category?: string;
+        isEmergency?: boolean;
+        differentials?: Record<string, unknown>;
+        workupAlgorithm?: unknown[];
+        redFlags?: unknown[];
+        keyQuestions?: unknown[];
+        keyExamFindings?: unknown[];
+        scoringSystems?: unknown[];
+        clinicalPearls?: unknown[];
+      };
 
       setState((prev) => ({
         ...prev,
         workup: {
-          complaint: data.complaint,
+          complaint: data.complaint ?? '',
           category: data.category,
-          isEmergency: data.isEmergency || false,
-          differentials: data.differentials || {},
-          workupAlgorithm: data.workupAlgorithm || [],
-          redFlags: data.redFlags || [],
-          keyQuestions: data.keyQuestions || [],
-          keyExamFindings: data.keyExamFindings || [],
-          scoringSystems: data.scoringSystems || [],
-          clinicalPearls: data.clinicalPearls || [],
+          isEmergency: data.isEmergency ?? false,
+          differentials: (data.differentials ?? {}) as WorkupData['differentials'],
+          workupAlgorithm: (data.workupAlgorithm ?? []) as WorkupStep[],
+          redFlags: (data.redFlags ?? []) as string[],
+          keyQuestions: (data.keyQuestions ?? []) as string[],
+          keyExamFindings: (data.keyExamFindings ?? []) as string[],
+          scoringSystems: (data.scoringSystems ?? []) as WorkupData['scoringSystems'],
+          clinicalPearls: (data.clinicalPearls ?? []) as string[],
         },
         isLoading: false,
       }));
@@ -213,7 +228,7 @@ export function useDDxIntelligence(
         throw new Error('Failed to fetch related conditions');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { relatedConditions?: RelatedCondition[] };
 
       setState((prev) => ({
         ...prev,

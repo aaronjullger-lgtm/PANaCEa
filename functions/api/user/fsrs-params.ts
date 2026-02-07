@@ -73,7 +73,7 @@ interface OptimizationResult {
 // CORS Handler
 // ============================================================================
 
-export function onRequestOptions(context: { env: CloudflareEnv }): Response {
+export function onRequestOptions(context: { request: Request; env: CloudflareEnv }): Response {
   return handleCorsOptions(context);
 }
 
@@ -131,7 +131,7 @@ export async function onRequestGet(context: {
       const response: FSRSParamsResponse = {
         params: {
           w: personalizedParams.w as number[],
-          sampleSize: personalizedParams.sampleSize,
+          sampleSize: personalizedParams.sampleSize ?? 0,
           lastOptimizedAt: personalizedParams.lastOptimizedAt?.toISOString() ?? null,
           improvementOverDefault: personalizedParams.improvementOverDefault ?? 0,
           brierScore: personalizedParams.validationBrierScore ?? null,
@@ -209,7 +209,7 @@ export async function onRequestPost(context: {
   // Authenticate
   const auth = await authenticateRequest(request, env);
   if (!auth) {
-    return createErrorResponse('Unauthorized', 401, 'AUTH_REQUIRED');
+    return createErrorResponse(request, 'Unauthorized', 401, 'AUTH_REQUIRED', env);
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -293,7 +293,7 @@ export async function onRequestPost(context: {
           ? (Date.now() - existingParams.lastOptimizedAt.getTime()) / 3600000
           : Infinity;
 
-        const reviewsSinceOptimization = reviewRows.length - existingParams.sampleSize;
+        const reviewsSinceOptimization = reviewRows.length - (existingParams.sampleSize ?? 0);
 
         // Skip if optimized recently (< 24h) and few new reviews (< 50)
         if (hoursSinceOptimization < 24 && reviewsSinceOptimization < 50) {
@@ -397,7 +397,10 @@ export async function onRequestPost(context: {
         improvementOverDefault: optimizedParams.improvementOverDefault,
         validationBrierScore: optimizedParams.brierScore,
         optimizationIterations: optimizedParams.iterations ?? undefined,
-        systemModifiers: optimizedParams.systemModifiers ?? undefined,
+        systemModifiers:
+          optimizedParams.systemModifiers != null
+            ? (JSON.parse(JSON.stringify(optimizedParams.systemModifiers)) as object)
+            : undefined,
       },
       update: {
         w: optimizedParams.w,
@@ -406,7 +409,10 @@ export async function onRequestPost(context: {
         improvementOverDefault: optimizedParams.improvementOverDefault,
         validationBrierScore: optimizedParams.brierScore,
         optimizationIterations: optimizedParams.iterations ?? undefined,
-        systemModifiers: optimizedParams.systemModifiers ?? undefined,
+        systemModifiers:
+          optimizedParams.systemModifiers != null
+            ? (JSON.parse(JSON.stringify(optimizedParams.systemModifiers)) as object)
+            : undefined,
       },
     });
 

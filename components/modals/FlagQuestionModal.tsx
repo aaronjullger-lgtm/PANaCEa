@@ -103,17 +103,18 @@ export function FlagQuestionModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-md">
-      <div className="relative w-full max-w-2xl bg-slate-800 rounded-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="flag-modal-title">
+      <div className="relative w-full max-w-2xl bg-[var(--color-bg-secondary)] rounded-lg shadow-[0_18px_42px_var(--color-shadow-soft)] max-h-[90vh] overflow-y-auto border border-[var(--color-border)]">
         {/* Header */}
-        <div className="sticky top-0 flex items-center justify-between p-6 border-b border-slate-700 bg-slate-800">
+        <div className="sticky top-0 flex items-center justify-between p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
           <div className="flex items-center gap-3">
             <Flag className="w-6 h-6 text-yellow-500" />
-            <h2 className="text-xl font-semibold text-white">Flag Question Issue</h2>
+            <h2 id="flag-modal-title" className="text-xl font-semibold text-[var(--color-text-primary)]">Flag Question Issue</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700 transition-colors"
+            className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
@@ -123,8 +124,8 @@ export function FlagQuestionModal({
           /* Success State */
           <div className="flex flex-col items-center justify-center p-12 text-center">
             <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
-            <h3 className="text-2xl font-semibold text-white mb-2">Thank You!</h3>
-            <p className="text-slate-300 max-w-md">
+            <h3 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-2">Thank You!</h3>
+            <p className="text-[var(--color-text-secondary)] max-w-md">
               Your feedback has been submitted. We'll review this question and send you an email
               once it's fixed.
             </p>
@@ -133,11 +134,11 @@ export function FlagQuestionModal({
           /* Form */
           <form onSubmit={handleSubmit} className="p-6">
             {/* Question Preview */}
-            <div className="mb-6 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
-              <p className="text-sm text-slate-400 mb-2">Question:</p>
-              <p className="text-white text-sm line-clamp-3">{questionText}</p>
+            <div className="mb-6 p-4 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)]">
+              <p className="text-sm text-[var(--color-text-muted)] mb-2">Question:</p>
+              <p className="text-[var(--color-text-primary)] text-sm line-clamp-3">{questionText}</p>
               {correctAnswer && (
-                <p className="text-sm text-slate-400 mt-2">
+                <p className="text-sm text-[var(--color-text-muted)] mt-2">
                   Correct Answer: <span className="text-green-400">{correctAnswer}</span>
                 </p>
               )}
@@ -145,7 +146,7 @@ export function FlagQuestionModal({
 
             {/* Flag Type Selection */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-3">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-3">
                 What's the issue?
               </label>
               <div className="space-y-2">
@@ -156,12 +157,12 @@ export function FlagQuestionModal({
                     onClick={() => setFlagType(type.value)}
                     className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                       flagType === type.value
-                        ? 'border-blue-500 bg-blue-500/10'
-                        : 'border-slate-700 bg-slate-900/30 hover:border-slate-600'
+                        ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                        : 'border-[var(--color-border)] bg-[var(--color-bg-tertiary)] hover:border-[var(--color-text-muted)]'
                     }`}
                   >
-                    <div className="font-medium text-white mb-1">{type.label}</div>
-                    <div className="text-sm text-slate-400">{type.description}</div>
+                    <div className="font-medium text-[var(--color-text-primary)] mb-1">{type.label}</div>
+                    <div className="text-sm text-[var(--color-text-muted)]">{type.description}</div>
                   </button>
                 ))}
               </div>
@@ -169,7 +170,7 @@ export function FlagQuestionModal({
 
             {/* Description */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                 Please describe the issue in detail
               </label>
               <textarea
@@ -177,19 +178,19 @@ export function FlagQuestionModal({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Example: The correct answer should be X because..."
                 rows={4}
-                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:border-transparent"
                 required
               />
-              <p className="mt-2 text-xs text-slate-400">
+              <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                 Tip: Be specific about what you think is wrong and why. This helps us fix it faster!
               </p>
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="mb-6 p-4 bg-red-900/20 border border-red-700 rounded-lg flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-200">{error}</p>
+              <div className="mb-6 p-4 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-lg flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-[var(--color-data-fail)]">{error}</p>
               </div>
             )}
 
@@ -198,7 +199,7 @@ export function FlagQuestionModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                className="px-6 py-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
                 disabled={loading}
               >
                 Cancel
@@ -206,11 +207,11 @@ export function FlagQuestionModal({
               <button
                 type="submit"
                 disabled={loading || !description.trim()}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {loading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-[var(--color-text-inverse)]/30 border-t-[var(--color-text-inverse)] rounded-full animate-spin" />
                     Submitting...
                   </>
                 ) : (

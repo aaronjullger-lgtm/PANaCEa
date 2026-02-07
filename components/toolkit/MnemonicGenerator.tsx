@@ -75,8 +75,8 @@ async function generateMnemonicWithAuth(
     throw new Error('Failed to generate mnemonic');
   }
 
-  const data = await response.json();
-  return data.data ?? data;
+  const data = (await response.json()) as { data?: GeneratedMnemonic };
+  return data.data ?? (data as unknown as GeneratedMnemonic);
 }
 
 const generateMnemonic = async (

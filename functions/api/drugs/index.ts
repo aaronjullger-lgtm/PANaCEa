@@ -66,7 +66,6 @@ export const onRequestGet = publicEndpoint(
           cursor: { id: cursor },
           skip: 1, // Skip the cursor item itself
         }),
-        cacheStrategy: { ttl: 60 }, // Cache for 60 seconds via Accelerate
       });
 
       // Determine if there are more results
@@ -77,7 +76,6 @@ export const onRequestGet = publicEndpoint(
       // Get total count with caching (separate query for count)
       const total = await prisma.drug.count({
         where,
-        cacheStrategy: { ttl: 300 }, // Cache count for 5 minutes
       });
 
       logger.info('Drug library fetched', {

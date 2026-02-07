@@ -89,9 +89,11 @@ export const QuestionPerformanceDashboard: React.FC = () => {
         throw new Error('Failed to fetch performance data');
       }
 
-      const result = await response.json();
+      const result = (await response.json()) as {
+        data?: { questions?: QuestionPerformance[]; summary?: PerformanceSummary | null };
+      };
       setQuestions(result.data?.questions || []);
-      setSummary(result.data?.summary || null);
+      setSummary(result.data?.summary ?? null);
     } catch (err) {
       console.error('Error fetching performance:', err);
       setError(err instanceof Error ? err.message : 'Failed to load performance data');

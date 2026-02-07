@@ -74,7 +74,7 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
     // Get question details
     const questions = await prisma.question.findMany({
       where: { id: { in: questionIds } },
-      select: { id: true, questionText: true, system: true, conditionId: true },
+      select: { id: true, question: true, system: true, conditionId: true },
     });
 
     type QuestionData = (typeof questions)[number];
@@ -88,7 +88,7 @@ export const onRequestGet = authenticatedEndpoint(PerformanceSchema, async (cont
       const flagCount = flagCountMap.get(stat.questionId) || 0;
       return {
         questionId: stat.questionId,
-        questionText: question?.questionText?.slice(0, 100) + '...' || 'Unknown',
+        questionText: question?.question?.slice(0, 100) + '...' || 'Unknown',
         system: question?.system || 'Unknown',
         conditionId: question?.conditionId || null,
         totalAttempts: Number(stat.totalAttempts),

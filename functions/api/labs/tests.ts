@@ -57,10 +57,7 @@ export const onRequestGet = authenticatedEndpoint(
         // Search mode
         results = await prisma.labTest.findMany({
           where: {
-            OR: [
-              { name: { contains: searchQuery, mode: 'insensitive' } },
-              { abbreviation: { contains: searchQuery, mode: 'insensitive' } },
-            ],
+            name: { contains: searchQuery, mode: 'insensitive' },
           },
           orderBy: { name: 'asc' },
           take: 20,

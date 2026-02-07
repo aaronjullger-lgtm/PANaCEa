@@ -11,7 +11,7 @@ import { requireAuth, AuthenticatedRequest } from '../lib/middleware/clerkAuth';
 const router = Router();
 
 // Anatomy
-router.get('/anatomy', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/anatomy', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { referenceService } = await import('../lib/services/referenceService');
     const { system, query } = req.query;
@@ -19,7 +19,7 @@ router.get('/anatomy', requireAuth, async (req: AuthenticatedRequest, res: Respo
       const results = await referenceService.searchAnatomy(query as string);
       res.json({ success: true, data: results });
     } else {
-      const results = await referenceService.getAnatomyStructures(system as string);
+      const results = await referenceService.getAnatomyStructures((system as string) ?? '');
       res.json({ success: true, data: results });
     }
   } catch (error) {
@@ -28,11 +28,19 @@ router.get('/anatomy', requireAuth, async (req: AuthenticatedRequest, res: Respo
   }
 });
 
-router.get('/anatomy/:id', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/anatomy/:id', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { referenceService } = await import('../lib/services/referenceService');
-    const result = await referenceService.getAnatomyStructure(req.params.id);
-    if (!result) return res.status(404).json({ success: false, error: 'Not found' });
+    const id = req.params.id;
+    if (!id) {
+      res.status(400).json({ success: false, error: 'id is required' });
+      return;
+    }
+    const result = await referenceService.getAnatomyStructure(id);
+    if (!result) {
+      res.status(404).json({ success: false, error: 'Not found' });
+      return;
+    }
     res.json({ success: true, data: result });
   } catch (error) {
     console.error('Error fetching anatomy detail:', error);

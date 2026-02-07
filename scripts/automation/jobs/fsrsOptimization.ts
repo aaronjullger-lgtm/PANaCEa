@@ -203,10 +203,10 @@ export async function generateOptimizationReport(): Promise<{
 export async function cleanupStaleOptimizations(): Promise<{ cleaned: number }> {
   console.log('🧹 [FSRS Optimization] Cleaning up stale optimization records...');
 
-  // Find optimization records for users that no longer exist
+  // Find optimization records for users that no longer exist (relation filter uses capital User)
   const staleRecords = await prisma.personalizedFSRSParams.findMany({
     where: {
-      user: null, // User was deleted
+      User: { is: null },
     },
     select: { id: true },
   });
@@ -375,7 +375,7 @@ async function optimizeUserFSRS(
       improvementOverDefault: result.improvementOverDefault,
       validationBrierScore: result.brierScore,
       optimizationIterations: result.iterations,
-      systemModifiers: result.systemModifiers ?? undefined,
+      systemModifiers: result.systemModifiers != null ? JSON.parse(JSON.stringify(result.systemModifiers)) : undefined,
     },
     update: {
       w: result.w,
@@ -384,7 +384,7 @@ async function optimizeUserFSRS(
       improvementOverDefault: result.improvementOverDefault,
       validationBrierScore: result.brierScore,
       optimizationIterations: result.iterations,
-      systemModifiers: result.systemModifiers ?? undefined,
+      systemModifiers: result.systemModifiers != null ? JSON.parse(JSON.stringify(result.systemModifiers)) : undefined,
     },
   });
 

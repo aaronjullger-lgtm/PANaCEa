@@ -259,7 +259,7 @@ export default function DrillHub(): JSX.Element {
                   mode.isAvailable
                     ? 'bg-gradient-to-br ' +
                       mode.color +
-                      ' border-transparent cursor-pointer hover:shadow-2xl'
+                      ' border-transparent cursor-pointer hover:shadow-[0_18px_42px_var(--color-shadow-soft)]'
                     : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] opacity-60'
                 }
               `}

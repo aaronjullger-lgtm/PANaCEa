@@ -45,12 +45,13 @@ export const onRequestPost = authenticatedEndpoint(SessionStartSchema, async (co
       return { status: 404, error: 'User not found' };
     }
 
-    // Create new session
+    const sessionId = `session-${user.id.slice(0, 8)}-${Date.now()}`;
     const session = await prisma.studySession.create({
       data: {
+        id: sessionId,
         userId: user.id,
-        sessionType,
-        systemsTargeted,
+        sessionType: sessionType ?? null,
+        systemsTargeted: systemsTargeted ?? [],
         startedAt: new Date(),
       },
     });
@@ -92,7 +93,14 @@ export const onRequestPatch = authenticatedEndpoint(SessionUpdateSchema, async (
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { sessionId, action, questionsAnswered, correctCount, thinkingTimeMs } = validated.body;
+    const { sessionId, action, questionsAnswered, correctCount, thinkingTimeMs } = validated
+      .body as {
+      sessionId: string;
+      action: string;
+      questionsAnswered?: number;
+      correctCount?: number;
+      thinkingTimeMs?: number;
+    };
 
     // Get user's internal ID
     const user = await prisma.user.findUnique({
@@ -124,11 +132,11 @@ export const onRequestPatch = authenticatedEndpoint(SessionUpdateSchema, async (
     }
 
     if (typeof questionsAnswered === 'number') {
-      updateData.questionsAnswered = questionsAnswered;
+      updateData.totalQuestions = questionsAnswered;
     }
 
     if (typeof correctCount === 'number') {
-      updateData.correctCount = correctCount;
+      updateData.correctAnswers = correctCount;
     }
 
     if (typeof thinkingTimeMs === 'number') {
@@ -144,7 +152,7 @@ export const onRequestPatch = authenticatedEndpoint(SessionUpdateSchema, async (
     logger.info(`Study session ${action === 'end' ? 'ended' : 'updated'}`, {
       userId: user.id,
       sessionId: session.id,
-      questionsAnswered: updatedSession.questionsAnswered,
+      totalQuestions: updatedSession.totalQuestions,
     });
 
     return {
@@ -152,8 +160,8 @@ export const onRequestPatch = authenticatedEndpoint(SessionUpdateSchema, async (
         success: true,
         session: {
           id: updatedSession.id,
-          questionsAnswered: updatedSession.questionsAnswered,
-          correctCount: updatedSession.correctCount,
+          questionsAnswered: updatedSession.totalQuestions,
+          correctCount: updatedSession.correctAnswers,
           thinkingTimeMs: updatedSession.thinkingTimeMs ?? undefined,
           endedAt: updatedSession.endedAt?.toISOString() || null,
         },

@@ -173,12 +173,15 @@ export async function getIntelligentQuestions(
   }
 
   if (targeting.targetSystems.length > 0) {
-    adaptations.push({
-      type: 'system',
-      reason: targeting.targetSystems[0].reason,
+    const firstTarget = targeting.targetSystems[0];
+    if (firstTarget) {
+      adaptations.push({
+        type: 'system',
+        reason: firstTarget.reason,
       original: 'all systems',
       adapted: targeting.targetSystems.map((t) => t.system).join(', '),
-    });
+      });
+    }
   }
 
   return {
@@ -387,7 +390,7 @@ async function fetchQuestionsFromPool(
           }
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('[IntelligentQuestionService] Pool fetch failed:', error);
     }
   }
@@ -407,7 +410,7 @@ async function fetchQuestionsFromPool(
           }
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('[IntelligentQuestionService] Fallback fetch failed:', error);
     }
   }
@@ -422,9 +425,8 @@ function convertPoolQuestion(poolQ: any): Question {
   const letterToIndex: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
   const correctIndex = letterToIndex[poolQ.correctAnswer?.charAt(0)?.toUpperCase()] ?? 0;
 
-  const condition = poolQ.tags?.[0] || poolQ.system;
-  const conditionId =
-    poolQ.conditionId || condition?.toLowerCase().replace(/\s+/g, '-') || 'unknown';
+  const condition: string = String(poolQ.tags?.[0] ?? poolQ.system ?? 'unknown');
+  const conditionId = poolQ.conditionId ?? condition.toLowerCase().replace(/\s+/g, '-');
 
   return {
     id: poolQ.id,
@@ -490,7 +492,7 @@ export async function getWeakAreaQuestions(
           questions.push(convertPoolQuestion(q));
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('[IntelligentQuestionService] Weak area fetch failed:', error);
     }
   }
@@ -527,11 +529,12 @@ export async function getReviewQuestions(
 
       if (response.ok) {
         const data = await response.json();
-        if (data.questions?.[0]) {
-          questions.push(convertPoolQuestion(data.questions[0]));
+        const firstQ = data.questions?.[0];
+        if (firstQ) {
+          questions.push(convertPoolQuestion(firstQ));
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('[IntelligentQuestionService] Review fetch failed:', error);
     }
   }
@@ -585,7 +588,7 @@ export async function getFlowStateQuestions(
           questions.push(convertPoolQuestion(q));
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.warn('[IntelligentQuestionService] Flow fetch failed:', error);
     }
   }
@@ -612,9 +615,11 @@ export function enhanceSessionSettings(
 
   // Suggest focus area
   if (baseSettings.focus === 'all' && systemMastery.length > 0) {
-    const weakest = systemMastery
-      .filter((s) => s.questionsSeen >= 10)
-      .reduce((a, b) => (a.masteryLevel < b.masteryLevel ? a : b), systemMastery[0]);
+    const initial = systemMastery[0];
+    const filtered = systemMastery.filter((s) => s.questionsSeen >= 10);
+    const weakest = initial && filtered.length > 0
+      ? filtered.reduce((a, b) => (a.masteryLevel < b.masteryLevel ? a : b), initial)
+      : initial;
 
     if (weakest && weakest.masteryLevel < 60) {
       // Don't override, but note recommendation

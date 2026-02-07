@@ -14,15 +14,13 @@ import {
   Activity,
   Droplets,
   Gauge,
-  Wind as Breaths,
-  Loader2,
-  AlertCircle,
 } from 'lucide-react';
 import { useVentilatorDrill, type VentCase } from '@/hooks/game/use-ventilator-drill';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 import { getDrillLandingStats } from '@/services/analytics';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 // Action options for ventilator adjustments
 const ACTION_OPTIONS = [
@@ -125,29 +123,12 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
   if (status === 'error') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)] p-4">
-        <div className="max-w-md w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
-            Failed to Load Questions
-          </h2>
-          <p className="text-[var(--color-text-secondary)] mb-6">
-            {error || 'An unexpected error occurred'}
-          </p>
-          <div className="flex gap-3 justify-center">
-            <button
-              onClick={handleReset}
-              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-            >
-              Try Again
-            </button>
-            <button
-              onClick={handleExit}
-              className="px-6 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors font-medium"
-            >
-              Exit
-            </button>
-          </div>
-        </div>
+        <ErrorState
+          title="Failed to Load Questions"
+          message={error || 'An unexpected error occurred'}
+          onRetry={handleReset}
+          secondaryAction={{ label: 'Exit', onClick: handleExit }}
+        />
       </div>
     );
   }
@@ -417,7 +398,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl text-center"
+          className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
         >
           <Wind className="w-16 h-16 text-blue-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Session Complete</h2>

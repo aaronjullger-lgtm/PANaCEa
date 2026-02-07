@@ -28,8 +28,9 @@ export function addRippleEffect(
   const rect = target.getBoundingClientRect();
 
   // Get click position relative to target
-  const x = ('touches' in event ? event.touches[0].clientX : event.clientX) - rect.left;
-  const y = ('touches' in event ? event.touches[0].clientY : event.clientY) - rect.top;
+  const touch = 'touches' in event ? event.touches[0] : null;
+  const x = (touch?.clientX ?? (event as React.MouseEvent).clientX) - rect.left;
+  const y = (touch?.clientY ?? (event as React.MouseEvent).clientY) - rect.top;
 
   // Create ripple element
   const ripple = document.createElement('span');

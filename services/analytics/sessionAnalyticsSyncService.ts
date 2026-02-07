@@ -230,7 +230,7 @@ export async function syncSessionAnalytics(
     console.log('[SessionAnalyticsSync] Success:', result.sessionId);
 
     return { success: true, sessionId: result.sessionId };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[SessionAnalyticsSync] Network error:', error);
 
     // Queue for retry on network failure
@@ -258,7 +258,7 @@ function queueForRetry(payload: SessionAnalyticsPayload): void {
 
     sessionStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(pending));
     console.log('[SessionAnalyticsSync] Queued for retry, pending:', pending.length);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[SessionAnalyticsSync] Failed to queue:', error);
   }
 }
@@ -270,7 +270,7 @@ function getPendingSync(): SessionAnalyticsPayload[] {
   try {
     const raw = sessionStorage.getItem(PENDING_SYNC_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[SessionAnalyticsSync] Failed to retrieve pending sync:', error);
     return [];
   }
@@ -307,7 +307,7 @@ export async function processPendingSync(token?: string | null): Promise<{
   // Update pending queue
   try {
     sessionStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(remaining));
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[SessionAnalyticsSync] Failed to update pending queue:', error);
   }
 
@@ -344,7 +344,7 @@ export async function fetchLearningProfile(token?: string | null): Promise<{
       sessions: data.sessions || [],
       aggregateStats: data.aggregateStats,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[SessionAnalyticsSync] Fetch profile error:', error);
     return {
       profile: null,

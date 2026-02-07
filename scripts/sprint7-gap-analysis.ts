@@ -31,6 +31,7 @@ function parseBlueprint(blueprintPath: string): BlueprintCondition[] {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    if (line === undefined) continue;
     const trimmed = line.trim();
 
     // System header (## Cardiovascular System)
@@ -54,7 +55,7 @@ function parseBlueprint(blueprintPath: string): BlueprintCondition[] {
     // Parent category (*   **Acute Coronary Syndrome**)
     if (trimmed.startsWith('*   **') && trimmed.endsWith('**')) {
       const match = trimmed.match(/\*\s+\*\*([^*]+)\*\*/);
-      if (match) {
+      if (match && match[1]) {
         currentParentCategory = match[1].trim();
       }
       continue;
@@ -210,12 +211,14 @@ async function performGapAnalysis() {
     if (!systemCoverage[bpCond.system]) {
       systemCoverage[bpCond.system] = { total: 0, matched: 0, missing: 0 };
     }
-    systemCoverage[bpCond.system].total++;
-
-    if (matched.includes(bpCond)) {
-      systemCoverage[bpCond.system].matched++;
-    } else {
-      systemCoverage[bpCond.system].missing++;
+    const entry = systemCoverage[bpCond.system];
+    if (entry) {
+      entry.total++;
+      if (matched.includes(bpCond)) {
+        entry.matched++;
+      } else {
+        entry.missing++;
+      }
     }
   }
 
@@ -225,6 +228,7 @@ async function performGapAnalysis() {
   );
 
   for (const [system, stats] of sortedSystems) {
+    if (!stats) continue;
     const coverage = ((stats.matched / stats.total) * 100).toFixed(1);
     const bar = '█'.repeat(Math.floor((stats.matched / stats.total) * 20));
     console.log(`  ${system}`);
@@ -246,18 +250,17 @@ async function performGapAnalysis() {
   console.log('🎯 Top Missing Conditions by System:\n');
 
   for (const [system, conditions] of Object.entries(missingBySystem).sort(
-    (a, b) => b[1].length - a[1].length
+    (a, b) => (b[1]?.length ?? 0) - (a[1]?.length ?? 0)
   )) {
-    if (conditions.length > 0) {
-      console.log(`  ${system} (${conditions.length} missing):`);
-      conditions.slice(0, 5).forEach((c) => {
-        console.log(`    - ${c.condition} (${c.subcategory})`);
-      });
-      if (conditions.length > 5) {
-        console.log(`    ... and ${conditions.length - 5} more`);
-      }
-      console.log();
+    if (!conditions || conditions.length === 0) continue;
+    console.log(`  ${system} (${conditions.length} missing):`);
+    conditions.slice(0, 5).forEach((c) => {
+      console.log(`    - ${c.condition} (${c.subcategory})`);
+    });
+    if (conditions.length > 5) {
+      console.log(`    ... and ${conditions.length - 5} more`);
     }
+    console.log();
   }
 
   // Export missing conditions to JSON

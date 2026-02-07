@@ -337,7 +337,7 @@ export class FSRS {
    * FSRS v6: Uses linear_damping for difficulty changes
    */
   private next_ds(card: FSRSCard, rating: Rating): void {
-    const delta_d = -this.p.w[6] * (rating - 3);
+    const delta_d = -(this.p.w[6] ?? 0) * (rating - 3);
     const next_d = card.difficulty + this.linear_damping(delta_d, card.difficulty);
     // Mean reversion targets init_difficulty(Easy) per official ts-fsrs
     card.difficulty = this.constrain_difficulty(
@@ -370,7 +370,8 @@ export class FSRS {
    * Apply mean reversion to difficulty
    */
   private mean_reversion(init: number, current: number): number {
-    return this.p.w[7] * init + (1 - this.p.w[7]) * current;
+    const w7 = this.p.w[7] ?? 0;
+    return w7 * init + (1 - w7) * current;
   }
 
   /**

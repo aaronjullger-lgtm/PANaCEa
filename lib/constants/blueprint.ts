@@ -257,7 +257,7 @@ export function getSystemAbbreviation(system: string): string {
  */
 export function getSystemWeight(system: string): number {
   const normalized = normalizeSystemName(system);
-  return NCCPA_2025_BLUEPRINT[normalized] ?? NCCPA_2025_BLUEPRINT.General;
+  return NCCPA_2025_BLUEPRINT[normalized] ?? NCCPA_2025_BLUEPRINT['General'] ?? 0;
 }
 
 /**
@@ -313,7 +313,7 @@ export function validateSessionDistribution(
   let totalDeviation = 0;
 
   // Check system diversity
-  const distinctSystems = Object.keys(distribution).filter((k) => distribution[k] > 0).length;
+  const distinctSystems = Object.keys(distribution).filter((k) => (distribution[k] ?? 0) > 0).length;
   if (distinctSystems < MIN_SYSTEMS_PER_BLOCK) {
     issues.push(
       `Only ${distinctSystems} distinct systems (minimum ${MIN_SYSTEMS_PER_BLOCK} required)`

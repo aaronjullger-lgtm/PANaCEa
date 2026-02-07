@@ -94,10 +94,15 @@ export function MediaApprovalDashboard() {
         },
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        success?: boolean;
+        media?: Array<{ id: string }>;
+        total?: number;
+        error?: string;
+      };
 
       if (data.success) {
-        setPendingMedia(data.media || []);
+        setPendingMedia((data.media || []) as MediaAsset[]);
         // Calculate stats from response
         if (data.total !== undefined) {
           const pending = data.media?.length || 0;
@@ -146,7 +151,7 @@ export function MediaApprovalDashboard() {
         setPendingMedia((prev) => prev.filter((m) => m.id !== mediaId));
         setSelectedMedia(null);
       } else {
-        const data = await response.json();
+        const data = (await response.json()) as { error?: string };
         setError(data.error || 'Failed to approve');
       }
     } catch (err) {
@@ -181,7 +186,7 @@ export function MediaApprovalDashboard() {
         setShowRejectionModal(false);
         setRejectionReason('');
       } else {
-        const data = await response.json();
+        const data = (await response.json()) as { error?: string };
         setError(data.error || 'Failed to reject');
       }
     } catch (err) {
@@ -577,7 +582,7 @@ export function MediaApprovalDashboard() {
               <button
                 onClick={() => handleReject(selectedMedia.id, rejectionReason)}
                 disabled={!rejectionReason.trim() || actionLoading}
-                className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                className="flex-1 bg-[var(--color-data-fail)] hover:opacity-90 disabled:bg-[var(--color-bg-tertiary)] disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
               >
                 {actionLoading ? 'Processing...' : 'Confirm Rejection'}
               </button>
@@ -665,7 +670,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
         body: formData,
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as { success?: boolean; error?: string };
 
       if (data.success) {
         onSuccess();
@@ -825,7 +830,7 @@ function MediaUploadModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           <button
             onClick={handleUpload}
             disabled={!file || uploading}
-            className="flex-1 bg-[var(--color-accent)] hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            className="flex-1 bg-[var(--color-accent)] hover:opacity-90 disabled:bg-[var(--color-bg-tertiary)] disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
             {uploading ? 'Uploading...' : 'Upload'}
           </button>

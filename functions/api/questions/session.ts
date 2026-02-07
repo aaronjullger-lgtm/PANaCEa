@@ -71,7 +71,10 @@ export const onRequestGet = authenticatedEndpoint(
         error: error instanceof Error ? error.message : String(error),
         userId: auth.userId,
       });
-      throw new Error('Failed to fetch session questions');
+      return {
+        data: { error: 'Failed to fetch session questions', message: 'Please try again later.' },
+        status: 500,
+      };
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -112,7 +115,10 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
       error: error instanceof Error ? error.message : String(error),
       userId: auth.userId,
     });
-    throw new Error('Failed to fetch session questions');
+    return {
+      data: { error: 'Failed to fetch session questions', message: 'Please try again later.' },
+      status: 500,
+    };
   } finally {
     await safePrismaDisconnect(prisma);
   }

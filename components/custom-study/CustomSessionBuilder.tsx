@@ -150,7 +150,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
       </div>
     );
   }
@@ -332,15 +332,15 @@ function ContentStep({
               title={fullName}
               className={`min-w-0 p-3 rounded-xl border-2 transition-all text-left ${
                 config.systems.includes(system.code)
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'
+                  ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                  : 'border-slate-200 dark:border-slate-700 hover:border-[var(--color-accent)]/50'
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
                 <div
                   className={`shrink-0 w-5 h-5 rounded flex items-center justify-center ${
                     config.systems.includes(system.code)
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                       : 'bg-slate-200 dark:bg-slate-700'
                   }`}
                 >
@@ -576,12 +576,12 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
 
         {/* Validation Errors */}
         {!validation.valid && (
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
-            <div className="flex items-center gap-2 text-red-700 dark:text-red-300 mb-2">
+          <div id="session-builder-validation" role="alert" className="p-4 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-xl">
+            <div className="flex items-center gap-2 text-[var(--color-data-fail)] mb-2">
               <AlertCircle className="w-4 h-4" />
               <span className="font-medium">Please fix the following:</span>
             </div>
-            <ul className="list-disc list-inside text-sm text-red-600 dark:text-red-400">
+            <ul className="list-disc list-inside text-sm text-[var(--color-data-fail)]">
               {validation.errors.map((error, i) => (
                 <li key={i}>{error}</li>
               ))}

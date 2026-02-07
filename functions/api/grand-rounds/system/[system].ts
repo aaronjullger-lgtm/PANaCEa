@@ -54,10 +54,11 @@ export const onRequestGet = authenticatedEndpoint(
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
 
+      const dateStr = today.toISOString().split('T')[0];
       const completedToday = await prisma.grandRoundsAttempt.findFirst({
         where: {
           userId: auth.userId,
-          system,
+          challengeId: { startsWith: `${system}-${dateStr}` },
           createdAt: { gte: today },
         },
       });
@@ -74,22 +75,21 @@ export const onRequestGet = authenticatedEndpoint(
             status: 'completed',
             stats: {
               score: completedToday.score,
-              correctCount: completedToday.correctAnswers,
-              totalQuestions: completedToday.totalQuestions,
+              correctCount: completedToday.correctCount,
+              totalQuestions: 5,
               timeSpentMs: completedToday.timeSpentMs,
-              percentile: completedToday.percentile || 50,
-              ranking: completedToday.globalRank || 1,
+              percentile: 50,
+              ranking: 1,
             },
           },
         };
       }
 
-      // Fetch 10 high-yield questions from MedicalContent for this system
+      // Fetch content from MedicalContent for this system
       const questions = await prisma.medicalContent.findMany({
         where: {
           system,
-          publishStatus: 'published',
-          isHighYield: true,
+          status: 'published',
         },
         take: 10,
         orderBy: {
@@ -117,10 +117,16 @@ export const onRequestGet = authenticatedEndpoint(
 
       // Transform MedicalContent into Question format
       const formattedQuestions = questions.map((q: QuestionItem) => {
-        const content = (q.content as any) || {};
-        const options = content.questionOptions || [
+        const content = (q.content as Record<string, unknown>) || {};
+        const questionOptions = Array.isArray(content.questionOptions)
+          ? content.questionOptions
+          : null;
+        const differentials = Array.isArray(content.differentials)
+          ? content.differentials
+          : ['Option B', 'Option C', 'Option D'];
+        const options = questionOptions || [
           q.gold_standard_dx || q.condition,
-          ...(content.differentials || ['Option B', 'Option C', 'Option D']).slice(0, 3),
+          ...differentials.slice(0, 3),
         ];
 
         return {
@@ -135,7 +141,10 @@ export const onRequestGet = authenticatedEndpoint(
           system: q.system,
           category: 'Formulating Diagnosis',
           difficulty: 'board',
-          rationale: content.rationale || q.clinical_pearls?.[0] || 'Clinical reasoning',
+          rationale:
+            (content.rationale as string | undefined) ||
+            (Array.isArray(q.clinical_pearls) ? (q.clinical_pearls as string[])[0] : undefined) ||
+            'Clinical reasoning',
           boardRelevance: 'high_yield',
           mediaType: null,
           mediaUrl: null,

@@ -319,7 +319,7 @@ export function generateMnemonicIfAvailable(condition: string): string {
   );
 
   if (partialMatch) {
-    return MNEMONIC_DATABASE[partialMatch];
+    return MNEMONIC_DATABASE[partialMatch] ?? '[Mnemonic not available]';
   }
 
   return '[Mnemonic not available]';
@@ -726,7 +726,8 @@ export function generateStudyTip(userProfile: UserBiasProfile): string {
   }
 
   // Return a random tip from applicable ones
-  return tips[Math.floor(Math.random() * tips.length)];
+  const tip = tips[Math.floor(Math.random() * tips.length)];
+  return tip ?? '[!] Keep up the great work! Consistency is key to PANCE success.';
 }
 
 export default {

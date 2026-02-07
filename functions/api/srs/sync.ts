@@ -93,7 +93,9 @@ export const onRequestPost = authenticatedEndpoint(SRSSyncSchema, async (context
               lastReviewed: new Date(item.lastReviewed),
               quality: item.quality,
               difficulty:
-                item.difficulty !== undefined ? parseFloat(String(item.difficulty)) : undefined,
+                item.difficulty !== undefined && item.difficulty !== null
+                  ? parseFloat(String(item.difficulty))
+                  : 0,
               stabilityScore: item.stabilityScore,
               fsrsStability: item.fsrsStability,
               fsrsDifficulty: item.fsrsDifficulty,

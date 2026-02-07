@@ -82,11 +82,11 @@ function parseArgs(): {
 
   for (const arg of args) {
     if (arg.startsWith('--stage=')) {
-      stage = parseInt(arg.split('=')[1], 10) || null;
+      stage = parseInt(arg.split('=')[1] ?? '', 10) || null;
     } else if (arg.startsWith('--max-per-stage=')) {
-      maxPerStage = parseInt(arg.split('=')[1], 10) || 50;
+      maxPerStage = parseInt(arg.split('=')[1] ?? '50', 10) || 50;
     } else if (arg.startsWith('--delay=')) {
-      delayMs = parseInt(arg.split('=')[1], 10) || 2000;
+      delayMs = parseInt(arg.split('=')[1] ?? '2000', 10) || 2000;
     } else if (arg === '--dry-run') {
       dryRun = true;
     } else if (arg === '--extended') {
@@ -153,6 +153,7 @@ async function processConditions(
   // Generate content for each
   for (let i = 0; i < missingConditions.length; i++) {
     const condition = missingConditions[i];
+    if (!condition) continue;
     const progress = `[${i + 1}/${stats.total}]`;
 
     console.log(`${progress} ${condition.condition} (${condition.system})`);
@@ -198,9 +199,9 @@ async function processConditions(
           });
           stats.generated++;
           console.log(`   ✅ Generated and saved`);
-        } catch (err: any) {
+        } catch (err: unknown) {
           stats.failed++;
-          console.log(`   ❌ Failed to save: ${err.message}`);
+          console.log(`   ❌ Failed to save: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     } else {
@@ -268,6 +269,7 @@ async function processLabTests(
 
   for (let i = 0; i < missingLabs.length; i++) {
     const lab = missingLabs[i];
+    if (!lab) continue;
     const progress = `[${i + 1}/${stats.total}]`;
 
     console.log(`${progress} ${lab.name}`);
@@ -292,9 +294,9 @@ async function processLabTests(
           });
           stats.generated++;
           console.log(`   ✅ Generated and saved`);
-        } catch (err: any) {
+        } catch (err: unknown) {
           stats.failed++;
-          console.log(`   ❌ Failed to save: ${err.message}`);
+          console.log(`   ❌ Failed to save: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     } else {
@@ -362,6 +364,7 @@ async function processImagingStudies(
 
   for (let i = 0; i < missingImaging.length; i++) {
     const imaging = missingImaging[i];
+    if (!imaging) continue;
     const progress = `[${i + 1}/${stats.total}]`;
 
     console.log(`${progress} ${imaging.name}`);
@@ -387,9 +390,9 @@ async function processImagingStudies(
           });
           stats.generated++;
           console.log(`   ✅ Generated and saved`);
-        } catch (err: any) {
+        } catch (err: unknown) {
           stats.failed++;
-          console.log(`   ❌ Failed to save: ${err.message}`);
+          console.log(`   ❌ Failed to save: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     } else {
@@ -461,6 +464,7 @@ async function processTreatments(
 
   for (let i = 0; i < missingTreatments.length; i++) {
     const treatment = missingTreatments[i];
+    if (!treatment) continue;
     const progress = `[${i + 1}/${stats.total}]`;
 
     console.log(`${progress} ${treatment.name}`);
@@ -489,9 +493,9 @@ async function processTreatments(
           });
           stats.generated++;
           console.log(`   ✅ Generated and saved`);
-        } catch (err: any) {
+        } catch (err: unknown) {
           stats.failed++;
-          console.log(`   ❌ Failed to save: ${err.message}`);
+          console.log(`   ❌ Failed to save: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     } else {
@@ -559,6 +563,7 @@ async function processPhysiology(
 
   for (let i = 0; i < missingPhysiology.length; i++) {
     const concept = missingPhysiology[i];
+    if (!concept) continue;
     const progress = `[${i + 1}/${stats.total}]`;
 
     console.log(`${progress} ${concept.name}`);
@@ -584,9 +589,9 @@ async function processPhysiology(
           });
           stats.generated++;
           console.log(`   ✅ Generated and saved`);
-        } catch (err: any) {
+        } catch (err: unknown) {
           stats.failed++;
-          console.log(`   ❌ Failed to save: ${err.message}`);
+          console.log(`   ❌ Failed to save: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     } else {

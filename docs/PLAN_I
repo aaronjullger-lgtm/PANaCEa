@@ -7,7 +7,7 @@ __Key Problems Identified:__
 1. __JSONB fields not rendering__ - `clinical_pearls`, `classic_triad`, `treatment`, `differentials`, `synonyms`, `age_demographic` stored as JSON but rendered incorrectly
 2. __Two redundant "library" components__ - `ClinicalReferenceLibrary` vs `ClinicalLibrary`
 3. __2000-line calculator monolith__ - Every calculator inline in `ToolkitHub.tsx`
-4. __Light mode design__ - Not the "dark sportsbook" aesthetic requested
+4. __Light mode design__ - Not the "professional dark mode" aesthetic requested
 5. __No unified card system__ - Different styling across components
 
 ---

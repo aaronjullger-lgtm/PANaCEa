@@ -61,19 +61,20 @@ export function usePolypharmacyDrill(
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as { error?: string };
         throw new Error(errorData.error || 'Failed to load case');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { cases?: PolypharmacyCase[] };
 
-      if (!data.cases || data.cases.length === 0) {
+      const cases = data.cases;
+      if (!cases?.length) {
         throw new Error('No cases returned from server');
       }
 
       setState((prev) => ({
         ...prev,
-        currentCase: data.cases[0],
+        currentCase: cases[0]!,
         loading: false,
       }));
     } catch (error) {

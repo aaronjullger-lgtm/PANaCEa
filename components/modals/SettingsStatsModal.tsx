@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
 import {
   X,
   Settings,
@@ -361,6 +362,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   onStartFirstSession,
 }) => {
   const { careerStage } = useUserContext();
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Accessibility: focus trap and escape key
+  useFocusTrap(modalRef as React.RefObject<HTMLElement>, isOpen);
+  useKeyboardNavigation(onClose);
   const perfDataIsArray = Array.isArray(performanceData);
   const hasNoStatsData = isLoadingStats || (perfDataIsArray ? performanceData.length === 0 : true);
   const [activeTab, setActiveTab] = useState<TabId>('stats');
@@ -996,10 +1002,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         onClick={onClose}
       >
         <motion.div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="settings-modal-title"
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="flex flex-col bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl shadow-brand dark:shadow-brand-lg w-full max-w-2xl max-h-[90vh] overflow-hidden border border-slate-200 dark:border-slate-700 dark:border-white/10 ring-1 ring-black/10 dark:ring-white/10"
+          className="flex flex-col bg-[var(--color-bg-primary)] backdrop-blur-md rounded-xl sm:rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[var(--color-border)]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header: title (left) and close (right) — close is modal chrome, not a tab */}
@@ -1016,7 +1026,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" strokeWidth={1.5} />
                 )}
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] dark:text-slate-100 truncate">
+              <h2 id="settings-modal-title" className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] dark:text-slate-100 truncate">
                 {activeTab === 'stats'
                   ? 'Statistics'
                   : activeTab === 'preferences'
@@ -2639,7 +2649,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           disabled={performanceData.length === 0}
                           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                             performanceData.length === 0
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600'
+                              ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                               : 'bg-[var(--color-accent)] text-white hover:opacity-90'
                           }`}
                           aria-label="Archive and reset: download backup then clear performance data"
@@ -2655,7 +2665,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                             confirmClear === 'performance' && clearConfirmText === 'DELETE'
                               ? 'bg-red-600 text-white'
                               : confirmClear === 'performance'
-                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                                 : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                           }`}
                           aria-label={confirmClear === 'performance' && clearConfirmText === 'DELETE' ? 'Confirm clear performance data' : 'Clear performance data permanently (requires typing DELETE)'}
@@ -2682,7 +2692,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         disabled={missedQuestionsCount === 0}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                           missedQuestionsCount === 0
-                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600'
+                            ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                             : confirmClear === 'missed'
                               ? 'bg-red-600 text-white'
                               : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
@@ -2708,7 +2718,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         disabled={flaggedQuestionsCount === 0}
                         className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                           flaggedQuestionsCount === 0
-                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600'
+                            ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                             : confirmClear === 'flagged'
                               ? 'bg-red-600 text-white'
                               : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'

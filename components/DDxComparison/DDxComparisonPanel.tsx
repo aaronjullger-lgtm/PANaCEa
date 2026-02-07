@@ -60,7 +60,7 @@ const DDxComparisonPanel: React.FC<DDxComparisonPanelProps> = ({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-bg-primary)] rounded-t-2xl shadow-2xl max-h-[85vh] overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-bg-primary)] rounded-t-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-h-[85vh] overflow-hidden border-t border-[var(--color-border)]"
           >
             {/* Header */}
             <div className="sticky top-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] px-6 py-4 flex items-center justify-between">

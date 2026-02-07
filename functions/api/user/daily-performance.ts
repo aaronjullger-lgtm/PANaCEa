@@ -53,7 +53,8 @@ export const onRequestGet = authenticatedEndpoint(DailyPerformanceSchema, async 
     const dailyMap: Record<string, { attempts: number; correct: number }> = {};
 
     for (const attempt of attempts) {
-      const dateKey = attempt.createdAt.toISOString().split('T')[0];
+      const dateKey = attempt.createdAt.toISOString().split('T')[0] ?? '';
+      if (!dateKey) continue;
       if (!dailyMap[dateKey]) {
         dailyMap[dateKey] = { attempts: 0, correct: 0 };
       }

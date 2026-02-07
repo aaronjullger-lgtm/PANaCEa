@@ -136,7 +136,6 @@ export const onRequestGet = authenticatedEndpoint(DrugLibrarySchema, async (cont
         cursor: { id: cursor },
         skip: 1, // Skip the cursor item itself
       }),
-      cacheStrategy: { ttl: 60 }, // Cache for 60 seconds via Accelerate
     });
 
     // Determine pagination state
@@ -147,7 +146,6 @@ export const onRequestGet = authenticatedEndpoint(DrugLibrarySchema, async (cont
     // Get total count with longer cache
     const total = await prisma.drug.count({
       where,
-      cacheStrategy: { ttl: 300 }, // Cache count for 5 minutes
     });
 
     logger.info('Drug library fetched', {

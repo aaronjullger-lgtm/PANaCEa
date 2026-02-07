@@ -39,7 +39,7 @@ export const onRequestGet = authenticatedEndpoint(SRSStatsSchema, async (context
       prisma.sRSItem.count({ where: { userId, interval: { gt: 21 } } }),
       prisma.questionAttempt.findMany({
         where: { userId, createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
-        select: { isCorrect: true },
+        select: { wasCorrect: true },
       }),
     ]);
 
@@ -47,7 +47,7 @@ export const onRequestGet = authenticatedEndpoint(SRSStatsSchema, async (context
     const retentionRate =
       recentAttempts.length > 0
         ? Math.round(
-            (recentAttempts.filter((a: AttemptItem) => a.isCorrect).length /
+            (recentAttempts.filter((a: AttemptItem) => a.wasCorrect).length /
               recentAttempts.length) *
               100
           )

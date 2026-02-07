@@ -5,7 +5,7 @@
  * Features:
  * - Tab switcher by organ system (Cardiac, Pulmonary, Vascular, Renal)
  * - Search across all calculators
- * - Dark sportsbook aesthetic
+ * - Professional dark mode aesthetic
  * - Extracted calculator components
  */
 

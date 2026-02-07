@@ -33,7 +33,7 @@ const SRSSubmitSchema = z.object({
     variantId: z.string().uuid().optional(),
     /** For Ghost Grader: use behavior to infer true difficulty */
     attemptId: z.string().optional(),
-    telemetry: z.record(z.unknown()).optional(),
+    telemetry: z.record(z.string(), z.unknown()).optional(),
   }),
 });
 
@@ -126,7 +126,7 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       const question = await prisma.question.findUnique({ where: { id: questionId } });
       if (question) {
         conditionId = question.conditionId;
-        taskType = question.taskType || getTaskTypeFromContent(question.question);
+        taskType = getTaskTypeFromContent(question.question);
 
         if (conditionId && taskType) {
           topicProgress = await prisma.userTopicProgress.findUnique({

@@ -156,15 +156,16 @@ class AnatomyModelService {
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch models');
+        throw new Error(data?.error ?? 'Failed to fetch models');
       }
 
+      const d = data?.data;
       return {
-        models: data.data.models || [],
-        total: data.data.pagination?.total || 0,
-        systems: data.data.filters?.systems || [],
+        models: d?.models ?? [],
+        total: d?.pagination?.total ?? 0,
+        systems: d?.filters?.systems ?? [],
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching models from API:', error);
       return { models: [], total: 0, systems: [] };
     }
@@ -209,7 +210,7 @@ class AnatomyModelService {
       this.catalogCacheTime = Date.now();
 
       return catalog;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error getting model catalog:', error);
       return this.getFallbackCatalog();
     }
@@ -255,7 +256,7 @@ class AnatomyModelService {
         institution: dbModel.institution || 'National Institutes of Health',
         license: dbModel.license || 'Public Domain',
         url: dbModel.sourceUrl ?? 'https://3d.nih.gov',
-        dateAccessed: new Date().toISOString().split('T')[0] || '',
+        dateAccessed: (new Date().toISOString().split('T')[0] ?? ''),
         citationText: `${dbModel.sourceName || 'NIH 3D Print Exchange'}. ${dbModel.displayName || dbModel.name}. ${dbModel.sourceUrl || 'https://3d.nih.gov'}.`,
       },
       clinicalRelevance: dbModel.clinicalRelevance || [],

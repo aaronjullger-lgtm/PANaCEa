@@ -43,12 +43,25 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         },
         body: JSON.stringify({}),
       });
-      const json = await res.json();
+      const json = (await res.json()) as {
+        error?: string;
+        details?: string;
+        data?: { imageBase64?: string; imageMime?: string; masks?: MaskItem[] };
+      };
       if (!res.ok) {
         setError(json.error || json.details || 'Generation failed');
         return;
       }
-      setResult(json.data);
+      const raw = json.data;
+      setResult(
+        raw
+          ? {
+              imageBase64: raw.imageBase64 ?? '',
+              imageMime: raw.imageMime ?? 'image/png',
+              masks: raw.masks ?? [],
+            }
+          : null
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Request failed');
     } finally {

@@ -42,15 +42,18 @@ export function calculateDayStreak(records: { timestamp?: number }[]): {
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split('T')[0];
 
+  const first = dates[0];
   let current = 0;
-  if (dates[0] === todayStr || dates[0] === yesterdayStr) {
+  if (first !== undefined && (first === todayStr || first === yesterdayStr)) {
     current = 1;
-    let checkDate = new Date(dates[0]);
+    let checkDate = new Date(first);
     for (let i = 1; i < dates.length; i++) {
+      const di = dates[i];
+      if (di === undefined) break;
       const prev = new Date(checkDate);
       prev.setDate(prev.getDate() - 1);
       const prevStr = prev.toISOString().split('T')[0];
-      if (dates[i] === prevStr) {
+      if (di === prevStr) {
         current++;
         checkDate = prev;
       } else break;
@@ -60,8 +63,11 @@ export function calculateDayStreak(records: { timestamp?: number }[]): {
   let best = 1;
   let temp = 1;
   for (let i = 0; i < dates.length - 1; i++) {
-    const curr = new Date(dates[i]);
-    const next = new Date(dates[i + 1]);
+    const currVal = dates[i];
+    const nextVal = dates[i + 1];
+    if (currVal === undefined || nextVal === undefined) continue;
+    const curr = new Date(currVal);
+    const next = new Date(nextVal);
     const diff = Math.round((curr.getTime() - next.getTime()) / (24 * 60 * 60 * 1000));
     if (diff === 1) temp++;
     else {

@@ -66,6 +66,7 @@ export async function syncConditions(client: PrismaClient = prisma): Promise<Syn
             displayName: row.condition,
             aliases: [],
             relatedSystems: row.relatedSystems ?? [],
+            updatedAt: new Date(),
           },
         });
         stats.created += 1;
@@ -116,6 +117,7 @@ export async function syncDrugs(client: PrismaClient = prisma): Promise<SyncStat
           interactions: [],
           dosing: undefined,
           tags: [],
+          updatedAt: new Date(),
         },
       });
 

@@ -99,7 +99,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-lg bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl overflow-hidden"
+          className="w-full max-w-lg bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)]"
         >
           {/* Header with gradient */}
           <div className={`p-5 bg-gradient-to-r ${getTriggerColor()} text-white`}>
@@ -173,7 +173,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
                       ? 'bg-blue-500'
                       : idx < currentQuestionIndex
                         ? 'bg-emerald-500'
-                        : 'bg-gray-300 dark:bg-gray-600'
+                        : 'bg-[var(--color-bg-tertiary)]'
                   }`}
                 />
               ))}
@@ -189,7 +189,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
               </button>
               <button
                 onClick={handleNextQuestion}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-[var(--color-text-inverse)] bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 {currentQuestionIndex < prompt.reflectionQuestions.length - 1 ? (
                   <>

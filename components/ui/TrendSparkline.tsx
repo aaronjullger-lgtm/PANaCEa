@@ -55,7 +55,7 @@ const COLOR_SCHEMES = {
   neutral: {
     line: '#6b7280',
     gradient: 'rgba(107, 114, 128, 0.2)',
-    text: 'text-gray-500',
+    text: 'text-[var(--color-text-muted)]',
   },
 };
 
@@ -267,7 +267,7 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
                     ? 'text-teal-500'
                     : trend === 'down'
                       ? 'text-slate-500'
-                      : 'text-gray-400'
+                      : 'text-[var(--color-text-muted)]'
                 }`}
               />
             )}

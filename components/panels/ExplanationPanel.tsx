@@ -338,7 +338,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         const root: any = (payload as any).data ?? payload;
         const list = (root?.passages || []) as CuratedPassageView[];
         if (!cancelled && list.length > 0) {
-          setCuratedPassage(list[0]);
+          setCuratedPassage(list[0] ?? null);
         } else if (!cancelled) {
           setCuratedPassage(null);
         }

@@ -46,9 +46,12 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
         { credentials: 'include' }
       );
       if (!res.ok) throw new Error(res.statusText || 'Failed to load');
-      const data = await res.json();
+      const data = (await res.json()) as {
+        data?: { items?: unknown[] };
+        items?: unknown[];
+      };
       const list = data?.data?.items ?? data?.items ?? [];
-      setItems(Array.isArray(list) ? list : []);
+      setItems((Array.isArray(list) ? list : []) as StagingItem[]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to load staging list';
       onError?.(msg);
@@ -71,7 +74,7 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(data?.error || res.statusText);
       setItems((prev) => prev.filter((i) => i.id !== id));
     } catch (e) {
@@ -90,7 +93,7 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(data?.error || res.statusText);
       setItems((prev) => prev.filter((i) => i.id !== id));
     } catch (e) {
@@ -109,7 +112,7 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, explanation: editExplanation }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(data?.error || res.statusText);
       setItems((prev) =>
         prev.map((i) => (i.id === id ? { ...i, explanation: editExplanation } : i))

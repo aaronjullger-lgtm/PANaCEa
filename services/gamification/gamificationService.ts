@@ -174,7 +174,7 @@ export class GamificationService {
 
       const data = await response.json();
       return data.videoUrl || data.uri || '';
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Phantom video generation error:', error);
       return '';
     }
@@ -235,6 +235,7 @@ export class GamificationService {
 
     for (let i = 0; i < Math.min(5, missedQuestions.length); i++) {
       const q = missedQuestions[i];
+      if (!q) continue;
       script += `Question ${i + 1}: ${q.question}\n`;
       script += `The correct answer is: ${q.correctAnswer}.\n`;
       script += `Here's why: ${q.explanation}\n\n`;
@@ -271,7 +272,7 @@ export class GamificationService {
 
       const data = await response.json();
       return data.audioUrl || '';
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Podcast audio generation error:', error);
       return '';
     }
@@ -450,7 +451,7 @@ export class GamificationService {
 
       const data = await response.json();
       return data.svg || avatar.baseSvg;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Avatar SVG generation error:', error);
       return avatar.baseSvg;
     }
@@ -487,7 +488,7 @@ Style: Medical education theme, ${badge.rarity === 'legendary' ? 'gold' : badge.
 
       const data = await response.json();
       return data.svg || '';
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Badge SVG generation error:', error);
       return '';
     }

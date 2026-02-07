@@ -222,18 +222,20 @@ export async function syncPreferencesToDb(
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(error.error || `HTTP ${response.status}`);
+    const errBody = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
+      error?: string;
+    };
+    throw new Error(errBody.error || `HTTP ${response.status}`);
     }
 
-    const result = await response.json();
+    const result = (await response.json()) as { preferences?: UserPreferencesPayload };
     console.log('[preferencesSync] Successfully synced to DB');
 
     // Mark as synced
     markAsSynced();
 
     return result.preferences || null;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[preferencesSync] Failed to sync to DB:', error);
     return null;
   }
@@ -260,13 +262,15 @@ export async function fetchPreferencesFromDb(
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(error.error || `HTTP ${response.status}`);
+    const errBody = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
+      error?: string;
+    };
+    throw new Error(errBody.error || `HTTP ${response.status}`);
     }
 
-    const result = await response.json();
+    const result = (await response.json()) as { preferences?: UserPreferencesPayload };
     return result.preferences || null;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[preferencesSync] Failed to fetch from DB:', error);
     return null;
   }
@@ -296,13 +300,15 @@ export async function updatePreferencesInDb(
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(error.error || `HTTP ${response.status}`);
+    const errBody = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
+      error?: string;
+    };
+    throw new Error(errBody.error || `HTTP ${response.status}`);
     }
 
-    const result = await response.json();
+    const result = (await response.json()) as { preferences?: UserPreferencesPayload };
     return result.preferences || null;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[preferencesSync] Failed to update in DB:', error);
     return null;
   }

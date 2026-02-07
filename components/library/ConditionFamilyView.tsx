@@ -49,7 +49,7 @@ export function ConditionFamilyView({
           `/ api / conditions / family / ${encodeURIComponent(canonicalName)} `
         );
         if (res.ok) {
-          const json = await res.json();
+          const json = (await res.json()) as FamilyData | null;
           if (mounted) setData(json);
         } else {
           console.error('Failed to load family data: ', res.status, res.statusText);
@@ -69,10 +69,10 @@ export function ConditionFamilyView({
   if (loading && !data) {
     return (
       <Card className={cn('p-4 animate-pulse', className)}>
-        <div className="h-6 w-1/3 bg-gray-200 rounded mb-4" />
+        <div className="h-6 w-1/3 bg-[var(--color-bg-tertiary)] rounded mb-4" />
         <div className="space-y-2">
-          <div className="h-4 w-full bg-gray-100 rounded" />
-          <div className="h-4 w-5/6 bg-gray-100 rounded" />
+          <div className="h-4 w-full bg-[var(--color-bg-tertiary)] rounded" />
+          <div className="h-4 w-5/6 bg-[var(--color-bg-tertiary)] rounded" />
         </div>
       </Card>
     );
@@ -100,10 +100,10 @@ export function ConditionFamilyView({
         'border-l-red-500': data.stats?.overallMastery === 'low',
       })}
     >
-      <div className="p-4 bg-gray-50/50">
+      <div className="p-4 bg-[var(--color-bg-tertiary)]/50">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-semibold text-lg flex items-center gap-2">
-            <Layers className="w-5 h-5 text-gray-500" />
+            <Layers className="w-5 h-5 text-[var(--color-text-muted)]" />
             {data.canonicalName} Family
           </h3>
           <Button variant="ghost" onClick={() => setExpanded(!expanded)}>
@@ -111,7 +111,7 @@ export function ConditionFamilyView({
           </Button>
         </div>
         {data.stats && (
-          <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex items-center gap-4 text-sm text-[var(--color-text-secondary)]">
             <div className="flex items-center gap-1">
               <span
                 className={cn('w-2 h-2 rounded-full', getMasteryColor(data.stats.overallMastery))}
@@ -131,7 +131,7 @@ export function ConditionFamilyView({
         <div className="p-4 space-y-4">
           {subtypes.length > 0 && (
             <section>
-              <h4 className="text-xs uppercase font-bold text-gray-500 mb-2 flex items-center gap-1">
+              <h4 className="text-xs uppercase font-bold text-[var(--color-text-muted)] mb-2 flex items-center gap-1">
                 <ChevronRight className="w-3 h-3" /> Subtypes
               </h4>
               <div className="space-y-1 pl-2 border-l-2 border-[var(--color-border)] ml-1">
@@ -178,16 +178,25 @@ function MemberRow({
   member: FamilyMember;
   onNavigate?: (id: string) => void;
 }) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onNavigate?.(member.id);
+    }
+  };
   return (
     <div
-      className="flex items-center justify-between p-2 rounded hover:bg-gray-50 cursor-pointer group"
+      role="button"
+      tabIndex={0}
+      className="flex items-center justify-between p-2 rounded hover:bg-[var(--color-bg-tertiary)] cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2"
       onClick={() => onNavigate?.(member.id)}
+      onKeyDown={handleKeyDown}
     >
-      <span className="text-sm font-medium group-hover:text-blue-600 transition-colors">
+      <span className="text-sm font-medium group-hover:text-[var(--color-accent)] transition-colors">
         {member.condition}
       </span>
       {member.mastery !== undefined && (
-        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className="w-16 h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <div
             className={cn('h-full rounded-full', {
               'bg-red-500': member.mastery < 50,

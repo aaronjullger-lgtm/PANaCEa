@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useShortcut } from '@/src/context/ShortcutContext';
 import { useUser } from '@clerk/clerk-react';
 import { useCommuter } from '@/contexts/CommuterContext';
+import { announceToScreenReader } from '@/lib/utils/accessibilityUtils';
+import { useSwipeGestures } from '@/hooks/useSwipeGestures';
+import { enhancedHaptics } from '@/lib/enhancedHaptics';
 
 // Core services - using client-safe API wrappers
 import { getQuestionClient, fetchPearlsClient } from '@/services/client/questionApi';
@@ -71,7 +74,7 @@ import { DrillLoadingState } from '@/components/drill/DrillLoadingState';
 // Icons
 import { CloseIcon } from '@/components/icons/CloseIcon';
 import { FlagIcon } from '@/components/icons/FlagIcon';
-import { AlertTriangle, BarChart3, Calculator, MessageCircle } from 'lucide-react';
+import { AlertTriangle, BarChart3, Calculator, MessageCircle, Clock } from 'lucide-react';
 import { ArrowLeftIcon } from '@/components/icons/ArrowLeftIcon';
 import { ClearHighlightIcon } from '@/components/icons/ClearHighlightIcon';
 
@@ -82,6 +85,16 @@ import type { StructuredRationale } from '@/components/questions/ExplanationPane
 
 // Lib utils
 import { calculateParTime } from '@/lib/utils/questionComplexity';
+
+/** Map Question to the shape inferQuestionType expects (type, stem, hasImage, mediaAssets). */
+function questionToInferShape(q: Question): { type?: string; stem?: string; hasImage?: boolean; mediaAssets?: unknown[] } {
+  return {
+    type: (q as { type?: string }).type,
+    stem: q.question ?? (q as { vignette?: string }).vignette,
+    hasImage: !!(q as { imageUrl?: string }).imageUrl,
+    mediaAssets: (q as { mediaAssets?: unknown[] }).mediaAssets ?? [],
+  };
+}
 import {
   optimisticUpdateStats,
   optimisticUpdateSystemStats,
@@ -149,8 +162,8 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
         span.className = 'user-highlight';
         range.surroundContents(span);
         selection.removeAllRanges();
-      } catch (e) {
-        console.error('Highlighting failed.', e);
+      } catch {
+        // Highlighting failed - clear selection
         window.getSelection()?.removeAllRanges();
       }
     };
@@ -326,6 +339,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [showRationale, setShowRationale] = useState<boolean>(false);
   const [alternateRationale, setAlternateRationale] = useState<string | null>(null);
   const [isExplainerLoading, setIsExplainerLoading] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const [localNote, setLocalNote] = useState<string>('');
 
@@ -370,6 +384,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [showSessionEndSummary, setShowSessionEndSummary] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [showTimer, setShowTimer] = useState(true);
+  const [timeRemainingMs, setTimeRemainingMs] = useState<number | null>(null);
   const commuter = useCommuter();
   const showTimerVisible = showTimer && !commuter?.isCommuterMode;
   const [behavioralRefreshKey, setBehavioralRefreshKey] = useState(0);
@@ -429,6 +444,12 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // Sprint 4: Handler to show session end summary before ending
   const handleEndSession = useCallback(() => {
+    // Accessibility: announce session completion
+    const correctCount = performanceData.filter((p) => p.isCorrect).length;
+    const totalCount = performanceData.length;
+    const scorePercent = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+    announceToScreenReader(`Session ended. Score: ${scorePercent} percent. ${correctCount} correct out of ${totalCount}.`, 'assertive');
+    
     // For finite sessions (review mode), show the session end summary
     if (!shouldEndlesslyReplenish || performanceData.length >= 5) {
       setShowSessionEndSummary(true);
@@ -436,7 +457,31 @@ const QuizView: React.FC<QuizViewProps> = ({
       // For continuous sessions with few questions, just end directly
       onEndSession();
     }
-  }, [onEndSession, shouldEndlesslyReplenish, performanceData.length]);
+  }, [onEndSession, shouldEndlesslyReplenish, performanceData]);
+
+  // Quick Wins: Time limit checking (auto-end session at limit)
+  useEffect(() => {
+    if (!sessionSettings.timeLimit) {
+      setTimeRemainingMs(null);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - sessionStartTime.current;
+      const remaining = sessionSettings.timeLimit! - elapsed;
+
+      if (remaining <= 0) {
+        // Time's up - end session
+        clearInterval(interval);
+        setTimeRemainingMs(0);
+        handleEndSession();
+      } else {
+        setTimeRemainingMs(remaining);
+      }
+    }, 1000); // Update every second
+
+    return () => clearInterval(interval);
+  }, [sessionSettings.timeLimit, handleEndSession]);
 
   // Sprint 4: Handler for stats overlay toggle with keyboard shortcut
   useShortcut('TOGGLE_STATS', () => setShowStatsOverlay((prev) => !prev), { enabled: true });
@@ -485,7 +530,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         // Keep both queues in sync with batch update
         setParentQueue((prev) => [...prev, ...newQuestions]);
         setQueue((prev) => [...prev, ...newQuestions]);
-        console.log(`[QuizView] Replenished ${newQuestions.length} questions`);
+        // Replenished questions successfully
       } else {
         console.warn('[QuizView] No questions returned from batch fetch');
       }
@@ -511,7 +556,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Proactive replenishment - trigger when queue drops below threshold
   useEffect(() => {
     if (shouldEndlesslyReplenish && queue.length < LOW_QUEUE_THRESHOLD && !isGeneratingQuestion) {
-      console.log(`[QuizView] Queue low (${queue.length}), triggering replenishment`);
+      // Queue low - triggering replenishment
       void replenishQueue();
     }
   }, [queue.length, shouldEndlesslyReplenish, isGeneratingQuestion, replenishQueue]);
@@ -520,6 +565,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   const showNextQuestion = useCallback(() => {
     try {
       setIsAnswered(false);
+      setIsSubmitting(false);
       setSelectedAnswerIndex(null);
       setShowRationale(false);
       setAlternateRationale(null);
@@ -536,8 +582,8 @@ const QuizView: React.FC<QuizViewProps> = ({
       // Reset implicit metrics and behavioral tracker for new question
       implicitMetrics.reset();
       implicitMetrics.startQuestion();
-      const nextQ = rest[0];
-      const qType = nextQ ? inferQuestionType(nextQ) : 'unknown';
+      const nextQ = queue.length > 1 ? queue[1] : undefined;
+      const qType = nextQ ? inferQuestionType(questionToInferShape(nextQ)) : 'unknown';
       behavioralTracker.start(qType);
 
       setQueue((prev) => {
@@ -557,7 +603,11 @@ const QuizView: React.FC<QuizViewProps> = ({
         return newQueue;
       });
 
-      // Accessibility: move focus to question content after advancing so screen readers land on new question
+      // Accessibility: announce question progress and move focus to question content
+      const totalQuestions = queue.length + performanceData.length; // Approximate total
+      const currentNum = questionNumber + 1;
+      announceToScreenReader(`Question ${currentNum} of ${totalQuestions}`, 'polite');
+      
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const el = document.getElementById('question-container');
@@ -571,12 +621,14 @@ const QuizView: React.FC<QuizViewProps> = ({
       setError('Failed to load next question. Please try again.');
     }
   }, [
+    queue,
     setParentQueue,
     shouldEndlesslyReplenish,
     replenishQueue,
     handleEndSession,
     setError,
     implicitMetrics,
+    behavioralTracker,
   ]);
 
   // Initialize from incoming queue once
@@ -591,7 +643,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (initialQueue.length > 0) {
       implicitMetrics.startQuestion();
       const q = initialQueue[0];
-      behavioralTracker.start(q ? inferQuestionType(q) : 'unknown');
+      behavioralTracker.start(q ? inferQuestionType(questionToInferShape(q)) : 'unknown');
     }
   }, [initialQueue, currentQuestion, implicitMetrics, behavioralTracker]);
 
@@ -614,8 +666,10 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // Keyboard shortcuts
   const handleSubmitAnswer = useCallback(async () => {
-    // Guard against submitting without selection
-    if (selectedAnswerIndex === null || !currentQuestion || isAnswered) return;
+    // Guard against submitting without selection or already submitting
+    if (selectedAnswerIndex === null || !currentQuestion || isAnswered || isSubmitting) return;
+    
+    setIsSubmitting(true);
 
     // Runtime validation: Log undefined functions to debug "S is not a function" error
     const functionChecks = {
@@ -662,7 +716,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       timeSpentMs: timeToAnswer,
       system: currentQuestion.system ?? undefined,
       conditionId: currentQuestion.conditionId ?? undefined,
-      telemetryJson: telemetryForApi ?? undefined,
+      telemetryJson: (telemetryForApi ?? undefined) as Record<string, unknown> | undefined,
       answerChangedCount: behavioralPayload?.answer_change_count ?? answerChangeCount,
       durationMs: behavioralPayload?.duration_ms ?? timeToAnswer,
     });
@@ -798,8 +852,16 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (isCorrect) {
       const newStreak = currentStreak + 1;
       setCurrentStreak(newStreak);
-      if (newStreak >= 3) feedback.streak();
-      else feedback.correct();
+      // Sprint 2: Enhanced haptic celebrations for streaks
+      if (newStreak >= 10) {
+        enhancedHaptics.streak(newStreak);
+      } else if (newStreak >= 5) {
+        enhancedHaptics.streak(newStreak);
+      } else if (newStreak >= 3) {
+        feedback.streak();
+      } else {
+        feedback.correct();
+      }
     } else {
       feedback.incorrect();
       setCurrentStreak(0);
@@ -889,11 +951,13 @@ const QuizView: React.FC<QuizViewProps> = ({
             });
 
             if (!response.ok) {
-              const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+              const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string };
               throw new Error(errorData.error || `HTTP ${response.status}`);
             }
 
-            const result = await response.json();
+            const result = (await response.json()) as {
+              data?: { quality?: number; implicitMetrics?: { latencyRatio?: number } };
+            };
 
             // Map API response to legacy SRSScheduleResult format for backward compatibility
             setSrsResult({
@@ -938,10 +1002,14 @@ const QuizView: React.FC<QuizViewProps> = ({
       setWellnessReason('late_night');
       setShowWellnessModal(true);
     }
+
+    // Clear submitting state
+    setIsSubmitting(false);
   }, [
     selectedAnswerIndex,
     currentQuestion,
     isAnswered,
+    isSubmitting,
     sessionSettings,
     updateReviewQuestion,
     addMissedQuestion,
@@ -1196,6 +1264,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     );
   }
 
+  // Note: Swipe gestures are available via swipeContainerRef
+  // Apply to main quiz container if needed (currently disabled to avoid conflicts with text selection)
+  
   return (
     <div className="flex flex-col">
       <div className="mb-6">
@@ -1226,6 +1297,15 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   isVisible={showTimerVisible}
                   compact
                 />
+              )}
+              {/* Quick Wins: Time-box session timer */}
+              {timeRemainingMs !== null && timeRemainingMs > 0 && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20">
+                  <Clock className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+                  <span className="text-xs font-semibold text-[var(--color-accent)]">
+                    {Math.ceil(timeRemainingMs / 60000)} min
+                  </span>
+                </div>
               )}
             </div>
           </div>
@@ -1425,8 +1505,22 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           {/* SUBMIT BUTTON - Only show when answer is selected but not yet submitted */}
           {!isAnswered && selectedAnswerIndex !== null && (
             <div className="mt-6 text-center animate-fade-in space-y-4">
-              <button onClick={handleSubmitAnswer} className="btn-glass px-8 py-3">
-                Submit Answer
+              <button 
+                onClick={handleSubmitAnswer} 
+                disabled={isSubmitting}
+                className="btn-glass px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Answer'
+                )}
               </button>
               <p className="mt-2 text-sm text-[var(--color-text-muted)]">
                 Press{' '}
@@ -1847,7 +1941,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 const r = currentQuestion.rationale;
                 if (typeof r === 'object' && r !== null && 'bottomLine' in r) {
                   const s = r as { bottomLine?: string; whyCorrect?: string };
-                  return [s.bottomLine, s.whyCorrect].filter(Boolean).map(stripHtml).join(' ') || 'See rationale above.';
+                  return [s.bottomLine, s.whyCorrect]
+                    .filter((x): x is string => typeof x === 'string')
+                    .map(stripHtml)
+                    .join(' ') || 'See rationale above.';
                 }
                 return stripHtml(typeof r === 'string' ? r : '') || 'See rationale above.';
               })()}

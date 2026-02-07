@@ -303,8 +303,9 @@ export function getConfusionPairs(
   const pairs = Array.from(pairCounts.entries())
     .map(([key, count]) => {
       const [a, b] = key.split('|');
-      return { conditionA: a, conditionB: b, totalConfusions: count };
+      return { conditionA: a ?? '', conditionB: b ?? '', totalConfusions: count };
     })
+    .filter((p) => p.conditionA !== '' && p.conditionB !== '')
     .sort((a, b) => b.totalConfusions - a.totalConfusions)
     .slice(0, limit);
 

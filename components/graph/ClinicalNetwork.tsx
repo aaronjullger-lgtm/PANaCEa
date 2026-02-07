@@ -93,11 +93,15 @@ export const ClinicalNetwork: React.FC<ClinicalNetworkProps> = ({
         if (!r.ok) throw new Error(r.statusText || 'Failed to load graph');
         return r.json();
       })
-      .then((res) => {
+      .then((res: unknown) => {
         if (cancelled) return;
-        const payload = res?.data ?? res;
+        const r = res as { data?: { nodes?: unknown[]; edges?: unknown[] }; nodes?: unknown[]; edges?: unknown[] };
+        const payload = r?.data ?? r;
         if (payload?.nodes && payload?.edges) {
-          setData({ nodes: payload.nodes, edges: payload.edges });
+          setData({
+            nodes: payload.nodes as GraphNode[],
+            edges: payload.edges as GraphEdge[],
+          });
         } else {
           setError('Invalid graph response');
         }

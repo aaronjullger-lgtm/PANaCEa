@@ -13,15 +13,17 @@ import { requireAuth, AuthenticatedRequest } from '../lib/middleware/clerkAuth';
 const router = Router();
 
 // Get a random patient encounter case
-router.get('/cases/random', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/cases/random', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     if (!process.env.DATABASE_URL) {
-      return res.status(503).json({ error: 'Database not configured' });
+      res.status(503).json({ error: 'Database not configured' });
+      return;
     }
 
     const count = await prisma.patientEncounterCase.count();
     if (count === 0) {
-      return res.status(404).json({ error: 'No cases found' });
+      res.status(404).json({ error: 'No cases found' });
+      return;
     }
 
     // Efficient random selection using skip
@@ -38,18 +40,26 @@ router.get('/cases/random', requireAuth, async (req: AuthenticatedRequest, res: 
 });
 
 // Create or get active session
-router.post('/session', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/session', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.auth.userId;
+    const userId = req.auth?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
     const { caseId } = req.body;
 
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true, sessionId: 'mock-session-id' });
+      res.json({ success: true, sessionId: 'mock-session-id' });
+      return;
     }
 
     const user = await prisma.user.findUnique({ where: { clerkId: userId } });
 
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
 
     // Check for existing active session for this case
     const existingSession = await prisma.patientEncounterSession.findFirst({
@@ -61,7 +71,8 @@ router.post('/session', requireAuth, async (req: AuthenticatedRequest, res: Resp
     });
 
     if (existingSession) {
-      return res.json({ success: true, session: existingSession });
+      res.json({ success: true, session: existingSession });
+      return;
     }
 
     // Create new session
@@ -83,12 +94,13 @@ router.post('/session', requireAuth, async (req: AuthenticatedRequest, res: Resp
 });
 
 // Get active session details
-router.get('/session/:sessionId', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/session/:sessionId', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { sessionId } = req.params;
 
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true, session: null });
+      res.json({ success: true, session: null });
+      return;
     }
 
     const session = await prisma.patientEncounterSession.findUnique({
@@ -103,12 +115,13 @@ router.get('/session/:sessionId', requireAuth, async (req: AuthenticatedRequest,
 });
 
 // Append chat message
-router.post('/chat', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/chat', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { sessionId, messages } = req.body; // messages is array of new messages or full history
 
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true });
+      res.json({ success: true });
+      return;
     }
 
     // Update session messages
@@ -127,12 +140,13 @@ router.post('/chat', requireAuth, async (req: AuthenticatedRequest, res: Respons
 });
 
 // Complete session
-router.post('/complete', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/complete', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { sessionId, diagnosis, treatmentPlan } = req.body;
 
     if (!process.env.DATABASE_URL) {
-      return res.json({ success: true });
+      res.json({ success: true });
+      return;
     }
 
     await prisma.patientEncounterSession.update({

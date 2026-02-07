@@ -51,8 +51,8 @@ export const onRequestGet = authenticatedEndpoint(
       const result = await prisma.procedure.findUnique({
         where: { id },
         include: {
-          conditions: {
-            select: { id: true, name: true },
+          ProcedureConditionLink: {
+            include: { Condition: { select: { id: true, name: true } } },
           },
         },
       });
@@ -62,11 +62,18 @@ export const onRequestGet = authenticatedEndpoint(
         return { status: 404, error: 'Procedure not found' };
       }
 
+      const conditions =
+        result.ProcedureConditionLink?.map((l) => l.Condition).filter(Boolean) ?? [];
       log.info('Procedure fetched successfully', {
         id,
-        conditionCount: result.conditions?.length || 0,
+        conditionCount: conditions.length,
       });
-      return { data: { success: true, data: result } };
+      return {
+        data: {
+          success: true,
+          data: { ...result, conditions },
+        },
+      };
     } catch (error) {
       log.error('Failed to fetch procedure', error);
       return { status: 500, error: 'Failed to fetch procedure' };

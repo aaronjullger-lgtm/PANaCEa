@@ -138,40 +138,41 @@ export function useAnatomy(options: UseAnatomyOptions = {}) {
           throw new Error(`Failed to load model: ${response.statusText}`);
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as { model: Anatomy3DModel };
         setCurrentModel(data.model);
 
         // Apply model's default camera if available
-        if (data.model.cameraPosition) {
+        const model = data.model;
+        if (model.cameraPosition) {
           setCamera((prev) => ({
             ...prev,
             position: [
-              data.model.cameraPosition.x,
-              data.model.cameraPosition.y,
-              data.model.cameraPosition.z,
+              model.cameraPosition!.x,
+              model.cameraPosition!.y,
+              model.cameraPosition!.z,
             ],
           }));
         }
 
-        if (data.model.cameraTarget) {
+        if (model.cameraTarget) {
           setCamera((prev) => ({
             ...prev,
             target: [
-              data.model.cameraTarget.x,
-              data.model.cameraTarget.y,
-              data.model.cameraTarget.z,
+              model.cameraTarget!.x,
+              model.cameraTarget!.y,
+              model.cameraTarget!.z,
             ],
           }));
         }
 
-        if (data.model.defaultZoom) {
+        if (model.defaultZoom != null) {
           setCamera((prev) => ({
             ...prev,
-            zoom: data.model.defaultZoom,
+            zoom: model.defaultZoom ?? prev.zoom,
           }));
         }
 
-        onModelLoad?.(data.model);
+        onModelLoad?.(model);
         setLoadProgress(100);
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Unknown error loading model');

@@ -44,7 +44,7 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
 
   // Validate required environment variables early (fail-fast)
   try {
-    validateFunctionEnv(env, 'GEMINI');
+    validateFunctionEnv(env as unknown as Record<string, unknown>, 'GEMINI');
   } catch (error) {
     if (error instanceof MissingEnvError) {
       return error.toResponse();
@@ -55,7 +55,7 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
   // Rate limit AI requests (user ID if available, else IP)
   const identifier = getRateLimitIdentifier(request);
   const { response: rateLimitResponse, headers: rateLimitHeaders } = await withRateLimit(
-    env,
+    env as { RATE_LIMIT_KV?: KVNamespace },
     identifier,
     'gemini'
   );

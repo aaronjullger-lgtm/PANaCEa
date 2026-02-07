@@ -64,10 +64,12 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!configRes.ok) {
-        const err = await configRes.json().catch(() => ({}));
+        const err = (await configRes.json().catch(() => ({}))) as { error?: string };
         throw new Error(err.error || 'Failed to get live config');
       }
-      const { data } = await configRes.json();
+      const config = (await configRes.json()) as { data?: { model?: string; apiKey?: string } };
+      const data = config.data;
+      if (!data?.model || !data?.apiKey) throw new Error('Live config missing model or apiKey');
       const { model, apiKey } = data;
 
       const { GoogleGenAI, Modality } = await import('@google/genai');
@@ -102,7 +104,10 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
                     headers: token ? { Authorization: `Bearer ${token}` } : {},
                   })
                     .then((r) => r.json())
-                    .then((json) => ({ id: fc.id, name: fc.name ?? 'get_current_vitals', response: json.data ?? json }))
+                    .then((json: unknown) => {
+                      const j = json as { data?: unknown };
+                      return { id: fc.id, name: fc.name ?? 'get_current_vitals', response: j?.data ?? j };
+                    })
                     .catch(() => ({ id: fc.id, name: fc.name ?? 'get_current_vitals', response: { bp: '160/90', hr: 110 } }))
                 )
               ).then((functionResponses) => {

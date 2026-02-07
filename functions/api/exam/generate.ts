@@ -22,7 +22,7 @@ const GenerateBodySchema = z.object({
       blueprintVersion: z.string().optional(),
     })
     .optional()
-    .default({}),
+    .default({ totalQuestions: 300 }),
 });
 
 const DIFFICULTY_SPLIT = { hard: 0.2, medium: 0.6, easy: 0.2 } as const;
@@ -69,15 +69,16 @@ export const onRequestPost = authenticatedEndpoint(
 
       const systemCounts: Record<string, number> = {};
       let remaining = total;
-      const systems = Object.keys(weights).filter((s) => weights[s] > 0);
+      const systems = Object.keys(weights).filter((s) => (weights[s] ?? 0) > 0);
       for (const system of systems) {
-        const frac = weights[system] as number;
+        const frac = (weights[system] ?? 0) as number;
         const count = Math.round(total * frac);
         systemCounts[system] = Math.min(count, remaining);
         remaining -= systemCounts[system];
       }
-      if (remaining > 0 && systems.length > 0) {
-        systemCounts[systems[0]] = (systemCounts[systems[0]] ?? 0) + remaining;
+      const firstSystem = systems[0];
+      if (remaining > 0 && firstSystem !== undefined) {
+        systemCounts[firstSystem] = (systemCounts[firstSystem] ?? 0) + remaining;
       }
 
       const selectedIds: string[] = [];
@@ -110,7 +111,8 @@ export const onRequestPost = authenticatedEndpoint(
           });
           const shuffled = [...pool].sort(() => Math.random() - 0.5);
           for (let i = 0; i < need && i < shuffled.length; i++) {
-            selectedIds.push(shuffled[i].id);
+            const row = shuffled[i];
+            if (row) selectedIds.push(row.id);
           }
           added += Math.min(need, shuffled.length);
         }
@@ -126,7 +128,8 @@ export const onRequestPost = authenticatedEndpoint(
           });
           const shuffled = [...anyDiff].sort(() => Math.random() - 0.5);
           for (let i = 0; i < stillNeed && i < shuffled.length; i++) {
-            selectedIds.push(shuffled[i].id);
+            const row = shuffled[i];
+            if (row) selectedIds.push(row.id);
           }
         }
       }
@@ -139,7 +142,8 @@ export const onRequestPost = authenticatedEndpoint(
         });
         const shuffled = [...fallback].sort(() => Math.random() - 0.5);
         for (let i = 0; selectedIds.length < total && i < shuffled.length; i++) {
-          selectedIds.push(shuffled[i].id);
+          const row = shuffled[i];
+          if (row) selectedIds.push(row.id);
         }
       }
 

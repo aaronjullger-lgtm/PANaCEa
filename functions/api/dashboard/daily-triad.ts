@@ -71,10 +71,10 @@ export const onRequestGet = authenticatedEndpoint(DailyTriadSchema, async ({ env
 
     const where = {
       status: 'published',
-      OR: [{ gold_standard_dx: { not: null } }, { clinical_pearls: { not: Prisma.DbNull } }],
-    } as const;
+      OR: [{ gold_standard_dx: { not: null } }, { clinical_pearls: { not: Prisma.DbNull } }] as const,
+    };
 
-    const total = await prisma.medicalContent.count({ where });
+    const total = await prisma.medicalContent.count({ where: { ...where, OR: [...where.OR] } });
     if (total === 0) {
       log.warn('No high-yield content available');
       return { status: 404, error: 'No high-yield content available' };
@@ -83,7 +83,7 @@ export const onRequestGet = authenticatedEndpoint(DailyTriadSchema, async ({ env
     const randomSkip = Math.max(0, Math.floor(Math.random() * total));
 
     const record = await prisma.medicalContent.findFirst({
-      where,
+      where: { ...where, OR: [...where.OR] },
       skip: randomSkip,
       take: 1,
       orderBy: { conditionId: 'asc' },

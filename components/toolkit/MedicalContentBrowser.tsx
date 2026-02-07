@@ -2,7 +2,7 @@
  * MedicalContentBrowser - Modern medical content library browser
  *
  * Refactored from ClinicalLibrary.tsx to use:
- * - MedicalContentCard with dark sportsbook aesthetic
+ * - MedicalContentCard with professional dark mode aesthetic
  * - ContentGrid responsive layout
  * - Type-safe MedicalContentDisplay interface
  * - Unified badge system (SystemBadge, YieldBadge)
@@ -145,8 +145,8 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
         });
 
         if (response.ok) {
-          const systems = await response.json();
-          setAvailableSystems(systems.map((s: { system: string }) => s.system));
+          const systems = (await response.json()) as Array<{ system: string }>;
+          setAvailableSystems(systems.map((s) => s.system));
         }
       } catch (err) {
         console.warn('[MedicalContentBrowser] Failed to fetch systems:', err);

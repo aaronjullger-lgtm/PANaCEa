@@ -116,10 +116,11 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     const systemPerformance: Record<string, { total: number; correct: number; accuracy: number }> =
       {};
     records.forEach((record: (typeof records)[0]) => {
-      if (!systemPerformance[record.system]) {
-        systemPerformance[record.system] = { total: 0, correct: 0, accuracy: 0 };
+      const sys = record.system ?? 'unknown';
+      if (!systemPerformance[sys]) {
+        systemPerformance[sys] = { total: 0, correct: 0, accuracy: 0 };
       }
-      const perfEntry = systemPerformance[record.system];
+      const perfEntry = systemPerformance[sys];
       if (perfEntry) {
         perfEntry.total++;
         if (record.isCorrect) {
@@ -212,8 +213,11 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     // Time optimization
     const avgTimePerQuestion =
-      records.reduce((sum: number, r: (typeof records)[0]) => sum + Number(r.timeSpent), 0) /
-      records.length;
+      records.reduce(
+        (sum: number, r: (typeof records)[0]) =>
+          sum + Number((r as { timeSpentMs?: number | null }).timeSpentMs ?? 0),
+        0
+      ) / records.length;
     const timeOptimization =
       avgTimePerQuestion > 120
         ? "You're taking time to think - good! But try to improve speed for exam conditions"

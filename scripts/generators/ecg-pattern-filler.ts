@@ -11,7 +11,7 @@
  * - testQuestionTips[], mnemonics[], boardYieldFacts[]
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const prisma = new PrismaClient();
@@ -191,6 +191,7 @@ async function fillECGPatterns(): Promise<void> {
 
   for (let i = 0; i < toUpdate.length; i++) {
     const record = toUpdate[i];
+    if (!record) continue;
     console.log(`  🔄 [${i + 1}/${toUpdate.length}] Processing: ${record.name}...`);
 
     const content = await generateECGContent(record);
@@ -219,9 +220,9 @@ async function fillECGPatterns(): Promise<void> {
           cardioversion: content.cardioversion || record.cardioversion,
           pacing: content.pacing || record.pacing,
           referral: content.referral || record.referral,
-          diagnosticCriteria: content.diagnosticCriteria?.length
+          diagnosticCriteria: (content.diagnosticCriteria?.length
             ? content.diagnosticCriteria
-            : record.diagnosticCriteria,
+            : record.diagnosticCriteria) as Prisma.InputJsonValue,
           etiology: content.etiology?.length ? content.etiology : record.etiology,
           symptoms: content.symptoms?.length ? content.symptoms : record.symptoms,
           associatedConditions: content.associatedConditions?.length

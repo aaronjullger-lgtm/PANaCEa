@@ -12,7 +12,6 @@ import {
   createEdgePrismaClient,
   safePrismaDisconnect,
   EdgePrismaClient,
-  CACHE_STRATEGY,
 } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { z } from 'zod';
@@ -104,7 +103,6 @@ export const onRequestGet = authenticatedEndpoint(ClinicalBrowseSchema, async ({
         overview: true,
         buzzwords: true,
       },
-      ...CACHE_STRATEGY.STATIC, // 1h cache - clinical content rarely changes
     });
 
     // Fetch pharmacology data (tagged by system if tags include the system code)
@@ -119,7 +117,6 @@ export const onRequestGet = authenticatedEndpoint(ClinicalBrowseSchema, async ({
         isHighYield: true,
       },
       take: 250,
-      ...CACHE_STRATEGY.STATIC, // 1h cache - drug data rarely changes
     });
 
     // Fetch physiology concepts

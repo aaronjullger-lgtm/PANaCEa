@@ -7,10 +7,11 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Filter, Zap, TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
+import { Play, Filter, Zap, TrendingUp, Loader2 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { SliderWithInput } from '@/components/ui/SliderWithInput';
 import type { SystemCode, SessionSettings } from '../../types';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 interface ConditionMetadata {
   id: string;
@@ -95,7 +96,7 @@ export function DrillSetup({
           throw new Error(`Failed to load conditions: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as ConditionMetadata[];
         setConditions(data);
       } catch (err) {
         console.error('Error fetching conditions:', err);
@@ -164,23 +165,11 @@ export function DrillSetup({
   if (error) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-[var(--color-bg-secondary)] border border-[var(--color-data-fail)]/30 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <AlertCircle className="w-6 h-6 text-[var(--color-data-fail)]" />
-            <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
-              Error Loading Drill
-            </h2>
-          </div>
-          <p className="text-[var(--color-text-secondary)] mb-4">{error}</p>
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="w-full px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-lg hover:bg-[var(--color-bg-primary)] transition-colors"
-            >
-              Go Back
-            </button>
-          )}
-        </div>
+        <ErrorState
+          title="Error Loading Drill"
+          message={error}
+          secondaryAction={onBack ? { label: 'Go Back', onClick: onBack } : undefined}
+        />
       </div>
     );
   }

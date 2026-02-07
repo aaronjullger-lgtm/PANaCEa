@@ -70,10 +70,10 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `HTTP ${res.status}`);
+        const errBody = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(errBody.error || `HTTP ${res.status}`);
       }
-      const data = (await res.json()) as { caches: KnowledgeCacheItem[] };
+      const data = (await res.json()) as { caches?: KnowledgeCacheItem[] };
       const list = data.caches ?? [];
       setCaches(list);
       // Clear active if it's no longer in the non-expired list (expired or deleted)
@@ -129,8 +129,8 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
         const url = getApiBaseUrl() + API_ENDPOINTS.KNOWLEDGE_CACHE_DELETE(geminiCacheName);
         const res = await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
         if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || `HTTP ${res.status}`);
+          const errBody = (await res.json().catch(() => ({}))) as { error?: string };
+          throw new Error(errBody.error || `HTTP ${res.status}`);
         }
         if (activeCacheName === geminiCacheName) clearActive();
         await fetchCaches();
@@ -159,8 +159,8 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
           body: formData,
         });
         if (!uploadRes.ok) {
-          const data = await uploadRes.json().catch(() => ({}));
-          throw new Error(data.error || `Upload failed: ${uploadRes.status}`);
+          const errBody = (await uploadRes.json().catch(() => ({}))) as { error?: string };
+          throw new Error(errBody.error || `Upload failed: ${uploadRes.status}`);
         }
         const uploadData = (await uploadRes.json()) as { fileUri: string; mimeType?: string };
         const cacheRes = await fetch(buildApiUrl(API_ENDPOINTS.KNOWLEDGE_CACHE), {
@@ -177,8 +177,8 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
           }),
         });
         if (!cacheRes.ok) {
-          const data = await cacheRes.json().catch(() => ({}));
-          throw new Error(data.error || `Create cache failed: ${cacheRes.status}`);
+          const errBody = (await cacheRes.json().catch(() => ({}))) as { error?: string };
+          throw new Error(errBody.error || `Create cache failed: ${cacheRes.status}`);
         }
         setUploadDisplayName('');
         await fetchCaches();

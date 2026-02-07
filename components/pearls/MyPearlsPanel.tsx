@@ -126,16 +126,16 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
         throw new Error('Failed to fetch pearls');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { pearls?: ClinicalPearl[] };
 
       // Merge with local SRS data
-      const pearlsWithSRS = (data.pearls || []).map((pearl: ClinicalPearl) => ({
+      const pearlsWithSRS = (data.pearls || []).map((pearl) => ({
         ...pearl,
         userInteraction: {
           ...pearl.userInteraction,
           ...getPearlSRSData(pearl.id),
         },
-      }));
+      })) as ClinicalPearl[];
 
       setPearls(pearlsWithSRS);
     } catch (err) {
@@ -544,7 +544,7 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[var(--color-bg-primary)] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-[var(--color-border)]"
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]/80 p-6 text-[var(--color-text-inverse)]">

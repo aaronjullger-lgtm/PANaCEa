@@ -125,7 +125,8 @@ router.post('/soap-note', async (req: Request, res: Response) => {
     const { caseId, totalScore, breakdown, userId } = req.body;
 
     if (!caseId || typeof totalScore !== 'number' || !breakdown) {
-      return res.status(400).json({ success: false, error: 'Missing required analytics fields' });
+      res.status(400).json({ success: false, error: 'Missing required analytics fields' });
+      return;
     }
 
     if (process.env.DATABASE_URL) {
@@ -160,11 +161,12 @@ router.post('/soap-note', async (req: Request, res: Response) => {
  * GET /performance-deltas
  * Computes performance deltas for a user compared to their cohort.
  */
-router.get('/performance-deltas', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/performance-deltas', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.auth?.userId;
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
     const cohortId = req.query.cohortId as string | undefined;

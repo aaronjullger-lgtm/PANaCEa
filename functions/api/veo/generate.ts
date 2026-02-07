@@ -112,9 +112,9 @@ function resolvePrompt(body: z.infer<typeof GenerateBodySchema>): string {
   const custom = body.prompt?.trim();
   if (custom) return custom.slice(0, MAX_PROMPT_LENGTH);
   if (body.preset && body.preset in PRESET_PROMPTS) {
-    return PRESET_PROMPTS[body.preset];
+    return (PRESET_PROMPTS as Record<string, string>)[body.preset] ?? '';
   }
-  return PRESET_PROMPTS.parkinsonian_gait;
+  return (PRESET_PROMPTS.parkinsonian_gait as string) ?? '';
 }
 
 export const onRequestOptions = withCors();

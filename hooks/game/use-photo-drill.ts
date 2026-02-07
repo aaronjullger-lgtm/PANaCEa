@@ -254,18 +254,18 @@ async function fetchPhotoCases(
     const response = await fetch(url);
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string };
       throw new Error(errorData.error || `API request failed: ${response.status}`);
     }
 
-    const body = await response.json();
-    const cases = Array.isArray(body) ? body : body?.data;
+    const body = (await response.json()) as { data?: unknown[] } | unknown[];
+    const cases = Array.isArray(body) ? body : (body as { data?: unknown[] })?.data;
 
     if (!Array.isArray(cases)) {
       throw new Error('Invalid API response');
     }
     // In production, return empty array so UI can show "No questions available" instead of mocks
-    return cases;
+    return cases as PhotoCase[];
   } catch (error) {
     console.error('[Photo Drill] Failed to fetch cases:', error);
     if (isTestEnv) {

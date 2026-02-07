@@ -3,9 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   Brain,
-  Clock,
-  Zap,
-  TrendingUp,
   CheckCircle,
   AlertCircle,
   AlertTriangle,
@@ -13,6 +10,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { toast } from 'sonner';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { SkeletonLoader, SkeletonText } from '@/components/ui/SkeletonLoader';
 import { useSession } from '@/contexts/SessionContext';
@@ -74,10 +72,10 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
       const response = await fetch('/api/drills/smart-review', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      const data = await response.json();
+      const data = (await response.json()) as { success?: boolean; items?: unknown[] };
 
-      if (data.success && data.items.length > 0) {
-        setReviewQueue(data.items);
+      if (data.success && data.items && data.items.length > 0) {
+        setReviewQueue(data.items as ReviewItem[]);
         setViewState('active');
         setStartTime(Date.now());
       } else {
@@ -125,7 +123,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
         }),
       });
 
-      const result = await response.json();
+      const result = (await response.json()) as { implicitMetrics?: unknown };
 
       // Record JOL calibration observation for metacognitive tracking
       if (recordCalibrationObservation && result.implicitMetrics) {
@@ -144,9 +142,29 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   };
 
   const showSpeedFeedback = (timeMs: number) => {
-    // Placeholder: implement toast/animation based on speed
-    const isFast = timeMs < 15000;
-    console.log(isFast ? 'Fast Recall (Easy)' : 'Slow Recall (Hard)');
+    const seconds = Math.floor(timeMs / 1000);
+    
+    if (timeMs < 10000) {
+      toast.success(`Lightning fast! ${seconds}s - Strong recall`, {
+        icon: '⚡',
+        duration: 2000,
+      });
+    } else if (timeMs < 20000) {
+      toast.success(`Quick recall! ${seconds}s - Good retention`, {
+        icon: '✓',
+        duration: 2000,
+      });
+    } else if (timeMs < 40000) {
+      toast.info(`${seconds}s - Consider reviewing this topic again`, {
+        icon: '🔄',
+        duration: 2500,
+      });
+    } else {
+      toast.warning(`Slow recall (${seconds}s) - Flag for intensive review`, {
+        icon: '⏱️',
+        duration: 3000,
+      });
+    }
   };
 
   const handleNext = () => {
@@ -169,7 +187,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
       case 'NEW':
         return { Icon: Sparkles, label: 'New Concept', color: 'bg-blue-500 text-white' };
       default:
-        return { Icon: FileText, label: 'Review', color: 'bg-gray-500 text-white' };
+        return { Icon: FileText, label: 'Review', color: 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]' };
     }
   };
 
@@ -287,6 +305,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
             <button
               onClick={onExit}
               className="p-2 hover:bg-[var(--color-bg-primary)] rounded-lg transition-colors"
+              aria-label="Exit Smart Review Mode"
             >
               <X className="w-5 h-5 text-[var(--color-text-muted)]" />
             </button>

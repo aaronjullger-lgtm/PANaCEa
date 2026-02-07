@@ -103,12 +103,12 @@ export function useSemanticSearch(
             body: JSON.stringify({ query: q.trim(), topK: Math.min(limit, 10) }),
             signal,
           });
-          const data = await res.json();
+          const data = (await res.json()) as { error?: string; data?: { answer?: string; results?: unknown[] }; results?: unknown[] };
           if (!res.ok) {
             const msg = data?.error ?? `Answer request failed: ${res.status}`;
             throw new Error(msg);
           }
-          const payload = data?.data ?? data;
+          const payload = (data?.data ?? data) as { answer?: string; results?: SemanticSearchResult[] };
           setAnswer(payload.answer ?? null);
           setResults(Array.isArray(payload.results) ? payload.results : []);
         } else {
@@ -118,12 +118,12 @@ export function useSemanticSearch(
             body: JSON.stringify({ query: q.trim(), limit }),
             signal,
           });
-          const data = await res.json();
+          const data = (await res.json()) as { error?: string; data?: { results?: unknown[] }; results?: unknown[] };
           if (!res.ok) {
             const msg = data?.error ?? `Search failed: ${res.status}`;
             throw new Error(msg);
           }
-          const payload = data?.data ?? data;
+          const payload = (data?.data ?? data) as { results?: SemanticSearchResult[] };
           setResults(Array.isArray(payload.results) ? payload.results : []);
         }
       } catch (err) {

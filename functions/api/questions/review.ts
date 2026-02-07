@@ -157,9 +157,10 @@ export const onRequestPost = authenticatedEndpoint(ReviewPostSchema, async (cont
       const interval = wasCorrect ? 1 : 0;
       const nextDue = new Date(now.getTime() + interval * 24 * 60 * 60 * 1000);
 
+      const srsId = crypto.randomUUID();
       await prisma.sRSItem.create({
         data: {
-          id: crypto.randomUUID(),
+          id: srsId,
           userId: user.id,
           questionId,
           lastReviewed: now,
@@ -170,6 +171,7 @@ export const onRequestPost = authenticatedEndpoint(ReviewPostSchema, async (cont
           quality,
           difficulty: 0.3,
           stabilityScore: 0,
+          updatedAt: now,
         },
       });
     }

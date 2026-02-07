@@ -45,10 +45,10 @@ export const onRequestPost = authenticatedEndpoint(CustomSessionSchema, async (c
       });
     }
 
-    // Filter by subcategories (if specified)
+    // Filter by category (Question model has category, not subcategory)
     if (config.subcategories && config.subcategories.length > 0) {
       whereConditions.push({
-        subcategory: { in: config.subcategories },
+        category: { in: config.subcategories },
       });
     }
 
@@ -59,104 +59,71 @@ export const onRequestPost = authenticatedEndpoint(CustomSessionSchema, async (c
       });
     }
 
-    // Only fetch approved questions
-    whereConditions.push({
-      status: 'approved',
-    });
-
-    // Fetch questions from pool
-    const poolQuestions = await prisma.questionPool.findMany({
-      where: {
-        AND: whereConditions,
-      },
+    // Build where for Question model (no status/approval field)
+    const whereClause =
+      whereConditions.length > 0
+        ? { AND: whereConditions }
+        : {};
+    const poolQuestions = await prisma.question.findMany({
+      where: whereClause,
       select: {
         id: true,
         question: true,
+        vignette: true,
         options: true,
-        correctAnswerIndex: true,
-        rationale: true,
+        correctAnswer: true,
+        explanation: true,
         topic: true,
         system: true,
-        subcategory: true,
+        category: true,
         conditionId: true,
-        condition: true,
-        pearls: true,
         difficulty: true,
-        focusArea: true,
-        metadata: true,
       },
       take: requestedCount * 3,
     });
 
-    // Define type for pool question results
-    type PoolQuestion = {
-      id: string;
-      question: string;
-      options: unknown;
-      correctAnswerIndex: number;
-      rationale: string | null;
-      topic: string | null;
-      system: string | null;
-      subcategory: string | null;
-      conditionId: string | null;
-      condition: string | null;
-      pearls: unknown;
-      difficulty: number | null;
-      focusArea: string | null;
-      metadata: unknown;
-    };
+    type PoolQuestion = (typeof poolQuestions)[0];
 
-    // Apply focus area filtering if specified
-    let filteredQuestions: PoolQuestion[] = poolQuestions;
-    if (config.focusAreas && config.focusAreas.length > 0) {
-      const focusAreas = config.focusAreas;
-      filteredQuestions = poolQuestions.filter(
-        (q: PoolQuestion) => !q.focusArea || focusAreas.includes(q.focusArea)
-      );
-    }
-
-    // Apply difficulty weighting
-    let weightedQuestions: PoolQuestion[] = filteredQuestions;
+    // Apply difficulty weighting if specified
+    let weightedQuestions = poolQuestions;
     if (config.difficulty && config.difficulty !== 'same') {
       const difficultyMode = config.difficulty;
-      weightedQuestions = filteredQuestions.sort((a: PoolQuestion, b: PoolQuestion) => {
-        const aDiff = a.difficulty || 50;
-        const bDiff = b.difficulty || 50;
-
-        if (difficultyMode === 'easier') {
-          return aDiff - bDiff;
-        } else {
-          return bDiff - aDiff;
-        }
+      weightedQuestions = [...poolQuestions].sort((a, b) => {
+        const aDiff = Number(a.difficulty) || 50;
+        const bDiff = Number(b.difficulty) || 50;
+        if (difficultyMode === 'easier') return aDiff - bDiff;
+        return bDiff - aDiff;
       });
     }
 
-    // Shuffle and select requested count
     const shuffled = shuffleArray(weightedQuestions);
     const selectedQuestions = shuffled.slice(0, requestedCount);
 
-    // Transform to Question format expected by client
-    const questions = selectedQuestions.map((q: any) => ({
-      id: q.id,
-      question: q.question,
-      options: q.options as string[],
-      correctAnswerIndex: q.correctAnswerIndex,
-      rationale: q.rationale || '',
-      topic: q.topic || q.system,
-      system: q.system,
-      subcategory: q.subcategory,
-      conditionId: q.conditionId,
-      condition: q.condition || 'Unknown',
-      pearls: (q.pearls as string[]) || [],
-      focusArea: q.focusArea,
-      difficulty: q.difficulty,
-    }));
+    const optionsArr = (opts: unknown): string[] =>
+      Array.isArray(opts) ? opts as string[] : [];
 
-    // Calculate total available
-    const totalAvailable = await prisma.questionPool.count({
-      where: {
-        AND: whereConditions,
-      },
+    const questions = selectedQuestions.map((q) => {
+      const opts = optionsArr(q.options);
+      const correctIdx = opts.indexOf(q.correctAnswer);
+      return {
+        id: q.id,
+        question: q.question,
+        options: opts,
+        correctAnswerIndex: correctIdx >= 0 ? correctIdx : 0,
+        rationale: q.explanation ?? '',
+        topic: q.topic ?? q.system,
+        system: q.system,
+        subcategory: q.category,
+        conditionId: q.conditionId,
+        condition: 'Unknown',
+        pearls: [],
+        focusArea: null,
+        difficulty: q.difficulty,
+      };
+    });
+
+    const totalAvailable = await prisma.question.count({
+      where: whereClause,
     });
 
     // Generate warning if not enough questions

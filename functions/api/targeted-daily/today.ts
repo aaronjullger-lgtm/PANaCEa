@@ -14,7 +14,7 @@
 
 import { z } from 'zod';
 import { authenticatedEndpoint } from '../_shared/middleware';
-import { createEdgePrismaClient, safePrismaDisconnect, CACHE_STRATEGY } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
 const AllowedSystemSchema = z.enum([
@@ -65,7 +65,7 @@ function normalizeOptions(data: any): string[] {
     return Object.keys(obj)
       .sort((a, b) => a.localeCompare(b))
       .map((k) => obj[k])
-      .filter(Boolean);
+      .filter((x): x is string => typeof x === 'string');
   }
   return [];
 }
@@ -81,7 +81,6 @@ async function fetchQuestionForId(prisma: any, questionId: string) {
       questionData: true,
       // tags live in questionData
     },
-    ...CACHE_STRATEGY.QUESTIONS,
   });
   if (pre) return { source: 'pre', record: pre };
 
@@ -96,7 +95,6 @@ async function fetchQuestionForId(prisma: any, questionId: string) {
       difficulty: true,
       tags: true,
     },
-    ...CACHE_STRATEGY.QUESTIONS,
   });
   if (main) return { source: 'main', record: main };
 
@@ -115,10 +113,10 @@ export const onRequestGet = authenticatedEndpoint(
         .map((s) => s.trim().toUpperCase())
         .filter(Boolean);
 
-      const parsedSystems = systems
+      const parsedSystems: string[] = systems
         .map((s) => AllowedSystemSchema.safeParse(s))
-        .filter((r) => r.success)
-        .map((r) => (r as any).data as z.infer<typeof AllowedSystemSchema>);
+        .filter((r): r is { success: true; data: z.infer<typeof AllowedSystemSchema> } => r.success)
+        .map((r) => r.data);
 
       const uniqSystems = Array.from(new Set(parsedSystems)).sort((a, b) => a.localeCompare(b));
       if (uniqSystems.length === 0) {
@@ -143,7 +141,6 @@ export const onRequestGet = authenticatedEndpoint(
           isCorrect: true,
           timeSpentMs: true,
         },
-        ...CACHE_STRATEGY.USER_DATA,
       });
 
       if (existing?.completedAt) {
@@ -209,7 +206,6 @@ export const onRequestGet = authenticatedEndpoint(
         },
         take: 200,
         orderBy: { generatedAt: 'asc' },
-        ...CACHE_STRATEGY.QUESTIONS,
       });
 
       if (!pool.length) {

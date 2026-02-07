@@ -338,8 +338,8 @@ export async function ensureTodoistProject(
     throw new Error(`Failed to create Todoist project: ${response.statusText}`);
   }
 
-  const project = await response.json();
-  return project.id;
+  const project = (await response.json()) as { id?: string };
+  return project.id ?? '';
 }
 
 /**

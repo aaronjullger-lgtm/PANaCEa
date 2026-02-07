@@ -123,7 +123,7 @@ export function AccountFooter({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="fixed bottom-16 left-4 right-4 sm:left-auto sm:right-auto sm:bottom-20 sm:left-8 z-50 bg-[var(--color-bg-tertiary)] rounded-xl shadow-2xl border border-[var(--color-border)] overflow-hidden max-w-xs"
+              className="fixed bottom-16 left-4 right-4 sm:left-auto sm:right-auto sm:bottom-20 sm:left-8 z-50 bg-[var(--color-bg-tertiary)] rounded-xl shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)] overflow-hidden max-w-xs"
             >
               {/* User Info Header */}
               <div className="px-4 py-3 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">

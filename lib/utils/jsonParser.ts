@@ -228,12 +228,12 @@ export function cleanMedicalContent(rawData: Record<string, unknown>): Record<st
       continue;
     }
 
-    if (typeof nonFakeNull === 'string' && nonFakeNull.trim().startsWith('[')) {
-      cleaned[key] = safeParseJson(nonFakeNull, []);
+    if (typeof nonFakeNull === 'string' && (nonFakeNull as string).trim().startsWith('[')) {
+      cleaned[key] = safeParseJson(nonFakeNull as string, []);
       continue;
     }
 
-    if (typeof nonFakeNull === 'string' && nonFakeNull.trim().startsWith('{')) {
+    if (typeof nonFakeNull === 'string' && (nonFakeNull as string).trim().startsWith('{')) {
       cleaned[key] = safeParseJson(nonFakeNull, {});
       continue;
     }

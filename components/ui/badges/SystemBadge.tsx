@@ -10,7 +10,7 @@ interface SystemBadgeProps {
 /**
  * SystemBadge - Displays organ system with icon and color coding
  *
- * Dark sportsbook aesthetic with deep colored backgrounds and icons.
+ * Professional dark mode aesthetic with deep colored backgrounds and icons.
  * Each system has a unique color scheme for quick visual recognition.
  */
 export const SystemBadge: React.FC<SystemBadgeProps> = ({

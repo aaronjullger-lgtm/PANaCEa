@@ -65,7 +65,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4">
-      <div className="bg-slate-900 rounded-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden shadow-2xl shadow-brand-lg flex flex-col">
+      <div className="bg-[var(--color-bg-secondary)] rounded-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden shadow-[0_18px_42px_var(--color-shadow-soft)] flex flex-col border border-[var(--color-border)]">
         {/* Header */}
         <div className="bg-slate-800 border-b border-slate-700 p-4 flex items-center justify-between">
           <div>
@@ -135,7 +135,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
               <img
                 src={image.url}
                 alt={`${image.type} of ${image.bodyPart}`}
-                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                className="max-w-full max-h-full object-contain rounded-lg shadow-[0_18px_42px_var(--color-shadow-soft)]"
               />
             </div>
           </div>

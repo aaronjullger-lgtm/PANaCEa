@@ -62,7 +62,7 @@ const DefinitionTooltip: React.FC = () => {
             top: tooltipState.position.y + 20, // Offset below cursor
           }}
         >
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-cyan-500/30 rounded-lg shadow-2xl p-4 max-w-xs pointer-events-auto">
+          <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-[0_18px_42px_var(--color-shadow-soft)] p-4 max-w-xs pointer-events-auto">
             <div className="flex items-start gap-2">
               <Info className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
               <div>

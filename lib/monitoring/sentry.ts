@@ -42,7 +42,9 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
 
   try {
     // Dynamically import Sentry only when we have a DSN
-    Sentry = await import('@sentry/react');
+    const SentryModule = await import('@sentry/react');
+    Sentry = SentryModule;
+    if (Sentry == null) return;
 
     const defaultConfig: SentryConfig = {
       dsn,
@@ -74,10 +76,10 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
       sendDefaultPii: true, // Required for agent monitoring
 
       // Custom transport to suppress tunnel errors
-      transport: (options: Parameters<typeof Sentry.makeFetchTransport>[0]) => {
-        const defaultTransport = Sentry.makeFetchTransport(options);
+      transport: (options: Parameters<NonNullable<typeof Sentry>['makeFetchTransport']>[0]) => {
+        const defaultTransport = Sentry!.makeFetchTransport(options);
         return {
-          send: (envelope: Parameters<ReturnType<typeof Sentry.makeFetchTransport>['send']>[0]) => {
+          send: (envelope: Parameters<ReturnType<NonNullable<typeof Sentry>['makeFetchTransport']>['send']>[0]) => {
             // Wrap PromiseLike in Promise.resolve() to get .catch() support
             return Promise.resolve(defaultTransport.send(envelope)).catch((error: unknown) => {
               // Suppress sentry-tunnel errors to avoid console spam
@@ -85,7 +87,7 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
               return Promise.resolve({});
             });
           },
-          flush: (timeout?: number) => defaultTransport.flush(timeout),
+          flush: (timeout?: number) => defaultTransport?.flush(timeout),
         };
       },
 

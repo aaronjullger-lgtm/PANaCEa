@@ -50,6 +50,12 @@ export const ReasoningTutorMode = lazy(() => import('../components/modes/Reasoni
 export const CramMode = lazy(() =>
   import('../components/modes').then((m) => ({ default: m.CramMode }))
 );
+export const PolypharmacyPuzzleMode = lazy(() =>
+  import('../components/modes').then((m) => ({ default: m.PolypharmacyPuzzleMode }))
+);
+export const MedicalWordleMode = lazy(() =>
+  import('../components/modes').then((m) => ({ default: m.MedicalWordleMode }))
+);
 export const IntegrationsHub = lazy(() => import('../components/integrations/IntegrationsHub'));
 export const SettingsStatsModal = lazy(() => import('../components/modals/SettingsStatsModal'));
 export const KeyboardShortcutsModal = lazy(
@@ -69,8 +75,8 @@ export const OnboardingYourPlan = lazy(() =>
 export const MediaApproval = lazy(() => import('../pages/admin/MediaApproval'));
 export const StudyGroupDashboard = lazy(() => import('../components/social/StudyGroupDashboard'));
 export const ToolkitHub = lazy(() => import('../components/toolkit/ToolkitHub'));
-export const GapAnalysisDashboard = lazy(
-  () => import('../components/dashboard/GapAnalysisDashboard')
+export const GapAnalysisDashboard = lazy(() =>
+  import('../components/dashboard/GapAnalysisDashboard').then((m) => ({ default: m.GapAnalysisDashboard }))
 );
 export const CommandCenterHub = lazy(() => import('../components/navigation/CommandCenterHub'));
 export const TrainingMenu = lazy(() => import('../components/dashboard/TrainingMenu'));

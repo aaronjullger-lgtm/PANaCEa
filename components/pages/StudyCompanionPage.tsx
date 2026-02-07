@@ -94,8 +94,8 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
         headers: { Authorization: `Bearer ${t}` },
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `HTTP ${res.status}`);
+        const errBody = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(errBody.error || `HTTP ${res.status}`);
       }
       const data = (await res.json()) as { data?: { resources?: StudyResource[] } };
       const list = data.data?.resources ?? [];
@@ -150,8 +150,8 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
         body: JSON.stringify({ resourceId: selectedId, userQuery }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `HTTP ${res.status}`);
+        const errBody = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(errBody.error || `HTTP ${res.status}`);
       }
 
       const data = (await res.json()) as {
@@ -256,7 +256,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
                   </select>
                 )}
                 {resourceError && (
-                  <p className="mt-2 text-xs text-red-600 dark:text-red-300">{resourceError}</p>
+                  <p className="mt-2 text-xs text-[var(--color-data-fail)]">{resourceError}</p>
                 )}
               </div>
             </div>
@@ -320,7 +320,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
               )}
 
               {askError && (
-                <div className="p-2 rounded-lg border border-red-500/30 bg-red-500/10 text-xs text-red-700 dark:text-red-300">
+                <div className="p-2 rounded-lg border border-[var(--color-data-fail)]/30 bg-[var(--color-data-fail)]/10 text-xs text-[var(--color-data-fail)]">
                   {askError}
                 </div>
               )}

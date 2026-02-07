@@ -344,11 +344,7 @@ export class SessionService {
       orderBy: { usageCount: 'asc' },
       take: count,
       include: {
-        Condition: {
-          include: {
-            MedicalContent: true,
-          },
-        },
+        Condition: { select: { name: true } },
       },
     });
 
@@ -400,7 +396,7 @@ export class SessionService {
         system: seed.system || 'General',
         conditionId: seed.conditionId,
         condition: seed.Condition?.name,
-        medicalContentId: seed.Condition?.MedicalContent?.id,
+        medicalContentId: undefined,
         pearls: [],
         difficulty: seed.difficulty,
         source: 'seed',
@@ -434,12 +430,7 @@ export class SessionService {
       take: count * 3,
       orderBy: { timesSeen: 'asc' },
       include: {
-        Condition: {
-          select: {
-            name: true,
-            MedicalContent: { select: { id: true } },
-          },
-        },
+        Condition: { select: { name: true } },
       },
     });
 
@@ -467,7 +458,7 @@ export class SessionService {
         system: q.system,
         conditionId: q.conditionId || undefined,
         condition: q.Condition?.name,
-        medicalContentId: q.Condition?.MedicalContent?.id || q.medicalContentId || undefined,
+        medicalContentId: q.medicalContentId ?? undefined,
         pearls: [],
         difficulty: q.difficulty || 'medium',
         source: 'main',
@@ -502,9 +493,6 @@ export class SessionService {
       where,
       take: count,
       orderBy: { updatedAt: 'desc' },
-      include: {
-        Condition: true,
-      },
     });
 
     if (contentRecords.length === 0) {
@@ -685,7 +673,10 @@ Return ONLY valid JSON:
     const result = [...array];
     for (let i = result.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [result[i], result[j]] = [result[j], result[i]];
+      const a = result[i]!;
+      const b = result[j]!;
+      result[i] = b;
+      result[j] = a;
     }
     return result;
   }

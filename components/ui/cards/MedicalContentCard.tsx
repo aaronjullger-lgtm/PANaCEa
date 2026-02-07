@@ -71,7 +71,7 @@ const CollapsibleSection: React.FC<SectionProps> = ({ title, children, defaultOp
 };
 
 /**
- * MedicalContentCard - Dark sportsbook themed medical condition card
+ * MedicalContentCard - Professional dark mode themed medical condition card
  *
  * Features:
  * - Display font headers (Teko) for condition names

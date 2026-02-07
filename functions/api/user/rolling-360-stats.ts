@@ -39,9 +39,10 @@ export const onRequestOptions = withCors();
 export const onRequestGet = authenticatedEndpoint(Rolling360StatsSchema, async (context) => {
   const { env, auth } = context;
   const logger = createEndpointLogger('/api/user/rolling-360-stats');
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
     const rolling360Service = new Rolling360Service(prisma);
     const stats = await rolling360Service.getRolling360Stats(auth.userId);
 
@@ -77,15 +78,9 @@ export const onRequestGet = authenticatedEndpoint(Rolling360StatsSchema, async (
       error: error instanceof Error ? error.message : String(error),
       userId: auth.userId,
     });
-    // Return empty state on error to maintain graceful degradation
-    return {
-      data: {
-        error: 'Failed to fetch statistics',
-        ...EMPTY_STATE_RESPONSE,
-      },
-    };
+    return { data: { error: 'Failed to fetch statistics', ...EMPTY_STATE_RESPONSE } };
   } finally {
-    await safePrismaDisconnect(prisma);
+    if (prisma) await safePrismaDisconnect(prisma);
   }
 });
 

@@ -48,7 +48,7 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const ARGS = process.argv.slice(2);
 const DRY_RUN = ARGS.includes('--dry-run');
 const LIMIT_ARG = ARGS.find((a) => a.startsWith('--limit='));
-const LIMIT = LIMIT_ARG ? parseInt(LIMIT_ARG.split('=')[1]) : undefined;
+const LIMIT = LIMIT_ARG ? parseInt(LIMIT_ARG.split('=')[1] ?? '', 10) : undefined;
 const UNREVIEWED_ONLY = ARGS.includes('--unreviewed-only');
 
 // Rate limiting
@@ -192,7 +192,7 @@ Be strict - we want high-quality, relevant clinical images without answer-reveal
 function getConditionName(conditionId: string): string {
   // Convert ID like "CV__ecg__atrial_fibrillation" to "Atrial Fibrillation"
   const parts = conditionId.split('__');
-  const lastPart = parts[parts.length - 1];
+  const lastPart = parts.at(-1) ?? conditionId;
   return lastPart
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -249,32 +249,34 @@ async function auditImages() {
 
     for (let i = 0; i < images.length; i++) {
       const image = images[i];
+      if (!image) continue;
+      const img = image;
       const progress = `[${i + 1}/${stats.total}]`;
 
-      if (!image.conditionId) {
-        console.log(`${progress} ⏭️ Skipping ${image.filename} - no condition assigned`);
+      if (!img.conditionId) {
+        console.log(`${progress} ⏭️ Skipping ${img.filename} - no condition assigned`);
         continue;
       }
 
       // Get image URL (prefer original, fallback to thumbnail)
-      const imageUrl = image.originalUrl || image.thumbnailUrl;
+      const imageUrl = img.originalUrl || img.thumbnailUrl;
       if (!imageUrl) {
-        console.log(`${progress} ⏭️ Skipping ${image.filename} - no URL`);
+        console.log(`${progress} ⏭️ Skipping ${img.filename} - no URL`);
         continue;
       }
 
-      const conditionName = getConditionName(image.conditionId);
-      console.log(`${progress} 🔍 Analyzing: ${image.filename}`);
+      const conditionName = getConditionName(img.conditionId);
+      console.log(`${progress} 🔍 Analyzing: ${img.filename}`);
       console.log(`       Condition: ${conditionName}`);
 
       // Analyze with AI
-      const analysis = await analyzeImageWithAI(imageUrl, image.conditionId, conditionName);
+      const analysis = await analyzeImageWithAI(imageUrl, img.conditionId, conditionName);
       stats.reviewed++;
 
       const result: AuditResult = {
-        imageId: image.id,
-        conditionId: image.conditionId,
-        filename: image.filename,
+        imageId: img.id,
+        conditionId: img.conditionId,
+        filename: img.filename,
         action: analysis.action,
         reason: analysis.reason,
         suggestedCondition: analysis.suggestedCondition,
@@ -327,10 +329,10 @@ async function auditImages() {
             case 'keep':
               // Update with AI analysis data
               await prisma.mediaAsset.update({
-                where: { id: image.id },
+                where: { id: img.id },
                 data: {
                   description: analysis.analysis,
-                  tags: ['ai-verified', ...(image.tags || [])],
+                  tags: ['ai-verified', ...(img.tags || [])],
                   qualityScore: analysis.confidence / 100,
                   aiMetadata: {
                     auditedAt: new Date().toISOString(),
@@ -345,28 +347,29 @@ async function auditImages() {
 
             case 'delete':
               // Delete from storage
-              if (image.originalUrl) {
-                const storagePath = image.originalUrl.split('/storage/v1/object/public/')[1];
+              if (img.originalUrl) {
+                const storagePath = img.originalUrl.split('/storage/v1/object/public/')[1];
                 if (storagePath) {
                   const [bucket, ...pathParts] = storagePath.split('/');
-                  await supabase.storage.from(bucket).remove([pathParts.join('/')]);
+                  const bucketName = bucket ?? 'media';
+                  await supabase.storage.from(bucketName).remove([pathParts.join('/')]);
                 }
               }
               // Delete from database
-              await prisma.mediaAsset.delete({ where: { id: image.id } });
+              await prisma.mediaAsset.delete({ where: { id: img.id } });
               break;
 
             case 'reclassify':
               // Mark for manual review with suggested condition
               await prisma.mediaAsset.update({
-                where: { id: image.id },
+                where: { id: img.id },
                 data: {
                   status: 'needs_review',
-                  tags: ['needs-reclassification', ...(image.tags || [])],
+                  tags: ['needs-reclassification', ...(img.tags || [])],
                   aiMetadata: {
                     auditedAt: new Date().toISOString(),
                     suggestedCondition: analysis.suggestedCondition,
-                    originalCondition: image.conditionId,
+                    originalCondition: img.conditionId,
                     reason: analysis.reason,
                   },
                 },
@@ -376,10 +379,10 @@ async function auditImages() {
             case 'flag':
               // Mark for manual review
               await prisma.mediaAsset.update({
-                where: { id: image.id },
+                where: { id: img.id },
                 data: {
                   status: 'needs_review',
-                  tags: ['flagged-for-review', ...(image.tags || [])],
+                  tags: ['flagged-for-review', ...(img.tags || [])],
                   aiMetadata: {
                     auditedAt: new Date().toISOString(),
                     reason: analysis.reason,

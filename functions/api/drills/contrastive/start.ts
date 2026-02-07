@@ -22,9 +22,6 @@ export const onRequestPost = authenticatedEndpoint(ContrastiveStartSchema, async
     // Fetch the contrastive set
     const set = await prisma.contrastiveSet.findUnique({
       where: { id: setId },
-      include: {
-        conditions: true,
-      },
     });
 
     if (!set) {

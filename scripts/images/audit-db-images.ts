@@ -123,7 +123,7 @@ function parseResponse(data: any): AuditResult {
 
   try {
     const match = clean.match(/\{[\s\S]*\}/);
-    if (match) {
+    if (match && match[0]) {
       const parsed = JSON.parse(match[0]);
       return {
         keep: parsed.keep ?? true,
@@ -175,6 +175,7 @@ async function main() {
 
   for (let i = 0; i < images.length; i++) {
     const image = images[i];
+    if (!image) continue;
     const imageUrl = image.originalUrl || image.sourceUrl || image.thumbnailUrl;
 
     if (!imageUrl) {

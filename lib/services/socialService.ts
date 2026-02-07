@@ -2,8 +2,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../prisma';
 
 export async function createStudyGroup(userId: string, name: string, description?: string) {
-  const prisma = getPrisma();
-
   // Generate a unique 6-character code
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -11,7 +9,7 @@ export async function createStudyGroup(userId: string, name: string, description
     data: {
       id: uuidv4(),
       name,
-      description,
+      description: description ?? undefined,
       code,
       ownerId: userId,
       StudyGroupMember: {
@@ -21,7 +19,7 @@ export async function createStudyGroup(userId: string, name: string, description
           role: 'admin',
         },
       },
-    },
+    } as Parameters<typeof prisma.studyGroup.create>[0]['data'],
     include: {
       StudyGroupMember: true,
     },
@@ -66,8 +64,6 @@ export async function joinStudyGroup(userId: string, code: string) {
 }
 
 export async function getUserGroups(userId: string) {
-  const prisma = getPrisma();
-
   const members = await prisma.studyGroupMember.findMany({
     where: { userId },
     include: {
@@ -81,7 +77,7 @@ export async function getUserGroups(userId: string) {
     },
   });
 
-  return members.map((m) => ({
+  return members.map((m: (typeof members)[number]) => ({
     ...m.StudyGroup,
     role: m.role,
     memberCount: m.StudyGroup._count.StudyGroupMember,

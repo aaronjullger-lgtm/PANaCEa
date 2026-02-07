@@ -49,20 +49,24 @@ export const onRequestPost = adminEndpoint(CurationRequestSchema, async (context
         // Move question from pre-generated pool to main Question table
         const questionData = preGenQuestion.questionData as Record<string, unknown>;
 
+        const opts = Array.isArray(questionData.options) ? questionData.options : [];
+        const idx = Number(questionData.correctAnswerIndex ?? 0);
+        const correctLetter = ['A', 'B', 'C', 'D'][idx] ?? (opts[idx] as string) ?? 'A';
+        const now = new Date();
         await prisma.question.create({
           data: {
             id: crypto.randomUUID(),
-            vignette: (questionData.question || questionData.vignette || '') as string,
-            options: (questionData.options || []) as string[],
-            correctAnswerIndex: (questionData.correctAnswerIndex ?? 0) as number,
-            rationale: (questionData.explanation || questionData.rationale || '') as string,
-            system: preGenQuestion.system || 'General',
-            condition: (questionData.condition || null) as string | null,
-            conditionId: preGenQuestion.conditionId,
+            vignette: (questionData.vignette ?? questionData.question ?? '') as string,
+            question: (questionData.question ?? questionData.vignette ?? '') as string,
+            options: opts as object,
+            correctAnswer: (questionData.correctAnswer as string) ?? correctLetter,
+            explanation: (questionData.explanation ?? questionData.rationale ?? '') as string,
+            system: preGenQuestion.system ?? 'General',
             difficulty: preGenQuestion.difficulty,
-            medicalContentId: preGenQuestion.medicalContentId,
             source: 'curated',
-            createdAt: new Date(),
+            updatedAt: now,
+            conditionId: preGenQuestion.conditionId ?? null,
+            medicalContentId: preGenQuestion.medicalContentId ?? null,
           },
         });
 

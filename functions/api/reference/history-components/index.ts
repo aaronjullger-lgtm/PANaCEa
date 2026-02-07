@@ -64,7 +64,7 @@ export const onRequestGet = authenticatedEndpoint(
         // List mode with optional type filter
         log.info('Listing history components', { type: type || 'all' });
         results = await prisma.historyComponent.findMany({
-          where: type ? { type } : undefined,
+          where: type ? { category: type } : undefined,
           orderBy: { name: 'asc' },
         });
       }

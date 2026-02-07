@@ -45,7 +45,7 @@ export const DataExport: React.FC = () => {
       throw new Error(`Failed to fetch review history: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { reviews?: ReviewExportData[] };
     return data.reviews || [];
   };
 

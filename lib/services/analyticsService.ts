@@ -46,18 +46,18 @@ export interface PeerComparison {
  */
 export async function getUserAccuracyProfile(userId: string): Promise<UserAccuracyProfile[]> {
   // Group by system and wasCorrect to get counts
-  // @ts-expect-error - Prisma accelerate extension creates union type conflicts with groupBy
-  const groupedData: Array<{ system: string | null; wasCorrect: boolean; _count: { id: number } }> =
-    await prisma.questionAttempt.groupBy({
-      by: ['system', 'wasCorrect'],
-      where: {
-        userId,
-        system: { not: null }, // Exclude attempts without system classification
-      },
-      _count: {
-        id: true,
-      },
-    });
+  const groupedData = (await prisma.questionAttempt.groupBy({
+    by: ['system', 'wasCorrect'],
+    where: {
+      userId,
+      system: { not: null },
+    },
+    _count: { id: true },
+  } as any)) as Array<{
+    system: string | null;
+    wasCorrect: boolean;
+    _count: { id: number };
+  }>;
 
   // Organize data by system
   const systemMap = new Map<string, { correct: number; total: number }>();
@@ -116,22 +116,19 @@ export async function getCohortBenchmarks(cohortId: string): Promise<CohortBench
   }
 
   // Group by userId and system to get individual user stats
-  // @ts-expect-error - Prisma accelerate extension creates union type conflicts with groupBy
-  const userSystemData: Array<{
-    userId: string;
-    system: string | null;
-    wasCorrect: boolean;
-    _count: { id: number };
-  }> = await prisma.questionAttempt.groupBy({
+  const userSystemData = (await prisma.questionAttempt.groupBy({
     by: ['userId', 'system', 'wasCorrect'],
     where: {
       system: { not: null },
       ...(targetUserIds && { userId: { in: targetUserIds } }),
     },
-    _count: {
-      id: true,
-    },
-  });
+    _count: { id: true },
+  } as any)) as Array<{
+    userId: string;
+    system: string | null;
+    wasCorrect: boolean;
+    _count: { id: number };
+  }>;
 
   // Calculate per-user, per-system accuracy
   interface UserSystemStat {
@@ -199,7 +196,7 @@ export async function getCohortBenchmarks(cohortId: string): Promise<CohortBench
     // Calculate 90th percentile
     const sorted = [...accuracies].sort((a, b) => a - b);
     const p90Index = Math.floor(sorted.length * 0.9);
-    const p90 = sorted[p90Index] || sorted[sorted.length - 1];
+    const p90 = sorted[p90Index] ?? sorted[sorted.length - 1] ?? 0;
 
     benchmarks.push({
       system,
@@ -263,22 +260,19 @@ export async function generatePeerComparison(
   }
 
   // Get cohort distribution data for percentile calculation
-  // @ts-expect-error - Prisma accelerate extension creates union type conflicts with groupBy
-  const cohortData: Array<{
-    userId: string;
-    system: string | null;
-    wasCorrect: boolean;
-    _count: { id: number };
-  }> = await prisma.questionAttempt.groupBy({
+  const cohortData = (await prisma.questionAttempt.groupBy({
     by: ['userId', 'system', 'wasCorrect'],
     where: {
       system: { not: null },
       ...(targetUserIds && { userId: { in: targetUserIds } }),
     },
-    _count: {
-      id: true,
-    },
-  });
+    _count: { id: true },
+  } as any)) as Array<{
+    userId: string;
+    system: string | null;
+    wasCorrect: boolean;
+    _count: { id: number };
+  }>;
 
   // Build cohort accuracy distribution by system
   const cohortSystemMap = new Map<string, Map<string, { correct: number; total: number }>>();

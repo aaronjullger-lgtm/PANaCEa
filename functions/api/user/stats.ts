@@ -365,9 +365,12 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     const recommendations: string[] = [];
 
     if (weakAreas.length > 0) {
-      recommendations.push(
-        `Focus on ${weakAreas[0].system} - currently at ${weakAreas[0].accuracy}% accuracy`
-      );
+      const first = weakAreas[0];
+      if (first) {
+        recommendations.push(
+          `Focus on ${first.system} - currently at ${first.accuracy}% accuracy`
+        );
+      }
     }
 
     if (currentStreak === 0) {
@@ -436,7 +439,7 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       totalAttempts,
       accuracy: overallAccuracy,
       weakAreasCount: weakAreas.length,
-      systemsCounted: Object.keys(systemStats).filter((k) => systemStats[k].total > 0).length,
+      systemsCounted: Object.keys(systemStats).filter((k) => (systemStats[k]?.total ?? 0) > 0).length,
     });
 
     return {
@@ -448,7 +451,10 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       error: error instanceof Error ? error.message : String(error),
       userId: auth.userId,
     });
-    throw new Error('Failed to fetch user stats');
+    return {
+      data: { success: false, error: 'Failed to fetch user stats', message: 'Please try again later.' },
+      status: 500,
+    };
   } finally {
     await safePrismaDisconnect(prisma);
   }

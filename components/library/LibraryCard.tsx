@@ -93,7 +93,7 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
                       ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
                       : Number(content.pance_yield) >= 5
                         ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                        : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]'
                   }`}
                 >
                   <Star className="w-3 h-3" />

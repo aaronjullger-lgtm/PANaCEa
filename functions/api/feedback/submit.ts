@@ -50,29 +50,39 @@ export const onRequestPost = authenticatedEndpoint(
     try {
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true, email: true, firstName: true },
+      });
+      if (!user) {
+        return { status: 404, error: 'User not found' };
+      }
+
       const { questionId, flagType, description, questionText, topic, system } = validated.body;
 
-      const feedback = await prisma.feedback.create({
+      const flag = await prisma.questionFlag.create({
         data: {
-          userId: auth.userId,
+          id: `flag-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          userId: user.id,
+          userEmail: user.email,
+          userFirstName: user.firstName,
           questionId,
-          type: flagType,
+          questionText: questionText ?? '',
           description,
-          status: 'new',
+          flagType,
+          status: 'pending',
           priority: flagType === 'incorrect_fact' ? 'high' : 'medium',
-          context: {
-            questionText,
-            topic,
-            system,
-          },
+          topic: topic ?? null,
+          system: system ?? null,
+          updatedAt: new Date(),
         },
       });
 
-      log.info('Feedback submitted successfully', { feedbackId: feedback.id });
+      log.info('Feedback submitted successfully', { feedbackId: flag.id });
 
       return {
         status: 201,
-        data: { success: true, feedbackId: feedback.id },
+        data: { success: true, feedbackId: flag.id },
       };
     } catch (error) {
       log.error('Error submitting feedback', error);

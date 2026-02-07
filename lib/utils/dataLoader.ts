@@ -44,8 +44,12 @@ export async function loadDrugData(getToken?: () => Promise<string | null>): Pro
       const response = await fetch(apiUrl, { headers });
       if (!response.ok) continue;
 
-      const raw = await parseJsonOrThrow(response);
-      const data = Array.isArray(raw) ? raw : (raw?.data?.drugs ?? raw?.drugs ?? []);
+      const raw = (await parseJsonOrThrow(response)) as unknown;
+      const data = Array.isArray(raw)
+        ? raw
+        : ((raw as { data?: { drugs?: unknown[] }; drugs?: unknown[] })?.data?.drugs ??
+          (raw as { drugs?: unknown[] })?.drugs ??
+          []);
       dataCache.set(cacheKey, data);
       return data;
     } catch {
@@ -97,7 +101,7 @@ export async function loadConditionContent(getToken?: () => Promise<string | nul
 
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      const data = await parseJsonOrThrow(response);
+      const data = (await parseJsonOrThrow(response)) as Record<string, unknown>;
       dataCache.set(cacheKey, data);
       console.log(
         `✓ Loaded condition content from database (${Object.keys(data).length} conditions)`
@@ -168,9 +172,9 @@ export async function loadLabCases(getToken?: () => Promise<string | null>): Pro
 
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      const responseData = await parseJsonOrThrow(response);
+      const responseData = (await parseJsonOrThrow(response)) as { data?: unknown } | unknown[];
       // Handle wrapped response format { success: true, data: [...] }
-      const data = responseData?.data ?? responseData;
+      const data = Array.isArray(responseData) ? responseData : (responseData as { data?: unknown }).data ?? responseData;
       const cases = Array.isArray(data) ? data : [];
       dataCache.set(cacheKey, cases);
       console.log(`✓ Loaded ${cases.length} lab cases from database`);

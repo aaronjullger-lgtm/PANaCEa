@@ -61,8 +61,8 @@ export const onRequestPost = authenticatedEndpoint(GenerateBatchSchema, async (c
     // Generate questions using Gemini
     const generatedQuestions = await generateQuestionsWithGemini(
       env.GEMINI_API_KEY,
-      selectedSystem,
-      selectedCategory,
+      selectedSystem ?? '',
+      selectedCategory ?? '',
       selectedDifficulty,
       requestedCount,
       logger

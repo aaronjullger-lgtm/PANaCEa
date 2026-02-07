@@ -65,12 +65,12 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
           prompt: prompt.trim(),
         }),
       });
-      const json = await res.json();
+      const json = (await res.json()) as { error?: string; details?: string; data?: AnalyzeResponse['data'] };
       if (!res.ok) {
         setError(json.error || json.details || 'Analysis failed');
         return;
       }
-      setResult(json.data);
+      setResult(json.data ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Request failed');
     } finally {
@@ -141,10 +141,10 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
                     style={{ left: 0, top: 0 }}
                   >
                     <rect
-                      x={box2d[1]}
-                      y={box2d[0]}
-                      width={box2d[3] - box2d[1]}
-                      height={box2d[2] - box2d[0]}
+                      x={box2d[1] ?? 0}
+                      y={box2d[0] ?? 0}
+                      width={(box2d[3] ?? 0) - (box2d[1] ?? 0)}
+                      height={(box2d[2] ?? 0) - (box2d[0] ?? 0)}
                       fill="none"
                       stroke="var(--color-accent)"
                       strokeWidth={20}

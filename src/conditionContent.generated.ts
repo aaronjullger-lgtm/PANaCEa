@@ -72,7 +72,7 @@ export async function loadConditionContent(): Promise<Record<string, ConditionCo
     const contentType = response.headers.get('content-type');
     
     if (response.ok && contentType?.includes('application/json')) {
-      const data = await response.json();
+      const data = (await response.json()) as Record<string, ConditionContent>;
       if (Object.keys(data).length > 0) {
         // Content loaded from database
         conditionContentCache = data;

@@ -31,29 +31,37 @@ export function InfographicDisplay({ infographics, className = '' }: Infographic
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        {infographics.map((infographic) => (
-          <div
-            key={infographic.id}
-            className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 cursor-pointer hover:border-[var(--color-accent)] transition-colors"
-            onClick={() => setSelectedInfographic(infographic)}
-          >
-            <div className="aspect-video bg-[var(--color-bg-tertiary)] rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-              {infographic.imageUrl ? (
-                <img
-                  src={infographic.imageUrl}
-                  alt={infographic.title}
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <div className="text-[var(--color-text-muted)] text-sm">
-                  {infographic.status === 'generating' ? 'Generating...' : 'Image unavailable'}
+        {infographics.map((infographic) => {
+          const isPlaceholder = infographic.imageUrl?.includes('placeholder-infographic');
+          
+          return (
+            <div
+              key={infographic.id}
+              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 cursor-pointer hover:border-[var(--color-accent)] transition-colors"
+              onClick={() => setSelectedInfographic(infographic)}
+            >
+              {isPlaceholder && (
+                <div className="mb-2 px-2 py-1 bg-amber-500/10 border border-amber-500/30 rounded text-xs text-amber-600 dark:text-amber-400">
+                  Preview Feature
                 </div>
               )}
-            </div>
+              <div className="aspect-video bg-[var(--color-bg-tertiary)] rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                {infographic.imageUrl ? (
+                  <img
+                    src={infographic.imageUrl}
+                    alt={infographic.title}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="text-[var(--color-text-muted)] text-sm">
+                    {infographic.status === 'generating' ? 'Generating...' : 'Image unavailable'}
+                  </div>
+                )}
+              </div>
 
-            <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">
-              {infographic.title}
-            </h4>
+              <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">
+                {infographic.title}
+              </h4>
             {infographic.description && (
               <p className="text-xs text-[var(--color-text-muted)] mb-2">
                 {infographic.description}
@@ -88,8 +96,9 @@ export function InfographicDisplay({ infographics, className = '' }: Infographic
                 View Full Size
               </button>
             </div>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
 
       {/* Full-Screen Modal */}

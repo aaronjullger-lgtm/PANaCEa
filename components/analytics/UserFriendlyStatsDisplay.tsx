@@ -387,7 +387,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
         throw new Error(`Failed to fetch stats: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as UserStatsResponse;
       setUserStats(data);
     } catch (err) {
       console.error('Failed to load analytics:', err);

@@ -126,7 +126,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
   if (!currentQuestionData) {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 shadow-2xl text-center">
+        <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]">
           <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
             No Questions Available
           </h2>
@@ -203,7 +203,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[var(--color-bg-secondary)] rounded-xl p-8 shadow-2xl"
+          className="bg-[var(--color-bg-secondary)] rounded-xl p-8 shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
         >
           <div className="text-center mb-8">
             <div
@@ -304,7 +304,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
           <button
             onClick={() => setShowIntro(false)}
             className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl 
-              font-bold text-lg hover:shadow-2xl transition-all hover:scale-105"
+              font-bold text-lg hover:shadow-[0_18px_42px_var(--color-shadow-soft)] transition-all hover:scale-105"
           >
             Begin Assessment
           </button>

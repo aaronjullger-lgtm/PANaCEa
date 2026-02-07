@@ -57,7 +57,8 @@ export function selectByPanceDistribution<T extends { system: string | null }>(
   }
 
   for (const sys of Object.keys(bySystem)) {
-    bySystem[sys] = fisherYatesShuffle(bySystem[sys], rng);
+    const arr = bySystem[sys];
+    if (arr) bySystem[sys] = fisherYatesShuffle(arr, rng);
   }
 
   const systemWeights: { system: string; weight: number; index: number }[] = [];
@@ -75,7 +76,10 @@ export function selectByPanceDistribution<T extends { system: string | null }>(
   const selected: T[] = [];
 
   while (selected.length < count) {
-    const available = systemWeights.filter((sw) => sw.index < bySystem[sw.system].length);
+    const available = systemWeights.filter((sw) => {
+      const arr = bySystem[sw.system];
+      return arr != null && sw.index < arr.length;
+    });
     if (available.length === 0) break;
 
     const totalWeight = available.reduce((sum, sw) => sum + sw.weight, 0);
@@ -89,10 +93,12 @@ export function selectByPanceDistribution<T extends { system: string | null }>(
         break;
       }
     }
-    if (!chosen) chosen = available[0];
+    if (!chosen) chosen = available[0] ?? null;
+    if (chosen == null) break;
 
-    const question = bySystem[chosen.system][chosen.index];
-    if (question) {
+    const sysArr = bySystem[chosen.system];
+    const question = sysArr?.[chosen.index];
+    if (question != null) {
       selected.push(question);
       chosen.index++;
     }

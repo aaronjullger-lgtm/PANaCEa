@@ -29,6 +29,7 @@ export function parseBracketTags(filename: string): string[] {
 
   while ((match = bracketRegex.exec(filename)) !== null) {
     const bracketContent = match[1];
+    if (bracketContent === undefined) continue;
 
     // Split by hyphens and dashes within brackets
     const innerTags = bracketContent

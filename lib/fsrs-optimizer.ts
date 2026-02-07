@@ -715,9 +715,9 @@ export async function runFullOptimization(
   // Assign system codes if provided
   if (systemCodes) {
     for (let i = 0; i < allReviews.length; i++) {
-      if (systemCodes[i]) {
-        allReviews[i].system = systemCodes[i];
-      }
+      const review = allReviews[i];
+      const code = systemCodes[i];
+      if (review && code) review.system = code;
     }
   }
 
@@ -729,11 +729,10 @@ export async function runFullOptimization(
     const reviewsBySystem: Record<string, OptimizationReview[]> = {};
 
     for (const review of allReviews) {
-      if (review.system) {
-        if (!reviewsBySystem[review.system]) {
-          reviewsBySystem[review.system] = [];
-        }
-        reviewsBySystem[review.system].push(review);
+      const sys = review.system;
+      if (sys) {
+        if (!reviewsBySystem[sys]) reviewsBySystem[sys] = [];
+        reviewsBySystem[sys].push(review);
       }
     }
 
@@ -761,11 +760,10 @@ export function runFullOptimizationFromReviewLog(
 
   const reviewsBySystem: Record<string, OptimizationReview[]> = {};
   for (const review of allReviews) {
-    if (review.system) {
-      if (!reviewsBySystem[review.system]) {
-        reviewsBySystem[review.system] = [];
-      }
-      reviewsBySystem[review.system].push(review);
+    const sys = review.system;
+    if (sys) {
+      if (!reviewsBySystem[sys]) reviewsBySystem[sys] = [];
+      reviewsBySystem[sys].push(review);
     }
   }
 
@@ -797,7 +795,7 @@ export function validateParameters(w: number[]): {
     const val = w[i];
     const min = PARAMETER_BOUNDS.min[i];
     const max = PARAMETER_BOUNDS.max[i];
-
+    if (val == null || min == null || max == null) continue;
     if (val < min || val > max) {
       errors.push(`w[${i}] = ${val} is outside bounds [${min}, ${max}]`);
     }

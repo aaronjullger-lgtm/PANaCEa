@@ -31,7 +31,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicMaste
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
         if (response.ok) {
-          const result = await response.json();
+          const result = (await response.json()) as TopicProgress;
           setData(result);
         }
       } catch (error) {

@@ -323,8 +323,8 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
         throw new Error(`Failed to fetch drug classes: ${res.status}`);
       }
 
-      const data = await res.json();
-      setDrugClasses(data || []);
+      const data = (await res.json()) as DrugClass[] | null | undefined;
+      setDrugClasses(data ?? []);
     } catch (err) {
       console.error('[DrugReferenceLibrary] classes fetch failed', err);
       setClassesError(err instanceof Error ? err.message : 'Failed to load drug classes');

@@ -64,12 +64,12 @@ async function fetchRandomConditionBySystem(system: string): Promise<DatabaseCon
     );
     if (!response.ok) return null;
 
-    const data = await response.json();
+    const data = (await response.json()) as { conditions?: DatabaseCondition[] };
     if (data.conditions && data.conditions.length > 0) {
       return data.conditions[0];
     }
     return null;
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn('[EnhancedQuestionService] Failed to fetch condition:', error);
     return null;
   }
@@ -87,14 +87,14 @@ async function fetchLinkedEntities(
     // Fetch lab tests linked to this condition
     const labResponse = await fetch(`/api/labtests?conditionId=${conditionId}&limit=5`);
     if (labResponse.ok) {
-      const labData = await labResponse.json();
+      const labData = (await labResponse.json()) as { labTests?: EnhancedQuestionContext['linkedEntities']['labs'] };
       entities.labs = labData.labTests?.slice(0, 5);
     }
 
     // Fetch imaging studies linked to this condition
     const imagingResponse = await fetch(`/api/imaging?conditionId=${conditionId}&limit=3`);
     if (imagingResponse.ok) {
-      const imagingData = await imagingResponse.json();
+      const imagingData = (await imagingResponse.json()) as { imagingStudies?: EnhancedQuestionContext['linkedEntities']['imaging'] };
       entities.imaging = imagingData.imagingStudies?.slice(0, 3);
     }
 
@@ -107,10 +107,10 @@ async function fetchLinkedEntities(
     drugParams.set('limit', '5');
     const drugResponse = await fetch(`/api/drugs?${drugParams.toString()}`);
     if (drugResponse.ok) {
-      const drugData = await drugResponse.json();
+      const drugData = (await drugResponse.json()) as { drugs?: EnhancedQuestionContext['linkedEntities']['drugs'] };
       entities.drugs = drugData.drugs?.slice(0, 5);
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn('[EnhancedQuestionService] Failed to fetch linked entities:', error);
   }
 
@@ -224,7 +224,7 @@ export async function generateEnhancedQuestion(
       targetSystem = normalizeSystemCode(settings.topic) || settings.topic;
     } else if (settings.focus === 'growth' && growthAreas.length > 0) {
       // Pick from growth areas with some randomness
-      targetSystem = growthAreas[Math.floor(Math.random() * growthAreas.length)];
+      targetSystem = growthAreas[Math.floor(Math.random() * growthAreas.length)] ?? getWeightedRandomSystem(enabledSystems);
     } else {
       // Use PANCE-weighted distribution
       targetSystem = getWeightedRandomSystem(enabledSystems);
@@ -268,7 +268,17 @@ export async function generateEnhancedQuestion(
       throw new Error(`Generation API error: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      question?: {
+        id?: string;
+        vignette?: string;
+        question?: string;
+        options?: string[];
+        correctAnswerIndex?: number;
+        rationale?: string;
+        pearls?: string[];
+      };
+    };
 
     if (data.question) {
       // Record this question in distribution tracker
@@ -277,8 +287,8 @@ export async function generateEnhancedQuestion(
       return {
         id: data.question.id || `enhanced-${Date.now()}`,
         question: data.question.vignette || data.question.question,
-        options: data.question.options,
-        correctAnswerIndex: data.question.correctAnswerIndex,
+        options: Array.isArray(data.question.options) ? data.question.options : [],
+        correctAnswerIndex: typeof data.question.correctAnswerIndex === 'number' ? data.question.correctAnswerIndex : 0,
         rationale: data.question.rationale,
         topic: condition.system,
         conditionId: condition.id,

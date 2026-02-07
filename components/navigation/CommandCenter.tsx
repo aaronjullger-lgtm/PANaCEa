@@ -89,7 +89,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok || cancelled) return;
-        const json = await res.json();
+        const json = (await res.json()) as { data?: { completed?: boolean } };
         if (json?.data?.completed === true && !cancelled) setGrandRoundsCompleted(true);
         else if (!cancelled) setGrandRoundsCompleted(false);
       } catch {
@@ -349,7 +349,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
                 className="relative"
               >
                 <div
-                  className="p-6 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-xl cursor-pointer hover:shadow-2xl hover:brightness-110 transition-all group"
+                  className="p-6 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-[0_10px_25px_var(--color-shadow-soft)] cursor-pointer hover:shadow-[0_18px_42px_var(--color-shadow-soft)] hover:brightness-110 transition-all group"
                   onClick={() => onNavigate(topRecommendation.actionDestination)}
                 >
                   <div className="flex items-start justify-between">

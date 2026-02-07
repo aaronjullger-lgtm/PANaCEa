@@ -438,7 +438,7 @@ export function generateDailySchedule(
       blockDuration = Math.min(30, remainingMinutes);
     }
 
-    const startHour = windowHours[0];
+    const startHour = windowHours[0] ?? 0;
     const startTime = new Date(currentDate);
     startTime.setHours(startHour, 0, 0, 0);
 

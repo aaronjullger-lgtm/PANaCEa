@@ -75,6 +75,10 @@ export const onRequestGet = authenticatedEndpoint(
 
     if (dueTopics.length > 0) {
       const topic = dueTopics[0];
+      if (!topic) {
+        logger.info('No due topic', { userId: userId.substring(0, 10) });
+        return { data: { message: 'No items due' } };
+      }
 
       // Find a variant for this topic
       const availableVariants = await prisma.questionVariant.findMany({
@@ -94,7 +98,7 @@ export const onRequestGet = authenticatedEndpoint(
         logger.info('SRS next item (variant) retrieved', {
           userId: userId.substring(0, 10),
           topicProgressId: topic.id.substring(0, 10),
-          taskType: topic.taskType,
+          taskType: topic.taskType ?? 'diagnosis',
         });
 
         return {
@@ -103,7 +107,7 @@ export const onRequestGet = authenticatedEndpoint(
             topicProgressId: topic.id,
             question: variant,
             isVariant: true,
-            taskType: topic.taskType,
+            taskType: topic.taskType ?? 'diagnosis',
           },
         };
       }
@@ -131,6 +135,10 @@ export const onRequestGet = authenticatedEndpoint(
     }
 
     const item = items[0];
+    if (!item) {
+      logger.info('No SRS items due', { userId: userId.substring(0, 10) });
+      return { data: { message: 'No items due' } };
+    }
     let questionContent: any = null;
     let isVariant = false;
 
@@ -180,7 +188,7 @@ export const onRequestGet = authenticatedEndpoint(
         srsItemId: item.id,
         question: questionContent,
         isVariant,
-        taskType: questionContent.taskType || getTaskTypeFromContent(questionContent.question),
+        taskType: (questionContent as { taskType?: string }).taskType ?? getTaskTypeFromContent(questionContent.question),
       },
     };
   } catch (error) {

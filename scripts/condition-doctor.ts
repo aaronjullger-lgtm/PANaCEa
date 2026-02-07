@@ -962,15 +962,17 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
     }
 
     if (records.length === 1) {
-      console.log(`      ✓ Already single record`);
-      // Just update the record with relatedSystems
-      if (!dryRun) {
-        await prisma.medicalContent.update({
-          where: { id: records[0].id },
-          data: {
-            relatedSystems: [...new Set([...records[0].relatedSystems, ...group.relatedSystems])],
-          },
-        });
+      const single = records[0];
+      if (single) {
+        console.log(`      ✓ Already single record`);
+        if (!dryRun) {
+          await prisma.medicalContent.update({
+            where: { id: single.id },
+            data: {
+              relatedSystems: [...new Set([...single.relatedSystems, ...group.relatedSystems])],
+            },
+          });
+        }
       }
       continue;
     }
@@ -982,6 +984,7 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
 
     // Pick the most complete record as primary
     const primary = records[0]; // Already sorted by updatedAt
+    if (!primary) continue;
     const duplicates = records.slice(1);
 
     if (!dryRun) {
@@ -1048,8 +1051,8 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
               diagnostics: mergedContent.diagnostics || primary.diagnostics,
               treatment: mergedContent.treatment || primary.treatment,
               synonyms: group.aliases
-                ? [...new Set([...((primary.synonyms as string[]) || []), ...group.aliases])]
-                : primary.synonyms,
+                ? [...new Set([...((primary.synonyms as string[] | null) ?? []), ...group.aliases])]
+                : (primary.synonyms ?? undefined) as never,
               updatedBy: 'condition-doctor',
             },
           });
@@ -1080,6 +1083,7 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
 
       if (conditionRecords.length > 1) {
         const primaryCond = conditionRecords[0];
+        if (!primaryCond) return;
         const dupConds = conditionRecords.slice(1);
 
         await prisma.condition.update({
@@ -1152,6 +1156,7 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
     if (!dryRun && records.length > 1) {
       // Pick the most recently updated record as primary
       const primary = records[0];
+      if (!primary) return;
       const duplicates = records.slice(1);
 
       // Deep merge content from all records
@@ -1261,7 +1266,8 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
     if (records.length <= 1) continue;
 
     // Check if we already processed this in SQL duplicates
-    if (sqlDuplicates.some((d) => d.condition === records[0].condition)) continue;
+    const r0 = records[0];
+    if (r0 && sqlDuplicates.some((d) => d.condition === r0.condition)) continue;
 
     console.log(`\n   📋 ${conditionName} (fuzzy match) - Found ${records.length} records`);
     for (const r of records) {
@@ -1270,6 +1276,7 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
 
     if (!dryRun && records.length > 1) {
       const primary = records[0];
+      if (!primary) return;
       const duplicates = records.slice(1);
 
       // Collect all related systems
@@ -1350,6 +1357,7 @@ async function mergeConditionTableDuplicates(dryRun: boolean): Promise<number> {
     if (!dryRun && records.length > 1) {
       // Pick the most recently updated record as primary
       const primary = records[0];
+      if (!primary) return;
       const duplicates = records.slice(1);
 
       // Collect all related systems and aliases

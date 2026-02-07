@@ -15,8 +15,10 @@ import {
   BarChart3,
   BookOpen,
   Calculator,
+  Headphones,
   LucideIcon,
 } from 'lucide-react';
+import { useCommuter } from '@/contexts/CommuterContext';
 
 export interface QuickActionItem {
   id: string;
@@ -58,6 +60,7 @@ export const NavRail: React.FC<NavRailProps> = ({
   quickActions = DEFAULT_QUICK_ACTIONS,
   className = '',
 }) => {
+  const commuterContext = useCommuter();
   const [collapsed, setCollapsed] = useState(() => {
     return globalThis.window?.matchMedia?.('(max-width: 768px)')?.matches === true;
   });
@@ -207,6 +210,38 @@ export const NavRail: React.FC<NavRailProps> = ({
         {renderSection('Study', studyItems)}
         {resourceItems.length > 0 && renderSection('Resources', resourceItems)}
       </nav>
+
+      {/* Commuter Mode quick toggle - PA students study on the go */}
+      {commuterContext && (
+        <div className="shrink-0 border-t border-[var(--color-border)] px-2 py-3">
+          <button
+            type="button"
+            onClick={commuterContext.toggleCommuterMode}
+            className={`group flex w-full min-h-[44px] items-center gap-3 rounded-xl pl-3 pr-3 py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] ${
+              commuterContext.isCommuterMode
+                ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
+                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]'
+            }`}
+            title={commuterContext.isCommuterMode ? 'Disable Commuter Mode' : 'Enable Commuter Mode (voice + larger buttons)'}
+            aria-label={commuterContext.isCommuterMode ? 'Disable Commuter Mode' : 'Enable Commuter Mode'}
+          >
+            <span
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                commuterContext.isCommuterMode
+                  ? 'bg-[var(--color-accent)]/20'
+                  : 'group-hover:bg-[var(--color-bg-tertiary)]'
+              }`}
+            >
+              <Headphones className="h-5 w-5" aria-hidden />
+            </span>
+            {!collapsed && (
+              <span className="truncate text-sm font-medium">
+                {commuterContext.isCommuterMode ? 'Commuter On' : 'Commuter'}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
     </motion.aside>
   );
 };

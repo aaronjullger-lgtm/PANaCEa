@@ -34,7 +34,7 @@ export const onRequestGet = authenticatedEndpoint(DrugDetailSchema, async (conte
         DrugConditionLink: {
           include: {
             Condition: {
-              select: { id: true, condition: true, system: true },
+              select: { id: true, name: true, system: true },
             },
           },
         },

@@ -61,15 +61,16 @@ export const onRequestPost = authenticatedEndpoint(QuestionRecordSchema, async (
       update: updateData,
     });
 
-    // Log attempt for drill history / analytics
+    const attemptId = `attempt-${userId}-${questionId}-${Date.now()}`;
     await prisma.questionAttempt.create({
       data: {
+        id: attemptId,
         userId,
         questionId,
-        questionType: questionType || null,
-        system: system || null,
-        conditionId: conditionId || null,
-        mode: mode || null,
+        questionType: questionType ?? null,
+        system: system ?? null,
+        conditionId: conditionId ?? null,
+        mode: mode ?? null,
         wasCorrect: Boolean(wasCorrect),
         isRankedAttempt,
       },

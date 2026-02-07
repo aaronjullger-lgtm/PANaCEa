@@ -48,9 +48,9 @@ export const onRequestPost = authenticatedEndpoint(exampleRequestSchema, async (
       take: limit,
       select: {
         id: true,
-        stability: true,
-        difficulty: true,
-        lastReviewed: includeDetails,
+        lastReviewAt: includeDetails,
+        nextReviewAt: includeDetails,
+        accuracy: includeDetails,
         reviewHistory: includeDetails,
       },
     });
@@ -94,13 +94,13 @@ export const onRequestGet = publicEndpoint(publicQuerySchema, async (context) =>
         where: { status: 'published' },
         select: {
           id: true,
-          canonicalName: true,
-          displayName: true,
-          organSystem: true,
+          condition: true,
+          system: true,
+          subcategory: true,
         },
         skip,
         take: pageSize,
-        orderBy: { displayName: 'asc' },
+        orderBy: { condition: 'asc' },
       }),
     ]);
 

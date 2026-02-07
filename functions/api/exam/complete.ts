@@ -33,14 +33,23 @@ export const onRequestPost = authenticatedEndpoint(
 
       prisma = createEdgePrismaClient(env.DATABASE_URL);
 
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
+      });
+      if (!user) {
+        log.warn('User not found', { clerkId: auth.userId });
+        return { status: 404, error: 'User not found' };
+      }
+
       // Get the attempt
       const attempt = await prisma.examAttempt.findFirst({
         where: {
           id: attemptId,
-          userId: auth.userId,
+          userId: user.id,
         },
         include: {
-          config: true,
+          ExamConfig: true,
         },
       });
 
@@ -59,7 +68,7 @@ export const onRequestPost = authenticatedEndpoint(
 
         const scoreReport = ExamService.generateScoreReport(
           answers as any,
-          attempt.config as any,
+          attempt.ExamConfig as any,
           attempt.totalTimeUsedSeconds || 0
         );
 
@@ -75,7 +84,7 @@ export const onRequestPost = authenticatedEndpoint(
       const answers = await prisma.examAnswer.findMany({
         where: { attemptId },
         include: {
-          question: {
+          Question: {
             select: {
               correctAnswer: true,
             },
@@ -88,7 +97,7 @@ export const onRequestPost = authenticatedEndpoint(
 
       // Update correctness for each answer
       const updatePromises = answers.map(async (answer: AnswerWithQuestion) => {
-        const isCorrect = answer.selectedAnswer === answer.question?.correctAnswer;
+        const isCorrect = answer.selectedAnswer === answer.Question?.correctAnswer;
         return prisma!.examAnswer.update({
           where: { id: answer.id },
           data: { isCorrect },
@@ -110,7 +119,7 @@ export const onRequestPost = authenticatedEndpoint(
       // Generate score report
       const scoreReport = ExamService.generateScoreReport(
         gradedAnswers as any,
-        attempt.config as any,
+        attempt.ExamConfig as any,
         totalTimeSeconds
       );
 

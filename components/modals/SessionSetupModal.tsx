@@ -83,12 +83,15 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
     <div
       className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="session-setup-title"
     >
       <div
-        className="bg-surface-primary rounded-2xl shadow-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700 ring-1 ring-black/10 dark:ring-white/10"
+        className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] p-8 w-full max-w-md max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-bold text-action-primary mb-2">New Study Session</h2>
+        <h2 id="session-setup-title" className="text-2xl font-bold text-action-primary mb-2">New Study Session</h2>
 
         {!isCustomizing ? (
           <>

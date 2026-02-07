@@ -41,7 +41,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (response.ok) {
-          const data = await response.json();
+          const data = (await response.json()) as { data?: { sets?: ContrastiveSetData[] } };
           setAvailableSets(data.data?.sets || []);
         }
       } catch (error) {
@@ -84,7 +84,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = (await response.json()) as { data?: { set?: { id?: string } } };
         setDrillId(data.data?.set?.id || selectedSet.id);
         setIsPlaying(true);
       } else {

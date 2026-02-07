@@ -21,10 +21,10 @@ import {
   BookOpen,
   Target,
   Loader2,
-  AlertCircle,
 } from 'lucide-react';
 import { geminiService } from '@/services/ai';
 import { GEMINI_FLASH_MODEL } from '@/src/constants';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 /**
  * HighYieldCondition interface - matches database API response
@@ -189,11 +189,11 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
         const response = await fetch('/api/conditions/high-yield?limit=50&random=true');
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
+          const errorData = (await response.json().catch(() => ({}))) as { error?: string };
           throw new Error(errorData.error || `Failed to fetch conditions: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as { conditions?: HighYieldCondition[] };
 
         if (!data.conditions || data.conditions.length === 0) {
           throw new Error('No high-yield conditions found in database');
@@ -306,27 +306,13 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
 
   if (loadError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)]">
-        <div className="text-center max-w-md mx-auto p-8">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">Failed to Load</h2>
-          <p className="text-[var(--color-text-secondary)] mb-4">{loadError}</p>
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={handleRestart}
-              className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition-colors"
-            >
-              <RotateCcw className="w-5 h-5" />
-              Try Again
-            </button>
-            <button
-              onClick={onExit}
-              className="flex items-center gap-2 px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-xl font-semibold transition-colors"
-            >
-              Exit
-            </button>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)] p-4">
+        <ErrorState
+          title="Failed to Load"
+          message={loadError}
+          onRetry={handleRestart}
+          secondaryAction={{ label: 'Exit', onClick: onExit }}
+        />
       </div>
     );
   }
@@ -345,7 +331,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl p-8 text-center"
+            className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] p-8 text-center border border-[var(--color-border)]"
           >
             <Trophy className="w-20 h-20 mx-auto mb-6 text-orange-500" />
             <h2 className="text-3xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center justify-center gap-2">

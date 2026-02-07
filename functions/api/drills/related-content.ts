@@ -109,7 +109,6 @@ export const onRequestPost = authenticatedEndpoint(
                 OR: [
                   { id: conceptId },
                   { name: { contains: conceptId, mode: 'insensitive' } },
-                  { abbreviation: { contains: conceptId, mode: 'insensitive' } },
                 ],
               },
             });
@@ -121,7 +120,6 @@ export const onRequestPost = authenticatedEndpoint(
                 OR: tags.map((tag) => ({
                   OR: [
                     { name: { contains: tag, mode: 'insensitive' } },
-                    { abbreviation: { contains: tag, mode: 'insensitive' } },
                     { category: { contains: tag, mode: 'insensitive' } },
                   ],
                 })),
@@ -135,7 +133,7 @@ export const onRequestPost = authenticatedEndpoint(
 
         case 'ecg': {
           if (conceptId) {
-            relatedContent = await prisma.ecgPattern.findFirst({
+            relatedContent = await prisma.eCGPattern.findFirst({
               where: {
                 OR: [{ id: conceptId }, { name: { contains: conceptId, mode: 'insensitive' } }],
               },
@@ -143,7 +141,7 @@ export const onRequestPost = authenticatedEndpoint(
           }
 
           if (tags && tags.length > 0) {
-            relatedItems = await prisma.ecgPattern.findMany({
+            relatedItems = await prisma.eCGPattern.findMany({
               where: {
                 OR: tags.map((tag) => ({
                   OR: [

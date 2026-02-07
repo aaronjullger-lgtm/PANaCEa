@@ -64,7 +64,7 @@ export function generateStudyBoard(examDate: Date, weeklyPlan: any[]): TrelloBoa
     pos: 1,
     cards: upcomingWeeks.slice(0, 4).map((week, idx) => ({
       name: `${week.weekLabel}: ${week.topics.join(', ')}`,
-      desc: `**Focus Areas:**\n${week.topics.map((t) => `• ${t}`).join('\n')}\n\n**Timeline:**\n• Start: ${new Date(week.startDate).toLocaleDateString()}\n• End: ${new Date(week.endDate).toLocaleDateString()}\n\n**Description:**\n${week.description}`,
+      desc: `**Focus Areas:**\n${week.topics.map((t: string) => `• ${t}`).join('\n')}\n\n**Timeline:**\n• Start: ${new Date(week.startDate).toLocaleDateString()}\n• End: ${new Date(week.endDate).toLocaleDateString()}\n\n**Description:**\n${week.description}`,
       due: new Date(week.endDate).toISOString(),
       labels: ['blue'],
       pos: idx,
@@ -84,7 +84,7 @@ export function generateStudyBoard(examDate: Date, weeklyPlan: any[]): TrelloBoa
       ? [
           {
             name: `${currentWeek.weekLabel}: ${currentWeek.topics.join(', ')}`,
-            desc: `**Currently Studying:**\n${currentWeek.topics.map((t) => `• ${t}`).join('\n')}\n\n**This Week's Goals:**\n☐ Complete 100+ practice questions\n☐ Review weak areas\n☐ Study 2 hours daily\n☐ Weekend comprehensive review\n\n**Notes:**\nAdd your notes and progress here!`,
+            desc: `**Currently Studying:**\n${currentWeek.topics.map((t: string) => `• ${t}`).join('\n')}\n\n**This Week's Goals:**\n☐ Complete 100+ practice questions\n☐ Review weak areas\n☐ Study 2 hours daily\n☐ Weekend comprehensive review\n\n**Notes:**\nAdd your notes and progress here!`,
             due: new Date(currentWeek.endDate).toISOString(),
             labels: ['yellow'],
             pos: 0,
@@ -113,7 +113,7 @@ export function generateStudyBoard(examDate: Date, weeklyPlan: any[]): TrelloBoa
     pos: 4,
     cards: completedWeeks.map((week, idx) => ({
       name: `${week.weekLabel}: ${week.topics.join(', ')}`,
-      desc: `**Completed!**\n\n${week.topics.map((t) => `✓ ${t}`).join('\n')}`,
+      desc: `**Completed!**\n\n${week.topics.map((t: string) => `✓ ${t}`).join('\n')}`,
       pos: idx,
       labels: ['green'],
     })),

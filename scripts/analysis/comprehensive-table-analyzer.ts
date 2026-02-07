@@ -10,9 +10,10 @@
  * Goes table-by-table for thorough analysis.
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
+const jsonNull = Prisma.DbNull;
 
 interface TableStats {
   totalRecords: number;
@@ -329,13 +330,13 @@ async function analyzeMedicalContent(): Promise<TableStats> {
     where: { OR: [{ mnemonic: null }, { mnemonic: '' }] },
   });
   stats.emptyFields.clinical_pearls = await prisma.medicalContent.count({
-    where: { clinical_pearls: { equals: null } },
+    where: { clinical_pearls: { equals: jsonNull } },
   });
   stats.emptyFields.differentials = await prisma.medicalContent.count({
-    where: { differentials: { equals: null } },
+    where: { differentials: { equals: jsonNull } },
   });
   stats.emptyFields.classic_triad = await prisma.medicalContent.count({
-    where: { classic_triad: { equals: null } },
+    where: { classic_triad: { equals: jsonNull } },
   });
   stats.emptyFields.first_line_rx = await prisma.medicalContent.count({
     where: { OR: [{ first_line_rx: null }, { first_line_rx: '' }] },

@@ -14,13 +14,23 @@ import crypto from 'crypto';
 const router = Router();
 
 // Get User Achievements
-router.get('/achievements', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/achievements', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.auth.userId;
-    if (!process.env.DATABASE_URL) return res.json({ success: true, data: [] });
+    const userId = req.auth?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+    if (!process.env.DATABASE_URL) {
+      res.json({ success: true, data: [] });
+      return;
+    }
 
     const user = await prisma.user.findUnique({ where: { clerkId: userId } });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
 
     const achievements = await prisma.userAchievement.findMany({
       where: { userId: user.id },
@@ -34,13 +44,23 @@ router.get('/achievements', requireAuth, async (req: AuthenticatedRequest, res: 
 });
 
 // Get Performance Records (Simple List)
-router.get('/performance', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/performance', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.auth.userId;
-    if (!process.env.DATABASE_URL) return res.json({ success: true, data: [] });
+    const userId = req.auth?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+    if (!process.env.DATABASE_URL) {
+      res.json({ success: true, data: [] });
+      return;
+    }
 
     const user = await prisma.user.findUnique({ where: { clerkId: userId } });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
 
     const records = await prisma.performanceRecord.findMany({
       where: { userId: user.id },
@@ -62,15 +82,25 @@ router.get('/performance', requireAuth, async (req: AuthenticatedRequest, res: R
 });
 
 // Post Single Performance Record
-router.post('/performance', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/performance', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const userId = req.auth.userId;
+    const userId = req.auth?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
     const record = req.body;
 
-    if (!process.env.DATABASE_URL) return res.json({ success: true });
+    if (!process.env.DATABASE_URL) {
+      res.json({ success: true });
+      return;
+    }
 
     const user = await prisma.user.findUnique({ where: { clerkId: userId } });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
 
     await prisma.performanceRecord.create({
       data: {

@@ -90,12 +90,13 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
         body: JSON.stringify(body),
       });
 
-      const data = await res.json();
-      const payload = data.data ?? data;
+      const data = (await res.json()) as { data?: { error?: string; details?: string; status?: string; videoUrl?: string; operationName?: string; pollUrl?: string; preset?: string }; error?: string };
+      type VeoPayload = { error?: string; details?: string; status?: string; videoUrl?: string; operationName?: string; pollUrl?: string; preset?: string };
+      const payload = (data.data ?? data) as VeoPayload;
 
       if (!res.ok) {
         setStatus('error');
-        setErrorMessage(payload.error || data.error || payload.details || 'Failed to start generation');
+        setErrorMessage(payload?.error || data.error || payload?.details || 'Failed to start generation');
         return;
       }
 
@@ -131,10 +132,11 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
 
     const url = pollUrl.startsWith('http') ? pollUrl : getApiEndpoint('/api/veo/status') + (pollUrl.includes('?') ? pollUrl.slice(pollUrl.indexOf('?')) : '');
     const res = await fetch(url, { headers });
-    const data = await res.json();
-    const payload = data.data ?? data;
+    const data = (await res.json()) as { data?: { status?: string; videoUrl?: string; videoBase64?: string; error?: string; pollIntervalSeconds?: number } };
+    type PollPayload = { status?: string; videoUrl?: string; videoBase64?: string; error?: string; pollIntervalSeconds?: number };
+    const payload = (data.data ?? data) as PollPayload;
 
-    if (payload.status === 'ready') {
+    if (payload?.status === 'ready') {
       setStatus('ready');
       if (payload.videoUrl) setVideoUrl(payload.videoUrl);
       if (payload.videoBase64) setVideoBase64(payload.videoBase64);
@@ -146,9 +148,9 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
       return;
     }
 
-    if (payload.status === 'failed') {
+    if (payload?.status === 'failed') {
       setStatus('error');
-      setErrorMessage(payload.error || 'Generation failed');
+      setErrorMessage(payload?.error || 'Generation failed');
       if (pollRef.current) {
         clearTimeout(pollRef.current);
         pollRef.current = null;
@@ -156,7 +158,7 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
       return;
     }
 
-    const delayMs = (payload.pollIntervalSeconds ?? 12) * 1000;
+    const delayMs = (payload?.pollIntervalSeconds ?? 12) * 1000;
     pollRef.current = setTimeout(pollStatus, delayMs);
   }, [pollUrl, getToken]);
 
@@ -167,6 +169,7 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
         if (pollRef.current) clearTimeout(pollRef.current);
       };
     }
+    return undefined;
   }, [status, pollUrl, pollStatus]);
 
   const loadNormalForComparison = useCallback(async () => {
@@ -178,8 +181,9 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
       headers,
       body: JSON.stringify({ preset: 'normal_gait' }),
     });
-    const data = await res.json();
-    const payload = data.data ?? data;
+    const data = (await res.json()) as { data?: { status?: string; videoUrl?: string } };
+    type NormalPayload = { status?: string; videoUrl?: string };
+    const payload = (data.data ?? data) as NormalPayload;
     if (payload?.status === 'ready' && payload?.videoUrl) {
       setNormalVideoUrl(payload.videoUrl);
     }

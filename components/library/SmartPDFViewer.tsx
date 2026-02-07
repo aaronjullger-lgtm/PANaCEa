@@ -150,7 +150,7 @@ export function SmartPDFViewer({
     if (typeof document === 'undefined') return;
     const existing = document.querySelector(`script[src="${ADOBE_VIEW_SDK_URL}"]`);
     if (existing) {
-      if ((globalThis as Window & { adobe_dc_view_sdk_ready?: boolean }).adobe_dc_view_sdk_ready) {
+      if ((globalThis as unknown as Window & { adobe_dc_view_sdk_ready?: boolean }).adobe_dc_view_sdk_ready) {
         setSdkReady(true);
       } else {
         document.addEventListener(ADOBE_READY_EVENT, () => setSdkReady(true));
@@ -161,7 +161,7 @@ export function SmartPDFViewer({
     script.src = ADOBE_VIEW_SDK_URL;
     script.async = true;
     script.onload = () => {
-      (globalThis as Window & { adobe_dc_view_sdk_ready?: boolean }).adobe_dc_view_sdk_ready = true;
+      (globalThis as unknown as Window & { adobe_dc_view_sdk_ready?: boolean }).adobe_dc_view_sdk_ready = true;
       setSdkReady(true);
     };
     script.onerror = () => setError('Failed to load Adobe PDF Embed SDK.');
@@ -171,7 +171,7 @@ export function SmartPDFViewer({
   // Initialize viewer when SDK is ready and container exists
   useEffect(() => {
     if (!sdkReady || !clientId || !containerRef.current) return;
-    const AdobeDC = (globalThis as Window).AdobeDC;
+    const AdobeDC = (globalThis as unknown as Window).AdobeDC;
     if (!AdobeDC) {
       setError('Adobe PDF Embed SDK not available.');
       return;
@@ -343,7 +343,7 @@ export function SmartPDFViewer({
 
       {error && (
         <div
-          className="flex items-center gap-2 px-3 py-2 bg-red-500/10 border-b border-red-500/20 text-red-700 dark:text-red-300 text-sm"
+          className="flex items-center gap-2 px-3 py-2 bg-[var(--color-data-fail)]/10 border-b border-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] text-sm"
           role="alert"
         >
           <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden />

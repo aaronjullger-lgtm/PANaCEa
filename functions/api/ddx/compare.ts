@@ -120,8 +120,6 @@ export const onRequestGet = publicEndpoint(CompareSchema, async (context) => {
             gold_standard_dx: true,
             best_initial_test: true,
             first_line_rx: true,
-            rx_mechanism: true,
-            rx_side_effects: true,
             age_demographic: true,
             gender_bias: true,
             classic_patient: true,

@@ -284,7 +284,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-2xl flex items-center gap-4"
+            className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-[0_18px_42px_var(--color-shadow-soft)] flex items-center gap-4 border border-[var(--color-border)]"
           >
             <span className="inline-flex h-10 w-10 animate-spin rounded-full border-4 border-blue-500/60 border-t-transparent" />
             <div>
@@ -306,7 +306,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-2xl"
+            className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
           >
             {/* Overall Score */}
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 mb-6">

@@ -86,8 +86,8 @@ async function fetchTopicProgress(
     throw new Error('Failed to fetch topic progress');
   }
 
-  const data = await response.json();
-  return data.data;
+  const data = (await response.json()) as { data?: TopicProgressData };
+  return data.data as TopicProgressData;
 }
 
 export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgressProps) {

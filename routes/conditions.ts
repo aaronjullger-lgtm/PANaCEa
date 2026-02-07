@@ -15,9 +15,13 @@ const router = Router();
 router.get(
   '/:identifier/extended',
   requireAuth,
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     try {
-      const { identifier } = req.params;
+      const identifier = req.params.identifier;
+      if (identifier == null || identifier === '') {
+        res.status(400).json({ error: 'Missing or invalid identifier' });
+        return;
+      }
 
       // 1. Try direct ID match (UUID)
       let condition = await prisma.condition.findUnique({
@@ -71,7 +75,8 @@ router.get(
       }
 
       if (!condition) {
-        return res.status(404).json({ error: 'Condition not found' });
+        res.status(404).json({ error: 'Condition not found' });
+        return;
       }
 
       res.json(condition);

@@ -475,7 +475,7 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => handleSystemSelect(system.id)}
-                className="relative p-8 rounded-xl bg-slate-800/30 backdrop-blur-sm border-2 border-slate-700 hover:border-white hover:shadow-2xl hover:bg-slate-800/50 transition-all text-left group hover:scale-[1.03]"
+                className="relative p-8 rounded-xl bg-[var(--color-bg-secondary)]/50 backdrop-blur-sm border-2 border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-[0_18px_42px_var(--color-shadow-soft)] hover:bg-[var(--color-bg-secondary)]/80 transition-all text-left group hover:scale-[1.03]"
               >
                 <div className="flex items-start gap-4">
                   <div className="p-3 rounded-lg bg-slate-700/40 group-hover:bg-slate-600/60 transition-colors">

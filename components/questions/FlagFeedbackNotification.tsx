@@ -197,7 +197,7 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
     try {
       const response = await fetch(`/api/user/flags?userId=${userId}`);
       if (response.ok) {
-        const data = await response.json();
+        const data = (await response.json()) as { flags?: FlaggedQuestion[] };
         setFlags(data.flags || []);
       }
     } catch (error) {

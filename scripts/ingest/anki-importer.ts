@@ -270,23 +270,24 @@ class AnkiImporter {
 
     if (type === 'cloze') {
       // Extract cloze deletions
-      const parsed = this.parseCloze(fields[0]);
+      const parsed = this.parseCloze(fields[0] ?? '');
       front = parsed.question;
       back = parsed.answer;
     } else if (type === 'image_occlusion') {
       // Handle image occlusion
-      front = this.stripHtml(fields[0]);
-      back = fields[1] ? this.stripHtml(fields[1]) : '';
+      const f0 = fields[0] ?? '';
+      front = this.stripHtml(f0);
+      back = fields[1] != null ? this.stripHtml(fields[1]) : '';
       // Extract media references
-      const mediaMatches = fields[0].match(/src="([^"]+)"/g) || [];
+      const mediaMatches = f0.match(/src="([^"]+)"/g) || [];
       for (const match of mediaMatches) {
         const filename = match.replace('src="', '').replace('"', '');
         mediaFiles.push(filename);
       }
     } else {
       // Basic card
-      front = this.stripHtml(fields[0]);
-      back = fields[1] ? this.stripHtml(fields[1]) : '';
+      front = this.stripHtml(fields[0] ?? '');
+      back = fields[1] != null ? this.stripHtml(fields[1]) : '';
     }
 
     // Skip if content is too short
@@ -343,8 +344,8 @@ class AnkiImporter {
 
     let match;
     while ((match = clozeRegex.exec(content)) !== null) {
-      const answer = match[1];
-      const hint = match[2] || '[...]';
+      const answer = match[1] ?? '';
+      const hint = match[2] ?? '[...]';
       answers.push(answer);
       question = question.replace(match[0], `___${hint}___`);
     }
@@ -486,6 +487,11 @@ async function main() {
 
   const filePath = args[fileIndex + 1];
   const dryRun = args.includes('--dry-run');
+
+  if (filePath == null || filePath === '') {
+    console.error('Error: Please provide path to .apkg file');
+    process.exit(1);
+  }
 
   if (!fs.existsSync(filePath)) {
     console.error(`Error: File not found: ${filePath}`);

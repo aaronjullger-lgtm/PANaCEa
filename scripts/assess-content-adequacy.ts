@@ -150,10 +150,11 @@ function calculateMetrics(content: any): ContentMetrics {
 
 function deriveStandards(allMetrics: ContentMetrics[]): QualityStandards {
   // Use 75th percentile as the standard (top quartile performance)
-  const percentile = (arr: number[], p: number) => {
-    const sorted = arr.sort((a, b) => a - b);
-    const index = Math.ceil(sorted.length * p);
-    return sorted[index] || sorted[sorted.length - 1];
+  const percentile = (arr: number[], p: number): number => {
+    if (arr.length === 0) return 0;
+    const sorted = [...arr].sort((a, b) => a - b);
+    const index = Math.min(Math.ceil(sorted.length * p), sorted.length - 1);
+    return sorted[index] ?? sorted[sorted.length - 1] ?? 0;
   };
 
   return {
@@ -287,6 +288,7 @@ async function assessAndRegenerate(regenerate: boolean = false, targetSystem?: s
   console.log('📉 Top 10 conditions needing improvement:');
   for (let i = 0; i < Math.min(10, sorted.length); i++) {
     const m = sorted[i];
+    if (!m) continue;
     console.log(
       `   ${i + 1}. ${m.conditionId} (Score: ${m.overallScore}%, Complete: ${m.completenessScore}%, Depth: ${m.depthScore}%)`
     );

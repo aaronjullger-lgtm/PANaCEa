@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
+const jsonNull = Prisma.DbNull;
 
 async function checkTableNulls() {
   try {
@@ -14,9 +15,11 @@ async function checkTableNulls() {
       where: { OR: [{ mnemonic: null }, { mnemonic: '' }] },
     });
     const mcNoClinicalPearls = await prisma.medicalContent.count({
-      where: { clinical_pearls: null },
+      where: { clinical_pearls: { equals: jsonNull } },
     });
-    const mcNoDifferentials = await prisma.medicalContent.count({ where: { differentials: null } });
+    const mcNoDifferentials = await prisma.medicalContent.count({
+      where: { differentials: { equals: jsonNull } },
+    });
     const mcNoOverview = await prisma.medicalContent.count({
       where: { OR: [{ overview: null }, { overview: '' }] },
     });
@@ -47,7 +50,9 @@ async function checkTableNulls() {
     const mcNoPrognosis = await prisma.medicalContent.count({
       where: { OR: [{ prognosis: null }, { prognosis: '' }] },
     });
-    const mcNoClassicTriad = await prisma.medicalContent.count({ where: { classic_triad: null } });
+    const mcNoClassicTriad = await prisma.medicalContent.count({
+      where: { classic_triad: { equals: jsonNull } },
+    });
     const mcNoFirstLineRx = await prisma.medicalContent.count({
       where: { OR: [{ first_line_rx: null }, { first_line_rx: '' }] },
     });

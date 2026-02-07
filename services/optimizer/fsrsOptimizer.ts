@@ -69,11 +69,18 @@ export async function optimizeFSRSParameters(
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Optimization failed: ${response.statusText}`);
+      const errorData = (await response.json()) as { error?: string };
+      throw new Error(errorData?.error ?? `Optimization failed: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      params?: {
+        w?: number[];
+        brierScore?: number;
+        sampleSize?: number;
+        improvementOverDefault?: number;
+      };
+    };
 
     // Stage 3: Validate results
     onProgress?.({
@@ -87,7 +94,7 @@ export async function optimizeFSRSParameters(
     }
 
     // Calculate improvement
-    const improvement = data.params.improvementOverDefault || 0;
+    const improvement = data.params.improvementOverDefault ?? 0;
 
     // Stage 4: Complete
     onProgress?.({
@@ -99,14 +106,14 @@ export async function optimizeFSRSParameters(
     return {
       parameters: data.params.w,
       metrics: {
-        rmse: data.params.brierScore || undefined,
+        rmse: data.params.brierScore ?? undefined,
         logLoss: undefined,
-        recordCount: data.params.sampleSize || 0,
+        recordCount: data.params.sampleSize ?? 0,
         improvementVsDefault: improvement,
       },
       timestamp: new Date(),
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('FSRS optimization failed:', error);
     throw error;
   }
@@ -138,15 +145,28 @@ export async function getOptimizationStatus(userId: string): Promise<{
     throw new Error(`Failed to get optimization status: ${response.statusText}`);
   }
 
-  const body = await response.json();
+  const body = (await response.json()) as {
+    data?: {
+      isDefault?: boolean;
+      params?: { lastOptimizedAt?: string; w?: number[]; sampleSize?: number };
+      canOptimize?: boolean;
+      reviewsNeeded?: number;
+    };
+  };
   const data = body?.data ?? body;
+  const d = data as {
+    isDefault?: boolean;
+    params?: { lastOptimizedAt?: string; w?: number[]; sampleSize?: number };
+    canOptimize?: boolean;
+    reviewsNeeded?: number;
+  };
 
   return {
-    isOptimized: !data.isDefault,
-    lastOptimized: data.params?.lastOptimizedAt ? new Date(data.params.lastOptimizedAt) : undefined,
-    parameters: data.params?.w,
-    recordCount: data.params?.sampleSize,
-    canOptimize: data.canOptimize ?? true,
-    reviewsNeeded: data.reviewsNeeded ?? 0,
+    isOptimized: !d.isDefault,
+    lastOptimized: d.params?.lastOptimizedAt ? new Date(d.params.lastOptimizedAt) : undefined,
+    parameters: d.params?.w,
+    recordCount: d.params?.sampleSize,
+    canOptimize: d.canOptimize ?? true,
+    reviewsNeeded: d.reviewsNeeded ?? 0,
   };
 }

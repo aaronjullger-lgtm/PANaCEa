@@ -170,7 +170,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           throw new Error('Failed to fetch user stats');
         }
 
-        const result = await response.json();
+        const result = (await response.json()) as UserStatsResponse;
         setUserStats(result);
       } catch (error) {
         console.error('[AnalyticsDashboard] Failed to fetch user stats:', error);
@@ -207,18 +207,18 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           throw new Error('Failed to fetch stability trend');
         }
 
-        const result = await response.json();
+        const result = (await response.json()) as { data?: Array<{ date: string; avgStability?: number; totalReviews?: number }> };
 
         if (result.data && Array.isArray(result.data)) {
           // Format dates for display
-          const formattedData = result.data.map((point: any) => ({
+          const formattedData = result.data.map((point: (typeof result.data)[number]) => ({
             date: new Date(point.date).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
             }),
-            avgStability: point.avgStability,
-            totalReviews: point.totalReviews,
-          }));
+            avgStability: point.avgStability ?? 0,
+            totalReviews: point.totalReviews ?? 0,
+          })) as StabilityTrendDatum[];
           setStabilityTrendData(formattedData);
         }
       } catch (error) {

@@ -541,7 +541,7 @@ export function buildPerformanceProfile(
 
   // Calculate baseline response time (median)
   const times = historicalResponses.map((r) => r.responseTimeMs).sort((a, b) => a - b);
-  const baselineResponseTime = times[Math.floor(times.length / 2)];
+  const baselineResponseTime = times[Math.floor(times.length / 2)] ?? 30000;
   const responseTimeVariance = calculateVariance(times);
 
   // Accuracy by time of day
@@ -580,8 +580,10 @@ export function buildPerformanceProfile(
 
   // Find fatigue threshold (where accuracy drops significantly)
   let fatigueThreshold = 30;
+  const firstAcc = accuracyBySessionPosition[0];
   for (let i = 1; i < accuracyBySessionPosition.length; i++) {
-    if (accuracyBySessionPosition[i] < accuracyBySessionPosition[0] * 0.85) {
+    const curr = accuracyBySessionPosition[i];
+    if (curr != null && firstAcc != null && curr < firstAcc * 0.85) {
       fatigueThreshold = i * 10;
       break;
     }
@@ -594,12 +596,12 @@ export function buildPerformanceProfile(
 
   return {
     baselineResponseTime,
-    responseTimeVariance: Math.sqrt(responseTimeVariance),
+    responseTimeVariance: Math.sqrt(responseTimeVariance ?? 0),
     accuracyByTimeOfDay,
     accuracyBySessionPosition,
     fatigueThreshold,
     optimalDifficulty: 5 + (correctRate - 0.7) * 5, // 5 ± 2.5 based on accuracy
-    learningVelocity,
+    learningVelocity: learningVelocity ?? 1,
   };
 }
 

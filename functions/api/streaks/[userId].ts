@@ -113,7 +113,7 @@ export const onRequestGet = authenticatedEndpoint(StreakParamsSchema, async (con
         longestStreak,
         isActiveToday,
         flameLevel,
-        lastActivity: streakRows.length > 0 ? streakRows[0].date : null,
+        lastActivity: streakRows.length > 0 ? (streakRows[0]?.date ?? null) : null,
         streakFreezes: prefs?.streakFreezes ?? 0,
         userCoins: prefs?.userCoins ?? 0,
         streakGoalDays,

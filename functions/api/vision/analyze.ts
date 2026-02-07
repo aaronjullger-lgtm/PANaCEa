@@ -62,7 +62,11 @@ function parseVisionResponse(text: string): {
     reasoning = parsed.reasoning;
     const raw = parsed.bounding_box ?? parsed.box_2d;
     if (Array.isArray(raw) && raw.length >= 4) {
-      const [ymin, xmin, ymax, xmax] = raw.map(Number);
+      const n = raw.map(Number);
+      const ymin = n[0] ?? 0;
+      const xmin = n[1] ?? 0;
+      const ymax = n[2] ?? 0;
+      const xmax = n[3] ?? 0;
       if (Number.isFinite(ymin) && Number.isFinite(xmin) && Number.isFinite(ymax) && Number.isFinite(xmax)) {
         bounding_box = [ymin, xmin, ymax, xmax];
       }

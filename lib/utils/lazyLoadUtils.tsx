@@ -6,7 +6,7 @@
 
 import React, { lazy, Suspense, ComponentType } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import Loader from '@/components/Loader';
+import Loader from '@/components/loading/Loader';
 
 /**
  * Enhanced lazy loading with preload capability
@@ -133,7 +133,8 @@ export function createPreloadStrategy() {
       // Process queue sequentially with delays between loads
       for (let i = 0; i < preloadQueue.length; i++) {
         const startTime = performance.now();
-        await preloadQueue[i]();
+        const fn = preloadQueue[i];
+        if (fn) await fn();
         const loadTime = performance.now() - startTime;
 
         // Add delay between preloads to avoid blocking

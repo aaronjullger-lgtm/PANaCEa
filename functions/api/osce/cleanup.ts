@@ -63,15 +63,17 @@ async function handleCleanup(context: any) {
 
     log.info('Cleaning up OSCE chat history', { sessionId });
 
-    const result = await prisma.encounterChatHistory.deleteMany({
-      where: { sessionId },
+    // Chat history is stored in PatientEncounterSession.messages; clear it for this session
+    const updated = await prisma.patientEncounterSession.updateMany({
+      where: { id: sessionId },
+      data: { messages: [] },
     });
 
-    log.info('Cleanup completed', { deleted: result.count });
+    log.info('Cleanup completed', { updated: updated.count });
     return {
       data: {
-        deleted: result.count,
-        message: `Deleted ${result.count} chat messages for session ${sessionId}`,
+        deleted: updated.count,
+        message: `Cleared chat messages for session ${sessionId}`,
       },
     };
   } catch (error: any) {

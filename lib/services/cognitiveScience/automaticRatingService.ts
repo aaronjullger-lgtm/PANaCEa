@@ -244,7 +244,9 @@ function extractBehavioralSignals(
   const clickEvents = question.interactions.filter((e) => e.type === 'click');
   const timeBetweenClicks: number[] = [];
   for (let i = 1; i < clickEvents.length; i++) {
-    timeBetweenClicks.push(clickEvents[i].timestamp - clickEvents[i - 1].timestamp);
+    const curr = clickEvents[i];
+    const prev = clickEvents[i - 1];
+    if (curr != null && prev != null) timeBetweenClicks.push(curr.timestamp - prev.timestamp);
   }
 
   // Analyze answer changes
