@@ -146,6 +146,7 @@ export async function onRequestPost(context: any) {
 
       await prisma.auditLog.create({
         data: {
+          id: `audit_prescription_${user.id}_${now.toISOString().split('T')[0]}_${Date.now()}`,
           action: 'DAILY_PRESCRIPTION_GENERATED',
           entityType: 'USER',
           entityId: user.id,

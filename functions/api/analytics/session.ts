@@ -107,6 +107,7 @@ export const onRequestPost = authenticatedEndpoint(
           // Device info
           deviceType: data.deviceType,
           browserName: data.browserName,
+          updatedAt: new Date(),
         },
       });
 
@@ -125,6 +126,7 @@ export const onRequestPost = authenticatedEndpoint(
           : undefined;
       await prisma.sessionAnalytics.create({
         data: {
+          id: `analytics_${session.id}`,
           userId: user.id,
           sessionId: session.id,
           totalDurationMinutes: totalDurationMinutes ?? undefined,
@@ -340,6 +342,7 @@ async function updateUserLearningProfile(
             ? sessionData.helpfulChanges / sessionData.totalAnswerChanges
             : null,
         estimatedScore: sessionData.predictedScore,
+        updatedAt: new Date(),
       },
     });
   }
