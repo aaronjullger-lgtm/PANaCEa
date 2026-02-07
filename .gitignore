@@ -172,3 +172,5 @@ docker-compose.override.yml
 debug*.log
 *.debug.log
 heapdump-*.heapsnapshot
+
+env.example
