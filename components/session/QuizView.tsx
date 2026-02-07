@@ -46,6 +46,7 @@ import {
 } from '@/components/quiz/Tracker';
 import { QuizLabCalcModal } from '@/components/quiz/QuizLabCalcModal';
 import { ConfidenceRating } from '@/components/quiz/ConfidenceRating';
+import { DifficultyAdjustmentBanner } from '@/components/quiz/DifficultyAdjustmentBanner';
 import ErrorTagger from '@/components/quiz/ErrorTagger';
 import Loader from '@/components/loading/Loader';
 import WellnessCheckModal from '@/components/wellness/WellnessCheckModal';
@@ -100,6 +101,12 @@ import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
 import { syncManager } from '@/lib/services/sync/syncManager';
+import {
+  getDifficultyRecommendation,
+  getDifficultyFeedbackMessage,
+  logDifficultyAdjustment,
+  type DifficultyLevel,
+} from '@/services/adaptiveDifficultyService';
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -327,6 +334,12 @@ const QuizView: React.FC<QuizViewProps> = ({
   
   // 2026 PA Student Optimization: Touch gesture state
   const [swipeHint, setSwipeHint] = useState<'left' | 'right' | null>(null);
+  
+  // 2026 PA Student Optimization: Dynamic difficulty state
+  const [showDifficultyBanner, setShowDifficultyBanner] = useState(false);
+  const [currentDifficultyLevel, setCurrentDifficultyLevel] = useState<DifficultyLevel>('maintain');
+  const [difficultyAccuracy, setDifficultyAccuracy] = useState(0.75);
+  const lastDifficultyCheck = useRef<number>(0);
 
   // ---- SRS RESULT STATE ----
   const [srsResult, setSrsResult] = useState<SRSScheduleResult | null>(null);
@@ -1165,7 +1178,41 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       confidenceLevel: rating,
       timeSpentMs: Date.now() - questionStartTime,
     });
+    
+    // Check if we should adjust difficulty after confidence is rated
+    checkDifficultyAdjustment();
   }, [currentQuestion, selectedAnswerIndex, questionStartTime, sessionSettings.focus, addPerformanceRecord]);
+
+  // 2026 PA Student Optimization: Check if difficulty should be adjusted
+  const checkDifficultyAdjustment = useCallback(() => {
+    // Only check every 5 questions to avoid too frequent adjustments
+    if (questionNumber - lastDifficultyCheck.current < 5) return;
+    
+    const recommendation = getDifficultyRecommendation({
+      recentPerformance: performanceData,
+      streakCount: currentStreak,
+    });
+    
+    if (recommendation.shouldAdjust && recommendation.level !== currentDifficultyLevel) {
+      // Log adjustment for analytics
+      logDifficultyAdjustment({
+        timestamp: Date.now(),
+        fromLevel: currentDifficultyLevel,
+        toLevel: recommendation.level,
+        accuracy: recommendation.currentAccuracy,
+        confidence: recommendation.confidence,
+        reason: recommendation.reason,
+      });
+      
+      // Update UI
+      setCurrentDifficultyLevel(recommendation.level);
+      setDifficultyAccuracy(recommendation.currentAccuracy);
+      setShowDifficultyBanner(true);
+      lastDifficultyCheck.current = questionNumber;
+      
+      console.log('[AdaptiveDifficulty]', recommendation);
+    }
+  }, [questionNumber, performanceData, currentStreak, currentDifficultyLevel]);
 
   // 2026 PA Student Optimization: Touch gesture handlers
   const { ref: swipeRef } = useSwipeGesture({
@@ -1306,6 +1353,15 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <span className="font-semibold">Mobile tip:</span> Swipe right to continue, left to flag for review
           </p>
         </motion.div>
+      )}
+      
+      {/* 2026 PA Student Optimization: Difficulty adjustment banner */}
+      {showDifficultyBanner && (
+        <DifficultyAdjustmentBanner
+          level={currentDifficultyLevel}
+          accuracy={difficultyAccuracy}
+          onDismiss={() => setShowDifficultyBanner(false)}
+        />
       )}
       
       <div className="mb-6">
