@@ -1132,13 +1132,13 @@ export const SmartConditionView: React.FC<SmartConditionViewProps> = ({
     refetchSummary,
   } = useSmartCondition(conditionId);
 
-  // Auto-fetch details when tabs are changed (for lazy loading)
+  // Auto-fetch details once on mount (not on every render).
+  // Guard: skip if already loaded, already loading, or already errored (prevents retry storm).
   useEffect(() => {
-    if (conditionId && !details && !isLoadingDetails) {
-      // Load details immediately since all tabs may need it
+    if (conditionId && !details && !isLoadingDetails && !errorDetails) {
       fetchDetails();
     }
-  }, [conditionId, details, isLoadingDetails, fetchDetails]);
+  }, [conditionId, details, isLoadingDetails, errorDetails, fetchDetails]);
 
   // If data prop is provided directly, use it (no loading/error states since data is complete)
   if (dataProp) {
