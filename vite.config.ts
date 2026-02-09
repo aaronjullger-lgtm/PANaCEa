@@ -4,60 +4,11 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
-const VIRTUAL_JSX_DEV_SHIM = 'virtual:react-jsx-dev-shim';
-
 /**
- * In production builds, code or deps compiled with dev JSX expect jsxDEV from react/jsx-dev-runtime.
- * Production React only exports jsx from react/jsx-runtime. This plugin aliases jsx-dev-runtime
- * to a virtual module that re-exports jsx as jsxDEV so "E.jsxDEV is not a function" is avoided.
+ * JSX Dev Shim path — a real file that re-exports react/jsx-runtime's `jsx` as `jsxDEV`.
+ * Using a real file avoids virtual-module edge cases with Rollup's resolution.
  */
-function reactJsxDevShimPlugin(isProduction: boolean): Plugin {
-  if (!isProduction) return { name: 'react-jsx-dev-shim', config: () => ({}) };
-  return {
-    name: 'react-jsx-dev-shim',
-    enforce: 'pre',
-    resolveId(source, importer) {
-      // Catch all variations of react/jsx-dev-runtime imports
-      if (
-        source === 'react/jsx-dev-runtime' ||
-        source === 'react/jsx-dev-runtime.js' ||
-        source.endsWith('react/jsx-dev-runtime') ||
-        source.endsWith('react/jsx-dev-runtime.js')
-      ) {
-        return VIRTUAL_JSX_DEV_SHIM;
-      }
-      return null;
-    },
-    load(id) {
-      if (id !== VIRTUAL_JSX_DEV_SHIM) return null;
-      return `
-import { jsx, Fragment } from 'react/jsx-runtime';
-export const jsxDEV = jsx;
-export { Fragment };
-export default { jsxDEV, Fragment };
-`;
-    },
-    transform(code, id) {
-      // Also catch dynamic imports and require calls that might bypass resolveId
-      if (!isProduction || id.includes('node_modules')) return null;
-      
-      // Replace any remaining references to jsx-dev-runtime in the code
-      if (code.includes('react/jsx-dev-runtime')) {
-        return {
-          code: code.replace(
-            /from\s+['"]react\/jsx-dev-runtime['"]/g,
-            "from 'react/jsx-runtime'"
-          ).replace(
-            /require\(['"]react\/jsx-dev-runtime['"]\)/g,
-            "require('react/jsx-runtime')"
-          ),
-          map: null,
-        };
-      }
-      return null;
-    },
-  };
-}
+const JSX_DEV_SHIM_PATH = path.resolve(__dirname, 'src/lib/jsx-dev-shim.ts');
 
 /**
  * Vite plugin to completely remove Prisma imports from browser bundles.
@@ -198,7 +149,6 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       prismaExcludePlugin(),
-      reactJsxDevShimPlugin(isProduction),
       react({
         // Use automatic JSX runtime for React 19
         jsxRuntime: 'automatic',
@@ -395,11 +345,12 @@ export default defineConfig(({ mode }) => {
         '@src': path.resolve(__dirname, './src'),
         // Force ESM build of lucide-react
         'lucide-react': 'lucide-react/dist/esm/lucide-react.js',
-        // In production, alias jsx-dev-runtime to jsx-runtime to avoid "jsxDEV is not a function" errors
+        // In production, alias jsx-dev-runtime to a shim that re-exports jsx as jsxDEV.
+        // Direct aliasing to react/jsx-runtime is WRONG because it doesn't export jsxDEV.
         ...(isProduction
           ? {
-              'react/jsx-dev-runtime': 'react/jsx-runtime',
-              'react/jsx-dev-runtime.js': 'react/jsx-runtime',
+              'react/jsx-dev-runtime': JSX_DEV_SHIM_PATH,
+              'react/jsx-dev-runtime.js': JSX_DEV_SHIM_PATH,
             }
           : {}),
       },
