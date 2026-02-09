@@ -8,11 +8,11 @@ export const buttonVariantStyles: Record<ButtonVariant, string> = {
   secondary:
     'bg-transparent text-[#0F172A] dark:text-[var(--color-text-primary)] border-2 border-[#0F172A] dark:border-[var(--color-text-secondary)] hover:bg-slate-100 dark:hover:bg-[var(--color-bg-secondary)] hover:border-[#0F172A] dark:hover:border-[var(--color-accent)] shadow-sm',
   success:
-    'bg-gradient-to-r from-[var(--color-data-pass)] to-[var(--color-data-pass)] text-white hover:from-[var(--color-data-pass)]/90 hover:to-[var(--color-data-pass)]/90 shadow-sm',
+    'bg-[#0d7a6f] text-white hover:brightness-110 shadow-sm dark:bg-[#0d7a6f]',
   warning:
-    'bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] text-white hover:from-[var(--color-data-provisional)]/90 hover:to-[var(--color-data-provisional)]/90 shadow-sm',
+    'bg-[#92610a] text-white hover:brightness-110 shadow-sm dark:bg-[#92610a]',
   danger:
-    'bg-gradient-to-r from-[var(--color-data-fail)] to-[var(--color-data-fail)] text-white hover:from-[var(--color-data-fail)]/90 hover:to-[var(--color-data-fail)]/90 shadow-sm',
+    'bg-[#b91c1c] text-white hover:brightness-110 shadow-sm dark:bg-[#b91c1c]',
   ghost:
     'bg-transparent text-[#0F172A] dark:text-[var(--color-text-secondary)] border-2 border-transparent hover:border-[#0F172A] dark:hover:border-[var(--color-border)] hover:bg-slate-100 dark:hover:bg-[var(--color-bg-secondary)]',
 };

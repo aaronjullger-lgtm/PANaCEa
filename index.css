@@ -167,24 +167,22 @@ a,
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  /* Success button - for submit actions */
+  /* Success button - for submit actions (hardcoded dark teal for white text contrast) */
   .btn-success {
     @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200
-           bg-[var(--color-data-pass)] text-[var(--color-text-inverse)] shadow-sm
-           hover:bg-[var(--color-data-pass)]/90 hover:shadow-md
+           bg-[#0d7a6f] text-white shadow-sm
+           hover:brightness-110 hover:shadow-md
            active:scale-[0.98]
-           disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-[var(--color-data-pass)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-data-pass)]/80;
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
-  /* Danger button - for destructive actions */
+  /* Danger button - for destructive actions (hardcoded dark red for white text contrast) */
   .btn-danger {
     @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200
-           bg-[var(--color-data-fail)] text-[var(--color-text-inverse)] shadow-sm
-           hover:bg-[var(--color-data-fail)]/90 hover:shadow-md
+           bg-[#b91c1c] text-white shadow-sm
+           hover:brightness-110 hover:shadow-md
            active:scale-[0.98]
-           disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-[var(--color-data-fail)] dark:text-[var(--color-text-inverse)] dark:hover:bg-[var(--color-data-fail)]/80;
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* Data/KPI numbers - tabular figures for aligned columns and fast scanning (Pillar V) */
@@ -514,10 +512,10 @@ a,
   --color-glass-shadow: rgba(0, 0, 0, 0.3);
   --color-card-bg: #1e293b;
 
-  /* Semantic data - same hue family as light, lighter for dark bg (teal/red/amber) */
-  --color-data-pass: #2dd4bf;   /* teal-400 - same family as light teal */
-  --color-data-fail: #f87171;  /* red-400 */
-  --color-data-provisional: #fbbf24; /* amber-400 */
+  /* Semantic data - muted for dark bg to avoid neon glare (teal/red/amber) */
+  --color-data-pass: #14b8a6;   /* teal-500 — toned down from teal-400 */
+  --color-data-fail: #ef4444;  /* red-500 — slightly deeper */
+  --color-data-provisional: #d97706; /* amber-600 — replaced neon amber-400 (#fbbf24) */
 
   /* ===== MUTED SEMANTIC CATEGORY ACCENTS (Dark Mode) ===== */
   --color-category-visual: #c09e9e; /* Dusty Rose (lighter) */

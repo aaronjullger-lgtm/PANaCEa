@@ -92,7 +92,7 @@ function BottomTabBar({ items, pathname, search }: {
       className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-md safe-area-bottom"
       aria-label="Main navigation"
     >
-      <ul className="flex items-stretch justify-around h-14">
+      <ul className="flex items-stretch justify-evenly h-14 max-w-lg mx-auto">
         {tabs.map((item) => {
           const Icon = item.icon;
           const isActive = item.href ? isPathActive(item.href, pathname, search) : false;

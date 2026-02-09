@@ -124,7 +124,7 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
   return (
     <div className="flex items-start gap-4 mb-4">
       <div
-        className={`p-3 rounded-xl bg-white/10 dark:bg-white/5 backdrop-blur-sm border border-white/20`}
+        className={`p-3 rounded-xl bg-[var(--color-bg-tertiary)] dark:bg-white/5 backdrop-blur-sm border border-[var(--color-border)]`}
       >
         <Icon className={`w-7 h-7 ${iconColor}`} />
       </div>
