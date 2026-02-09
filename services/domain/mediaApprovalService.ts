@@ -13,7 +13,8 @@ import {
   optimizeImage,
   QualityAssessment,
 } from './imageQualityService';
-import { supabaseAdmin, getStorageUrl } from '../../lib/supabase';
+import { supabaseAdmin } from '../../lib/supabase/admin';
+import { getStorageUrl } from '../../lib/supabase/client';
 
 const MEDIA_BUCKET = 'medical-images';
 

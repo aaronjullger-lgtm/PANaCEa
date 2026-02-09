@@ -295,12 +295,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     const caseWithStateMachine = currentCase as any; // Type extension for new field
     if (!caseWithStateMachine?.stateMachine) return;
     
+    let unsubscribe: (() => void) | undefined;
+    
     try {
       const stateMachine = caseWithStateMachine.stateMachine as unknown as PatientAVStateMachine;
       const engine = new PatientAVEngine(stateMachine);
       
-      // Subscribe to state transitions
-      engine.on((event) => {
+      // Subscribe to state transitions — capture unsubscribe for cleanup
+      unsubscribe = engine.on((event) => {
         if (event.type === 'TRANSITION_COMPLETED') {
           const newState = engine.getCurrentAVState();
           setCurrentAVState(newState);
@@ -329,38 +331,47 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     } catch (error) {
       console.error('Failed to initialize state machine:', error);
     }
+
+    // Cleanup: unsubscribe stale engine listener when case/session changes
+    return () => {
+      unsubscribe?.();
+    };
   }, [currentCase, integration, session?.id]);
 
-  // NEW: Update state machine when vitals change
+  // NEW: Update state machine when vitals change (debounced to avoid trigger cascade)
   useEffect(() => {
     if (!avEngine) return;
     
-    const vitalsForEngine = {
-      hr: currentVitals.hr,
-      bp: `${currentVitals.sbp}/${currentVitals.dbp}`,
-      temp: 98.6, // Default
-      rr: currentVitals.rr,
-      o2: currentVitals.o2,
-    };
-    
-    avEngine.updateVitals(vitalsForEngine);
-    
-    // Also update SOAP generator
-    addSOAPVitals(vitalsForEngine);
-    
-    // Check for critical vitals
-    if (currentVitals.o2 < 88 || currentVitals.hr > 150 || currentVitals.hr < 50) {
-      integration.emit({
-        type: 'VITALS_CRITICAL' as any,
-        timestamp: new Date().toISOString(),
-        sourceModule: 'osce',
-        sessionId: session?.id || 'unknown',
-        payload: {
-          vitals: vitalsForEngine,
-          trigger: currentVitals.o2 < 88 ? 'hypoxia_severe' : currentVitals.hr > 150 ? 'tachycardia_severe' : 'bradycardia',
-        },
-      });
-    }
+    const timer = setTimeout(() => {
+      const vitalsForEngine = {
+        hr: currentVitals.hr,
+        bp: `${currentVitals.sbp}/${currentVitals.dbp}`,
+        temp: 98.6, // Default
+        rr: currentVitals.rr,
+        o2: currentVitals.o2,
+      };
+      
+      avEngine.updateVitals(vitalsForEngine);
+      
+      // Also update SOAP generator
+      addSOAPVitals(vitalsForEngine);
+      
+      // Check for critical vitals
+      if (currentVitals.o2 < 88 || currentVitals.hr > 150 || currentVitals.hr < 50) {
+        integration.emit({
+          type: 'VITALS_CRITICAL' as any,
+          timestamp: new Date().toISOString(),
+          sourceModule: 'osce',
+          sessionId: session?.id || 'unknown',
+          payload: {
+            vitals: vitalsForEngine,
+            trigger: currentVitals.o2 < 88 ? 'hypoxia_severe' : currentVitals.hr > 150 ? 'tachycardia_severe' : 'bradycardia',
+          },
+        });
+      }
+    }, 250); // Debounce 250ms — prevents trigger evaluation on every vitals tick
+
+    return () => clearTimeout(timer);
   }, [currentVitals, avEngine, addSOAPVitals, integration, session?.id]);
 
   // HUD mode: medical-monitor style UI when Live OSCE session is active

@@ -10,16 +10,29 @@
  * API route should: authenticate, validate, delegate here, return result.
  */
 
-import type { PrismaClient } from '@prisma/client';
+import type { CircadianPhase as PrismaCircadianPhase, PrismaClient } from '@prisma/client';
 import { calculateParTime } from '../utils/questionComplexity';
 import { updateReviewOutcome } from './srsService';
 import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
-import { deriveImplicitRating } from '../implicit-metrics';
+import {
+  deriveContinuousRating,
+  applyStabilityModifierFromGrade,
+} from '../implicit-metrics';
 import { buildCircadianContext, applyCircadianModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from './userStatisticsService';
+import { applyHonestRating } from '../srs/ghostGrader';
+
+/** Map lib/circadian phase to ReviewLog CircadianPhase enum */
+function toCircadianPhaseEnum(phase: string): PrismaCircadianPhase | undefined {
+  const p = phase.toLowerCase();
+  if (p === 'peak') return 'PEAK';
+  if (p === 'trough') return 'TROUGH';
+  if (p === 'neutral' || p === 'evening_recovery' || p === 'late_night') return 'NEUTRAL';
+  return undefined;
+}
 
 /** Question data structure from PreGeneratedQuestion.questionData field */
 export interface QuestionData {
@@ -239,16 +252,30 @@ export async function submitDrillReview(
     timezone || undefined
   );
 
+  const commitmentGapMs = (telemetry?.selection_drift_ms as number | undefined) ?? null;
+  const cursorEntropy = telemetry?.cursor_entropy as number | undefined;
+  const hoverOscillationCount = (telemetry?.hover_oscillations as number | undefined) ?? 0;
+
+  // When timeToFirstClick is missing, substitute a neutral value (parTimeMs * 0.85)
+  // rather than totalDwellTime. Total dwell includes rationale-reading time and
+  // inflates the latency ratio by 2-5x, systematically downgrading ratings for
+  // questions where the client omits the first-click metric.
+  const effectiveFirstClick =
+    timeToFirstClick ?? Math.min(numericTime, parTimeMs * 0.85);
+
   const behaviorMetrics: ImplicitBehaviorMetrics = {
-    timeToFirstClick: timeToFirstClick ?? numericTime,
+    timeToFirstClick: effectiveFirstClick,
     answerSwitches: answerSwitches ?? 0,
     totalDwellTime: totalDwellTime ?? numericTime,
     isCorrect,
     parTimeMs,
+    commitmentGapMs: commitmentGapMs ?? undefined,
+    cursorEntropy,
+    hoverOscillationCount,
   };
 
-  const implicitResult = deriveImplicitRating(behaviorMetrics);
-  let rating = implicitResult.rating;
+  const continuousResult = deriveContinuousRating(behaviorMetrics);
+  let rating = continuousResult.discreteRating;
 
   // Implicit FSRS "Truth Engine": Override user-derived rating using behavioral honesty heuristics
   // Rule 1: If responseTime > (parTime * 1.5) AND rating == Easy → downgrade to Good
@@ -273,6 +300,22 @@ export async function submitDrillReview(
       answerSwitches: switches,
     });
   }
+  // Rule 3 (Ghost Grader): oscillations, drift, tremor → force Hard for honest history
+  const oscillations = (telemetry?.hover_oscillations as number | undefined) ?? 0;
+  const vignetteRegressions = (telemetry?.vignette_regressions as number | undefined) ?? 0;
+  const selectionDriftMs = telemetry?.selection_drift_ms as number | null | undefined;
+  const tremorScore = (telemetry?.tremor_score as number | undefined) ?? 0;
+  rating = applyHonestRating({
+    userRating: rating,
+    isCorrect,
+    oscillations,
+    vignetteRegressions,
+    selectionDriftMs: selectionDriftMs ?? null,
+    tremorScore,
+  });
+
+  const gradeContinuous = continuousResult.grade;
+  const implicitConfidence = continuousResult.confidence;
 
   const quality =
     rating === Rating.Again ? 1 : rating === Rating.Hard ? 2 : rating === Rating.Easy ? 5 : 4;
@@ -312,11 +355,12 @@ export async function submitDrillReview(
         conditionId: question.conditionId ?? undefined,
         medicalContentId: question.medicalContentId ?? undefined,
         system: question.system ?? undefined,
-        isMainSession: sessionType === 'main',
+        // Match the FSRS gate logic: undefined/missing sessionType is treated as main
+        isMainSession: sessionType !== 'cram' && sessionType !== 'rapid_recall',
         selectedAnswer: normalizedSelectedAnswer,
         wasCorrect: isCorrect,
         durationMs: effectiveDurationMs,
-        implicitConfidence: implicitResult.confidence,
+        implicitConfidence,
         telemetryJson: telemetry
           ? {
               ...telemetry,
@@ -324,7 +368,8 @@ export async function submitDrillReview(
                 par_time_ms: parTimeMs,
                 latency_ratio: effectiveDurationMs / parTimeMs,
                 implicit_rating: rating,
-                implicit_confidence: implicitResult.confidence,
+                implicit_confidence: implicitConfidence,
+                grade_continuous: gradeContinuous,
                 circadian_phase: circadianContext.circadianPhase,
                 is_rapid_guess: isRapidGuess,
               },
@@ -344,7 +389,8 @@ export async function submitDrillReview(
                 par_time_ms: parTimeMs,
                 latency_ratio: numericTime / parTimeMs,
                 implicit_rating: rating,
-                implicit_confidence: implicitResult.confidence,
+                implicit_confidence: implicitConfidence,
+                grade_continuous: gradeContinuous,
                 circadian_phase: circadianContext.circadianPhase,
                 is_rapid_guess: isRapidGuess,
               },
@@ -365,9 +411,10 @@ export async function submitDrillReview(
   }
 
   // Only update FSRS (UserProgress.reviewHistory) for main study sessions; exclude cram/rapid_recall
+  // Also skip FSRS when rapid guess is detected — accidental taps must not pollute SRS scheduling
   const countForFSRS = sessionType !== 'cram' && sessionType !== 'rapid_recall';
 
-  if (question.conditionId && countForFSRS) {
+  if (question.conditionId && countForFSRS && !isRapidGuess) {
     try {
       const fsrs = new FSRS();
       const existingProgress = await prisma.userProgress.findUnique({
@@ -396,12 +443,25 @@ export async function submitDrillReview(
       };
 
       const { card: rawCard } = fsrs.next(currentCard, new Date(), rating);
-      const modifiedStability = applyCircadianModifier(rawCard.stability, circadianContext);
-      const updatedCard = { ...rawCard, stability: modifiedStability };
+      const gradeModifier = applyStabilityModifierFromGrade(gradeContinuous);
+      let modifiedStability = rawCard.stability * gradeModifier;
+      modifiedStability = applyCircadianModifier(modifiedStability, circadianContext);
+      // implicitConfidence is floored at 0.5 → implicitDifficulty maxes at 0.5.
+      // Using >= instead of > so the modifier can actually fire at the boundary.
+      const implicitDifficulty = 1 - implicitConfidence;
+      if (implicitDifficulty >= 0.5) {
+        modifiedStability *= 1 - implicitDifficulty * 0.5;
+      }
+      const updatedCard = { ...rawCard, stability: Math.max(0.01, modifiedStability) };
 
       // Write to ReviewLog for FSRS v6 optimizer (MAIN/real sessions only)
       try {
         const reviewDate = new Date();
+        const hoverOscillations = (telemetry?.hover_oscillations as number | undefined) ?? undefined;
+        const vignetteRegressions = (telemetry?.vignette_regressions as number | undefined) ?? undefined;
+        const timeToFirstInteraction =
+          (telemetry?.time_to_first_interaction_ms as number | undefined) ?? timeToFirstClick ?? undefined;
+
         await prisma.reviewLog.create({
           data: {
             userId,
@@ -409,14 +469,14 @@ export async function submitDrillReview(
             medicalContentId: question.medicalContentId ?? undefined,
             questionId,
             questionType: 'pre_generated',
-            rating,
+            grade: rating,
             state: currentCard.state,
-            due_date: new Date(
+            scheduledAt: new Date(
               currentCard.last_review.getTime() +
                 currentCard.scheduled_days * 86400000
             ),
-            review_date: reviewDate,
-            duration: effectiveDurationMs,
+            reviewedAt: reviewDate,
+            responseTimeMs: effectiveDurationMs,
             review_type: 'real',
             stability: currentCard.stability,
             difficulty: currentCard.difficulty,
@@ -426,12 +486,22 @@ export async function submitDrillReview(
             sessionType: 'MAIN',
             attemptId,
             system: question.system ?? undefined,
+            hover_oscillations: hoverOscillations,
+            vignette_regressions: vignetteRegressions,
+            time_to_first_interaction: timeToFirstInteraction,
+            circadian_phase: toCircadianPhaseEnum(circadianContext.circadianPhase),
             telemetry: {
               par_time_ms: parTimeMs,
               latency_ratio: effectiveDurationMs / parTimeMs,
-              implicit_confidence: implicitResult.confidence,
-              answer_changes: switches,
+              implicit_confidence: implicitConfidence,
+              grade_continuous: gradeContinuous,
+              // Prefer tracker-reported answer_changes (telemetry) over request body (switches)
+              // to avoid dual-source divergence between QuestionAttempt and ReviewLog
+              answer_changes: (telemetry?.answer_changes as number | undefined) ?? switches,
               circadian_phase: circadianContext.circadianPhase,
+              selection_drift_ms: (telemetry?.selection_drift_ms as number | undefined),
+              cursor_entropy: (telemetry?.cursor_entropy as number | undefined),
+              tremor_score: (telemetry?.tremor_score as number | undefined),
             },
           },
         });
@@ -548,7 +618,8 @@ export async function submitDrillReview(
     timeSpentMs: numericTime,
     implicitMetrics: {
       rating,
-      confidence: implicitResult.confidence,
+      gradeContinuous,
+      confidence: implicitConfidence,
       latencyRatio: numericTime / parTimeMs,
       answerSwitches: answerSwitches ?? 0,
     },

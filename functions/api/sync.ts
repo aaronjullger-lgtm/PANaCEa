@@ -66,7 +66,7 @@ const SyncSavedQuestionSchema = z.object({
   nextReviewDate: z.string().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
-  // Allow additional fields from client
+  taskType: z.string().max(50).nullable().optional(),
   id: z.string().optional(),
   question: z.string().optional(),
   options: z.array(z.string()).optional(),
@@ -438,6 +438,9 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
             userNote: item.userNote ?? null,
             repetitionLevel: item.repetitionLevel ?? 1,
             nextReviewDate: item.nextReviewDate ?? null,
+            taskType: item.taskType ?? null,
+            conditionId: item.conditionId ?? null,
+            medicalContentId: item.medicalContentId ?? null,
             createdAt: item.createdAt ? new Date(item.createdAt) : updatedAt,
             updatedAt,
           };

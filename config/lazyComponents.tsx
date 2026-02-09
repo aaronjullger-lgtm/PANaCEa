@@ -89,6 +89,13 @@ export const CommandCenterPage = lazy(() =>
 export const ClinicalReferenceLibrary = lazy(
   () => import('../components/library/ClinicalReferenceLibrary')
 );
+export const SmartConditionView = lazy(() =>
+  import('../components/library/SmartConditionView').then((m) => ({ default: m.SmartConditionView }))
+);
+
+export const KnowledgeBaseHub = lazy(
+  () => import('../components/knowledge/KnowledgeBaseHub').then((m) => ({ default: m.KnowledgeBaseHub }))
+);
 export const MyLibraryPage = lazy(() =>
   import('../components/pages/MyLibraryPage').then((m) => ({ default: m.MyLibraryPage }))
 );
@@ -110,6 +117,9 @@ export const ClinicalProfileDashboard = lazy(
 );
 export const AdminDashboard = lazy(() =>
   import('../pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
+);
+export const RefineryPage = lazy(() =>
+  import('../pages/admin/RefineryPage').then((m) => ({ default: m.RefineryPage }))
 );
 export const MyPearlsPanel = lazy(() => import('../components/pearls/MyPearlsPanel'));
 export const ClinicalEyePage = lazy(() =>

@@ -44,6 +44,7 @@ export { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 // Detail Views
 export { ConditionMaster } from './ConditionMaster';
 export { ConditionDetailPanel } from './ConditionDetailPanel';
+export { SmartConditionView } from './SmartConditionView';
 
 // Hooks
 export {

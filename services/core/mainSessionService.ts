@@ -94,7 +94,11 @@ export async function fetchSessionQuestions(
   const params = new URLSearchParams();
   params.set('count', String(count));
 
-  if (settings.focus && settings.focus !== 'all') {
+  if (settings.simulationStrict) {
+    params.set('simulationStrict', 'true');
+  }
+
+  if (settings.focus && settings.focus !== 'all' && !settings.simulationStrict) {
     const systemMap: Record<string, string> = {
       cardiology: 'CV',
       pulmonology: 'PULM',
@@ -114,10 +118,12 @@ export async function fetchSessionQuestions(
     params.set('system', system);
   }
 
-  if (settings.focus === 'review') {
-    params.set('mode', 'review');
-  } else if (settings.focus === 'growth') {
-    params.set('mode', 'weakness');
+  if (!settings.simulationStrict) {
+    if (settings.focus === 'review') {
+      params.set('mode', 'review');
+    } else if (settings.focus === 'growth') {
+      params.set('mode', 'weakness');
+    }
   }
 
   try {
@@ -166,21 +172,37 @@ export async function fetchSessionQuestions(
       poolStatus: data.poolStatus,
     };
   } catch (error) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'mainSessionService.ts:fetchSessionQuestions:catch',
+        message: 'Session API failed, entering fallback',
+        data: { hadToken: !!token, count },
+        timestamp: Date.now(),
+        hypothesisId: 'H5',
+      }),
+    }).catch(() => {});
+    // #endregion
     console.error('[SessionService] API fetch failed, using fallback:', error);
-    return fallbackQuestionFetch(settings, count);
+    return fallbackQuestionFetch(settings, count, token);
   }
 }
 
 /**
- * Fallback to local generation when API fails
+ * Fallback to local generation when API fails.
+ * Pass token when available so pool/API calls in getQuestionBatch are authenticated.
  */
 async function fallbackQuestionFetch(
   settings: SessionSettings,
-  count: number
+  count: number,
+  token?: string | null
 ): Promise<SessionResponse> {
+  const getToken = token !== undefined && token !== null ? async () => token : undefined;
   try {
-    // Use statically imported question service as fallback
-    const questions = await getQuestionBatch(settings, [], count);
+    // Use statically imported question service as fallback; pass getToken so fetchFromPool gets auth
+    const questions = await getQuestionBatch(settings, [], count, getToken);
 
     return {
       questions,

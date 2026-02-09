@@ -28,7 +28,7 @@ interface VideoVignettePlayerProps {
 
 type VideoType = 'seizure' | 'gait' | 'tremor' | 'rash' | 'cardiac_exam';
 
-export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
+export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.memo(({
   videoUrl,
   question,
   options,
@@ -49,7 +49,16 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
-    const handleTimeUpdate = () => setCurrentTime(video.currentTime);
+    // Throttle timeupdate to rAF cadence (~60fps → 1 setState per frame max)
+    // instead of the default ~4 updates/sec that each trigger a full re-render.
+    let rafId: number | null = null;
+    const handleTimeUpdate = () => {
+      if (rafId !== null) return; // Already scheduled
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        setCurrentTime(video.currentTime);
+      });
+    };
     const handleLoadedMetadata = () => setDuration(video.duration);
     const handleEnded = () => {
       setIsPlaying(false);
@@ -64,6 +73,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('ended', handleEnded);
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, []);
 
@@ -304,6 +314,8 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
       </AnimatePresence>
     </div>
   );
-};
+});
+
+VideoVignettePlayer.displayName = 'VideoVignettePlayer';
 
 export default VideoVignettePlayer;

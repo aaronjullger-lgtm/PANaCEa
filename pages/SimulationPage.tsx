@@ -102,6 +102,10 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
       enabledSystems.size < allSystems;
 
     const settings: SessionSettings = { focus };
+    // Core PANCE Simulation "All Topics": strict NCCIPA blueprint, no adaptive/weak-area bias
+    if (selectedFocus === 'all') {
+      settings.simulationStrict = true;
+    }
     if (isDidacticWithCurriculum) {
       settings.systems = Array.from(enabledSystems);
     }
@@ -111,7 +115,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
   const getFocusDescription = () => {
     switch (selectedFocus) {
       case 'all':
-        return 'Cover all PANCE topics with AI-powered adaptive difficulty';
+        return 'Strict NCCIPA blueprint weighting. No weak-area bias — exam-representative mix only.';
       case 'growth':
         return `Target your ${stats.growthAreasCount} weakest areas for maximum improvement`;
       case 'flagged':
@@ -207,7 +211,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
               <p className="text-[var(--color-text-muted)] mt-1">
                 {examLabel === 'PANRE'
                   ? 'PANRE-LA check-in — maintain your certification knowledge'
-                  : 'Gold standard adaptive quiz engine'}
+                  : 'Strict blueprint-weighted exam simulation. No adaptive bias.'}
               </p>
             </div>
           </div>

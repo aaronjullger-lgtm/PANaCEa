@@ -1,12 +1,14 @@
 /**
  * QuickReferenceDrawer - Mid-session reference lookup
- * 
+ *
  * Allows students to quickly look up drugs, lab values, or calculations
  * without leaving the quiz session. Opens as bottom sheet on mobile.
+ * Deep links: Drugs/Labs → Knowledge Base; Calculators → Clinical Utilities.
  */
 
 import React, { useState } from 'react';
-import { Search, Pill, Beaker, Calculator, BookOpen, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Pill, Beaker, Calculator, BookOpen, ExternalLink } from 'lucide-react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 
 type ReferenceTab = 'drugs' | 'labs' | 'calculators' | 'guidelines';
@@ -17,9 +19,34 @@ interface QuickReferenceDrawerProps {
 }
 
 /**
+ * Deep link button to Knowledge Base or Clinical Utilities
+ */
+const DeepLinkButton: React.FC<{
+  href: string;
+  label: string;
+  onNavigate: (path: string) => void;
+  onClose: () => void;
+}> = ({ href, label, onNavigate, onClose }) => (
+  <button
+    type="button"
+    onClick={() => {
+      onNavigate(href);
+      onClose();
+    }}
+    className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[var(--color-accent)]/50 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-colors text-sm font-medium"
+  >
+    <ExternalLink className="w-4 h-4" />
+    {label}
+  </button>
+);
+
+/**
  * Mini drug search component
  */
-const DrugSearchMini: React.FC = () => {
+const DrugSearchMini: React.FC<{ onNavigate: (path: string) => void; onClose: () => void }> = ({
+  onNavigate,
+  onClose,
+}) => {
   const [query, setQuery] = useState('');
 
   return (
@@ -46,6 +73,12 @@ const DrugSearchMini: React.FC = () => {
           Results for "{query}" (feature in development)
         </div>
       )}
+      <DeepLinkButton
+        href="/study/knowledge?tab=pharmacopeia"
+        label="View full Pharmacopeia in Knowledge Base"
+        onNavigate={onNavigate}
+        onClose={onClose}
+      />
     </div>
   );
 };
@@ -53,7 +86,10 @@ const DrugSearchMini: React.FC = () => {
 /**
  * Mini lab values component
  */
-const LabValuesMini: React.FC = () => {
+const LabValuesMini: React.FC<{ onNavigate: (path: string) => void; onClose: () => void }> = ({
+  onNavigate,
+  onClose,
+}) => {
   const commonLabs = [
     { name: 'Sodium', range: '136-145 mEq/L' },
     { name: 'Potassium', range: '3.5-5.0 mEq/L' },
@@ -80,6 +116,12 @@ const LabValuesMini: React.FC = () => {
           </div>
         ))}
       </div>
+      <DeepLinkButton
+        href="/study/knowledge?tab=labs"
+        label="View full Lab Reference in Knowledge Base"
+        onNavigate={onNavigate}
+        onClose={onClose}
+      />
     </div>
   );
 };
@@ -87,7 +129,10 @@ const LabValuesMini: React.FC = () => {
 /**
  * Mini calculators component
  */
-const CalculatorsMini: React.FC = () => {
+const CalculatorsMini: React.FC<{ onNavigate: (path: string) => void; onClose: () => void }> = ({
+  onNavigate,
+  onClose,
+}) => {
   const commonCalcs = [
     { name: 'Anion Gap', formula: 'Na - (Cl + HCO3)' },
     { name: 'Corrected Ca', formula: 'Ca + 0.8(4 - Albumin)' },
@@ -112,6 +157,12 @@ const CalculatorsMini: React.FC = () => {
           </button>
         ))}
       </div>
+      <DeepLinkButton
+        href="/study/utilities?tab=calculators"
+        label="View full Calculators in Clinical Utilities"
+        onNavigate={onNavigate}
+        onClose={onClose}
+      />
     </div>
   );
 };
@@ -123,7 +174,12 @@ export const QuickReferenceDrawer: React.FC<QuickReferenceDrawerProps> = ({
   isOpen,
   onClose,
 }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ReferenceTab>('drugs');
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+  };
 
   const tabs = [
     { id: 'drugs' as const, label: 'Drugs', icon: Pill },
@@ -166,9 +222,15 @@ export const QuickReferenceDrawer: React.FC<QuickReferenceDrawerProps> = ({
 
       {/* Content */}
       <div className="min-h-[300px]">
-        {activeTab === 'drugs' && <DrugSearchMini />}
-        {activeTab === 'labs' && <LabValuesMini />}
-        {activeTab === 'calculators' && <CalculatorsMini />}
+        {activeTab === 'drugs' && (
+          <DrugSearchMini onNavigate={handleNavigate} onClose={onClose} />
+        )}
+        {activeTab === 'labs' && (
+          <LabValuesMini onNavigate={handleNavigate} onClose={onClose} />
+        )}
+        {activeTab === 'calculators' && (
+          <CalculatorsMini onNavigate={handleNavigate} onClose={onClose} />
+        )}
         {activeTab === 'guidelines' && (
           <div className="p-4 text-center text-[var(--color-text-muted)] py-12">
             Guidelines feature coming soon

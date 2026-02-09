@@ -8,6 +8,8 @@ import {
   NCCPA_2025_BLUEPRINT_PERCENT,
   getSystemAbbreviation,
   normalizeSystemName,
+  calculateSimulationTargetDistribution,
+  PANCE_SIMULATION_TO_ABBREVIATION,
 } from '../../constants/blueprint';
 
 // Interfaces moved from session.ts to be used in the service
@@ -16,10 +18,11 @@ export interface SessionQuestionRequest {
   count?: number;
   system?: string;
   conditionId?: string;
-  // Difficulty removed - all questions are now PANCE-level
   mode?: 'standard' | 'review' | 'weakness' | 'random' | 'interleaved';
   excludeQuestionIds?: string[];
   minSystems?: number;
+  /** Core PANCE Simulation: strict NCCIPA blueprint, no weak-area bias, PANCE-level difficulty only */
+  simulationStrict?: boolean;
 }
 
 export interface EnrichedQuestion {
@@ -69,7 +72,6 @@ export class SessionService {
     analytics: SessionAnalytics;
     poolStatus: { available: number; needsGeneration: boolean };
   }> {
-    // All questions are now PANCE-level - no difficulty filtering needed
     const {
       userId,
       count = 10,
@@ -78,7 +80,14 @@ export class SessionService {
       mode,
       excludeQuestionIds = [],
       minSystems = 3,
+      simulationStrict = false,
     } = params;
+
+    // Core PANCE Simulation: ignore single-system/weakness — strict blueprint only
+    const effectiveSystem = simulationStrict ? undefined : system;
+    const effectiveConditionId = simulationStrict ? undefined : conditionId;
+    const effectiveMode = simulationStrict ? 'standard' : mode;
+    const panceLevelOnly = simulationStrict;
 
     // Use UserQuestionSeen for comprehensive tracking (replaces UserQuestionHistory)
     const seenRecords = await this.prisma.userQuestionSeen.findMany({
@@ -98,62 +107,70 @@ export class SessionService {
       systemDistribution: {},
     };
 
-    // If no specific system requested, use NCCPA blueprint distribution
-    // All questions are PANCE-level - no difficulty filtering
-    if (!system && !conditionId) {
-      const systemQuotas = this.calculateNCCPAQuotas(count, minSystems);
+    // If no specific system requested, use blueprint distribution (strict simulation or standard).
+    // Task category compliance (PANCE_TASK_CATEGORY_PERCENT) can be applied when questionData.taskType exists.
+    if (!effectiveSystem && !effectiveConditionId) {
+      const systemQuotas = simulationStrict
+        ? calculateSimulationTargetDistribution(count)
+        : this.calculateNCCPAQuotas(count, minSystems);
+
+      const getAbbrev = (targetSystem: string) =>
+        simulationStrict
+          ? (PANCE_SIMULATION_TO_ABBREVIATION[targetSystem] ?? targetSystem)
+          : getSystemAbbreviation(targetSystem);
 
       for (const [targetSystem, targetCount] of Object.entries(systemQuotas)) {
-        // Map blueprint name (e.g. "Cardiovascular") to DB abbreviation (e.g. "CV")
-        const systemAbbrev = getSystemAbbreviation(targetSystem);
+        if (targetCount <= 0) continue;
+        const systemAbbrev = getAbbrev(targetSystem);
         const poolQ = await this.fetchFromPool(userId, seenIds, {
           count: targetCount,
           system: systemAbbrev,
+          panceLevelOnly,
         });
         questions.push(...poolQ.questions);
         analytics.fromPool += poolQ.questions.length;
 
-        // If not enough from pool, try seeds
         const remaining = targetCount - poolQ.questions.length;
         let seedQ: EnrichedQuestion[] = [];
-        if (remaining > 0 && mode !== 'review') {
+        if (remaining > 0 && effectiveMode !== 'review') {
           seedQ = await this.expandFromSeeds(userId, seenIds, {
             count: remaining,
             system: systemAbbrev,
+            panceLevelOnly,
           });
           questions.push(...seedQ);
           analytics.fromSeeds += seedQ.length;
         }
 
-        // If still not enough, try main questions
         const stillRemaining = targetCount - poolQ.questions.length - seedQ.length;
         if (stillRemaining > 0) {
           const mainQ = await this.fetchFromMain(userId, seenIds, {
             count: Math.min(stillRemaining, 5),
             system: systemAbbrev,
+            panceLevelOnly,
           });
           questions.push(...mainQ);
           analytics.fromMain += mainQ.length;
         }
       }
 
-      // Shuffle for true randomization (interleaving)
       this.shuffleArray(questions);
     } else {
-      // Original logic for specific system or condition
       const poolQuestions = await this.fetchFromPool(userId, seenIds, {
         count,
-        system,
-        conditionId,
+        system: effectiveSystem,
+        conditionId: effectiveConditionId,
+        panceLevelOnly,
       });
       questions.push(...poolQuestions.questions);
       analytics.fromPool = poolQuestions.questions.length;
 
-      if (questions.length < count && mode !== 'review') {
+      if (questions.length < count && effectiveMode !== 'review') {
         const seedQuestions = await this.expandFromSeeds(userId, seenIds, {
           count: count - questions.length,
-          system,
-          conditionId,
+          system: effectiveSystem,
+          conditionId: effectiveConditionId,
+          panceLevelOnly,
         });
         questions.push(...seedQuestions);
         analytics.fromSeeds = seedQuestions.length;
@@ -162,8 +179,9 @@ export class SessionService {
       if (questions.length < count) {
         const mainQuestions = await this.fetchFromMain(userId, seenIds, {
           count: count - questions.length,
-          system,
-          conditionId,
+          system: effectiveSystem,
+          conditionId: effectiveConditionId,
+          panceLevelOnly,
         });
         questions.push(...mainQuestions);
         analytics.fromMain = mainQuestions.length;
@@ -259,14 +277,17 @@ export class SessionService {
       system?: string;
       conditionId?: string;
       difficulty?: string;
+      /** Exclude easy; only medium/hard (PANCE-level) */
+      panceLevelOnly?: boolean;
     }
   ): Promise<{ questions: EnrichedQuestion[] }> {
-    const { count, system, conditionId, difficulty } = options;
+    const { count, system, conditionId, difficulty, panceLevelOnly } = options;
 
     const where: Prisma.PreGeneratedQuestionWhereInput = {};
     if (system) where.system = system;
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
+    if (panceLevelOnly) where.difficulty = { in: ['medium', 'hard'] };
 
     const poolQuestions = await this.prisma.preGeneratedQuestion.findMany({
       where,
@@ -330,14 +351,16 @@ export class SessionService {
       system?: string;
       conditionId?: string;
       difficulty?: string;
+      panceLevelOnly?: boolean;
     }
   ): Promise<EnrichedQuestion[]> {
-    const { count, system, conditionId, difficulty } = options;
+    const { count, system, conditionId, difficulty, panceLevelOnly } = options;
 
     const where: Prisma.QuestionSeedWhereInput = {};
     if (system) where.system = system;
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
+    if (panceLevelOnly) where.difficulty = { in: ['medium', 'hard'] };
 
     const seeds = await this.prisma.questionSeed.findMany({
       where,
@@ -416,14 +439,16 @@ export class SessionService {
       system?: string;
       conditionId?: string;
       difficulty?: string;
+      panceLevelOnly?: boolean;
     }
   ): Promise<EnrichedQuestion[]> {
-    const { count, system, conditionId, difficulty } = options;
+    const { count, system, conditionId, difficulty, panceLevelOnly } = options;
 
     const where: Prisma.QuestionWhereInput = {};
     if (system) where.system = system;
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
+    if (panceLevelOnly) where.difficulty = { in: ['medium', 'hard'] };
 
     const dbQuestions = await this.prisma.question.findMany({
       where,

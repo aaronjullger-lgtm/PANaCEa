@@ -6,7 +6,7 @@
  * - Tools: get_current_vitals(), reveal_lab_result(test_name)
  */
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useReducer } from 'react';
 import { MicOff, Send, Activity, Heart } from 'lucide-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
@@ -46,7 +46,12 @@ export function LiveInterface({
     'disconnected'
   );
   const [vitals, setVitals] = useState<VitalsState>({});
-  const [transcript, setTranscript] = useState<string[]>([]);
+  // Use a reducer for the transcript to avoid O(n) spread-copy on every incoming message.
+  // The reducer pushes to a mutable array and returns a new reference to trigger re-render.
+  const [transcript, appendTranscript] = useReducer(
+    (prev: string[], line: string) => { prev.push(line); return [...prev]; },
+    [] as string[]
+  );
   const [textInput, setTextInput] = useState('');
   const [loading, setLoading] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
@@ -135,7 +140,7 @@ export function LiveInterface({
         const msg = JSON.parse(event.data as string) as Record<string, unknown>;
 
         if (msg.setupComplete !== undefined) {
-          setTranscript((prev) => [...prev, '[Session ready. You can speak or type.]']);
+          appendTranscript('[Session ready. You can speak or type.]');
           return;
         }
 
@@ -146,13 +151,13 @@ export function LiveInterface({
             generationComplete?: boolean;
           };
           if (content?.interrupted) {
-            setTranscript((prev) => [...prev, '[Interrupted]']);
+            appendTranscript('[Interrupted]');
             audioQueueRef.current = [];
             return;
           }
           const parts = content.modelTurn?.parts ?? [];
           for (const part of parts) {
-            if (part.text) setTranscript((prev) => [...prev, `Patient: ${part.text}`]);
+            if (part.text) appendTranscript(`Patient: ${part.text}`);
           }
         }
 
@@ -203,7 +208,7 @@ export function LiveInterface({
         },
       })
     );
-    setTranscript((prev) => [...prev, `You: ${s}`]);
+    appendTranscript(`You: ${s}`);
     setTextInput('');
   }, [textInput]);
 

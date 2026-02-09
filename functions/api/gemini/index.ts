@@ -8,7 +8,6 @@
 
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
-import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 
 interface Env {
@@ -42,15 +41,7 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
     validated: z.infer<typeof GeminiRequestSchema>;
   };
 
-  // Validate required environment variables early (fail-fast)
-  try {
-    validateFunctionEnv(env as unknown as Record<string, unknown>, 'GEMINI');
-  } catch (error) {
-    if (error instanceof MissingEnvError) {
-      return error.toResponse();
-    }
-    throw error;
-  }
+  // GEMINI_API_KEY is validated below (with process.env fallback for local dev)
 
   // Rate limit AI requests (user ID if available, else IP)
   const identifier = getRateLimitIdentifier(request);
@@ -65,7 +56,35 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
 
   const { modelName, prompt, temperature, maxTokens, systemInstruction, cachedContent, thinkingLevel } =
     validated;
-  const apiKey = env.GEMINI_API_KEY;
+  // Use context.env first (Cloudflare); fallback to process.env for local dev (e.g. wrangler + .env)
+  const apiKey =
+    (env.GEMINI_API_KEY && String(env.GEMINI_API_KEY).trim()) ||
+    (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY?.trim()) ||
+    '';
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'functions/api/gemini/index.ts:apiKey',
+      message: 'Gemini handler apiKey check',
+      data: { hasKey: !!apiKey, keyLength: apiKey ? apiKey.length : 0, fromEnv: !!env.GEMINI_API_KEY },
+      timestamp: Date.now(),
+      hypothesisId: 'H1',
+    }),
+  }).catch(() => {});
+  // #endregion
+
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'GEMINI_API_KEY is not configured. Set it in Cloudflare Pages Environment Variables or in .dev.vars for local dev.',
+      }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
 
   try {
     // Construct Gemini API URL
@@ -130,6 +149,19 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
       }
 
       if (statusCode === 401 || statusCode === 403) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'functions/api/gemini/index.ts:401',
+            message: 'Gemini API returned 401/403',
+            data: { statusCode, keyPresent: !!apiKey },
+            timestamp: Date.now(),
+            hypothesisId: 'H1',
+          }),
+        }).catch(() => {});
+        // #endregion
         return {
           status: 500,
           error: 'API authentication failed. Please contact support.',

@@ -40,8 +40,8 @@ const TopicTrendChart: React.FC<TopicTrendChartProps> = ({ topic }) => {
       <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">
         Performance Trend: {topic}
       </h3>
-      <div className="w-full h-[300px]">
-        <ResponsiveContainer>
+      <div className="w-full min-h-[300px] h-[300px]">
+        <ResponsiveContainer width="100%" height={300} minHeight={200}>
           <LineChart
             data={chartData}
             margin={{

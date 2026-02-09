@@ -2,6 +2,12 @@
 
 Visual Semantic Anchoring for flashcards: generate mnemonic images via Adobe Firefly so cards are memorable, not just text.
 
+## Canonical FSRS flow (architecture)
+
+**The only user-facing FSRS path is the main session:** MC PANCE questions in `QuizView`. Incorrect answers are scheduled; when due, a **variant** of the question is presented in the **same** session flow via focus "Due" (Training Menu) and `/api/questions/due-siblings`. There are no separate "flashcards" in the product; "due" = variant shown as MC in the main session.
+
+**Variant-on-incorrect:** Each schedule (incorrect answer) is paired with ensuring a due variant exists. On incorrect, `/api/drills/submit-review` calls `ensureDueVariant`: if no sibling (same `conditionId`, different question id) exists in `PreGeneratedQuestion`, a variant is generated via Gemini and stored. So the user never waits for generation when starting a Due session; if they get the variant wrong again, the same logic runs and another variant can be generated. Variants are stored and reused (not one-use).
+
 ## Endpoint
 
 **POST /api/srs/generate-visual** — `functions/api/srs/generate-visual.ts`
@@ -29,7 +35,8 @@ When the user rates a card **Hard (1)** in `POST /api/srs/submit`, the response 
 
 ## Frontend display
 
-- **UI entry point:** `components/session/SrsFlashcardView.tsx` — reachable via **Study Tools → Resources → SRS Flashcards** (view `srs_flashcards`). Uses `fetchNextVariantCard()` and `submitVariantReview()` from `lib/services/srsService.ts`; on `triggerVisualRegeneration` calls `requestMnemonicImage()` and shows the image with a flip animation.
+- **Canonical:** Main session = `QuizView` (MC only). Due items are loaded via focus "Due" and `/api/questions/due-siblings` and shown as MC variants in the same view; Ghost Grader and optimistic UI are wired there.
+- **Legacy / hidden:** `SrsFlashcardView` (view `srs_flashcards`) is no longer linked from the app nav. It used **Study Tools → Resources → SRS Flashcards**; that entry point has been removed so the product has a single FSRS path (QuizView MC). The component and `/api/srs/next`, `/api/srs/submit`, `/api/srs/generate-visual` remain in code for possible future use. `SrsFlashcardView` uses `fetchNextVariantCard()` and `submitVariantReview()`; on `triggerVisualRegeneration` it would call `requestMnemonicImage()` and show the image with a flip animation.
 - **Flashcard component:** When a mnemonic image is available (from generate-visual or cached), show it on the card (e.g. front or back). Add a **Flip** animation (e.g. CSS transform rotateY or Framer Motion) so the user can flip between front text and back image.
 - **Flow:** On submit with rating 1, if `data.triggerVisualRegeneration` is true, call generate-visual with the card’s front/back and `style: "exaggerated"`, store or display the returned image, and optionally replace the card’s visual for the next review.
 

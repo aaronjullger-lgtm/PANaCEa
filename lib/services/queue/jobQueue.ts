@@ -26,7 +26,8 @@ export type JobType =
   | 'sync_operation'
   | 'ai_quality_check'
   | 'duplicate_detection'
-  | 'podcast_generation';
+  | 'podcast_generation'
+  | 'fsrs_optimization';
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -178,6 +179,22 @@ export async function scheduleQuestionGeneration(
     },
     priority: 3, // Lower priority for background generation
     scheduledFor: options.scheduledFor || getNextLowTrafficTime(),
+  });
+}
+
+/**
+ * Schedule nightly FSRS parameter optimization
+ * Runs optimizeAllUsersFSRS for users with sufficient ReviewLog (sessionType=MAIN) data
+ */
+export async function scheduleFSRSOptimization(
+  prisma: PrismaClientLike,
+  scheduledFor?: Date
+): Promise<any> {
+  return createJob(prisma, {
+    jobType: 'fsrs_optimization',
+    payload: {},
+    priority: 4,
+    scheduledFor: scheduledFor ?? getNext3AM(),
   });
 }
 

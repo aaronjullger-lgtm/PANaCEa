@@ -142,7 +142,7 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
                 }
               }}
               className={`
-                absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md
+                absolute right-3 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md
                 transition-all duration-150
                 ${
                   isEliminated

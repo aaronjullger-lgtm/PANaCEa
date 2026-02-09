@@ -3,6 +3,8 @@ import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { submitDrillReview } from '../../../lib/services/drillReviewService';
 import { scheduleConceptReview } from '../intelligence/profile';
+import { ensureDueVariant } from '../../../lib/ensureDueVariant';
+import { uuidSchema } from '../_shared/zodSchemas';
 import { z } from 'zod';
 
 // Zod schema for TelemetryData (Phase 3: Telemetry Injection)
@@ -45,13 +47,23 @@ const TelemetrySchema = z
         user_agent_short: z.string().optional(),
       })
       .optional(),
+    /** Ghost Grader: hover oscillations (A→B→A revisits) */
+    hover_oscillations: z.number().int().min(0).optional(),
+    /** Ghost Grader: vignette regressions (scroll direction changes after reveal) */
+    vignette_regressions: z.number().int().min(0).optional(),
+    /** Ghost Grader: selection drift (ms from selection to submit) */
+    selection_drift_ms: z.number().int().min(0).optional(),
+    /** Ghost Grader: mouse tremor score 0-1 */
+    tremor_score: z.number().min(0).max(1).optional(),
+    /** Trajectory metrics from micro-kinetics (distractorHovers, etc.) */
+    trajectory_metrics: z.record(z.unknown()).optional(),
   })
   .strict();
 
 // Request validation schema
 // questionId must be a PreGeneratedQuestion id (submit-review looks up via prisma.preGeneratedQuestion)
 const DrillSubmitReviewSchema = z.object({
-  questionId: z.string().uuid(),
+  questionId: uuidSchema,
   selectedAnswer: z.union([z.string(), z.number()]),
   timeSpentMs: z.number().int().min(0).max(3600000),
   timeToFirstClick: z.number().int().min(0).optional(),
@@ -120,6 +132,8 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
         conditionId: true,
         medicalContentId: true,
         system: true,
+        difficulty: true,
+        questionType: true,
       },
     });
 
@@ -151,10 +165,26 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       try {
         const conceptKey = `${question.system || 'General'}|${question.conditionId || questionId}`;
         await scheduleConceptReview(prisma, user.id, conceptKey, result.isCorrect);
-      } catch (srsErr) {
+      } catch (error_) {
         logger.warn('SRS scheduleConceptReview failed (non-fatal)', {
-          error: srsErr instanceof Error ? srsErr.message : String(srsErr),
+          error: error_ instanceof Error ? error_.message : String(error_),
         });
+      }
+      // When incorrect: ensure a due variant exists (sibling or generate+store) so Due session never waits
+      if (result.isCorrect === false) {
+        ensureDueVariant(
+          prisma,
+          {
+            id: question.id,
+            conditionId: question.conditionId,
+            system: question.system,
+            difficulty: question.difficulty ?? 'medium',
+            questionType: question.questionType ?? 'mcq',
+            questionData: question.questionData,
+          },
+          env.GEMINI_API_KEY as string | undefined,
+          { info: logger.info.bind(logger), warn: logger.warn.bind(logger) }
+        ).catch(() => {});
       }
     }
 

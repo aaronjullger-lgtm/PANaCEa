@@ -7,6 +7,8 @@ export { useDebouncedSearch } from './useDebouncedSearch';
 export { useRecentConditions } from './useRecentConditions';
 export { useConditionBookmarks } from './useConditionBookmarks';
 export { useDDxIntelligence } from './useDDxIntelligence';
+export { useConditionDetail } from './useConditionDetail';
+export { useSmartCondition } from './useSmartCondition';
 
 // Re-export types
 export type {
@@ -16,3 +18,9 @@ export type {
   RelatedCondition,
   DDxIntelligenceState,
 } from './useDDxIntelligence';
+export type {
+  ConditionSummary,
+  ConditionDetails,
+  ConfusedWithItem,
+  UseSmartConditionResult,
+} from './useSmartCondition';

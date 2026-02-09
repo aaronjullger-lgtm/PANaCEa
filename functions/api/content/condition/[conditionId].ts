@@ -2,7 +2,8 @@
  * Condition Content API
  * GET /api/content/condition/{conditionId}
  *
- * Public endpoint for fetching medical condition content by ID
+ * Public endpoint for fetching medical condition content by ID.
+ * Returns full content + relations for SmartConditionView (Triage, Recognize, Order, Manage).
  */
 
 import { z } from 'zod';
@@ -33,6 +34,44 @@ export const onRequestGet = publicEndpoint(ConditionContentSchema, async (contex
         conditionId,
         status: 'published',
       },
+      include: {
+        DrugConditionLink: {
+          include: { Drug: { select: { id: true, genericName: true, brandName: true, drugClass: true } } },
+        },
+        FindingConditionLink: {
+          include: {
+            PhysicalExamFinding: {
+              select: { id: true, name: true, displayName: true, category: true, system: true },
+            },
+          },
+        },
+        LabConditionLink: {
+          include: {
+            LabTest: { select: { id: true, name: true, displayName: true, category: true } },
+          },
+        },
+        ImagingConditionLink: {
+          include: {
+            ImagingStudy: {
+              select: { id: true, name: true, displayName: true, modality: true, bodyRegion: true },
+            },
+          },
+        },
+        ECGConditionLink: {
+          include: {
+            ECGPattern: { select: { id: true, name: true, displayName: true, category: true } },
+          },
+        },
+        TreatmentConditionLink: {
+          include: {
+            Treatment: { select: { id: true, name: true, displayName: true, category: true } },
+          },
+        },
+        other_MedicalContent: {
+          where: { status: 'published' },
+          select: { id: true, conditionId: true, condition: true, system: true },
+        },
+      },
     });
 
     if (!content) {
@@ -57,10 +96,12 @@ export const onRequestGet = publicEndpoint(ConditionContentSchema, async (contex
 
     return {
       data: {
+        id: content.id,
         conditionId: content.conditionId,
         condition: content.condition,
         system: content.system,
         subcategory: content.subcategory,
+        parent_category: content.parent_category,
         overview: content.overview,
         etiology: content.etiology,
         pathophysiology: content.pathophysiology,
@@ -73,6 +114,33 @@ export const onRequestGet = publicEndpoint(ConditionContentSchema, async (contex
         differentialDiagnosis: content.differentialDiagnosis,
         riskFactors: content.riskFactors,
         complications: content.complications,
+        // SmartConditionView / Layered Disclosure fields
+        pance_yield: content.pance_yield,
+        synonyms: content.synonyms,
+        buzzwords: content.buzzwords,
+        classic_triad: content.classic_triad,
+        clinical_pearls: content.clinical_pearls,
+        differentials: content.differentials,
+        mnemonic: content.mnemonic,
+        relatedSystems: content.relatedSystems,
+        best_initial_test: content.best_initial_test,
+        gold_standard_dx: content.gold_standard_dx,
+        first_line_rx: content.first_line_rx,
+        age_demographic: content.age_demographic,
+        gender_bias: content.gender_bias,
+        classic_patient: content.classic_patient,
+        disposition: content.disposition,
+        patient_education: content.patient_education,
+        prevention: content.prevention,
+        content: content.content,
+        // Relations
+        DrugConditionLink: content.DrugConditionLink,
+        FindingConditionLink: content.FindingConditionLink,
+        LabConditionLink: content.LabConditionLink,
+        ImagingConditionLink: content.ImagingConditionLink,
+        ECGConditionLink: content.ECGConditionLink,
+        TreatmentConditionLink: content.TreatmentConditionLink,
+        other_MedicalContent: content.other_MedicalContent,
       },
     };
   } catch (error) {

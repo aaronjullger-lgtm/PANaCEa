@@ -107,15 +107,18 @@ const MetricCard: React.FC<{
       <span className="text-2xl font-semibold text-[var(--color-text-primary)]">{value}</span>
       {trend && (
         <span
-          className={`text-sm ${
+          className={`text-sm flex items-center gap-1 ${
             trend === 'up'
               ? 'text-[var(--color-data-pass)]'
               : trend === 'down'
                 ? 'text-[var(--color-data-fail)]'
-                : 'text-[var(--color-text-tertiary)]'
+                : 'text-[var(--color-text-muted)]'
           }`}
         >
           {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'}
+          {trend === 'neutral' && (
+            <span className="text-xs font-normal">No change</span>
+          )}
         </span>
       )}
     </div>

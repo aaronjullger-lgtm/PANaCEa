@@ -173,7 +173,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
                 </button>
                 <button
                   onClick={handleCustomStart}
-                  className="px-6 py-2 rounded-md font-semibold text-sm bg-action-primary text-white hover:opacity-90 transition-opacity"
+                  className="px-6 py-2 rounded-md font-semibold text-sm bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity"
                 >
                   Start Session
                 </button>

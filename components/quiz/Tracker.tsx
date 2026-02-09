@@ -161,6 +161,8 @@ interface OptionHoverTrackerProps {
   optionLabel: string; // 'A' | 'B' | 'C' | 'D'
   children: ReactNode;
   className?: string;
+  /** Optional: report hover enter for micro-kinetics (Ghost Grader oscillation) */
+  onHoverEnter?: (optionLabel: string) => void;
 }
 
 export function OptionHoverTracker({
@@ -168,6 +170,7 @@ export function OptionHoverTracker({
   optionLabel,
   children,
   className,
+  onHoverEnter,
 }: OptionHoverTrackerProps) {
   const tracker = useBehavioralTracker();
   const enterTimeRef = useRef<number | null>(null);
@@ -175,7 +178,8 @@ export function OptionHoverTracker({
   const handleMouseEnter = useCallback(() => {
     enterTimeRef.current = Date.now();
     tracker.recordFirstInteraction();
-  }, [tracker]);
+    onHoverEnter?.(optionLabel);
+  }, [tracker, optionLabel, onHoverEnter]);
 
   const handleMouseLeave = useCallback(() => {
     if (enterTimeRef.current !== null) {
@@ -204,7 +208,16 @@ export function OptionHoverTracker({
 export function behavioralPayloadToTelemetryData(
   payload: BehavioralPayload,
   answer_changes?: number,
-  hint_viewed = false
+  hint_viewed = false,
+  microKinetics?: {
+    oscillations: number;
+    vignetteRegressions: number;
+    selectionDriftMs: number | null;
+    tremorScore: number;
+    cursorEntropy?: number;
+  },
+  /** Eliminations per second (strategy speed). */
+  eliminationVelocity?: number
 ): TelemetryData {
   return {
     duration_ms: payload.duration_ms,
@@ -230,5 +243,13 @@ export function behavioralPayloadToTelemetryData(
       peakDistractorHover: null,
       distractorHoverRatio: 0,
     },
+    ...(microKinetics && {
+      hover_oscillations: microKinetics.oscillations,
+      vignette_regressions: microKinetics.vignetteRegressions,
+      selection_drift_ms: microKinetics.selectionDriftMs ?? undefined,
+      tremor_score: microKinetics.tremorScore,
+      cursor_entropy: microKinetics.cursorEntropy,
+    }),
+    ...(eliminationVelocity !== undefined && { elimination_velocity: eliminationVelocity }),
   };
 }

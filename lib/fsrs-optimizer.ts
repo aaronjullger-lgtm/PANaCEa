@@ -503,9 +503,10 @@ export function lbfgsOptimize(
 
 /**
  * Shape of Prisma ReviewLog for optimization (algorithm-facing fields)
+ * grade = FSRS rating (1-4: Again/Hard/Good/Easy)
  */
 export interface ReviewLogRow {
-  rating: number;
+  grade: number;
   state: number;
   stability: number;
   difficulty: number;
@@ -526,9 +527,9 @@ export function convertReviewLogRows(rows: ReviewLogRow[]): OptimizationReview[]
     elapsedDays: r.elapsedDays ?? 0,
     stability: r.stability,
     difficulty: r.difficulty,
-    rating: r.rating as Rating,
+    rating: r.grade as Rating,
     state: r.state as FSRSState,
-    success: r.rating >= 2 || r.wasCorrect,
+    success: r.grade >= 2 || r.wasCorrect,
     system: r.system ?? undefined,
   }));
 }

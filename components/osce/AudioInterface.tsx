@@ -42,6 +42,8 @@ export function AudioInterface({
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const transcriptRef = useRef<string[]>([]);
+  /** Guard against setState on unmounted component */
+  const mountedRef = useRef(true);
 
   const disconnect = useCallback(() => {
     if (wsRef.current) {
@@ -56,14 +58,21 @@ export function AudioInterface({
       audioContextRef.current.close().catch(() => {});
       audioContextRef.current = null;
     }
-    setStatus('idle');
+    // Only update React state if still mounted
+    if (mountedRef.current) {
+      setStatus('idle');
+    }
     if (transcriptRef.current.length > 0) {
       onSessionClose?.(transcriptRef.current);
     }
   }, [onSessionClose]);
 
   useEffect(() => {
-    return () => disconnect();
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      disconnect();
+    };
   }, [disconnect]);
 
   const sendBargeIn = useCallback(() => {
@@ -99,6 +108,7 @@ export function AudioInterface({
       };
 
       ws.onmessage = (event) => {
+        if (!mountedRef.current) return;
         try {
           const msg = JSON.parse(event.data as string);
           if (msg.type === 'transcript') {
@@ -110,10 +120,13 @@ export function AudioInterface({
           if (msg.type === 'tts_end') {
             setIsAiSpeaking(false);
           }
+          // Fix: Only set isAiSpeaking=true for 'audio' chunks if we haven't
+          // just received a tts_end (which means this is a stale flush after barge-in).
+          // A proper tts_start always precedes a real audio stream.
+          // Removed the unconditional setIsAiSpeaking(true) on 'audio' to prevent
+          // the tts_end→audio race where a stale chunk re-activates the speaking indicator.
           if (msg.type === 'audio') {
-            setIsAiSpeaking(true);
-            // Play received audio chunk (backend would send base64 PCM)
-            // For now, audio playback would be handled by the backend or a separate channel
+            // Audio playback handled by backend or separate channel
           }
         } catch {
           // Binary or non-JSON message
@@ -121,13 +134,14 @@ export function AudioInterface({
       };
 
       ws.onerror = () => {
+        if (!mountedRef.current) return;
         setStatus('error');
         setErrorMessage('WebSocket error');
       };
 
       ws.onclose = (e) => {
         disconnect();
-        if (e.code !== 1000) {
+        if (mountedRef.current && e.code !== 1000) {
           setErrorMessage(e.reason || 'Connection closed');
         }
       };
@@ -230,8 +244,25 @@ export function AudioInterface({
 }
 
 /**
- * Capture audio via ScriptProcessorNode (fallback when AudioWorklet not available)
- * or AudioWorklet. Streams chunks to WebSocket.
+ * Encode a Uint8Array to base64 without blowing the call stack.
+ * The old `btoa(String.fromCharCode(...bytes))` spreads the entire buffer as
+ * function arguments (~8KB per chunk), causing GC pressure and potential
+ * stack overflow on large buffers. This chunked version is O(n) with no spread.
+ */
+function uint8ToBase64(bytes: Uint8Array): string {
+  const CHUNK = 0x8000; // 32KB chunks — safe for String.fromCharCode.apply
+  const parts: string[] = [];
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    parts.push(String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK) as unknown as number[]));
+  }
+  return btoa(parts.join(''));
+}
+
+/**
+ * Capture audio via ScriptProcessorNode (fallback when AudioWorklet not available).
+ * Streams PCM chunks to WebSocket as base64 JSON.
+ *
+ * TODO: Migrate to AudioWorkletProcessor for off-main-thread processing.
  */
 function startCapture(
   audioContext: AudioContext,
@@ -240,8 +271,8 @@ function startCapture(
 ): void {
   const source = audioContext.createMediaStreamSource(stream);
 
-  // Use ScriptProcessorNode for broad compatibility (deprecated but widely supported)
-  // In production, prefer AudioWorklet with a custom processor
+  // ScriptProcessorNode runs on main thread (deprecated but broadly supported).
+  // AudioWorklet is preferred for production — see TODO above.
   const bufferSize = 4096;
   const processor = audioContext.createScriptProcessor(bufferSize, CHANNELS, CHANNELS);
 
@@ -255,8 +286,8 @@ function startCapture(
       pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
     }
 
-    // Send as base64 for JSON transport
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(pcm.buffer)));
+    // Chunked base64 encoding — avoids the stack-overflow-prone spread operator
+    const base64 = uint8ToBase64(new Uint8Array(pcm.buffer));
     ws.send(JSON.stringify({ type: 'audio', data: base64 }));
   };
 

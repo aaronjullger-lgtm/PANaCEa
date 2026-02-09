@@ -28,7 +28,7 @@ interface ExamPanelProps {
   onClose?: () => void;
 }
 
-export const ExamPanel: React.FC<ExamPanelProps> = ({
+export const ExamPanel: React.FC<ExamPanelProps> = React.memo(({
   onExamPerformed,
   completedExams,
   suggestedRegions = [],
@@ -335,6 +335,8 @@ export const ExamPanel: React.FC<ExamPanelProps> = ({
       </div>
     </div>
   );
-};
+});
+
+ExamPanel.displayName = 'ExamPanel';
 
 export default ExamPanel;

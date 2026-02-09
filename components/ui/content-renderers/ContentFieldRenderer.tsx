@@ -1,6 +1,9 @@
-import React from 'react';
-import { MarkdownRenderer } from './MarkdownRenderer';
+import React, { lazy, Suspense } from 'react';
 import { BulletListRenderer } from './BulletListRenderer';
+
+const MarkdownRenderer = lazy(() =>
+  import('./MarkdownRenderer').then((m) => ({ default: m.MarkdownRenderer }))
+);
 import { KeyValueRenderer } from './KeyValueRenderer';
 import {
   getFieldRenderType,
@@ -43,7 +46,19 @@ export const ContentFieldRenderer: React.FC<ContentFieldRendererProps> = ({
       return null;
 
     case 'markdown':
-      return <MarkdownRenderer content={value as string} className={className} />;
+      return (
+        <Suspense
+          fallback={
+            <div className={`prose prose-sm dark:prose-invert max-w-none animate-pulse ${className}`}>
+              <div className="h-4 bg-slate-700/50 rounded w-full mb-2" />
+              <div className="h-4 bg-slate-700/50 rounded w-5/6 mb-2" />
+              <div className="h-4 bg-slate-700/50 rounded w-4/6" />
+            </div>
+          }
+        >
+          <MarkdownRenderer content={value as string} className={className} />
+        </Suspense>
+      );
 
     case 'bullet-list':
       return (

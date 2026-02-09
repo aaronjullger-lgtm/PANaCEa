@@ -9,7 +9,7 @@
  * - Keyboard navigation support
  */
 
-import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import React, { Suspense, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
@@ -35,7 +35,9 @@ import {
 import { LibrarySidebar } from './LibrarySidebar';
 import { LibraryBreadcrumb } from './LibraryBreadcrumb';
 import { EnhancedConditionCard } from './EnhancedConditionCard';
+import { SmartConditionView } from '@/config/lazyComponents';
 import { LoadingOverlay } from '@/components/ui/layouts';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
@@ -680,9 +682,24 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                 </button>
               </div>
 
-              {/* Panel Content - Embedded ConditionMaster without modal wrapper */}
-              <div className="flex-1 overflow-y-auto">
-                <ConditionMasterEmbedded content={selected} />
+              {/* Panel Content - SmartConditionView (Triage, Recognize, Order, Manage) */}
+              <div className="flex-1 overflow-hidden flex flex-col">
+                <Suspense
+                  fallback={
+                    <div className="p-6 space-y-4">
+                      <Skeleton className="h-10 w-3/4" />
+                      <Skeleton className="h-6 w-1/2" />
+                      <Skeleton className="h-32 w-full" />
+                      <Skeleton className="h-64 w-full" />
+                    </div>
+                  }
+                >
+                  <SmartConditionView
+                    conditionId={selected.conditionId ?? selected.id ?? ''}
+                    onClose={() => setSelected(null)}
+                    embedded
+                  />
+                </Suspense>
               </div>
             </motion.div>
           </>

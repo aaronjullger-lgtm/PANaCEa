@@ -57,6 +57,45 @@ export const NCCPA_2025_BLUEPRINT_PERCENT: Readonly<Record<string, number>> = {
 } as const;
 
 /**
+ * NCCIPA PANCE Content Blueprint effective January 2025 — for Core PANCE Simulation only.
+ * Strict, non-adaptive exam simulation: use these exact weights; do not bias by user stats.
+ * Sum = 100 (with General 1% for uncategorized).
+ */
+export const PANCE_SIMULATION_JAN2025_PERCENT: Readonly<Record<string, number>> = {
+  Cardiovascular: 11,
+  Pulmonary: 9,
+  'Gastrointestinal/Nutrition': 8,
+  Musculoskeletal: 8,
+  'Infectious Diseases': 7,
+  Neurologic: 7,
+  'Psychiatry/Behavioral': 7,
+  Reproductive: 7,
+  Endocrine: 6,
+  EENT: 6,
+  'Professional Practice': 6,
+  Hematologic: 5,
+  Renal: 5,
+  Dermatologic: 4,
+  Genitourinary: 4,
+  General: 1,
+} as const;
+
+/**
+ * PANCE Task Category distribution (NCCIPA Blueprint) — for simulation task compliance when question task is available.
+ * Formulating Most Likely Diagnosis: 18%, History & PE: 16%, Clinical Intervention: 16%, etc.
+ */
+export const PANCE_TASK_CATEGORY_PERCENT: Readonly<Record<string, number>> = {
+  diagnosis: 18, // Formulating Most Likely Diagnosis
+  history_physical: 16, // History Taking & Physical Exam
+  clinical_intervention: 16, // Clinical Intervention
+  pharmaceutical: 15, // Pharmaceutical Therapeutics
+  health_maintenance: 11, // Health Maintenance
+  diagnostic_lab: 10, // Diagnostic & Lab Studies
+  basic_science: 8, // Basic Science
+  professional_practice: 6, // Professional Practice
+} as const;
+
+/**
  * Maps blueprint canonical names to DB/system abbreviations.
  * Used when querying PreGeneratedQuestion, Question, etc. which store system as "CV", "DERM", etc.
  */
@@ -76,6 +115,28 @@ export const BLUEPRINT_TO_ABBREVIATION: Readonly<Record<string, string>> = {
   'Infectious Disease': 'ID',
   Nephrology: 'RENAL',
   'Emergency Medicine': 'EM',
+  General: 'General',
+};
+
+/**
+ * Simulation Jan 2025 category names → DB abbreviations (for strict Core PANCE Simulation).
+ */
+export const PANCE_SIMULATION_TO_ABBREVIATION: Readonly<Record<string, string>> = {
+  Cardiovascular: 'CV',
+  Pulmonary: 'PULM',
+  'Gastrointestinal/Nutrition': 'GI',
+  Musculoskeletal: 'MSK',
+  'Infectious Diseases': 'ID',
+  Neurologic: 'NEURO',
+  'Psychiatry/Behavioral': 'PSYCH',
+  Reproductive: 'REPRO',
+  Endocrine: 'ENDO',
+  EENT: 'HEENT',
+  'Professional Practice': 'PRO',
+  Hematologic: 'HEME',
+  Renal: 'RENAL',
+  Dermatologic: 'DERM',
+  Genitourinary: 'GU',
   General: 'General',
 };
 
@@ -293,6 +354,38 @@ export function calculateTargetDistribution(sessionSize: number = 20): Record<st
 }
 
 /**
+ * Strict Core PANCE Simulation: exact NCCIPA Jan 2025 category distribution.
+ * No shuffle, no adaptive bias — use for exam-like sessions only.
+ *
+ * @param sessionSize - Number of questions in the session
+ * @returns Map of simulation category names to target question counts
+ */
+export function calculateSimulationTargetDistribution(
+  sessionSize: number = 20
+): Record<string, number> {
+  const distribution: Record<string, number> = {};
+  let total = 0;
+  const percentSum = Object.values(PANCE_SIMULATION_JAN2025_PERCENT).reduce((a, b) => a + b, 0);
+
+  for (const [system, pct] of Object.entries(PANCE_SIMULATION_JAN2025_PERCENT)) {
+    if (system === 'General' && pct <= 1) continue; // Prefer real systems first
+    const target = Math.round((sessionSize * pct) / percentSum);
+    if (target > 0) {
+      distribution[system] = target;
+      total += target;
+    }
+  }
+
+  if (total !== sessionSize) {
+    const diff = sessionSize - total;
+    const current = distribution['Cardiovascular'] ?? 0;
+    distribution['Cardiovascular'] = Math.max(0, current + diff);
+  }
+
+  return distribution;
+}
+
+/**
  * Validate that a question distribution meets blueprint requirements.
  * Returns validation result with any issues found.
  *
@@ -367,6 +460,10 @@ validateBlueprintWeights();
 export default {
   NCCPA_2025_BLUEPRINT,
   NCCPA_2025_BLUEPRINT_PERCENT,
+  PANCE_SIMULATION_JAN2025_PERCENT,
+  PANCE_TASK_CATEGORY_PERCENT,
+  PANCE_SIMULATION_TO_ABBREVIATION,
+  calculateSimulationTargetDistribution,
   SYSTEM_ALIASES,
   MIN_SYSTEMS_PER_BLOCK,
   BLUEPRINT_TOLERANCE,

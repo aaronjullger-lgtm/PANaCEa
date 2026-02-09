@@ -212,6 +212,21 @@ async function fetchFromPool(
 ): Promise<{ questions: Question[]; poolStatus: PoolStatus }> {
   // Validate token is available
   if (!token) {
+    // #region agent log
+    if (typeof fetch !== 'undefined') {
+      fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'questionService.ts:fetchFromPool',
+          message: 'No auth token provided to fetchFromPool',
+          data: { count },
+          timestamp: Date.now(),
+          hypothesisId: 'H5',
+        }),
+      }).catch(() => {});
+    }
+    // #endregion
     console.warn('[QuestionService] No auth token provided to fetchFromPool');
     // Return empty result instead of throwing - allows graceful fallback to Gemini
     return {

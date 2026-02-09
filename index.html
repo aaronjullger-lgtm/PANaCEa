@@ -499,43 +499,19 @@
           0 6px 18px rgba(0, 0, 0, 0.35);
       }
 
-      /* Premium Glass Widget - for stat cards with enhanced depth */
+      /* Premium Glass Widget - uses theme tokens so cards always match page (no light/dark leak) */
       .widget-premium-glass {
-        background: rgba(255, 255, 255, 0.65);
+        background: var(--color-bg-secondary);
         backdrop-filter: blur(28px);
         -webkit-backdrop-filter: blur(28px);
-        border-top: 1px solid rgba(255, 255, 255, 0.85);
-        border-left: 1px solid rgba(255, 255, 255, 0.85);
-        border-bottom: 1px solid rgba(148, 163, 184, 0.55);
-        border-right: 1px solid rgba(148, 163, 184, 0.55);
-        box-shadow:
-          0 8px 32px rgba(148, 163, 184, 0.22),
-          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        border: 1px solid var(--color-border);
+        box-shadow: 0 4px 24px var(--color-shadow-soft, rgba(0, 0, 0, 0.08));
         border-radius: 16px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .widget-premium-glass:hover {
         transform: translateY(-2px);
-        box-shadow:
-          0 12px 40px rgba(148, 163, 184, 0.28),
-          inset 0 1px 0 rgba(255, 255, 255, 0.35);
-      }
-      .dark .widget-premium-glass {
-        background: rgba(30, 41, 59, 0.55);
-        backdrop-filter: blur(28px);
-        -webkit-backdrop-filter: blur(28px);
-        border-top: 1px solid rgba(255, 255, 255, 0.12);
-        border-left: 1px solid rgba(255, 255, 255, 0.12);
-        border-bottom: 1px solid rgba(71, 85, 105, 0.4);
-        border-right: 1px solid rgba(71, 85, 105, 0.4);
-        box-shadow:
-          0 8px 32px rgba(0, 0, 0, 0.45),
-          inset 0 1px 0 rgba(255, 255, 255, 0.08);
-      }
-      .dark .widget-premium-glass:hover {
-        box-shadow:
-          0 12px 40px rgba(0, 0, 0, 0.55),
-          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px var(--color-shadow-soft, rgba(0, 0, 0, 0.12));
       }
 
       /* Noise texture overlay for premium glass effect - removes "plastic" look */

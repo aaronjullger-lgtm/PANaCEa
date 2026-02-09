@@ -8,7 +8,8 @@
 import { prisma } from '../../lib/prisma';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { v4 as uuidv4 } from 'uuid';
-import { supabaseAdmin, getStorageUrl } from '../../lib/supabase';
+import { supabaseAdmin } from '../../lib/supabase/admin';
+import { getStorageUrl } from '../../lib/supabase/client';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const RESOURCE_BUCKET = 'educational-resources';

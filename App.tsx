@@ -54,6 +54,7 @@ import {
   SimulationPage,
   CommandCenterPage,
   ClinicalReferenceLibrary,
+  KnowledgeBaseHub,
   MyLibraryPage,
   TutorChatPage,
   StudyCompanionPage,
@@ -61,6 +62,7 @@ import {
   CustomStudyMode,
   ClinicalProfileDashboard,
   AdminDashboard,
+  RefineryPage,
   MyPearlsPanel,
   ClinicalEyePage,
   VisualizerPage,
@@ -79,6 +81,7 @@ import { LandingPage } from './pages/LandingPage';
 import { LoadingProgress } from './components/loading/LoadingProgress';
 import { getQuestionBatch } from './services/questionService';
 import { initializeSession, fetchSessionQuestions, prefetchQuestions } from './services/core';
+import { inferTaskType } from './lib/taskTypes';
 import { useUserStats } from './hooks/useUserStats';
 import { preloadData } from './lib/utils/dataLoader';
 import { useAccessibleTransition } from './hooks/useReducedMotion';
@@ -188,6 +191,8 @@ const App: React.FC = () => {
     ];
     
     const isKnownPath = knownPaths.includes(path) || 
+                        path.startsWith('/study/knowledge') ||
+                        path.startsWith('/study/utilities') ||
                         path.startsWith('/study/reference') || 
                         path.startsWith('/study/toolkit');
     
@@ -198,15 +203,25 @@ const App: React.FC = () => {
     
     setShowNotFound(false);
     
+    // Redirects for legacy paths (bookmarks/links)
+    if (path.startsWith('/study/reference')) {
+      navigate('/study/knowledge', { replace: true });
+      return;
+    }
+    if (path.startsWith('/study/toolkit')) {
+      navigate('/study/utilities', { replace: true });
+      return;
+    }
+    
     if (path === '/' || path === '') {
       setView('command_center');
     } else if (path === '/menu') {
       setView('menu');
     } else if (path === '/study' || path === '/study/') {
       setView('command_center');
-    } else if (path.startsWith('/study/reference')) {
+    } else if (path.startsWith('/study/knowledge')) {
       setView('reference_library');
-    } else if (path.startsWith('/study/toolkit')) {
+    } else if (path.startsWith('/study/utilities')) {
       setView('toolkit');
     }
   }, [location.pathname]);
@@ -436,12 +451,27 @@ const App: React.FC = () => {
   const addMissedQuestion = useCallback(
     (question: QuizQuestion) => {
       const now = new Date().toISOString().split('T')[0];
+      const taskType = question.taskType ?? inferTaskType(question.question ?? '');
       const base: QuizQuestion = {
         ...question,
+        taskType,
         repetitionLevel: question.repetitionLevel ?? 1,
         nextReviewDate: question.nextReviewDate ?? now,
       };
       setMissedQuestions((prev) => [...prev, base]);
+    },
+    [setMissedQuestions]
+  );
+
+  /** Remove a concept from the Due queue when user answers a sibling correctly (proves understanding). */
+  const removeDueConcept = useCallback(
+    (conditionId: string, taskType: string | null) => {
+      if (!conditionId) return;
+      setMissedQuestions((prev) =>
+        prev.filter(
+          (q) => !(q.conditionId === conditionId && (q.taskType ?? null) === taskType)
+        )
+      );
     },
     [setMissedQuestions]
   );
@@ -532,8 +562,64 @@ const App: React.FC = () => {
             setError('No questions due for review right now. Check back later or start a general session.');
             return;
           }
-          setQuestionQueue(due);
-          setView('quiz');
+          const token = await getToken();
+          try {
+            const dueItems = due.map((q) => ({
+              conditionId: q.conditionId ?? '',
+              taskType: q.taskType ?? null,
+              originalQuestionId: q.id ?? (q as { questionId?: string }).questionId ?? '',
+            })).filter((d) => d.conditionId);
+            if (dueItems.length === 0) {
+              setError('Due review requires concept data for each item. No variants can be loaded.');
+              setQuestionQueue([]);
+              return;
+            }
+            const res = token
+              ? await fetch('/api/questions/due-siblings', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ dueItems }),
+                })
+              : null;
+            const data = res?.ok ? await res.json().catch(() => null) : null;
+            const results = data?.data?.results as Array<{
+              question: { id: string; question: string; vignette?: string; options: string[]; correctAnswerIndex: number; rationale: string; system: string; conditionId?: string; condition?: string } | null;
+              dueConceptKey: { conditionId: string; taskType: string | null };
+            }> | undefined;
+            // Variant-only: only add questions when we have a sibling/variant (never the original) to test retention, not recognition.
+            const queue: QuizQuestion[] = (results ?? [])
+              .filter((r): r is typeof r & { question: NonNullable<typeof r.question> } => r.question != null)
+              .map((r) => {
+                const key = r.dueConceptKey;
+                const q = r.question;
+                return {
+                  id: q.id,
+                  question: q.vignette ? `${q.vignette}\n\n${q.question}` : q.question,
+                  options: q.options,
+                  correctAnswerIndex: q.correctAnswerIndex,
+                  rationale: q.rationale,
+                  system: q.system,
+                  conditionId: key.conditionId,
+                  condition: q.condition ?? '',
+                  topic: q.system,
+                  dueConceptKey: key,
+                } as QuizQuestion;
+              });
+            if (queue.length === 0) {
+              setError('No variants available for your due concepts right now. Try a general session or come back later.');
+              setQuestionQueue([]);
+              return;
+            }
+            setQuestionQueue(queue);
+            setView('quiz');
+          } catch {
+            setError('Could not load due variants. Try again or start a general session.');
+            setQuestionQueue([]);
+            return;
+          }
         } else if (settings.focus === 'reviewFlagged') {
           if (flaggedQuestions.length === 0) {
             setError('You have no flagged questions. Flag questions during a session to review them here.');
@@ -845,6 +931,14 @@ const App: React.FC = () => {
               }
             />
             <Route
+              path="/admin/refinery"
+              element={
+                <Suspense fallback={<Loader message="Loading refinery…" />}>
+                  <RefineryPage onClose={() => navigate('/')} />
+                </Suspense>
+              }
+            />
+            <Route
               path="/clinical-eye"
               element={
                 <Suspense fallback={<Loader message="Loading Clinical Eye…" />}>
@@ -894,11 +988,11 @@ const App: React.FC = () => {
                       >
                         Skip to main content
                       </a>
-                      {/* Header - theme-aware for light/dark contrast */}
-                      <header 
-                    className="sticky top-0 z-40 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm backdrop-blur-md bg-opacity-95 dark:bg-opacity-95"
-                    style={{ height: 'var(--header-height, 56px)' }}
-                  >
+                      {/* Header - fixed height so NavRail (sidebar) starts below it; z-50 above rail */}
+                      <header
+                        className="sticky top-0 z-50 h-16 shrink-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm backdrop-blur-md bg-opacity-95 dark:bg-opacity-95"
+                        style={{ height: 'var(--header-height, 4rem)' }}
+                      >
                     <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center">
                       <AppBrand
                         size="sm"
@@ -976,9 +1070,9 @@ const App: React.FC = () => {
                         viewName="reference_library"
                         onRetry={() => setView('reference_library')}
                       >
-                        <Suspense fallback={<Loader message="Loading reference library…" />}>
-                          <ClinicalReferenceLibrary
-                          onExit={() => {
+                        <Suspense fallback={<Loader message="Loading knowledge base…" />}>
+                          <KnowledgeBaseHub
+                          onClose={() => {
                             setView('command_center');
                             navigate('/study');
                           }}
@@ -1019,7 +1113,7 @@ const App: React.FC = () => {
                       className={`min-h-screen min-w-0 max-w-full overflow-x-hidden transition-all duration-300 ${view === 'command_center' || view === 'menu' ? '' : ''}`}
                       style={{ 
                         marginLeft: 'var(--nav-rail-width, 56px)',
-                        paddingTop: '1rem',
+                        paddingTop: 'var(--header-height, 4rem)',
                         paddingBottom: '6rem',
                       }}
                     >
@@ -1089,7 +1183,7 @@ const App: React.FC = () => {
                                 onNavigateToCustomStudy={handleNavigateToCustomStudy}
                                 onNavigateToTutorChat={() => setView('tutor_chat')}
                                 onNavigateToStudyCompanion={() => setView('study_companion')}
-                                onNavigateToSrsFlashcards={() => setView('srs_flashcards')}
+                                // Canonical FSRS flow is main session (QuizView) MC only; due = variants in same session. SRS Flashcards view hidden.
                                 onNavigateToPearlDeck={() => setView('pearl_deck')}
                                 growthAreas={growthAreas}
                                 examLabel={examLabel ?? 'PANCE'}
@@ -1167,6 +1261,7 @@ const App: React.FC = () => {
                                   addPerformanceRecord={addPerformanceRecord}
                                   addMissedQuestion={addMissedQuestion}
                                   updateReviewQuestion={updateReviewQuestion}
+                                  removeDueConcept={removeDueConcept}
                                   updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
                                   setIsLoading={setIsLoading}
                                   setError={setError}
@@ -1738,7 +1833,7 @@ const App: React.FC = () => {
                                   onNavigateToReference={() => navigate(ROUTES.STUDY_REFERENCE)}
                                   onNavigateToMyLibrary={() => setView('my_library')}
                                   onNavigateToStudyCompanion={() => setView('study_companion')}
-                                  onNavigateToSrsFlashcards={() => setView('srs_flashcards')}
+                                  // Canonical FSRS flow is main session (QuizView) MC only; due = variants in same session. SRS Flashcards view hidden.
                                   onBack={() => setView('command_center')}
                                 />
                               </Suspense>

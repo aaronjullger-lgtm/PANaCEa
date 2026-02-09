@@ -16,6 +16,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Shield,
@@ -30,9 +31,11 @@ import {
   Sparkles,
   Loader2,
   RefreshCw,
+  BookOpen,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { canManageRoles, getRoleDisplayName, type UserRole } from '../../lib/auth/rbac';
+import { ROUTES } from '../../config/routes';
 import { FlaggedQuestionsDashboard } from '../../components/admin/FlaggedQuestionsDashboard';
 import { QuestionPerformanceDashboard } from '../../components/admin/QuestionPerformanceDashboard';
 import QuestionCurationPanel from '../../components/admin/QuestionCurationPanel';
@@ -50,6 +53,7 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ onClose }: AdminDashboardProps) {
+  const navigate = useNavigate();
   const { user, isSignedIn, getToken } = useAuth();
   const userId = user?.id;
   const [userRole, setUserRole] = useState<UserRole>('user');
@@ -415,6 +419,22 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                       </div>
                     </div>
                   </a>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate(ROUTES.ADMIN_REFINERY)}
+                    className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors text-left"
+                  >
+                    <BookOpen className="w-5 h-5 text-amber-500" />
+                    <div>
+                      <div className="font-medium text-[var(--color-text-primary)]">
+                        Content Refinery
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)]">
+                        Triage drafts, media, and questions
+                      </div>
+                    </div>
+                  </button>
 
                   <button className="flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[var(--color-bg-tertiary)]/80 transition-colors text-left">
                     <Users className="w-5 h-5 text-[var(--color-accent)]" />

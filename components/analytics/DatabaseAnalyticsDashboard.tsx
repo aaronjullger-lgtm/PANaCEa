@@ -154,6 +154,23 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
   const { stats, isLoading, error, refetch, lastFetched } = useDatabaseStats();
   const [activeTab, setActiveTab] = useState<'overview' | 'systems' | 'conditions'>('overview');
 
+  // #region agent log
+  React.useEffect(() => {
+    const state = isLoading && !stats ? 'loading' : error && !stats ? 'error' : !stats ? 'empty' : 'data';
+    fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'DatabaseAnalyticsDashboard.tsx:render',
+        message: 'Overview analytics state',
+        data: { state, isLoading, hasError: !!error, hasStats: !!stats },
+        hypothesisId: 'H3',
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [isLoading, error, stats]);
+  // #endregion
+
   if (isLoading && !stats) {
     return <StatsSkeleton />;
   }

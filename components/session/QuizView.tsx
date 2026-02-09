@@ -47,6 +47,7 @@ import {
   OptionHoverTracker,
   behavioralPayloadToTelemetryData,
 } from '@/components/quiz/Tracker';
+import { useMicroKinetics } from '@/hooks/useMicroKinetics';
 import { QuizLabCalcModal } from '@/components/quiz/QuizLabCalcModal';
 import ErrorTagger from '@/components/quiz/ErrorTagger';
 import Loader from '@/components/loading/Loader';
@@ -74,7 +75,7 @@ import { DrillLoadingState } from '@/components/drill/DrillLoadingState';
 // Icons
 import { CloseIcon } from '@/components/icons/CloseIcon';
 import { FlagIcon } from '@/components/icons/FlagIcon';
-import { AlertTriangle, BarChart3, Calculator, MessageCircle, Clock } from 'lucide-react';
+import { AlertTriangle, BarChart3, Calculator, MessageCircle, Clock, MoreHorizontal, ChevronDown, PenLine } from 'lucide-react';
 import { ArrowLeftIcon } from '@/components/icons/ArrowLeftIcon';
 import { ClearHighlightIcon } from '@/components/icons/ClearHighlightIcon';
 
@@ -118,6 +119,8 @@ interface QuizViewProps {
   addPerformanceRecord: (record: PerformanceRecord) => void;
   addMissedQuestion: (question: Question) => void;
   updateReviewQuestion: (question: Question, wasCorrect: boolean) => void;
+  /** When user answers a Due sibling correctly, remove that concept from the Due queue */
+  removeDueConcept?: (conditionId: string, taskType: string | null) => void;
   updateLastPerformanceErrorTag: (tag: ErrorTag) => void;
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -292,6 +295,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       addPerformanceRecord,
       addMissedQuestion,
       updateReviewQuestion,
+      removeDueConcept,
       updateLastPerformanceErrorTag,
       setIsLoading,
       setError,
@@ -323,6 +327,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   // ---- IMPLICIT METRICS TRACKING ----
   const implicitMetrics = useImplicitMetrics();
   const behavioralTracker = useBehavioralTracker();
+  const microKinetics = useMicroKinetics();
 
   // ---- QUEUE HANDLING ----
   const [queue, setQueue] = useState<Question[]>(initialQueue);
@@ -345,6 +350,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // Track eliminated answers (by index) for the current question
   const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<number>>(new Set());
+  const eliminationTimestampsRef = useRef<number[]>([]);
 
   // Track answer changes for analytics
   const [answerChangeCount, setAnswerChangeCount] = useState<number>(0);
@@ -390,6 +396,14 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [behavioralRefreshKey, setBehavioralRefreshKey] = useState(0);
   const [replenishmentError, setReplenishmentError] = useState<string | null>(null);
 
+  // Fix #6a: Overflow menu for secondary header actions
+  const [showOverflowMenu, setShowOverflowMenu] = useState(false);
+  const overflowMenuRef = useRef<HTMLDivElement>(null);
+  // Fix #6b: Collapsible detailed explanation
+  const [showFullExplanation, setShowFullExplanation] = useState(false);
+  // Fix #6c: Notes textarea toggle
+  const [showNotes, setShowNotes] = useState(false);
+
   const noteUpdateTimeout = useRef<number | null>(null);
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const nextButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -398,6 +412,24 @@ const QuizView: React.FC<QuizViewProps> = ({
   useEffect(() => {
     document.documentElement.style.setProperty('--font-size-adj', `${fontSizeAdjustment * 0.1}rem`);
   }, [fontSizeAdjustment]);
+
+  // Close overflow menu on click outside
+  useEffect(() => {
+    if (!showOverflowMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (overflowMenuRef.current && !overflowMenuRef.current.contains(e.target as Node)) {
+        setShowOverflowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showOverflowMenu]);
+
+  // Reset collapsible states when question changes
+  useEffect(() => {
+    setShowFullExplanation(false);
+    setShowNotes(false);
+  }, [currentQuestion?.id]);
 
   const isFlagged = useMemo(() => {
     if (!currentQuestion) return false;
@@ -573,15 +605,17 @@ const QuizView: React.FC<QuizViewProps> = ({
       setAnswerDistribution(null); // Reset peer selection stats for next question
       setIsExplainerLoading(false);
       setQuestionNumber((prev) => prev + 1);
-      setEliminatedAnswers(new Set()); // Reset eliminated answers for new question
+      setEliminatedAnswers(new Set());
+      eliminationTimestampsRef.current = [];
       setSrsResult(null); // Reset SRS result for new question
       setQuestionStartTime(Date.now()); // Track time for new question
       setAnswerChangeCount(0); // Reset answer change tracking
       setFirstSelectedAnswer(null); // Reset first selected answer
 
-      // Reset implicit metrics and behavioral tracker for new question
+      // Reset implicit metrics, behavioral tracker, and micro-kinetics for new question
       implicitMetrics.reset();
       implicitMetrics.startQuestion();
+      microKinetics.reset();
       const nextQ = queue.length > 1 ? queue[1] : undefined;
       const qType = nextQ ? inferQuestionType(questionToInferShape(nextQ)) : 'unknown';
       behavioralTracker.start(qType);
@@ -629,6 +663,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     setError,
     implicitMetrics,
     behavioralTracker,
+    microKinetics,
   ]);
 
   // Initialize from incoming queue once
@@ -637,15 +672,17 @@ const QuizView: React.FC<QuizViewProps> = ({
       setCurrentQuestion(initialQueue[0] ?? null);
     }
     setLocalNote(initialQueue[0]?.userNote || '');
-    setEliminatedAnswers(new Set()); // Reset when new question loaded
+    setEliminatedAnswers(new Set());
+    eliminationTimestampsRef.current = [];
 
-    // Start tracking implicit metrics and behavioral tracker for the first question
+    // Start tracking implicit metrics, behavioral tracker, and micro-kinetics for the first question
     if (initialQueue.length > 0) {
       implicitMetrics.startQuestion();
+      microKinetics.reset();
       const q = initialQueue[0];
       behavioralTracker.start(q ? inferQuestionType(questionToInferShape(q)) : 'unknown');
     }
-  }, [initialQueue, currentQuestion, implicitMetrics, behavioralTracker]);
+  }, [initialQueue, currentQuestion, implicitMetrics, behavioralTracker, microKinetics]);
 
   // Handler for toggling elimination state
   const handleToggleEliminate = useCallback(
@@ -657,6 +694,7 @@ const QuizView: React.FC<QuizViewProps> = ({
           next.delete(index);
         } else {
           next.add(index);
+          eliminationTimestampsRef.current.push(Date.now());
         }
         return next;
       });
@@ -697,6 +735,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     }
 
     setIsAnswered(true);
+    microKinetics.onAnswersRevealed();
 
     // Sprint 4: Calculate correctness IMMEDIATELY
     const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
@@ -704,9 +743,28 @@ const QuizView: React.FC<QuizViewProps> = ({
     const questionId = currentQuestion.id || `temp-${questionNumber}`;
 
     const behavioralPayload = behavioralTracker.finalize();
+    const microMetrics = microKinetics.getMetrics();
+    const elimTimestamps = eliminationTimestampsRef.current;
+    const eliminationVelocity =
+      elimTimestamps.length >= 2
+        ? elimTimestamps.length /
+          ((elimTimestamps[elimTimestamps.length - 1]! - elimTimestamps[0]!) / 1000)
+        : undefined;
     const telemetryForApi =
       behavioralPayload != null
-        ? behavioralPayloadToTelemetryData(behavioralPayload, behavioralPayload.answer_change_count)
+        ? behavioralPayloadToTelemetryData(
+            behavioralPayload,
+            behavioralPayload.answer_change_count,
+            false,
+            {
+              oscillations: microMetrics.oscillations,
+              vignetteRegressions: microMetrics.vignetteRegressions,
+              selectionDriftMs: microMetrics.selectionDriftMs,
+              tremorScore: microMetrics.tremorScore,
+              cursorEntropy: microMetrics.cursorEntropy,
+            },
+            eliminationVelocity
+          )
         : undefined;
 
     syncManager.queueAnswer({
@@ -874,6 +932,9 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     if (sessionSettings.focus === 'review') {
       updateReviewQuestion(currentQuestion, isCorrect);
+      if (isCorrect && currentQuestion.dueConceptKey && removeDueConcept) {
+        removeDueConcept(currentQuestion.dueConceptKey.conditionId, currentQuestion.dueConceptKey.taskType);
+      }
     } else {
       if (!isCorrect) {
         addMissedQuestion(currentQuestion);
@@ -947,6 +1008,7 @@ const QuizView: React.FC<QuizViewProps> = ({
                     : sessionSettings.mode === 'cram_mode' || sessionSettings.mode === 'cram'
                       ? 'cram'
                       : 'main',
+                telemetry: telemetryForApi,
               }),
             });
 
@@ -1115,6 +1177,8 @@ const QuizView: React.FC<QuizViewProps> = ({
     // Guard against selecting eliminated answers or already answered questions
     if (isAnswered || !currentQuestion || eliminatedAnswers.has(index)) return;
 
+    microKinetics.recordSelection();
+
     // Track answer changes
     if (firstSelectedAnswer === null) {
       setFirstSelectedAnswer(index);
@@ -1275,7 +1339,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             {/* Back to dashboard */}
             <button
               onClick={onShowMenu}
-              className="p-2 rounded-full bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors flex-shrink-0 flex items-center justify-center border border-[var(--color-border)]"
+              className="min-h-[44px] min-w-[44px] rounded-full bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors flex-shrink-0 flex items-center justify-center border border-[var(--color-border)]"
               aria-label="Back to Menu"
             >
               <ArrowLeftIcon className="w-6 h-6 text-[var(--color-text-secondary)]" />
@@ -1311,11 +1375,13 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           </div>
 
           <div className="flex items-center space-x-2 flex-shrink-0">
-            {/* Sprint 4: Session Stats Toggle */}
+            {/* Primary actions — always visible, with 44px touch targets */}
+
+            {/* Session Stats Toggle */}
             <button
               onClick={() => setShowStatsOverlay((prev) => !prev)}
               title="Toggle session stats (S)"
-              className={`p-1.5 rounded-full transition-colors border ${
+              className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                 showStatsOverlay
                   ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-[var(--color-accent)]'
                   : 'bg-[var(--color-card-bg)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)] hover:border-[var(--color-accent)]'
@@ -1324,20 +1390,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               <BarChart3 className="w-5 h-5" />
             </button>
 
-            {/* Report Issue - for reporting bad questions to admins */}
-            <button
-              onClick={() => setShowReportModal(true)}
-              title="Report an issue with this question"
-              className="p-1.5 rounded-full transition-colors border bg-[var(--color-card-bg)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-data-fail)]/10 hover:text-[var(--color-data-fail)] hover:border-[var(--color-data-fail)]"
-            >
-              <AlertTriangle className="w-5 h-5" />
-            </button>
-
             {/* Flag for personal review */}
             <button
               onClick={toggleFlag}
               title={isFlagged ? 'Unflag for review' : 'Flag for review'}
-              className={`p-1.5 rounded-full transition-colors border ${
+              className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                 isFlagged
                   ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]'
                   : 'bg-[var(--color-card-bg)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
@@ -1346,60 +1403,88 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               <FlagIcon className="w-5 h-5" />
             </button>
 
-            {/* Clear Highlights */}
-            <button
-              onClick={() => {
-                const container = document.getElementById('question-container');
-                if (!container) return;
-                const spans = container.querySelectorAll('span.user-highlight');
-                spans.forEach((s) => {
-                  const parent = s.parentNode;
-                  if (!parent) return;
-                  while (s.firstChild) {
-                    parent.insertBefore(s.firstChild, s);
-                  }
-                  parent.removeChild(s);
-                });
-              }}
-              title="Clear highlights"
-              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)] transition-colors"
-            >
-              <ClearHighlightIcon className="w-5 h-5" />
-            </button>
-
-            {/* Lab calculators (Anion Gap, Osmolar Gap, Parkland) – encourages active calculation */}
-            <button
-              onClick={() => setShowLabCalcModal(true)}
-              title="Lab calculators (Anion Gap, Osmolar Gap, Parkland)"
-              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-colors"
-            >
-              <Calculator className="w-5 h-5" />
-            </button>
-
-            {/* Font size controls */}
-            <div className="flex items-center border border-[var(--color-border)] rounded-md bg-[var(--color-card-bg)]">
+            {/* Overflow menu — secondary actions collapsed behind "more" */}
+            <div className="relative" ref={overflowMenuRef}>
               <button
-                onClick={() => setFontSizeAdjustment((prev) => prev - 1)}
-                className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-l-md text-sm"
-                aria-label="Decrease font size"
+                onClick={() => setShowOverflowMenu((prev) => !prev)}
+                title="More actions"
+                className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
+                  showOverflowMenu
+                    ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-[var(--color-accent)]'
+                    : 'bg-[var(--color-card-bg)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
+                }`}
               >
-                A-
+                <MoreHorizontal className="w-5 h-5" />
               </button>
-              <div className="w-px h-4 bg-[var(--color-border)]"></div>
-              <button
-                onClick={() => setFontSizeAdjustment((prev) => prev + 1)}
-                className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-r-md text-sm"
-                aria-label="Increase font size"
-              >
-                A+
-              </button>
+              {showOverflowMenu && (
+                <div className="absolute right-0 top-full mt-1 w-56 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 py-1 animate-fade-in">
+                  {/* Report Issue */}
+                  <button
+                    onClick={() => { setShowReportModal(true); setShowOverflowMenu(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                  >
+                    <AlertTriangle className="w-4 h-4 text-[var(--color-data-fail)]" />
+                    Report Issue
+                  </button>
+                  {/* Clear Highlights */}
+                  <button
+                    onClick={() => {
+                      const container = document.getElementById('question-container');
+                      if (!container) return;
+                      const spans = container.querySelectorAll('span.user-highlight');
+                      spans.forEach((s) => {
+                        const parent = s.parentNode;
+                        if (!parent) return;
+                        while (s.firstChild) {
+                          parent.insertBefore(s.firstChild, s);
+                        }
+                        parent.removeChild(s);
+                      });
+                      setShowOverflowMenu(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                  >
+                    <ClearHighlightIcon className="w-4 h-4" />
+                    Clear Highlights
+                  </button>
+                  {/* Lab Calculators */}
+                  <button
+                    onClick={() => { setShowLabCalcModal(true); setShowOverflowMenu(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                  >
+                    <Calculator className="w-4 h-4 text-[var(--color-accent)]" />
+                    Lab Calculators
+                  </button>
+                  {/* Font size controls */}
+                  <div className="flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)]">
+                    <span className="text-[var(--color-text-muted)]">Font Size</span>
+                    <div className="ml-auto flex items-center border border-[var(--color-border)] rounded-md bg-[var(--color-bg-secondary)]">
+                      <button
+                        onClick={() => setFontSizeAdjustment((prev) => prev - 1)}
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-l-md text-sm font-medium"
+                        aria-label="Decrease font size"
+                      >
+                        A−
+                      </button>
+                      <div className="w-px h-5 bg-[var(--color-border)]"></div>
+                      <button
+                        onClick={() => setFontSizeAdjustment((prev) => prev + 1)}
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-r-md text-sm font-medium"
+                        aria-label="Increase font size"
+                      >
+                        A+
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* End session */}
             <button
               onClick={handleEndSession}
               title="End Session"
-              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-data-fail)]/10 hover:border-[var(--color-data-fail)] hover:text-[var(--color-data-fail)] transition-colors"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-data-fail)]/10 hover:border-[var(--color-data-fail)] hover:text-[var(--color-data-fail)] transition-colors"
             >
               <CloseIcon className="w-5 h-5" />
             </button>
@@ -1425,6 +1510,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           vignette={useSplitPane ? currentQuestion.vignette : null}
           className="mb-6"
         >
+          <div ref={(el) => microKinetics.registerMouseTrackingContainer(el)}>
           <AnimatePresence mode="wait">
             <motion.div
               key={currentQuestion.id ?? `${currentQuestion.question}-${questionNumber}`}
@@ -1482,6 +1568,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   optionIndex={index}
                   optionLabel={optionLabel}
                   className="block"
+                  onHoverEnter={microKinetics.recordHoverEnter}
                 >
                   <AnswerChoice
                     ref={(el) => {
@@ -1501,10 +1588,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               );
             })}
           </div>
+          </div>
 
-          {/* SUBMIT BUTTON - Only show when answer is selected but not yet submitted */}
+          {/* SUBMIT BUTTON - Sticky on mobile so it doesn't scroll off-screen */}
           {!isAnswered && selectedAnswerIndex !== null && (
-            <div className="mt-6 text-center animate-fade-in space-y-4">
+            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)] border-t border-[var(--color-border)] mt-6 -mx-4 px-4 py-4 text-center animate-fade-in space-y-2 md:static md:border-t-0 md:bg-transparent md:mx-0 md:px-0 md:py-0 md:mt-6 md:space-y-4">
               <button 
                 onClick={handleSubmitAnswer} 
                 disabled={isSubmitting}
@@ -1522,7 +1610,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   'Submit Answer'
                 )}
               </button>
-              <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+              <p className="mt-2 text-sm text-[var(--color-text-muted)] hidden md:block">
                 Press{' '}
                 <kbd className="px-2 py-1 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded text-xs font-mono">
                   Enter
@@ -1601,8 +1689,29 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   if (structured) {
                     const letters = ['A', 'B', 'C', 'D'] as const;
                     const whyKeys = ['whyIncorrectA', 'whyIncorrectB', 'whyIncorrectC', 'whyIncorrectD'] as const;
+                    const wasIncorrect = selectedAnswerIndex !== currentQuestion.correctAnswerIndex;
+                    // Find the user's wrong answer explanation (if they got it wrong)
+                    const userChoiceLetter = selectedAnswerIndex !== null ? letters[selectedAnswerIndex] : null;
+                    const userChoiceKey = selectedAnswerIndex !== null ? whyKeys[selectedAnswerIndex] : null;
+                    const userChoiceExplanation = userChoiceKey
+                      ? (structured[userChoiceKey as keyof typeof structured] as string | undefined)
+                      : null;
+                    // Count how many extra sections exist for the "show full" toggle
+                    const hasExtraSections = !!(
+                      (structured.highYieldImageOrTable && structured.highYieldImageOrTable !== 'N/A') ||
+                      structured.clinicalPearl ||
+                      (structured.commonPitfalls && structured.commonPitfalls.length > 0)
+                    );
+                    const hasOtherDistractors = letters.some(
+                      (_l, i) =>
+                        i !== currentQuestion.correctAnswerIndex &&
+                        i !== selectedAnswerIndex &&
+                        structured[whyKeys[i] as keyof typeof structured]
+                    );
+
                     return (
                       <div className="space-y-4">
+                        {/* ALWAYS VISIBLE: Bottom Line */}
                         {structured.bottomLine && (
                           <section>
                             <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
@@ -1613,92 +1722,149 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                             </p>
                           </section>
                         )}
-                        <section>
-                          <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
-                            Why the Correct Answer is Right
-                          </h3>
-                          <div
-                            className="text-[var(--color-text-secondary)] leading-relaxed bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3"
-                            dangerouslySetInnerHTML={{
-                              __html: sanitizeForRationale(structured.whyCorrect.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
-                            }}
-                          />
-                        </section>
-                        <section>
-                          <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
-                            Why the Distractors Are Wrong
-                          </h3>
-                          <div className="space-y-2">
-                            {letters.map((letter, i) => {
-                              if (i === currentQuestion.correctAnswerIndex) return null;
-                              const key = whyKeys[i];
-                              if (!key) return null;
-                              const text = structured[key as keyof typeof structured];
-                              if (!text || typeof text !== 'string') return null;
-                              const optionText = currentQuestion.options[i];
-                              const isUserChoice = i === selectedAnswerIndex;
-                              return (
-                                <div
-                                  key={letter}
-                                  className={`px-4 py-2 rounded-lg border text-sm ${
-                                    isUserChoice
-                                      ? 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border-dusty-rose-300 dark:border-dusty-rose-700'
-                                      : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
-                                  }`}
-                                >
-                                  <span className="font-semibold text-[var(--color-text-muted)]">
-                                    Option {letter} ({optionText}):
-                                  </span>{' '}
-                                  <span
-                                    className="text-[var(--color-text-secondary)]"
-                                    dangerouslySetInnerHTML={{
-                                      __html: text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'),
-                                    }}
-                                  />
-                                  {isUserChoice && (
-                                    <span className="ml-2 text-xs text-dusty-rose-600 dark:text-dusty-rose-400 font-medium">
-                                      (Your answer)
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </section>
-                        {structured.highYieldImageOrTable && structured.highYieldImageOrTable !== 'N/A' && (
+
+                        {/* ALWAYS VISIBLE: Why YOUR answer was wrong (if incorrect) */}
+                        {wasIncorrect && userChoiceExplanation && userChoiceLetter && (
                           <section>
                             <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
-                              High-Yield Image / Table
+                              Why Your Answer Was Wrong
                             </h3>
-                            <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed bg-steel-blue-50 dark:bg-steel-blue-900/20 border border-steel-blue-200 dark:border-steel-blue-800 rounded-lg px-4 py-3">
-                              {structured.highYieldImageOrTable}
-                            </p>
+                            <div className="px-4 py-3 rounded-lg border text-sm bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border-dusty-rose-300 dark:border-dusty-rose-700">
+                              <span className="font-semibold text-[var(--color-text-muted)]">
+                                Option {userChoiceLetter} ({currentQuestion.options[selectedAnswerIndex!]}):
+                              </span>{' '}
+                              <span
+                                className="text-[var(--color-text-secondary)]"
+                                dangerouslySetInnerHTML={{
+                                  __html: userChoiceExplanation.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'),
+                                }}
+                              />
+                            </div>
                           </section>
                         )}
-                        {structured.clinicalPearl && (
+
+                        {/* ALWAYS VISIBLE (if correct, or inside expanded): Why Correct */}
+                        {(!wasIncorrect || showFullExplanation) && (
                           <section>
                             <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
-                              Clinical Pearl
+                              Why the Correct Answer is Right
                             </h3>
                             <div
-                              className="text-[var(--color-text-secondary)] leading-relaxed bg-muted-amber-50 dark:bg-muted-amber-900/20 border border-muted-amber-200 dark:border-muted-amber-800 rounded-lg px-4 py-3"
+                              className="text-[var(--color-text-secondary)] leading-relaxed bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3"
                               dangerouslySetInnerHTML={{
-                                __html: sanitizeForRationale(structured.clinicalPearl.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
+                                __html: sanitizeForRationale(structured.whyCorrect.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
                               }}
                             />
                           </section>
                         )}
-                        {structured.commonPitfalls && structured.commonPitfalls.length > 0 && (
-                          <section>
-                            <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
-                              Common Pitfalls
-                            </h3>
-                            <ul className="list-disc list-inside space-y-1 text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-4 py-3">
-                              {structured.commonPitfalls.map((pitfall, i) => (
-                                <li key={i}>{pitfall}</li>
-                              ))}
-                            </ul>
-                          </section>
+
+                        {/* COLLAPSIBLE: Full explanation toggle */}
+                        {(wasIncorrect || hasOtherDistractors || hasExtraSections) && (
+                          <>
+                            {!showFullExplanation ? (
+                              <button
+                                onClick={() => setShowFullExplanation(true)}
+                                className="flex items-center gap-2 text-sm font-medium text-[var(--color-accent)] hover:text-[var(--color-accent)]/80 transition-colors py-2"
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                                Show full explanation
+                              </button>
+                            ) : (
+                              <>
+                                {/* Why Correct (shown here for incorrect answers since it was hidden above) */}
+                                {wasIncorrect && (
+                                  <section>
+                                    <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                                      Why the Correct Answer is Right
+                                    </h3>
+                                    <div
+                                      className="text-[var(--color-text-secondary)] leading-relaxed bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3"
+                                      dangerouslySetInnerHTML={{
+                                        __html: sanitizeForRationale(structured.whyCorrect.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
+                                      }}
+                                    />
+                                  </section>
+                                )}
+
+                                {/* Other Distractors */}
+                                {hasOtherDistractors && (
+                                  <section>
+                                    <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                                      Other Distractors
+                                    </h3>
+                                    <div className="space-y-2">
+                                      {letters.map((letter, i) => {
+                                        if (i === currentQuestion.correctAnswerIndex) return null;
+                                        if (i === selectedAnswerIndex) return null; // already shown above
+                                        const key = whyKeys[i];
+                                        if (!key) return null;
+                                        const text = structured[key as keyof typeof structured];
+                                        if (!text || typeof text !== 'string') return null;
+                                        const optionText = currentQuestion.options[i];
+                                        return (
+                                          <div
+                                            key={letter}
+                                            className="px-4 py-2 rounded-lg border text-sm bg-[var(--color-bg-secondary)] border-[var(--color-border)]"
+                                          >
+                                            <span className="font-semibold text-[var(--color-text-muted)]">
+                                              Option {letter} ({optionText}):
+                                            </span>{' '}
+                                            <span
+                                              className="text-[var(--color-text-secondary)]"
+                                              dangerouslySetInnerHTML={{
+                                                __html: text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'),
+                                              }}
+                                            />
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </section>
+                                )}
+
+                                {/* High-Yield Image/Table */}
+                                {structured.highYieldImageOrTable && structured.highYieldImageOrTable !== 'N/A' && (
+                                  <section>
+                                    <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                                      High-Yield Image / Table
+                                    </h3>
+                                    <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed bg-steel-blue-50 dark:bg-steel-blue-900/20 border border-steel-blue-200 dark:border-steel-blue-800 rounded-lg px-4 py-3">
+                                      {structured.highYieldImageOrTable}
+                                    </p>
+                                  </section>
+                                )}
+
+                                {/* Clinical Pearl */}
+                                {structured.clinicalPearl && (
+                                  <section>
+                                    <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                                      Clinical Pearl
+                                    </h3>
+                                    <div
+                                      className="text-[var(--color-text-secondary)] leading-relaxed bg-muted-amber-50 dark:bg-muted-amber-900/20 border border-muted-amber-200 dark:border-muted-amber-800 rounded-lg px-4 py-3"
+                                      dangerouslySetInnerHTML={{
+                                        __html: sanitizeForRationale(structured.clinicalPearl.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
+                                      }}
+                                    />
+                                  </section>
+                                )}
+
+                                {/* Common Pitfalls */}
+                                {structured.commonPitfalls && structured.commonPitfalls.length > 0 && (
+                                  <section>
+                                    <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                                      Common Pitfalls
+                                    </h3>
+                                    <ul className="list-disc list-inside space-y-1 text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-4 py-3">
+                                      {structured.commonPitfalls.map((pitfall, i) => (
+                                        <li key={i}>{pitfall}</li>
+                                      ))}
+                                    </ul>
+                                  </section>
+                                )}
+                              </>
+                            )}
+                          </>
                         )}
                       </div>
                     );
@@ -1728,6 +1894,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                             Rationale
                           </h3>
                           <div
+                            ref={(el) => microKinetics.registerScrollContainer(el)}
                             className="text-[var(--color-text-secondary)] leading-relaxed bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-4 py-3 max-h-[40vh] overflow-y-auto prose prose-sm dark:prose-invert max-w-none"
                             dangerouslySetInnerHTML={{ __html: showRest ? restBody : raw }}
                           />
@@ -1798,23 +1965,36 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 )}
 
                 <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
-                  <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
-                    My Notes
-                  </h3>
-                  <textarea
-                    value={localNote}
-                    onChange={handleNoteChange}
-                    placeholder="Type your notes here... They will be saved automatically."
-                    className="w-full p-2 border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
-                    rows={3}
-                  />
+                  {!showNotes && !localNote ? (
+                    <button
+                      onClick={() => setShowNotes(true)}
+                      className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors py-1"
+                    >
+                      <PenLine className="w-4 h-4" />
+                      Add Note
+                    </button>
+                  ) : (
+                    <>
+                      <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
+                        My Notes
+                      </h3>
+                      <textarea
+                        value={localNote}
+                        onChange={handleNoteChange}
+                        placeholder="Type your notes here... They will be saved automatically."
+                        className="w-full p-2 border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
+                        rows={3}
+                        autoFocus={showNotes && !localNote}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
           {isAnswered && (
-            <div className="mt-4 text-center">
+            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)] border-t border-[var(--color-border)] mt-4 -mx-4 px-4 py-4 text-center md:static md:border-t-0 md:bg-transparent md:mx-0 md:px-0 md:py-0 md:mt-4">
               <button
                 ref={nextButtonRef}
                 onClick={() => {

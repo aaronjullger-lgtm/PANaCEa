@@ -36,6 +36,12 @@ export interface ImplicitBehaviorMetrics {
   complexityScore?: number;
   /** Optional: Mouse trajectory metrics (Phase 3A) */
   trajectory?: TrajectoryMetrics;
+  /** Optional: Time from last answer selection to submit (ms). Micro-kinetics. */
+  commitmentGapMs?: number | null;
+  /** Optional: pathLength/idealDistance. >1 = meandering. Micro-kinetics. */
+  cursorEntropy?: number;
+  /** Optional: Hover oscillation count (A↔B revisits). Micro-kinetics. */
+  hoverOscillationCount?: number;
 }
 
 /**
@@ -68,6 +74,18 @@ export interface ImplicitReviewData {
   flagged: boolean;
   /** Reason for flagging, if any */
   flagReason?: string;
+}
+
+/**
+ * Continuous rating result for FSRS scheduling with stability modifier
+ */
+export interface ContinuousRatingResult {
+  /** Float grade in [1.0, 4.0]; 3.0 = standard correct baseline */
+  grade: number;
+  /** Confidence in derived rating (0-1). High gap/entropy → lower confidence. */
+  confidence: number;
+  /** Discrete rating for FSRS.next() (round of grade) */
+  discreteRating: Rating;
 }
 
 /**
@@ -154,6 +172,10 @@ export function calculateLatencyPercentile(latency: number, stats: SessionLatenc
 }
 
 /**
+ * @deprecated Use `deriveContinuousRating` instead. This function is no longer
+ * called in production (drillReviewService uses deriveContinuousRating since the
+ * continuous FSRS ratings migration). Kept for backward compatibility only.
+ *
  * Derive FSRS rating from implicit behavioral metrics
  *
  * Core algorithm:
@@ -281,6 +303,78 @@ export function deriveImplicitRating(
     flagged,
     flagReason,
   };
+}
+
+/**
+ * Derive continuous FSRS grade (1.0–4.0) from behavioral metrics.
+ * Standard correct (no red flags) = 3.0. Deviations toward 4.0 or 1.0 driven by behavior.
+ *
+ * Formula:
+ * - base = isCorrect ? 3.0 : 1.0
+ * - penalties: switch, latency, commitment gap, entropy, oscillation
+ * - bonus: fast response (< 0.5 par time)
+ * - grade = clamp(base - penalties + bonus, 1.0, 4.0)
+ */
+export function deriveContinuousRating(
+  metrics: ImplicitBehaviorMetrics,
+  config: ImplicitRatingConfig = DEFAULT_IMPLICIT_CONFIG
+): ContinuousRatingResult {
+  const parTime = metrics.parTimeMs ?? 30000;
+  const effectiveLatency =
+    metrics.timeToFirstClick * (1 + metrics.answerSwitches * config.switchPenalty);
+  const latencyRatio = effectiveLatency / parTime;
+
+  const base = metrics.isCorrect ? 3.0 : 1.0;
+  let grade = base;
+
+  if (metrics.isCorrect) {
+    // Red-flag penalties
+    const penaltySwitch = metrics.answerSwitches * 0.15;
+    const latencyExcess = Math.max(0, Math.min(2, latencyRatio - 0.85));
+    const penaltyLatency = latencyExcess * 0.3;
+    const commitmentGapSec = (metrics.commitmentGapMs ?? 0) / 1000;
+    const penaltyCommitment = commitmentGapSec * 0.02;
+    const entropy = metrics.cursorEntropy ?? 0;
+    const penaltyEntropy = entropy > 1 ? (entropy - 1) * 0.2 : 0;
+    const penaltyOscillation = (metrics.hoverOscillationCount ?? 0) * 0.1;
+
+    // Bonuses for fast, clean response
+    const bonusFast =
+      latencyRatio < 0.5 ? 0.3 : latencyRatio < 0.7 ? 0.15 : 0;
+
+    grade =
+      base -
+      penaltySwitch -
+      penaltyLatency -
+      penaltyCommitment -
+      penaltyEntropy -
+      penaltyOscillation +
+      bonusFast;
+  }
+
+  grade = Math.max(1.0, Math.min(4.0, grade));
+
+  // Confidence: high commitment gap / entropy → lower confidence
+  let confidence = 0.7;
+  if (!metrics.isCorrect) confidence = 0.95;
+  else {
+    confidence -= metrics.answerSwitches * 0.1;
+    if ((metrics.commitmentGapMs ?? 0) > 3000) confidence -= 0.1;
+    if ((metrics.cursorEntropy ?? 0) > 1.5) confidence -= 0.1;
+    confidence = Math.max(0.5, Math.min(0.95, confidence));
+  }
+
+  const discreteRating = gradeToRating(grade);
+
+  return { grade, confidence, discreteRating };
+}
+
+/** Map continuous grade to discrete FSRS Rating */
+function gradeToRating(grade: number): Rating {
+  if (grade < 1.5) return Rating.Again;
+  if (grade < 2.5) return Rating.Hard;
+  if (grade < 3.5) return Rating.Good;
+  return Rating.Easy;
 }
 
 /**
@@ -413,8 +507,19 @@ export function serializeImplicitMetrics(data: ImplicitReviewData): Record<strin
   return base;
 }
 
+/**
+ * Stability modifier from continuous grade.
+ * grade 3.0 → 1.0; grade < 3 → slightly lower S; grade > 3 → slightly higher S.
+ */
+export function applyStabilityModifierFromGrade(grade: number): number {
+  const delta = grade - 3;
+  return Math.max(0.85, Math.min(1.15, 1 + delta * 0.05));
+}
+
 export default {
   deriveImplicitRating,
+  deriveContinuousRating,
+  applyStabilityModifierFromGrade,
   updateLatencyStats,
   initLatencyStats,
   calculateLatencyPercentile,

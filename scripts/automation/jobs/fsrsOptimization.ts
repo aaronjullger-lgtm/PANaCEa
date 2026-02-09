@@ -337,7 +337,7 @@ async function optimizeUserFSRS(
       sessionType: 'MAIN',
     },
     select: {
-      rating: true,
+      grade: true,
       state: true,
       stability: true,
       difficulty: true,
@@ -345,7 +345,7 @@ async function optimizeUserFSRS(
       wasCorrect: true,
       system: true,
     },
-    orderBy: { review_date: 'asc' },
+    orderBy: { reviewedAt: 'asc' },
   });
 
   if (rows.length === 0) {
@@ -364,7 +364,7 @@ async function optimizeUserFSRS(
     return { optimized: false, improvement: 0 };
   }
 
-  // Upsert to database (PersonalizedFSRSParams schema: validationBrierScore only)
+  // Upsert to database (PersonalizedFSRSParams + User.fsrs_weights for fast access)
   await prisma.personalizedFSRSParams.upsert({
     where: { userId },
     create: {
@@ -386,6 +386,11 @@ async function optimizeUserFSRS(
       optimizationIterations: result.iterations,
       systemModifiers: result.systemModifiers != null ? JSON.parse(JSON.stringify(result.systemModifiers)) : undefined,
     },
+  });
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { fsrs_weights: result.w },
   });
 
   return {

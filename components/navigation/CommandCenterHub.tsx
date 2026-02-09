@@ -272,12 +272,12 @@ const CoreAdaptiveHero: React.FC<{
 }) => {
   const mainTitle = isPracticing ? 'Knowledge Maintenance' : 'Core PANCE Simulation';
   const badgeLabel = isPracticing ? 'PANRE-LA Check-in' : `${examLabel} Prep`;
-  const subtitle =
-    growthAreas.length > 0
+  // Core PANCE Simulation: no weak-area copy — strict NCCIPA blueprint only
+  const subtitle = isPracticing
+    ? growthAreas.length > 0
       ? `Focusing on your weak areas: ${growthAreas.slice(0, 3).join(', ')}.`
-      : isPracticing
-        ? 'Maintain your certification knowledge with adaptive questions.'
-        : 'Questions weighted by blueprint and your performance patterns.';
+      : 'Maintain your certification knowledge with adaptive questions.'
+    : 'Strict NCCIPA blueprint weighting. Exam-representative mix — no adaptive bias.';
   return (
     <GlassCard variant="primary" hoverable className="mb-6">
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
@@ -349,7 +349,7 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
                 Voice patient
               </span>
             </div>
-            <p className="text-base text-[var(--color-text-secondary)] mb-3">
+            <p className="text-base text-slate-600 dark:text-[var(--color-text-secondary)] mb-3">
               Practice with a live voice simulated patient; rubric-based SOAP note grading and real-time feedback.
             </p>
             <div className="flex items-center gap-4">
@@ -422,7 +422,7 @@ const HeroTriple: React.FC<{
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-[var(--color-text-primary)]">Build Session</h3>
-              <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+              <p className="text-sm text-slate-600 dark:text-[var(--color-text-muted)] mt-0.5">
                 {dueCount > 0 ? 'Review due questions' : 'Start adaptive questions'}
               </p>
             </div>
@@ -446,7 +446,7 @@ const HeroTriple: React.FC<{
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-[var(--color-text-primary)]">Live OSCE</h3>
-              <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+              <p className="text-sm text-slate-600 dark:text-[var(--color-text-muted)] mt-0.5">
                 Voice patient, SOAP grading
               </p>
             </div>
@@ -470,7 +470,7 @@ const HeroTriple: React.FC<{
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-[var(--color-text-primary)]">Progress & Analytics</h3>
-              <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+              <p className="text-sm text-slate-600 dark:text-[var(--color-text-muted)] mt-0.5">
                 Streak {streak} · {dueLabel} {dueCount} · {accuracy !== null ? `${accuracy}%` : '—'} {accuracyLabel}
               </p>
             </div>
@@ -913,6 +913,31 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     ) as Record<string, number>;
   }, [rolling360Stats?.systemStats]);
 
+  // #region agent log
+  useEffect(() => {
+    const isDark = typeof document !== 'undefined' && document.documentElement?.classList?.contains('dark');
+    const sysKeys = rolling360Stats?.systemStats ? Object.keys(rolling360Stats.systemStats) : [];
+    const progressKeys = curriculumProgressData ? Object.keys(curriculumProgressData) : [];
+    fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'CommandCenterHub.tsx:curriculumProgress',
+        message: 'Curriculum and theme state',
+        data: {
+          theme: isDark ? 'dark' : 'light',
+          rolling360SystemStatsCount: sysKeys.length,
+          curriculumProgressDataCount: progressKeys.length,
+          sampleSystem: sysKeys[0],
+          sampleProgress: curriculumProgressData?.[sysKeys[0]],
+        },
+        hypothesisId: 'H2',
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [rolling360Stats?.systemStats, curriculumProgressData]);
+  // #endregion
+
   // Load enabled systems from localStorage (updates when Settings modal changes them)
   const [enabledSystems, setEnabledSystems] = useState<Set<SystemCode>>(() => {
     const saved = localStorage.getItem('panceai_enabled_systems');
@@ -1334,7 +1359,11 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         transition={sectionTransition(0.1)}
       >
         <CoreAdaptiveHero
-          onStart={() => (onNavigateToSimulation ? onNavigateToSimulation() : onStartSession())}
+          onStart={() =>
+            onNavigateToSimulation
+              ? onNavigateToSimulation()
+              : onStartSession({ focus: 'all', simulationStrict: true })
+          }
           accuracy={stats.accuracy}
           questionsToday={stats.questionsToday}
           examLabel={examLabel}
@@ -1584,8 +1613,13 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </motion.div>
       )}
 
-      {/* Study Tools / Maintenance Section Header - Sticky; aligned to same grid as content */}
-      <div ref={studyToolsSectionRef} id="study-tools-section" className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/95 backdrop-blur border-b border-[var(--color-border)] -mx-4 px-4 pb-4 mb-6">
+      {/* Study Tools / Maintenance Section Header - Sticky below app header so it never overlaps sidebar */}
+      <div
+        ref={studyToolsSectionRef}
+        id="study-tools-section"
+        className="sticky z-20 bg-[var(--color-bg-primary)]/95 backdrop-blur border-b border-[var(--color-border)] -mx-4 px-4 pb-4 mb-6"
+        style={{ top: 'var(--header-height, 4rem)' }}
+      >
         <div className="mb-3 max-w-[1200px] mx-auto">
           <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
             {careerStage === 'practicing' ? 'Maintenance & Reference' : 'Study Tools'}
@@ -2019,12 +2053,12 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               </section>
             )}
 
-            {/* Clinical Reference Library */}
+            {/* Knowledge Base */}
             {onNavigateToReference && (
               <section>
                 <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
                   <Stethoscope className="w-5 h-5 text-[var(--color-text-muted)]" />
-                  Clinical Reference
+                  Knowledge Base
                 </h3>
                 <button
                   onClick={onNavigateToReference}
@@ -2036,7 +2070,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     </div>
                     <div className="flex-1">
                       <h4 className="font-bold text-[var(--color-text-primary)]">
-                        Clinical Reference Library
+                        Knowledge Base
                       </h4>
                       <p className="text-sm text-[var(--color-text-secondary)] mt-1">
                         Browse Anatomy, Labs, Drugs, ECG Patterns, Procedures, Physiology & more

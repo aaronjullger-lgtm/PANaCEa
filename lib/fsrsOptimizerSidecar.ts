@@ -16,10 +16,10 @@
 export interface ReviewLogRow {
   id: string;
   questionFkId: string | null;
-  review_date: Date;
-  rating: number;
+  reviewedAt: Date;
+  grade: number;
   state: number;
-  duration: number | null;
+  responseTimeMs: number | null;
 }
 
 /** Payload sent to the Python Cloud Function. */
@@ -71,14 +71,14 @@ export interface ReviewLogClient {
   reviewLog: {
     findMany: (args: {
       where: { userId: string; review_type: string; sessionType: string };
-      orderBy: { review_date: 'asc' };
+      orderBy: { reviewedAt: 'asc' };
       select: {
         id: true;
         questionFkId: true;
-        review_date: true;
-        rating: true;
+        reviewedAt: true;
+        grade: true;
         state: true;
-        duration: true;
+        responseTimeMs: true;
       };
     }) => Promise<ReviewLogRow[]>;
   };
@@ -101,10 +101,10 @@ function toOptimizerPayload(rows: ReviewLogRow[]): FSRSOptimizerPayload {
   return {
     reviews: rows.map((r) => ({
       card_id: r.questionFkId ?? r.id,
-      review_time: r.review_date.getTime(),
-      review_rating: r.rating,
+      review_time: r.reviewedAt.getTime(),
+      review_rating: r.grade,
       review_state: r.state,
-      review_duration: r.duration ?? 0,
+      review_duration: r.responseTimeMs ?? 0,
     })),
     timezone: DEFAULT_TIMEZONE,
     next_day_starts_at: DEFAULT_DAY_START,

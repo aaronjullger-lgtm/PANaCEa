@@ -292,6 +292,8 @@ model Buzzword {
   @@index([system])
 }
 
+/// Canonical FSRS card model. Maps 1:1 to ts-fsrs FSRSCard interface.
+/// state: 0=New, 1=Learning, 2=Review, 3=Relearning (FSRSState)
 model Card {
   id             String    @id
   userId         String
@@ -303,7 +305,7 @@ model Card {
   scheduled_days Float     @default(0.0)
   reps           Int       @default(0)
   lapses         Int       @default(0)
-  state          Int       @default(0)
+  state          Int       @default(0) // FSRSState: New=0, Learning=1, Review=2, Relearning=3
   last_review    DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime
@@ -1421,67 +1423,94 @@ model MasteryProgress {
   @@index([userId])
 }
 
+/// Source provenance ("chain of custody") for media and content.
+model SourceMaterial {
+  id           String              @id @default(uuid())
+  sourceType   SourceMaterialType
+  sourceName   String
+  sourceUrl    String?
+  licenseType  String?
+  licenseUrl   String?
+  citationText String?
+  uploadedAt   DateTime             @default(now())
+  processed    Boolean             @default(false)
+  MediaAsset   MediaAsset[]
+
+  @@index([sourceType])
+  @@index([processed])
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model MediaAsset {
-  id                  String                @id
-  conditionId         String?
-  type                String
-  filename            String
-  originalUrl         String?
-  thumbnailUrl        String?
-  tags                String[]
-  description         String?
-  altText             String?
-  mimeType            String?
-  fileSize            Int?
-  dimensions          Json?
-  confidence          Float                 @default(0)
-  aiMetadata          Json?
-  approvalStatus      String                @default("pending")
-  status              String                @default("pending_review")
-  approvedBy          String?
-  approvedAt          DateTime?
-  rejectionReason     String?
-  qualityScore        Float?
-  isClinical          Boolean               @default(false)
-  folder              String                @default("inbox")
-  mediaType           String                @default("image")
-  textContent         String?
-  pageCount           Int?
-  duration            Int?
-  sourceUrl           String?
-  citation            String?
-  uploadedBy          String?
-  uploadedAt          DateTime              @default(now())
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime
-  clinicalContext     Json?
-  correctDiagnosis    String?
-  distractors         Json?
-  imagingStudyId      String?
-  difficulty          String                @default("medium")
-  sourceQuality       String                @default("high")
-  modality            String?
-  explanation         String?
-  isAnnotated         Boolean               @default(false)
-  usageType           String                @default("quiz")
-  anatomyId           String?
-  drugId              String?
-  findingId           String?
-  labTestId           String?
-  procedureId         String?
-  medicalContentId    String?
-  storagePath         String?
-  AnatomyStructure    AnatomyStructure?     @relation(fields: [anatomyId], references: [id])
-  Condition           Condition?            @relation(fields: [conditionId], references: [id])
-  Drug                Drug?                 @relation(fields: [drugId], references: [id])
-  PhysicalExamFinding PhysicalExamFinding?  @relation(fields: [findingId], references: [id])
-  ImagingStudy        ImagingStudy?         @relation(fields: [imagingStudyId], references: [id])
-  LabTest             LabTest?              @relation(fields: [labTestId], references: [id])
-  MedicalContent      MedicalContent?       @relation(fields: [medicalContentId], references: [id])
-  Procedure           Procedure?            @relation(fields: [procedureId], references: [id])
-  MedicalContentMedia MedicalContentMedia[]
+  id                   String                @id
+  conditionId          String?
+  type                 String
+  filename             String
+  originalUrl          String?
+  thumbnailUrl         String?
+  tags                 String[]
+  description          String?
+  altText              String?
+  mimeType             String?
+  fileSize             Int?
+  dimensions           Json?
+  confidence           Float                 @default(0)
+  aiMetadata           Json?
+  approvalStatus       String                @default("pending")
+  status               String                @default("pending_review")
+  approvedBy           String?
+  approvedAt           DateTime?
+  rejectionReason      String?
+  qualityScore         Float?
+  isClinical           Boolean               @default(false)
+  folder               String                @default("inbox")
+  mediaType            String                @default("image")
+  textContent          String?
+  pageCount            Int?
+  duration             Int?
+  sourceUrl            String?
+  citation             String?
+  uploadedBy           String?
+  uploadedAt           DateTime              @default(now())
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime
+  clinicalContext      Json?
+  correctDiagnosis     String?
+  distractors          Json?
+  imagingStudyId       String?
+  difficulty           String                @default("medium")
+  sourceQuality        String                @default("high")
+  modality             String?
+  explanation          String?
+  isAnnotated          Boolean               @default(false)
+  usageType            String                @default("quiz")
+  anatomyId            String?
+  drugId               String?
+  findingId            String?
+  labTestId            String?
+  procedureId          String?
+  medicalContentId     String?
+  storagePath          String?
+  sourceMaterialId     String?
+  licenseType          String?
+  attribution         String?
+  originalSourceId     String?
+  isClassicPortrayal  Boolean?
+  rawStoragePath       String?
+  contentHash          String?
+  provenanceStatus     String?
+  AnatomyStructure     AnatomyStructure?     @relation(fields: [anatomyId], references: [id])
+  Condition            Condition?            @relation(fields: [conditionId], references: [id])
+  Drug                 Drug?                 @relation(fields: [drugId], references: [id])
+  PhysicalExamFinding  PhysicalExamFinding?  @relation(fields: [findingId], references: [id])
+  ImagingStudy         ImagingStudy?         @relation(fields: [imagingStudyId], references: [id])
+  LabTest              LabTest?              @relation(fields: [labTestId], references: [id])
+  MedicalContent       MedicalContent?       @relation(fields: [medicalContentId], references: [id])
+  Procedure            Procedure?            @relation(fields: [procedureId], references: [id])
+  SourceMaterial       SourceMaterial?       @relation(fields: [sourceMaterialId], references: [id])
+  MedicalContentMedia  MedicalContentMedia[]
+  Question             Question[]
 
   @@index([anatomyId])
   @@index([approvalStatus])
@@ -1498,6 +1527,7 @@ model MediaAsset {
   @@index([medicalContentId])
   @@index([modality])
   @@index([procedureId])
+  @@index([sourceMaterialId])
   @@index([status])
   @@index([tags])
   @@index([type])
@@ -1575,9 +1605,10 @@ model MedicalContent {
   MediaAsset                                                      MediaAsset[]
   MedicalContent                                                  MedicalContent?              @relation("MedicalContentToMedicalContent", fields: [parentId], references: [id])
   other_MedicalContent                                            MedicalContent[]             @relation("MedicalContentToMedicalContent")
-  MedicalContentEmbedding                                         MedicalContentEmbedding?
-  MedicalContentMedia                                             MedicalContentMedia[]
-  PearlConditionLink                                              PearlConditionLink[]
+  ContentChunk                                                     ContentChunk[]
+  MedicalContentEmbedding                                          MedicalContentEmbedding?
+  MedicalContentMedia                                              MedicalContentMedia[]
+  PearlConditionLink                                               PearlConditionLink[]
   PhysiologyConditionLink                                         PhysiologyConditionLink[]
   PreGeneratedQuestion                                            PreGeneratedQuestion[]
   ProcedureConditionLink                                          ProcedureConditionLink[]
@@ -1616,6 +1647,24 @@ model MedicalContentEmbedding {
   MedicalContent   MedicalContent        @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
 
   @@index([embedding])
+}
+
+/// RAG chunk for semantic search; embedding index supports vector_cosine_ops (HNSW in migration if needed).
+model ContentChunk {
+  id               String         @id @default(uuid())
+  medicalContentId String
+  field            String
+  chunkIndex       Int
+  text             String
+  embedding        Unsupported("vector")
+  tokenCount       Int?
+  MedicalContent   MedicalContent @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
+
+  @@unique([medicalContentId, field, chunkIndex])
+  @@index([medicalContentId])
+  @@index([field])
+  /// For HNSW vector search use raw migration: CREATE INDEX ... ON "ContentChunk" USING hnsw (embedding vector_cosine_ops);
+  @@index([embedding(ops: raw("vector_cosine_ops"))], map: "ContentChunk_embedding_cosine_ops")
 }
 
 model MedicalContentMedia {
@@ -2164,7 +2213,7 @@ model ProcedureConditionLink {
 }
 
 model Question {
-  id               String          @id
+  id               String           @id
   vignette         String
   question         String
   options          Json
@@ -2174,20 +2223,24 @@ model Question {
   tags             Json?
   difficulty       String
   source           String
-  timesSeen        Int             @default(0)
-  timesCorrect     Int             @default(0)
-  createdAt        DateTime        @default(now())
+  timesSeen        Int              @default(0)
+  timesCorrect     Int              @default(0)
+  createdAt        DateTime         @default(now())
   updatedAt        DateTime
   conditionId      String?
   medicalContentId String?
   category         String?
   topic            String?
-  cognitiveLevel   CognitiveLevel  @default(LEVEL_1_RECALL)
-  clinicalSettings String[]        @default([])
-  relatedDrugs     String[]        @default([])
-  relatedDiseases  String[]        @default([])
-  Condition        Condition?      @relation(fields: [conditionId], references: [id])
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id])
+  cognitiveLevel   CognitiveLevel   @default(LEVEL_1_RECALL)
+  clinicalSettings String[]         @default([])
+  relatedDrugs     String[]         @default([])
+  relatedDiseases  String[]         @default([])
+  taskType         String?
+  questionFormat   QuestionFormat?
+  mediaAssetId     String?
+  Condition        Condition?       @relation(fields: [conditionId], references: [id])
+  MedicalContent   MedicalContent?  @relation(fields: [medicalContentId], references: [id])
+  MediaAsset       MediaAsset?      @relation(fields: [mediaAssetId], references: [id])
   ReviewLog        ReviewLog[]
 
   @@index([category])
@@ -2195,7 +2248,10 @@ model Question {
   @@index([conditionId])
   @@index([difficulty])
   @@index([medicalContentId])
+  @@index([mediaAssetId])
+  @@index([questionFormat])
   @@index([system])
+  @@index([taskType])
   @@index([topic])
 }
 
@@ -2353,35 +2409,46 @@ model QuestionVersion {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model ReviewLog {
-  id               String          @id
-  userId           String
-  conditionId      String?
-  medicalContentId String?
-  questionId       String?
-  questionType     String?
-  grade            Int
-  state            Int
-  stability        Float
-  difficulty       Float
-  retrievability   Float?
-  reviewedAt       DateTime        @default(now())
-  scheduledAt      DateTime?
-  elapsedDays      Float?
-  responseTimeMs   Int?
-  wasCorrect       Boolean
-  sessionId        String?
-  attemptId        String?
-  deviceType       String?
-  system           String?
-  telemetry        Json?
-  fsrsVersion      String          @default("6.0")
-  createdAt        DateTime        @default(now())
-  questionFkId     String?
-  review_type      String          @default("real")
-  sessionType      SessionType     @default(MAIN)
-  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id])
-  Question         Question?       @relation(fields: [questionFkId], references: [id])
-  User             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                     String          @id
+  userId                 String
+  conditionId            String?
+  medicalContentId       String?
+  questionId             String?
+  questionType           String?
+  grade                  Int
+  state                  Int
+  stability              Float
+  difficulty             Float
+  retrievability         Float?
+  reviewedAt             DateTime        @default(now())
+  scheduledAt            DateTime?
+  elapsedDays            Float?
+  responseTimeMs         Int?
+  wasCorrect             Boolean
+  sessionId              String?
+  attemptId              String?
+  deviceType             String?
+  system                 String?
+  telemetry              Json?
+  fsrsVersion            String          @default("6.0")
+  createdAt              DateTime        @default(now())
+  questionFkId           String?
+  review_type            String          @default("real")
+  sessionType            SessionType     @default(MAIN)
+  /// Ghost Grader: A→B→A hover revisits (indecision signal)
+  hover_oscillations     Int?
+  /// Ghost Grader: scroll direction changes after answer reveal
+  vignette_regressions   Int?
+  /// Time from question display to first interaction (ms)
+  time_to_first_interaction Int?
+  /// Circadian rhythm phase at review time
+  circadian_phase        CircadianPhase?
+  taskType               String?
+  errorCategory          String?
+  errorConfidence        Float?
+  MedicalContent         MedicalContent? @relation(fields: [medicalContentId], references: [id])
+  Question               Question?       @relation(fields: [questionFkId], references: [id])
+  User                   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([conditionId, reviewedAt])
   @@index([medicalContentId])
@@ -2411,6 +2478,7 @@ model Rolling360Buffer {
   @@index([userId, slotIndex])
 }
 
+/// @deprecated SM-2 legacy. Uses easiness, interval, repetition - incompatible with FSRS. Migrate to Card (FSRS) + ReviewLog. Do not add new writes.
 model SRSItem {
   id             String    @id
   userId         String
@@ -2454,12 +2522,15 @@ model SavedQuestion {
   updatedAt        DateTime
   conditionId      String?
   medicalContentId String?
+  /// Task category for Due Cards sibling lookup (e.g. diagnosis, workup, treatment)
+  taskType         String?
   Condition        Condition?      @relation(fields: [conditionId], references: [id])
   MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id])
   User             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, questionId, type])
   @@index([conditionId])
+  @@index([conditionId, taskType])
   @@index([medicalContentId])
   @@index([questionId])
   @@index([userId])
@@ -2856,6 +2927,8 @@ model User {
   trainingPhase           TrainingPhase?
   rotationExamDate        DateTime?
   activeSystems           String[]                  @default([])
+  /** FSRS v6 optimized weights (21 params). Empty = use defaults. Denormalized from PersonalizedFSRSParams. */
+  fsrs_weights            Float[]                  @default([])
   Card                    Card[]
   CohortMember            CohortMember[]
   ConceptGap              ConceptGap[]
@@ -3152,24 +3225,30 @@ model UserPreferences {
 }
 
 model UserProgress {
-  id             String         @id
-  userId         String
-  conditionId    String
-  fsrsCard       Json
-  fsrsParams     Json?
-  reviewHistory  Json[]         @default([])
-  totalAttempts  Int            @default(0)
-  correctCount   Int            @default(0)
-  accuracy       Float          @default(0)
-  lastReviewAt   DateTime?
-  nextReviewAt   DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime
-  MedicalContent MedicalContent @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  User           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String         @id
+  userId          String
+  conditionId     String
+  system          String?
+  fsrsCard        Json?
+  fsrsParams      Json?
+  fsrsStability   Float?
+  fsrsDifficulty  Float?
+  fsrsState       Int?
+  fsrsReps        Int?
+  reviewHistory   Json[]         @default([])
+  totalAttempts   Int            @default(0)
+  correctCount    Int            @default(0)
+  accuracy        Float          @default(0)
+  lastReviewAt    DateTime?
+  nextReviewAt    DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime
+  MedicalContent  MedicalContent @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  User            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, conditionId])
   @@index([conditionId])
+  @@index([system])
   @@index([userId, conditionId])
   @@index([userId, nextReviewAt])
 }
@@ -3413,6 +3492,27 @@ model WeaknessPattern {
   @@index([medicalContentId])
   @@index([userId, conditionId])
   @@index([userId])
+}
+
+enum CircadianPhase {
+  PEAK
+  TROUGH
+  NEUTRAL
+}
+
+enum QuestionFormat {
+  VIGNETTE
+  IMAGE_FIRST
+  RECALL
+}
+
+enum SourceMaterialType {
+  TEXTBOOK
+  WIKIMEDIA
+  JOURNAL
+  GUIDELINE
+  USER_UPLOAD
+  OTHER
 }
 
 enum CognitiveLevel {

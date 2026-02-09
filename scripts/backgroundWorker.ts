@@ -101,6 +101,10 @@ async function processJob(job: any): Promise<void> {
       await processDuplicateDetection(job);
       break;
 
+    case 'fsrs_optimization':
+      await processFSRSOptimization(job);
+      break;
+
     default:
       throw new Error(`Unknown job type: ${job.jobType}`);
   }
@@ -241,6 +245,19 @@ async function processAIQualityCheck(job: any): Promise<void> {
 async function processDuplicateDetection(job: any): Promise<void> {
   console.log('[Worker] Running duplicate detection');
   // Placeholder for duplicate detection
+}
+
+/**
+ * FSRS parameter optimization (Phase 3)
+ * Runs nightly to optimize FSRS v6 weights per user from ReviewLog (sessionType=MAIN)
+ */
+async function processFSRSOptimization(job: any): Promise<void> {
+  console.log('[Worker] Running FSRS parameter optimization');
+  const { optimizeAllUsersFSRS } = await import('./automation/jobs/fsrsOptimization');
+  const result = await optimizeAllUsersFSRS();
+  console.log(
+    `[Worker] FSRS optimization complete: ${result.optimized}/${result.processed} users optimized`
+  );
 }
 
 /**

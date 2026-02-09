@@ -67,7 +67,7 @@ const COST_COLORS: Record<string, string> = {
   $$$$: 'text-red-600 dark:text-red-400',
 };
 
-export const OrderPanel: React.FC<OrderPanelProps> = ({
+export const OrderPanel: React.FC<OrderPanelProps> = React.memo(({
   isOpen,
   onClose,
   onOrderPlace,
@@ -519,6 +519,8 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
       </motion.div>
     </AnimatePresence>
   );
-};
+});
+
+OrderPanel.displayName = 'OrderPanel';
 
 export default OrderPanel;

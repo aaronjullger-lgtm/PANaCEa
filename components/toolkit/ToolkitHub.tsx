@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -7,14 +8,11 @@ import {
   BookOpen,
   Pill,
   Activity,
-  Beaker,
-  FileImage,
   Video,
   Headphones,
   ChevronRight,
   X,
   Menu,
-  Dna,
   Star,
   StarOff,
   Clock,
@@ -22,23 +20,14 @@ import {
   Lightbulb,
   FileText,
 } from 'lucide-react';
-import type { SystemCode } from '@/types';
-import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
-import {
-  DRUG_REGISTRY_ANTIBIOTICS,
-  DRUG_REGISTRY_CARDIOVASCULAR,
-  DRUG_REGISTRY_ENDOCRINE,
-  DRUG_REGISTRY_ANALGESICS,
-  DRUG_REGISTRY_PSYCHIATRY,
-} from '@/src/registries/drugRegistry';
 import { CalculatorHub } from './calculators/CalculatorHub';
 import { CALCULATORS as REGISTRY_CALCULATORS } from './calculators/calculatorRegistry';
 import { StorageKeys } from '@/lib/storage/storageRegistry';
-import { MedicalContentBrowser } from './MedicalContentBrowser';
 import { MnemonicGenerator } from './MnemonicGenerator';
 import { StudyGuideGenerator } from './StudyGuideGenerator';
 import { ClinicalMotionFlashcards } from './ClinicalMotionFlashcards';
 import { LectureConverter } from './LectureConverter';
+import { ABGInterpreter, EKGInterpreter } from './interpreters';
 
 // ============================================================================
 // Types & Interfaces
@@ -49,13 +38,7 @@ interface ToolkitHubProps {
   onClose: () => void;
 }
 
-type TabId =
-  | 'calculators'
-  | 'clinical'
-  | 'pharmacopeia'
-  | 'physiology'
-  | 'imaging'
-  | 'generators';
+type TabId = 'calculators' | 'generators' | 'interpreters';
 
 /** Calculator card type (registry entries used in ToolkitHub grid) */
 type Calculator = (typeof REGISTRY_CALCULATORS)[number];
@@ -70,14 +53,11 @@ interface NavTab {
 // Constants
 // ============================================================================
 
-/** Navigation tabs - single source of truth for desktop & mobile sidebars */
+/** Navigation tabs - Clinical Utilities only (calculators, generators, interpreters) */
 const NAV_TABS: NavTab[] = [
   { id: 'calculators', label: 'Calculators', icon: CalculatorIcon },
-  { id: 'clinical', label: 'Clinical Library', icon: BookOpen },
-  { id: 'pharmacopeia', label: 'Pharmacopeia', icon: Pill },
-  { id: 'physiology', label: 'Physiology', icon: Activity },
-  { id: 'imaging', label: 'Imaging Atlas', icon: FileImage },
   { id: 'generators', label: 'Generators', icon: Lightbulb },
+  { id: 'interpreters', label: 'Interpretation Assistants', icon: Activity },
 ];
 
 /** Single source of truth: use shared registry */
@@ -173,35 +153,6 @@ const getCategoryColor = (category: Calculator['category']): string => {
 // Subcomponents
 // ============================================================================
 
-/** System grid for Clinical/Pharmacopeia tabs - eliminates duplicate pattern */
-interface SystemGridProps {
-  onSelectSystem: (system: SystemCode) => void;
-}
-
-const SystemGrid: React.FC<SystemGridProps> = ({ onSelectSystem }) => (
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-    {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map((system) => {
-      const fullName = getSystemDisplayFullName(system);
-      return (
-        <button
-          key={system}
-          onClick={() => onSelectSystem(system)}
-          title={fullName}
-          className="min-w-0 text-left p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-md transition-all group"
-        >
-          <div className="font-bold text-[var(--color-accent)] mb-1 truncate" title={system}>
-            {system}
-          </div>
-          <div className="text-sm text-[var(--color-text-muted)] truncate min-w-0" title={fullName}>
-            {fullName}
-          </div>
-          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] mt-2 group-hover:translate-x-1 transition-transform" />
-        </button>
-      );
-    })}
-  </div>
-);
-
 /** Calculator Card Component with enhanced hover states and pin functionality */
 interface CalculatorCardProps {
   calc: Calculator;
@@ -283,69 +234,6 @@ const CalculatorCard: React.FC<CalculatorCardProps> = ({
   </motion.button>
 );
 
-/** Pharmacopeia tab: drug reference by class from registry */
-const PHARM_CATEGORIES: Array<{
-  id: string;
-  label: string;
-  drugs: Array<{ genericName: string; brandName?: string; drugClass: string[] }>;
-}> = [
-  { id: 'antibiotics', label: 'Antibiotics', drugs: DRUG_REGISTRY_ANTIBIOTICS },
-  { id: 'cardiovascular', label: 'Cardiovascular', drugs: DRUG_REGISTRY_CARDIOVASCULAR },
-  { id: 'endocrine', label: 'Endocrine', drugs: DRUG_REGISTRY_ENDOCRINE },
-  { id: 'analgesics', label: 'Analgesics', drugs: DRUG_REGISTRY_ANALGESICS },
-  { id: 'psychiatry', label: 'Psychiatry', drugs: DRUG_REGISTRY_PSYCHIATRY },
-];
-
-const PharmacopeiaContent: React.FC = () => {
-  const firstCategory = PHARM_CATEGORIES[0];
-  const [categoryId, setCategoryId] = useState<string>(firstCategory?.id ?? 'antibiotics');
-  const category = PHARM_CATEGORIES.find((c) => c.id === categoryId) ?? firstCategory ?? PHARM_CATEGORIES[0];
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {PHARM_CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setCategoryId(cat.id)}
-            className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
-              categoryId === cat.id
-                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] border-[var(--color-accent)]'
-                : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] hover:border-[var(--color-accent)]'
-            }`}
-          >
-            {cat.label} ({cat.drugs.length})
-          </button>
-        ))}
-      </div>
-      <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4">
-        <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-3">
-          {category?.label ?? 'Pharmacopeia'}
-        </h3>
-        <ul className="space-y-2 max-h-[60vh] overflow-y-auto">
-          {(category?.drugs ?? []).map((drug) => (
-            <li
-              key={drug.genericName}
-              className="flex justify-between items-baseline py-2 border-b border-[var(--color-border)] last:border-0 text-sm"
-            >
-              <span className="font-medium text-[var(--color-text-primary)]">
-                {drug.genericName}
-                {drug.brandName && (
-                  <span className="text-[var(--color-text-muted)] font-normal ml-2">
-                    ({drug.brandName})
-                  </span>
-                )}
-              </span>
-              <span className="text-xs text-[var(--color-text-muted)]">
-                {drug.drugClass.slice(0, 2).join(', ')}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-};
-
 /** Sidebar navigation button */
 interface SidebarNavButtonProps {
   tab: NavTab;
@@ -377,19 +265,31 @@ const SidebarNavButton: React.FC<SidebarNavButtonProps> = ({
 // Main Component
 // ============================================================================
 
+const VALID_UTILITY_TAB_IDS: TabId[] = ['calculators', 'generators', 'interpreters'];
+
 const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) => {
-  const [activeTab, setActiveTab] = useState<TabId>('calculators');
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') as TabId | null;
+  const [activeTab, setActiveTab] = useState<TabId>(
+    tabFromUrl && VALID_UTILITY_TAB_IDS.includes(tabFromUrl) ? tabFromUrl : 'calculators'
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCalculator, setSelectedCalculator] = useState<string | null>(null);
-  const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [selectedGenerator, setSelectedGenerator] = useState<
     'mnemonic' | 'study_guide' | 'clinical_motion' | 'lecture_script' | null
   >(null);
+  const [selectedInterpreter, setSelectedInterpreter] = useState<'abg' | 'ekg' | null>(null);
   const [mnemonicConcept, setMnemonicConcept] = useState('');
 
   const { pinnedCalcs, recentCalcs, togglePin, recordUsage } = useCalculatorPreferences();
+
+  useEffect(() => {
+    if (tabFromUrl && VALID_UTILITY_TAB_IDS.includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
 
   // Enhanced search with synonyms, keywords, and formula matching
   const filteredCalculators = useMemo(() => {
@@ -452,8 +352,8 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
   const handleTabChange = useCallback((tabId: TabId, closeSidebar = false) => {
     setActiveTab(tabId);
     setSelectedCalculator(null);
-    setSelectedSystem(null);
     setSelectedGenerator(null);
+    setSelectedInterpreter(null);
     if (closeSidebar) {
       setSidebarOpen(false);
     }
@@ -477,25 +377,13 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
       title: 'Clinical Calculators',
       description: 'Risk scores, diagnostic criteria, and clinical decision tools',
     },
-    clinical: {
-      title: 'Clinical Medicine Library',
-      description: 'Conditions organized by system and subcategory',
-    },
-    pharmacopeia: {
-      title: 'Pharmacopeia',
-      description: 'Drug reference with mechanisms, indications, and interactions',
-    },
-    physiology: {
-      title: 'Physiology & Lab Values',
-      description: 'Normal values, pathophysiology, and anatomy',
-    },
-    imaging: {
-      title: 'Imaging Atlas',
-      description: 'X-ray, CT, and MRI findings library',
-    },
     generators: {
       title: 'Generators & Study Aids',
       description: 'Mnemonics, study guides, clinical motion, and lecture scripts',
+    },
+    interpreters: {
+      title: 'Interpretation Assistants',
+      description: 'Input clinical data → Get diagnostic interpretation (ABG, EKG, etc.)',
     },
   };
 
@@ -512,8 +400,8 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span className="text-sm">Dashboard</span>
             </button>
-            <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Clinical Toolkit</h2>
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">Reference & Calculators</p>
+            <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Clinical Utilities</h2>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">Tools & Calculators</p>
           </div>
 
           <nav className="p-2">
@@ -618,9 +506,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                 placeholder={
                   activeTab === 'calculators'
                     ? "Search calculators (e.g. 'afib', 'pneumonia', 'pe')"
-                    : activeTab === 'clinical'
-                      ? 'Search conditions...'
-                      : 'Search applies to Calculators or Clinical tab'
+                    : 'Search calculators'
                 }
                 value={searchQuery}
                 onChange={(e) => {
@@ -788,191 +674,79 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
               </motion.div>
             )}
 
-            {/* CLINICAL LIBRARY TAB */}
-            {activeTab === 'clinical' && (
+            {/* INTERPRETATION ASSISTANTS TAB */}
+            {activeTab === 'interpreters' && (
               <motion.div
-                key="clinical"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
-              >
-                <MedicalContentBrowser
-                  initialSystem={selectedSystem ?? undefined}
-                  searchQuery={activeTab === 'clinical' ? searchQuery : undefined}
-                  onSelectCondition={undefined}
-                />
-              </motion.div>
-            )}
-
-            {/* PHARMACOPEIA TAB */}
-            {activeTab === 'pharmacopeia' && (
-              <motion.div
-                key="pharmacopeia"
+                key="interpreters"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <PharmacopeiaContent />
-              </motion.div>
-            )}
-
-            {/* PHYSIOLOGY TAB */}
-            {activeTab === 'physiology' && (
-              <motion.div
-                key="physiology"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Beaker className="w-8 h-8 text-[var(--color-data-pass)]" />
-                      <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
-                        Lab Normal Values
-                      </h3>
-                    </div>
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
-                          Electrolytes
-                        </h4>
-                        <div className="space-y-2 text-sm">
-                          {[
-                            ['Sodium', '135-145 mEq/L'],
-                            ['Potassium', '3.5-5.0 mEq/L'],
-                            ['Chloride', '96-106 mEq/L'],
-                            ['Bicarbonate', '22-28 mEq/L'],
-                            ['Calcium', '8.6-10.2 mg/dL'],
-                            ['Magnesium', '1.7-2.2 mg/dL'],
-                            ['Phosphate', '2.5-4.5 mg/dL'],
-                          ].map(([name, range]) => (
-                            <div
-                              key={name}
-                              className="flex justify-between border-b border-[var(--color-border)] pb-2"
-                            >
-                              <span className="text-[var(--color-text-muted)]">{name}</span>
-                              <span className="font-mono text-[var(--color-text-primary)]">
-                                {range}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
-                          CBC
-                        </h4>
-                        <div className="space-y-2 text-sm">
-                          {[
-                            ['WBC', '4-11 × 10³/μL'],
-                            ['Hemoglobin', '12-16 (F), 14-18 (M) g/dL'],
-                            ['Hematocrit', '36-46% (F), 41-50% (M)'],
-                            ['Platelets', '150-400 × 10³/μL'],
-                            ['MCV', '80-100 fL'],
-                          ].map(([name, range]) => (
-                            <div
-                              key={name}
-                              className="flex justify-between border-b border-[var(--color-border)] pb-2"
-                            >
-                              <span className="text-[var(--color-text-muted)]">{name}</span>
-                              <span className="font-mono text-[var(--color-text-primary)]">
-                                {range}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
-                          Chemistry / Renal
-                        </h4>
-                        <div className="space-y-2 text-sm">
-                          {[
-                            ['Glucose (fasting)', '70-100 mg/dL'],
-                            ['BUN', '7-20 mg/dL'],
-                            ['Creatinine', '0.6-1.2 mg/dL'],
-                            ['eGFR', '>90 mL/min/1.73 m²'],
-                            ['Albumin', '3.4-5.4 g/dL'],
-                            ['Bilirubin (total)', '0.1-1.2 mg/dL'],
-                            ['ALT', '7-56 U/L'],
-                            ['AST', '10-40 U/L'],
-                            ['Alk Phos', '44-147 U/L'],
-                          ].map(([name, range]) => (
-                            <div
-                              key={name}
-                              className="flex justify-between border-b border-[var(--color-border)] pb-2"
-                            >
-                              <span className="text-[var(--color-text-muted)]">{name}</span>
-                              <span className="font-mono text-[var(--color-text-primary)]">
-                                {range}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
-                          Coagulation
-                        </h4>
-                        <div className="space-y-2 text-sm">
-                          {[
-                            ['PT', '11-13.5 s'],
-                            ['PTT', '25-35 s'],
-                            ['INR', '0.8-1.2'],
-                          ].map(([name, range]) => (
-                            <div
-                              key={name}
-                              className="flex justify-between border-b border-[var(--color-border)] pb-2"
-                            >
-                              <span className="text-[var(--color-text-muted)]">{name}</span>
-                              <span className="font-mono text-[var(--color-text-primary)]">
-                                {range}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                {selectedInterpreter ? (
+                  <div className="space-y-4">
+                    <button
+                      onClick={() => setSelectedInterpreter(null)}
+                      className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Back to Interpretation Assistants
+                    </button>
+                    {selectedInterpreter === 'abg' && (
+                      <ABGInterpreter onBack={() => setSelectedInterpreter(null)} />
+                    )}
+                    {selectedInterpreter === 'ekg' && (
+                      <EKGInterpreter onBack={() => setSelectedInterpreter(null)} />
+                    )}
                   </div>
-
-                  <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Dna className="w-8 h-8 text-[var(--color-accent)]" />
-                      <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
-                        Anatomy & Physiology
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <motion.button
+                      type="button"
+                      onClick={() => setSelectedInterpreter('abg')}
+                      className="text-left p-6 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="p-2.5 rounded-xl text-[var(--color-data-pass)] bg-[var(--color-data-pass)]/10">
+                          <Activity className="w-5 h-5" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] ml-auto transition-all" />
+                      </div>
+                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">
+                        ABG Interpreter
                       </h3>
-                    </div>
-                    <p className="text-sm text-[var(--color-text-muted)] mb-4">
-                      Key anatomical structures and physiological processes are organized by system
-                      (MSK, CV, PULM, GI, NEURO). Use the Clinical Library tab to browse conditions
-                      by system and link to relevant anatomy.
-                    </p>
-                    <div className="text-sm text-[var(--color-text-muted)] space-y-2">
-                      <p>
-                        <strong className="text-[var(--color-text-primary)]">MSK:</strong> Knee
-                        (ACL, PCL, MCL, LCL), shoulder, spine
+                      <p className="text-sm text-[var(--color-text-muted)] mb-3">
+                        pH, pCO₂, HCO₃, O₂ → Acidosis/alkalosis, metabolic/respiratory, compensation
                       </p>
-                      <p>
-                        <strong className="text-[var(--color-text-primary)]">CV:</strong> Heart
-                        chambers, valves, coronary circulation
+                      <div className="flex items-center gap-2 text-xs text-[var(--color-accent)]">
+                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">Rule-based</span>
+                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">Winter&apos;s Formula</span>
+                      </div>
+                    </motion.button>
+
+                    <motion.button
+                      type="button"
+                      onClick={() => setSelectedInterpreter('ekg')}
+                      className="text-left p-6 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="p-2.5 rounded-xl text-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10">
+                          <Activity className="w-5 h-5" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] ml-auto transition-all" />
+                      </div>
+                      <h3 className="font-semibold text-[var(--color-text-primary)] mb-2">
+                        EKG Interpreter
+                      </h3>
+                      <p className="text-sm text-[var(--color-text-muted)] mb-3">
+                        Rhythm, rate, PR, QRS, QT, ST, T-wave → Diagnostic interpretation & DDx
                       </p>
-                      <p>
-                        <strong className="text-[var(--color-text-primary)]">PULM:</strong> Lungs,
-                        pleura, airways
-                      </p>
-                      <p>
-                        <strong className="text-[var(--color-text-primary)]">GI:</strong> Liver,
-                        pancreas, GI tract
-                      </p>
-                      <p>
-                        <strong className="text-[var(--color-text-primary)]">NEURO:</strong> Cranial
-                        nerves, CNS, PNS
-                      </p>
-                    </div>
+                      <div className="flex items-center gap-2 text-xs text-[var(--color-accent)]">
+                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">Interactive</span>
+                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">ECGPattern</span>
+                      </div>
+                    </motion.button>
                   </div>
-                </div>
+                )}
               </motion.div>
             )}
 

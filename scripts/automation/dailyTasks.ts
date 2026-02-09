@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
 import { prisma, disconnectPrisma } from '../helpers/prisma-client';
+import { createJob } from '../../lib/services/queue/jobQueue';
 
 // Load environment variables
 config();
@@ -275,6 +276,45 @@ async function databaseCleanup(): Promise<void> {
 }
 
 /**
+ * Enqueue nightly FSRS optimization job (runs via backgroundWorker)
+ */
+async function enqueueFSRSOptimization(): Promise<void> {
+  const start = Date.now();
+  console.log('🧠 Enqueueing FSRS optimization job...');
+
+  try {
+    const next3AM = new Date();
+    next3AM.setHours(3, 0, 0, 0);
+    if (new Date().getHours() >= 3) {
+      next3AM.setDate(next3AM.getDate() + 1);
+    }
+
+    await createJob(prisma, {
+      jobType: 'fsrs_optimization',
+      payload: {},
+      priority: 4,
+      scheduledFor: next3AM,
+    });
+
+    report.tasks.push({
+      name: 'FSRS Optimization Enqueue',
+      status: 'completed',
+      message: 'Scheduled FSRS optimization for next 3 AM',
+      duration: Date.now() - start,
+    });
+    report.summary.completed++;
+  } catch (error: any) {
+    report.tasks.push({
+      name: 'FSRS Optimization Enqueue',
+      status: 'failed',
+      message: `Failed: ${error.message}`,
+      duration: Date.now() - start,
+    });
+    report.summary.failed++;
+  }
+}
+
+/**
  * Grand Rounds daily challenge creation.
  * Strategy: GET /api/grand-rounds/today creates today's challenge on first request (Question table only).
  * This task is a no-op; creation is handled by the API. See docs/implementation/GRAND_ROUNDS_IMPLEMENTATION.md.
@@ -364,10 +404,11 @@ function saveReport(): void {
 async function main() {
   console.log('🌅 Starting daily automation tasks...\n');
 
-  report.summary.total = 6;
+  report.summary.total = 7;
 
   try {
     await createGrandRoundsChallenge(); // Create daily challenge first
+    await enqueueFSRSOptimization();
     await validateContentAccuracy();
     await identifyContentGaps();
     await checkMediaAssetQuality();

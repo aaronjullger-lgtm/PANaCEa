@@ -288,6 +288,42 @@ export interface TelemetryData {
    * Hesitation = pause > 200ms during mouse movement or typing
    */
   hesitation_count?: number;
+
+  /**
+   * Hover oscillations (A→B→A revisits) - Ghost Grader indecision signal
+   * @see hooks/useMicroKinetics.ts
+   */
+  hover_oscillations?: number;
+
+  /**
+   * Vignette regressions (scroll direction changes after answer reveal)
+   * @see hooks/useMicroKinetics.ts
+   */
+  vignette_regressions?: number;
+
+  /**
+   * Selection drift: time from answer selection to submit (ms). High = low confidence.
+   * @see hooks/useMicroKinetics.ts
+   */
+  selection_drift_ms?: number;
+
+  /**
+   * Mouse tremor score 0-1. High = erratic movement, cognitive load.
+   * @see hooks/useMicroKinetics.ts
+   */
+  tremor_score?: number;
+
+  /**
+   * Cursor entropy: total path length / straight-line distance. >1 = meandering, confusion.
+   * @see hooks/useMicroKinetics.ts
+   */
+  cursor_entropy?: number;
+
+  /**
+   * Elimination velocity: distractors crossed off per second. Strategy speed signal.
+   * @see components/session/QuizView.tsx
+   */
+  elimination_velocity?: number;
 }
 
 /**

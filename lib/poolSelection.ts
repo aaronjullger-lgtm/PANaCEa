@@ -3,26 +3,24 @@
  *
  * Pure functions for weighted random selection following PANCE blueprint.
  * Used by /api/questions/pool and unit-tested for correctness.
+ * Weights derived from lib/constants/blueprint (NCCIPA Jan 2025).
  */
 
-/** Official PANCE Content Blueprint percentages (2024) */
-export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = {
-  CV: 11,
-  PULM: 9,
-  GI: 8,
-  MSK: 8,
-  ID: 7,
-  NEURO: 7,
-  PSYCH: 7,
-  REPRO: 7,
-  ENDO: 6,
-  HEENT: 6,
-  PRO: 6,
-  HEME: 5,
-  RENAL: 5,
-  DERM: 4,
-  GU: 4,
-};
+import {
+  PANCE_SIMULATION_JAN2025_PERCENT,
+  PANCE_SIMULATION_TO_ABBREVIATION,
+} from './constants/blueprint';
+
+/** PANCE system percentages by DB abbreviation — from NCCIPA Jan 2025 blueprint (single source of truth) */
+export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = (() => {
+  const out: Record<string, number> = {};
+  for (const [name, pct] of Object.entries(PANCE_SIMULATION_JAN2025_PERCENT)) {
+    if (name === 'General') continue;
+    const abbrev = PANCE_SIMULATION_TO_ABBREVIATION[name];
+    if (abbrev) out[abbrev] = (out[abbrev] ?? 0) + pct;
+  }
+  return out;
+})();
 
 /**
  * Fisher-Yates shuffle for unbiased randomization

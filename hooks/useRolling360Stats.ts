@@ -107,9 +107,22 @@ const EMPTY_STATS: Rolling360Stats = {
 // =============================================================================
 
 async function fetchRolling360Stats(url: string, token: string | null): Promise<Rolling360Stats> {
+  // #region agent log
   if (!token) {
+    fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'useRolling360Stats.ts:fetch',
+        message: 'Rolling360 no token, returning EMPTY_STATS',
+        data: { hasToken: false },
+        hypothesisId: 'H4',
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
     return EMPTY_STATS;
   }
+  // #endregion
 
   const response = await fetch(url, {
     headers: {
@@ -118,12 +131,36 @@ async function fetchRolling360Stats(url: string, token: string | null): Promise<
     },
   });
 
+  // #region agent log
   if (!response.ok) {
     if (response.status === 401) {
+      fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'useRolling360Stats.ts:fetch',
+          message: 'Rolling360 401, returning EMPTY_STATS',
+          data: { status: 401 },
+          hypothesisId: 'H4',
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
       return EMPTY_STATS;
     }
+    fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'useRolling360Stats.ts:fetch',
+        message: 'Rolling360 fetch not ok',
+        data: { status: response.status, statusText: response.statusText },
+        hypothesisId: 'H4',
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
     throw new Error(`Failed to fetch Rolling 360 stats: ${response.statusText}`);
   }
+  // #endregion
 
   return response.json();
 }

@@ -16,6 +16,11 @@ const SessionGetSchema = z.object({
   count: z.string().optional(),
   system: z.string().optional(),
   mode: z.string().optional(),
+  /** Core PANCE Simulation: strict NCCIPA blueprint, no weak-area bias */
+  simulationStrict: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true' || v === '1'),
 });
 
 const SessionPostSchema = z.object({
@@ -24,6 +29,7 @@ const SessionPostSchema = z.object({
   mode: z.enum(['standard', 'review', 'weakness', 'random', 'interleaved']).optional(),
   systems: z.array(z.string()).optional(),
   prioritizeWeakAreas: z.boolean().optional(),
+  simulationStrict: z.boolean().optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -35,6 +41,19 @@ export const onRequestGet = authenticatedEndpoint(
     const logger = createEndpointLogger('/api/questions/session');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'functions/api/questions/session.ts:GET:entry',
+        message: 'Session GET entry',
+        data: { userId: auth.userId, hasEnvGemini: !!(env as Record<string, unknown>).GEMINI_API_KEY },
+        timestamp: Date.now(),
+        hypothesisId: 'H3',
+      }),
+    }).catch(() => {});
+    // #endregion
     try {
       const user = await prisma.user.findUnique({
         where: { clerkId: auth.userId },
@@ -51,6 +70,7 @@ export const onRequestGet = authenticatedEndpoint(
       const count = Math.min(parseInt(validated?.count || '10', 10), 50);
       const system = validated?.system || undefined;
       const mode = (validated?.mode || 'standard') as SessionQuestionRequest['mode'];
+      const simulationStrict = validated?.simulationStrict === true;
 
       const sessionService = new SessionService(env.DATABASE_URL, env);
       const result = await sessionService.getSessionQuestions({
@@ -58,6 +78,7 @@ export const onRequestGet = authenticatedEndpoint(
         count,
         system,
         mode,
+        simulationStrict,
       });
 
       logger.info('Session questions fetched (GET)', {
@@ -67,8 +88,23 @@ export const onRequestGet = authenticatedEndpoint(
 
       return { data: result };
     } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const errStack = error instanceof Error ? error.stack : undefined;
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          location: 'functions/api/questions/session.ts:GET:catch',
+          message: 'Session GET error',
+          data: { error: errMsg, stack: errStack?.slice(0, 200), userId: auth.userId },
+          timestamp: Date.now(),
+          hypothesisId: 'H3',
+        }),
+      }).catch(() => {});
+      // #endregion
       logger.error('Error fetching session questions', {
-        error: error instanceof Error ? error.message : String(error),
+        error: errMsg,
         userId: auth.userId,
       });
       return {
@@ -102,6 +138,7 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
       ...validated,
       userId: user.id,
       count: Math.min(validated.count || 10, 50),
+      simulationStrict: validated.simulationStrict === true,
     });
 
     logger.info('Session questions fetched (POST)', {

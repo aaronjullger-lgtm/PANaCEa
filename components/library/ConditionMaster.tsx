@@ -1,16 +1,11 @@
 /**
- * ConditionMaster - Hierarchical detail panel for MedicalContent
+ * ConditionMaster - Modal detail view for MedicalContent
  *
- * REDESIGNED with proper section organization:
- * - Essentials (Classic Patient, Epidemiology, Etiology, Risk Factors)
- * - Pathophysiology (Mechanism)
- * - Clinical Presentation (Symptoms, Physical Exam)
- * - Workup & Diagnostics (Best Initial Test, Labs, Imaging)
- * - Treatment (First-line Rx, Alternatives, Mechanism, Side Effects)
- * - Outcomes & Prognosis (Complications, Prognosis, Disposition)
+ * Delegates to SmartConditionView (Triage, Recognize, Order, Manage) when
+ * conditionId is available. Falls back to legacy layout for content without conditionId.
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import {
@@ -29,6 +24,8 @@ import {
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 import { parseListField, parseTextField, normalizeMedicalContent } from '@/lib/utils/normalization';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
+import { SmartConditionView } from '@/config/lazyComponents';
+import { Skeleton } from '@/components/ui/Skeleton';
 import type { MedicalContentDisplay } from '@/types/medical-content';
 
 interface ConditionMasterProps {
@@ -154,9 +151,46 @@ const PillListField: React.FC<{ label: string; value: unknown; color?: string }>
 };
 
 export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClose }) => {
+  const conditionId = content.conditionId ?? (content as { id?: string }).id ?? null;
   const normalized = useMemo(() => normalizeMedicalContent(content), [content]);
 
-  // Extract key values for hero cards
+  // Use SmartConditionView when we have conditionId (fetches full data with relations)
+  if (conditionId) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.97, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.97, y: 20 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          >
+            <Suspense
+              fallback={
+                <div className="p-6 space-y-4">
+                  <Skeleton className="h-10 w-3/4" />
+                  <Skeleton className="h-6 w-1/2" />
+                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-64 w-full" />
+                </div>
+              }
+            >
+              <SmartConditionView conditionId={conditionId} onClose={onClose} />
+            </Suspense>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
+  // Extract key values for hero cards (legacy fallback)
   const goldStandard = parseTextField(getValue(normalized, ['gold_standard', 'gold_standard_dx']));
   const firstLineRx = parseTextField(getValue(normalized, ['first_line_rx']));
   const bestInitialTest = parseTextField(getValue(normalized, ['best_initial_test']));

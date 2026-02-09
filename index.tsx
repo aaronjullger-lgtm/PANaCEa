@@ -32,6 +32,35 @@ if (!rootElement) {
   throw new Error('Could not find root element to mount to');
 }
 
+// #region agent log
+const DEBUG_INGEST = 'http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff';
+function debugLog(payload: Record<string, unknown>) {
+  fetch(DEBUG_INGEST, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...payload, timestamp: Date.now() }),
+  }).catch(() => {});
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (e) => {
+    debugLog({
+      hypothesisId: 'H5',
+      location: 'global',
+      message: 'window.onerror',
+      data: { message: e.message, filename: e.filename, lineno: e.lineno, colno: e.colno },
+    });
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    debugLog({
+      hypothesisId: 'H5',
+      location: 'global',
+      message: 'unhandledrejection',
+      data: { reason: String(e.reason) },
+    });
+  });
+}
+// #endregion
+
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>

@@ -1,16 +1,18 @@
 /**
  * SRS Flashcard View (Pillar 4: FSRS Generative Mnemonics)
  *
- * Uses GET /api/srs/next and POST /api/srs/submit. When user rates Hard (1),
- * backend returns triggerVisualRegeneration; we call requestMnemonicImage
- * and show the generated image with a flip animation.
+ * Uses GET /api/srs/next and POST /api/srs/submit. Implicit behavioral model:
+ * User flips card, then marks Correct or Incorrect. FSRS rating (1–4) is derived
+ * from correctness + time spent—no self-evaluation of difficulty.
+ * When user marks Incorrect, backend may return triggerVisualRegeneration; we
+ * request an exaggerated mnemonic image and show it with a flip animation.
  */
 
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Loader2, RotateCcw, ImagePlus } from 'lucide-react';
+import { Check, X, ChevronLeft, Loader2, RotateCcw, ImagePlus } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import {
   fetchNextVariantCard,
@@ -18,17 +20,12 @@ import {
   requestMnemonicImage,
   type VariantNextResponse,
 } from '@/lib/services/srsService';
+import { deriveFsrsRating } from '@/lib/utils/fsrsImplicitRating';
+import { toast } from '@/lib/toast';
 
 interface SrsFlashcardViewProps {
   onExit: () => void;
 }
-
-const RATING_LABELS: Record<1 | 2 | 3 | 4, string> = {
-  1: 'Again',
-  2: 'Hard',
-  3: 'Good',
-  4: 'Easy',
-};
 
 type CardData = VariantNextResponse & { questionId: string; front: string; back: string };
 
@@ -46,6 +43,12 @@ function getCardPayload(data: VariantNextResponse | null | undefined): CardData 
     front: front.trim(),
     back: backText || front.trim(),
   };
+}
+
+function formatNextReview(date: Date | string | undefined): string {
+  if (!date) return '';
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
@@ -103,12 +106,20 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
     void loadNext();
   }, [loadNext]);
 
-  const handleSubmit = useCallback(
-    async (rating: number) => {
+  const handleMarkCorrect = useCallback(() => {
+    void handleBinarySubmit(true);
+  }, []);
+
+  const handleMarkIncorrect = useCallback(() => {
+    void handleBinarySubmit(false);
+  }, []);
+
+  const handleBinarySubmit = useCallback(
+    async (isCorrect: boolean) => {
       if (!card || submitting) return;
       setSubmitting(true);
-      const timeSpent = Math.round(Date.now() - startTimeRef.current);
-      const isCorrect = rating >= 3;
+      const timeSpentMs = Date.now() - startTimeRef.current;
+      const rating = deriveFsrsRating(isCorrect, timeSpentMs);
       try {
         const result = await submitVariantReview(
           {
@@ -117,13 +128,22 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
             questionId: card.questionId,
             rating,
             isCorrect,
-            timeSpent,
+            timeSpent: Math.round(timeSpentMs),
             variantId: card.isVariant ? (card.question as { id?: string })?.id : undefined,
           },
           srsAuth()
         );
         setSubmitting(false);
         if (!result) return;
+
+        const nextDate = result.nextReviewDate;
+        const nextStr = formatNextReview(nextDate);
+        if (nextStr) {
+          toast.info(`Next review: ${nextStr}`, { duration: 2500 });
+        } else {
+          toast.info('Interval updated based on performance', { duration: 2000 });
+        }
+
         if (result.triggerVisualRegeneration) {
           setMnemonicLoading(true);
           const visual = await requestMnemonicImage(card.front, card.back, {
@@ -190,7 +210,10 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-lg font-semibold text-[var(--color-text-primary)]" data-testid="srs-flashcards-heading">
+        <h1
+          className="text-lg font-semibold text-[var(--color-text-primary)]"
+          data-testid="srs-flashcards-heading"
+        >
           SRS Flashcards
         </h1>
       </div>
@@ -243,7 +266,7 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
                 animate={{ opacity: 1, rotateY: 0 }}
                 exit={{ opacity: 0, rotateY: 90 }}
                 transition={{ duration: 0.25 }}
-                className="absolute inset-0 flex items-center justify-center p-6"
+                className="absolute inset-0 flex flex-col items-center justify-center p-6"
               >
                 <p className="text-[var(--color-text-primary)] text-center text-lg leading-relaxed">
                   {card.front}
@@ -264,19 +287,28 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
           </button>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-2 mt-6">
-          {([1, 2, 3, 4] as const).map((rating) => (
+        {flipped && !mnemonicImage && (
+          <div className="flex flex-wrap justify-center gap-3 mt-6" data-testid="srs-binary-buttons">
             <button
-              key={rating}
               type="button"
               disabled={submitting}
-              onClick={() => handleSubmit(rating)}
-              className="min-h-[44px] min-w-[44px] px-4 py-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] text-sm font-medium disabled:opacity-50 hover:bg-[var(--color-bg-tertiary)] cursor-pointer"
+              onClick={handleMarkIncorrect}
+              className="min-h-[44px] min-w-[44px] px-5 py-3 rounded-lg border border-[var(--color-data-provisional)] bg-[var(--color-bg-secondary)] text-[var(--color-data-provisional)] text-sm font-medium disabled:opacity-50 hover:bg-[var(--color-bg-tertiary)] cursor-pointer inline-flex items-center gap-2"
             >
-              {RATING_LABELS[rating]}
+              <X className="w-5 h-5" />
+              Incorrect
             </button>
-          ))}
-        </div>
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={handleMarkCorrect}
+              className="min-h-[44px] min-w-[44px] px-5 py-3 rounded-lg border border-[var(--color-data-pass)] bg-[var(--color-bg-secondary)] text-[var(--color-data-pass)] text-sm font-medium disabled:opacity-50 hover:bg-[var(--color-bg-tertiary)] cursor-pointer inline-flex items-center gap-2"
+            >
+              <Check className="w-5 h-5" />
+              Correct
+            </button>
+          </div>
+        )}
 
         {mnemonicImage && (
           <div className="mt-4 flex justify-center">

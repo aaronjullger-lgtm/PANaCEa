@@ -41,8 +41,8 @@ const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = [
   { id: 'home', label: 'Home', icon: Home, href: '/study', section: 'study' },
   { id: 'practice', label: 'Practice', icon: Dumbbell, href: '/menu', section: 'study' },
   { id: 'progress', label: 'Progress', icon: BarChart3, href: '/study?tab=analytics', section: 'study' },
-  { id: 'reference', label: 'Reference', icon: BookOpen, href: '/study/reference', section: 'resources' },
-  { id: 'toolkit', label: 'Toolkit', icon: Calculator, href: '/study/toolkit', section: 'resources' },
+  { id: 'knowledge', label: 'Knowledge Base', icon: BookOpen, href: '/study/knowledge', section: 'resources' },
+  { id: 'utilities', label: 'Clinical Utilities', icon: Calculator, href: '/study/utilities', section: 'resources' },
 ];
 
 const RAIL_WIDTH_COLLAPSED = 56;
@@ -131,14 +131,23 @@ export const NavRail: React.FC<NavRailProps> = ({
             aria-current={isActive ? 'page' : undefined}
           >
             {isActive && (
-              <motion.div
-                layoutId="active-nav-pill"
-                className="absolute inset-0 rounded-xl bg-[var(--color-bg-tertiary)] border-l-4 border-l-[var(--color-accent)] z-0"
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                aria-hidden
-              />
+              <>
+                <motion.div
+                  layoutId="active-nav-pill"
+                  className="absolute inset-0 rounded-xl bg-[var(--color-bg-tertiary)] z-0"
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  aria-hidden
+                />
+                {/* Gold bar as separate element inside padding so it doesn't crop rounded background */}
+                <span
+                  className="absolute left-2 top-1/2 z-0 h-6 w-0.5 -translate-y-1/2 rounded-full bg-[var(--color-accent)]"
+                  aria-hidden
+                />
+              </>
             )}
-            <span className="relative z-10 flex w-full items-center gap-3">
+            <span
+              className={`relative z-10 flex w-full items-center gap-3 ${isActive ? 'pl-1' : ''}`}
+            >
               {content}
             </span>
           </Link>
@@ -162,7 +171,7 @@ export const NavRail: React.FC<NavRailProps> = ({
     <div key={label} className="mb-1">
       {!collapsed && (
         <div className="px-3 py-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
             {label}
           </span>
         </div>
@@ -179,15 +188,15 @@ export const NavRail: React.FC<NavRailProps> = ({
       animate={{ width: collapsed ? RAIL_WIDTH_COLLAPSED : RAIL_WIDTH_EXPANDED }}
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
       className={`
-        fixed left-0 z-30 flex flex-col
+        fixed left-0 z-40 flex flex-col
         border-r border-[var(--color-border)]
         bg-[var(--color-bg-primary)]/95 backdrop-blur-md
         shadow-[0_4px_24px_var(--color-shadow-soft)]
         ${className}
       `}
       style={{
-        top: 'var(--header-height, 56px)',
-        height: 'calc(100vh - var(--header-height, 56px))',
+        top: 'var(--header-height, 4rem)',
+        height: 'calc(100vh - var(--header-height, 4rem))',
       }}
       aria-label="Main navigation"
     >
