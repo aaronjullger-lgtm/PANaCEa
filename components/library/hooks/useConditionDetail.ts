@@ -130,23 +130,23 @@ export function useConditionDetail(conditionId: string | null | undefined): UseC
 
     try {
       const res = await fetch(`/api/content/condition/${encodeURIComponent(conditionId)}`);
-      const json = await res.json();
+      const json = (await res.json()) as { data?: Record<string, unknown>; error?: string };
 
       if (!res.ok) {
-        const errMsg = json?.error ?? json?.data?.error ?? `Failed to load condition (${res.status})`;
+        const errMsg = json?.error ?? (json?.data?.error as string) ?? `Failed to load condition (${res.status})`;
         setError(errMsg);
         setData(null);
         return;
       }
 
       const raw = json?.data ?? json;
-      if (!raw || raw.error) {
-        setError(raw?.error ?? 'Condition not found');
+      if (!raw || (typeof raw === 'object' && 'error' in raw)) {
+        setError(raw && typeof raw === 'object' && 'error' in raw ? String((raw as { error: unknown }).error) : 'Condition not found');
         setData(null);
         return;
       }
 
-      const normalized = normalizeMedicalContent(raw) as ConditionDetailData;
+      const normalized = normalizeMedicalContent(raw as Record<string, unknown>) as unknown as ConditionDetailData;
       setData(normalized);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch condition');

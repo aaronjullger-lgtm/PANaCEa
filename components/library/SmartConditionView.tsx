@@ -1194,6 +1194,7 @@ export const SmartConditionView: React.FC<SmartConditionViewProps> = ({
       id: c.id,
       mistakenForId: c.conditionId,
       selectedConditionId: c.condition,
+      conditionName: c.condition, // Explicit display name for UUID guard
     })),
     // Add details if loaded
     ...(details

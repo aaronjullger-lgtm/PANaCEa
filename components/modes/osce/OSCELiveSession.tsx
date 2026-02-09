@@ -54,6 +54,8 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [micMuted, setMicMuted] = useState(false);
   const sessionRef = useRef<{ close?: () => void; sendClientContent?: (opts: unknown) => void; sendToolResponse?: (opts: { functionResponses: Array<{ id?: string; name: string; response: unknown }> }) => void } | null>(null);
+  /** Guard against setState on unmounted component (same pattern as AudioInterface) */
+  const mountedRef = useRef(true);
 
   const connect = useCallback(async () => {
     setStatus('connecting');
@@ -93,7 +95,7 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
           ],
         },
         callbacks: {
-          onopen: () => setStatus('connected'),
+          onopen: () => { if (mountedRef.current) setStatus('connected'); },
           onmessage: (msg: unknown) => {
             const m = msg as { toolCall?: { functionCalls?: Array<{ id?: string; name?: string }> }; serverContent?: { turnComplete?: boolean } };
             const calls = m?.toolCall?.functionCalls;
@@ -116,11 +118,14 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
             }
           },
           onerror: (e: { message?: string }) => {
+            if (!mountedRef.current) return;
             setStatus('error');
             setErrorMessage(e?.message ?? 'Connection error');
           },
           onclose: (e: { reason?: string }) => {
-            if (status !== 'error') setStatus('idle');
+            if (!mountedRef.current) return;
+            // Use functional update to avoid stale closure over `status`
+            setStatus((prev) => prev === 'error' ? prev : 'idle');
             if (e?.reason) setErrorMessage(e.reason);
           },
         },
@@ -131,7 +136,7 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
       setStatus('error');
       setErrorMessage(err instanceof Error ? err.message : 'Failed to connect');
     }
-  }, [sessionId, getToken, status, systemInstruction]);
+  }, [sessionId, getToken, systemInstruction]);
 
   const disconnect = useCallback(() => {
     if (sessionRef.current?.close) {
@@ -143,7 +148,9 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
   }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
       if (sessionRef.current?.close) sessionRef.current.close();
       sessionRef.current = null;
     };

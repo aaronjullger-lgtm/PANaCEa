@@ -271,6 +271,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   addPerformanceRecord,
   addMissedQuestion,
   updateReviewQuestion,
+  removeDueConcept,
   updateLastPerformanceErrorTag,
   setIsLoading,
   setError,
@@ -1018,19 +1019,34 @@ const QuizView: React.FC<QuizViewProps> = ({
             }
 
             const result = (await response.json()) as {
-              data?: { quality?: number; implicitMetrics?: { latencyRatio?: number } };
+              data?: {
+                quality?: number;
+                implicitMetrics?: { latencyRatio?: number; gradeContinuous?: number };
+                fsrsSchedule?: {
+                  intervalDays?: number;
+                  nextDueDate?: string;
+                  stability?: number;
+                  difficulty?: number;
+                };
+              };
             };
 
-            // Map API response to legacy SRSScheduleResult format for backward compatibility
+            // Use real FSRS schedule from backend when available
+            const schedule = result.data?.fsrsSchedule;
+            const realInterval = schedule?.intervalDays ?? 1;
+            const realDueDate = schedule?.nextDueDate
+              ? new Date(schedule.nextDueDate)
+              : new Date(Date.now() + realInterval * 86400000);
+
             setSrsResult({
-              interval: 1,
+              interval: realInterval,
               repetition: 0,
-              easiness: 2.5,
-              dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
-              difficulty: result.data?.quality ?? 3,
-              stabilityScore: result.data?.implicitMetrics?.latencyRatio ?? 1.0,
+              easiness: schedule?.stability ?? 2.5,
+              dueDate: realDueDate,
+              difficulty: schedule?.difficulty ?? (result.data?.quality ?? 3),
+              stabilityScore: schedule?.stability ?? (result.data?.implicitMetrics?.latencyRatio ?? 1.0),
               qualityAdjusted: result.data?.quality ?? 3,
-              modifiersApplied: [],
+              modifiersApplied: schedule ? ['fsrs_v5'] : [],
             });
           } catch (err) {
             console.error('Failed to submit review to server:', err);

@@ -113,7 +113,7 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [sidebarOpen, onClose]);
 
-  const currentTab = NAV_TABS.find((t) => t.id === activeTab) ?? NAV_TABS[0];
+  const currentTab = NAV_TABS.find((t) => t.id === activeTab) ?? NAV_TABS[0]!;
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] flex">

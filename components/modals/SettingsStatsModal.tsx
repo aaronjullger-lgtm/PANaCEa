@@ -70,13 +70,14 @@ import {
   saveWidgetPreferences as saveWidgetPrefs,
 } from '@/lib/dashboardUtils';
 import { getAccuracyBarClassSemantic } from '@/lib/accuracyColorUtils';
-import ActivityHeatmap from '@/components/analytics/ActivityHeatmap';
-import DecisionTimeAnalysis from '@/components/analytics/DecisionTimeAnalysis';
-import LongitudinalProgressDashboard from '@/components/analytics/LongitudinalProgressDashboard';
-import WeaknessCheatsheetExporter from '@/components/analytics/WeaknessCheatsheetExporter';
+// Lazy-load heavy analytics components — only rendered in specific tabs
+const ActivityHeatmap = lazy(() => import('@/components/analytics/ActivityHeatmap'));
+const DecisionTimeAnalysis = lazy(() => import('@/components/analytics/DecisionTimeAnalysis'));
+const LongitudinalProgressDashboard = lazy(() => import('@/components/analytics/LongitudinalProgressDashboard'));
+const WeaknessCheatsheetExporter = lazy(() => import('@/components/analytics/WeaknessCheatsheetExporter'));
 import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
 import { ARCHIVE_AND_RESET, TO_REVIEW_LABEL, CLEAR_TO_REVIEW } from '@/config/labels';
-import EnhancedSettingsTab from '@/components/settings/EnhancedSettingsTab';
+const EnhancedSettingsTab = lazy(() => import('@/components/settings/EnhancedSettingsTab'));
 import { useCommuter } from '@/contexts/CommuterContext';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useClinicalFidelitySettings } from '@/hooks/useClinicalFidelitySettings';

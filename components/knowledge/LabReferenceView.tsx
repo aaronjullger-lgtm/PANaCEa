@@ -74,8 +74,8 @@ export const LabReferenceView: React.FC = () => {
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      setLabs(json.data ?? []);
+      const json = (await res.json()) as { data?: unknown[] };
+      setLabs((json.data ?? []) as typeof labs);
     } catch (err) {
       console.error('[LabReferenceView] fetch error', err);
       setError(err instanceof Error ? err.message : 'Failed to load lab tests');
@@ -106,8 +106,7 @@ export const LabReferenceView: React.FC = () => {
       <ErrorState
         title="Failed to load lab reference"
         message={error}
-        actionLabel="Retry"
-        onAction={fetchLabs}
+        onRetry={fetchLabs}
       />
     );
   }

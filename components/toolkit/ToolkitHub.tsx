@@ -19,6 +19,7 @@ import {
   Sparkles,
   Lightbulb,
   FileText,
+  FileImage,
 } from 'lucide-react';
 import { CalculatorHub } from './calculators/CalculatorHub';
 import { CALCULATORS as REGISTRY_CALCULATORS } from './calculators/calculatorRegistry';
@@ -38,7 +39,7 @@ interface ToolkitHubProps {
   onClose: () => void;
 }
 
-type TabId = 'calculators' | 'generators' | 'interpreters';
+type TabId = 'calculators' | 'generators' | 'interpreters' | 'imaging';
 
 /** Calculator card type (registry entries used in ToolkitHub grid) */
 type Calculator = (typeof REGISTRY_CALCULATORS)[number];
@@ -384,6 +385,10 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
     interpreters: {
       title: 'Interpretation Assistants',
       description: 'Input clinical data → Get diagnostic interpretation (ABG, EKG, etc.)',
+    },
+    imaging: {
+      title: 'Radiology Scroll',
+      description: 'Classic imaging findings and diagnostic radiology atlas',
     },
   };
 

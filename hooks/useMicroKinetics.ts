@@ -52,8 +52,8 @@ function countOscillations(sequence: string[]): number {
   let count = 0;
   const seen = new Set<string>();
   for (let i = 0; i < sequence.length; i++) {
-    const label = sequence[i];
-    const prev = i > 0 ? sequence[i - 1] : null;
+    const label = sequence[i]!;
+    const prev = i > 0 ? sequence[i - 1]! : null;
     if (seen.has(label) && prev !== label) count++;
     seen.add(label);
   }
@@ -69,14 +69,14 @@ interface Point {
 /** Compute cursor entropy: pathLength / idealDistance. >1 = meandering path. */
 function computeCursorEntropy(points: Point[]): number {
   if (points.length < 2) return 0;
-  const first = points[0];
-  const last = points[points.length - 1];
+  const first = points[0]!;
+  const last = points[points.length - 1]!;
   const idealDistance = Math.hypot(last.x - first.x, last.y - first.y) || 1;
   let pathLength = 0;
   for (let i = 1; i < points.length; i++) {
     pathLength += Math.hypot(
-      points[i].x - points[i - 1].x,
-      points[i].y - points[i - 1].y
+      points[i]!.x - points[i - 1]!.x,
+      points[i]!.y - points[i - 1]!.y
     );
   }
   return pathLength / idealDistance;
@@ -85,16 +85,16 @@ function computeCursorEntropy(points: Point[]): number {
 /** Compute tremor score from sampled mouse path. High = erratic/non-linear. */
 function computeTremorScore(points: Point[]): number {
   if (points.length < 5) return 0;
-  const first = points[0];
-  const last = points[points.length - 1];
+  const first = points[0]!;
+  const last = points[points.length - 1]!;
   const straightLine = Math.hypot(last.x - first.x, last.y - first.y) || 1;
   let pathLength = 0;
   let reversals = 0;
   let prevDx = 0;
   let prevDy = 0;
   for (let i = 1; i < points.length; i++) {
-    const dx = points[i].x - points[i - 1].x;
-    const dy = points[i].y - points[i - 1].y;
+    const dx = points[i]!.x - points[i - 1]!.x;
+    const dy = points[i]!.y - points[i - 1]!.y;
     const segLen = Math.hypot(dx, dy);
     pathLength += segLen;
     if (i > 1 && (dx * prevDx + dy * prevDy) < 0) reversals++;

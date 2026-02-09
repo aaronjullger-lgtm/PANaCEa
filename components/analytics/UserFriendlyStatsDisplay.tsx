@@ -33,6 +33,7 @@ import {
   Activity,
   RefreshCw,
   Coffee,
+  Minus,
 } from 'lucide-react';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { UserStatsOverviewSkeleton } from '@/components/loading';

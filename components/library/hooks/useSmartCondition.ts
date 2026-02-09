@@ -55,7 +55,6 @@ export interface ConditionDetails {
   age_demographic: unknown;
   gender_bias: string | null;
   classic_patient: string | null;
-  riskFactors: string | null;
   differentials: unknown;
   LabConditionLink: Array<{
     id: string;
@@ -154,19 +153,20 @@ export function useSmartCondition(
       const res = await fetch(
         `/api/content/condition/${encodeURIComponent(conditionId)}/summary`
       );
-      const json = await res.json();
+      const json = (await res.json()) as { data?: Record<string, unknown>; error?: string };
       if (!res.ok) {
-        setErrorSummary(json?.data?.error ?? json?.error ?? `Failed to load (${res.status})`);
+        const errMsg = (json?.data?.error as string) ?? json?.error ?? `Failed to load (${res.status})`;
+        setErrorSummary(errMsg);
         setSummary(null);
         return;
       }
       const data = json?.data ?? json;
-      if (data?.error) {
-        setErrorSummary(data.error);
+      if (data && typeof data === 'object' && 'error' in data) {
+        setErrorSummary(String((data as { error: unknown }).error));
         setSummary(null);
         return;
       }
-      setSummary(data as ConditionSummary);
+      setSummary(data as unknown as ConditionSummary);
     } catch (err) {
       setErrorSummary(err instanceof Error ? err.message : 'Failed to fetch summary');
       setSummary(null);
@@ -183,19 +183,20 @@ export function useSmartCondition(
       const res = await fetch(
         `/api/content/condition/${encodeURIComponent(conditionId)}/details`
       );
-      const json = await res.json();
+      const json = (await res.json()) as { data?: Record<string, unknown>; error?: string };
       if (!res.ok) {
-        setErrorDetails(json?.data?.error ?? json?.error ?? `Failed to load (${res.status})`);
+        const errMsg = (json?.data?.error as string) ?? json?.error ?? `Failed to load (${res.status})`;
+        setErrorDetails(errMsg);
         setDetails(null);
         return;
       }
       const data = json?.data ?? json;
-      if (data?.error) {
-        setErrorDetails(data.error);
+      if (data && typeof data === 'object' && 'error' in data) {
+        setErrorDetails(String((data as { error: unknown }).error));
         setDetails(null);
         return;
       }
-      setDetails(data as ConditionDetails);
+      setDetails(data as unknown as ConditionDetails);
     } catch (err) {
       setErrorDetails(err instanceof Error ? err.message : 'Failed to fetch details');
       setDetails(null);

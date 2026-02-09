@@ -162,6 +162,7 @@ export interface SubmitDrillReviewResult {
   timeSpentMs: number;
   implicitMetrics: {
     rating: Rating;
+    gradeContinuous: number;
     confidence: number;
     latencyRatio: number;
     answerSwitches: number;
@@ -170,6 +171,13 @@ export interface SubmitDrillReviewResult {
     phase: string;
     stabilityModifier: number;
     localHour: number;
+  };
+  /** Real FSRS schedule — undefined when FSRS was skipped (cram, rapid_recall, rapid guess, no conditionId) */
+  fsrsSchedule?: {
+    intervalDays: number;
+    nextDueDate: string;
+    stability: number;
+    difficulty: number;
   };
 }
 
@@ -414,6 +422,9 @@ export async function submitDrillReview(
   // Also skip FSRS when rapid guess is detected — accidental taps must not pollute SRS scheduling
   const countForFSRS = sessionType !== 'cram' && sessionType !== 'rapid_recall';
 
+  // Capture FSRS schedule for the return value so the frontend can display real data
+  let fsrsSchedule: { intervalDays: number; nextDueDate: string; stability: number; difficulty: number } | undefined;
+
   if (question.conditionId && countForFSRS && !isRapidGuess) {
     try {
       const fsrs = new FSRS();
@@ -453,6 +464,16 @@ export async function submitDrillReview(
         modifiedStability *= 1 - implicitDifficulty * 0.5;
       }
       const updatedCard = { ...rawCard, stability: Math.max(0.01, modifiedStability) };
+
+      // Capture real FSRS schedule for the API response
+      fsrsSchedule = {
+        intervalDays: updatedCard.scheduled_days,
+        nextDueDate: new Date(
+          Date.now() + updatedCard.scheduled_days * 86400000
+        ).toISOString(),
+        stability: updatedCard.stability,
+        difficulty: updatedCard.difficulty,
+      };
 
       // Write to ReviewLog for FSRS v6 optimizer (MAIN/real sessions only)
       try {
@@ -628,5 +649,7 @@ export async function submitDrillReview(
       stabilityModifier: circadianContext.stabilityModifier,
       localHour: circadianContext.localHour,
     },
+    // Real FSRS schedule data — undefined when FSRS was skipped (cram, rapid_recall, rapid guess, no conditionId)
+    fsrsSchedule,
   };
 }
