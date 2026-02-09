@@ -395,11 +395,23 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
         return;
       }
 
-      let data: UserStatsResponse & { success?: boolean; error?: string };
+      let data: UserStatsResponse & { success?: boolean; error?: string; message?: string };
       try {
-        data = (await response.json()) as UserStatsResponse & { success?: boolean; error?: string };
+        data = (await response.json()) as UserStatsResponse & {
+          success?: boolean;
+          error?: string;
+          message?: string;
+        };
       } catch {
-        if (!response.ok) throw new Error(response.statusText || 'Failed to fetch stats');
+        if (!response.ok) {
+          const friendly =
+            response.status === 503
+              ? 'Analytics temporarily unavailable. Please try again later.'
+              : response.status === 500
+                ? 'Server error loading analytics. Please try again later.'
+                : response.statusText || 'Failed to load analytics';
+          throw new Error(friendly);
+        }
         throw new Error('Invalid response from server');
       }
 
@@ -411,7 +423,14 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
       }
 
       if (!response.ok) {
-        throw new Error(data?.error || `Failed to fetch stats: ${response.statusText}`);
+        const serverMessage =
+          data?.message || data?.error || (response.status === 503 ? 'Service unavailable.' : '');
+        const friendly =
+          serverMessage ||
+          (response.status === 500
+            ? 'Server error loading analytics. Please try again later.'
+            : `Failed to load analytics (${response.status})`);
+        throw new Error(friendly);
       }
 
       setUserStats(data as UserStatsResponse);
@@ -550,7 +569,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
         <p className="text-sm text-[var(--color-text-muted)] mt-1">{error}</p>
         <button
           onClick={loadData}
-          className="mt-4 px-4 py-2 rounded-lg font-medium bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2"
+          className="mt-4 px-4 py-2 rounded-lg font-medium bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2"
         >
           Try Again
         </button>

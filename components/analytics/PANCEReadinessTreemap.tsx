@@ -147,7 +147,7 @@ export const PANCEReadinessTreemap: React.FC<PANCEReadinessTreemapProps> = ({
         </h3>
       </div>
       <div className="h-[320px] min-h-[200px] w-full min-w-0">
-        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+        <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={0}>
           <Treemap
             data={chartData}
             dataKey="volume"

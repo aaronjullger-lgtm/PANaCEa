@@ -475,7 +475,9 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ level, systemName, categoryName
 
       {systemName && (
         <>
-          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <span className="inline-flex items-center shrink-0 bg-transparent" aria-hidden>
+            <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+          </span>
           <button
             onClick={() => onNavigate('category')}
             className={`${
@@ -491,7 +493,9 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ level, systemName, categoryName
 
       {categoryName && (
         <>
-          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <span className="inline-flex items-center shrink-0 bg-transparent" aria-hidden>
+            <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+          </span>
           <span className="text-[var(--color-text-primary)] font-semibold">{categoryName}</span>
         </>
       )}

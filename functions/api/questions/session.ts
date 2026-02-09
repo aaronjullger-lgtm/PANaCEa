@@ -39,6 +39,13 @@ export const onRequestGet = authenticatedEndpoint(
   async (context) => {
     const { env, auth, validated } = context;
     const logger = createEndpointLogger('/api/questions/session');
+    if (!env.DATABASE_URL) {
+      logger.error('DATABASE_URL not configured');
+      return {
+        data: { error: 'Session service unavailable', message: 'Server database is not configured.' },
+        status: 503,
+      };
+    }
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
     let sessionService: SessionService | null = null;
     try {

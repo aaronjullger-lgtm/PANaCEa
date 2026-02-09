@@ -7,6 +7,8 @@
 
 export { NavRail } from './NavRail';
 export type { QuickActionItem } from './NavRail';
+export { SidebarItem } from './SidebarItem';
+export type { SidebarItemProps } from './SidebarItem';
 export { AppBrand } from './AppBrand';
 export type { AppBrandSize, AppBrandProps } from './AppBrand';
 export { PageContainer } from './PageContainer';

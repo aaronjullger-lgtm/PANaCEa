@@ -692,7 +692,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   </button>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={Math.max(320, systemPerformanceBarData.length * 36)}>
+                <ResponsiveContainer width="100%" height={Math.max(320, systemPerformanceBarData.length * 36)} minHeight={200} minWidth={0}>
                   <BarChart
                     layout="vertical"
                     data={systemPerformanceBarData}
@@ -802,7 +802,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               />
             ) : (
               <>
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
                   <LineChart data={stabilityTrendData} margin={{ top: 4, right: 24, left: 0, bottom: 28 }}>
                     <CartesianGrid {...chartTheme.grid} />
                     <XAxis dataKey="date" tick={chartTheme.axis.tick} angle={-20} height={60} />
@@ -883,7 +883,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 Time tracking will appear once you complete timed sessions.
               </p>
             ) : (
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
                 <BarChart data={timeData} margin={{ bottom: 28 }}>
                   <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
                   <XAxis

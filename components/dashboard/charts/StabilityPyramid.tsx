@@ -61,7 +61,7 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
   };
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={300} minHeight={200} minWidth={0}>
       <BarChart
         data={sortedData}
         layout="vertical"

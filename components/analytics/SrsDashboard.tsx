@@ -145,7 +145,7 @@ const SrsDashboard = () => {
         <h2 className="text-xl md:text-2xl font-bold mb-4 text-[var(--color-text-primary)]">
           Memory Stability Distribution
         </h2>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={300} minHeight={200} minWidth={0}>
           <BarChart data={analytics.stabilityDistribution}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
             <XAxis dataKey="name" />

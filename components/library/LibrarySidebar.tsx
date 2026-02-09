@@ -10,6 +10,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SidebarItem } from '@/components/layout/SidebarItem';
 import {
   ChevronRight,
   ChevronDown,
@@ -22,7 +23,6 @@ import {
   Activity,
   Bone,
   Eye,
-  Pill,
   Baby,
   Droplet,
   Shield,
@@ -129,48 +129,27 @@ const SystemTreeItem: React.FC<{
     }
   };
 
-  return (
-    <div className="mb-1">
-      {/* System Header */}
-      <button
-        onClick={handleSystemClick}
-        className={`
-          w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all duration-200
-          ${
-            isActive
-              ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30'
-              : 'hover:bg-[var(--color-bg-secondary)]/80 text-[var(--color-text-secondary)] border border-transparent'
-          }
-        `}
-      >
-        {subcategories.length > 0 ? (
-          isExpanded ? (
-            <ChevronDown className="w-4 h-4 flex-shrink-0" />
-          ) : (
-            <ChevronRight className="w-4 h-4 flex-shrink-0" />
-          )
-        ) : (
-          <span className="w-4" />
-        )}
-        <Icon
-          className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}
-        />
-        <span className="flex-1 text-sm font-medium truncate">{system.label}</span>
-        <span
-          className={`
-          text-xs px-1.5 py-0.5 rounded-full
-          ${
-            isActive
-              ? 'bg-[var(--color-accent)]/30 text-[var(--color-accent)]'
-              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
-          }
-        `}
-        >
-          {system.count}
-        </span>
-      </button>
+  const leftSlot =
+    subcategories.length > 0 ? (
+      isExpanded ? (
+        <ChevronDown className="w-4 h-4 flex-shrink-0" />
+      ) : (
+        <ChevronRight className="w-4 h-4 flex-shrink-0" />
+      )
+    ) : undefined;
 
-      {/* Subcategories */}
+  return (
+    <div className="mb-2">
+      <SidebarItem
+        as="button"
+        label={system.label}
+        icon={Icon}
+        count={system.count}
+        active={isActive}
+        leftSlot={leftSlot}
+        onClick={handleSystemClick}
+      />
+
       <AnimatePresence>
         {isExpanded && subcategories.length > 0 && (
           <motion.div
@@ -180,39 +159,24 @@ const SystemTreeItem: React.FC<{
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="pl-9 py-1 space-y-0.5">
-              {/* "All" option for this system */}
-              <button
+            <div className="pl-9 py-2 space-y-1">
+              <SidebarItem
+                as="button"
+                label={`All ${system.label}`}
+                active={activeSubcategory === null && isActive}
+                compact
                 onClick={() => onSubcategorySelect(null)}
-                className={`
-                  w-full text-left px-3 py-1.5 rounded-md text-xs transition-colors
-                  ${
-                    activeSubcategory === null && isActive
-                      ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-medium'
-                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/50'
-                  }
-                `}
-              >
-                All {system.label}
-              </button>
-
-              {/* Individual subcategories */}
+              />
               {subcategories.map((sub) => (
-                <button
+                <SidebarItem
                   key={sub.subcategory}
+                  as="button"
+                  label={sub.subcategory}
+                  count={sub.count}
+                  active={activeSubcategory === sub.subcategory && isActive}
+                  compact
                   onClick={() => onSubcategorySelect(sub.subcategory)}
-                  className={`
-                    w-full text-left px-3 py-1.5 rounded-md text-xs transition-colors flex items-center justify-between
-                    ${
-                      activeSubcategory === sub.subcategory && isActive
-                        ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-medium'
-                        : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/50'
-                    }
-                  `}
-                >
-                  <span className="truncate">{sub.subcategory}</span>
-                  <span className="text-[10px] opacity-70">{sub.count}</span>
-                </button>
+                />
               ))}
             </div>
           </motion.div>
@@ -351,32 +315,14 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
       {/* System Tree */}
       <div className="flex-1 overflow-y-auto p-3 space-y-1">
         {/* All Systems Option */}
-        <button
+        <SidebarItem
+          as="button"
+          label="All Systems"
+          icon={BookOpen}
+          count={totalConditions}
+          active={activeSystem === 'all'}
           onClick={() => onSystemSelect('all')}
-          className={`
-            w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all duration-200
-            ${
-              activeSystem === 'all'
-                ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30'
-                : 'hover:bg-[var(--color-bg-secondary)]/80 text-[var(--color-text-secondary)] border border-transparent'
-            }
-          `}
-        >
-          <BookOpen className="w-4 h-4" />
-          <span className="flex-1 text-sm font-medium">All Systems</span>
-          <span
-            className={`
-            text-xs px-1.5 py-0.5 rounded-full
-            ${
-              activeSystem === 'all'
-                ? 'bg-[var(--color-accent)]/30 text-[var(--color-accent)]'
-                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
-            }
-          `}
-          >
-            {totalConditions}
-          </span>
-        </button>
+        />
 
         {/* Divider */}
         <div className="h-px bg-[var(--color-border)] my-2" />

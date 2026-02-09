@@ -152,6 +152,13 @@ export const onRequestGet = authenticatedEndpoint(
   async (context) => {
     const { env, auth, validated } = context;
     const logger = createEndpointLogger('/api/questions/pool');
+    if (!env.DATABASE_URL) {
+      logger.error('DATABASE_URL not configured');
+      return {
+        data: { error: 'Pool unavailable', message: 'Server database is not configured.' },
+        status: 503,
+      };
+    }
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {

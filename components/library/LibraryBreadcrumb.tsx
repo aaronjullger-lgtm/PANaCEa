@@ -39,7 +39,9 @@ export const LibraryBreadcrumb: React.FC<LibraryBreadcrumbProps> = ({
       {/* System (if selected) */}
       {!isAllSystems && (
         <>
-          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <span className="inline-flex items-center shrink-0 bg-transparent" aria-hidden>
+            <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+          </span>
           <button
             onClick={onSystemClick}
             className={`
@@ -59,7 +61,9 @@ export const LibraryBreadcrumb: React.FC<LibraryBreadcrumbProps> = ({
       {/* Subcategory (if selected) */}
       {subcategory && (
         <>
-          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <span className="inline-flex items-center shrink-0 bg-transparent" aria-hidden>
+            <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+          </span>
           <button
             onClick={onSubcategoryClick}
             className="px-2 py-1 rounded-md text-[var(--color-accent)] font-semibold"
@@ -72,7 +76,9 @@ export const LibraryBreadcrumb: React.FC<LibraryBreadcrumbProps> = ({
       {/* Count indicator */}
       {isAllSystems && (
         <>
-          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <span className="inline-flex items-center shrink-0 bg-transparent" aria-hidden>
+            <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+          </span>
           <span className="px-2 py-1 text-[var(--color-accent)] font-semibold">All Systems</span>
         </>
       )}

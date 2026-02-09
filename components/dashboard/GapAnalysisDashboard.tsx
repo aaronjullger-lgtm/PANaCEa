@@ -432,7 +432,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({
               </p>
             </div>
 
-            <ResponsiveContainer width="100%" height={500}>
+            <ResponsiveContainer width="100%" height={500} minHeight={200} minWidth={0}>
               <ComposedChart
                 data={chartData}
                 layout="vertical"

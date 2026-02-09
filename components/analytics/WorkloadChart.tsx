@@ -181,7 +181,7 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
       )}
 
       {/* Chart */}
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width="100%" height={height} minHeight={200} minWidth={0}>
         <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-stroke)" />
 

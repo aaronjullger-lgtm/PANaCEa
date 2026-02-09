@@ -1298,10 +1298,17 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   try {
     const rawText = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.8);
 
+    // Strip markdown code fences if present (e.g. ```json ... ``` or truncated ```json ...)
+    let trimmed = rawText.trim();
+    if (trimmed.startsWith('```')) {
+      const afterOpen = trimmed.replace(/^```(?:json)?\s*\n?/i, '');
+      trimmed = afterOpen.replace(/\n?```\s*$/, '').trim();
+    }
+
     // Repair common HTML-table newline bug:
     // Gemini sometimes puts a real newline between tags like </td>\n    <td>,
     // which is illegal inside a JSON string. This collapses any ">\n<" into "><".
-    const jsonString = rawText.replace(/>\s*\n\s*</g, '><');
+    const jsonString = trimmed.replace(/>\s*\n\s*</g, '><');
 
     let parsed: ParsedQuestionResponse;
     try {

@@ -139,7 +139,7 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
 
       {/* Forgetting curve + After-review curve */}
       <div className="h-[200px] min-h-[160px] w-full min-w-0 mt-2 mb-4">
-        <ResponsiveContainer width="100%" height="100%" minHeight={160}>
+        <ResponsiveContainer width="100%" height="100%" minHeight={160} minWidth={0}>
           <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
             <defs>
               <linearGradient id="decayGradient" x1="0" y1="0" x2="0" y2="1">

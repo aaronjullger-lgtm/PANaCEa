@@ -42,13 +42,13 @@ html.theme-transitioning * {
    PREVENT HORIZONTAL SCROLLING ON MOBILE
 ------------------------------------------------------ */
 
-body,
-#root {
+body {
   overflow-x: hidden;
 }
 
-/* Mobile: prevent any child from causing horizontal scroll (320px viewport) */
+/* Allow sidebar shadow to render; main content uses overflow-x-hidden on inner wrapper */
 #root {
+  overflow-x: visible;
   max-width: 100%;
   min-width: 0;
 }

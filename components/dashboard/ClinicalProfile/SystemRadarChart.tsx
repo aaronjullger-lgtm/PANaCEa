@@ -32,7 +32,7 @@ export const SystemRadarChart: React.FC<Props> = ({ systems }) => {
       className="h-64 min-h-[200px] w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
       style={{ transform: 'translateZ(0)' }}
     >
-      <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={0}>
         <RadarChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
           <PolarGrid stroke="var(--chart-grid-stroke)" strokeOpacity={0.4} />
           <PolarAngleAxis dataKey="system" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />

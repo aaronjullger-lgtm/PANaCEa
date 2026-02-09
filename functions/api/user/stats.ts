@@ -31,6 +31,13 @@ export const onRequestOptions = withCors();
 export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (context) => {
   const { env, auth } = context;
   const logger = createEndpointLogger('/api/user/stats');
+  if (!env.DATABASE_URL) {
+    logger.error('DATABASE_URL not configured');
+    return {
+      data: { success: false, error: 'Analytics unavailable', message: 'Server database is not configured.' },
+      status: 503,
+    };
+  }
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {

@@ -7,9 +7,9 @@
  * All links are URL-driven; App.tsx syncs path → view.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ChevronLeft,
   ChevronRight,
@@ -24,6 +24,7 @@ import {
   LucideIcon,
 } from 'lucide-react';
 import { useCommuter } from '@/contexts/CommuterContext';
+import { SidebarItem } from '@/components/layout/SidebarItem';
 
 export interface QuickActionItem {
   id: string;
@@ -220,39 +221,12 @@ export const NavRail: React.FC<NavRailProps> = ({
   const studyItems = quickActions.filter((i) => i.section === 'study' || !i.section);
   const resourceItems = quickActions.filter((i) => i.section === 'resources');
 
-  const renderItem = (item: QuickActionItem) => {
-    const Icon = item.icon;
-    const isActive = item.href ? isPathActive(item.href, pathname, search) : false;
-    const content = (
-      <>
-        <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
-            isActive
-              ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
-              : 'text-[var(--color-text-secondary)] group-hover:bg-[var(--color-bg-tertiary)] group-hover:text-[var(--color-text-primary)]'
-          }`}
-        >
-          <Icon className="h-5 w-5" aria-hidden />
-        </span>
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.span
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: 'auto' }}
-              exit={{ opacity: 0, width: 0 }}
-              transition={{ duration: 0.15 }}
-              className={`truncate text-sm ${isActive ? 'font-semibold text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]'}`}
-            >
-              {item.label}
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </>
-    );
+  const baseClass =
+    'group relative flex w-full min-h-[44px] items-center rounded-xl py-2.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98] ' +
+    (collapsed ? 'justify-center px-2' : '');
 
-    const baseClass =
-      'group relative flex w-full min-h-[44px] items-center rounded-xl py-2.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98] ' +
-      (collapsed ? 'justify-center px-2' : 'gap-3 pl-3 pr-3');
+  const renderItem = (item: QuickActionItem) => {
+    const isActive = item.href ? isPathActive(item.href, pathname, search) : false;
 
     if (item.href) {
       return (
@@ -277,9 +251,18 @@ export const NavRail: React.FC<NavRailProps> = ({
               </>
             )}
             <span
-              className={`relative z-10 flex items-center ${collapsed ? 'justify-center' : 'w-full gap-3'} ${!collapsed && isActive ? 'pl-1' : ''}`}
+              className={`relative z-10 flex items-center ${collapsed ? 'justify-center' : 'w-full'}`}
             >
-              {content}
+              <SidebarItem
+                as="span"
+                label={item.label}
+                icon={item.icon}
+                active={isActive}
+                collapsed={collapsed}
+                iconVariant="box"
+                aria-current={isActive ? 'page' : undefined}
+                aria-label={item.label}
+              />
             </span>
           </Link>
         </li>
@@ -287,13 +270,16 @@ export const NavRail: React.FC<NavRailProps> = ({
     }
     return (
       <li key={item.id}>
-        <button
-          type="button"
+        <SidebarItem
+          as="button"
+          label={item.label}
+          icon={item.icon}
+          active={false}
+          collapsed={collapsed}
+          iconVariant="box"
           onClick={item.onClick}
-          className={`${baseClass} text-left text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]`}
-        >
-          {content}
-        </button>
+          aria-label={item.label}
+        />
       </li>
     );
   };
@@ -322,7 +308,7 @@ export const NavRail: React.FC<NavRailProps> = ({
         fixed left-0 z-40 flex flex-col
         border-r border-[var(--color-border)]
         bg-[var(--color-bg-primary)]/95 backdrop-blur-md
-        shadow-[0_4px_24px_var(--color-shadow-soft)]
+        shadow-[0_4px_24px_var(--color-shadow-soft),4px_0_24px_-4px_rgba(15,23,42,0.15)]
         ${className}
       `}
       style={{
