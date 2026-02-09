@@ -1,9 +1,9 @@
 export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'ghost';
 
 export const buttonVariantStyles: Record<ButtonVariant, string> = {
-  /* Primary: Muted Gold, white text, high contrast for readability */
+  /* Primary: Rich Gold, white text, WCAG AA contrast (≥4.5:1 with #fff) */
   primary:
-    'bg-[#B09B73] text-white shadow-md border border-[#9d8a63] hover:brightness-90 dark:bg-[#B09B73] dark:text-white dark:border-[#9d8a63] dark:hover:brightness-90',
+    'bg-[#7B6C4F] text-white shadow-md border border-[#6B5C3F] hover:brightness-110 dark:bg-[#7B6C4F] dark:text-white dark:border-[#6B5C3F] dark:hover:brightness-110',
   /* Secondary: High-contrast border and text for visibility */
   secondary:
     'bg-transparent text-[#0F172A] dark:text-[var(--color-text-primary)] border-2 border-[#0F172A] dark:border-[var(--color-text-secondary)] hover:bg-slate-100 dark:hover:bg-[var(--color-bg-secondary)] hover:border-[#0F172A] dark:hover:border-[var(--color-accent)] shadow-sm',

@@ -135,15 +135,15 @@ a,
 ------------------------------------------------------ */
 
 @layer components {
-  /* Primary button - Gold CTA, high contrast for readability (students) */
+  /* Primary button - Gold CTA, WCAG AA contrast with white text */
   .btn-primary {
     @apply px-4 py-2 rounded-xl font-semibold transition-all duration-200 ease-out
            focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
-           bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-md border border-[var(--color-accent-hover)]
-           hover:-translate-y-0.5 hover:brightness-90 hover:shadow-lg
+           bg-[var(--color-accent-button)] text-white shadow-md border border-[var(--color-accent-button)]
+           hover:-translate-y-0.5 hover:brightness-110 hover:shadow-lg
            active:scale-[0.95]
            disabled:opacity-50 disabled:cursor-not-allowed
-           dark:bg-[var(--color-accent)] dark:text-[var(--color-text-inverse)] dark:border-[var(--color-accent-hover)] dark:hover:brightness-110;
+           dark:bg-[var(--color-accent-button)] dark:text-white dark:border-[var(--color-accent-button)] dark:hover:brightness-110;
   }
 
   /* Secondary button - High-contrast border and text for visibility */
@@ -232,11 +232,11 @@ a,
            dark:hover:bg-[var(--color-bg-secondary)];
   }
 
-  /* Glass button - Gold CTA */
+  /* Glass button - Gold CTA (uses --color-accent-button for WCAG AA contrast with white text) */
   .btn-glass {
     @apply px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-md
-           bg-[var(--color-accent)] text-[var(--color-text-inverse)]
-           hover:brightness-90 hover:shadow-lg
+           bg-[var(--color-accent-button)] text-white
+           hover:brightness-110 hover:shadow-lg
            active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
@@ -247,8 +247,8 @@ a,
   }
 
   .pill-select-active {
-    @apply bg-[var(--color-accent)] text-[var(--color-text-inverse)]
-      dark:bg-[var(--color-accent)] dark:text-[var(--color-text-inverse)];
+    @apply bg-[var(--color-accent-button)] text-white
+      dark:bg-[var(--color-accent-button)] dark:text-white;
   }
 
   .pill-select-inactive {
@@ -367,6 +367,7 @@ a,
   --chart-grid-stroke: rgba(15, 23, 42, 0.08);
   --color-accent: #9a8f72; /* Same gold family */
   --color-accent-hover: #8a7f62;
+  --color-accent-button: #7B6C4F; /* Darker gold for buttons — 4.6:1 contrast with white (WCAG AA) */
   --color-accent-secondary: #728ba6; /* Steel blue - charts, secondary CTAs */
   --color-accent-light: #f5f2ec;
   --color-overlay: rgba(15, 23, 42, 0.5);
@@ -487,6 +488,7 @@ a,
   --chart-grid-stroke: rgba(71, 85, 105, 0.2);
   --color-accent: #a89b7a; /* Same gold family */
   --color-accent-hover: #b8ab8a;
+  --color-accent-button: #7B6C4F; /* Same darker gold for buttons in dark mode — consistent CTA contrast */
   --color-accent-secondary: #91a6bd; /* Steel blue (lighter) - charts, secondary CTAs */
   --color-accent-light: #1e293b;
   --color-text-inverse: #f8fafc;
