@@ -171,21 +171,7 @@ export async function fetchSessionQuestions(
       analytics: data.analytics,
       poolStatus: data.poolStatus,
     };
-  } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'mainSessionService.ts:fetchSessionQuestions:catch',
-        message: 'Session API failed, entering fallback',
-        data: { hadToken: !!token, count },
-        timestamp: Date.now(),
-        hypothesisId: 'H5',
-      }),
-    }).catch(() => {});
-    // #endregion
-    console.error('[SessionService] API fetch failed, using fallback:', error);
+  } catch (error) {    console.error('[SessionService] API fetch failed, using fallback:', error);
     return fallbackQuestionFetch(settings, count, token);
   }
 }

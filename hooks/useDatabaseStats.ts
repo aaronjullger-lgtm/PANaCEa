@@ -107,53 +107,11 @@ export function useDatabaseStats(): UseDatabaseStatsResult {
 
         if (result) {
           setStats(result as DatabaseStats);
-          setLastFetched(Date.now());
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              location: 'useDatabaseStats.ts:fetch',
-              message: 'Database stats loaded',
-              data: { hasStats: true, systemsCount: Object.keys((result as DatabaseStats).bySystems || {}).length },
-              hypothesisId: 'H4',
-              timestamp: Date.now(),
-            }),
-          }).catch(() => {});
-          // #endregion
-        } else {
-          setError('Failed to fetch stats');
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              location: 'useDatabaseStats.ts:fetch',
-              message: 'Database stats null result',
-              data: { hasStats: false },
-              hypothesisId: 'H4',
-              timestamp: Date.now(),
-            }),
-          }).catch(() => {});
-          // #endregion
-        }
+          setLastFetched(Date.now());        } else {
+          setError('Failed to fetch stats');        }
       } catch (err) {
         console.error('[useDatabaseStats] Error fetching stats:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            location: 'useDatabaseStats.ts:fetch',
-            message: 'Database stats fetch error',
-            data: { error: err instanceof Error ? err.message : String(err) },
-            hypothesisId: 'H4',
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
-      } finally {
+        setError(err instanceof Error ? err.message : 'Unknown error');      } finally {
         setIsLoading(false);
       }
     },

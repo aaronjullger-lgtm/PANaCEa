@@ -57,31 +57,6 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 }) => {
   const isDisabled = disabled || loading;
   const btnRef = useRef<HTMLButtonElement>(null);
-
-  // #region agent log
-  useEffect(() => {
-    if (!btnRef.current || typeof children !== 'string') return;
-    const el = btnRef.current;
-    const span = el.querySelector('span');
-    const target = span || el;
-    const computed = target ? getComputedStyle(target) : null;
-    const color = computed?.color;
-    if (color) {
-      fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          location: 'PrimaryButton.tsx:render',
-          message: 'Button computed text color',
-          data: { variant, color, label: String(children).slice(0, 30) },
-          hypothesisId: 'H1',
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-    }
-  }, [variant, children]);
-  // #endregion
-
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (hapticOnPress && !isDisabled) feedback.selection();
     if (!isDisabled) onClick?.(e);

@@ -912,32 +912,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       Object.entries(sys).map(([k, v]) => [k, Math.round(v.accuracy)])
     ) as Record<string, number>;
   }, [rolling360Stats?.systemStats]);
-
-  // #region agent log
-  useEffect(() => {
-    const isDark = typeof document !== 'undefined' && document.documentElement?.classList?.contains('dark');
-    const sysKeys = rolling360Stats?.systemStats ? Object.keys(rolling360Stats.systemStats) : [];
-    const progressKeys = curriculumProgressData ? Object.keys(curriculumProgressData) : [];
-    fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'CommandCenterHub.tsx:curriculumProgress',
-        message: 'Curriculum and theme state',
-        data: {
-          theme: isDark ? 'dark' : 'light',
-          rolling360SystemStatsCount: sysKeys.length,
-          curriculumProgressDataCount: progressKeys.length,
-          sampleSystem: sysKeys[0] ?? null,
-          sampleProgress: sysKeys[0] ? curriculumProgressData?.[sysKeys[0]] : null,
-        },
-        hypothesisId: 'H2',
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }, [rolling360Stats?.systemStats, curriculumProgressData]);
-  // #endregion
-
   // Load enabled systems from localStorage (updates when Settings modal changes them)
   const [enabledSystems, setEnabledSystems] = useState<Set<SystemCode>>(() => {
     const saved = localStorage.getItem('panceai_enabled_systems');

@@ -61,21 +61,6 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
     (env.GEMINI_API_KEY && String(env.GEMINI_API_KEY).trim()) ||
     (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY?.trim()) ||
     '';
-
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      location: 'functions/api/gemini/index.ts:apiKey',
-      message: 'Gemini handler apiKey check',
-      data: { hasKey: !!apiKey, keyLength: apiKey ? apiKey.length : 0, fromEnv: !!env.GEMINI_API_KEY },
-      timestamp: Date.now(),
-      hypothesisId: 'H1',
-    }),
-  }).catch(() => {});
-  // #endregion
-
   if (!apiKey) {
     return new Response(
       JSON.stringify({
@@ -148,21 +133,7 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
         };
       }
 
-      if (statusCode === 401 || statusCode === 403) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/cc925588-f854-48c4-bfb9-7695098805ff', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            location: 'functions/api/gemini/index.ts:401',
-            message: 'Gemini API returned 401/403',
-            data: { statusCode, keyPresent: !!apiKey },
-            timestamp: Date.now(),
-            hypothesisId: 'H1',
-          }),
-        }).catch(() => {});
-        // #endregion
-        return {
+      if (statusCode === 401 || statusCode === 403) {        return {
           status: 500,
           error: 'API authentication failed. Please contact support.',
         };
