@@ -982,7 +982,7 @@ const App: React.FC = () => {
                         </div>
                         <button
                           onClick={() => navigate(ROUTES.STUDY)}
-                          className="px-6 py-3 bg-[var(--color-accent)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+                          className="px-6 py-3 bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] rounded-lg font-medium hover:opacity-90 transition-opacity"
                         >
                           Go to Dashboard
                         </button>
@@ -1002,7 +1002,7 @@ const App: React.FC = () => {
                         className="sticky top-0 z-50 h-16 shrink-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm backdrop-blur-md bg-opacity-95 dark:bg-opacity-95"
                         style={{ height: 'var(--header-height, 4rem)' }}
                       >
-                    <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center">
+                    <div className="h-full w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between max-w-[100vw]">
                       <AppBrand
                         size="sm"
                         asLink

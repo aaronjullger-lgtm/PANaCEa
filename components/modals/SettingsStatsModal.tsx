@@ -2651,7 +2651,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                             performanceData.length === 0
                               ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                              : 'bg-[var(--color-accent)] text-white hover:opacity-90'
+                              : 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] hover:opacity-90'
                           }`}
                           aria-label="Archive and reset: download backup then clear performance data"
                         >

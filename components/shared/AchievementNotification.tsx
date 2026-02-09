@@ -185,7 +185,7 @@ export function AchievementNotification({
                 setIsVisible(false);
                 setTimeout(onDismiss, 300);
               }}
-              className="w-full mt-6 px-4 py-3 rounded-lg bg-[var(--color-accent)] text-white font-semibold hover:opacity-90 transition-opacity"
+              className="w-full mt-6 px-4 py-3 rounded-lg bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] font-semibold hover:opacity-90 transition-opacity"
             >
               Awesome!
             </motion.button>

@@ -253,7 +253,7 @@ const SidebarNavButton: React.FC<SidebarNavButtonProps> = ({
     onClick={onClick}
     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all mb-1 ${
       isActive
-        ? `bg-[var(--color-accent)] text-white ${variant === 'desktop' ? 'shadow-md' : ''}`
+        ? `bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] ${variant === 'desktop' ? 'shadow-md' : ''}`
         : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]'
     }`}
   >

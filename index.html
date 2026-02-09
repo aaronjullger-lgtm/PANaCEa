@@ -82,6 +82,9 @@
     <style>
       /* CSS Custom Properties - unified colorway (matches index.css). Same gold + slate family in both modes. */
       :root {
+        /* Layout - available before index.css for reliable first paint */
+        --header-height: 4rem;
+        --nav-rail-width: 56px;
         /* Light mode - same colorway, light-optimized contrast */
         --color-bg-primary: #F8FAFC;
         --color-bg-secondary: #ffffff;
@@ -113,6 +116,7 @@
         --color-glass-shadow: rgba(0, 0, 0, 0.08);
         --color-glass-hover: rgba(255, 255, 255, 0.9);
         --color-glass-text: #0f172a;
+        --color-text-inverse: #f8fafc;
       }
 
       .dark {
@@ -148,6 +152,7 @@
         --color-glass-shadow: rgba(0, 0, 0, 0.3);
         --color-glass-hover: rgba(255, 255, 255, 0.12);
         --color-glass-text: #f1f5f9;
+        --color-text-inverse: #f8fafc;
       }
 
       body {

@@ -1352,15 +1352,15 @@ a,
    MOBILE RESPONSIVE STYLES
    =============================================== */
 
-/* Layout adjustments for mobile */
+/* Layout adjustments for mobile - no sidebar rail; bottom tab bar only */
 @media (max-width: 768px) {
   :root {
-    --nav-rail-width: 56px; /* Always collapsed on mobile */
+    --nav-rail-width: 0;
   }
-  
+
   /* Ensure main content has proper mobile spacing */
   main#main-content {
-    margin-left: var(--nav-rail-width) !important;
+    margin-left: 0 !important;
     padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
   }

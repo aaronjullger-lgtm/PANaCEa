@@ -251,7 +251,8 @@ export const NavRail: React.FC<NavRailProps> = ({
     );
 
     const baseClass =
-      'group relative flex w-full min-h-[44px] items-center gap-3 rounded-xl pl-3 pr-3 py-2.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98]';
+      'group relative flex w-full min-h-[44px] items-center rounded-xl py-2.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98] ' +
+      (collapsed ? 'justify-center px-2' : 'gap-3 pl-3 pr-3');
 
     if (item.href) {
       return (
@@ -270,13 +271,13 @@ export const NavRail: React.FC<NavRailProps> = ({
                   aria-hidden
                 />
                 <span
-                  className="absolute left-2 top-1/2 z-0 h-6 w-0.5 -translate-y-1/2 rounded-full bg-[var(--color-accent)]"
+                  className={`absolute top-1/2 z-0 h-6 w-0.5 -translate-y-1/2 rounded-full bg-[var(--color-accent)] ${collapsed ? 'left-1/2 -translate-x-1/2' : 'left-2'}`}
                   aria-hidden
                 />
               </>
             )}
             <span
-              className={`relative z-10 flex w-full items-center gap-3 ${isActive ? 'pl-1' : ''}`}
+              className={`relative z-10 flex items-center ${collapsed ? 'justify-center' : 'w-full gap-3'} ${!collapsed && isActive ? 'pl-1' : ''}`}
             >
               {content}
             </span>
@@ -330,8 +331,10 @@ export const NavRail: React.FC<NavRailProps> = ({
       }}
       aria-label="Main navigation"
     >
-      {/* Header with collapse/hide controls */}
-      <div className="flex h-12 items-center justify-between border-b border-[var(--color-border)] px-2 shrink-0">
+      {/* Header with collapse/hide controls — centered when collapsed */}
+      <div
+        className={`flex h-12 items-center border-b border-[var(--color-border)] px-2 shrink-0 ${collapsed ? 'justify-center' : 'justify-between'}`}
+      >
         {!collapsed && (
           <button
             type="button"
@@ -363,13 +366,15 @@ export const NavRail: React.FC<NavRailProps> = ({
         {resourceItems.length > 0 && renderSection('Resources', resourceItems)}
       </nav>
 
-      {/* Commuter Mode quick toggle */}
+      {/* Commuter Mode quick toggle — centered when collapsed */}
       {commuterContext && (
         <div className="shrink-0 border-t border-[var(--color-border)] px-2 py-3">
           <button
             type="button"
             onClick={commuterContext.toggleCommuterMode}
-            className={`group flex w-full min-h-[44px] items-center gap-3 rounded-xl pl-3 pr-3 py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] ${
+            className={`group flex w-full min-h-[44px] items-center rounded-xl py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] ${
+              collapsed ? 'justify-center px-2' : 'gap-3 pl-3 pr-3'
+            } ${
               commuterContext.isCommuterMode
                 ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
                 : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]'
