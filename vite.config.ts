@@ -345,14 +345,10 @@ export default defineConfig(({ mode }) => {
         '@src': path.resolve(__dirname, './src'),
         // Force ESM build of lucide-react
         'lucide-react': 'lucide-react/dist/esm/lucide-react.js',
-        // In production, alias jsx-dev-runtime to a shim that re-exports jsx as jsxDEV.
-        // Direct aliasing to react/jsx-runtime is WRONG because it doesn't export jsxDEV.
-        ...(isProduction
-          ? {
-              'react/jsx-dev-runtime': JSX_DEV_SHIM_PATH,
-              'react/jsx-dev-runtime.js': JSX_DEV_SHIM_PATH,
-            }
-          : {}),
+        // Always alias jsx-dev-runtime to a shim that re-exports jsx as jsxDEV.
+        // Fixes "jsxDEV is not a function" in dev, preview, and production builds.
+        'react/jsx-dev-runtime': JSX_DEV_SHIM_PATH,
+        'react/jsx-dev-runtime.js': JSX_DEV_SHIM_PATH,
       },
     },
     build: {
