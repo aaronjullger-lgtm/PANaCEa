@@ -6,6 +6,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe area for notched phones (iPhone X+) — bottom tab bar */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile bottom bar spacing — add to main content containers on mobile */
+@media (max-width: 767px) {
+  .main-content-area {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* -----------------------------------------------------
    THEME TRANSITION MANAGEMENT
 ------------------------------------------------------ */

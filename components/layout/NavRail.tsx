@@ -1,10 +1,13 @@
 /**
- * NavRail – Primary app navigation. One clear path to each area.
- * Make sense: Home → Practice → Progress; Reference → Toolkit.
+ * NavRail – Responsive primary navigation.
+ *
+ * Mobile  (<768px): Bottom tab bar — 5 icons flush to bottom edge, no sidebar.
+ * Desktop (≥768px): Collapsible sidebar rail that can fully hide.
+ *
  * All links are URL-driven; App.tsx syncs path → view.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -16,6 +19,8 @@ import {
   BookOpen,
   Calculator,
   Headphones,
+  PanelLeftClose,
+  PanelLeftOpen,
   LucideIcon,
 } from 'lucide-react';
 import { useCommuter } from '@/contexts/CommuterContext';
@@ -28,6 +33,8 @@ export interface QuickActionItem {
   onClick?: () => void;
   /** Optional section key for visual grouping (e.g. "study" vs "resources") */
   section?: string;
+  /** When true, show in mobile bottom bar (max 5) */
+  showInBottomBar?: boolean;
 }
 
 interface NavRailProps {
@@ -35,14 +42,12 @@ interface NavRailProps {
   className?: string;
 }
 
-const RAIL_SECTIONS = ['study', 'resources'] as const;
-
 const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = [
-  { id: 'home', label: 'Home', icon: Home, href: '/study', section: 'study' },
-  { id: 'practice', label: 'Practice', icon: Dumbbell, href: '/menu', section: 'study' },
-  { id: 'progress', label: 'Progress', icon: BarChart3, href: '/study?tab=analytics', section: 'study' },
-  { id: 'knowledge', label: 'Knowledge Base', icon: BookOpen, href: '/study/knowledge', section: 'resources' },
-  { id: 'utilities', label: 'Clinical Utilities', icon: Calculator, href: '/study/utilities', section: 'resources' },
+  { id: 'home', label: 'Home', icon: Home, href: '/study', section: 'study', showInBottomBar: true },
+  { id: 'practice', label: 'Practice', icon: Dumbbell, href: '/menu', section: 'study', showInBottomBar: true },
+  { id: 'progress', label: 'Progress', icon: BarChart3, href: '/study?tab=analytics', section: 'study', showInBottomBar: true },
+  { id: 'knowledge', label: 'Knowledge', icon: BookOpen, href: '/study/knowledge', section: 'resources', showInBottomBar: true },
+  { id: 'utilities', label: 'Utilities', icon: Calculator, href: '/study/utilities', section: 'resources', showInBottomBar: true },
 ];
 
 const RAIL_WIDTH_COLLAPSED = 56;
@@ -56,35 +61,161 @@ function isPathActive(href: string, pathname: string, search: string): boolean {
   return pathname === href || pathname.startsWith(href + '/');
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    () => globalThis.window?.matchMedia?.('(max-width: 767px)')?.matches === true
+  );
+  useEffect(() => {
+    const mq = globalThis.window?.matchMedia?.('(max-width: 767px)');
+    if (!mq) return;
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return isMobile;
+}
+
+// ---------------------------------------------------------------------------
+// Mobile: Bottom Tab Bar
+// ---------------------------------------------------------------------------
+
+function BottomTabBar({ items, pathname, search }: {
+  items: QuickActionItem[];
+  pathname: string;
+  search: string;
+}) {
+  // Take max 5 for the bottom bar
+  const tabs = items.filter((i) => i.showInBottomBar !== false).slice(0, 5);
+
+  return (
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-md safe-area-bottom"
+      aria-label="Main navigation"
+    >
+      <ul className="flex items-stretch justify-around h-14">
+        {tabs.map((item) => {
+          const Icon = item.icon;
+          const isActive = item.href ? isPathActive(item.href, pathname, search) : false;
+
+          const inner = (
+            <span className="flex flex-col items-center justify-center gap-0.5 pt-1.5 pb-1">
+              <Icon
+                className={`h-5 w-5 transition-colors ${
+                  isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'
+                }`}
+                aria-hidden
+              />
+              <span
+                className={`text-[10px] leading-none font-medium transition-colors ${
+                  isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'
+                }`}
+              >
+                {item.label}
+              </span>
+              {isActive && (
+                <motion.span
+                  layoutId="bottom-tab-indicator"
+                  className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[var(--color-accent)]"
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
+              )}
+            </span>
+          );
+
+          if (item.href) {
+            return (
+              <li key={item.id} className="flex-1 relative">
+                <Link
+                  to={item.href}
+                  className="flex items-center justify-center h-full w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-accent)]"
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  {inner}
+                </Link>
+              </li>
+            );
+          }
+          return (
+            <li key={item.id} className="flex-1 relative">
+              <button
+                type="button"
+                onClick={item.onClick}
+                className="flex items-center justify-center h-full w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-accent)]"
+              >
+                {inner}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Desktop: Sidebar Rail
+// ---------------------------------------------------------------------------
+
 export const NavRail: React.FC<NavRailProps> = ({
   quickActions = DEFAULT_QUICK_ACTIONS,
   className = '',
 }) => {
   const commuterContext = useCommuter();
-  const [collapsed, setCollapsed] = useState(() => {
-    return globalThis.window?.matchMedia?.('(max-width: 768px)')?.matches === true;
-  });
+  const isMobile = useIsMobile();
+  const [collapsed, setCollapsed] = useState(true);
+  const [hidden, setHidden] = useState(false);
   const location = useLocation();
   const { pathname, search } = location;
 
+  // Keyboard shortcut: [ to toggle sidebar
   useEffect(() => {
-    const mq = globalThis.window?.matchMedia?.('(max-width: 768px)');
-    const handler = () => setCollapsed((c) => (mq?.matches ? true : c));
-    if (mq) {
-      mq.addEventListener('change', handler);
-    }
-    return () => mq?.removeEventListener?.('change', handler);
-  }, []);
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === '[' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        e.preventDefault();
+        if (hidden) {
+          setHidden(false);
+          setCollapsed(true);
+        } else if (collapsed) {
+          setCollapsed(false);
+        } else {
+          setHidden(true);
+        }
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [hidden, collapsed]);
 
+  // Sync CSS variable for main content margin
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      '--nav-rail-width',
-      `${collapsed ? RAIL_WIDTH_COLLAPSED : RAIL_WIDTH_EXPANDED}px`,
-    );
+    const width = hidden || isMobile ? 0 : collapsed ? RAIL_WIDTH_COLLAPSED : RAIL_WIDTH_EXPANDED;
+    document.documentElement.style.setProperty('--nav-rail-width', `${width}px`);
     return () => {
       document.documentElement.style.removeProperty('--nav-rail-width');
     };
-  }, [collapsed]);
+  }, [collapsed, hidden, isMobile]);
+
+  // On mobile, render bottom tab bar instead
+  if (isMobile) {
+    return <BottomTabBar items={quickActions} pathname={pathname} search={search} />;
+  }
+
+  // Fully hidden state — just show a subtle reveal button
+  if (hidden) {
+    return (
+      <button
+        type="button"
+        onClick={() => { setHidden(false); setCollapsed(true); }}
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 p-1.5 rounded-r-lg bg-[var(--color-bg-secondary)] border border-l-0 border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] transition-colors shadow-sm"
+        aria-label="Show sidebar"
+        title="Show sidebar (press [)"
+      >
+        <PanelLeftOpen className="h-4 w-4" />
+      </button>
+    );
+  }
 
   const studyItems = quickActions.filter((i) => i.section === 'study' || !i.section);
   const resourceItems = quickActions.filter((i) => i.section === 'resources');
@@ -138,7 +269,6 @@ export const NavRail: React.FC<NavRailProps> = ({
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   aria-hidden
                 />
-                {/* Gold bar as separate element inside padding so it doesn't crop rounded background */}
                 <span
                   className="absolute left-2 top-1/2 z-0 h-6 w-0.5 -translate-y-1/2 rounded-full bg-[var(--color-accent)]"
                   aria-hidden
@@ -200,12 +330,25 @@ export const NavRail: React.FC<NavRailProps> = ({
       }}
       aria-label="Main navigation"
     >
-      <div className="flex h-12 items-center justify-end border-b border-[var(--color-border)] px-2 shrink-0">
+      {/* Header with collapse/hide controls */}
+      <div className="flex h-12 items-center justify-between border-b border-[var(--color-border)] px-2 shrink-0">
+        {!collapsed && (
+          <button
+            type="button"
+            onClick={() => setHidden(true)}
+            className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            aria-label="Hide sidebar"
+            title="Hide sidebar (press [)"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
+          className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsed ? 'Expand sidebar (press [)' : 'Collapse sidebar (press [)'}
         >
           {collapsed ? (
             <ChevronRight className="h-5 w-5" />
@@ -220,7 +363,7 @@ export const NavRail: React.FC<NavRailProps> = ({
         {resourceItems.length > 0 && renderSection('Resources', resourceItems)}
       </nav>
 
-      {/* Commuter Mode quick toggle - PA students study on the go */}
+      {/* Commuter Mode quick toggle */}
       {commuterContext && (
         <div className="shrink-0 border-t border-[var(--color-border)] px-2 py-3">
           <button
