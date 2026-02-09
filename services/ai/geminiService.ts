@@ -394,13 +394,27 @@ function getRetryInfo(status: number): { retryable: boolean; retryAfterMs: numbe
  */
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Module-level auth token provider for Gemini API calls.
+ * Set once from App.tsx using `setGeminiAuthProvider(getToken)`.
+ */
+let _geminiAuthProvider: (() => Promise<string | null>) | null = null;
+
+/**
+ * Register a Clerk `getToken` function so all callGeminiText calls
+ * automatically include the Authorization header.
+ */
+export function setGeminiAuthProvider(provider: () => Promise<string | null>): void {
+  _geminiAuthProvider = provider;
+}
+
 export async function callGeminiText(
   modelName: string = 'gemini-2.5-flash',
   prompt: string,
   temperature: number = 0.8,
-  options: { maxRetries?: number } = {}
+  options: { maxRetries?: number; getToken?: () => Promise<string | null> } = {}
 ): Promise<string> {
-  const { maxRetries = 2 } = options;
+  const { maxRetries = 2, getToken } = options;
 
   const isTestEnv =
     typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
@@ -414,13 +428,29 @@ export async function callGeminiText(
     return mock.length < 40 ? mock.padEnd(40, '.') : mock;
   }
 
+  // Resolve auth token: explicit getToken param > module-level provider
+  const tokenProvider = getToken || _geminiAuthProvider;
+  let authToken: string | null = null;
+  if (tokenProvider) {
+    try {
+      authToken = await tokenProvider();
+    } catch (err) {
+      console.warn('[callGeminiText] Failed to get auth token:', err);
+    }
+  }
+
   let lastError: GeminiApiError | Error | null = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
       const response = await fetch(getApiEndpoint(API_ENDPOINTS.GEMINI_PROXY), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ modelName, prompt, temperature }),
       });
 

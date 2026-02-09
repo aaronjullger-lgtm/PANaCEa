@@ -277,11 +277,19 @@ export const onRequestGet = authenticatedEndpoint(
         headers: { 'X-Cache': cachedPool ? 'HIT' : 'MISS' },
       };
     } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
       logger.error('Error fetching pool questions', {
-        error: error instanceof Error ? error.message : String(error),
+        error: errMsg,
+        stack: error instanceof Error ? error.stack : undefined,
         userId: auth.userId,
       });
-      throw new Error('Failed to fetch pool questions');
+      return {
+        data: {
+          error: 'Failed to fetch pool questions',
+          message: errMsg || 'Please try again later.',
+        },
+        status: 500,
+      };
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -325,11 +333,18 @@ export const onRequestPost = authenticatedEndpoint(PoolPostSchema, async (contex
 
     return { data: { success: true }, status: 201 };
   } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
     logger.error('Error seeding question to pool', {
-      error: error instanceof Error ? error.message : String(error),
+      error: errMsg,
       userId: auth.userId,
     });
-    throw new Error('Failed to seed question to pool');
+    return {
+      data: {
+        error: 'Failed to seed question to pool',
+        message: errMsg || 'Please try again later.',
+      },
+      status: 500,
+    };
   } finally {
     await safePrismaDisconnect(prisma);
   }

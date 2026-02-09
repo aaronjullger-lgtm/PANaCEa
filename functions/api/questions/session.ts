@@ -39,7 +39,9 @@ export const onRequestGet = authenticatedEndpoint(
   async (context) => {
     const { env, auth, validated } = context;
     const logger = createEndpointLogger('/api/questions/session');
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);    try {
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    let sessionService: SessionService | null = null;
+    try {
       const user = await prisma.user.findUnique({
         where: { clerkId: auth.userId },
         select: { id: true },
@@ -57,7 +59,7 @@ export const onRequestGet = authenticatedEndpoint(
       const mode = (validated?.mode || 'standard') as SessionQuestionRequest['mode'];
       const simulationStrict = validated?.simulationStrict === true;
 
-      const sessionService = new SessionService(env.DATABASE_URL, env);
+      sessionService = new SessionService(env.DATABASE_URL, env);
       const result = await sessionService.getSessionQuestions({
         userId: user.id,
         count,
@@ -74,15 +76,26 @@ export const onRequestGet = authenticatedEndpoint(
       return { data: result };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
-      const errStack = error instanceof Error ? error.stack : undefined;      logger.error('Error fetching session questions', {
+      logger.error('Error fetching session questions', {
         error: errMsg,
         userId: auth.userId,
       });
       return {
-        data: { error: 'Failed to fetch session questions', message: 'Please try again later.' },
+        data: {
+          error: 'Failed to fetch session questions',
+          message: errMsg || 'Please try again later.',
+        },
         status: 500,
       };
     } finally {
+      // Disconnect SessionService's internal Prisma clients first
+      if (sessionService) {
+        try {
+          await sessionService.disconnect();
+        } catch {
+          // Non-fatal
+        }
+      }
       await safePrismaDisconnect(prisma);
     }
   },
@@ -93,6 +106,7 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/session');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  let sessionService: SessionService | null = null;
 
   try {
     const user = await prisma.user.findUnique({
@@ -104,7 +118,7 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
       return { data: { error: 'User not found', message: 'Account not synced yet.' }, status: 404 };
     }
 
-    const sessionService = new SessionService(env.DATABASE_URL, env);
+    sessionService = new SessionService(env.DATABASE_URL, env);
     const result = await sessionService.getSessionQuestions({
       ...validated,
       userId: user.id,
@@ -119,15 +133,26 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
 
     return { data: result };
   } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
     logger.error('Error fetching session questions', {
-      error: error instanceof Error ? error.message : String(error),
+      error: errMsg,
       userId: auth.userId,
     });
     return {
-      data: { error: 'Failed to fetch session questions', message: 'Please try again later.' },
+      data: {
+        error: 'Failed to fetch session questions',
+        message: errMsg || 'Please try again later.',
+      },
       status: 500,
     };
   } finally {
+    if (sessionService) {
+      try {
+        await sessionService.disconnect();
+      } catch {
+        // Non-fatal
+      }
+    }
     await safePrismaDisconnect(prisma);
   }
 });

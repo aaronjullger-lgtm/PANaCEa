@@ -69,6 +69,7 @@ import {
 } from './config/lazyComponents';
 import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { useUser, useAuth } from '@clerk/clerk-react';
+import { setGeminiAuthProvider } from '@/services/ai/geminiService';
 import { useFSRSOptimizationCheck } from './hooks/useFSRSOptimizationCheck';
 import { Toaster } from 'sonner';
 import Loader from './components/loading/Loader';
@@ -164,6 +165,14 @@ const App: React.FC = () => {
   // Check authentication status
   const { isSignedIn, isLoaded: authLoaded } = useUser();
   const { getToken } = useAuth();
+
+  // Register Clerk auth provider for Gemini API calls so all callGeminiText
+  // requests automatically include the Authorization header
+  useEffect(() => {
+    if (getToken) {
+      setGeminiAuthProvider(getToken);
+    }
+  }, [getToken]);
 
   // Automated FSRS tuning: trigger optimization on sign-in if > 24h since last run
   useFSRSOptimizationCheck();
