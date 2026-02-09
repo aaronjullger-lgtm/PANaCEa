@@ -1295,15 +1295,20 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 
   // --- Call Gemini through proxy and parse JSON ---
 
+  /** Strip Markdown code fences (e.g. ```json ... ```) so JSON.parse can succeed. Used by VerifiedQuestionGenerator fallback. */
+  function sanitizeGeminiJsonString(raw: string): string {
+    let s = raw.trim();
+    // Strip any leading ```json or ``` (case-insensitive, optional newline after)
+    s = s.replace(/^```(?:json)?\s*\n?/i, '');
+    // Strip any trailing ``` (optional newline before)
+    s = s.replace(/\n?```\s*$/g, '');
+    return s.trim();
+  }
+
   try {
     const rawText = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.8);
 
-    // Strip markdown code fences if present (e.g. ```json ... ``` or truncated ```json ...)
-    let trimmed = rawText.trim();
-    if (trimmed.startsWith('```')) {
-      const afterOpen = trimmed.replace(/^```(?:json)?\s*\n?/i, '');
-      trimmed = afterOpen.replace(/\n?```\s*$/, '').trim();
-    }
+    const trimmed = sanitizeGeminiJsonString(rawText);
 
     // Repair common HTML-table newline bug:
     // Gemini sometimes puts a real newline between tags like </td>\n    <td>,
@@ -1314,8 +1319,27 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
     try {
       parsed = JSON.parse(jsonString) as ParsedQuestionResponse;
     } catch (parseError) {
-      console.error('Failed to parse JSON from Gemini. String that failed:', rawText);
-      throw new Error('The API returned a malformed JSON response. Please try again.');
+      const truncated = !jsonString.trimEnd().endsWith('}') && !jsonString.trimEnd().endsWith(']');
+      // Log the exact string that failed to parse (for debugging VerifiedQuestionGenerator / fallback)
+      const maxLog = 2500;
+      const toLog =
+        jsonString.length <= maxLog
+          ? jsonString
+          : `${jsonString.slice(0, maxLog - 200)}\n... [truncated, total ${jsonString.length} chars] ...\n${jsonString.slice(-200)}`;
+      console.error(
+        '[fetchNewQuestion] Failed to parse JSON from Gemini.',
+        truncated ? 'Response may be truncated.' : '',
+        'Length:',
+        jsonString.length,
+        'Parse error:',
+        parseError instanceof Error ? parseError.message : String(parseError)
+      );
+      console.error('[fetchNewQuestion] Raw string that failed to parse:', toLog);
+      throw new Error(
+        truncated
+          ? 'The API response was cut off. Please try again.'
+          : 'The API returned a malformed JSON response. Please try again.'
+      );
     }
 
     // Basic sanity checks (rationale may be string or standardized object)

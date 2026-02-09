@@ -87,12 +87,14 @@ export const onRequestGet = authenticatedEndpoint(
         error: errMsg,
         userId: auth.userId,
       });
+      const isDbUnavailable =
+        /connection|ECONNREFUSED|timeout|database.*unavailable|P1001|P1017|pool/i.test(errMsg);
       return {
         data: {
-          error: 'Failed to fetch session questions',
-          message: errMsg || 'Please try again later.',
+          error: isDbUnavailable ? 'Session service unavailable' : 'Failed to fetch session questions',
+          message: isDbUnavailable ? 'Database is temporarily unavailable. Please try again.' : errMsg || 'Please try again later.',
         },
-        status: 500,
+        status: isDbUnavailable ? 503 : 500,
       };
     } finally {
       // Disconnect SessionService's internal Prisma clients first
@@ -112,6 +114,13 @@ export const onRequestGet = authenticatedEndpoint(
 export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/session');
+  if (!env.DATABASE_URL) {
+    logger.error('DATABASE_URL not configured');
+    return {
+      data: { error: 'Session service unavailable', message: 'Server database is not configured.' },
+      status: 503,
+    };
+  }
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   let sessionService: SessionService | null = null;
 
@@ -145,12 +154,14 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
       error: errMsg,
       userId: auth.userId,
     });
+    const isDbUnavailable =
+      /connection|ECONNREFUSED|timeout|database.*unavailable|P1001|P1017|pool/i.test(errMsg);
     return {
       data: {
-        error: 'Failed to fetch session questions',
-        message: errMsg || 'Please try again later.',
+        error: isDbUnavailable ? 'Session service unavailable' : 'Failed to fetch session questions',
+        message: isDbUnavailable ? 'Database is temporarily unavailable. Please try again.' : errMsg || 'Please try again later.',
       },
-      status: 500,
+      status: isDbUnavailable ? 503 : 500,
     };
   } finally {
     if (sessionService) {

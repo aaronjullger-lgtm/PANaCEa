@@ -180,8 +180,8 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
         </div>
       )}
 
-      {/* Chart */}
-      <ResponsiveContainer width="100%" height={height} minHeight={200} minWidth={0}>
+      {/* Chart - use fallback height so Recharts never receives -1 when parent has no size yet */}
+      <ResponsiveContainer width="100%" height={height ?? 300} minHeight={200} minWidth={0}>
         <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-stroke)" />
 

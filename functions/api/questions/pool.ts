@@ -290,12 +290,14 @@ export const onRequestGet = authenticatedEndpoint(
         stack: error instanceof Error ? error.stack : undefined,
         userId: auth.userId,
       });
+      const isDbUnavailable =
+        /connection|ECONNREFUSED|timeout|database.*unavailable|P1001|P1017|pool/i.test(errMsg);
       return {
         data: {
-          error: 'Failed to fetch pool questions',
-          message: errMsg || 'Please try again later.',
+          error: isDbUnavailable ? 'Pool unavailable' : 'Failed to fetch pool questions',
+          message: isDbUnavailable ? 'Database is temporarily unavailable. Please try again.' : errMsg || 'Please try again later.',
         },
-        status: 500,
+        status: isDbUnavailable ? 503 : 500,
       };
     } finally {
       await safePrismaDisconnect(prisma);
