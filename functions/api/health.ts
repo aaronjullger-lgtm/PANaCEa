@@ -1,141 +1,77 @@
 /**
- * Health Check Endpoint
- *
- * Diagnostic endpoint to verify:
- * 1. Functions are deployed correctly to Cloudflare Pages
- * 2. Environment variables are accessible
- * 3. Database connectivity via Prisma Accelerate
- *
- * This endpoint does NOT require authentication for diagnostic purposes.
+ * GET /api/health
+ * Diagnostic endpoint - tests database connectivity and auth setup.
+ * No authentication required so you can test from a browser.
  */
 
 import { createEdgePrismaClient, safePrismaDisconnect } from './_shared/prisma-edge';
-import { getCorsHeaders, handleCorsPreflightSecure } from './_shared/cors';
+import { getCorsHeaders } from './_shared/cors';
 
-interface Env {
-  DATABASE_URL?: string;
-  CLERK_SECRET_KEY?: string;
-  CLERK_PUBLISHABLE_KEY?: string;
-}
+export const onRequestOptions = async (context: any) => {
+  return new Response(null, {
+    status: 204,
+    headers: getCorsHeaders(context.request, context.env),
+  });
+};
 
-interface CloudflareContext {
-  request: Request;
-  env: Env;
-}
-
-/**
- * GET /api/health
- * Returns system health status and diagnostics
- */
-export async function onRequestGet(context: CloudflareContext): Promise<Response> {
-  const requestId = crypto.randomUUID();
-  const startTime = Date.now();
-  const diagnostics: Record<string, any> = {
+export const onRequestGet = async (context: any) => {
+  const { env } = context;
+  const cors = getCorsHeaders(context.request, env);
+  const diagnostics: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
-    endpoint: '/api/health',
-    status: 'checking',
-    checks: {},
+    runtime: 'cloudflare-pages',
   };
 
-  try {
-    // Check 1: Function deployment (if we get here, it's working)
-    diagnostics.checks.functionDeployed = {
-      status: 'pass',
-      message: 'Cloudflare Pages Function is running',
-    };
+  // 1. Check environment variables
+  diagnostics.env = {
+    DATABASE_URL: !!env.DATABASE_URL,
+    CLERK_SECRET_KEY: !!env.CLERK_SECRET_KEY,
+    GEMINI_API_KEY: !!env.GEMINI_API_KEY,
+  };
 
-    // Check 2: Environment variables presence (not values for security)
-    const envChecks = {
-      DATABASE_URL: !!context.env.DATABASE_URL,
-      CLERK_SECRET_KEY: !!context.env.CLERK_SECRET_KEY,
-      DATABASE_URL_FORMAT: context.env.DATABASE_URL
-        ? context.env.DATABASE_URL.startsWith('prisma://')
-          ? 'prisma-accelerate'
-          : context.env.DATABASE_URL.startsWith('postgresql://')
-            ? 'direct-postgres'
-            : 'unknown'
-        : 'missing',
-    };
-
-    diagnostics.checks.environment = {
-      status: envChecks.DATABASE_URL && envChecks.CLERK_SECRET_KEY ? 'pass' : 'fail',
-      details: envChecks,
-    };
-
-    // Check 3: Database connectivity (only if DATABASE_URL exists)
-    if (context.env.DATABASE_URL) {
-      try {
-        const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-        try {
-          // Simple query to verify connection
-          const result = await prisma.$queryRaw`SELECT 1 as health_check`;
-          diagnostics.checks.database = {
-            status: 'pass',
-            message: 'Database connection successful',
-            latencyMs: Date.now() - startTime,
-          };
-        } finally {
-          await safePrismaDisconnect(prisma);
-        }
-      } catch (dbError) {
-        diagnostics.checks.database = {
-          status: 'fail',
-          message: 'Database connection failed',
-          error: dbError instanceof Error ? dbError.message : 'Unknown error',
-          errorType: dbError instanceof Error ? dbError.name : 'Unknown',
-        };
-      }
-    } else {
-      diagnostics.checks.database = {
-        status: 'fail',
-        message: 'DATABASE_URL environment variable not set',
-      };
+  // 2. DATABASE_URL type
+  const dbUrl = env.DATABASE_URL as string | undefined;
+  if (dbUrl) {
+    const isAccelerate = dbUrl.startsWith('prisma://') || dbUrl.startsWith('prisma+postgres://');
+    const isPostgres = dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://');
+    diagnostics.dbUrlType = isAccelerate ? 'accelerate' : isPostgres ? 'direct-postgres' : 'unknown';
+    if (isPostgres) {
+      diagnostics.warning = 'Direct PostgreSQL URLs do not work on Cloudflare Workers (no TCP). Use Prisma Accelerate.';
     }
-
-    // Overall status
-    const allPassed = Object.values(diagnostics.checks).every(
-      (check: any) => check.status === 'pass'
-    );
-    diagnostics.status = allPassed ? 'healthy' : 'degraded';
-    diagnostics.totalLatencyMs = Date.now() - startTime;
-
-    // Build response
-    const responseBody = JSON.stringify(diagnostics, null, 2);
-    const corsHeaders = getCorsHeaders(context.request) || {};
-
-    return new Response(responseBody, {
-      status: allPassed ? 200 : 503,
-      headers: {
-        'Content-Type': 'application/json',
-        ...corsHeaders,
-      },
-    });
-  } catch (error) {
-    // Catastrophic failure - return JSON without stack (never leak stack in API responses)
-    const errorResponse = {
-      timestamp: new Date().toISOString(),
-      endpoint: '/api/health',
-      status: 'error',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      errorType: error instanceof Error ? error.name : 'Unknown',
-    };
-
-    const corsHeaders = getCorsHeaders(context.request) || {};
-
-    return new Response(JSON.stringify({ ...errorResponse, requestId }, null, 2), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Request-ID': requestId,
-        ...corsHeaders,
-      },
-    });
+  } else {
+    diagnostics.dbUrlType = 'missing';
   }
-}
 
-/**
- * OPTIONS handler for CORS preflight
- */
-export async function onRequestOptions(context: CloudflareContext): Promise<Response> {
-  return handleCorsPreflightSecure(context.request, context.env);
-}
+  // 3. Test database connection
+  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+  try {
+    prisma = createEdgePrismaClient(dbUrl);
+    diagnostics.prismaClientCreated = true;
+    const userCount = await prisma.user.count();
+    diagnostics.dbConnected = true;
+    diagnostics.userCount = userCount;
+  } catch (err) {
+    diagnostics.prismaClientCreated = !!prisma;
+    diagnostics.dbConnected = false;
+    diagnostics.dbError = err instanceof Error ? err.message : String(err);
+    diagnostics.dbErrorName = err instanceof Error ? err.name : 'Unknown';
+  } finally {
+    if (prisma) await safePrismaDisconnect(prisma);
+  }
+
+  // 4. Clerk key format
+  const clerkKey = env.CLERK_SECRET_KEY as string | undefined;
+  if (clerkKey) {
+    diagnostics.clerkKeyType = clerkKey.startsWith('sk_test_') ? 'test' : clerkKey.startsWith('sk_live_') ? 'live' : 'unknown-format';
+  }
+
+  const allGood = diagnostics.dbConnected === true;
+
+  return new Response(
+    JSON.stringify({ status: allGood ? 'healthy' : 'unhealthy', diagnostics }, null, 2),
+    {
+      status: allGood ? 200 : 503,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    }
+  );
+};
