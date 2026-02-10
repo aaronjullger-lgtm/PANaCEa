@@ -5,10 +5,8 @@
  * Works on complete records one at a time - no partial filling.
  */
 
-import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const prisma = new PrismaClient();
+import { prisma, disconnectPrisma } from '../helpers/prisma-client';
 
 class TokenBucket {
   private tokens: number = 5;
@@ -55,7 +53,7 @@ async function enhanceLabTest(labTest: any): Promise<LabTestEnhancement> {
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-pro',
+    model: 'gemini-2.0-flash',
     generationConfig: {
       temperature: 0.3,
       responseMimeType: 'application/json',
@@ -208,7 +206,11 @@ async function main() {
   );
   console.log(`\n💡 Remaining incomplete: ${116 - successCount}`);
 
-  await prisma.$disconnect();
+  await disconnectPrisma();
 }
 
-main();
+main().catch(async (e) => {
+  console.error('Fatal error:', e);
+  await disconnectPrisma();
+  process.exit(1);
+});

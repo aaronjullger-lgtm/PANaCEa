@@ -128,7 +128,7 @@ async function generatePatientEncounterCase(
   item: { name: string; category: string },
   retryCount = 0
 ): Promise<PatientEncounterCaseData | null> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   let prompt = PROMPT_TEMPLATE.replace('{{ITEM_NAME}}', item.name).replace(
     '{{CATEGORY}}',
