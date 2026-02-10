@@ -40,6 +40,15 @@ export const onRequestGet = authenticatedEndpoint(
     .optional()
     .default({ days: DEFAULT_DAYS }),
   async (context) => {
+    if (!context.env.DATABASE_URL) {
+      return {
+        status: 503,
+        data: {
+          error: 'Calibration unavailable',
+          message: 'Server database is not configured.',
+        },
+      };
+    }
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
     const days = context.validated?.days ?? DEFAULT_DAYS;
 
@@ -91,6 +100,19 @@ export const onRequestGet = authenticatedEndpoint(
             total: calibration.total,
           },
           days,
+        },
+      };
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const isDbUnavailable =
+        /connection|ECONNREFUSED|timeout|database.*unavailable|P1001|P1017|pool/i.test(errMsg);
+      return {
+        status: isDbUnavailable ? 503 : 500,
+        data: {
+          error: isDbUnavailable ? 'Calibration unavailable' : 'Failed to load calibration',
+          message: isDbUnavailable
+            ? 'Database is temporarily unavailable. Please try again.'
+            : errMsg || 'Please try again later.',
         },
       };
     } finally {
