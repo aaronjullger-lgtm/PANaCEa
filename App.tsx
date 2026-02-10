@@ -8,6 +8,7 @@ import { NavRail } from './components/layout/NavRail';
 import { AppBrand } from './components/layout/AppBrand';
 import { PageContainer } from './components/layout/PageContainer';
 import { type View, pageVariants, DRILL_MODE_IDS } from './config/appViews';
+import { TRAINING_MODES } from './config/training-modes';
 import {
   QuizView,
   MenuView,
@@ -199,19 +200,21 @@ const App: React.FC = () => {
       '/visualizer',
     ];
     
-    const isKnownPath = knownPaths.includes(path) || 
+    const isKnownPath = knownPaths.includes(path) ||
                         path.startsWith('/study/knowledge') ||
                         path.startsWith('/study/utilities') ||
-                        path.startsWith('/study/reference') || 
-                        path.startsWith('/study/toolkit');
-    
+                        path.startsWith('/study/reference') ||
+                        path.startsWith('/study/toolkit') ||
+                        path.startsWith('/modes/') ||
+                        path === '/core-adaptive';
+
     if (!isKnownPath) {
       setShowNotFound(true);
       return;
     }
-    
+
     setShowNotFound(false);
-    
+
     // Redirects for legacy paths (bookmarks/links)
     if (path.startsWith('/study/reference')) {
       navigate('/study/knowledge', { replace: true });
@@ -221,7 +224,20 @@ const App: React.FC = () => {
       navigate('/study/utilities', { replace: true });
       return;
     }
-    
+
+    // Route-to-view map for training mode deep links (e.g. /modes/ecg-drill -> ecg_drill)
+    const routeToViewMap: Record<string, View> = {};
+    for (const mode of TRAINING_MODES) {
+      routeToViewMap[mode.route] = mode.id as View;
+    }
+    if (path.startsWith('/modes/') || path === '/core-adaptive') {
+      const view = routeToViewMap[path];
+      if (view) {
+        setView(view);
+        return;
+      }
+    }
+
     if (path === '/' || path === '') {
       setView('command_center');
     } else if (path === '/menu') {
@@ -564,7 +580,7 @@ const App: React.FC = () => {
       initializeSession();
       try {
         setIsLoading(true);
-        if (settings.focus === 'review') {
+        if (settings.focus === 'review' || settings.focus === 'due') {
           const today = new Date().toISOString().split('T')[0] ?? '';
           const due = missedQuestions.filter((q) => q.nextReviewDate && q.nextReviewDate <= today);
           if (due.length === 0) {

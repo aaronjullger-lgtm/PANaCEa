@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 
 export interface ConfusedWithItem {
   id: string;
@@ -133,6 +134,7 @@ export interface UseSmartConditionResult {
 export function useSmartCondition(
   conditionId: string | null | undefined
 ): UseSmartConditionResult {
+  const { getToken } = useAuth();
   const [summary, setSummary] = useState<ConditionSummary | null>(null);
   const [details, setDetails] = useState<ConditionDetails | null>(null);
   const [isLoadingSummary, setIsLoadingSummary] = useState(true);
@@ -150,8 +152,15 @@ export function useSmartCondition(
     setIsLoadingSummary(true);
     setErrorSummary(null);
     try {
+      const token = await getToken();
       const res = await fetch(
-        `/api/content/condition/${encodeURIComponent(conditionId)}/summary`
+        `/api/content/condition/${encodeURIComponent(conditionId)}/summary`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            'Content-Type': 'application/json',
+          },
+        }
       );
       const json = (await res.json()) as { data?: Record<string, unknown>; error?: string };
       if (!res.ok) {
@@ -173,15 +182,22 @@ export function useSmartCondition(
     } finally {
       setIsLoadingSummary(false);
     }
-  }, [conditionId]);
+  }, [conditionId, getToken]);
 
   const fetchDetails = useCallback(async () => {
     if (!conditionId) return;
     setIsLoadingDetails(true);
     setErrorDetails(null);
     try {
+      const token = await getToken();
       const res = await fetch(
-        `/api/content/condition/${encodeURIComponent(conditionId)}/details`
+        `/api/content/condition/${encodeURIComponent(conditionId)}/details`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            'Content-Type': 'application/json',
+          },
+        }
       );
       const json = (await res.json()) as { data?: Record<string, unknown>; error?: string };
       if (!res.ok) {
@@ -203,7 +219,7 @@ export function useSmartCondition(
     } finally {
       setIsLoadingDetails(false);
     }
-  }, [conditionId]);
+  }, [conditionId, getToken]);
 
   useEffect(() => {
     fetchSummary();

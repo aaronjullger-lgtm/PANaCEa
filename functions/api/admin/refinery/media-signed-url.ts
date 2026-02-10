@@ -12,7 +12,7 @@ import {
   refineryEndpoint,
   type AuthenticatedContext,
   type ValidatedContext,
-} from '../../_shared/middleware';
+} from '../../_shared/refineryMiddleware';
 
 const RAW_VAULT_BUCKET = 'raw-source-vault';
 const SIGNED_URL_EXPIRES_SEC = 300; // 5 minutes

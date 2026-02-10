@@ -1752,7 +1752,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                               <span
                                 className="text-[var(--color-text-secondary)]"
                                 dangerouslySetInnerHTML={{
-                                  __html: userChoiceExplanation.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'),
+                                  __html: sanitizeForRationale(userChoiceExplanation.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
                                 }}
                               />
                             </div>
@@ -1828,7 +1828,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                                             <span
                                               className="text-[var(--color-text-secondary)]"
                                               dangerouslySetInnerHTML={{
-                                                __html: text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'),
+                                                __html: sanitizeForRationale(text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
                                               }}
                                             />
                                           </div>
@@ -1912,7 +1912,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                           <div
                             ref={(el) => microKinetics.registerScrollContainer(el)}
                             className="text-[var(--color-text-secondary)] leading-relaxed bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-4 py-3 max-h-[40vh] overflow-y-auto prose prose-sm dark:prose-invert max-w-none"
-                            dangerouslySetInnerHTML={{ __html: showRest ? restBody : raw }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeForRationale(showRest ? restBody : raw) }}
                           />
                         </section>
                       )}

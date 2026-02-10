@@ -15,7 +15,7 @@ import {
   refineryEndpoint,
   type AuthenticatedContext,
   type ValidatedContext,
-} from '../../_shared/middleware';
+} from '../../_shared/refineryMiddleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,

@@ -165,7 +165,7 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+            className="lg:hidden fixed inset-0 bg-[var(--color-overlay)] z-40"
           />
         )}
       </AnimatePresence>

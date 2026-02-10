@@ -1,4 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+
+const SEARCH_DEBOUNCE_MS = 320;
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@clerk/clerk-react';
 import {
@@ -291,6 +293,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
 
   const [activeDrugClass, setActiveDrugClass] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [highYieldOnly, setHighYieldOnly] = useState(false);
   const [firstLineOnly, setFirstLineOnly] = useState(false);
 
@@ -299,6 +302,12 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Debounce search so API is not called on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearchQuery(searchQuery), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   // Fetch drug classes
   const fetchDrugClasses = useCallback(async () => {
@@ -345,7 +354,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
     try {
       const params = new URLSearchParams();
       if (activeDrugClass && activeDrugClass !== 'all') params.append('drugClass', activeDrugClass);
-      if (searchQuery) params.append('search', searchQuery);
+      if (debouncedSearchQuery) params.append('search', debouncedSearchQuery);
       if (highYieldOnly) params.append('highYield', 'true');
       if (firstLineOnly) params.append('firstLine', 'true');
 
@@ -375,7 +384,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
     } finally {
       setLoading(false);
     }
-  }, [activeDrugClass, searchQuery, highYieldOnly, firstLineOnly, getToken, isSignedIn]);
+  }, [activeDrugClass, debouncedSearchQuery, highYieldOnly, firstLineOnly, getToken, isSignedIn]);
 
   // Initial load
   useEffect(() => {

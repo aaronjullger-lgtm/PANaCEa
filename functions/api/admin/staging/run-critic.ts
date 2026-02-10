@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { adminEndpoint, withCors } from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
-import { processStagingQueueWithCritic } from '../../_shared/staging-questions';
+import { processStagingQueueWithCritic } from '../../_shared/stagingExports';
 
 const BodySchema = z.object({
   body: z.object({ limit: z.number().int().min(1).max(50).optional().default(10) }).optional().default({ limit: 10 }),

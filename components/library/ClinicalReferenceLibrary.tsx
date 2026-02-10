@@ -627,7 +627,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-[60%] min-w-[500px] max-w-4xl bg-[var(--color-bg-primary)] border-l border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)] z-50 flex flex-col"
+              className="fixed top-0 right-0 h-full w-full md:w-[60%] min-w-0 md:min-w-[400px] max-w-4xl bg-[var(--color-bg-primary)] border-l border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)] z-50 flex flex-col"
             >
               {/* Panel Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">

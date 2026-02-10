@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -200,6 +200,18 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     enabled: viewState === 'active',
   });
   
+  // Refs for cleanup: diagnosis timing metric id; debrief stream abort
+  const diagnosisMetricIdRef = useRef<string | null>(null);
+  const debriefAbortRef = useRef<AbortController | null>(null);
+
+  // Abort debrief stream on unmount so we do not update state after unmount
+  useEffect(() => {
+    return () => {
+      debriefAbortRef.current?.abort();
+      debriefAbortRef.current = null;
+    };
+  }, []);
+
   // NEW: State machine for Module 1
   const [avEngine, setAVEngine] = useState<PatientAVEngine | null>(null);
   const [currentAVState, setCurrentAVState] = useState<AVState | null>(null);
@@ -579,7 +591,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }
   };
 
-  // NEW: Start diagnosis timing when entering diagnosis phase
+  // NEW: Start diagnosis timing when entering diagnosis phase; store id for endMetric on submit
   useEffect(() => {
     if (phase === 'diagnosis' && session?.id) {
       const metricId = startMetric(
@@ -588,9 +600,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         'critical',
         120 // Target: 2 minutes
       );
-      // Store metric ID in component state if needed
+      diagnosisMetricIdRef.current = metricId ?? null;
       return () => {
-        // Cleanup if user exits before completing
+        diagnosisMetricIdRef.current = null;
       };
     }
     return undefined;
@@ -636,6 +648,13 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         120, // 2 min target
         isCorrect
       );
+
+      // End diagnosis timing metric so analytics has duration
+      const metricId = diagnosisMetricIdRef.current;
+      if (metricId) {
+        endMetric(metricId);
+        diagnosisMetricIdRef.current = null;
+      }
 
       // Move to Treatment Phase
       setPhase('treatment');
@@ -785,12 +804,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
     try {
       const prompt = buildDebriefPrompt(sessionSummary, currentCase);
+      debriefAbortRef.current = new AbortController();
       const fullText = await streamGeminiText(prompt, {
         modelName: 'gemini-2.5-pro',
         temperature: 0.7,
         token: token ?? undefined,
         onChunk: (chunk) => setStreamedDebriefText((prev) => prev + chunk),
+        signal: debriefAbortRef.current.signal,
       });
+      debriefAbortRef.current = null;
 
       const cleaned = cleanDebriefJsonResponse(fullText);
       const parsed = JSON.parse(cleaned);
@@ -828,6 +850,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       );
       setAar(report);
     } catch (error) {
+      debriefAbortRef.current = null;
+      if (error instanceof Error && error.name === 'AbortError') return;
       console.error('Error streaming Virtual Preceptor debrief:', error);
       toast.error('Debrief could not be loaded. Showing a summary instead.');
       const fallback = getFallbackDebriefFeedback(sessionSummary, currentCase);
