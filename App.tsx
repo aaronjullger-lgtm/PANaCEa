@@ -1014,7 +1014,7 @@ const App: React.FC = () => {
                         <OfflineSyncIndicator />
                         <Link
                           to={ROUTES.ADMIN}
-                          className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors duration-200 flex items-center justify-center"
+                          className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-700 hover:text-slate-900 bg-[var(--color-bg-secondary)] hover:bg-slate-100 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
                           aria-label="Admin Dashboard"
                         >
                           <Shield className="w-5 h-5" />
@@ -1022,7 +1022,7 @@ const App: React.FC = () => {
                         <motion.button
                           ref={settingsButtonRef}
                           onClick={() => setIsSettingsModalOpen(true)}
-                          className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
+                          className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-700 hover:text-slate-900 bg-[var(--color-bg-secondary)] hover:bg-slate-100 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
                           aria-label="Settings and Stats"
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}

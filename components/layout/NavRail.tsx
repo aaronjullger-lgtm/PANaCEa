@@ -102,13 +102,13 @@ function BottomTabBar({ items, pathname, search }: {
             <span className="flex flex-col items-center justify-center gap-0.5 pt-1.5 pb-1">
               <Icon
                 className={`h-5 w-5 transition-colors ${
-                  isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'
+                  isActive ? 'text-[#2563EB] dark:text-[var(--color-accent)]' : 'text-slate-700 dark:text-[var(--color-text-muted)]'
                 }`}
                 aria-hidden
               />
               <span
                 className={`text-[10px] leading-none font-medium transition-colors ${
-                  isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'
+                  isActive ? 'text-[#2563EB] dark:text-[var(--color-accent)]' : 'text-slate-700 dark:text-[var(--color-text-muted)]'
                 }`}
               >
                 {item.label}
@@ -116,7 +116,7 @@ function BottomTabBar({ items, pathname, search }: {
               {isActive && (
                 <motion.span
                   layoutId="bottom-tab-indicator"
-                  className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[var(--color-accent)]"
+                  className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[#2563EB] dark:bg-[var(--color-accent)]"
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}
