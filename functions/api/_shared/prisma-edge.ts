@@ -206,38 +206,8 @@ export async function safePrismaDisconnect(prisma: EdgePrismaClient | null): Pro
 
   try {
     await prisma.$disconnect();
-  } catch (err) {
-    console.warn('[Prisma Edge] Error during disconnect (non-fatal):', err);
-  }
-}
-
-/**
- * Run a handler with an Edge Prisma client. Ensures safePrismaDisconnect is called in finally.
- * Use this to avoid forgetting disconnect in new handlers.
- *
- * @example
- * const result = await withEdgePrisma(env.DATABASE_URL, async (prisma) => {
- *   return await prisma.user.findMany({ ... });
- * });
- */
-export async function withEdgePrisma<T>(
-  databaseUrlOrEnv: DatabaseUrlInput,
-  fn: (prisma: EdgePrismaClient) => Promise<T>
-): Promise<T> {
-  const databaseUrl =
-    typeof databaseUrlOrEnv === 'string'
-      ? databaseUrlOrEnv
-      : (databaseUrlOrEnv && 'DATABASE_URL' in databaseUrlOrEnv
-          ? (databaseUrlOrEnv as any).DATABASE_URL
-          : (databaseUrlOrEnv as any)?.env?.DATABASE_URL) || '';
-  if (!databaseUrl) {
-    throw new Error('DATABASE_URL is required for withEdgePrisma');
-  }
-  let prisma: EdgePrismaClient | null = null;
-  try {
-    prisma = createEdgePrismaClient(databaseUrlOrEnv);
-    return await fn(prisma);
-  } finally {
-    await safePrismaDisconnect(prisma);
+  } catch (error) {
+    // Log but don't throw - disconnection errors shouldn't fail the request
+    console.warn('[Prisma Edge] Error during disconnect (non-fatal):', error);
   }
 }

@@ -298,49 +298,6 @@ export function withAdminRole(): Middleware<AuthenticatedContext> {
   };
 }
 
-/**
- * Refinery / CMS approval role check - requires approver or higher (approver, admin, superadmin)
- * Must be used after withAuth() middleware
- */
-export function withApproverOrAdminRole(): Middleware<AuthenticatedContext> {
-  return async (context, next) => {
-    if (!context.auth?.userId) {
-      logger.error('withApproverOrAdminRole called without auth context');
-      return { status: 401, error: 'Authentication required' };
-    }
-
-    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-
-    try {
-      const user = await prisma.user.findUnique({
-        where: { clerkId: context.auth.userId },
-        select: { role: true },
-      });
-
-      const role = user?.role as string | undefined;
-      const allowed = role === 'APPROVER' || role === 'ADMIN' || role === 'SUPERADMIN';
-
-      if (!user || !allowed) {
-        logger.warn('User without approver role attempted refinery endpoint', {
-          userId: context.auth.userId,
-          path: new URL(context.request.url).pathname,
-        });
-        return { status: 403, error: 'Approver or admin access required' };
-      }
-
-      return next();
-    } catch (error) {
-      logger.error('Error checking admin role', {
-        error: error instanceof Error ? error.message : String(error),
-        userId: context.auth.userId,
-      });
-      return { status: 500, error: 'Internal server error' };
-    } finally {
-      await safePrismaDisconnect(prisma);
-    }
-  };
-}
-
 // ============================================================================
 // VALIDATION MIDDLEWARE
 // ============================================================================
@@ -551,27 +508,6 @@ export function adminEndpoint<T>(
     withAdminRole(), // Admin role check added
     withRateLimit({ requestsPerMinute: 30, endpointType: 'admin' }),
     withValidation(schema),
-    withLogging(),
-    handler
-  );
-}
-
-/**
- * Refinery endpoint stack - requires approver or admin role (for Content Refinery / inbox)
- */
-export function refineryEndpoint<T>(
-  schema: z.ZodSchema<T>,
-  handler: Handler<AuthenticatedContext & ValidatedContext<T>>,
-  options?: { source?: 'body' | 'query' | 'params' }
-) {
-  return withMiddleware(
-    withCors(),
-    withErrorHandling(),
-    withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
-    withAuth(),
-    withApproverOrAdminRole(),
-    withRateLimit({ requestsPerMinute: 30, endpointType: 'admin' }),
-    withValidation(schema, options),
     withLogging(),
     handler
   );

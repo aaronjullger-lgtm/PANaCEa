@@ -40,11 +40,6 @@ export interface CloudflareEnv {
 
   // Optional R2 bucket (for media storage)
   MEDIA_BUCKET?: R2Bucket;
-
-  // FSRS Optimizer sidecar (Google Cloud Function)
-  FSRS_OPTIMIZER_URL?: string;
-  FSRS_OPTIMIZER_SECRET?: string;
-  FSRS_USE_SIDECAR?: string; // '1' | 'true' to call Python sidecar; else in-process
 }
 
 /**
@@ -169,36 +164,6 @@ export interface ContentTransitionPayload {
   newStatus: 'draft' | 'pending_review' | 'approved' | 'published' | 'archived';
   reviewNotes?: string;
 }
-
-// ============================================================================
-// FSRS DATA ISOLATION (Main Session vs OSCE / Cram / Rapid Recall)
-// ============================================================================
-
-/** Sessions that affect FSRS memory states. Only MAIN feeds the scheduler/optimizer. */
-export type FSRSSessionType = 'MAIN';
-
-/** Sessions that use questions but do NOT update FSRS memory states. */
-export type PracticeSessionType = 'CRAM' | 'RAPID_RECALL' | 'CUSTOM_DRILL';
-
-/** Sessions that are completely separate (clinical reasoning); never touch ReviewLog/FSRS. */
-export type ClinicalSessionType = 'OSCE' | 'GRAND_ROUNDS';
-
-/** Union for strict parameter checking on schedule/optimizer endpoints. */
-export type ValidScheduleMode = FSRSSessionType | PracticeSessionType;
-
-/**
- * Type guard: ensures we never pass an OSCE/clinical session to the FSRS scheduler or optimizer.
- * Use when writing ReviewLog (only MAIN gets review_type: 'real') or when querying for optimization.
- */
-export function isFSRSEligible(mode: string): mode is FSRSSessionType {
-  return mode === 'MAIN';
-}
-
-/** review_type value for FSRS-active rows (algorithm sees these). */
-export const FSRS_REVIEW_TYPE_REAL = 'real' as const;
-
-/** review_type value for history-only rows (cram, rapid recall, OSCE - algorithm ignores). */
-export const FSRS_REVIEW_TYPE_CRAM = 'cram' as const;
 
 // ============================================================================
 // TYPE GUARDS

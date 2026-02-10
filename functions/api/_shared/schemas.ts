@@ -556,7 +556,7 @@ export type SyncPayloadInput = z.infer<typeof SyncPayloadSchema>;
  * Validate request body against schema and return parsed data or error response
  */
 export async function validateRequest<T>(
-  request: Request<unknown, unknown>,
+  request: Request,
   schema: z.ZodSchema<T>
 ): Promise<{ success: true; data: T } | { success: false; response: Response }> {
   try {

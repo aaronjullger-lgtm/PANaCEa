@@ -54,12 +54,6 @@ export const RATE_LIMITS = {
     windowSeconds: 3600, // 1 hour
     description: 'Admin operations',
   },
-  // Veo video generation – expensive, limit tightly
-  veo: {
-    maxRequests: 5,
-    windowSeconds: 3600, // 1 hour
-    description: 'Veo video generation',
-  },
 } as const;
 
 export type RateLimitType = keyof typeof RATE_LIMITS;

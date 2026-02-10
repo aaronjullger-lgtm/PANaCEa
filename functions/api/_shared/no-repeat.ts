@@ -242,10 +242,9 @@ export async function fetchUnseenQuestions(
     questionType: 'pre_generated',
   });
 
-  // Build query for pool questions (exclude kill-switch rejected)
+  // Build query for pool questions
   const where: any = {
     id: { notIn: seenQuestionIds },
-    validationStatus: { not: 'rejected' },
   };
 
   if (filter.system) {
