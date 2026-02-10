@@ -112,6 +112,9 @@ import { inferQuestionType } from '@/hooks/useTelemetryCollector';
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
 import { syncManager } from '@/lib/services/sync/syncManager';
+import { logger } from '@/src/lib/logger';
+
+const LOG_SCOPE = 'QuizView';
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -310,10 +313,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     for (const [name, callback] of Object.entries(requiredCallbacks)) {
       if (typeof callback !== 'function') {
-        console.error(
-          `QuizView: Required callback prop "${name}" is not a function:`,
-          typeof callback
-        );
+        logger.error(LOG_SCOPE, `Required callback prop "${name}" is not a function`, typeof callback);
       }
     }
   }, []);
@@ -544,14 +544,14 @@ const QuizView: React.FC<QuizViewProps> = ({
           newQuestions = result.questions ?? [];
         }
       } catch (apiErr) {
-        console.warn('[QuizView] Session API replenish failed, using fallback:', apiErr);
+        logger.warn(LOG_SCOPE, 'Session API replenish failed, using fallback', apiErr);
       }
 
       if (newQuestions.length === 0) {
         // Fallback: fetch questions one at a time
         const fetchPromises = Array.from({ length: BATCH_SIZE }, () =>
           getQuestionClient(sessionSettings, growthAreas, getToken).catch((err) => {
-            console.warn('Single question fetch failed:', err);
+            logger.warn(LOG_SCOPE, 'Single question fetch failed', err);
             return null;
           })
         );
@@ -565,10 +565,10 @@ const QuizView: React.FC<QuizViewProps> = ({
         setQueue((prev) => [...prev, ...newQuestions]);
         // Replenished questions successfully
       } else {
-        console.warn('[QuizView] No questions returned from batch fetch');
+        logger.warn(LOG_SCOPE, 'No questions returned from batch fetch');
       }
     } catch (err: unknown) {
-      console.error('Failed to replenish queue:', err);
+      logger.error(LOG_SCOPE, 'Failed to replenish queue', err);
       // soft-fail: show a user-friendly error but don't kill the session
       setError(
         'Unable to load more questions right now. You can continue with your current questions.'
@@ -652,7 +652,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
       // Note: Replenishment is handled by the proactive effect when queue < LOW_QUEUE_THRESHOLD
     } catch (error) {
-      console.error('Error advancing to next question:', error);
+      logger.error(LOG_SCOPE, 'Error advancing to next question', error);
       setError('Failed to load next question. Please try again.');
     }
   }, [
@@ -729,10 +729,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       .map(([name, type]) => `${name}: ${type}`);
 
     if (undefinedFunctions.length > 0) {
-      console.error(
-        '[QuizView] CRITICAL: Undefined functions detected in handleSubmitAnswer:',
-        undefinedFunctions
-      );
+      logger.error(LOG_SCOPE, 'CRITICAL: Undefined functions detected in handleSubmitAnswer', undefinedFunctions);
     }
 
     setIsAnswered(true);
@@ -781,7 +778,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     });
     // Fire-and-forget: metrics and review sync in background (or when back online).
     void implicitMetrics.submitAnswer(questionId, isCorrect, 'multiple_choice').catch((err) => {
-      console.warn('Implicit metrics submission failed (will retry when online):', err);
+      logger.warn(LOG_SCOPE, 'Implicit metrics submission failed (will retry when online)', err);
     });
 
     // Note: Removed showOptimisticFeedback() call - user feedback on correctness
@@ -797,7 +794,7 @@ const QuizView: React.FC<QuizViewProps> = ({
           setCurrentQuestion((prev) => (prev ? { ...prev, pearls } : null));
         }
       } catch (error) {
-        console.error('Failed to load clinical pearls:', error);
+        logger.error(LOG_SCOPE, 'Failed to load clinical pearls', error);
       }
     }
 
@@ -820,7 +817,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         recordBehavioralConfidence(behaviorSignals, isCorrect);
       }
     } catch (e) {
-      console.warn('[QuizView] recordBehavioralConfidence failed:', e);
+      logger.warn(LOG_SCOPE, 'recordBehavioralConfidence failed', e);
     }
 
     // Sprint 4: Record momentum data
@@ -829,7 +826,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         recordMomentumResult(isCorrect, timeToAnswer, parTime);
       }
     } catch (e) {
-      console.warn('[QuizView] recordMomentumResult failed:', e);
+      logger.warn(LOG_SCOPE, 'recordMomentumResult failed', e);
     }
 
     // Sprint 4: Record answer pattern for post-session analysis
@@ -848,7 +845,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         });
       }
     } catch (e) {
-      console.warn('[QuizView] recordAnswerPattern failed:', e);
+      logger.warn(LOG_SCOPE, 'recordAnswerPattern failed', e);
     }
 
     // Sprint 4: Update performance prediction
@@ -872,7 +869,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         });
       }
     } catch (e) {
-      console.warn('[QuizView] updatePerformancePrediction failed:', e);
+      logger.warn(LOG_SCOPE, 'updatePerformancePrediction failed', e);
     }
 
     // Sprint 4: Record for smart pause detection
@@ -885,7 +882,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         });
       }
     } catch (e) {
-      console.warn('[QuizView] recordPauseResult failed:', e);
+      logger.warn(LOG_SCOPE, 'recordPauseResult failed', e);
     }
 
     // Advanced analytics: Record comprehensive question result
@@ -902,7 +899,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         });
       }
     } catch (e) {
-      console.warn('[QuizView] recordQuestionResult failed:', e);
+      logger.warn(LOG_SCOPE, 'recordQuestionResult failed', e);
     }
 
     setBehavioralRefreshKey((k) => k + 1);
@@ -1049,13 +1046,13 @@ const QuizView: React.FC<QuizViewProps> = ({
               modifiersApplied: schedule ? ['fsrs_v5'] : [],
             });
           } catch (err) {
-            console.error('Failed to submit review to server:', err);
+            logger.error(LOG_SCOPE, 'Failed to submit review to server', err);
             // Silent failure - don't block the user
             // Local data is already recorded, server sync can be retried later
           }
         })
         .catch((err) => {
-          console.error('Failed to get auth token:', err);
+          logger.error(LOG_SCOPE, 'Failed to get auth token', err);
         });
     }
 
@@ -1252,7 +1249,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         });
         setIsExplainerLoading(false);
       } catch (err) {
-        console.error('Error generating alternate rationale:', err);
+        logger.error(LOG_SCOPE, 'Error generating alternate rationale', err);
         setAlternateRationale(
           "Sorry, we couldn't generate a new explanation right now. The AI service may be temporarily busy. Please try again in a moment."
         );
@@ -1260,7 +1257,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       }
     } catch (err) {
       // User-friendly error message instead of technical details
-      console.error('Error generating alternate rationale:', err);
+      logger.error(LOG_SCOPE, 'Error generating alternate rationale', err);
       setAlternateRationale(
         "Sorry, we couldn't generate a new explanation right now. The AI service may be temporarily busy. Please try again in a moment."
       );
@@ -2017,7 +2014,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   try {
                     showNextQuestion();
                   } catch (error) {
-                    console.error('Error in Next Question button click:', error);
+                    logger.error(LOG_SCOPE, 'Error in Next Question button click', error);
                     setError('Failed to proceed to next question. Please refresh the page.');
                   }
                 }}

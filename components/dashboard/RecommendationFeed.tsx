@@ -4,6 +4,7 @@ import { PrimaryButton } from '../ui/PrimaryButton';
 import { Lightbulb, X, Check, ArrowRight, RefreshCw, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../hooks/useAuth';
+import { logger } from '@/src/lib/logger';
 
 // Cache configuration: Only fetch fresh data if user returns after 6+ hours
 const CACHE_KEY = 'panceai_recommendations';
@@ -109,7 +110,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
       localStorage.setItem(TIMESTAMP_KEY, now.toString());
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Unknown error';
-      console.error('[RecommendationFeed] Failed to fetch recommendations:', errorMsg);
+      logger.warn('RecommendationFeed', 'Failed to fetch recommendations', errorMsg);
       toast.error('Failed to load recommendations. Please try again.');
       setRecommendations([]); // Clear on error
     } finally {
@@ -162,7 +163,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
       }
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Unknown error';
-      console.error('[RecommendationFeed] Failed to generate recommendations:', errorMsg);
+      logger.warn('RecommendationFeed', 'Failed to generate recommendations', errorMsg);
       toast.error('Failed to analyze progress. Please try again.');
     } finally {
       setGenerating(false);

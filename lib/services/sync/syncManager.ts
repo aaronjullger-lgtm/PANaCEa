@@ -10,6 +10,10 @@
  * - Supports background sync via Service Worker
  */
 
+import { logger } from '@/src/lib/logger';
+
+const SCOPE = 'SyncManager';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -94,7 +98,7 @@ class SyncManager {
   private handleOnline(): void {
     this.emit('online', this.getStatus());
     // Automatically sync when coming online
-    this.syncAll().catch((err) => console.error('[SyncManager] Auto-sync failed:', err));
+    this.syncAll().catch((err) => logger.error(SCOPE, 'Auto-sync failed', err));
   }
 
   private handleOffline(): void {
@@ -165,7 +169,7 @@ class SyncManager {
 
     // Try immediate sync if online
     if (this.isOnline()) {
-      this.syncAnswers().catch((err) => console.error('[SyncManager] Immediate sync failed:', err));
+      this.syncAnswers().catch((err) => logger.error(SCOPE, 'Immediate sync failed', err));
     }
 
     return id;
@@ -211,7 +215,7 @@ class SyncManager {
     // Try immediate sync if online
     if (this.isOnline()) {
       this.syncPearlActions().catch((err) =>
-        console.error('[SyncManager] Immediate sync failed:', err)
+        logger.error(SCOPE, 'Immediate sync failed (pearls)', err)
       );
     }
 
@@ -244,12 +248,12 @@ class SyncManager {
 
   public async syncAll(token?: string | null): Promise<{ answers: number; pearls: number }> {
     if (this.isSyncing) {
-      console.log('[SyncManager] Sync already in progress');
+      logger.debug(SCOPE, 'Sync already in progress');
       return { answers: 0, pearls: 0 };
     }
 
     if (!this.isOnline()) {
-      console.log('[SyncManager] Offline, skipping sync');
+      logger.debug(SCOPE, 'Offline, skipping sync');
       return { answers: 0, pearls: 0 };
     }
 
@@ -334,7 +338,7 @@ class SyncManager {
     const filtered = answers.filter((a) => !a.synced || a.timestamp > cutoff);
     this.saveOfflineAnswers(filtered);
 
-    console.log(`[SyncManager] Synced ${synced}/${pending.length} answers`);
+    logger.debug(SCOPE, `Synced ${synced}/${pending.length} answers`);
     return synced;
   }
 
@@ -393,7 +397,7 @@ class SyncManager {
     const filtered = actions.filter((a) => !a.synced || a.timestamp > cutoff);
     this.saveOfflinePearlActions(filtered);
 
-    console.log(`[SyncManager] Synced ${synced}/${pending.length} pearl actions`);
+    logger.debug(SCOPE, `Synced ${synced}/${pending.length} pearl actions`);
     return synced;
   }
 
@@ -452,7 +456,7 @@ class SyncManager {
   public clearAllPending(): void {
     this.saveOfflineAnswers([]);
     this.saveOfflinePearlActions([]);
-    console.log('[SyncManager] Cleared all pending items');
+    logger.debug(SCOPE, 'Cleared all pending items');
   }
 }
 

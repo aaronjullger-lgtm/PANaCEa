@@ -9,6 +9,7 @@ import type { PerformanceRecord, Question } from '../types';
 import { getAllSRSItems, loadSRSItemsFromCloud } from '../lib/services/srsService';
 import { createDebouncedFunction } from '../lib/utils/debounce';
 import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
+import { logger } from '@/src/lib/logger';
 
 const PERFORMANCE_KEY = 'panceai_performance_v2';
 const MISSED_KEY = 'panceai_missed_v2';
@@ -111,7 +112,7 @@ export function useUserStats(): UseUserStatsResult {
    */
   const syncToCloud = useCallback(async () => {
     if (!isSignedIn || !user) {
-      console.warn('Cannot sync: user not signed in');
+      logger.warn('useUserStats', 'Cannot sync: user not signed in');
       return;
     }
 
@@ -149,7 +150,7 @@ export function useUserStats(): UseUserStatsResult {
 
       // Handle 401 Unauthorized - abort sync immediately without retry
       if (response.status === 401) {
-        console.warn('[useUserStats] 401 Unauthorized - stopping sync to prevent infinite loop');
+        logger.warn('useUserStats', '401 Unauthorized - stopping sync to prevent infinite loop');
         setSyncError('Authentication failed. Please sign in again.');
         setIsSyncing(false);
         setIsLoading(false);
@@ -159,6 +160,11 @@ export function useUserStats(): UseUserStatsResult {
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Sync failed with status ${response.status}: ${errorText}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType?.includes('application/json')) {
+        throw new Error(`Sync failed: server returned ${contentType || 'non-JSON'}`);
       }
 
       const result = (await response.json()) as {
@@ -185,7 +191,7 @@ export function useUserStats(): UseUserStatsResult {
       setLastSyncTime(Date.now());
       console.log('Sync to cloud successful:', result);
     } catch (error) {
-      console.error('Sync to cloud failed:', error);
+      logger.warn('useUserStats', 'Sync to cloud failed', error);
       setSyncError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsSyncing(false);
@@ -198,7 +204,7 @@ export function useUserStats(): UseUserStatsResult {
    */
   const syncFromCloud = useCallback(async () => {
     if (!isSignedIn || !user) {
-      console.warn('Cannot sync: user not signed in');
+      logger.warn('useUserStats', 'Cannot sync: user not signed in');
       return;
     }
 
@@ -220,7 +226,7 @@ export function useUserStats(): UseUserStatsResult {
 
       // Handle 401 Unauthorized - abort sync immediately without retry
       if (response.status === 401) {
-        console.warn('[useUserStats] 401 Unauthorized - stopping sync to prevent infinite loop');
+        logger.warn('useUserStats', '401 Unauthorized - stopping sync to prevent infinite loop');
         setSyncError('Authentication failed. Please sign in again.');
         setIsSyncing(false);
         setIsLoading(false);
@@ -229,6 +235,11 @@ export function useUserStats(): UseUserStatsResult {
 
       if (!response.ok) {
         throw new Error(`Sync failed: ${response.status}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType?.includes('application/json')) {
+        throw new Error(`Sync failed: server returned ${contentType || 'non-JSON'}`);
       }
 
       const result = (await response.json()) as {
@@ -250,11 +261,11 @@ export function useUserStats(): UseUserStatsResult {
           setFlaggedQuestionsState(flagged);
         }
 
-        setLastSyncTime(Date.now());
-        console.log('Sync from cloud successful:', result);
+      setLastSyncTime(Date.now());
+      logger.debug('useUserStats', 'Sync from cloud successful');
       }
     } catch (error) {
-      console.error('Sync from cloud failed:', error);
+      logger.warn('useUserStats', 'Sync from cloud failed', error);
       setSyncError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsSyncing(false);

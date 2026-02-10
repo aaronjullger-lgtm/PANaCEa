@@ -47,6 +47,7 @@ import {
   CLINICAL_REASONING_TARGET_SEC,
   OVERALL_TARGET_SEC,
 } from '@/lib/speedBenchmarks';
+import { logger } from '@/src/lib/logger';
 
 // Minimum reviews needed for confident predictions (FSRS calibration threshold)
 const CALIBRATION_THRESHOLD = 60;
@@ -164,17 +165,18 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         });
 
         if (!response.ok) {
-          const contentType = response.headers.get('content-type');
-          if (!contentType?.includes('application/json')) {
-            throw new Error(`Expected JSON but got ${contentType}`);
-          }
           throw new Error('Failed to fetch user stats');
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+          throw new Error(`Expected JSON but got ${contentType || 'text/html'}`);
         }
 
         const result = (await response.json()) as UserStatsResponse;
         setUserStats(result);
       } catch (error) {
-        console.error('[AnalyticsDashboard] Failed to fetch user stats:', error);
+        logger.error('AnalyticsDashboard', 'Failed to fetch user stats', error);
         setStatsError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         setStatsLoading(false);
@@ -208,6 +210,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           throw new Error('Failed to fetch stability trend');
         }
 
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+          throw new Error(`Expected JSON but got ${contentType || 'text/html'}`);
+        }
+
         const result = (await response.json()) as { data?: Array<{ date: string; avgStability?: number; totalReviews?: number }> };
 
         if (result.data && Array.isArray(result.data)) {
@@ -223,7 +230,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           setStabilityTrendData(formattedData);
         }
       } catch (error) {
-        console.error('[AnalyticsDashboard] Failed to fetch stability trend:', error);
+        logger.error('AnalyticsDashboard', 'Failed to fetch stability trend', error);
         setStabilityError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         setStabilityLoading(false);

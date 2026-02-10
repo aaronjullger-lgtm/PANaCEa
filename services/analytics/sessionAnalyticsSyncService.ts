@@ -13,6 +13,7 @@ import {
 } from './behavioralConfidenceService';
 import { getMomentumInsights } from './sessionMomentumService';
 import { getPrediction, getConfidenceInterval } from './performancePredictionService';
+import { logger } from '@/src/lib/logger';
 
 // Storage key for pending sync
 const PENDING_SYNC_KEY = 'panceai_pending_session_sync';
@@ -216,7 +217,7 @@ export async function syncSessionAnalytics(
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-      console.error('[SessionAnalyticsSync] API error:', error);
+      logger.error('SessionAnalyticsSync', 'API error', error);
 
       // Queue for retry if offline or server error
       if (response.status >= 500 || !navigator.onLine) {
@@ -227,11 +228,11 @@ export async function syncSessionAnalytics(
     }
 
     const result = await response.json();
-    console.log('[SessionAnalyticsSync] Success:', result.sessionId);
+    logger.debug('SessionAnalyticsSync', 'Success', { sessionId: result.sessionId });
 
     return { success: true, sessionId: result.sessionId };
   } catch (error: unknown) {
-    console.error('[SessionAnalyticsSync] Network error:', error);
+    logger.error('SessionAnalyticsSync', 'Network error', error);
 
     // Queue for retry on network failure
     queueForRetry(payload);
@@ -257,9 +258,9 @@ function queueForRetry(payload: SessionAnalyticsPayload): void {
     }
 
     sessionStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(pending));
-    console.log('[SessionAnalyticsSync] Queued for retry, pending:', pending.length);
+    logger.debug('SessionAnalyticsSync', 'Queued for retry', { pending: pending.length });
   } catch (error: unknown) {
-    console.error('[SessionAnalyticsSync] Failed to queue:', error);
+    logger.error('SessionAnalyticsSync', 'Failed to queue', error);
   }
 }
 
@@ -271,7 +272,7 @@ function getPendingSync(): SessionAnalyticsPayload[] {
     const raw = sessionStorage.getItem(PENDING_SYNC_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch (error: unknown) {
-    console.error('[SessionAnalyticsSync] Failed to retrieve pending sync:', error);
+    logger.error('SessionAnalyticsSync', 'Failed to retrieve pending sync', error);
     return [];
   }
 }
@@ -288,7 +289,7 @@ export async function processPendingSync(token?: string | null): Promise<{
     return { synced: 0, failed: 0 };
   }
 
-  console.log('[SessionAnalyticsSync] Processing pending:', pending.length);
+  logger.debug('SessionAnalyticsSync', 'Processing pending', { count: pending.length });
 
   let synced = 0;
   let failed = 0;
@@ -308,7 +309,7 @@ export async function processPendingSync(token?: string | null): Promise<{
   try {
     sessionStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(remaining));
   } catch (error: unknown) {
-    console.error('[SessionAnalyticsSync] Failed to update pending queue:', error);
+    logger.error('SessionAnalyticsSync', 'Failed to update pending queue', error);
   }
 
   return { synced, failed };
@@ -334,8 +335,22 @@ export async function fetchLearningProfile(token?: string | null): Promise<{
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-      return { profile: null, sessions: [], aggregateStats: null, error: error.error };
+      const contentType = response.headers.get('content-type');
+      const error =
+        contentType?.includes('application/json')
+          ? await response.json().catch(() => ({ error: 'Unknown error' }))
+          : { error: `Request failed (${response.status})` };
+      return { profile: null, sessions: [], aggregateStats: null, error: (error as { error?: string }).error };
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType?.includes('application/json')) {
+      return {
+        profile: null,
+        sessions: [],
+        aggregateStats: null,
+        error: `Server returned ${contentType || 'non-JSON'}`,
+      };
     }
 
     const data = await response.json();
@@ -345,7 +360,7 @@ export async function fetchLearningProfile(token?: string | null): Promise<{
       aggregateStats: data.aggregateStats,
     };
   } catch (error: unknown) {
-    console.error('[SessionAnalyticsSync] Fetch profile error:', error);
+    logger.error('SessionAnalyticsSync', 'Fetch profile error', error);
     return {
       profile: null,
       sessions: [],

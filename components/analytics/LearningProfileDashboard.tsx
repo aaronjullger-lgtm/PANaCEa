@@ -487,7 +487,7 @@ export const LearningProfileDashboard: React.FC = () => {
           <ul className="space-y-2">
             {profile.recommendations.map((rec, i) => (
               <li
-                key={i}
+                key={`rec-${i}-${String(rec).slice(0, 40)}`}
                 className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
               >
                 <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />

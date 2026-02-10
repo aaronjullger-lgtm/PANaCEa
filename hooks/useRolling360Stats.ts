@@ -113,6 +113,13 @@ async function fetchRolling360Stats(url: string, token: string | null): Promise<
       'Content-Type': 'application/json',
     },
   });
+  if (!response.ok) {
+    throw new Error(`Rolling 360 stats failed: ${response.status}`);
+  }
+  const contentType = response.headers.get('content-type');
+  if (!contentType?.includes('application/json')) {
+    throw new Error(`Expected JSON but got ${contentType || 'text/html'}`);
+  }
   return response.json();
 }
 

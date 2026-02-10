@@ -1,5 +1,6 @@
 import { getApiEndpoint, API_ENDPOINTS } from './apiConfig';
 import { parseJsonOrThrow } from './safeJsonResponse';
+import { logger } from '@/src/lib/logger';
 
 // Cache to store loaded data
 const dataCache = new Map<string, any>();
@@ -103,33 +104,35 @@ export async function loadConditionContent(getToken?: () => Promise<string | nul
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       const data = (await parseJsonOrThrow(response)) as Record<string, unknown>;
       dataCache.set(cacheKey, data);
-      console.log(
-        `✓ Loaded condition content from database (${Object.keys(data).length} conditions)`
-      );
+      logger.debug('dataLoader', `Loaded condition content (${Object.keys(data).length} conditions)`);
       return data;
     }
 
     // Database API returned non-OK response
     const contentType = response.headers.get('content-type');
 
-    if (!contentType?.includes('application/json')) {
+    if (response.status === 429) {
+      logger.warn('dataLoader', 'Rate limited (429) for /api/content/all – retry later');
+      warnBackendDownOnce();
+    } else if (!contentType?.includes('application/json')) {
       warnBackendDownOnce();
     } else if (response.status === 503) {
-      const errorData = (await parseJsonOrThrow(response).catch(() => ({}))) as {
-        message?: string;
-      };
-      console.error(
-        `⚠ Database unavailable: ${errorData?.message || 'Cannot connect to database'}`
-      );
-      console.error('Ensure DATABASE_URL is configured in .env');
+      try {
+        const errorData = (await parseJsonOrThrow(response).catch(() => ({}))) as {
+          message?: string;
+        };
+        logger.warn('dataLoader', 'Database unavailable', errorData?.message || 'Cannot connect to database');
+      } catch {
+        logger.warn('dataLoader', 'Database unavailable (503)');
+      }
     } else {
-      console.error(`Database API returned status ${response.status} for ${apiUrl}`);
+      logger.warn('dataLoader', `Content API returned status ${response.status}`, apiUrl);
     }
   } catch (error) {
     if (error instanceof TypeError && error.message.includes('fetch')) {
       warnBackendDownOnce();
     } else {
-      console.error(`✗ Failed to load condition content (${apiUrl}):`, error);
+      logger.error('dataLoader', `Failed to load condition content (${apiUrl})`, error);
     }
   }
 
@@ -177,7 +180,7 @@ export async function loadLabCases(getToken?: () => Promise<string | null>): Pro
       const data = Array.isArray(responseData) ? responseData : (responseData as { data?: unknown }).data ?? responseData;
       const cases = Array.isArray(data) ? data : [];
       dataCache.set(cacheKey, cases);
-      console.log(`✓ Loaded ${cases.length} lab cases from database`);
+      logger.debug('dataLoader', `Loaded ${cases.length} lab cases from database`);
       return cases;
     }
 

@@ -6,6 +6,7 @@
  */
 
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { logger } from '@/src/lib/logger';
 
 interface AttemptData {
   questionId: string;
@@ -209,14 +210,24 @@ export async function getUserStats(token?: string | null): Promise<any | null> {
     });
 
     if (!response.ok) {
-      console.error('[AttemptService] Failed to fetch user stats:', response.status);
+      if (response.status === 404) {
+        logger.warn('AttemptService', 'User stats not found (404) – user may not be synced yet');
+      } else {
+        logger.error('AttemptService', 'Failed to fetch user stats', response.status);
+      }
+      return null;
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType?.includes('application/json')) {
+      logger.warn('AttemptService', 'User stats response was not JSON', contentType);
       return null;
     }
 
     const result = await response.json();
     return result.stats;
   } catch (error) {
-    console.error('[AttemptService] Error fetching user stats:', error);
+    logger.error('AttemptService', 'Error fetching user stats', error);
     return null;
   }
 }
