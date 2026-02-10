@@ -895,7 +895,7 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
   const [activeTab, setActiveTab] = useState<TabId>('highyield');
 
   return (
-    <div className="flex flex-col h-full bg-[var(--color-bg-primary)]">
+    <div className="flex flex-col h-full min-h-0 bg-[var(--color-bg-primary)]">
       {/* Zone 1: Clinical Summary Header */}
       <div className="sticky top-0 z-10 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)]">
         <div className="p-4 md:p-6">
@@ -999,8 +999,8 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
         ))}
       </div>
 
-      {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+      {/* Tab Content - min-h-0 so overflow-y-auto can scroll when embedded */}
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 md:p-6">
         {/* Details-fetch error banner — shown inline so High Yield (summary-only) still works */}
         {errorDetails && (
           <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-[var(--color-data-fail)]/40 bg-[var(--color-data-fail)]/10 px-4 py-3 text-sm text-[var(--color-text-secondary)]">

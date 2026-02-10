@@ -31,6 +31,8 @@ export default defineConfig({
   projects: [
     // API health - no auth, validates CF Functions routing
     { name: 'api-health', testMatch: /api-health\.spec\.ts/ },
+    // CSP headers and console (no clerk-telemetry violation)
+    { name: 'csp-console', testMatch: /csp-console\.spec\.ts/ },
   ],
 
   /* No webServer - Wrangler must be started separately */

@@ -264,7 +264,7 @@ const ConditionPage: React.FC = () => {
   }, [conditionContent?.sections]);
 
   return (
-    <main className="condition-page max-w-5xl mx-auto p-6">
+    <main className="condition-page max-w-5xl mx-auto p-6 overflow-x-hidden" id="condition-page-main">
       {/* Loading State - skeleton aligned with design system (slate-700/800) */}
       {loading && (
         <div className="condition-page-loading space-y-6 py-8">
@@ -469,8 +469,14 @@ const ConditionPage: React.FC = () => {
                   ))}
                 </div>
               </div>
+            </>
+          )}
+
+          {/* Two-column layout on lg: TOC sidebar + main content to prevent overlap */}
+          <div className={sections.length > 1 ? 'lg:flex lg:gap-8 lg:items-start' : ''}>
+            {sections.length > 1 && (
               <aside
-                className="hidden lg:block w-52 flex-shrink-0 sticky top-24 self-start"
+                className="hidden lg:block w-52 flex-shrink-0 sticky top-24"
                 aria-label="Table of contents"
               >
                 <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3">
@@ -501,9 +507,9 @@ const ConditionPage: React.FC = () => {
                   ))}
                 </nav>
               </aside>
-            </>
-          )}
+            )}
 
+            <div className="min-w-0 flex-1">
           {/* Tabbed interface for subtypes */}
           {subtypes.length > 0 && (
             <div className="mb-6">
@@ -634,6 +640,8 @@ const ConditionPage: React.FC = () => {
               </div>
             </>
       )}
+            </div>
+          </div>
         </>
       )}
     </main>

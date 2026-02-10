@@ -22,12 +22,12 @@ export const MasteryHeatmapToggle: React.FC<MasteryHeatmapToggleProps> = ({
       type="button"
       onClick={() => setMasteryHeatmapOverlay((v) => !v)}
       className={`
-        inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)]
+        inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border)]
         bg-[var(--color-bg-secondary)] px-3 py-2 text-sm font-medium
-        text-[var(--color-text-primary)] transition-colors
-        hover:bg-[var(--color-bg-tertiary)]
+        text-slate-700 dark:text-[var(--color-text-primary)] transition-colors
+        hover:bg-[var(--color-bg-tertiary)] min-w-[44px] min-h-[44px]
         focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
-        ${compact ? 'p-2' : ''}
+        ${compact ? 'p-2.5' : ''}
         ${masteryHeatmapOverlay ? 'ring-2 ring-[var(--color-accent)] ring-offset-2 ring-offset-[var(--color-bg-primary)]' : ''}
         ${className}
       `}

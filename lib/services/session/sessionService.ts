@@ -568,8 +568,8 @@ export class SessionService {
   ): Promise<EnrichedQuestion | null> {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(this.env.GEMINI_API_KEY as string);
-    // Using gemini-2.5-pro for higher quality PANCE-style questions
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro-preview-05-06' });
+    // Stable model for PANCE-style question generation (preview IDs change; use stable)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
 
     const prompt = `Generate a PANCE-style multiple choice question about ${content.condition}.
 
@@ -679,6 +679,7 @@ Return ONLY valid JSON:
           lastSeenAt: now,
         },
         create: {
+          id: uuidv4(),
           userId,
           questionId: q.id,
           questionType: sourceToType[q.source] || 'question',
@@ -687,6 +688,7 @@ Return ONLY valid JSON:
           timesShown: 1,
           timesCorrect: 0,
           timesIncorrect: 0,
+          updatedAt: now,
         },
       })
     );

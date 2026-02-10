@@ -692,7 +692,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   </button>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={Math.max(320, systemPerformanceBarData.length * 36)} minHeight={200} minWidth={0}>
+                <div className="min-h-[320px] w-full" aria-hidden>
+                  <ResponsiveContainer width="100%" height={Math.max(320, systemPerformanceBarData.length * 36)} minHeight={200} minWidth={0}>
                   <BarChart
                     layout="vertical"
                     data={systemPerformanceBarData}
@@ -725,6 +726,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
+                </div>
               )}
             </div>
 
@@ -802,6 +804,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               />
             ) : (
               <>
+                <div className="min-h-[320px] w-full" aria-hidden>
                 <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
                   <LineChart data={stabilityTrendData} margin={{ top: 4, right: 24, left: 0, bottom: 28 }}>
                     <CartesianGrid {...chartTheme.grid} />
@@ -838,6 +841,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     />
                   </LineChart>
                 </ResponsiveContainer>
+                </div>
                 <div className="mt-3 p-3 bg-surface-card rounded-lg border border-[var(--color-border)]">
                   <p className="text-xs text-action-muted">
                     <strong>What is Stability?</strong> Stability measures how long you'll remember
@@ -883,6 +887,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 Time tracking will appear once you complete timed sessions.
               </p>
             ) : (
+              <div className="min-h-[320px] w-full" aria-hidden>
               <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
                 <BarChart data={timeData} margin={{ bottom: 28 }}>
                   <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
@@ -924,6 +929,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
+              </div>
             )}
           </div>
         </>

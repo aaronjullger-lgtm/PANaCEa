@@ -482,16 +482,19 @@ async function getFromPreGeneratedPool(
   }
 
   if (toMarkUsed.length > 0) {
+    const now = new Date();
     await prisma.userQuestionSeen.createMany({
       data: toMarkUsed.map((questionId) => ({
+        id: crypto.randomUUID(),
         userId,
         questionId,
         questionType: 'pre_generated',
-        firstSeenAt: new Date(),
-        lastSeenAt: new Date(),
+        firstSeenAt: now,
+        lastSeenAt: now,
         timesShown: 1,
         timesCorrect: 0,
         timesIncorrect: 0,
+        updatedAt: now,
       })),
       skipDuplicates: true,
     });

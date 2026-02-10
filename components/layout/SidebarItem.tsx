@@ -18,7 +18,7 @@ const ACTIVE_CLASS =
   'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20';
 
 const INACTIVE_CLASS =
-  'border border-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/80 hover:text-[var(--color-text-primary)]';
+  'border border-transparent text-slate-700 dark:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/80 hover:text-slate-900 dark:hover:text-[var(--color-text-primary)]';
 
 const COMPACT_CLASS = 'min-h-0 py-2 text-xs';
 
@@ -65,7 +65,7 @@ function SidebarItemContent({
 }: Readonly<Pick<SidebarItemProps, 'label' | 'icon' | 'count' | 'active' | 'leftSlot' | 'compact' | 'iconVariant' | 'collapsed'>>) {
   const iconClass = active
     ? 'text-[var(--color-accent)]'
-    : 'text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)]';
+    : 'text-slate-700 dark:text-[var(--color-text-muted)] group-hover:text-slate-900 dark:group-hover:text-[var(--color-text-primary)]';
 
   if (collapsed && Icon != null) {
     return (
@@ -73,7 +73,7 @@ function SidebarItemContent({
         className={`inline-flex w-10 h-10 shrink-0 items-center justify-center rounded-lg transition-colors [&_svg]:block [&_svg]:m-0 [&_svg]:shrink-0 ${
           active
             ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
-            : 'text-[var(--color-text-muted)] group-hover:bg-[var(--color-bg-tertiary)] group-hover:text-[var(--color-text-primary)]'
+            : 'text-slate-700 dark:text-[var(--color-text-muted)] group-hover:bg-[var(--color-bg-tertiary)] group-hover:text-slate-900 dark:group-hover:text-[var(--color-text-primary)]'
         }`}
       >
         <Icon className="h-5 w-5" aria-hidden />
@@ -91,7 +91,7 @@ function SidebarItemContent({
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
               active
                 ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
-                : 'text-[var(--color-text-muted)] group-hover:bg-[var(--color-bg-tertiary)] group-hover:text-[var(--color-text-primary)]'
+                : 'text-slate-700 dark:text-[var(--color-text-muted)] group-hover:bg-[var(--color-bg-tertiary)] group-hover:text-slate-900 dark:group-hover:text-[var(--color-text-primary)]'
             }`}
           >
             <Icon className="h-5 w-5" aria-hidden />

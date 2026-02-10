@@ -28,13 +28,22 @@ export const onRequestGet = authenticatedEndpoint(
   async (context) => {
     const { env, validated } = context;
     const logger = createEndpointLogger('/api/content/library');
+
+    if (!env.DATABASE_URL) {
+      logger.error('DATABASE_URL not configured');
+      return {
+        data: { error: 'Library unavailable', message: 'Database is not configured.' },
+        status: 503,
+      };
+    }
+
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
       const { system, subcategory, search, highYield } = validated || {};
 
       // Build where clause — when system is missing or 'all', return all conditions (no system filter)
-      const where: any = {};
+      const where: Record<string, unknown> = {};
       if (system && system !== 'all') where.system = system;
       if (subcategory) where.subcategory = subcategory;
       if (highYield === 'true') where.pance_yield = { gte: 3 };
@@ -48,7 +57,15 @@ export const onRequestGet = authenticatedEndpoint(
             ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', ${search})) DESC
           `;
           searchResults = ftsResults.map((r: { id: string }) => r.id);
-          where.id = searchResults && searchResults.length > 0 ? { in: searchResults } : { in: [] };
+          if (searchResults.length > 0) {
+            where.id = { in: searchResults };
+          } else {
+            where.OR = [
+              { condition: { contains: search, mode: 'insensitive' } },
+              { overview: { contains: search, mode: 'insensitive' } },
+              { classic_patient: { contains: search, mode: 'insensitive' } },
+            ];
+          }
         } catch {
           logger.warn('Full-text search failed, falling back to LIKE');
           where.OR = [
@@ -106,10 +123,17 @@ export const onRequestGet = authenticatedEndpoint(
         headers: { 'Cache-Control': 'public, max-age=3600' },
       };
     } catch (error) {
-      logger.error('Error fetching library content', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw new Error('Failed to fetch library content');
+      const errMsg = error instanceof Error ? error.message : String(error);
+      logger.error('Error fetching library content', { error: errMsg });
+      return {
+        data: {
+          error: 'Failed to fetch library content',
+          message: errMsg || 'Please try again later.',
+          content: [],
+          count: 0,
+        },
+        status: 500,
+      };
     } finally {
       await safePrismaDisconnect(prisma);
     }

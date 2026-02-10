@@ -10,7 +10,7 @@ const ThemeToggleButton: React.FC = () => {
   return (
     <motion.button
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="relative p-2.5 rounded-full bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] transition-all duration-200 shadow-sm hover:shadow-md"
+      className="relative p-2.5 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 hover:border-slate-300 dark:bg-[var(--color-bg-secondary)] dark:border-[var(--color-border)] dark:text-[var(--color-text-secondary)] dark:hover:border-[var(--color-accent)] transition-all duration-200 shadow-sm hover:shadow-md"
       aria-label="Toggle theme"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
@@ -21,9 +21,9 @@ const ThemeToggleButton: React.FC = () => {
         transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
         {theme === 'light' ? (
-          <MoonIcon className="w-5 h-5 text-[var(--color-text-secondary)]" />
+          <MoonIcon className="w-5 h-5 text-slate-600 dark:text-[var(--color-text-secondary)]" />
         ) : (
-          <SunIcon className="w-5 h-5 text-yellow-400" />
+          <SunIcon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
         )}
       </motion.div>
     </motion.button>

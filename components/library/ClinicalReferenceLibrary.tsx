@@ -661,8 +661,8 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                 </button>
               </div>
 
-              {/* Panel Content - SmartConditionView (Triage, Recognize, Order, Manage) */}
-              <div className="flex-1 overflow-hidden flex flex-col">
+              {/* Panel Content - SmartConditionView (Triage, Recognize, Order, Manage); min-h-0 so content can scroll */}
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
                 <Suspense
                   fallback={
                     <div className="p-6 space-y-4">

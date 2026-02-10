@@ -313,6 +313,9 @@ export default defineConfig(({ mode }) => {
                 filesToDeleteAfterUpload: ['./dist/**/*.map'],
               },
               telemetry: false,
+              errorHandler: (err) => {
+                console.warn('[Sentry] Source map upload failed (build continues):', err?.message || err);
+              },
             }),
           ]
         : []),

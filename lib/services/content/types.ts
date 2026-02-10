@@ -4,8 +4,8 @@ import { z } from 'zod';
  * Zod schema for MedicalContent.content JSON structure
  */
 export const MedicalContentSchema = z.object({
-  condition: z.string(),
-  system: z.string(),
+  condition: z.string().optional().default(''),
+  system: z.string().optional().default(''),
   overview: z.string().optional(),
   diagnostics: z.string().optional(),
   treatment: z.string().optional(),

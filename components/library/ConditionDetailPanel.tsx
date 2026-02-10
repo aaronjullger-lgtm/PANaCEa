@@ -264,10 +264,10 @@ export const ConditionDetailPanel: React.FC<ConditionDetailPanelProps> = ({ cont
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.95, y: 20 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-4xl w-full h-[90vh] max-h-[90vh] overflow-hidden flex flex-col min-h-0"
       >
-        {/* Header */}
-        <div className="p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
+        {/* Header - shrink-0 so scroll area gets remaining space */}
+        <div className="shrink-0 p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
           <div className="flex items-start justify-between mb-3">
             <h2
               className="text-3xl font-bold text-[var(--color-text-primary)] tracking-wide"
@@ -304,8 +304,8 @@ export const ConditionDetailPanel: React.FC<ConditionDetailPanelProps> = ({ cont
           )}
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {/* Scrollable Content - min-h-0 so flex allows shrink and scroll */}
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6 space-y-4">
           {/* Topic Mastery Breakdown - Second Chance System */}
           {normalized.conditionId && (
             <TopicMasteryBreakdown
