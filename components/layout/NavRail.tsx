@@ -223,7 +223,7 @@ export const NavRail: React.FC<NavRailProps> = ({
 
   const baseClass =
     'group relative flex w-full min-h-[44px] items-center rounded-xl py-2.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98] ' +
-    (collapsed ? 'justify-center px-2' : '');
+    (collapsed ? 'justify-center items-center px-0' : '');
 
   const renderItem = (item: QuickActionItem) => {
     const isActive = item.href ? isPathActive(item.href, pathname, search) : false;
@@ -251,7 +251,7 @@ export const NavRail: React.FC<NavRailProps> = ({
               </>
             )}
             <span
-              className={`relative z-10 flex items-center ${collapsed ? 'justify-center' : 'w-full'}`}
+              className={`relative z-10 flex items-center justify-center ${collapsed ? 'w-10 shrink-0' : 'w-full'}`}
             >
               <SidebarItem
                 as="span"

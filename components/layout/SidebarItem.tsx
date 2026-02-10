@@ -11,6 +11,9 @@ const BASE_CLASS =
   'w-full flex items-center gap-2 min-h-[44px] px-3 py-2.5 rounded-xl text-left transition-all duration-200 ' +
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]';
 
+/** Collapsed: fixed width so parent can center us; no full-width stretch. Icon container is w-10 h-10. */
+const COLLAPSED_WRAPPER_CLASS = 'w-10 shrink-0 justify-center items-center px-0 min-w-0';
+
 const ACTIVE_CLASS =
   'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20';
 
@@ -67,7 +70,7 @@ function SidebarItemContent({
   if (collapsed && Icon != null) {
     return (
       <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${
+        className={`inline-flex w-10 h-10 shrink-0 items-center justify-center rounded-lg transition-colors [&_svg]:block [&_svg]:m-0 [&_svg]:shrink-0 ${
           active
             ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
             : 'text-[var(--color-text-muted)] group-hover:bg-[var(--color-bg-tertiary)] group-hover:text-[var(--color-text-primary)]'
@@ -137,8 +140,7 @@ export const SidebarItem: React.FC<Readonly<SidebarItemProps>> = ({
     />
   );
 
-  const COLLAPSED_CLASS = 'justify-center px-2';
-  const styleClass = `${BASE_CLASS} ${compact ? COMPACT_CLASS : ''} ${collapsed ? COLLAPSED_CLASS : ''} group ${
+  const styleClass = `${BASE_CLASS} ${compact ? COMPACT_CLASS : ''} ${collapsed ? COLLAPSED_WRAPPER_CLASS : ''} group ${
     active ? ACTIVE_CLASS : INACTIVE_CLASS
   } ${className}`.trim();
 

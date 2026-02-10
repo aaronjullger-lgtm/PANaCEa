@@ -33,19 +33,7 @@ export const onRequestGet = authenticatedEndpoint(
     try {
       const { system, subcategory, search, highYield } = validated || {};
 
-      // REQUIRE system selection unless searching
-      if ((!system || system === 'all') && !search) {
-        return {
-          data: {
-            content: [],
-            count: 0,
-            message: 'Please select a system to browse conditions',
-            requiresSelection: true,
-          },
-        };
-      }
-
-      // Build where clause
+      // Build where clause — when system is missing or 'all', return all conditions (no system filter)
       const where: any = {};
       if (system && system !== 'all') where.system = system;
       if (subcategory) where.subcategory = subcategory;

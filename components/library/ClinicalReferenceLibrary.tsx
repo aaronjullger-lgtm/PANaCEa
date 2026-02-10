@@ -224,6 +224,11 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   const filteredContent = useMemo(() => {
     let result = content;
 
+    // Filter by system only when a specific system is selected (when 'all', pass all items)
+    if (activeSystem && activeSystem !== 'all') {
+      result = result.filter((item) => item.system === activeSystem);
+    }
+
     // Filter by subcategory if selected
     if (activeSubcategory) {
       result = result.filter((item) => item.subcategory === activeSubcategory);
@@ -247,21 +252,25 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     }
 
     return result;
-  }, [content, activeSubcategory, highYieldOnly, searchQuery]);
+  }, [content, activeSystem, activeSubcategory, highYieldOnly, searchQuery]);
 
   const displayContent = isSearchMode ? semanticResults : filteredContent;
 
-  // Group content by subcategory for display (browse mode only; search mode uses flat list)
+  // Group content by system + subcategory so headers always match the conditions (no ID/label mismatch).
+  // When viewing "All Systems", subcategory names can repeat across systems; grouping by (system, subcategory) keeps e.g. ENT conditions under ENT headers only.
   const groupedContent = useMemo(() => {
-    const map = new Map<string, Partial<MedicalContentDisplay>[]>();
+    const map = new Map<string, { system: string; subcategory: string; items: Partial<MedicalContentDisplay>[] }>();
     for (const item of filteredContent) {
-      const key = item.subcategory || 'Uncategorized';
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(item);
+      const system = item.system || 'Unknown';
+      const subcategory = item.subcategory || 'Uncategorized';
+      const key = `${system}\0${subcategory}`;
+      if (!map.has(key)) map.set(key, { system, subcategory, items: [] });
+      map.get(key)!.items.push(item);
     }
-    return Array.from(map.entries())
-      .map(([subcategory, items]) => ({ subcategory, items }))
-      .sort((a, b) => a.subcategory.localeCompare(b.subcategory));
+    return Array.from(map.values()).sort((a, b) => {
+      const sysCmp = a.system.localeCompare(b.system);
+      return sysCmp !== 0 ? sysCmp : a.subcategory.localeCompare(b.subcategory);
+    });
   }, [filteredContent]);
 
   // Handlers
@@ -495,43 +504,6 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
             <ErrorState title="Failed to load content" message={error} onRetry={fetchContent} />
           ) : loading ? (
             <LoadingOverlay message="Loading clinical content..." />
-          ) : activeSystem === 'all' && !searchQuery ? (
-            // System Selection Prompt - Don't load all 2000+ conditions
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-6">
-                <svg
-                  className="w-10 h-10 text-blue-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
-                Select a Medical System
-              </h3>
-              <p className="text-sm text-[var(--color-text-muted)] max-w-md mb-6">
-                Choose a system from the sidebar to explore conditions. This helps you focus your
-                study and prevents information overload.
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-w-md">
-                {systems.slice(0, 6).map((sys) => (
-                  <button
-                    key={sys.id}
-                    onClick={() => handleSystemSelect(sys.id)}
-                    className="px-3 py-2 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-accent)]/60 hover:bg-[var(--color-bg-secondary)]/80 text-sm font-medium text-[var(--color-text-secondary)] transition-all"
-                  >
-                    {sys.label}
-                  </button>
-                ))}
-              </div>
-            </div>
           ) : filteredContent.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <AlertCircle className="w-12 h-12 text-[var(--color-text-muted)] mb-4" />
@@ -549,23 +521,30 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
           ) : (
             <div className="space-y-8">
               {groupedContent.map((group) => {
-                const isExpanded = expandedSubcats.has(group.subcategory);
+                const groupKey = `${group.system}\0${group.subcategory}`;
+                const isExpanded = expandedSubcats.has(groupKey);
                 const hasMore = group.items.length > ITEMS_PER_SUBCATEGORY;
                 const displayItems = isExpanded
                   ? group.items
                   : group.items.slice(0, ITEMS_PER_SUBCATEGORY);
                 const remainingCount = group.items.length - ITEMS_PER_SUBCATEGORY;
+                const showSystemInHeader = activeSystem === 'all';
 
                 return (
                   <div
-                    key={group.subcategory}
+                    key={groupKey}
                     className="bg-gradient-to-br from-[var(--color-bg-secondary)]/30 to-transparent rounded-2xl p-6 border border-[var(--color-border)]/40 shadow-sm"
                   >
-                    {/* Subcategory Header - Enhanced */}
+                    {/* Subcategory Header - uses each condition's own system + subcategory so no ID/label mismatch */}
                     <div className="flex items-center justify-between mb-5">
                       <div className="flex items-center gap-3">
                         <div className="w-1 h-6 rounded-full bg-gradient-to-b from-[var(--color-accent)] to-[var(--color-accent)]/30" />
                         <h3 className="text-sm uppercase tracking-wider text-[var(--color-text-primary)] font-bold flex items-center gap-3">
+                          {showSystemInHeader && (
+                            <span className="text-[var(--color-text-muted)] font-semibold normal-case">
+                              {group.system}
+                            </span>
+                          )}
                           <span>{group.subcategory}</span>
                           <span className="px-2.5 py-1 rounded-full bg-[var(--color-accent)]/15 text-[var(--color-accent)] text-xs font-semibold tabular-nums">
                             {group.items.length}
@@ -602,9 +581,9 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                             setExpandedSubcats((prev) => {
                               const next = new Set(prev);
                               if (isExpanded) {
-                                next.delete(group.subcategory);
+                                next.delete(groupKey);
                               } else {
-                                next.add(group.subcategory);
+                                next.add(groupKey);
                               }
                               return next;
                             });
