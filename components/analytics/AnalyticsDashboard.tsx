@@ -35,11 +35,9 @@ import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { CalibrationProgress } from '@/components/analytics/CalibrationProgress';
 import { EmptyLineChart } from '@/components/analytics/EmptyChartState';
-import { PANCEReadinessTreemap, type SystemNode } from '@/components/analytics/PANCEReadinessTreemap';
 import chartTheme from '@/lib/chartTheme';
-import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { getQuadrantLabel } from '@/lib/calibrationQuadrants';
-import { formatPercentForDisplay } from '@/lib/utils/textFormatting';
 import {
   getSpeedBenchmarkLabel,
   getSpeedBenchmarkStatus,
@@ -156,7 +154,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           return;
         }
 
-        const response = await fetch(getApiEndpoint(API_ENDPOINTS.USER_STATS), {
+        const response = await fetch(getApiEndpoint('/api/user/stats'), {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -171,7 +169,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           throw new Error('Failed to fetch user stats');
         }
 
-        const result = (await response.json()) as UserStatsResponse;
+        const result = await response.json();
         setUserStats(result);
       } catch (error) {
         console.error('[AnalyticsDashboard] Failed to fetch user stats:', error);
@@ -194,32 +192,29 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           return;
         }
 
-        const response = await fetch(
-          `${getApiEndpoint(API_ENDPOINTS.USER_STABILITY_TREND)}?days=30`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+        const response = await fetch('/api/user/stability-trend?days=30', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch stability trend');
         }
 
-        const result = (await response.json()) as { data?: Array<{ date: string; avgStability?: number; totalReviews?: number }> };
+        const result = await response.json();
 
         if (result.data && Array.isArray(result.data)) {
           // Format dates for display
-          const formattedData = result.data.map((point: (typeof result.data)[number]) => ({
+          const formattedData = result.data.map((point: any) => ({
             date: new Date(point.date).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
             }),
-            avgStability: point.avgStability ?? 0,
-            totalReviews: point.totalReviews ?? 0,
-          })) as StabilityTrendDatum[];
+            avgStability: point.avgStability,
+            totalReviews: point.totalReviews,
+          }));
           setStabilityTrendData(formattedData);
         }
       } catch (error) {
@@ -244,12 +239,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     // API middleware sends result.data as body, so response is { calibration, days }
     return json as { calibration: CalibrationQuadrantData; days: number };
   };
-  const calibrationUrl =
-    userStats && userStats.stats?.overall?.totalAttempts > 0
-      ? `${getApiEndpoint(API_ENDPOINTS.ANALYTICS_CALIBRATION)}?days=90`
-      : null;
   const { data: calibrationData } = useSWR<{ calibration: CalibrationQuadrantData; days: number }>(
-    calibrationUrl,
+    userStats && userStats.stats?.overall?.totalAttempts > 0
+      ? '/api/analytics/calibration?days=90'
+      : null,
     calibrationFetcher,
     { revalidateOnFocus: false }
   );
@@ -266,20 +259,6 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       }))
       .filter((d) => d.attempts > 0)
       .sort((a, b) => b.accuracy - a.accuracy); // Best first, worst last (bottom 3 = study today)
-  }, [userStats]);
-
-  // PANCE readiness treemap: include ALL systems so 0-data shows as "Not Yet Studied" (neutral), not red
-  const treemapData: SystemNode[] = useMemo(() => {
-    if (!userStats?.stats.bySystems) return [];
-
-    return Object.entries(userStats.stats.bySystems)
-      .map(([system, stats]) => ({
-        name: system,
-        systemCode: system,
-        volume: stats.total ?? 0,
-        masteryPercent: stats.accuracy ?? 0,
-      }))
-      .sort((a, b) => b.volume - a.volume); // Most studied first for visual hierarchy
   }, [userStats]);
 
   // Transform server data for time chart (decision time by system)
@@ -413,28 +392,28 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {hasData && userStats && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
+            <div className="p-6 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary hover:border-action-primary/50 transition-colors">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <Gauge className="w-4 h-4" />
                 <span className="font-medium">Exam Readiness</span>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <div className="text-4xl font-bold text-action-primary">{formatPercentForDisplay(readinessScore)}</div>
+                <div className="text-4xl font-bold text-action-primary">{readinessScore}%</div>
                 <TrendingUp className="w-5 h-5 text-action-primary" />
               </div>
               <p className="text-xs text-action-muted">
-                Based on accuracy ({formatPercentForDisplay(userStats.stats.overall.accuracy)}) + coverage
+                Based on accuracy ({userStats.stats.overall.accuracy}%) + coverage
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
+            <div className="p-6 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary hover:border-action-primary/50 transition-colors">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <TrendingUp className="w-4 h-4" />
                 <span className="font-medium">Recent Performance</span>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
                 <div className="text-4xl font-bold text-action-primary">
-                  {formatPercentForDisplay(userStats.stats.recentPerformance.last7Days.accuracy)}
+                  {userStats.stats.recentPerformance.last7Days.accuracy ?? 0}%
                 </div>
                 <Activity className="w-5 h-5 text-action-primary" />
               </div>
@@ -443,7 +422,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
+            <div className="p-6 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary hover:border-action-primary/50 transition-colors">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <Clock className="w-4 h-4" />
                 <span className="font-medium">Decision Speed</span>
@@ -479,7 +458,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
           {/* Confidence vs. Accuracy (Calibration) - Illusion of Competence */}
           {calibrationData?.calibration && calibrationData.calibration.total > 0 && (
-            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm">
+            <div className="p-6 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
                 <Brain className="w-4 h-4" />
                 <span className="font-medium">Confidence vs. Accuracy</span>
@@ -495,33 +474,33 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     icon: CheckCircle,
                     label: getQuadrantLabel('mastered').short,
                     count: calibrationData.calibration.mastered,
-                    className: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
+                    className: 'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]/40 text-[var(--color-data-pass)]',
                   },
                   {
                     key: 'dangerous_misconception' as const,
                     icon: AlertTriangle,
                     label: getQuadrantLabel('dangerous_misconception').short,
                     count: calibrationData.calibration.dangerousMisconception,
-                    className: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
+                    className: 'bg-[var(--color-data-fail)]/10 border-[var(--color-data-fail)]/40 text-[var(--color-data-fail)]',
                   },
                   {
                     key: 'lucky_guess' as const,
                     icon: HelpCircle,
                     label: getQuadrantLabel('lucky_guess').short,
                     count: calibrationData.calibration.luckyGuess,
-                    className: 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]',
+                    className: 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/40 text-[var(--color-data-provisional)]',
                   },
                   {
                     key: 'unconfident_wrong' as const,
                     icon: XCircle,
                     label: getQuadrantLabel('unconfident_wrong').short,
                     count: calibrationData.calibration.unconfidentWrong,
-                    className: 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]',
+                    className: 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400',
                   },
                 ].map(({ key, icon: Icon, label, count, className }) => (
                   <div
                     key={key}
-                    className={`rounded-lg p-3 flex items-center justify-between ${className}`}
+                    className={`rounded-xl border p-3 flex items-center justify-between ${className}`}
                   >
                     <div className="flex items-center gap-2">
                       <Icon className="w-4 h-4 shrink-0" />
@@ -544,7 +523,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {userStats.stats.speedByType &&
             (userStats.stats.speedByType.recall.count > 0 ||
               userStats.stats.speedByType.clinicalReasoning.count > 0) && (
-              <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm">
+              <div className="p-6 rounded-xl border-2 border-[var(--color-border)] bg-surface-primary">
                 <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
                   <Clock className="w-4 h-4" />
                   <span className="font-medium">Speed by question type</span>
@@ -555,7 +534,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {userStats.stats.speedByType.recall.count > 0 && (
-                    <div className="rounded-xl p-4 bg-[var(--color-bg-tertiary)]">
+                    <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-bg-secondary)]/30">
                       <div className="text-sm font-medium text-action-primary mb-1">
                         Recall speed
                       </div>
@@ -585,7 +564,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     </div>
                   )}
                   {userStats.stats.speedByType.clinicalReasoning.count > 0 && (
-                    <div className="rounded-xl p-4 bg-[var(--color-bg-tertiary)]">
+                    <div className="rounded-xl border border-[var(--color-border)] p-4 bg-[var(--color-bg-secondary)]/30">
                       <div className="text-sm font-medium text-action-primary mb-1">
                         Clinical reasoning speed
                       </div>
@@ -626,47 +605,33 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             showDetails={true}
           />
 
-          {/* Weakest Subject Areas - Student Priority (hide when no data: filter out 0 attempts) */}
-          {(() => {
-            const focusAreasWithData = (userStats.stats.weakAreas ?? []).filter(
-              (area) => (area.attempts ?? 0) > 0
-            );
-            if (focusAreasWithData.length === 0) return null;
-
-            return (
-              <div className="p-6 rounded-xl border-2 border-data-provisional/30 bg-[var(--color-bg-secondary)]">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 rounded-lg bg-data-provisional/10">
-                    <AlertCircle className="w-5 h-5 text-data-provisional" />
-                  </div>
-                  <h3 className="font-bold text-data-provisional">Focus Areas - Highest Impact</h3>
+          {/* Weakest Subject Areas - Student Priority */}
+          {userStats.stats.weakAreas.length > 0 && (
+            <div className="p-6 rounded-xl bg-data-provisional/10 border-2 border-data-provisional/30">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-2 rounded-lg bg-data-provisional/10">
+                  <AlertCircle className="w-5 h-5 text-data-provisional" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {focusAreasWithData.slice(0, 3).map((area) => (
-                    <div
-                      key={area.system}
-                      className="p-4 rounded-lg bg-[var(--color-bg-primary)] border border-data-provisional/30"
-                    >
-                      <div className="text-sm font-semibold text-action-primary mb-1">
-                        {area.system}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold text-data-provisional">
-                          {formatPercentForDisplay(area.accuracy)}
-                        </span>
-                        <span className="text-xs text-action-muted">{area.attempts} Q's</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <h3 className="font-bold text-data-provisional">Focus Areas - Highest Impact</h3>
               </div>
-            );
-          })()}
-
-          {/* PANCE Readiness Treemap (all systems: 0 data = neutral "Not Yet Studied") */}
-          {treemapData.length > 0 && (
-            <div className="mb-6">
-              <PANCEReadinessTreemap data={treemapData} />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {userStats.stats.weakAreas.slice(0, 3).map((area) => (
+                  <div
+                    key={area.system}
+                    className="p-3 rounded-lg bg-surface-primary border border-data-provisional/30"
+                  >
+                    <div className="text-sm font-semibold text-action-primary mb-1">
+                      {area.system}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold text-data-provisional">
+                        {area.accuracy}%
+                      </span>
+                      <span className="text-xs text-action-muted">{area.attempts} Q's</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -692,13 +657,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   </button>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={Math.max(320, systemPerformanceBarData.length * 36)} minHeight={200} minWidth={0}>
+                <ResponsiveContainer width="100%" height={Math.max(320, systemPerformanceBarData.length * 36)}>
                   <BarChart
                     layout="vertical"
                     data={systemPerformanceBarData}
-                    margin={{ top: 4, right: 24, left: 0, bottom: 24 }}
+                    margin={{ top: 4, right: 24, left: 0, bottom: 4 }}
                   >
-                    <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
+                    <CartesianGrid {...chartTheme.grid} />
                     <XAxis type="number" domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
                     <YAxis
                       type="category"
@@ -707,18 +672,22 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                     />
                     <Tooltip
-                      formatter={(value?: number) => [formatPercentForDisplay(value ?? 0), 'Accuracy']}
+                      formatter={(value?: number) => [`${value ?? 0}%`, 'Accuracy']}
                       contentStyle={chartTheme.tooltip.contentStyle}
                       labelStyle={chartTheme.tooltip.labelStyle}
                     />
                     <Bar dataKey="accuracy" name="Accuracy" radius={[0, 4, 4, 0]} maxBarSize={28}>
                       {systemPerformanceBarData.map((_, index) => {
                         const isRedZone = index >= systemPerformanceBarData.length - 3;
+                        const barSequence = chartTheme.colors.barSequence ?? [];
+                        const fill = isRedZone
+                          ? 'var(--color-data-fail)'
+                          : barSequence[index % barSequence.length] ?? 'var(--color-accent)';
                         return (
                           <Cell
                             key={index}
-                            fill={isRedZone ? 'var(--color-data-fail)' : 'var(--color-accent)'}
-                            fillOpacity={isRedZone ? 0.9 : 0.7}
+                            fill={fill}
+                            fillOpacity={isRedZone ? 0.9 : 0.75}
                           />
                         );
                       })}
@@ -759,15 +728,15 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                         const prev7 = userStats.stats.recentPerformance.previous7Days.accuracy ?? 0;
                         const delta = last7 - prev7;
                         const deltaStr =
-                          delta > 0 ? `+${formatPercentForDisplay(delta)}` : formatPercentForDisplay(delta);
+                          delta > 0 ? `+${delta.toFixed(1)}%` : `${delta.toFixed(1)}%`;
                         return deltaStr;
                       })()}
                   </p>
                   <p className="text-sm text-action-muted text-center max-w-xs">
-                    Last 7 days: {formatPercentForDisplay(userStats.stats.recentPerformance.last7Days.accuracy)} (
+                    Last 7 days: {userStats.stats.recentPerformance.last7Days.accuracy}% (
                     {userStats.stats.recentPerformance.last7Days.attempts} questions)
                     <br />
-                    Previous 7 days: {formatPercentForDisplay(userStats.stats.recentPerformance.previous7Days.accuracy)} (
+                    Previous 7 days: {userStats.stats.recentPerformance.previous7Days.accuracy}% (
                     {userStats.stats.recentPerformance.previous7Days.attempts} questions)
                   </p>
                 </div>
@@ -802,8 +771,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               />
             ) : (
               <>
-                <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
-                  <LineChart data={stabilityTrendData} margin={{ top: 4, right: 24, left: 0, bottom: 28 }}>
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={stabilityTrendData} margin={{ top: 8, right: 16, left: 8, bottom: 32 }}>
                     <CartesianGrid {...chartTheme.grid} />
                     <XAxis dataKey="date" tick={chartTheme.axis.tick} angle={-20} height={60} />
                     <YAxis
@@ -822,7 +791,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                         if (value === undefined) return ['—', name ?? ''];
                         if (name === 'avgStability')
                           return [
-                            typeof value === 'number' ? value.toFixed(1) : value,
+                            typeof value === 'number' ? value.toFixed(2) : value,
                             'Stability',
                           ];
                         return [value, name ?? ''];
@@ -883,9 +852,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 Time tracking will appear once you complete timed sessions.
               </p>
             ) : (
-              <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
-                <BarChart data={timeData} margin={{ bottom: 28 }}>
-                  <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart data={timeData} margin={{ top: 8, right: 16, left: 8, bottom: 32 }}>
+                  <CartesianGrid {...chartTheme.grid} />
                   <XAxis
                     dataKey="system"
                     tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}

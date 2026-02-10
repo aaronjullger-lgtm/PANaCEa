@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
@@ -49,7 +48,6 @@ import {
   FolderTree,
   Sparkles,
   MoreHorizontal,
-  RotateCcw,
 } from 'lucide-react';
 import type { PerformanceRecord, Question, SessionSettings, SystemCode } from '@/types';
 import type { ClinicalRotation } from '@/types';
@@ -72,27 +70,14 @@ import {
   type TrainingModeConfig,
   type TrainingCategory,
 } from '@/config/training-modes';
-import { TO_REVIEW_LABEL } from '@/config/labels';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useRolling360Stats } from '@/hooks/useRolling360Stats';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { calculateDayStreak } from '@/lib/dashboardUtils';
 import { QuickStatsBarSkeleton } from '@/components/loading';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
-import { CurriculumGrid } from '@/components/dashboard/CurriculumGrid';
+import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
 import { BodyMapWidget } from '@/components/dashboard/BodyMapWidget';
 import { RoundsButton } from '@/components/dashboard/RoundsButton';
-import { HighContrastDataToggle } from '@/components/ui/HighContrastDataToggle';
-import { SmartSchedulerGantt, type ScheduleBlock } from '@/components/analytics/SmartSchedulerGantt';
-import { getLastSession, clearLastSession, type LastSessionData } from '@/lib/utils/sessionStorage';
-import { WelcomeBackCard } from '@/components/dashboard/WelcomeBackCard';
-import { ExamCountdownCard } from '@/components/dashboard/ExamCountdownCard';
-import { EorCountdownCard } from '@/components/dashboard/EorCountdownCard';
-import { CircadianInsightCard } from '@/components/dashboard/CircadianInsightCard';
-import { TimeBoxButtons } from '@/components/dashboard/TimeBoxButtons';
-import { ProgressRingWidget } from '@/components/dashboard/ProgressRingWidget';
-import { RecommendedActionCard } from '@/components/dashboard/RecommendedActionCard';
-import { usePullToRefresh } from '@/hooks/useSwipeGestures';
 
 // ============================================================================
 // Types
@@ -123,8 +108,6 @@ interface CommandCenterHubProps {
   onNavigateToMyLibrary?: () => void;
   /** Study Companion: PDF + citations + chat with textbook */
   onNavigateToStudyCompanion?: () => void;
-  /** SRS Flashcards: variant-aware cards + generative mnemonics (Hard → exaggerated image) */
-  onNavigateToSrsFlashcards?: () => void;
   onNavigateToCustomStudy?: () => void;
   /** Opens Pearl Deck (Rapid Review - saved pearls only) */
   onNavigateToPearlDeck?: () => void;
@@ -136,14 +119,6 @@ interface CommandCenterHubProps {
   onOpenSettings?: () => void;
   /** Profile-aware Reasoning Tutor chat */
   onNavigateToTutorChat?: () => void;
-  /** When true, show Continue Learning card above the fold (Zeigarnik) */
-  hasActiveSession?: boolean;
-  /** Optional: current question index and total for "Resume Question N – M remaining" */
-  resumeContext?: { current: number; total: number; remaining: number };
-  /** Callback to return to in-progress session (e.g. setView('quiz')) */
-  onResumeSession?: () => void;
-  /** Initial Study Tools tab when opened via NavRail Reference/Progress (URL ?tab=resources|analytics) */
-  initialStudyToolsTab?: 'training' | 'resources' | 'analytics';
 }
 
 // Icon mapping
@@ -234,7 +209,7 @@ const GrandRoundsBanner: React.FC<{
                 Daily Challenge • {dateStr}
               </span>
             </div>
-            <p className="text-sm text-[var(--color-text-muted)]">{subtitle}</p>
+            <p className="text-sm text-slate-300">{subtitle}</p>
           </div>
         </div>
 
@@ -272,12 +247,12 @@ const CoreAdaptiveHero: React.FC<{
 }) => {
   const mainTitle = isPracticing ? 'Knowledge Maintenance' : 'Core PANCE Simulation';
   const badgeLabel = isPracticing ? 'PANRE-LA Check-in' : `${examLabel} Prep`;
-  // Core PANCE Simulation: no weak-area copy — strict NCCIPA blueprint only
-  const subtitle = isPracticing
-    ? growthAreas.length > 0
+  const subtitle =
+    growthAreas.length > 0
       ? `Focusing on your weak areas: ${growthAreas.slice(0, 3).join(', ')}.`
-      : 'Maintain your certification knowledge with adaptive questions.'
-    : 'Strict NCCIPA blueprint weighting. Exam-representative mix — no adaptive bias.';
+      : isPracticing
+        ? 'Maintain your certification knowledge with adaptive questions.'
+        : 'Questions weighted by blueprint and your performance patterns.';
   return (
     <GlassCard variant="primary" hoverable className="mb-6">
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
@@ -295,7 +270,7 @@ const CoreAdaptiveHero: React.FC<{
                   {badgeLabel}
                 </span>
               </div>
-              <p className="text-base text-[var(--color-text-secondary)]">
+              <p className="text-[0.9375rem] text-slate-600 dark:text-slate-400">
                 {subtitle}
               </p>
             </div>
@@ -349,7 +324,7 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
                 Voice patient
               </span>
             </div>
-            <p className="text-base text-slate-600 dark:text-[var(--color-text-secondary)] mb-3">
+            <p className="text-[0.9375rem] text-slate-600 dark:text-slate-400 mb-3">
               Practice with a live voice simulated patient; rubric-based SOAP note grading and real-time feedback.
             </p>
             <div className="flex items-center gap-4">
@@ -376,117 +351,6 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
         </PrimaryButton>
       </div>
     </GlassCard>
-  );
-};
-
-// Hero Triple: Main Session | OSCE | Analytics — above the fold focal block
-const HeroTriple: React.FC<{
-  onStartSession: (settings?: SessionSettings) => void;
-  onNavigateToSimulation?: (settings?: { initialFocus?: 'all' | 'growth' | 'flagged' | 'due' }) => void;
-  onNavigateToDrillMode: (modeId: string) => void;
-  streak: number;
-  dueCount: number;
-  accuracy: number | null;
-  questionsToday: number;
-  dueLabel: string;
-  accuracyLabel: string;
-  onOpenFullAnalytics: () => void;
-}> = ({
-  onStartSession,
-  onNavigateToSimulation,
-  onNavigateToDrillMode,
-  streak,
-  dueCount,
-  accuracy,
-  questionsToday,
-  dueLabel,
-  accuracyLabel,
-  onOpenFullAnalytics,
-}) => {
-  const handleMainSession = () => {
-    if (onNavigateToSimulation) {
-      onNavigateToSimulation();
-    } else {
-      onStartSession(dueCount > 0 ? { focus: 'review' } : undefined);
-    }
-  };
-  return (
-    <section className="mb-6" aria-label="Quick actions: Main Session, OSCE, Analytics">
-      <h2 className="sr-only">Quick actions</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Main Session */}
-        <GlassCard variant="primary" hoverable className="flex flex-col">
-          <div className="flex items-start gap-3 mb-3">
-            <div className="p-2.5 rounded-xl bg-action-blue/20 shrink-0">
-              <Brain className="w-6 h-6 text-action-blue" aria-hidden />
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-bold text-[var(--color-text-primary)]">Build Session</h3>
-              <p className="text-sm text-slate-600 dark:text-[var(--color-text-muted)] mt-0.5">
-                {dueCount > 0 ? 'Review due questions' : 'Start adaptive questions'}
-              </p>
-            </div>
-          </div>
-          <PrimaryButton
-            variant="primary"
-            size="md"
-            icon={Play}
-            className="mt-auto w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2"
-            onClick={handleMainSession}
-          >
-            {dueCount > 0 ? 'Start review' : 'Start session'}
-          </PrimaryButton>
-        </GlassCard>
-
-        {/* OSCE */}
-        <GlassCard variant="info" hoverable className="flex flex-col">
-          <div className="flex items-start gap-3 mb-3">
-            <div className="p-2.5 rounded-xl bg-steel-blue-400/20 shrink-0">
-              <MessageSquare className="w-6 h-6 text-steel-blue-500" aria-hidden />
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-bold text-[var(--color-text-primary)]">Live OSCE</h3>
-              <p className="text-sm text-slate-600 dark:text-[var(--color-text-muted)] mt-0.5">
-                Voice patient, SOAP grading
-              </p>
-            </div>
-          </div>
-          <PrimaryButton
-            variant="primary"
-            size="md"
-            icon={Play}
-            className="mt-auto w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2"
-            onClick={() => onNavigateToDrillMode('patient_encounter')}
-          >
-            Start Encounter
-          </PrimaryButton>
-        </GlassCard>
-
-        {/* Analytics */}
-        <GlassCard variant="info" hoverable className="flex flex-col">
-          <div className="flex items-start gap-3 mb-3">
-            <div className="p-2.5 rounded-xl bg-sage-500/20 shrink-0">
-              <BarChart3 className="w-6 h-6 text-sage-600 dark:text-sage-400" aria-hidden />
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-bold text-[var(--color-text-primary)]">Progress & Analytics</h3>
-              <p className="text-sm text-slate-600 dark:text-[var(--color-text-muted)] mt-0.5">
-                Streak {streak} · {dueLabel} {dueCount} · {accuracy !== null ? `${accuracy}%` : '—'} {accuracyLabel}
-              </p>
-            </div>
-          </div>
-          <PrimaryButton
-            variant="secondary"
-            size="md"
-            icon={BarChart3}
-            className="mt-auto w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2"
-            onClick={onOpenFullAnalytics}
-          >
-            View full analytics
-          </PrimaryButton>
-        </GlassCard>
-      </div>
-    </section>
   );
 };
 
@@ -577,8 +441,8 @@ const QuickStatsBar: React.FC<{
               <stat.icon className={`w-5 h-5 ${stat.color}`} />
             </div>
             <div>
-              <div className="text-lg font-bold text-[var(--color-text-primary)] data-nums">{stat.value}</div>
-              <div className="kpi-label">{stat.label}</div>
+              <div className="text-lg font-bold text-[var(--color-text-primary)]">{stat.value}</div>
+              <div className="text-xs text-[var(--color-text-muted)]">{stat.label}</div>
             </div>
           </motion.div>
         );
@@ -597,28 +461,18 @@ const ModeCard: React.FC<{
 
   return (
     <motion.button
-      variants={{
-        initial: { opacity: 0, y: 10 },
-        animate: { opacity: 1, y: 0 },
-      }}
-      transition={
-        prefersReducedMotion
-          ? { duration: 0 }
-          : { type: 'spring', stiffness: 400, damping: 28 }
-      }
       whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.01 }}
-      whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+      whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.2, ease: 'easeOut' }}
       onClick={onSelect}
       disabled={mode.isComingSoon}
-      title={mode.isComingSoon ? `${mode.label} - Feature in development, available soon` : mode.description}
-      aria-label={mode.isComingSoon ? `${mode.label} - Coming soon` : mode.label}
       className={`
         w-full text-left p-4 rounded-xl border transition-all duration-200 group min-h-0
         focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
         ${
           mode.isComingSoon
-            ? 'opacity-50 cursor-not-allowed bg-[var(--color-bg-tertiary)] border-dashed border-[var(--color-border)]'
-            : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg shadow-md shadow-[var(--color-shadow-soft)]'
+            ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900/30 border-dashed border-[var(--color-border)]'
+            : 'bg-[var(--color-bg-primary)] border-slate-200 dark:border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg shadow-md shadow-slate-400/5 dark:shadow-none dark:hover:shadow-black/10'
         }
       `}
     >
@@ -637,7 +491,7 @@ const ModeCard: React.FC<{
               </span>
             )}
           </div>
-          <p className="text-[15px] text-[var(--color-text-secondary)] line-clamp-3">{mode.description}</p>
+          <p className="text-sm text-[var(--color-text-muted)] line-clamp-3">{mode.description}</p>
           {mode.estimatedMinutes && (
             <div className="flex items-center gap-1.5 mt-2 text-xs text-[var(--color-text-muted)]">
               <Timer className="w-3 h-3" />
@@ -673,18 +527,11 @@ const CategorySection: React.FC<{
         </div>
       </div>
 
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
-        variants={{
-          animate: { transition: { staggerChildren: 0.04, delayChildren: 0.02 } },
-        }}
-        initial="initial"
-        animate="animate"
-      >
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {modes.map((mode) => (
           <ModeCard key={mode.id} mode={mode} onSelect={() => onSelectMode(mode)} />
         ))}
-      </motion.div>
+      </div>
     </section>
   );
 };
@@ -714,11 +561,11 @@ function ResidencyCockpitSection({
       </h3>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {hasData && systemsWithData.length > 0 && stats?.systemStats && (
+        {hasData && systemsWithData.length > 0 && (
           <div className="flex-shrink-0">
             <BodyMapWidget
-              systemStats={stats.systemStats}
-              weakestSystems={stats.weakestSystems ?? []}
+              systemStats={stats!.systemStats}
+              weakestSystems={stats!.weakestSystems ?? []}
               onSystemClick={(s) => onNavigateToDrillWithSystem('system_drill', s)}
             />
           </div>
@@ -748,7 +595,7 @@ function ResidencyCockpitSection({
                       text-left p-4 rounded-xl border transition-all
                       bg-[var(--color-bg-primary)] border-[var(--color-border)]
                       hover:border-[var(--color-accent)]/50 hover:shadow-lg
-                      ${isWeak ? 'ring-1 ring-[var(--color-accent)]/30' : ''}
+                      ${isWeak ? 'ring-1 ring-amber-500/30' : ''}
                     `}
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -756,7 +603,7 @@ function ResidencyCockpitSection({
                         {system}
                       </span>
                       {isWeak && (
-                        <span className="px-1.5 py-0.5 bg-[var(--color-accent)]/20 text-[var(--color-accent)] text-xs rounded">
+                        <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs rounded">
                           Weak
                         </span>
                       )}
@@ -798,120 +645,16 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   onNavigateToReference,
   onNavigateToMyLibrary,
   onNavigateToStudyCompanion,
-  onNavigateToSrsFlashcards,
   onNavigateToCustomStudy,
   onNavigateToPearlDeck,
   onNavigateToClinicalEye,
   onNavigateToVisualizer,
   onOpenSettings,
   onNavigateToTutorChat,
-  hasActiveSession = false,
-  resumeContext,
-  onResumeSession,
-  initialStudyToolsTab,
 }) => {
-  const navigate = useNavigate();
   const { user } = useUser();
   const { showPANREContent, careerStage } = useUserContext();
-  const { stats: rolling360Stats } = useRolling360Stats();
 
-  // Quick Wins: Last session and welcome back state
-  const [lastSession] = useState<LastSessionData | null>(() => getLastSession());
-  const [showWelcomeBack, setShowWelcomeBack] = useState(() => getLastSession() !== null);
-
-  // Handler: Resume last session
-  const handleResumeLastSession = useCallback(() => {
-    if (!lastSession) return;
-    clearLastSession();
-    setShowWelcomeBack(false);
-    onStartSession(lastSession.settings);
-  }, [lastSession, onStartSession]);
-
-  // Handler: Dismiss welcome back card
-  const handleDismissWelcomeBack = useCallback(() => {
-    setShowWelcomeBack(false);
-    // Optionally clear localStorage so it doesn't reappear
-    clearLastSession();
-  }, []);
-
-  // Calculate curriculum progress for exam countdown
-  const curriculumProgressPercent = useMemo(() => {
-    if (!rolling360Stats) return 0;
-    const totalSystems = Object.keys(ABBREVIATION_TO_TOPIC_MAP).length;
-    const systemsWithGoodMastery = Object.values(rolling360Stats.systemStats || {}).filter(
-      (s) => s.accuracy >= 0.7 && s.total >= 5
-    ).length;
-    return Math.round((systemsWithGoodMastery / totalSystems) * 100);
-  }, [rolling360Stats]);
-
-  // Sprint 2: Pull-to-refresh
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      // In production: trigger parent data reload
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, []);
-
-  const pullToRefreshRef = usePullToRefresh(handleRefresh, {
-    threshold: 80,
-    enabled: true,
-  });
-
-  // Sprint 3: System stats for AI recommendation and progress ring
-  const systemStatsForAI = useMemo(() => {
-    if (!rolling360Stats?.systemStats) return [];
-    return Object.entries(rolling360Stats.systemStats).map(([system, stats]) => ({
-      system: system as SystemCode,
-      name: ABBREVIATION_TO_TOPIC_MAP[system] || system,
-      accuracy: stats.accuracy,
-      totalAttempts: stats.total,
-    }));
-  }, [rolling360Stats]);
-
-  // Sprint 3: System progress for Progress Ring detail
-  const systemProgressData = useMemo(() => {
-    if (!rolling360Stats?.systemStats) return [];
-    return Object.entries(rolling360Stats.systemStats).map(([system, stats]) => ({
-      system: system as SystemCode,
-      name: ABBREVIATION_TO_TOPIC_MAP[system] || system,
-      reviewed: stats.total,
-      total: 100, // TODO: Get actual condition count per system from registry
-      percent: stats.total >= 5 ? Math.min(stats.accuracy * 100, 100) : 0,
-      accuracy: stats.accuracy,
-    }));
-  }, [rolling360Stats]);
-
-  // Load user profile first (needed by other hooks)
-  const [userProfile, setUserProfile] = useState(() => loadUserProfile() || { hasCompletedOnboarding: false });
-  
-  useEffect(() => {
-    const sync = () => setUserProfile(loadUserProfile() || { hasCompletedOnboarding: false });
-    sync();
-    window.addEventListener('storage', sync);
-    return () => window.removeEventListener('storage', sync);
-  }, []);
-
-  // Sprint 3: Days until exam for AI recommendation
-  const daysUntilExam = useMemo(() => {
-    if (!userProfile?.graduationDate) return null;
-    const examDate = new Date(userProfile.graduationDate);
-    const now = new Date();
-    const diffTime = examDate.getTime() - now.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  }, [userProfile]);
-
-  // Map Rolling 360 system stats to CurriculumGrid progressData (system -> mastery %)
-  const curriculumProgressData = useMemo(() => {
-    const sys = rolling360Stats?.systemStats;
-    if (!sys) return undefined;
-    return Object.fromEntries(
-      Object.entries(sys).map(([k, v]) => [k, Math.round(v.accuracy)])
-    ) as Record<string, number>;
-  }, [rolling360Stats?.systemStats]);
   // Load enabled systems from localStorage (updates when Settings modal changes them)
   const [enabledSystems, setEnabledSystems] = useState<Set<SystemCode>>(() => {
     const saved = localStorage.getItem('panceai_enabled_systems');
@@ -963,6 +706,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     });
   }, []);
 
+  const [userProfile, setUserProfile] = useState(() => loadUserProfile() || { hasCompletedOnboarding: false });
+  useEffect(() => {
+    const sync = () => setUserProfile(loadUserProfile() || { hasCompletedOnboarding: false });
+    sync();
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+
   const isClinicalStudent = careerStage === 'student' && userProfile?.yearInProgram === 'Clinical Year';
   const currentRotation = userProfile?.currentRotation;
   const eorTestDate = userProfile?.eorTestDate;
@@ -987,26 +738,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     setUserProfile((prev) => ({ ...prev, eorTestDate: date || undefined }));
   }, []);
 
-  const [activeTab, setActiveTab] = useState<'training' | 'resources' | 'analytics'>(
-    initialStudyToolsTab ?? 'analytics'
-  );
-  const studyToolsSectionRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (initialStudyToolsTab && (initialStudyToolsTab === 'resources' || initialStudyToolsTab === 'analytics' || initialStudyToolsTab === 'training')) {
-      setActiveTab(initialStudyToolsTab);
-    }
-  }, [initialStudyToolsTab]);
-  const handleOpenFullAnalytics = useCallback(() => {
-    setActiveTab('analytics');
-    navigate('/study?tab=analytics', { replace: true });
-    // Defer scroll so React can commit the tab switch and the analytics panel is in the DOM
-    const scrollToStudyTools = () => {
-      studyToolsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-    requestAnimationFrame(() => {
-      requestAnimationFrame(scrollToStudyTools);
-    });
-  }, [navigate]);
+  const [activeTab, setActiveTab] = useState<'training' | 'resources' | 'analytics'>('training');
   const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
   const [studyFocusStep, setStudyFocusStep] = useState<'idle' | 'choose_focus'>('idle');
   const [showAllTools, setShowAllTools] = useState(false);
@@ -1037,20 +769,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
     return { streak, dueCount, accuracy, questionsToday: todayRecords.length };
   }, [performanceData, flaggedQuestions, missedQuestions, propDueCount]);
-
-  // FSRS / spaced repetition schedule blocks for Gantt (today when dueCount > 0)
-  const schedulerBlocks: ScheduleBlock[] = useMemo(() => {
-    if (stats.dueCount <= 0) return [];
-    const today = new Date().toISOString().slice(0, 10);
-    return [
-      {
-        id: 'today-due',
-        label: 'Review due',
-        date: today,
-        count: stats.dueCount,
-      },
-    ];
-  }, [stats.dueCount]);
 
   // For Didactic users: sub-label showing enabled systems (e.g. "Testing: CV, PULM, GI Only")
   const enabledSystemsLabel = useMemo(() => {
@@ -1109,191 +827,19 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     return 'Good evening';
   }, []);
 
-  const prefersReducedMotion = useReducedMotion();
-  const sectionEnter = prefersReducedMotion ? false : { opacity: 0, y: 16 };
-  const sectionAnimate = prefersReducedMotion ? false : { opacity: 1, y: 0 };
-  const sectionTransition = (delay: number) =>
-    prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.32, 0.72, 0, 1] as const, delay };
-
   return (
-    <>
-      {/* Sprint 3: Progress Ring Widget (floating, persistent) */}
-      {curriculumProgressPercent > 0 && systemProgressData.length > 0 && (
-        <ProgressRingWidget
-          percent={curriculumProgressPercent}
-          systemProgress={systemProgressData}
-          onSystemClick={(system) => onNavigateToDrillWithSystem?.('system_drill', system)}
-        />
-      )}
-
-      <div ref={pullToRefreshRef} className="max-w-6xl mx-auto">
-        {/* Refresh indicator */}
-        {isRefreshing && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-center py-4"
-          >
-            <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 rounded-full">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              >
-                <RotateCcw className="w-4 h-4 text-[var(--color-accent)]" />
-              </motion.div>
-              <span className="text-sm font-medium text-[var(--color-accent)]">Refreshing...</span>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Header */}
-        <motion.div
-          initial={sectionEnter}
-          animate={sectionAnimate}
-          transition={sectionTransition(0)}
-          className="mb-6"
-        >
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] truncate max-w-full">
-            {greeting}, {user?.firstName || 'Student'}
-          </h1>
-          <p className="text-[var(--color-text-muted)] mt-1">
-            Ready to advance your clinical knowledge?
-          </p>
-        </motion.div>
-
-      {/* Welcome Back Card - shows last completed session (not same as active session resume) */}
-      {!hasActiveSession && showWelcomeBack && lastSession && (
-        <motion.div
-          initial={sectionEnter}
-          animate={sectionAnimate}
-          transition={sectionTransition(0)}
-          className="mb-6"
-        >
-          <WelcomeBackCard
-            lastSession={lastSession}
-            onResume={handleResumeLastSession}
-            onDismiss={handleDismissWelcomeBack}
-          />
-        </motion.div>
-      )}
-
-      {/* Continue Learning (Zeigarnik) - above the fold when session in progress */}
-      {hasActiveSession && onResumeSession && (
-        <motion.div
-          initial={sectionEnter}
-          animate={sectionAnimate}
-          transition={sectionTransition(0)}
-          className="mb-6"
-        >
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 md:p-5 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
-                  <RotateCcw className="w-5 h-5 text-[var(--color-accent)]" aria-hidden />
-                  Continue Learning
-                </h2>
-                <p className="text-[var(--color-text-secondary)] text-sm mt-1">
-                  {resumeContext?.remaining != null
-                    ? `Resume question ${resumeContext.current} – ${resumeContext.remaining} remaining`
-                    : 'Pick up where you left off.'}
-                </p>
-                {resumeContext?.total != null && resumeContext.total > 0 && (
-                  <div className="mt-3 max-w-xs" role="group" aria-label="Session progress">
-                    <progress
-                      className="h-2 w-full rounded-full overflow-hidden [&::-webkit-progress-bar]:bg-[var(--color-bg-tertiary)] [&::-webkit-progress-value]:bg-[var(--color-accent)] [&::-moz-progress-bar]:bg-[var(--color-accent)]"
-                      value={resumeContext.current}
-                      max={resumeContext.total}
-                      aria-label={`Question ${resumeContext.current} of ${resumeContext.total}`}
-                    />
-                  </div>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={onResumeSession}
-                className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
-              >
-                <Play className="w-4 h-4" aria-hidden />
-                Resume
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Quick Wins: PANCE / EOR Countdown + Time-Box Buttons (for students) */}
-      {careerStage === 'student' && (userProfile?.graduationDate || (eorTestDate && currentRotation && isEorRotation(currentRotation))) && (
-        <motion.div
-          initial={sectionEnter}
-          animate={sectionAnimate}
-          transition={sectionTransition(0)}
-          className="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-4"
-        >
-          {userProfile?.graduationDate && (
-            <div className={eorTestDate && currentRotation && isEorRotation(currentRotation) ? '' : 'lg:col-span-2'}>
-              <ExamCountdownCard
-                examDate={userProfile.graduationDate}
-                curriculumPercent={curriculumProgressPercent}
-                questionsAnswered={performanceData.length}
-              />
-            </div>
-          )}
-          {eorTestDate && currentRotation && isEorRotation(currentRotation) && (
-            <div className={userProfile?.graduationDate ? '' : 'lg:col-span-2'}>
-              <EorCountdownCard examDate={eorTestDate} rotation={currentRotation} />
-            </div>
-          )}
-          <div>
-            <TimeBoxButtons onStartSession={onStartSession} />
-          </div>
-        </motion.div>
-      )}
-
-      {/* Time-Box Buttons only (for users without exam date) */}
-      {((!userProfile?.graduationDate && !(eorTestDate && currentRotation && isEorRotation(currentRotation))) || careerStage === 'practicing') && (
-        <motion.div
-          initial={sectionEnter}
-          animate={sectionAnimate}
-          transition={sectionTransition(0)}
-          className="mb-6"
-        >
-          <TimeBoxButtons onStartSession={onStartSession} />
-        </motion.div>
-      )}
-
-      {/* Hero Triple: Main Session | OSCE | Analytics — above the fold */}
-      <motion.div
-        initial={sectionEnter}
-        animate={sectionAnimate}
-        transition={sectionTransition(0.05)}
-      >
-        <HeroTriple
-          onStartSession={onStartSession}
-          onNavigateToSimulation={onNavigateToSimulation}
-          onNavigateToDrillMode={onNavigateToDrillMode}
-          streak={stats.streak}
-          dueCount={stats.dueCount}
-          accuracy={stats.accuracy}
-          questionsToday={stats.questionsToday}
-          dueLabel={careerStage === 'practicing' ? 'Maintenance Due' : TO_REVIEW_LABEL}
-          accuracyLabel={
-            careerStage === 'student' &&
-            enabledSystems.size > 0 &&
-            enabledSystems.size < Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
-              ? 'Module Accuracy'
-              : 'Global Accuracy'
-          }
-          onOpenFullAnalytics={handleOpenFullAnalytics}
-        />
+    <div className="max-w-6xl mx-auto">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
+          {greeting}, {user?.firstName || 'Student'}
+        </h1>
+        <p className="text-[var(--color-text-muted)] mt-1">
+          Ready to advance your clinical knowledge?
+        </p>
       </motion.div>
 
-      {/* Quick Stats - Section 1 (delay 0) */}
-      <motion.div
-        initial={sectionEnter}
-        animate={sectionAnimate}
-        transition={sectionTransition(0)}
-        className="mb-6"
-      >
+      {/* Quick Stats */}
       {isLoadingStats ? (
         <QuickStatsBarSkeleton />
       ) : (
@@ -1309,89 +855,66 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               ? 'Module Accuracy'
               : 'Global Accuracy'
           }
-          dueLabel={careerStage === 'practicing' ? 'Maintenance Due' : TO_REVIEW_LABEL}
+          dueLabel={careerStage === 'practicing' ? 'Maintenance Due' : 'To Review'}
         />
       )}
-      </motion.div>
 
-      {/* Circadian insight (when enough data) */}
-      {performanceData.length >= 20 && (
+      {/* Primary CTA: Start review when due, else start a session */}
+      {!isLoadingStats && (
         <motion.div
-          initial={sectionEnter}
-          animate={sectionAnimate}
-          transition={sectionTransition(0)}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <CircadianInsightCard performanceRecords={performanceData} className="max-w-xs" />
+          {stats.dueCount > 0 ? (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-accent)]/10">
+              <p className="text-[var(--color-text-primary)] font-medium">
+                {stats.dueCount} question{stats.dueCount !== 1 ? 's' : ''} due
+                {careerStage === 'practicing' ? ' — maintenance' : ' — maintain study continuity'}
+              </p>
+              <PrimaryButton
+                onClick={() => onStartSession({ focus: 'review' })}
+                className="flex items-center gap-2"
+              >
+                <Play className="w-4 h-4" />
+                {careerStage === 'practicing' ? 'Practice due' : 'Start review'}
+              </PrimaryButton>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+              <p className="text-[var(--color-text-secondary)] font-medium">
+                Ready to study?
+              </p>
+              <PrimaryButton
+                onClick={() => onStartSession()}
+                className="flex items-center gap-2"
+              >
+                <Play className="w-4 h-4" />
+                Start a session
+              </PrimaryButton>
+            </div>
+          )}
         </motion.div>
       )}
 
-      {/* Core Adaptive Hero - main session (above the fold) */}
-      <motion.div
-        initial={sectionEnter}
-        animate={sectionAnimate}
-        transition={sectionTransition(0.1)}
-      >
-        <CoreAdaptiveHero
-          onStart={() =>
-            onNavigateToSimulation
-              ? onNavigateToSimulation()
-              : onStartSession({ focus: 'all', simulationStrict: true })
-          }
-          accuracy={stats.accuracy}
-          questionsToday={stats.questionsToday}
-          examLabel={examLabel}
-          enabledSystemsLabel={enabledSystemsLabel}
-          accuracyLabel={
-            careerStage === 'student' &&
-            enabledSystems.size > 0 &&
-            enabledSystems.size < Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
-              ? 'Module Accuracy'
-              : 'Global Accuracy'
-          }
-          growthAreas={growthAreas}
-        />
-      </motion.div>
-
-      {/* OSCE Section - above the fold */}
-      <motion.div
-        initial={sectionEnter}
-        animate={sectionAnimate}
-        transition={sectionTransition(0.1)}
-      >
-        <OSCESection onStart={() => onNavigateToDrillMode('patient_encounter')} />
-      </motion.div>
-
-      {/* Recommended for you - Section 2 */}
-      <motion.div
-        initial={sectionEnter}
-        animate={sectionAnimate}
-        transition={sectionTransition(0.1)}
-      >
+      {/* Recommended for you */}
       <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3">
         Recommended for you
       </h2>
       <RecommendationFeed onNavigateToDrill={handleNavigateToDrillModeWithSettings} />
-      </motion.div>
 
       {/* Residency Cockpit: Study by System (body map / system grid from Rolling 360) */}
       {onNavigateToDrillWithSystem && (
         <ResidencyCockpitSection onNavigateToDrillWithSystem={onNavigateToDrillWithSystem} />
       )}
 
-      {/* Grand Rounds / Daily Question - Section 2 (delay 100ms) */}
-      <motion.div
-        initial={sectionEnter}
-        animate={sectionAnimate}
-        transition={sectionTransition(0.1)}
-      >
+      {/* Grand Rounds (Clinical/Pro) vs Targeted Daily Question (Didactic) */}
       <GrandRoundsBanner
         onStart={() => onNavigateToDrillMode('grand_rounds')}
         isDidactic={
           careerStage === 'student' && userProfile?.yearInProgram !== 'Clinical Year'
         }
       />
-      </motion.div>
 
       {/* Clinical Student: Current Rotation dropdown (presets systems) + EOR Test Date */}
       {isClinicalStudent && (
@@ -1432,17 +955,16 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </motion.div>
       )}
 
-      {/* Current Curriculum - Section 3 (delay 200ms) */}
+      {/* Current Curriculum - Elevated for Didactic: Study Systems on dashboard + sub-label on Start Session */}
       {careerStage === 'student' &&
         enabledSystems.size >= 0 &&
         enabledSystems.size <= Object.keys(ABBREVIATION_TO_TOPIC_MAP).length && (
           <motion.div
-            initial={sectionEnter}
-            animate={sectionAnimate}
-            transition={sectionTransition(0.2)}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
             className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
           >
-            <div className="flex flex-col gap-3 mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-[var(--color-accent)]/10">
                   <Layers className="w-5 h-5 text-[var(--color-accent)]" />
@@ -1458,52 +980,91 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   </p>
                 </div>
               </div>
-              {/* Unified toolbar: Enable All, Disable All, More options */}
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const all = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
-                    setEnabledSystems(all);
-                    localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(all)));
-                    window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
-                  }}
-                  className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
-                >
-                  Enable All
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEnabledSystems(new Set());
-                    localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
-                    window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
-                  }}
-                  className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
-                >
-                  Disable All
-                </button>
-                {onOpenSettings && (
-                  <button
-                    type="button"
-                    onClick={onOpenSettings}
-                    title="More options"
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
-                  >
-                    <MoreHorizontal className="w-4 h-4" aria-hidden />
-                    <span>More options</span>
-                  </button>
-                )}
-              </div>
             </div>
-            <CurriculumGrid
-              selectedSystems={enabledSystems}
-              onSystemToggle={handleToggleSystem}
-              growthAreas={growthAreas}
-              progressData={curriculumProgressData}
-            />
+            {/* Unified toolbar: Enable/Disable + More options */}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const all = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+                  setEnabledSystems(all);
+                  localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(all)));
+                  window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
+                }}
+                className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg border border-[var(--color-border)]"
+              >
+                Enable All
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEnabledSystems(new Set());
+                  localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
+                  window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
+                }}
+                className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg border border-[var(--color-border)]"
+              >
+                Disable All
+              </button>
+              {onOpenSettings && (
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  className="ml-1 p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 transition-colors"
+                  title="More options"
+                  aria-label="More options"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+              {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map((system) => {
+                const fullName = getSystemDisplayFullName(system);
+                return (
+                  <button
+                    key={system}
+                    type="button"
+                    onClick={() => handleToggleSystem(system)}
+                    title={fullName}
+                    className={`min-w-0 p-3 rounded-lg text-xs font-medium transition-all text-left ${
+                      enabledSystems.has(system)
+                        ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-2 border-[var(--color-accent)]'
+                        : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border-2 border-transparent'
+                    }`}
+                  >
+                    <div className="font-semibold truncate" title={system}>
+                      {system}
+                    </div>
+                    <div className="text-[10px] opacity-80 truncate min-w-0" title={fullName}>
+                      {fullName}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </motion.div>
         )}
+
+      {/* Core Adaptive - THE MAIN EVENT */}
+      <CoreAdaptiveHero
+        onStart={() => (onNavigateToSimulation ? onNavigateToSimulation() : onStartSession())}
+        accuracy={stats.accuracy}
+        questionsToday={stats.questionsToday}
+        examLabel={examLabel}
+        enabledSystemsLabel={enabledSystemsLabel}
+        accuracyLabel={
+          careerStage === 'student' &&
+          enabledSystems.size > 0 &&
+          enabledSystems.size < Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
+            ? 'Module Accuracy'
+            : 'Global Accuracy'
+        }
+        growthAreas={growthAreas}
+      />
+
+      {/* Virtual OSCE Section (Standalone Feature) */}
+      <OSCESection onStart={() => onNavigateToDrillMode('patient_encounter')} />
 
       {/* Custom Study Mode - System Chooser (Targeted Practice) */}
       {onNavigateToCustomStudy && (
@@ -1522,7 +1083,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     System Chooser
                   </span>
                 </div>
-                <p className="text-base text-[var(--color-text-secondary)] mb-3">
+                <p className="text-[0.9375rem] text-slate-600 dark:text-slate-400 mb-3">
                   Build targeted sessions: choose specific organ systems, focus areas, and customize
                   difficulty
                 </p>
@@ -1578,7 +1139,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => onNavigateToDrillMode('panre_la')}
-              className="flex items-center gap-2 px-4 py-2 bg-deep-plum-500 hover:bg-deep-plum-600 text-[var(--color-text-inverse)] font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-deep-plum-500 hover:bg-deep-plum-600 text-white font-medium rounded-lg transition-colors"
             >
               Start Practice
               <ChevronRight className="w-4 h-4" />
@@ -1587,14 +1148,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </motion.div>
       )}
 
-      {/* Study Tools / Maintenance Section Header - Sticky below app header so it never overlaps sidebar */}
-      <div
-        ref={studyToolsSectionRef}
-        id="study-tools-section"
-        className="sticky z-20 bg-[var(--color-bg-primary)]/95 backdrop-blur border-b border-[var(--color-border)] -mx-4 px-4 pb-4 mb-6"
-        style={{ top: 'var(--header-height, 4rem)' }}
-      >
-        <div className="mb-3 max-w-[1200px] mx-auto">
+      {/* Study Tools / Maintenance Section Header - Sticky; aligned to global grid */}
+      <div className="sticky top-0 z-20 bg-[var(--color-bg-primary)]/95 backdrop-blur border-b border-[var(--color-border)] -mx-4 px-4 pb-4 mb-6">
+        <div className="mb-3">
           <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
             {careerStage === 'practicing' ? 'Maintenance & Reference' : 'Study Tools'}
           </h2>
@@ -1607,27 +1163,22 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
         {/* Tab Navigation - switches content below (not scroll anchors) */}
         <div
-          className="flex gap-4 overflow-x-auto -mx-1 px-1 border-b border-[var(--color-border)] w-full"
+          className="flex gap-4 overflow-x-auto -mx-1 px-1 border-b border-[var(--color-border)]"
           role="tablist"
           aria-label="Study tools view"
         >
           {[
-            { id: 'analytics' as const, label: 'Progress & Analytics', icon: BarChart3 },
             { id: 'training' as const, label: 'Training Modes', icon: Zap },
             { id: 'resources' as const, label: 'Clinical Resources', icon: BookOpen },
+            { id: 'analytics' as const, label: 'Progress & Analytics', icon: BarChart3 },
           ].map((tab) => {
             const isSelected = activeTab === tab.id;
             const className = `flex items-center gap-2 px-1 py-2 font-medium transition-all whitespace-nowrap border-b-2 bg-transparent ${
               isSelected
-                ? 'text-muted-amber-500 border-muted-amber-500'
-                : 'text-[var(--color-text-muted)] border-transparent hover:text-[var(--color-text-secondary)]'
+                ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
+                : 'text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-200'
             }`;
 
-            const handleTabClick = () => {
-              setActiveTab(tab.id);
-              const search = tab.id === 'training' ? '' : `?tab=${tab.id}`;
-              navigate(`/study${search}`, { replace: true });
-            };
             return isSelected ? (
               <button
                 key={tab.id}
@@ -1635,7 +1186,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 aria-selected="true"
                 aria-controls={`study-tools-panel-${tab.id}`}
                 id={`study-tools-tab-${tab.id}`}
-                onClick={handleTabClick}
+                onClick={() => setActiveTab(tab.id)}
                 className={className}
               >
                 <tab.icon className="w-4 h-4" strokeWidth={1.5} />
@@ -1648,7 +1199,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 aria-selected="false"
                 aria-controls={`study-tools-panel-${tab.id}`}
                 id={`study-tools-tab-${tab.id}`}
-                onClick={handleTabClick}
+                onClick={() => setActiveTab(tab.id)}
                 className={className}
               >
                 <tab.icon className="w-4 h-4" strokeWidth={1.5} />
@@ -1659,10 +1210,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         </div>
       </div>
 
-      {/* Tab panels: aligned to same grid as header/tabs (max-w 1200px) */}
-      <div className="max-w-[1200px] mx-auto">
-        <AnimatePresence mode="wait">
-          {activeTab === 'training' && (
+      {/* Tab panels: one visible at a time (view switch, not scroll) */}
+      <AnimatePresence mode="wait">
+        {activeTab === 'training' && (
           <motion.div
             key="training"
             id="study-tools-panel-training"
@@ -1684,7 +1234,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     icon={Play}
                     iconRight={ChevronRight}
                     onClick={() => setStudyFocusStep('choose_focus')}
-                    hapticOnPress
                     className="gap-2"
                   >
                     Study Now
@@ -1788,7 +1337,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   )}
                 </section>
 
-                {/* Fix My Weaknesses — fix.modeIds is intentionally empty; fix is handled by the weak-areas CTA only. */}
+                {/* Fix My Weaknesses */}
                 <section>
                   <div className="flex items-center gap-2 mb-3">
                     <AlertCircle className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -1929,11 +1478,11 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </h3>
                 <button
                   onClick={onNavigateToPearlDeck}
-                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
+                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-amber-500/50 hover:shadow-lg transition-all group"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-xl bg-[var(--color-accent)]/20">
-                      <Sparkles className="w-6 h-6 text-[var(--color-accent)]" />
+                    <div className="p-3 rounded-xl bg-amber-500/10">
+                      <Sparkles className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-bold text-[var(--color-text-primary)]">
@@ -2027,39 +1576,39 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               </section>
             )}
 
-            {/* Knowledge Base */}
+            {/* Clinical Reference Library */}
             {onNavigateToReference && (
               <section>
                 <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
                   <Stethoscope className="w-5 h-5 text-[var(--color-text-muted)]" />
-                  Knowledge Base
+                  Clinical Reference
                 </h3>
                 <button
                   onClick={onNavigateToReference}
-                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
+                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
                 >
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-xl bg-[var(--color-accent)]/20">
-                      <BookOpen className="w-6 h-6 text-[var(--color-accent)]" />
+                    <div className="p-3 rounded-xl bg-steel-blue-100 dark:bg-steel-blue-900/30">
+                      <BookOpen className="w-6 h-6 text-steel-blue-600 dark:text-steel-blue-400" />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-bold text-[var(--color-text-primary)]">
-                        Knowledge Base
+                        Clinical Reference Library
                       </h4>
                       <p className="text-sm text-[var(--color-text-secondary)] mt-1">
                         Browse Anatomy, Labs, Drugs, ECG Patterns, Procedures, Physiology & more
                       </p>
                       <div className="flex flex-wrap gap-2 mt-3">
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-steel-blue-100 dark:bg-steel-blue-900/40 text-steel-blue-700 dark:text-steel-blue-300">
                           300+ Anatomy
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-sage-100 dark:bg-sage-900/40 text-sage-700 dark:text-sage-300">
                           200+ Labs
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-deep-plum-100 dark:bg-deep-plum-900/40 text-deep-plum-700 dark:text-deep-plum-300">
                           1000+ Drugs
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-dusty-rose-100 dark:bg-dusty-rose-900/40 text-dusty-rose-700 dark:text-dusty-rose-300">
                           50+ ECG
                         </span>
                       </div>
@@ -2078,7 +1627,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </h3>
                 <button
                   onClick={onNavigateToMyLibrary}
-                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
+                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
                 >
                   <div className="flex items-start gap-4">
                     <div className="p-3 rounded-xl bg-[var(--color-accent)]/20">
@@ -2104,50 +1653,24 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 {onNavigateToStudyCompanion && (
                   <button
                     onClick={onNavigateToStudyCompanion}
-                    className="mt-3 w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
+                    className="mt-3 w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
                   >
                     <div className="flex items-start gap-4">
-                      <div className="p-3 rounded-xl bg-[var(--color-accent)]/20">
-                        <MessageSquare className="w-6 h-6 text-[var(--color-accent)]" />
+                      <div className="p-3 rounded-xl bg-action-blue/15">
+                        <MessageSquare className="w-6 h-6 text-action-blue" />
                       </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-[var(--color-text-primary)] flex items-center gap-2">
                           Study Companion
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-action-blue/15 text-action-blue">
                             Citations
                           </span>
                         </h4>
                         <p className="text-sm text-[var(--color-text-secondary)] mt-1">
                           Chat with an approved textbook and see evidence highlighted directly on the PDF
                         </p>
-                        <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                        <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs bg-action-blue/15 text-action-blue">
                           PDF + Tutor
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                )}
-                {onNavigateToSrsFlashcards && (
-                  <button
-                    onClick={onNavigateToSrsFlashcards}
-                    className="mt-3 w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 rounded-xl bg-[var(--color-accent)]/20">
-                        <Layers className="w-6 h-6 text-[var(--color-accent)]" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-                          SRS Flashcards
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
-                            Mnemonics
-                          </span>
-                        </h4>
-                        <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-                          Spaced repetition with variant cards; rate Hard to get an exaggerated mnemonic image
-                        </p>
-                        <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
-                          FSRS + Firefly
                         </span>
                       </div>
                     </div>
@@ -2171,22 +1694,11 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           >
             {/* Research-Backed User-Friendly Stats */}
             <section>
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <h3 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-action-blue" />
-                  Your Learning Analytics
-                </h3>
-                <HighContrastDataToggle compact className="shrink-0" />
-              </div>
+              <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-action-blue" />
+                Your Learning Analytics
+              </h3>
               <UserFriendlyStatsDisplay />
-            </section>
-
-            {/* Spaced repetition schedule (Gantt-style) */}
-            <section>
-              <SmartSchedulerGantt
-                blocks={schedulerBlocks}
-                daysToShow={14}
-              />
             </section>
 
             {/* Learning Profile - Comprehensive User Analytics */}
@@ -2200,7 +1712,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   onClick={() => setShowAdvancedAnalytics(!showAdvancedAnalytics)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
                     showAdvancedAnalytics
-                      ? 'bg-action-blue text-[var(--color-text-inverse)]'
+                      ? 'bg-action-blue text-white'
                       : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
                   }`}
                 >
@@ -2310,10 +1822,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             )}
           </motion.div>
         )}
-        </AnimatePresence>
-      </div>
-      </div>
-    </>
+      </AnimatePresence>
+    </div>
   );
 };
 

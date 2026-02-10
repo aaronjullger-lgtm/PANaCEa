@@ -26,6 +26,7 @@ function warnBackendDownOnce(): void {
 export async function loadDrugData(getToken?: () => Promise<string | null>): Promise<any> {
   const cacheKey = 'drugData';
 
+  // Return from cache if already loaded
   if (dataCache.has(cacheKey)) {
     return dataCache.get(cacheKey);
   }
@@ -36,20 +37,20 @@ export async function loadDrugData(getToken?: () => Promise<string | null>): Pro
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
 
-  // Try /api/drugs/all first, fallback to /api/drugs when only root exists
-  const urls = [getApiEndpoint(API_ENDPOINTS.DRUGS_ALL), getApiEndpoint(API_ENDPOINTS.DRUGS)];
+  // Try /api/drugs/all first, fallback to /api/drugs for environments where only root exists
+  const urls = [
+    getApiEndpoint(API_ENDPOINTS.DRUGS_ALL),
+    getApiEndpoint(API_ENDPOINTS.DRUGS),
+  ];
 
   for (const apiUrl of urls) {
     try {
       const response = await fetch(apiUrl, { headers });
       if (!response.ok) continue;
 
-      const raw = (await parseJsonOrThrow(response)) as unknown;
-      const data = Array.isArray(raw)
-        ? raw
-        : ((raw as { data?: { drugs?: unknown[] }; drugs?: unknown[] })?.data?.drugs ??
-          (raw as { drugs?: unknown[] })?.drugs ??
-          []);
+      const raw = await parseJsonOrThrow(response);
+      // Normalize: CF returns { data: { drugs } }, Express returns array
+      const data = Array.isArray(raw) ? raw : raw?.data?.drugs ?? raw?.drugs ?? [];
       dataCache.set(cacheKey, data);
       return data;
     } catch {
@@ -101,7 +102,7 @@ export async function loadConditionContent(getToken?: () => Promise<string | nul
 
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      const data = (await parseJsonOrThrow(response)) as Record<string, unknown>;
+      const data = await parseJsonOrThrow(response);
       dataCache.set(cacheKey, data);
       console.log(
         `✓ Loaded condition content from database (${Object.keys(data).length} conditions)`
@@ -115,12 +116,8 @@ export async function loadConditionContent(getToken?: () => Promise<string | nul
     if (!contentType?.includes('application/json')) {
       warnBackendDownOnce();
     } else if (response.status === 503) {
-      const errorData = (await parseJsonOrThrow(response).catch(() => ({}))) as {
-        message?: string;
-      };
-      console.error(
-        `⚠ Database unavailable: ${errorData?.message || 'Cannot connect to database'}`
-      );
+      const errorData = (await parseJsonOrThrow(response).catch(() => ({}))) as { message?: string };
+      console.error(`⚠ Database unavailable: ${errorData?.message || 'Cannot connect to database'}`);
       console.error('Ensure DATABASE_URL is configured in .env');
     } else {
       console.error(`Database API returned status ${response.status} for ${apiUrl}`);
@@ -172,9 +169,9 @@ export async function loadLabCases(getToken?: () => Promise<string | null>): Pro
 
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      const responseData = (await parseJsonOrThrow(response)) as { data?: unknown } | unknown[];
+      const responseData = await parseJsonOrThrow(response);
       // Handle wrapped response format { success: true, data: [...] }
-      const data = Array.isArray(responseData) ? responseData : (responseData as { data?: unknown }).data ?? responseData;
+      const data = responseData?.data ?? responseData;
       const cases = Array.isArray(data) ? data : [];
       dataCache.set(cacheKey, cases);
       console.log(`✓ Loaded ${cases.length} lab cases from database`);

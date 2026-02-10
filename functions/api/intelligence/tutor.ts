@@ -81,21 +81,9 @@ const TutorMessageSchema = z.object({
   thinkingLevel: z.enum(['minimal', 'low', 'medium', 'high']).optional().default('high'),
 
   /**
-   * Optional model override, e.g. "gemini-3-flash-preview" | "gemini-2.5-flash".
+   * Optional model override, e.g. "gemini-3-flash" | "gemini-3-pro".
    */
-  modelName: z.string().optional().default('gemini-2.5-flash'),
-
-  /**
-   * Optional: always enable Google Search grounding (External Brain / guideline checker).
-   * When true, bypasses keyword heuristic and always adds google_search tool.
-   */
-  enableGoogleSearch: z.boolean().optional().default(false),
-
-  /**
-   * Optional: "Deep Search" – combine Search with high reasoning effort for complex questions.
-   * Use for multi-part comparisons (e.g. "Compare DOACs vs Warfarin in valvular Afib").
-   */
-  reasoningEffort: z.enum(['low', 'medium', 'high']).optional(),
+  modelName: z.string().optional().default('gemini-3-flash'),
 
   /**
    * Temperature / output length tunables with safe defaults.
@@ -110,11 +98,6 @@ interface TutorHandlerContext
   extends AuthenticatedContext,
     ValidatedContext<TutorRequest> {}
 
-interface GroundingSource {
-  title: string;
-  uri: string;
-}
-
 interface TutorReplyPayload {
   reply: string;
   model: string;
@@ -127,11 +110,6 @@ interface TutorReplyPayload {
    * Session cache name (cachedContents/{id}) used or created for this request.
    */
   sessionCacheName?: string;
-  /**
-   * When enableGoogleSearch was used, citations from grounding metadata.
-   * Enables UI source chips: [Source: Mayo Clinic], [Source: NIH].
-   */
-  groundingSources?: GroundingSource[];
 }
 
 // -----------------------------------------------------------------------------
@@ -276,7 +254,7 @@ async function callGeminiTutor(
   input: TutorRequest,
   sessionCacheName?: string
 ): Promise<TutorReplyPayload> {
-  const { message, history, temperature, maxTokens, thinkingLevel, enableGoogleSearch, reasoningEffort } = input;
+  const { message, history, temperature, maxTokens, thinkingLevel } = input;
 
   const contents: Array<{ role?: string; parts: Array<Record<string, unknown>> }> = [];
 
@@ -303,13 +281,8 @@ async function callGeminiTutor(
 
   // Hint to Gemini 3 about the desired reasoning depth.
   if (thinkingLevel) {
-    (generationConfig as Record<string, unknown>).thinkingLevel = thinkingLevel;
-  }
-  // "Deep Search": high reasoning budget when combining Search with complex questions.
-  if (reasoningEffort === 'high') {
-    (generationConfig as Record<string, unknown>).thinkingConfig = { thinkingBudget: 24576 };
-  } else if (reasoningEffort === 'medium') {
-    (generationConfig as Record<string, unknown>).thinkingConfig = { thinkingBudget: 8192 };
+    // Field name mirrors current client config; unknown fields are ignored server-side.
+    (generationConfig as any).thinkingLevel = thinkingLevel;
   }
 
   const body: Record<string, unknown> = {
@@ -317,11 +290,9 @@ async function callGeminiTutor(
     generationConfig,
   };
 
-  // Enable guideline-aware grounding with Google Search (External Brain).
-  // Use explicit enableGoogleSearch or keyword heuristic.
+  // Enable guideline-aware grounding with Google Search for treatment / guideline questions.
   const lowerMessage = message.toLowerCase();
   const shouldEnableSearch =
-    enableGoogleSearch === true ||
     lowerMessage.includes('guideline') ||
     lowerMessage.includes('cdc') ||
     lowerMessage.includes('who recommendation') ||
@@ -371,14 +342,10 @@ async function callGeminiTutor(
           thoughtSignature?: string;
         }>;
       };
-      groundingMetadata?: {
-        groundingChunks?: Array<{ web?: { uri?: string; title?: string } }>;
-      };
     }>;
   };
 
-  const candidate = data.candidates?.[0];
-  const parts = candidate?.content?.parts ?? [];
+  const parts = data.candidates?.[0]?.content?.parts ?? [];
 
   const replyText = parts
     .filter((p) => !p.thought && p.text)
@@ -406,27 +373,6 @@ async function callGeminiTutor(
 
   if (sessionCacheName) {
     payload.sessionCacheName = sessionCacheName;
-  }
-
-  // Strict citation return when Search was used (groundingMetadata).
-  const chunks = candidate?.groundingMetadata?.groundingChunks;
-  if (chunks && Array.isArray(chunks) && chunks.length > 0) {
-    payload.groundingSources = chunks
-      .map((c) => {
-        const uri = c.web?.uri;
-        const title = c.web?.title;
-        if (uri && title) return { title, uri };
-        if (uri) {
-          try {
-            const host = new URL(uri).hostname.replace(/^www\./, '');
-            return { title: host, uri };
-          } catch {
-            return { title: 'Source', uri };
-          }
-        }
-        return null;
-      })
-      .filter((s): s is GroundingSource => s !== null);
   }
 
   return payload;
@@ -467,14 +413,14 @@ export const onRequestPost = authenticatedEndpoint(
       let sessionCacheName = validated.sessionCacheName;
 
       if (!sessionCacheName && weakSpotProfile) {
-        sessionCacheName = (await createWeakSpotCache(env, modelName, weakSpotProfile)) ?? undefined;
+        sessionCacheName = await createWeakSpotCache(env, modelName, weakSpotProfile);
         if (sessionCacheName) {
           log.info('Created weak-spot context cache', { cacheName: sessionCacheName });
         }
       }
 
       // 3) Call Gemini 3 Tutor with optional cache + thinking configuration.
-      const payload = await callGeminiTutor(env, modelName, validated, sessionCacheName ?? undefined);
+      const payload = await callGeminiTutor(env, modelName, validated, sessionCacheName);
 
       // 4) Return structured payload for the frontend Reasoning Tutor UI.
       return {

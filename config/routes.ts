@@ -7,19 +7,11 @@
 export const ROUTES = {
   HOME: '/',
   ADMIN: '/admin',
-  ADMIN_REFINERY: '/admin/refinery',
   ADMIN_CURATION: '/admin/curation',
   CLINICAL_EYE: '/clinical-eye',
   VISUALIZER: '/visualizer',
-  /** Study hub; path→view sync in App.tsx */
-  STUDY: '/study',
-  STUDY_KNOWLEDGE: '/study/knowledge',
-  STUDY_UTILITIES: '/study/utilities',
-  /** @deprecated Use STUDY_KNOWLEDGE */
-  STUDY_REFERENCE: '/study/reference',
-  /** @deprecated Use STUDY_UTILITIES */
-  STUDY_TOOLKIT: '/study/toolkit',
-  MENU: '/menu',
+  LECTURE_CONVERTER: '/lecture-converter',
+  TECHNIQUE_CHECK: '/technique-check',
 } as const;
 
 // Type for route values

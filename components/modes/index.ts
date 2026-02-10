@@ -10,7 +10,6 @@ export { default as FluidElectrolyteMode } from './FluidElectrolyteMode';
 export { default as AntibioticMode } from './AntibioticMode';
 export { default as CodeBlueSpeedMode } from './CodeBlueSpeedMode';
 export { default as ReasoningTutorMode } from './ReasoningTutorMode';
-export { default as PolypharmacyPuzzleMode } from './PolypharmacyPuzzleMode';
 
 // Challenge Modes
 export { default as GrandRoundsMode } from './GrandRoundsMode';

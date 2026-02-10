@@ -60,8 +60,7 @@ export const buzzwordService = {
     const buzzwords = await buzzwordService.getAllBuzzwords();
     const dict: Record<string, string> = {};
     buzzwords.forEach((b) => {
-      const key = b.buzzword;
-      if (key) dict[key] = b.condition ?? '';
+      if (b.buzzword != null) dict[b.buzzword] = b.condition ?? '';
     });
     return dict;
   },
@@ -71,10 +70,6 @@ export const buzzwordService = {
    */
   getAllBuzzwordConditions: async (): Promise<string[]> => {
     const buzzwords = await buzzwordService.getAllBuzzwords();
-    const conditions: string[] = [];
-    buzzwords.forEach((b) => {
-      if (b.condition) conditions.push(b.condition);
-    });
-    return Array.from(new Set(conditions)).sort();
+    return Array.from(new Set(buzzwords.map((b) => b.condition).filter((c): c is string => c != null))).sort();
   },
 };

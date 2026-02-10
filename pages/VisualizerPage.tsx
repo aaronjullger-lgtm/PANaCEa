@@ -1,10 +1,11 @@
 /**
  * Visualizer Page - Generate anatomy image (Firefly) and segment (Gemini); overlay clickable masks.
+ * Edit mode: conversational image editing (Nano Banana) with thoughtSignature for consistency.
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Loader2, ImageIcon } from 'lucide-react';
+import { ChevronLeft, Loader2, ImageIcon, Pencil } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 
 interface MaskItem {
@@ -20,14 +21,32 @@ interface GenerateResponse {
   };
 }
 
+interface EditResponse {
+  data: {
+    imageBase64: string;
+    imageMime: string;
+    thoughtSignature?: string;
+  };
+}
+
+type VisualizerMode = 'generate' | 'edit';
+
 export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const { getToken } = useAuth();
+  const [mode, setMode] = useState<VisualizerMode>('generate');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<GenerateResponse['data'] | null>(null);
   const [hoveredLabel, setHoveredLabel] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  // Edit mode state
+  const [editImage, setEditImage] = useState<string | null>(null);
+  const [editMime, setEditMime] = useState<string>('image/png');
+  const [editPrompt, setEditPrompt] = useState('');
+  const [thoughtSignature, setThoughtSignature] = useState<string | undefined>(undefined);
+  const [editResult, setEditResult] = useState<EditResponse['data'] | null>(null);
 
   const generate = useCallback(async () => {
     setLoading(true);
@@ -43,31 +62,70 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
         },
         body: JSON.stringify({}),
       });
-      const json = (await res.json()) as {
-        error?: string;
-        details?: string;
-        data?: { imageBase64?: string; imageMime?: string; masks?: MaskItem[] };
-      };
+      const json = await res.json();
       if (!res.ok) {
         setError(json.error || json.details || 'Generation failed');
         return;
       }
-      const raw = json.data;
-      setResult(
-        raw
-          ? {
-              imageBase64: raw.imageBase64 ?? '',
-              imageMime: raw.imageMime ?? 'image/png',
-              masks: raw.masks ?? [],
-            }
-          : null
-      );
+      setResult(json.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Request failed');
     } finally {
       setLoading(false);
     }
   }, [getToken]);
+
+  const runEdit = useCallback(async () => {
+    if (!editImage || !editPrompt.trim()) return;
+    setLoading(true);
+    setError(null);
+    setEditResult(null);
+    try {
+      const token = await getToken();
+      const base64 = editImage.replace(/^data:[^;]+;base64,/, '');
+      const res = await fetch('/api/visualizer/edit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          imageBase64: base64,
+          mimeType: editMime,
+          userPrompt: editPrompt.trim(),
+          thoughtSignature: thoughtSignature ?? undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.error || json.details || 'Edit failed');
+        return;
+      }
+      setEditResult(json.data);
+      if (json.data?.thoughtSignature) setThoughtSignature(json.data.thoughtSignature);
+      setEditImage(json.data?.imageBase64 ?? editImage);
+      setEditMime(json.data?.imageMime ?? editMime);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Request failed');
+    } finally {
+      setLoading(false);
+    }
+  }, [editImage, editMime, editPrompt, thoughtSignature, getToken]);
+
+  const handleEditFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setEditImage(dataUrl);
+      setEditMime(file.type || 'image/png');
+      setEditResult(null);
+      setThoughtSignature(undefined);
+      setError(null);
+    };
+    reader.readAsDataURL(file);
+  }, []);
 
   useEffect(() => {
     if (!result?.imageBase64 || !canvasRef.current || !imgRef.current) return;
@@ -118,12 +176,91 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             Anatomy Visualizer
           </h1>
           <p className="text-[var(--color-text-muted)] mt-1">
-            Generate an anatomy image (Firefly) and segment regions (Gemini). Click regions for labels.
+            Generate an anatomy image (Firefly) and segment regions (Gemini), or edit an existing image (conversational edit).
           </p>
         </motion.div>
 
+        <div className="flex gap-2 mb-6">
+          <button
+            type="button"
+            onClick={() => setMode('generate')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              mode === 'generate'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)]'
+            }`}
+          >
+            <ImageIcon className="w-4 h-4" />
+            Generate
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('edit')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              mode === 'edit'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)]'
+            }`}
+          >
+            <Pencil className="w-4 h-4" />
+            Edit existing image
+          </button>
+        </div>
+
+        {mode === 'edit' && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 mb-6"
+          >
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Conversational image edit</h2>
+            <p className="text-sm text-[var(--color-text-muted)] mb-3">
+              Upload a diagram (e.g. heart), then describe the edit (e.g. &quot;Show ventricular wall thickening&quot;). Send the previous turn signature for consistency.
+            </p>
+            <div className="space-y-3">
+              <label className="block">
+                <span className="text-sm font-medium text-[var(--color-text-primary)]">Image</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="mt-1 block w-full text-sm text-[var(--color-text-primary)] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[var(--color-accent)] file:text-[var(--color-text-inverse)]"
+                  onChange={handleEditFile}
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-[var(--color-text-primary)]">Edit prompt</span>
+                <input
+                  type="text"
+                  placeholder="e.g. Show ventricular wall thickening"
+                  value={editPrompt}
+                  onChange={(e) => setEditPrompt(e.target.value)}
+                  className="mt-1 block w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={runEdit}
+                disabled={loading || !editImage || !editPrompt.trim()}
+                className="flex items-center gap-2 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-text-inverse)] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />}
+                Apply edit
+              </button>
+            </div>
+            {(editResult?.imageBase64 || editImage) && (
+              <div className="mt-4">
+                <img
+                  src={editResult?.imageBase64 ?? editImage ?? ''}
+                  alt="Edited"
+                  className="max-h-64 rounded-lg border border-[var(--color-border)] object-contain"
+                />
+              </div>
+            )}
+          </motion.div>
+        )}
+
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
-          {!result && !loading && (
+          {mode === 'generate' && !result && !loading && (
             <button
               type="button"
               onClick={generate}
@@ -136,7 +273,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
           {loading && (
             <div className="flex items-center justify-center gap-2 py-8 text-[var(--color-text-muted)]">
               <Loader2 className="w-6 h-6 animate-spin" />
-              Generating…
+              {mode === 'edit' ? 'Editing…' : 'Generating…'}
             </div>
           )}
           {error && (
@@ -144,7 +281,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
               {error}
             </p>
           )}
-          {result && (
+          {mode === 'generate' && result && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

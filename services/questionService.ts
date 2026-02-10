@@ -8,7 +8,6 @@
 
 import type { Question, SessionSettings } from '../types';
 import { parseJsonOrThrow } from '../lib/utils/safeJsonResponse';
-import { getSystemsForRotation, ALL_SYSTEMS as ROTATION_ALL_SYSTEMS } from '../config/rotation-systems';
 
 // Pool status tracking
 let lastPoolCheck = 0;
@@ -200,18 +199,17 @@ export async function fetchPearlsForQuestion(
 
 /**
  * Fetch questions from the pool API
- * systems: for didactic users - only questions from these systems
  */
 async function fetchFromPool(
   count: number,
   system?: string,
-  systems?: string[],
   category?: string,
   difficulty?: string,
   token?: string | null
 ): Promise<{ questions: Question[]; poolStatus: PoolStatus }> {
   // Validate token is available
-  if (!token) {    console.warn('[QuestionService] No auth token provided to fetchFromPool');
+  if (!token) {
+    console.warn('[QuestionService] No auth token provided to fetchFromPool');
     // Return empty result instead of throwing - allows graceful fallback to Gemini
     return {
       questions: [],
@@ -222,7 +220,6 @@ async function fetchFromPool(
   const params = new URLSearchParams();
   params.set('count', count.toString());
   if (system) params.set('system', system);
-  if (systems?.length) params.set('systems', systems.join(','));
   if (category) params.set('category', category);
   if (difficulty) params.set('difficulty', difficulty);
 
@@ -379,7 +376,6 @@ export async function getQuestion(
     const { questions, poolStatus } = await fetchFromPool(
       1,
       system,
-      undefined, // systems (multi-system filter)
       undefined, // category
       poolDifficulty,
       token
@@ -446,60 +442,7 @@ export async function getQuestion(
 }
 
 /**
- * Get enabled systems from localStorage (didactic curriculum filter)
- */
-function getEnabledSystemsFromStorage(): string[] | undefined {
-  if (typeof window === 'undefined') return undefined;
-  try {
-    const saved = localStorage.getItem('panceai_enabled_systems');
-    if (!saved) return undefined;
-    const arr = JSON.parse(saved) as string[];
-    return Array.isArray(arr) && arr.length > 0 ? arr : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * Get active-unit systems from localStorage (80% current / 20% review)
- */
-function getActiveUnitSystemsFromStorage(): string[] | undefined {
-  if (typeof window === 'undefined') return undefined;
-  try {
-    const saved = localStorage.getItem('panceai_active_unit_systems');
-    if (!saved) return undefined;
-    const arr = JSON.parse(saved) as string[];
-    return Array.isArray(arr) && arr.length > 0 ? arr : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * Get year-in-program and current rotation from localStorage (Clinical 60/40)
- */
-function getClinicalContextFromStorage(): {
-  yearInProgram: string | null;
-  currentRotation: string | null;
-} {
-  if (typeof window === 'undefined')
-    return { yearInProgram: null, currentRotation: null };
-  try {
-    const year = localStorage.getItem('panceai_year_in_program');
-    const rotation = localStorage.getItem('panceai_current_rotation');
-    return {
-      yearInProgram: year || null,
-      currentRotation: rotation || null,
-    };
-  } catch {
-    return { yearInProgram: null, currentRotation: null };
-  }
-}
-
-/**
  * Get multiple questions at once (for batch prefetching)
- * When settings.systems is set (or enabled systems in storage for didactic), pool is filtered to those systems.
- * When active-unit systems are set, 80% from active unit and 20% from completed/review.
  */
 export async function getQuestionBatch(
   settings: SessionSettings,
@@ -507,7 +450,7 @@ export async function getQuestionBatch(
   count: number,
   getToken?: () => Promise<string | null>
 ): Promise<Question[]> {
-  const { focus, difficulty, systems: settingsSystems } = settings;
+  const { focus, difficulty } = settings;
 
   const systemMap: Record<string, string> = {
     cardiology: 'CV',
@@ -529,132 +472,13 @@ export async function getQuestionBatch(
   // Fixed at PANCE-level difficulty for standardized practice
   const poolDifficulty = 'PANCE-level';
 
-  // Didactic: use settings.systems or fallback to enabled systems from localStorage
-  const systemsFilter: string[] | undefined = settingsSystems?.length
-    ? settingsSystems
-    : getEnabledSystemsFromStorage();
-
-  // Cumulative review: 80% active unit, 20% completed/review
-  const activeUnit = getActiveUnitSystemsFromStorage();
-  const do80_20 =
-    activeUnit &&
-    activeUnit.length > 0 &&
-    systemsFilter &&
-    systemsFilter.length > 0 &&
-    systemsFilter.some((s) => activeUnit.includes(s));
-  const reviewSystems = do80_20
-    ? systemsFilter!.filter((s) => !activeUnit!.includes(s))
-    : undefined;
-  const activeCount = do80_20 ? Math.max(1, Math.round(count * 0.8)) : count;
-  const reviewCount = do80_20 && reviewSystems?.length ? count - activeCount : 0;
-
-  // Clinical Year 60/40: 60% current rotation topic, 40% background PANCE prep
-  const { yearInProgram, currentRotation } = getClinicalContextFromStorage();
-  const isClinicalRotationMode =
-    yearInProgram === 'Clinical Year' &&
-    currentRotation &&
-    currentRotation.trim().length > 0;
-  const rotationSystems = isClinicalRotationMode
-    ? getSystemsForRotation(currentRotation as import('../types').ClinicalRotation)
-    : undefined;
-  const backgroundSystems =
-    rotationSystems && rotationSystems.length > 0
-      ? ROTATION_ALL_SYSTEMS.filter((s) => !rotationSystems.includes(s))
-      : undefined;
-  const do60_40 =
-    isClinicalRotationMode &&
-    rotationSystems &&
-    rotationSystems.length > 0 &&
-    backgroundSystems &&
-    backgroundSystems.length > 0;
-  const rotationCount = do60_40 ? Math.max(1, Math.round(count * 0.6)) : 0;
-  const backgroundCount = do60_40 ? count - rotationCount : 0;
-
   try {
     // Get auth token if available
     const token = getToken ? await getToken() : null;
 
-    if (do60_40 && backgroundCount > 0) {
-      // Fetch 60% from current rotation systems, 40% from background PANCE; merge and shuffle
-      const [rotationResult, backgroundResult] = await Promise.all([
-        fetchFromPool(
-          rotationCount,
-          undefined,
-          rotationSystems,
-          undefined,
-          poolDifficulty,
-          token
-        ),
-        fetchFromPool(
-          backgroundCount,
-          undefined,
-          backgroundSystems,
-          undefined,
-          poolDifficulty,
-          token
-        ),
-      ]);
-      const combined = [...rotationResult.questions, ...backgroundResult.questions];
-      for (let i = combined.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [combined[i], combined[j]] = [combined[j]!, combined[i]!];
-      }
-      if (combined.length >= count) {
-        cachedPoolStatus = rotationResult.poolStatus;
-        if (rotationResult.poolStatus.needsGeneration) {
-          triggerBackgroundGeneration(
-            undefined,
-            undefined,
-            poolDifficulty,
-            20,
-            token
-          );
-        }
-        return combined.slice(0, count);
-      }
-      const needed = count - combined.length;
-      const fallback = await fetchFromPool(
-        needed,
-        undefined,
-        rotationSystems,
-        undefined,
-        poolDifficulty,
-        token
-      );
-      return [...combined, ...fallback.questions].slice(0, count);
-    }
-
-    if (do80_20 && reviewCount > 0) {
-      // Fetch 80% from active unit, 20% from review systems; merge and shuffle
-      const [activeResult, reviewResult] = await Promise.all([
-        fetchFromPool(activeCount, undefined, activeUnit, undefined, poolDifficulty, token),
-        fetchFromPool(reviewCount, undefined, reviewSystems, undefined, poolDifficulty, token),
-      ]);
-      const combined = [...activeResult.questions, ...reviewResult.questions];
-      for (let i = combined.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [combined[i], combined[j]] = [combined[j]!, combined[i]!];
-      }
-      if (combined.length >= count) {
-        cachedPoolStatus = activeResult.poolStatus;
-        return combined.slice(0, count);
-      }
-      const needed = count - combined.length;
-      const fallback = await fetchFromPool(
-        needed,
-        undefined,
-        systemsFilter,
-        undefined,
-        poolDifficulty,
-        token
-      );
-      return [...combined, ...fallback.questions].slice(0, count);
-    }
-
     const { questions, poolStatus } = await fetchFromPool(
       count,
       system,
-      systemsFilter,
       undefined,
       poolDifficulty,
       token

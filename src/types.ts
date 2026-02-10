@@ -40,16 +40,8 @@ export interface Question {
   /** Optional tags for organization */
   tags?: string[];
   lastReviewedAt?: string; // ISO timestamp
-  /** Task category for Due Cards sibling lookup (e.g. diagnosis, workup, treatment) */
-  taskType?: string;
-  /** Set when question is a sibling for a Due item; used to remove concept from due queue on correct */
-  dueConceptKey?: { conditionId: string; taskType: string | null };
   /** Source of the question (pool, database, ai_fallback) */
   source?: string;
-  /** Content source attribution (e.g. 'openstax') */
-  contentSource?: string;
-  /** Content source title (e.g. book name) */
-  contentSourceTitle?: string;
   /** True when question is from staging lake (beta/peer review) */
   fromStaging?: boolean;
   /** Optional image/ECG/imaging URL for multi-modal questions */
@@ -94,17 +86,7 @@ export interface TopicStats {
 }
 
 export interface SessionSettings {
-  mode?:
-    | 'standard'
-    | 'diagnostic'
-    | 'photo'
-    | 'anatomy'
-    | 'quick-review'
-    | 'custom'
-    | 'core_adaptive'
-    | 'rapid_recall'
-    | 'cram_mode'
-    | 'cram';
+  mode?: 'standard' | 'diagnostic' | 'photo' | 'anatomy' | 'quick-review' | 'custom';
   focus:
     | 'all'
     | 'growth'
@@ -113,28 +95,18 @@ export interface SessionSettings {
     | 'reviewFlagged'
     | 'unseen'
     | 'incorrect'
-    | 'bookmarked'
-    | 'due';
+    | 'bookmarked';
   topic?: string;
   count?: number;
   systems?: string[];
   /** Optional difficulty filter for pool/API (e.g. 'easy', 'medium', 'hard') */
   difficulty?: string;
 
-  /** Core PANCE Simulation only: strict NCCIPA blueprint, no weak-area bias, PANCE-level difficulty */
-  simulationStrict?: boolean;
-
   /** Optional: when present, Gemini should target this specific condition */
   subcategoryName?: string;
 
   /** Optional: when present, Gemini should target this specific condition ID or name */
   conditionName?: string;
-
-  /** Optional time limit in milliseconds - session auto-ends at limit (for time-boxed study) */
-  timeLimit?: number;
-  
-  /** Question count (legacy field name, kept for compatibility with 'count') */
-  questionCount?: number;
 }
 
 // High-level systems (matches your existing tiles + PRO + hidden OTHER)
@@ -194,8 +166,6 @@ export interface UserProfile {
   school?: string;
   graduationDate?: string; // ISO date string
   currentRotation?: ClinicalRotation;
-  /** EOR exam date for current rotation (ISO date); when set, dashboard shows EOR Readiness */
-  eorTestDate?: string;
   yearInProgram?: YearInProgram;
   isCertifiedPA?: boolean;
   hasCompletedOnboarding: boolean;

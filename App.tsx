@@ -66,6 +66,8 @@ import {
   MyPearlsPanel,
   ClinicalEyePage,
   VisualizerPage,
+  LectureConverterPage,
+  TechniqueCheckPage,
 } from './config/lazyComponents';
 import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { useUser, useAuth } from '@clerk/clerk-react';
@@ -964,6 +966,22 @@ const App: React.FC = () => {
               }
             />
             <Route
+              path="/lecture-converter"
+              element={
+                <Suspense fallback={<Loader />}>
+                  <LectureConverterPage onBack={() => navigate('/'))} />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/technique-check"
+              element={
+                <Suspense fallback={<Loader />}>
+                  <TechniqueCheckPage onBack={() => navigate('/'))} />
+                </Suspense>
+              }
+            />
+            <Route
               path="*"
               element={
                 <>
@@ -1191,6 +1209,8 @@ const App: React.FC = () => {
                                 onNavigateToMyLibrary={() => setView('my_library')}
                                 onNavigateToCustomStudy={handleNavigateToCustomStudy}
                                 onNavigateToTutorChat={() => setView('tutor_chat')}
+                                onNavigateToLectureConverter={() => navigate('/lecture-converter')}
+                                onNavigateToTechniqueCheck={() => navigate('/technique-check')}
                                 onNavigateToStudyCompanion={() => setView('study_companion')}
                                 // Canonical FSRS flow is main session (QuizView) MC only; due = variants in same session. SRS Flashcards view hidden.
                                 onNavigateToPearlDeck={() => setView('pearl_deck')}

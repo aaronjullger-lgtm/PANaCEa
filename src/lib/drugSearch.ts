@@ -142,20 +142,15 @@ type ApiDrug = {
 
 /**
  * Map API Drug to DrugEntry format
+ * Transforms database schema to internal search format
  */
 function mapDrugToEntry(drug: ApiDrug): DrugEntry {
-  const drugClassArr = Array.isArray(drug.drugClass)
-    ? drug.drugClass
-    : drug.drugClass
-      ? [drug.drugClass]
-      : [];
-  const mainClass = drugClassArr[0];
-  const subClass = drugClassArr[1];
+  const drugClassArr = Array.isArray(drug.drugClass) ? drug.drugClass : drug.drugClass ? [drug.drugClass] : [];
   return {
     term: drug.genericName ?? drug.name ?? '',
-    type: 'Small Molecule',
-    class: mainClass ?? '',
-    subclass: subClass ?? '',
+    type: 'Small Molecule', // Default
+    class: drugClassArr[0] ?? '',
+    subclass: drugClassArr[1] ?? '',
     MOA: drug.mechanism ?? '',
     ADEs: drug.sideEffects ?? [],
     contraindications: drug.contraindications ?? [],
