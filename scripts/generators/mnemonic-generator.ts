@@ -15,13 +15,13 @@
  *   unset GEMINI_API_KEY && DOTENV_CONFIG_PATH=.env node -r dotenv/config node_modules/.bin/tsx scripts/generators/mnemonic-generator.ts --table=all --batch=20
  */
 
-import { PrismaClient } from '@prisma/client';
+
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const prisma = new PrismaClient();
+import { prisma, disconnectPrisma } from '../helpers/prisma-client';
 
 // Rate limiting
 class TokenBucket {
@@ -74,7 +74,7 @@ async function generateMnemonics(tableName: TableName, record: any): Promise<str
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-pro',
+    model: 'gemini-2.0-flash',
     generationConfig: {
       temperature: 0.3,
       responseMimeType: 'application/json',
@@ -488,7 +488,7 @@ async function main() {
     console.error('Fatal error:', error);
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    await disconnectPrisma();
   }
 }
 

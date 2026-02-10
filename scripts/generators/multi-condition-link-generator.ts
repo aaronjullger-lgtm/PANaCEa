@@ -24,12 +24,11 @@
  *   npx tsx scripts/generators/multi-condition-link-generator.ts --analyze
  */
 
-import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
+import { prisma, disconnectPrisma } from '../helpers/prisma-client';
 
-const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 // Parse CLI args
@@ -147,10 +146,9 @@ async function generateLabLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<LabConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const conditionsList = conditions
-    .slice(0, 50)
     .map((c) => `${c.name} (${c.system})`)
     .join(', ');
 
@@ -263,10 +261,9 @@ async function generateFindingLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<FindingConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const conditionsList = conditions
-    .slice(0, 50)
     .map((c) => `${c.name} (${c.system})`)
     .join(', ');
 
@@ -375,10 +372,9 @@ async function generateProcedureLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<ProcedureConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const conditionsList = conditions
-    .slice(0, 50)
     .map((c) => `${c.name} (${c.system})`)
     .join(', ');
 
@@ -485,10 +481,9 @@ async function generatePhysiologyLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<PhysiologyConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const conditionsList = conditions
-    .slice(0, 50)
     .map((c) => `${c.name} (${c.system})`)
     .join(', ');
 
@@ -591,10 +586,9 @@ async function generateAnatomyLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<AnatomyConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const conditionsList = conditions
-    .slice(0, 50)
     .map((c) => `${c.name} (${c.system})`)
     .join(', ');
 
@@ -698,10 +692,9 @@ async function generateDrugLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<DrugConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const conditionsList = conditions
-    .slice(0, 50)
     .map((c) => `${c.name} (${c.system})`)
     .join(', ');
 
@@ -829,10 +822,9 @@ async function generateTreatmentLinks(
     isFirstLine: boolean;
   }>
 > {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const conditionsList = conditions
-    .slice(0, 50)
     .map((c) => `${c.name} (${c.system})`)
     .join(', ');
 
@@ -983,6 +975,7 @@ async function processLabLinks() {
             data: {
               id: uuidv4(),
               ...link,
+              updatedAt: new Date(),
             } as any,
           });
           existingSet.add(key);
@@ -1043,6 +1036,7 @@ async function processFindingLinks() {
             data: {
               id: uuidv4(),
               ...link,
+              updatedAt: new Date(),
             } as any,
           });
           existingSet.add(key);
@@ -1103,6 +1097,7 @@ async function processProcedureLinks() {
             data: {
               id: uuidv4(),
               ...link,
+              updatedAt: new Date(),
             } as any,
           });
           existingSet.add(key);
@@ -1163,6 +1158,7 @@ async function processPhysiologyLinks() {
             data: {
               id: uuidv4(),
               ...link,
+              updatedAt: new Date(),
             } as any,
           });
           existingSet.add(key);
@@ -1223,6 +1219,7 @@ async function processAnatomyLinks() {
             data: {
               id: uuidv4(),
               ...link,
+              updatedAt: new Date(),
             } as any,
           });
           existingSet.add(key);
@@ -1307,6 +1304,7 @@ async function processDrugLinks() {
                 notes: link.notes,
                 evidenceLevel: link.evidenceLevel,
                 isFirstLine: link.isFirstLine,
+                updatedAt: new Date(),
               } as any,
             });
             existingSet.add(key);
@@ -1389,6 +1387,7 @@ async function processTreatmentLinks() {
                 notes: link.notes,
                 evidenceLevel: link.evidenceLevel,
                 isFirstLine: link.isFirstLine,
+                updatedAt: new Date(),
               } as any,
             });
             existingSet.add(key);
@@ -1468,7 +1467,7 @@ async function main() {
 
   if (ANALYZE) {
     await analyze();
-    await prisma.$disconnect();
+    await disconnectPrisma();
     return;
   }
 
@@ -1493,7 +1492,7 @@ async function main() {
     console.log('   --all        Generate all link types');
     console.log('   --analyze    Show current status');
     console.log('   --dry-run    Preview mode');
-    await prisma.$disconnect();
+    await disconnectPrisma();
     return;
   }
 
@@ -1510,7 +1509,7 @@ async function main() {
   console.log('\n' + '='.repeat(60));
   console.log(`📊 Total links created: ${totalCreated}`);
 
-  await prisma.$disconnect();
+  await disconnectPrisma();
 }
 
 main().catch(console.error);

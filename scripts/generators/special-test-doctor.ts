@@ -761,7 +761,7 @@ async function generateAISpecialTests(
 ): Promise<SpecialTestCandidate[]> {
   const ai = getAI();
   const model = ai.getGenerativeModel({
-    model: 'gemini-2.5-pro',
+    model: 'gemini-2.0-flash',
     generationConfig: {
       temperature: 0.1,
       responseMimeType: 'application/json',

@@ -217,7 +217,7 @@ async function generateGuidelineContent(
   guideline: { name: string; org: string; category: string; year: number },
   retryCount = 0
 ): Promise<GuidelineData | null> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const prompt = `You are a medical education expert. Generate comprehensive clinical practice guideline information for PA/NP students about:
 

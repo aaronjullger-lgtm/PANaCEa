@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const prisma = new PrismaClient();
+import { prisma, disconnectPrisma } from '../helpers/prisma-client';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
 class TokenBucket {
   private tokens: number;
@@ -278,7 +276,7 @@ async function fillMedicalContent() {
   } catch (error) {
     console.error('❌ Fatal error:', error);
   } finally {
-    await prisma.$disconnect();
+    await disconnectPrisma();
   }
 }
 

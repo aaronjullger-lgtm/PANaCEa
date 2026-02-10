@@ -1004,7 +1004,7 @@ async function generateAIPearls(
 ): Promise<PearlCandidate[]> {
   const ai = getAI();
   const model = ai.getGenerativeModel({
-    model: 'gemini-2.5-pro',
+    model: 'gemini-2.0-flash',
     generationConfig: {
       temperature: 0.2,
       responseMimeType: 'application/json',

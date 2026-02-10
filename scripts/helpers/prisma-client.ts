@@ -19,8 +19,8 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
-// Load environment variables
-config();
+// Load environment variables (override ensures .env wins over stale shell vars)
+config({ override: true });
 
 // Use DIRECT_DATABASE_URL for scripts (bypasses Accelerate proxy)
 const directUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;

@@ -17,12 +17,11 @@
  *   npx tsx scripts/generators/condition-link-generator.ts --analyze     # Show current state
  */
 
-import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
+import { prisma, disconnectPrisma } from '../helpers/prisma-client';
 
-const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 // Parse CLI args
@@ -98,10 +97,9 @@ async function generateECGLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<ECGConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const conditionsList = conditions
-    .slice(0, 50)
     .map((c) => `${c.name} (${c.system})`)
     .join(', ');
 
@@ -219,10 +217,9 @@ async function generateImagingLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<ImagingConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const conditionsList = conditions
-    .slice(0, 50)
     .map((c) => `${c.name} (${c.system})`)
     .join(', ');
 
@@ -469,7 +466,8 @@ async function generateECGConditionLinks() {
           data: {
             id: uuidv4(),
             ...link,
-          },
+            updatedAt: new Date(),
+          } as any,
         });
         existingSet.add(key);
         created++;
@@ -582,6 +580,7 @@ async function generateImagingConditionLinks() {
             specificity: link.specificity,
             isFirstLine: link.isFirstLine,
             panceYield: link.panceYield,
+            updatedAt: new Date(),
           } as any,
         });
         existingSet.add(key);
@@ -616,7 +615,7 @@ async function main() {
 
   if (ANALYZE) {
     await analyze();
-    await prisma.$disconnect();
+    await disconnectPrisma();
     return;
   }
 
@@ -628,7 +627,7 @@ async function main() {
     await generateImagingConditionLinks();
   }
 
-  await prisma.$disconnect();
+  await disconnectPrisma();
   console.log('\n✅ Done!');
 }
 

@@ -311,7 +311,7 @@ async function generateDDx(complaint: {
   category: string;
   emergency: boolean;
 }): Promise<DDxData | null> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const prompt = PROMPT_TEMPLATE.replace(/{{COMPLAINT}}/g, complaint.complaint)
     .replace(/{{CATEGORY}}/g, complaint.category)

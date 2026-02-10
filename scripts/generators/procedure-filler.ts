@@ -46,7 +46,7 @@ async function generateContent(procedure: any): Promise<ProcedureContent | null>
   await rateLimiter.consume();
 
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-pro',
+    model: 'gemini-2.0-flash',
     generationConfig: {
       responseMimeType: 'application/json',
       temperature: 0.3,

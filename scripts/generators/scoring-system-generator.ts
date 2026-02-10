@@ -254,7 +254,7 @@ async function generateScoringSystemData(
 ): Promise<ScoringSystemData | null> {
   await rateLimiter.acquire();
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const prompt = `You are a PA/NP educator creating PANCE exam prep content. Generate comprehensive data for the clinical scoring system "${name}" used for "${condition}".
 
