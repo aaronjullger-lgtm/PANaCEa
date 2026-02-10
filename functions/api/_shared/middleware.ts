@@ -298,6 +298,42 @@ export function withAdminRole(): Middleware<AuthenticatedContext> {
   };
 }
 
+/**
+ * Refinery role check - requires approver or admin (for Refinery inbox/action/media)
+ */
+export function withRefineryRole(): Middleware<AuthenticatedContext> {
+  return async (context, next) => {
+    if (!context.auth?.userId) {
+      return { status: 401, error: 'Authentication required' };
+    }
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+    try {
+      const user = await prisma.user.findUnique({
+        where: { clerkId: context.auth.userId },
+        select: { role: true },
+      });
+      const role = (user?.role ?? '').toUpperCase();
+      const allowed = role === 'APPROVER' || role === 'ADMIN' || role === 'SUPERADMIN';
+      if (!user || !allowed) {
+        logger.warn('Non-approver attempted refinery access', {
+          userId: context.auth.userId,
+          path: new URL(context.request.url).pathname,
+        });
+        return { status: 403, error: 'Approver or admin access required' };
+      }
+      return next();
+    } catch (error) {
+      logger.error('Error checking refinery role', {
+        error: error instanceof Error ? error.message : String(error),
+        userId: context.auth.userId,
+      });
+      return { status: 500, error: 'Internal server error' };
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  };
+}
+
 // ============================================================================
 // VALIDATION MIDDLEWARE
 // ============================================================================
@@ -508,6 +544,28 @@ export function adminEndpoint<T>(
     withAdminRole(), // Admin role check added
     withRateLimit({ requestsPerMinute: 30, endpointType: 'admin' }),
     withValidation(schema),
+    withLogging(),
+    handler
+  );
+}
+
+/**
+ * Refinery endpoint stack (approver or admin)
+ * For Refinery inbox, action, media-signed-url.
+ */
+export function refineryEndpoint<T>(
+  schema: z.ZodSchema<T>,
+  handler: Handler<AuthenticatedContext & ValidatedContext<T>>,
+  options?: { source?: 'body' | 'query' | 'params' }
+) {
+  return withMiddleware(
+    withCors(),
+    withErrorHandling(),
+    withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
+    withAuth(),
+    withRefineryRole(),
+    withRateLimit({ requestsPerMinute: 60, endpointType: 'admin', keyPrefix: 'refinery' }),
+    withValidation(schema, options),
     withLogging(),
     handler
   );
