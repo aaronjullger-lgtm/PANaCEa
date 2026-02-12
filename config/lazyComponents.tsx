@@ -5,7 +5,7 @@
 
 import { lazy } from 'react';
 
-export const QuizView = lazy(() => import('../components/session/QuizView'));
+export const QuizViewWithErrorBoundary = lazy(() => import('../components/session/QuizViewWithErrorBoundary'));
 export const MenuView = lazy(() => import('../components/navigation/MenuView'));
 export const PhotoDrillSession = lazy(() => import('../components/session/PhotoDrillSession'));
 export const RapidRecallDrill = lazy(() => import('../components/drill/recall/RapidRecallDrill'));

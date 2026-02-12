@@ -11,8 +11,10 @@ import { type View, pageVariants, DRILL_MODE_IDS } from './config/appViews';
 import { TRAINING_MODES } from './config/training-modes';
 import { KeyboardAccessibilityAudit } from './components/shared/KeyboardAccessibilityAudit';
 import { ContrastRatioAudit } from './components/shared/ContrastRatioAudit';
+import PerformanceMonitor from './components/shared/PerformanceMonitor';
+import PWAInstallPrompt from './components/shared/PWAInstallPrompt';
 import {
-  QuizView,
+  QuizViewWithErrorBoundary,
   MenuView,
   PhotoDrillSession,
   RapidRecallDrill,
@@ -95,6 +97,7 @@ import { useAccessibleTransition } from './hooks/useReducedMotion';
 import { useViewTransition } from './hooks/useViewTransition';
 import { flushPendingToLocalStorage } from './lib/services/sync/offlineSync';
 import { WithGeminiErrorBoundary } from './components/hoc/withGeminiErrorBoundary';
+import { useInitialLoadOptimization } from './services/initialLoadOptimizer';
 import type {
   Question as QuizQuestion,
   PerformanceRecord,
@@ -193,6 +196,9 @@ const App: React.FC = () => {
 
   // Automated FSRS tuning: trigger optimization on sign-in if > 24h since last run
   useFSRSOptimizationCheck();
+
+  // Initial load time optimization and performance monitoring
+  const { report: performanceReport, optimize: optimizeInitialLoad } = useInitialLoadOptimization();
 
   // Theme state for passing to child components
   const [theme, setTheme] = useTheme();
@@ -361,6 +367,24 @@ const App: React.FC = () => {
   useEffect(() => {
     // Start preloading data after initial mount
     preloadData();
+  }, []);
+
+  // ---- Optimize initial load time with performance monitoring ----
+  const performanceReportRef = React.useRef(performanceReport);
+  performanceReportRef.current = performanceReport;
+  useEffect(() => {
+    optimizeInitialLoad();
+    const timer = setTimeout(() => {
+      const report = performanceReportRef.current;
+      if (report.score < 70) {
+        console.warn('[Performance] Initial load needs improvement:', report);
+      } else {
+        console.log('[Performance] Initial load optimized:', report);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+    // Run once on mount; reportRef keeps latest for 5s callback
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ---- Check if user needs onboarding on first sign-in ----
@@ -1309,7 +1333,7 @@ const App: React.FC = () => {
                             >
                               <Suspense fallback={<Loader message="Loading session…" />}>
                                 <BehavioralTrackerProvider>
-                                <QuizView
+                                <QuizViewWithErrorBoundary
                                   initialQueue={questionQueue}
                                   setParentQueue={setQuestionQueue}
                                   addPerformanceRecord={addPerformanceRecord}
@@ -2075,8 +2099,18 @@ const App: React.FC = () => {
             <>
               <KeyboardAccessibilityAudit defaultOpen={false} />
               <ContrastRatioAudit defaultOpen={false} />
+              <PerformanceMonitor defaultOpen={false} />
             </>
           )}
+
+          {/* PWA Install Prompt (Shows in production too) */}
+          <PWAInstallPrompt
+            delay={15000}
+            minSessionDuration={30000}
+            showOfflineFeatures={true}
+            onInstall={() => console.log('PWA installed successfully')}
+            onDismiss={() => console.log('PWA prompt dismissed')}
+          />
         </div>
         </CommuterProvider>
       </ToastProvider>

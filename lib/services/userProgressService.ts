@@ -52,6 +52,7 @@ export async function updateUserProgressWithHistory(
         });
         const totalAttempts = (row?.totalAttempts ?? 0) + 1;
         const correctCount = (row?.correctCount ?? 0) + (accuracy >= 0.7 ? 1 : 0);
+        const now = new Date();
         await prisma.userProgress.update({
           where: { userId_conditionId: { userId, conditionId } },
           data: {
@@ -68,8 +69,9 @@ export async function updateUserProgressWithHistory(
             totalAttempts,
             correctCount,
             accuracy: totalAttempts > 0 ? correctCount / totalAttempts : 0,
-            lastReviewAt: new Date(),
-            nextReviewAt: new Date(Date.now() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000),
+            lastReviewAt: now,
+            nextReviewAt: new Date(now.getTime() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000),
+            updatedAt: now,
           },
         });
         return;
@@ -96,48 +98,66 @@ export async function updateUserProgressWithHistory(
   const correctCount = (existing?.correctCount ?? 0) + (accuracy >= 0.7 ? 1 : 0);
   const newAccuracy = totalAttempts > 0 ? correctCount / totalAttempts : 0;
 
-  await prisma.userProgress.upsert({
-    where: { userId_conditionId: { userId, conditionId } },
-    update: {
-      fsrsCard: {
-        stability: fsrsCard.stability,
-        difficulty: fsrsCard.difficulty,
-        state: fsrsCard.state,
-        elapsed_days: fsrsCard.elapsed_days,
-        scheduled_days: fsrsCard.scheduled_days,
-        reps: fsrsCard.reps,
-        lapses: fsrsCard.lapses,
-        last_review: fsrsCard.last_review.toISOString(),
+  const now = new Date();
+  const nextReviewDate = new Date(now.getTime() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000);
+  
+  try {
+    await prisma.userProgress.upsert({
+      where: { userId_conditionId: { userId, conditionId } },
+      update: {
+        fsrsCard: {
+          stability: fsrsCard.stability,
+          difficulty: fsrsCard.difficulty,
+          state: fsrsCard.state,
+          elapsed_days: fsrsCard.elapsed_days,
+          scheduled_days: fsrsCard.scheduled_days,
+          reps: fsrsCard.reps,
+          lapses: fsrsCard.lapses,
+          last_review: fsrsCard.last_review.toISOString(),
+        },
+        reviewHistory,
+        totalAttempts,
+        correctCount,
+        accuracy: newAccuracy,
+        lastReviewAt: now,
+        nextReviewAt: nextReviewDate,
+        updatedAt: now,
       },
-      reviewHistory,
-      totalAttempts,
-      correctCount,
-      accuracy: newAccuracy,
-      lastReviewAt: new Date(),
-      nextReviewAt: new Date(Date.now() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000),
-    },
-    create: {
-      id: crypto.randomUUID(),
-      userId,
-      conditionId,
-      fsrsCard: {
-        stability: fsrsCard.stability,
-        difficulty: fsrsCard.difficulty,
-        state: fsrsCard.state,
-        elapsed_days: fsrsCard.elapsed_days,
-        scheduled_days: fsrsCard.scheduled_days,
-        reps: fsrsCard.reps,
-        lapses: fsrsCard.lapses,
-        last_review: fsrsCard.last_review.toISOString(),
+      create: {
+        id: crypto.randomUUID(),
+        userId,
+        conditionId,
+        fsrsCard: {
+          stability: fsrsCard.stability,
+          difficulty: fsrsCard.difficulty,
+          state: fsrsCard.state,
+          elapsed_days: fsrsCard.elapsed_days,
+          scheduled_days: fsrsCard.scheduled_days,
+          reps: fsrsCard.reps,
+          lapses: fsrsCard.lapses,
+          last_review: fsrsCard.last_review.toISOString(),
+        },
+        reviewHistory,
+        totalAttempts,
+        correctCount,
+        accuracy: newAccuracy,
+        lastReviewAt: now,
+        nextReviewAt: nextReviewDate,
+        createdAt: now,
+        updatedAt: now,
       },
-      reviewHistory,
-      totalAttempts,
-      correctCount,
-      accuracy: newAccuracy,
-      lastReviewAt: new Date(),
-      nextReviewAt: new Date(Date.now() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000),
-    },
-  });
+    });
+  } catch (error: any) {
+    // Check if it's a foreign key constraint error
+    if (error.code === 'P2003' || error.code === 'P2002') {
+      // Log the error but don't throw - this allows the review to continue
+      // even if UserProgress can't be created due to missing user/condition
+      console.warn(`Failed to create/update UserProgress for user ${userId}, condition ${conditionId}:`, error.message);
+      return;
+    }
+    // Re-throw other errors
+    throw error;
+  }
 }
 
 /**

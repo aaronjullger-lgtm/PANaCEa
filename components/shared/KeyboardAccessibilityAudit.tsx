@@ -20,7 +20,7 @@ import {
   Zap, 
   ArrowRight,
   Focus,
-  Tab,
+  Indent,
   Command,
   X
 } from 'lucide-react';
@@ -530,7 +530,7 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
                       <div className="p-3 rounded-lg bg-[var(--color-bg-tertiary)]">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <Tab className="w-4 h-4" />
+                            <Indent className="w-4 h-4" />
                             <span className="font-medium">Tab Order</span>
                           </div>
                           <button

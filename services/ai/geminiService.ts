@@ -412,9 +412,14 @@ export async function callGeminiText(
   modelName: string = 'gemini-2.5-flash',
   prompt: string,
   temperature: number = 0.8,
-  options: { maxRetries?: number; getToken?: () => Promise<string | null> } = {}
+  options: {
+    maxRetries?: number;
+    getToken?: () => Promise<string | null>;
+    /** Override default maxOutputTokens (proxy default 2048). Use 8192+ for long JSON (e.g. question generation). */
+    maxTokens?: number;
+  } = {}
 ): Promise<string> {
-  const { maxRetries = 2, getToken } = options;
+  const { maxRetries = 2, getToken, maxTokens } = options;
 
   const isTestEnv =
     typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
@@ -448,10 +453,14 @@ export async function callGeminiText(
         headers['Authorization'] = `Bearer ${authToken}`;
       }
 
+      const body: Record<string, unknown> = { modelName, prompt, temperature };
+      if (typeof maxTokens === 'number' && maxTokens > 0) {
+        body.maxTokens = maxTokens;
+      }
       const response = await fetch(getApiEndpoint(API_ENDPOINTS.GEMINI_PROXY), {
         method: 'POST',
         headers,
-        body: JSON.stringify({ modelName, prompt, temperature }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -1306,7 +1315,8 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   }
 
   try {
-    const rawText = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.8);
+    // Use 8192 tokens for question JSON (vignette + options + rationale + pearls) to avoid truncation
+    const rawText = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.8, { maxTokens: 8192 });
 
     const trimmed = sanitizeGeminiJsonString(rawText);
 
