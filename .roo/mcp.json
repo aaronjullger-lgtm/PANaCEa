@@ -1,0 +1,46 @@
+{
+	"mcpServers": {
+		"git": {
+			"command": "uvx",
+			"args": [
+				"mcp-server-git",
+				"--repository",
+				"/Users/aaronullger/GitHub"
+			],
+			"disabled": true,
+			"alwaysAllow": []
+		},
+		"sqlite": {
+			"command": "uvx",
+			"args": [
+				"mcp-server-sqlite",
+				"--db-path",
+				"/Users/aaronullger/GitHub"
+			],
+			"disabled": true,
+			"alwaysAllow": []
+		},
+		"postgres": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-postgres",
+				"postgresql://postgres:!(PANCE123)!@db.lzfescdrpezzjhgveotz.supabase.co:5432/postgres"
+			],
+			"disabled": true,
+			"alwaysAllow": []
+		},
+		"gdrive": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-gdrive"
+			],
+			"env": {
+				"GDRIVE_CREDENTIALS_PATH": "/Users/aaronullger/GitHub/StudyPANaCEa"
+			},
+			"disabled": true,
+			"alwaysAllow": []
+		}
+	}
+}

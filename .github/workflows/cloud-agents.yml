@@ -1,0 +1,267 @@
+# Cloud Agents: trigger Cursor Cloud Agents from CI based on changed paths.
+# Requires GitHub secret: CURSOR_AGENTS_API_KEY (from Cursor Dashboard).
+# See docs/automation/CLOUD_AGENTS_API.md.
+
+name: Cloud Agents
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    # Security sentinel: nightly (optional; set PACKAGE_* when triggered by Dependabot)
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      agent_job:
+        description: "Agent job (edge-guard, living-docs, asset-perf, schema-sync, e2e-gap, pr-review, security-sentinel, lint-fix)"
+        required: true
+        default: "pr-review"
+
+env:
+  NODE_VERSION: 22
+
+jobs:
+  # Determine which path sets changed (for PR/push).
+  path-filter:
+    name: Path filter
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    outputs:
+      functions: ${{ steps.filter.outputs.functions }}
+      functions_api: ${{ steps.filter.outputs.functions_api }}
+      assets: ${{ steps.filter.outputs.assets }}
+      schema_config: ${{ steps.filter.outputs.schema_config }}
+      e2e_scope: ${{ steps.filter.outputs.e2e_scope }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            functions:
+              - 'functions/**'
+            functions_api:
+              - 'functions/api/**'
+              - 'lib/prisma.ts'
+              - 'functions/api/_shared/**'
+            assets:
+              - 'public/**'
+              - '**/*.css'
+              - 'App.tsx'
+              - 'components/**'
+            schema_config:
+              - 'prisma/schema.prisma'
+              - 'scripts/db/**'
+              - 'scripts/automation/**'
+              - 'config/conditionRegistry.ts'
+              - 'config/training-modes.ts'
+            e2e_scope:
+              - 'components/modes/**'
+              - 'components/session/**'
+              - 'functions/api/**'
+
+  # Get changed files list (for agent instructions).
+  changed-files:
+    name: Changed files
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    outputs:
+      list: ${{ steps.files.outputs.list }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: List changed files
+        id: files
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            LIST=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} 2>/dev/null || true)
+          else
+            LIST=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- . 2>/dev/null || true)
+          fi
+          echo "list<<EOF" >> $GITHUB_OUTPUT
+          echo "$LIST" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  # ---------- Agent: Edge / Prisma compliance (functions/**)
+  agent-edge-guard:
+    name: Agent – Edge/Prisma Guard
+    runs-on: ubuntu-latest
+    needs: [path-filter, changed-files]
+    if: |
+      (github.event_name == 'pull_request' || github.event_name == 'push') &&
+      needs.path-filter.outputs.functions == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - name: Launch Edge/Prisma compliance agent
+        env:
+          CURSOR_AGENTS_API_KEY: ${{ secrets.CURSOR_AGENTS_API_KEY }}
+          AGENT_JOB: edge-guard
+          CHANGED_FILES: ${{ needs.changed-files.outputs.list }}
+        run: npx tsx scripts/cloud-agents/run-from-ci.ts
+
+  # ---------- Agent: Living documentation (functions/api/**)
+  agent-living-docs:
+    name: Agent – Living Docs
+    runs-on: ubuntu-latest
+    needs: [path-filter, changed-files]
+    if: |
+      (github.event_name == 'pull_request' || github.event_name == 'push') &&
+      needs.path-filter.outputs.functions_api == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - name: Launch Living Docs agent
+        env:
+          CURSOR_AGENTS_API_KEY: ${{ secrets.CURSOR_AGENTS_API_KEY }}
+          AGENT_JOB: living-docs
+          CHANGED_FILES: ${{ needs.changed-files.outputs.list }}
+        run: npx tsx scripts/cloud-agents/run-from-ci.ts
+
+  # ---------- Agent: Asset & performance (public, css, components)
+  agent-asset-perf:
+    name: Agent – Asset/Perf
+    runs-on: ubuntu-latest
+    needs: [path-filter, changed-files]
+    if: |
+      (github.event_name == 'pull_request' || github.event_name == 'push') &&
+      needs.path-filter.outputs.assets == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - name: Launch Asset/Perf agent
+        env:
+          CURSOR_AGENTS_API_KEY: ${{ secrets.CURSOR_AGENTS_API_KEY }}
+          AGENT_JOB: asset-perf
+          CHANGED_FILES: ${{ needs.changed-files.outputs.list }}
+        run: npx tsx scripts/cloud-agents/run-from-ci.ts
+
+  # ---------- Agent: Content & schema sync
+  agent-schema-sync:
+    name: Agent – Schema Sync
+    runs-on: ubuntu-latest
+    needs: [path-filter, changed-files]
+    if: |
+      (github.event_name == 'pull_request' || github.event_name == 'push') &&
+      needs.path-filter.outputs.schema_config == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - name: Launch Schema Sync agent
+        env:
+          CURSOR_AGENTS_API_KEY: ${{ secrets.CURSOR_AGENTS_API_KEY }}
+          AGENT_JOB: schema-sync
+          CHANGED_FILES: ${{ needs.changed-files.outputs.list }}
+        run: npx tsx scripts/cloud-agents/run-from-ci.ts
+
+  # ---------- Agent: E2E / test gap filler
+  agent-e2e-gap:
+    name: Agent – E2E Gap
+    runs-on: ubuntu-latest
+    needs: [path-filter, changed-files]
+    if: |
+      (github.event_name == 'pull_request' || github.event_name == 'push') &&
+      needs.path-filter.outputs.e2e_scope == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - name: Launch E2E Gap agent
+        env:
+          CURSOR_AGENTS_API_KEY: ${{ secrets.CURSOR_AGENTS_API_KEY }}
+          AGENT_JOB: e2e-gap
+          CHANGED_FILES: ${{ needs.changed-files.outputs.list }}
+        run: npx tsx scripts/cloud-agents/run-from-ci.ts
+
+  # ---------- Agent: PR review (on any PR)
+  agent-pr-review:
+    name: Agent – PR Review
+    runs-on: ubuntu-latest
+    needs: [changed-files]
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - name: Launch PR Review agent
+        env:
+          CURSOR_AGENTS_API_KEY: ${{ secrets.CURSOR_AGENTS_API_KEY }}
+          AGENT_JOB: pr-review
+          CHANGED_FILES: ${{ needs.changed-files.outputs.list }}
+        run: npx tsx scripts/cloud-agents/run-from-ci.ts
+
+  # ---------- Agent: Security sentinel (nightly schedule; for manual use agent_job=security-sentinel)
+  agent-security-sentinel:
+    name: Agent – Security Sentinel
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - name: Launch Security Sentinel agent
+        env:
+          CURSOR_AGENTS_API_KEY: ${{ secrets.CURSOR_AGENTS_API_KEY }}
+          AGENT_JOB: security-sentinel
+          PACKAGE_NAME: ${{ github.event.inputs.package_name || env.PACKAGE_NAME }}
+          PACKAGE_VERSION: ${{ github.event.inputs.package_version || env.PACKAGE_VERSION }}
+          ADVISORY_URL: ${{ github.event.inputs.advisory_url || env.ADVISORY_URL }}
+        run: npx tsx scripts/cloud-agents/run-from-ci.ts
+
+  # ---------- Manual dispatch: run any job by name
+  agent-manual:
+    name: Agent – Manual
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.agent_job != ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+      - run: npm ci
+      - name: List changed files for manual run
+        id: changed
+        run: |
+          LIST=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo ".")
+          echo "list<<EOF" >> $GITHUB_OUTPUT
+          echo "$LIST" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Launch agent (${{ github.event.inputs.agent_job }})
+        env:
+          CURSOR_AGENTS_API_KEY: ${{ secrets.CURSOR_AGENTS_API_KEY }}
+          AGENT_JOB: ${{ github.event.inputs.agent_job }}
+          CHANGED_FILES: ${{ steps.changed.outputs.list }}
+        run: npx tsx scripts/cloud-agents/run-from-ci.ts

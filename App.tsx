@@ -2,13 +2,15 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, X, Shield } from 'lucide-react';
+import { Settings, X, Shield, User } from 'lucide-react';
 import { ROUTES } from './config/routes';
 import { NavRail } from './components/layout/NavRail';
 import { AppBrand } from './components/layout/AppBrand';
 import { PageContainer } from './components/layout/PageContainer';
 import { type View, pageVariants, DRILL_MODE_IDS } from './config/appViews';
 import { TRAINING_MODES } from './config/training-modes';
+import { KeyboardAccessibilityAudit } from './components/shared/KeyboardAccessibilityAudit';
+import { ContrastRatioAudit } from './components/shared/ContrastRatioAudit';
 import {
   QuizView,
   MenuView,
@@ -72,10 +74,13 @@ import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { setGeminiAuthProvider } from '@/services/ai/geminiService';
 import { useFSRSOptimizationCheck } from './hooks/useFSRSOptimizationCheck';
+import { useEnhancedAuth } from './hooks/useEnhancedAuth';
 import { Toaster } from 'sonner';
+import EnhancedLoader from './components/loading/EnhancedLoader';
 import Loader from './components/loading/Loader';
 import { CommandCenterSkeleton } from './components/loading';
 import { DrillLoadingState } from './components/drill/DrillLoadingState';
+import { EnhancedErrorMessage } from './components/shared/EnhancedErrorMessage';
 import ThemeToggleButton from './components/ui/ThemeToggleButton';
 import { MasteryHeatmapToggle } from './components/ui/MasteryHeatmapToggle';
 import { useTheme } from './hooks/useTheme';
@@ -163,17 +168,28 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check authentication status
+  // Check authentication status with enhanced timeout and error handling
   const { isSignedIn, isLoaded: authLoaded } = useUser();
   const { getToken } = useAuth();
+  const {
+    isLoading: authIsLoading,
+    error: authError,
+    hasTimedOut: authHasTimedOut,
+    isGuestMode,
+    retryAuth,
+    enterGuestMode
+  } = useEnhancedAuth();
 
   // Register Clerk auth provider for Gemini API calls so all callGeminiText
   // requests automatically include the Authorization header
   useEffect(() => {
-    if (getToken) {
+    if (getToken && !isGuestMode) {
       setGeminiAuthProvider(getToken);
+    } else if (isGuestMode) {
+      // Set a mock auth provider for guest mode
+      setGeminiAuthProvider(async () => 'guest-mode-token');
     }
-  }, [getToken]);
+  }, [getToken, isGuestMode]);
 
   // Automated FSRS tuning: trigger optimization on sign-in if > 24h since last run
   useFSRSOptimizationCheck();
@@ -913,21 +929,20 @@ const App: React.FC = () => {
     ease: [0.32, 0.72, 0, 1] as const, // Snappy ease-out
   });
 
-  // Show loading state while checking auth
-  if (!authLoaded) {
-    return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center">
-        <Loader />
-      </div>
-    );
+  // Show enhanced loading state while checking auth (with timeout and guest mode)
+  if (authIsLoading || (!authLoaded && !isGuestMode)) {
+    return <EnhancedLoader isAuthLoading={true} />;
   }
 
-  // Show landing page for unauthenticated users
-  if (!isSignedIn) {
+  // Show landing page for unauthenticated users (not in guest mode)
+  if (!isSignedIn && !isGuestMode) {
     return <LandingPage />;
   }
 
-  // Main authenticated app
+  // If we're in guest mode, show a guest mode banner
+  const showGuestModeBanner = isGuestMode;
+
+  // Main authenticated app (or guest mode)
   return (
     <SystemIntegrationProvider>
       <ToastProvider>
@@ -943,6 +958,26 @@ const App: React.FC = () => {
           }}
         />
         <div className="min-h-screen bg-[var(--color-canvas,#F8FAFC)] dark:bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+          {/* Guest mode banner */}
+          {showGuestModeBanner && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
+              <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <User className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <span className="text-sm text-amber-800 dark:text-amber-300">
+                    You're in <strong>Guest Mode</strong>. Some features are limited.
+                  </span>
+                </div>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 underline"
+                >
+                  Try signing in again
+                </button>
+              </div>
+            </div>
+          )}
+          
           {/* Loading Progress Bar */}
           <LoadingProgress isLoading={isLoading} />
 
@@ -1157,22 +1192,16 @@ const App: React.FC = () => {
                           />
                         ))}
                       {error && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="mb-4 p-3 rounded-md bg-data-fail/10 text-data-fail text-sm border border-data-fail/30 flex items-center justify-between gap-3"
-                          role="alert"
-                          aria-live="assertive"
-                        >
-                          <span>{error}</span>
-                          <button
-                            type="button"
-                            onClick={() => setError(null)}
-                            className="flex-shrink-0 px-3 py-1 rounded-md bg-data-fail/20 hover:bg-data-fail/30 text-data-fail font-medium"
-                          >
-                            Dismiss
-                          </button>
-                        </motion.div>
+                        <EnhancedErrorMessage
+                          title="Session Error"
+                          description={error}
+                          severity="error"
+                          category="system"
+                          dismissible
+                          onDismiss={() => setError(null)}
+                          showRetry={false}
+                          className="mb-4"
+                        />
                       )}
 
                       {/* Removed mode="wait" to allow overlapping transitions for faster perceived navigation */}
@@ -2040,6 +2069,14 @@ const App: React.FC = () => {
               }
             />
           </Routes>
+
+          {/* Accessibility Audit Components (Development Tools) */}
+          {process.env.NODE_ENV === 'development' && (
+            <>
+              <KeyboardAccessibilityAudit defaultOpen={false} />
+              <ContrastRatioAudit defaultOpen={false} />
+            </>
+          )}
         </div>
         </CommuterProvider>
       </ToastProvider>

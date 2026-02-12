@@ -375,9 +375,10 @@ a,
   --color-border: #e2e8f0;
   --color-border-light: #f1f5f9;
   --chart-grid-stroke: rgba(15, 23, 42, 0.08);
-  --color-accent: #9a8f72; /* Same gold family */
-  --color-accent-hover: #8a7f62;
+  --color-accent: #7a6f52; /* Darker gold for better contrast — 4.8:1 with bg-primary (WCAG AA) */
+  --color-accent-hover: #6a5f42;
   --color-accent-button: #7B6C4F; /* Darker gold for buttons — 4.6:1 contrast with white (WCAG AA) */
+  --color-accent-border: #9a8f72; /* Lighter gold for borders to improve contrast */
   --color-accent-secondary: #728ba6; /* Steel blue - charts, secondary CTAs */
   --color-accent-light: #f5f2ec;
   --color-overlay: rgba(15, 23, 42, 0.5);
@@ -396,7 +397,7 @@ a,
   --color-card-bg: #ffffff;
 
   /* Semantic data colors - same hue family as dark, darker for light bg contrast */
-  --color-data-pass: #0d9488;   /* teal-600 */
+  --color-data-pass: #0a766c;   /* teal-700 - improved contrast 5.1:1 (WCAG AA) */
   --color-data-fail: #b91c1c;   /* red-700 */
   --color-data-provisional: #b45309; /* amber-700 */
 
@@ -405,8 +406,8 @@ a,
   --content-primary-on-canvas: var(--color-text-primary);
 
   /* ===== MUTED SEMANTIC CATEGORY ACCENTS ===== */
-  --color-category-visual: #a67f7f; /* Dusty Rose */
-  --color-category-simulation: #9a7f9a; /* Deep Plum */
+  --color-category-visual: #8c6666; /* Dusty Rose 600 - improved contrast 4.8:1 (WCAG AA) */
+  --color-category-simulation: #806680; /* Deep Plum 600 - improved contrast 5.1:1 (WCAG AA) */
   --color-category-practice: #728ba6; /* Steel Blue */
   --color-category-specialty: #b39b6c; /* Muted Amber */
   --color-category-toolkit: #7a8f6e; /* Sage */
@@ -448,6 +449,48 @@ a,
   --clinical-glow-blue: rgba(59, 130, 246, 0.2); /* blue-500/20 */
   --clinical-glow-accent: rgba(59, 130, 246, 0.3); /* blue-500/30 */
   --clinical-shadow-strong: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+
+  /* ===== SPACING SYSTEM VARIABLES ===== */
+  /* Base unit: 4px (0.25rem) */
+  --spacing-base: 4px;
+  
+  /* Numeric scale (multiples of 4px) */
+  --spacing-0: 0px;
+  --spacing-1: 4px;    /* 0.25rem */
+  --spacing-2: 8px;    /* 0.5rem */
+  --spacing-3: 12px;   /* 0.75rem */
+  --spacing-4: 16px;   /* 1rem */
+  --spacing-5: 20px;   /* 1.25rem */
+  --spacing-6: 24px;   /* 1.5rem */
+  --spacing-8: 32px;   /* 2rem */
+  --spacing-10: 40px;  /* 2.5rem */
+  --spacing-12: 48px;  /* 3rem */
+  --spacing-16: 64px;  /* 4rem */
+  --spacing-20: 80px;  /* 5rem */
+  --spacing-24: 96px;  /* 6rem */
+  --spacing-32: 128px; /* 8rem */
+  
+  /* Semantic spacing tokens */
+  --spacing-container-padding: 16px;
+  --spacing-container-padding-mobile: 12px;
+  --spacing-section-vertical: 48px;
+  --spacing-section-vertical-mobile: 32px;
+  --spacing-card-padding: 20px;
+  --spacing-card-padding-mobile: 16px;
+  --spacing-card-gap: 16px;
+  --spacing-form-field-gap: 12px;
+  --spacing-button-padding-x: 16px;
+  --spacing-button-padding-y: 10px;
+  --spacing-button-icon-gap: 8px;
+  --spacing-nav-bar-height: 64px;
+  --spacing-nav-bar-height-mobile: 56px;
+  --spacing-grid-gap: 24px;
+  --spacing-grid-gap-mobile: 16px;
+  
+  /* Accessibility spacing */
+  --spacing-min-touch-target: 44px;
+  --spacing-focus-ring-offset: 2px;
+  --spacing-focus-ring-width: 2px;
 }
 
 .dark {
@@ -498,7 +541,8 @@ a,
   --chart-grid-stroke: rgba(71, 85, 105, 0.2);
   --color-accent: #a89b7a; /* Same gold family */
   --color-accent-hover: #b8ab8a;
-  --color-accent-button: #7B6C4F; /* Same darker gold for buttons in dark mode — consistent CTA contrast */
+  --color-accent-button: #7a6f52; /* Darker gold for better text contrast (WCAG AA) */
+  --color-accent-border: #c4b78a; /* Lighter gold for borders to improve visibility */
   --color-accent-secondary: #91a6bd; /* Steel blue (lighter) - charts, secondary CTAs */
   --color-accent-light: #1e293b;
   --color-text-inverse: #f8fafc;

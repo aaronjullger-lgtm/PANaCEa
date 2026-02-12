@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { useCommuter } from '@/contexts/CommuterContext';
 import { SidebarItem } from '@/components/layout/SidebarItem';
+import { InfoTooltipWrapper } from '@/components/shared/TooltipWrapper';
+import { KeyboardShortcutTooltip } from '@/components/shared/KeyboardShortcutTooltip';
 
 export interface QuickActionItem {
   id: string;
@@ -228,6 +230,45 @@ export const NavRail: React.FC<NavRailProps> = ({
   const renderItem = (item: QuickActionItem) => {
     const isActive = item.href ? isPathActive(item.href, pathname, search) : false;
 
+    // Create the SidebarItem component
+    const sidebarItem = item.href ? (
+      <SidebarItem
+        as="span"
+        label={item.label}
+        icon={item.icon}
+        active={isActive}
+        collapsed={collapsed}
+        iconVariant="box"
+        aria-current={isActive ? 'page' : undefined}
+        aria-label={item.label}
+      />
+    ) : (
+      <SidebarItem
+        as="button"
+        label={item.label}
+        icon={item.icon}
+        active={false}
+        collapsed={collapsed}
+        iconVariant="box"
+        onClick={item.onClick}
+        aria-label={item.label}
+      />
+    );
+
+    // Wrap with tooltip if collapsed
+    const wrappedItem = collapsed ? (
+      <InfoTooltipWrapper
+        content={item.label}
+        position="right"
+        className="w-full"
+        ariaLabel={item.label}
+      >
+        {sidebarItem}
+      </InfoTooltipWrapper>
+    ) : (
+      sidebarItem
+    );
+
     if (item.href) {
       return (
         <li key={item.id}>
@@ -253,33 +294,16 @@ export const NavRail: React.FC<NavRailProps> = ({
             <span
               className={`relative z-10 flex items-center justify-center ${collapsed ? 'w-10 shrink-0' : 'w-full'}`}
             >
-              <SidebarItem
-                as="span"
-                label={item.label}
-                icon={item.icon}
-                active={isActive}
-                collapsed={collapsed}
-                iconVariant="box"
-                aria-current={isActive ? 'page' : undefined}
-                aria-label={item.label}
-              />
+              {wrappedItem}
             </span>
           </Link>
         </li>
       );
     }
+    
     return (
       <li key={item.id}>
-        <SidebarItem
-          as="button"
-          label={item.label}
-          icon={item.icon}
-          active={false}
-          collapsed={collapsed}
-          iconVariant="box"
-          onClick={item.onClick}
-          aria-label={item.label}
-        />
+        {wrappedItem}
       </li>
     );
   };

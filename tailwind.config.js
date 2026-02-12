@@ -178,7 +178,7 @@ export default {
           'secondary-hover': '#475569', // Slate 600
         },
         data: {
-          pass: '#14b8a6', // Teal 500 - success/passing
+          pass: '#0a766c', // Teal 700 - success/passing (improved contrast for light mode)
           fail: '#ef4444', // Red 500 - failure/errors
           provisional: '#f59e0b', // Amber 500 - building/uncertain
           neutral: '#64748b', // Slate 500 - baseline
@@ -217,8 +217,8 @@ export default {
           '--color-text-secondary': '#334155',
           '--color-text-muted': '#64748b',
           '--color-border': '#e2e8f0',
-          '--color-accent': '#0f172a',
-          '--color-accent-hover': '#1e293b',
+          '--color-accent': '#7a6f52', // Updated to match new darker gold
+          '--color-accent-hover': '#6a5f42',
           filter: 'grayscale(100%) contrast(1.12)',
           colorScheme: 'light',
         },

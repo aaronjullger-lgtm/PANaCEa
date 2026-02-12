@@ -1,0 +1,241 @@
+/**
+ * Enhanced Authentication Hook with Timeout & Error Handling
+ * Provides graceful degradation when Clerk authentication fails or times out
+ */
+
+import { useEffect, useState, useCallback } from 'react';
+import { useUser, useAuth } from '@clerk/clerk-react';
+import {
+  isGuestModeActive,
+  enableGuestMode,
+  exitGuestMode,
+  shouldOfferGuestMode as checkShouldOfferGuestMode,
+  recordAuthFailure,
+  clearAuthFailures,
+  getGuestModeTimeRemaining
+} from '@/services/auth/guestAuth';
+
+interface EnhancedAuthResult {
+  /** Clerk's authentication loaded state */
+  authLoaded: boolean;
+  /** Clerk's signed in state */
+  isSignedIn: boolean;
+  /** Enhanced loading state with timeout detection */
+  isLoading: boolean;
+  /** Error message if authentication failed */
+  error: string | null;
+  /** Time elapsed since authentication started (ms) */
+  elapsedTime: number;
+  /** Whether authentication has timed out */
+  hasTimedOut: boolean;
+  /** Function to retry authentication */
+  retryAuth: () => void;
+  /** Function to enter guest/demo mode */
+  enterGuestMode: () => void;
+  /** Whether guest mode is active */
+  isGuestMode: boolean;
+  /** Time remaining in guest mode (minutes) */
+  guestTimeRemaining: number;
+  /** Whether guest mode should be offered */
+  shouldOfferGuestMode: boolean;
+}
+
+const AUTH_TIMEOUT_MS = 15000; // 15 seconds
+const AUTH_RETRY_COUNT_KEY = 'pance-auth-retry-count';
+const MAX_RETRIES = 3;
+
+/**
+ * Enhanced authentication hook with timeout, error handling, and guest mode fallback
+ */
+export function useEnhancedAuth(): EnhancedAuthResult {
+  const { isLoaded: clerkLoaded, isSignedIn } = useUser();
+  const { getToken } = useAuth();
+  
+  const [error, setError] = useState<string | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
+  const [isGuestMode, setIsGuestMode] = useState(false);
+  const [guestTimeRemaining, setGuestTimeRemaining] = useState(0);
+  const [retryCount, setRetryCount] = useState(() => {
+    const stored = localStorage.getItem(AUTH_RETRY_COUNT_KEY);
+    return stored ? parseInt(stored, 10) : 0;
+  });
+
+  // Check for existing guest mode on mount
+  useEffect(() => {
+    const guestActive = isGuestModeActive();
+    setIsGuestMode(guestActive);
+    if (guestActive) {
+      setGuestTimeRemaining(getGuestModeTimeRemaining());
+      console.log('[Auth] Guest mode restored, time remaining:', getGuestModeTimeRemaining(), 'minutes');
+    }
+  }, []);
+
+  // Timer for authentication timeout
+  useEffect(() => {
+    if (clerkLoaded || isGuestMode) {
+      setElapsedTime(0);
+      setHasTimedOut(false);
+      return;
+    }
+
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      const currentElapsed = Date.now() - startTime;
+      setElapsedTime(currentElapsed);
+
+      if (currentElapsed > AUTH_TIMEOUT_MS) {
+        setHasTimedOut(true);
+        setError('Authentication is taking longer than expected. You can try guest mode or check your connection.');
+        recordAuthFailure(); // Record this as an auth failure
+        clearInterval(interval);
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [clerkLoaded, isGuestMode]);
+
+  // Update guest mode time remaining
+  useEffect(() => {
+    if (!isGuestMode) return;
+    
+    const interval = setInterval(() => {
+      setGuestTimeRemaining(getGuestModeTimeRemaining());
+    }, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
+  }, [isGuestMode]);
+
+  // Monitor for authentication errors
+  useEffect(() => {
+    if (!clerkLoaded && elapsedTime > 5000) {
+      // Check for common Clerk errors
+      const checkClerkErrors = () => {
+        // Check if Clerk script loaded
+        const clerkScript = document.querySelector('script[src*="clerk"]');
+        if (!clerkScript) {
+          setError('Authentication service not loaded. Please check your internet connection.');
+          recordAuthFailure();
+          return;
+        }
+
+        // Check for console errors (simplified - in real app would use error boundary)
+        const originalConsoleError = console.error;
+        console.error = function(...args) {
+          const errorStr = args.join(' ');
+          if (errorStr.includes('Clerk') || errorStr.includes('authentication') || errorStr.includes('token')) {
+            setError(`Authentication error: ${errorStr.substring(0, 100)}...`);
+            recordAuthFailure();
+          }
+          originalConsoleError.apply(console, args);
+        };
+
+        return () => {
+          console.error = originalConsoleError;
+        };
+      };
+
+      const cleanup = checkClerkErrors();
+      return cleanup;
+    }
+  }, [clerkLoaded, elapsedTime]);
+
+  const retryAuth = useCallback(() => {
+    setError(null);
+    setElapsedTime(0);
+    setHasTimedOut(false);
+    
+    const newRetryCount = retryCount + 1;
+    setRetryCount(newRetryCount);
+    localStorage.setItem(AUTH_RETRY_COUNT_KEY, newRetryCount.toString());
+
+    if (newRetryCount >= MAX_RETRIES) {
+      setError(`Authentication failed after ${MAX_RETRIES} attempts. Try guest mode or check your Clerk configuration.`);
+    } else {
+      // Force Clerk to retry by reloading the page (simplest approach)
+      console.log(`[Auth] Retry attempt ${newRetryCount}/${MAX_RETRIES}`);
+      window.location.reload();
+    }
+  }, [retryCount]);
+
+  const enterGuestMode = useCallback(() => {
+    enableGuestMode();
+    setIsGuestMode(true);
+    setError(null);
+    setHasTimedOut(false);
+    setGuestTimeRemaining(getGuestModeTimeRemaining());
+    clearAuthFailures(); // Clear failures since user chose guest mode
+    console.log('[Auth] Entered guest mode');
+  }, []);
+
+  // Combined loading state
+  const isLoading = !clerkLoaded && !isGuestMode && !hasTimedOut;
+  const shouldOfferGuestMode = checkShouldOfferGuestMode() || hasTimedOut || retryCount >= 1;
+
+  return {
+    authLoaded: clerkLoaded,
+    isSignedIn: isGuestMode ? false : isSignedIn, // Guest mode is not signed in
+    isLoading,
+    error,
+    elapsedTime,
+    hasTimedOut,
+    retryAuth,
+    enterGuestMode,
+    isGuestMode,
+    guestTimeRemaining,
+    shouldOfferGuestMode,
+  };
+}
+
+/**
+ * Utility function to check if guest mode should be offered
+ */
+export function shouldOfferGuestMode(): boolean {
+  return checkShouldOfferGuestMode();
+}
+
+/**
+ * Utility function to exit guest mode
+ */
+export function exitGuestMode(): void {
+  // Call the imported exitGuestMode function from guestAuth service
+  import('@/services/auth/guestAuth').then(({ exitGuestMode: guestAuthExit }) => {
+    guestAuthExit();
+    window.location.reload();
+  }).catch(() => {
+    // Fallback if import fails
+    localStorage.removeItem('pance-guest-mode');
+    localStorage.removeItem('pance-guest-expiry');
+    window.location.reload();
+  });
+}
+
+/**
+ * Hook to get authentication token with fallback for guest mode
+ */
+export function useAuthToken(): string | null {
+  const { getToken } = useAuth();
+  const [token, setToken] = useState<string | null>(null);
+  const { isGuestMode } = useEnhancedAuth();
+
+  useEffect(() => {
+    if (isGuestMode) {
+      setToken('guest-mode-token');
+      return;
+    }
+
+    const fetchToken = async () => {
+      try {
+        const clerkToken = await getToken?.();
+        setToken(clerkToken || null);
+      } catch (error) {
+        console.error('[Auth] Failed to get token:', error);
+        setToken(null);
+      }
+    };
+
+    fetchToken();
+  }, [getToken, isGuestMode]);
+
+  return token;
+}

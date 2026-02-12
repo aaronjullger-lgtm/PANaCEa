@@ -99,6 +99,7 @@ db-credentials.json
 
 # Cloud service credentials
 gcp-credentials.json
+gen-lang-client-*.json
 aws-credentials.json
 azure-credentials.json
 cloudflare-credentials.json
@@ -162,6 +163,9 @@ coverage*.json
 *.local
 *.local.*
 docker-compose.override.yml
+
+# Qdrant vector DB (local Docker volume)
+qdrant_storage/
 
 # Session and state files
 *.session

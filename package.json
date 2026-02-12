@@ -144,6 +144,8 @@
     "audit:design-system": "tsx scripts/audit-design-system.ts",
     "audit:design-system:strict": "tsx scripts/audit-design-system.ts --strict",
     "audit:all": "npm run audit:prisma && npm run audit:zod && npm run audit:loading && npm run audit:services && npm run audit:components",
+    "agents:trigger": "tsx scripts/cloud-agents/trigger.ts",
+    "agents:bulk": "tsx scripts/cloud-agents/bulk-repos.ts",
     "lint": "eslint . --max-warnings 2000",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
