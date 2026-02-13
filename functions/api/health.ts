@@ -2,15 +2,15 @@
  * GET /api/health
  * Diagnostic endpoint - tests database connectivity and auth setup.
  * No authentication required so you can test from a browser.
+ * Prisma is imported dynamically only when DATABASE_URL is set to avoid load-time errors in Workers.
  */
 
-import { createEdgePrismaClient, safePrismaDisconnect } from './_shared/prisma-edge';
 import { getCorsHeaders } from './_shared/cors';
 
 export const onRequestOptions = async (context: any) => {
   return new Response(null, {
     status: 204,
-    headers: getCorsHeaders(context.request, context.env),
+    headers: getCorsHeaders(context?.request, context?.env),
   });
 };
 
@@ -46,15 +46,18 @@ export const onRequestGet = async (context: any) => {
       diagnostics.dbUrlType = 'missing';
     }
 
-    // 3. Test database connection (skip if DATABASE_URL missing — createEdgePrismaClient would throw)
-    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+    // 3. Test database connection (skip if DATABASE_URL missing; dynamic import to avoid load-time throw in Workers)
+    let prisma: { user: { count: () => Promise<number> }; [key: string]: unknown } | null = null;
     if (!dbUrl) {
       diagnostics.prismaClientCreated = false;
       diagnostics.dbConnected = false;
       diagnostics.dbError = 'DATABASE_URL is missing';
     } else {
+      let disconnect: ((p: unknown) => Promise<void>) | null = null;
       try {
-        prisma = createEdgePrismaClient(dbUrl);
+        const prismaEdge = await import('./_shared/prisma-edge');
+        disconnect = prismaEdge.safePrismaDisconnect;
+        prisma = prismaEdge.createEdgePrismaClient(dbUrl) as typeof prisma;
         diagnostics.prismaClientCreated = true;
         const userCount = await prisma.user.count();
         diagnostics.dbConnected = true;
@@ -65,7 +68,7 @@ export const onRequestGet = async (context: any) => {
         diagnostics.dbError = err instanceof Error ? err.message : String(err);
         diagnostics.dbErrorName = err instanceof Error ? err.name : 'Unknown';
       } finally {
-        if (prisma) await safePrismaDisconnect(prisma);
+        if (prisma && disconnect) await disconnect(prisma);
       }
     }
 
