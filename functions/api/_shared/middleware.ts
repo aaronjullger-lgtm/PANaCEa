@@ -140,10 +140,21 @@ function toResponse(result: HandlerResponse, request: Request, requestId?: strin
     return result;
   }
 
-  const status = result.status || 200;
-  const body = result.error
-    ? JSON.stringify({ error: result.error })
-    : JSON.stringify(result.data || result);
+  let status = result.status || 200;
+  let body: string;
+  try {
+    body =
+      result.error != null
+        ? JSON.stringify({ error: result.error })
+        : JSON.stringify(result.data ?? result);
+  } catch (serializeError) {
+    logger.error('Response serialization failed', serializeError);
+    status = 500;
+    body = JSON.stringify({
+      error: 'Internal server error',
+      details: 'Response could not be serialized to JSON',
+    });
+  }
 
   const headers = new Headers({ 'Content-Type': 'application/json' });
   if (requestId) headers.set('X-Request-ID', requestId);
@@ -508,7 +519,7 @@ async function checkRateLimit(
 
     return false;
   } catch (error) {
-    console.error('Rate limit check failed:', error);
+    logger.error('Rate limit check failed', error);
     // Fail open - allow request if rate limiting fails
     return false;
   }

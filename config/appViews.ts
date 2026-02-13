@@ -50,7 +50,9 @@ export type View =
   | 'my_library'
   | 'tutor_chat'
   | 'study_companion'
-  | 'srs_flashcards';
+  | 'srs_flashcards'
+  | 'medical_database'
+  | 'live_collaboration';
 
 /** Drill mode IDs with dedicated view implementations */
 export const DRILL_MODE_IDS = {

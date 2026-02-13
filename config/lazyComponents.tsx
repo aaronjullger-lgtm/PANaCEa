@@ -128,3 +128,9 @@ export const ClinicalEyePage = lazy(() =>
 export const VisualizerPage = lazy(() =>
   import('../pages/VisualizerPage').then((m) => ({ default: m.VisualizerPage }))
 );
+export const MedicalDatabaseSearch = lazy(() =>
+  import('../components/external/MedicalDatabaseSearch').then((m) => ({ default: m.MedicalDatabaseSearch }))
+);
+export const LiveStudySession = lazy(() =>
+  import('../components/collaboration/LiveStudySession').then((m) => ({ default: m.LiveStudySession }))
+);

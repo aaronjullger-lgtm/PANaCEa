@@ -5,7 +5,7 @@
  * Implements critical path optimization, resource prioritization, and monitoring
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export interface LoadTimeMetrics {
   firstContentfulPaint: number;
@@ -71,7 +71,7 @@ export class InitialLoadOptimizer {
         const lastEntry = entries[entries.length - 1] as PerformanceEntry;
         if (lastEntry) {
           this.metrics = {
-            ...this.metrics,
+            ...(this.metrics ?? {}),
             firstContentfulPaint: lastEntry.startTime,
           };
           this.logMetric('First Contentful Paint', lastEntry.startTime);
@@ -85,7 +85,7 @@ export class InitialLoadOptimizer {
         const lastEntry = entries[entries.length - 1] as PerformanceEntry;
         if (lastEntry) {
           this.metrics = {
-            ...this.metrics,
+            ...(this.metrics ?? {}),
             largestContentfulPaint: (lastEntry as any).startTime,
           };
           this.logMetric('Largest Contentful Paint', (lastEntry as any).startTime);
@@ -103,7 +103,7 @@ export class InitialLoadOptimizer {
           }
         });
         this.metrics = {
-          ...this.metrics,
+          ...(this.metrics ?? {}),
           cumulativeLayoutShift: cls,
         };
         this.logMetric('Cumulative Layout Shift', cls);
@@ -117,7 +117,7 @@ export class InitialLoadOptimizer {
         if (lastEntry) {
           const delay = (lastEntry as any).processingStart - lastEntry.startTime;
           this.metrics = {
-            ...this.metrics,
+            ...(this.metrics ?? {}),
             firstInputDelay: delay,
           };
           this.logMetric('First Input Delay', delay);
@@ -327,18 +327,34 @@ export class InitialLoadOptimizer {
       document.head.appendChild(link);
     });
 
-    // Prefetch likely next pages
-    const likelyPages = [
-      '/quiz',
-      '/training',
-      '/dashboard',
+    // Prefetch critical API endpoints that will be needed
+    const criticalEndpoints = [
+      '/api/dashboard/stats',
+      '/api/user/profile',
+      '/api/questions/batch',
     ];
 
-    likelyPages.forEach(page => {
+    criticalEndpoints.forEach(endpoint => {
       const link = document.createElement('link');
       link.rel = 'prefetch';
-      link.href = page;
-      link.as = 'document';
+      link.href = endpoint;
+      link.as = 'fetch';
+      link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
+    });
+
+    // Preconnect to critical origins
+    const preconnectOrigins = [
+      'https://api.clerk.com',
+      'https://fonts.googleapis.com',
+      'https://fonts.gstatic.com',
+    ];
+
+    preconnectOrigins.forEach(origin => {
+      const link = document.createElement('link');
+      link.rel = 'preconnect';
+      link.href = origin;
+      link.crossOrigin = 'anonymous';
       document.head.appendChild(link);
     });
   }
@@ -400,24 +416,35 @@ export class InitialLoadOptimizer {
   }
 }
 
+const DEFAULT_REPORT: ReturnType<InitialLoadOptimizer['getPerformanceReport']> = {
+  metrics: null,
+  resourceAnalysis: { totalSize: 0, largestChunks: [], recommendations: [] },
+  recommendations: [],
+  score: 0,
+};
+
 /**
- * React hook for performance optimization
+ * React hook for performance optimization.
+ * Report updates after init so consumers (e.g. 5s timeout in App) see real metrics.
  */
 export function useInitialLoadOptimization(): {
   report: ReturnType<InitialLoadOptimizer['getPerformanceReport']>;
   optimize: () => void;
 } {
   const optimizerRef = useRef<InitialLoadOptimizer | null>(null);
+  const [report, setReport] = useState(DEFAULT_REPORT);
 
   useEffect(() => {
     if (!optimizerRef.current) {
       optimizerRef.current = InitialLoadOptimizer.getInstance();
       optimizerRef.current.initialize();
     }
-
-    return () => {
-      // Cleanup if needed
-    };
+    const opt = optimizerRef.current;
+    // Update report after observers have had time to emit (so App's 5s callback sees real score)
+    const t = setTimeout(() => {
+      setReport(opt.getPerformanceReport());
+    }, 4000);
+    return () => clearTimeout(t);
   }, []);
 
   const optimize = () => {
@@ -425,13 +452,6 @@ export function useInitialLoadOptimization(): {
       optimizerRef.current.optimizeCriticalPath();
       optimizerRef.current.addResourceHints();
     }
-  };
-
-  const report = optimizerRef.current?.getPerformanceReport() || {
-    metrics: null,
-    resourceAnalysis: { totalSize: 0, largestChunks: [], recommendations: [] },
-    recommendations: [],
-    score: 0,
   };
 
   return { report, optimize };

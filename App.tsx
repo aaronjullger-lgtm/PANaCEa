@@ -6,7 +6,6 @@ import { Settings, X, Shield, User } from 'lucide-react';
 import { ROUTES } from './config/routes';
 import { NavRail } from './components/layout/NavRail';
 import { AppBrand } from './components/layout/AppBrand';
-import { PageContainer } from './components/layout/PageContainer';
 import { type View, pageVariants, DRILL_MODE_IDS } from './config/appViews';
 import { TRAINING_MODES } from './config/training-modes';
 import { KeyboardAccessibilityAudit } from './components/shared/KeyboardAccessibilityAudit';
@@ -51,14 +50,12 @@ import {
   BaselineAssessment,
   OnboardingYourPlan,
   MediaApproval,
-  StudyGroupDashboard,
   ToolkitHub,
   GapAnalysisDashboard,
   CommandCenterHub,
   TrainingMenu,
   SimulationPage,
   CommandCenterPage,
-  ClinicalReferenceLibrary,
   KnowledgeBaseHub,
   MyLibraryPage,
   TutorChatPage,
@@ -71,6 +68,8 @@ import {
   MyPearlsPanel,
   ClinicalEyePage,
   VisualizerPage,
+  MedicalDatabaseSearch,
+  LiveStudySession,
 } from './config/lazyComponents';
 import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { useUser, useAuth } from '@clerk/clerk-react';
@@ -220,6 +219,8 @@ const App: React.FC = () => {
       '/admin',
       '/clinical-eye',
       '/visualizer',
+      '/medical-database',
+      '/live-collaboration',
     ];
     
     const isKnownPath = knownPaths.includes(path) ||
@@ -228,7 +229,9 @@ const App: React.FC = () => {
                         path.startsWith('/study/reference') ||
                         path.startsWith('/study/toolkit') ||
                         path.startsWith('/modes/') ||
-                        path === '/core-adaptive';
+                        path === '/core-adaptive' ||
+                        path.startsWith('/medical-database') ||
+                        path.startsWith('/live-collaboration');
 
     if (!isKnownPath) {
       setShowNotFound(true);
@@ -270,6 +273,10 @@ const App: React.FC = () => {
       setView('reference_library');
     } else if (path.startsWith('/study/utilities')) {
       setView('toolkit');
+    } else if (path === '/medical-database' || path.startsWith('/medical-database')) {
+      setView('medical_database');
+    } else if (path === '/live-collaboration' || path.startsWith('/live-collaboration')) {
+      setView('live_collaboration');
     }
   }, [location.pathname]);
 
@@ -1156,11 +1163,11 @@ const App: React.FC = () => {
                       >
                         <Suspense fallback={<Loader message="Loading knowledge base…" />}>
                           <KnowledgeBaseHub
-                          onClose={() => {
-                            setView('command_center');
-                            navigate('/study');
-                          }}
-                        />
+                            onClose={() => {
+                              setView('command_center');
+                              navigate('/study');
+                            }}
+                          />
                         </Suspense>
                       </WithGeminiErrorBoundary>
                     </div>
@@ -1990,6 +1997,36 @@ const App: React.FC = () => {
                           >
                             <Suspense fallback={<Loader />}>
                               <SrsFlashcardView onExit={() => setView('command_center')} />
+                            </Suspense>
+                          </motion.div>
+                        )}
+
+                        {view === 'medical_database' && (
+                          <motion.div
+                            key="medical_database"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            transition={pageTransition}
+                          >
+                            <Suspense fallback={<Loader message="Loading medical database search..." />}>
+                              <MedicalDatabaseSearch onClose={() => setView('command_center')} />
+                            </Suspense>
+                          </motion.div>
+                        )}
+
+                        {view === 'live_collaboration' && (
+                          <motion.div
+                            key="live_collaboration"
+                            variants={pageVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            transition={pageTransition}
+                          >
+                            <Suspense fallback={<Loader message="Loading live study session..." />}>
+                              <LiveStudySession onClose={() => setView('command_center')} />
                             </Suspense>
                           </motion.div>
                         )}

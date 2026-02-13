@@ -15,6 +15,8 @@ import {
   GraduationCap,
   Settings,
   CreditCard,
+  Database,
+  Users,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -44,6 +46,8 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   GraduationCap,
   Settings,
   CreditCard,
+  Database,
+  Users,
 };
 /**
  * Universal Medical Companion - Main Navigation Configuration
@@ -70,6 +74,8 @@ export const NAVIGATION_CONFIG: NavigationCategory[] = [
     items: [
       { label: 'Clinical Reference', path: '/study/reference', icon: 'Library' },
       { label: 'Toolkit', path: '/study/toolkit', icon: 'Zap' },
+      { label: 'Medical Databases', path: '/medical-database', icon: 'Database' },
+      { label: 'Live Collaboration', path: '/live-collaboration', icon: 'Users' },
     ],
   },
 ];
@@ -97,6 +103,8 @@ export const NAVIGATION_STRUCTURE: NavigationCategory[] = [
     items: [
       { label: 'Clinical Reference', path: '/study/reference', icon: 'Library' },
       { label: 'Toolkit', path: '/study/toolkit', icon: 'Zap' },
+      { label: 'Medical Databases', path: '/medical-database', icon: 'Database' },
+      { label: 'Live Collaboration', path: '/live-collaboration', icon: 'Users' },
     ],
   },
 ];
