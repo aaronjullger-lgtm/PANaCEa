@@ -42,21 +42,27 @@ export const onRequestGet = async (context: any) => {
     diagnostics.dbUrlType = 'missing';
   }
 
-  // 3. Test database connection
+  // 3. Test database connection (skip if DATABASE_URL missing — createEdgePrismaClient would throw)
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
-  try {
-    prisma = createEdgePrismaClient(dbUrl);
-    diagnostics.prismaClientCreated = true;
-    const userCount = await prisma.user.count();
-    diagnostics.dbConnected = true;
-    diagnostics.userCount = userCount;
-  } catch (err) {
-    diagnostics.prismaClientCreated = !!prisma;
+  if (!dbUrl) {
+    diagnostics.prismaClientCreated = false;
     diagnostics.dbConnected = false;
-    diagnostics.dbError = err instanceof Error ? err.message : String(err);
-    diagnostics.dbErrorName = err instanceof Error ? err.name : 'Unknown';
-  } finally {
-    if (prisma) await safePrismaDisconnect(prisma);
+    diagnostics.dbError = 'DATABASE_URL is missing';
+  } else {
+    try {
+      prisma = createEdgePrismaClient(dbUrl);
+      diagnostics.prismaClientCreated = true;
+      const userCount = await prisma.user.count();
+      diagnostics.dbConnected = true;
+      diagnostics.userCount = userCount;
+    } catch (err) {
+      diagnostics.prismaClientCreated = !!prisma;
+      diagnostics.dbConnected = false;
+      diagnostics.dbError = err instanceof Error ? err.message : String(err);
+      diagnostics.dbErrorName = err instanceof Error ? err.name : 'Unknown';
+    } finally {
+      if (prisma) await safePrismaDisconnect(prisma);
+    }
   }
 
   // 4. Clerk key format
