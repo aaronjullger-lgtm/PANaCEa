@@ -41,11 +41,17 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
       const response = await fetch(getApiEndpoint('/api/srs/stats'), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = (await response.json()) as { success?: boolean; stats?: unknown };
-
-      if (data.success && data.stats != null) {
-        setStats(data.stats as SRSStats);
+      if (!response.ok) {
+        const errBody = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(errBody.error || `HTTP ${response.status}`);
       }
+      // API returns { data: { dueCount, totalCards, retentionRate, matureCards } }; middleware sends result.data as body
+      const data = (await response.json()) as SRSStats | { stats?: SRSStats };
+      const statsPayload =
+        data && typeof (data as SRSStats).dueCount === 'number'
+          ? (data as SRSStats)
+          : (data as { stats?: SRSStats }).stats;
+      if (statsPayload) setStats(statsPayload);
     } catch (error) {
       console.error('Failed to load SRS stats:', error);
     } finally {

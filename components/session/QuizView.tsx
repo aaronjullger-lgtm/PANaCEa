@@ -1015,21 +1015,19 @@ const QuizView: React.FC<QuizViewProps> = ({
               throw new Error(errorData.error || `HTTP ${response.status}`);
             }
 
-            const result = (await response.json()) as {
-              data?: {
-                quality?: number;
-                implicitMetrics?: { latencyRatio?: number; gradeContinuous?: number };
-                fsrsSchedule?: {
-                  intervalDays?: number;
-                  nextDueDate?: string;
-                  stability?: number;
-                  difficulty?: number;
-                };
+            // Handler returns { data: result }; middleware sends result.data as body, so payload is submitDrillReview result
+            const payload = (await response.json()) as {
+              quality?: number;
+              implicitMetrics?: { latencyRatio?: number; gradeContinuous?: number };
+              fsrsSchedule?: {
+                intervalDays?: number;
+                nextDueDate?: string;
+                stability?: number;
+                difficulty?: number;
               };
             };
+            const schedule = payload.fsrsSchedule;
 
-            // Use real FSRS schedule from backend when available
-            const schedule = result.data?.fsrsSchedule;
             const realInterval = schedule?.intervalDays ?? 1;
             const realDueDate = schedule?.nextDueDate
               ? new Date(schedule.nextDueDate)
@@ -1040,9 +1038,9 @@ const QuizView: React.FC<QuizViewProps> = ({
               repetition: 0,
               easiness: schedule?.stability ?? 2.5,
               dueDate: realDueDate,
-              difficulty: schedule?.difficulty ?? (result.data?.quality ?? 3),
-              stabilityScore: schedule?.stability ?? (result.data?.implicitMetrics?.latencyRatio ?? 1.0),
-              qualityAdjusted: result.data?.quality ?? 3,
+              difficulty: schedule?.difficulty ?? (payload.quality ?? 3),
+              stabilityScore: schedule?.stability ?? (payload.implicitMetrics?.latencyRatio ?? 1.0),
+              qualityAdjusted: payload.quality ?? 3,
               modifiersApplied: schedule ? ['fsrs_v5'] : [],
             });
           } catch (err) {
@@ -1330,10 +1328,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           You've reached the end of this set of questions.
         </p>
         <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
-          <button onClick={onShowMenu} className="btn-glass px-6 py-2">
+          <button type="button" onClick={onShowMenu} className="btn-glass px-6 py-2">
             Back to Dashboard
           </button>
-          <button onClick={handleEndSession} className="btn-secondary px-6 py-2">
+          <button type="button" onClick={handleEndSession} className="btn-secondary px-6 py-2">
             View Summary
           </button>
         </div>
@@ -1606,10 +1604,13 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           {/* SUBMIT BUTTON - Sticky on mobile so it doesn't scroll off-screen */}
           {!isAnswered && selectedAnswerIndex !== null && (
             <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)] border-t border-[var(--color-border)] mt-6 -mx-4 px-4 py-4 text-center animate-fade-in space-y-2 md:static md:border-t-0 md:bg-transparent md:mx-0 md:px-0 md:py-0 md:mt-6 md:space-y-4">
-              <button 
-                onClick={handleSubmitAnswer} 
+              <button
+                type="button"
+                onClick={handleSubmitAnswer}
                 disabled={isSubmitting}
-                className="btn-glass px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+                aria-busy={isSubmitting}
+                aria-disabled={isSubmitting}
+                className="btn-glass px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto min-h-[44px]"
               >
                 {isSubmitting ? (
                   <>

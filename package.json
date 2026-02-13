@@ -126,7 +126,7 @@
     "images:preview": "tsx ./scripts/images/bulk-image-fetcher.ts preview",
     "images:curated": "tsx ./scripts/images/fetch-curated-images.ts",
     "images:local": "tsx ./scripts/images/process-local-images.ts",
-    "build": "vite build",
+    "build": "node scripts/inject-wrangler-env.js && vite build --mode production",
     "build:server": "tsc server.ts --outDir dist-server --module commonjs --target es2022",
     "preview": "vite preview",
     "test": "vitest run",
