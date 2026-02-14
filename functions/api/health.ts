@@ -5,17 +5,19 @@
  * Prisma is imported dynamically only when DATABASE_URL is set to avoid load-time errors in Workers.
  */
 
-import { getCorsHeaders } from './_shared/cors';
+import { getCorsHeaders, getCorsConfig } from './_shared/cors';
 
 export const onRequestOptions = async (context: any) => {
+  const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
   return new Response(null, {
     status: 204,
-    headers: getCorsHeaders(context?.request, context?.env),
+    headers: getCorsHeaders(context?.request, corsConfig) ?? {},
   });
 };
 
 export const onRequestGet = async (context: any) => {
-  const cors = getCorsHeaders(context?.request, context?.env);
+  const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
+  const cors = getCorsHeaders(context?.request, corsConfig) ?? {};
   const jsonHeaders = { ...cors, 'Content-Type': 'application/json' };
 
   try {
