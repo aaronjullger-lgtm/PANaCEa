@@ -94,7 +94,10 @@ export const onRequestGet = authenticatedEndpoint(
       logger.error('Error fetching profile', {
         error: error instanceof Error ? error.message : String(error),
       });
-      throw new Error('Failed to fetch profile');
+      return {
+        status: 500,
+        data: { success: false, error: 'Failed to fetch profile. Please try again later.' },
+      };
     } finally {
       await safePrismaDisconnect(prisma);
     }
@@ -169,7 +172,10 @@ export const onRequestPut = authenticatedEndpoint(profileUpdateSchema, async (co
     logger.error('Error updating profile', {
       error: error instanceof Error ? error.message : String(error),
     });
-    throw new Error('Failed to update profile');
+    return {
+      status: 500,
+      data: { success: false, error: 'Failed to update profile. Please try again later.' },
+    };
   } finally {
     await safePrismaDisconnect(prisma);
   }

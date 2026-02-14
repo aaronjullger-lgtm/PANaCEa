@@ -1,1 +1,4 @@
-/* /index.html  200
+# Serve index.html for index path (avoids infinite loop on catch-all)
+/index.html  /index.html  200
+# SPA fallback: serve index.html for all other paths
+/*  /index.html  200

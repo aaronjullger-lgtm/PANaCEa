@@ -3,8 +3,12 @@
  */
 
 import { verifyToken } from '@clerk/backend';
-import { authLogger } from '../../../lib/logging/structuredLogger';
 import { CloudflareEnv } from './types';
+
+// Edge-safe logger stub (no dependency on lib/ outside functions)
+const authLogger = {
+  success: (_userId: string, _action: string) => {},
+};
 import { getCorsHeaders, getCorsConfig, handleCorsPreflightSecure } from './cors';
 
 /**
