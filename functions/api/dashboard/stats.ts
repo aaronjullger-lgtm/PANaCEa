@@ -22,7 +22,6 @@ import { calculateConceptGaps } from '../intelligence/profile';
 import { NCCPA_2025_BLUEPRINT_PERCENT } from '../../../lib/constants/blueprint';
 import {
   computeCurrentStreak as calcStreak,
-  computeLongestStreak,
   type StreakGoalDays,
 } from '../../../lib/streakCalc';
 
@@ -56,6 +55,10 @@ export const onRequestOptions = withCors();
 export const onRequestGet = authenticatedEndpoint(StatsSchema, async (context) => {
   const { env, auth } = context;
   const log = createEndpointLogger('/api/dashboard/stats', auth.userId);
+  if (!env.DATABASE_URL) {
+    log.error('DATABASE_URL not configured');
+    return { status: 503, data: { error: 'Service temporarily unavailable. Database not configured.' } };
+  }
   let prisma: EdgePrismaClient | null = null;
 
   try {
@@ -163,9 +166,9 @@ export const onRequestGet = authenticatedEndpoint(StatsSchema, async (context) =
     log.error('Dashboard stats error', { error });
     return {
       status: 500,
-      error: 'Internal server error',
+      data: { success: false, error: 'Internal server error' },
     };
   } finally {
-    await safePrismaDisconnect(prisma);
+    if (prisma) await safePrismaDisconnect(prisma);
   }
 });

@@ -78,7 +78,10 @@ export const onRequestGet = authenticatedEndpoint(Rolling360StatsSchema, async (
       error: error instanceof Error ? error.message : String(error),
       userId: auth.userId,
     });
-    return { data: { error: 'Failed to fetch statistics', ...EMPTY_STATE_RESPONSE } };
+    return {
+      status: 500,
+      data: { error: 'Failed to fetch statistics', ...EMPTY_STATE_RESPONSE },
+    };
   } finally {
     if (prisma) await safePrismaDisconnect(prisma);
   }

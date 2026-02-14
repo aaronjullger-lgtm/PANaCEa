@@ -21,12 +21,13 @@ import {
   Headphones,
   PanelLeftClose,
   PanelLeftOpen,
+  Download,
   LucideIcon,
 } from 'lucide-react';
 import { useCommuter } from '@/contexts/CommuterContext';
+import { usePWAEnhancer } from '@/services/pwaEnhancer';
 import { SidebarItem } from '@/components/layout/SidebarItem';
 import { InfoTooltipWrapper } from '@/components/shared/TooltipWrapper';
-import { KeyboardShortcutTooltip } from '@/components/shared/KeyboardShortcutTooltip';
 
 export interface QuickActionItem {
   id: string;
@@ -164,11 +165,14 @@ export const NavRail: React.FC<NavRailProps> = ({
   className = '',
 }) => {
   const commuterContext = useCommuter();
+  const { status: pwaStatus, showInstallPrompt } = usePWAEnhancer();
   const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(true);
   const [hidden, setHidden] = useState(false);
   const location = useLocation();
   const { pathname, search } = location;
+  const showPwaInstall =
+    pwaStatus.hasInstallPrompt && !pwaStatus.isInstalled && !pwaStatus.isStandalone;
 
   // Keyboard shortcut: [ to toggle sidebar
   useEffect(() => {
@@ -224,8 +228,8 @@ export const NavRail: React.FC<NavRailProps> = ({
   const resourceItems = quickActions.filter((i) => i.section === 'resources');
 
   const baseClass =
-    'group relative flex w-full min-h-[44px] items-center rounded-xl py-2.5 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98] ' +
-    (collapsed ? 'justify-center items-center px-0' : '');
+    'group relative flex w-full h-12 items-center rounded-xl px-2 transition-[padding,background-color] duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] active:scale-[0.98] ' +
+    (collapsed ? 'justify-center px-0' : '');
 
   const renderItem = (item: QuickActionItem) => {
     const isActive = item.href ? isPathActive(item.href, pathname, search) : false;
@@ -255,12 +259,12 @@ export const NavRail: React.FC<NavRailProps> = ({
       />
     );
 
-    // Wrap with tooltip if collapsed
+    // Wrap with tooltip if collapsed; use flex center so icon stays centered in rail (not w-full)
     const wrappedItem = collapsed ? (
       <InfoTooltipWrapper
         content={item.label}
         position="right"
-        className="w-full"
+        className="flex justify-center items-center"
         ariaLabel={item.label}
       >
         {sidebarItem}
@@ -292,7 +296,7 @@ export const NavRail: React.FC<NavRailProps> = ({
               </>
             )}
             <span
-              className={`relative z-10 flex items-center justify-center ${collapsed ? 'w-10 shrink-0' : 'w-full'}`}
+              className={`relative z-10 flex h-12 items-center justify-center transition-[width] duration-200 ease-out ${collapsed ? 'w-10 shrink-0' : 'w-full'}`}
             >
               {wrappedItem}
             </span>
@@ -309,7 +313,7 @@ export const NavRail: React.FC<NavRailProps> = ({
   };
 
   const renderSection = (label: string, items: QuickActionItem[]) => (
-    <div key={label} className="mb-1">
+    <div key={label} className="mb-3 first:mt-0">
       {!collapsed && (
         <div className="px-3 py-2">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
@@ -317,7 +321,7 @@ export const NavRail: React.FC<NavRailProps> = ({
           </span>
         </div>
       )}
-      <ul className="space-y-0.5">
+      <ul className="space-y-1">
         {items.map(renderItem)}
       </ul>
     </div>
@@ -341,9 +345,9 @@ export const NavRail: React.FC<NavRailProps> = ({
       }}
       aria-label="Main navigation"
     >
-      {/* Header with collapse/hide controls — centered when collapsed */}
+      {/* Header with collapse/hide controls — centered when collapsed; clear separation from nav items */}
       <div
-        className={`flex h-12 items-center border-b border-[var(--color-border)] px-2 shrink-0 ${collapsed ? 'justify-center' : 'justify-between'}`}
+        className={`flex h-12 shrink-0 items-center border-b border-[var(--color-border)] px-2 ${collapsed ? 'justify-center' : 'justify-between'}`}
       >
         {!collapsed && (
           <button
@@ -371,10 +375,35 @@ export const NavRail: React.FC<NavRailProps> = ({
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-2" aria-label="App sections">
+      <nav
+        className="flex-1 overflow-y-auto overflow-x-hidden px-2 pt-5 pb-4"
+        aria-label="App sections"
+      >
         {renderSection('Study', studyItems)}
         {resourceItems.length > 0 && renderSection('Resources', resourceItems)}
       </nav>
+
+      {/* PWA Install — show when browser supports install and app is not installed */}
+      {showPwaInstall && (
+        <div className="shrink-0 border-t border-[var(--color-border)] px-2 py-3">
+          <button
+            type="button"
+            onClick={() => showInstallPrompt()}
+            className={`group flex w-full min-h-[44px] items-center rounded-xl py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] ${
+              collapsed ? 'justify-center px-2' : 'gap-3 pl-3 pr-3'
+            }`}
+            title="Install PANaCEa app"
+            aria-label="Install PANaCEa app"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors group-hover:bg-[var(--color-bg-tertiary)]">
+              <Download className="h-5 w-5" aria-hidden />
+            </span>
+            {!collapsed && (
+              <span className="truncate text-sm font-medium">Install app</span>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Commuter Mode quick toggle — centered when collapsed */}
       {commuterContext && (
