@@ -52,13 +52,6 @@ export const onRequestOptions = withCors();
 export const onRequestGet = authenticatedEndpoint(StatsSchema, async (context) => {
   const { env, auth } = context;
   const log = createEndpointLogger('/api/dashboard/stats', auth.userId);
-  if (!env.DATABASE_URL) {
-    log.error('DATABASE_URL not configured');
-    return {
-      status: 503,
-      data: { error: 'Service temporarily unavailable. Database not configured.' },
-    };
-  }
   let prisma: EdgePrismaClient | null = null;
 
   try {
@@ -163,10 +156,16 @@ export const onRequestGet = authenticatedEndpoint(StatsSchema, async (context) =
       data: payload,
     };
   } catch (error) {
-    log.error('Dashboard stats error', { error });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    log.error('Dashboard stats error', { error: errorMessage, stack: errorStack });
     return {
       status: 500,
-      data: { success: false, error: 'Internal server error' },
+      data: {
+        success: false,
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
     };
   } finally {
     if (prisma) await safePrismaDisconnect(prisma);
