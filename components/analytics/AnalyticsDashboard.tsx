@@ -674,7 +674,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {/* PANCE Readiness Treemap (all systems: 0 data = neutral "Not Yet Studied") */}
           {treemapData.length > 0 && (
             <div className="mb-6">
-              <PANCEReadinessTreemap data={treemapData} />
+              <ChartContainer minHeight={320} className="w-full">
+                <PANCEReadinessTreemap data={treemapData} />
+              </ChartContainer>
             </div>
           )}
 

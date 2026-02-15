@@ -6,10 +6,13 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { authenticatedEndpoint, withCors, getSentryTraceId } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { withTimeout, TimeoutError } from '../_shared/timeout';
 import { Rolling360Service } from '../../../lib/services/rolling360Service';
+
+const ROLLING_360_TIMEOUT_MS = 8_000; // 8s so we respond before Worker "code had hung" kill
 
 const Rolling360StatsSchema = z.object({
   query: z.object({}).optional(), // No query params expected
@@ -37,14 +40,19 @@ const EMPTY_STATE_RESPONSE = {
 export const onRequestOptions = withCors();
 
 export const onRequestGet = authenticatedEndpoint(Rolling360StatsSchema, async (context) => {
-  const { env, auth } = context;
+  const { env, auth, request } = context;
   const logger = createEndpointLogger('/api/user/rolling-360-stats');
+  const sentryTraceId = getSentryTraceId(request);
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
     prisma = createEdgePrismaClient(env.DATABASE_URL);
     const rolling360Service = new Rolling360Service(prisma);
-    const stats = await rolling360Service.getRolling360Stats(auth.userId);
+    const stats = await withTimeout(
+      rolling360Service.getRolling360Stats(auth.userId, { skipCalibration: true }),
+      ROLLING_360_TIMEOUT_MS,
+      'Rolling 360 stats request timed out'
+    );
 
     // Safety: Return structured empty state if no data exists
     if (!stats) {
@@ -74,13 +82,19 @@ export const onRequestGet = authenticatedEndpoint(Rolling360StatsSchema, async (
       },
     };
   } catch (error) {
-    logger.error('Error fetching Rolling 360 stats', {
+    const isTimeout = error instanceof TimeoutError;
+    logger.error(isTimeout ? 'Rolling 360 stats timed out' : 'Error fetching Rolling 360 stats', {
       error: error instanceof Error ? error.message : String(error),
       userId: auth.userId,
+      sentryTraceId: sentryTraceId ?? undefined,
     });
     return {
-      status: 500,
-      data: { error: 'Failed to fetch statistics', ...EMPTY_STATE_RESPONSE },
+      status: isTimeout ? 503 : 500,
+      data: {
+        error: isTimeout ? 'Service temporarily unavailable. Please try again.' : 'Failed to fetch statistics',
+        ...EMPTY_STATE_RESPONSE,
+        ...(sentryTraceId ? { sentryTraceId } : {}),
+      },
     };
   } finally {
     if (prisma) await safePrismaDisconnect(prisma);

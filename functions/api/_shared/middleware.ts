@@ -128,16 +128,15 @@ export function withMiddleware<TContext extends CloudflareContext>(
  */
 function toResponse(result: HandlerResponse, request: Request, requestId?: string): Response {
   if (result instanceof Response) {
-    if (requestId) {
-      const headers = new Headers(result.headers);
-      headers.set('X-Request-ID', requestId);
-      return new Response(result.body, {
-        status: result.status,
-        statusText: result.statusText,
-        headers,
-      });
-    }
-    return result;
+    const headers = new Headers(result.headers);
+    if (requestId) headers.set('X-Request-ID', requestId);
+    const sentryTrace = request.headers.get('sentry-trace');
+    if (sentryTrace) headers.set('Sentry-Trace', sentryTrace);
+    return new Response(result.body, {
+      status: result.status,
+      statusText: result.statusText,
+      headers,
+    });
   }
 
   let status = result.status || 200;
@@ -159,6 +158,10 @@ function toResponse(result: HandlerResponse, request: Request, requestId?: strin
   const headers = new Headers({ 'Content-Type': 'application/json' });
   if (requestId) headers.set('X-Request-ID', requestId);
 
+  // Forward Sentry trace so failed requests can be found in Sentry by trace ID
+  const sentryTrace = request.headers.get('sentry-trace');
+  if (sentryTrace) headers.set('Sentry-Trace', sentryTrace);
+
   const response = new Response(body, {
     status,
     headers,
@@ -173,6 +176,14 @@ function toResponse(result: HandlerResponse, request: Request, requestId?: strin
   }
 
   return response;
+}
+
+/** Extract Sentry trace ID from request (first segment of sentry-trace header) for logging/debugging */
+export function getSentryTraceId(request: Request): string | null {
+  const header = request.headers.get('sentry-trace');
+  if (!header) return null;
+  const traceId = header.split('-')[0];
+  return traceId && traceId.length > 0 ? traceId : null;
 }
 
 // ============================================================================

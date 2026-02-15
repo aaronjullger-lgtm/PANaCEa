@@ -466,9 +466,13 @@ export class Rolling360Service {
 
   /**
    * Gets current Rolling 360 stats for dashboard display (O(1) read)
-   * Includes calibration metrics for cold start users (<60 questions)
+   * Includes calibration metrics for cold start users (<60 questions) unless skipCalibration is true.
+   * Use skipCalibration in edge/Worker to avoid extra DB round-trips and stay under CPU limits.
    */
-  async getRolling360Stats(userId: string): Promise<Rolling360Stats | null> {
+  async getRolling360Stats(
+    userId: string,
+    options?: { skipCalibration?: boolean }
+  ): Promise<Rolling360Stats | null> {
     const stats = await this.prisma.userRolling360Stats.findUnique({
       where: { userId },
     });
@@ -479,9 +483,12 @@ export class Rolling360Service {
     const systemStats = (stats.systemStats as unknown as Record<string, SystemStats>) || {};
     const weakestSystems = stats.weakestSystems || [];
 
-    // Calculate calibration metrics for cold start users
+    // Calibration metrics require 2–3 extra queries; skip in Worker to avoid CPU timeout
     let calibrationMetrics: CalibrationMetrics | undefined;
-    if (totalInWindow < CALIBRATION_STEP_THRESHOLDS.ERROR_TYPOLOGY) {
+    if (
+      !options?.skipCalibration &&
+      totalInWindow < CALIBRATION_STEP_THRESHOLDS.ERROR_TYPOLOGY
+    ) {
       calibrationMetrics = await this.calculateCalibrationMetrics(
         userId,
         totalInWindow,

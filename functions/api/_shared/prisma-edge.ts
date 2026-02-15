@@ -64,8 +64,10 @@ type DatabaseUrlInput =
   | null
   | undefined;
 
-// Global singleton cache per isolate (keyed by normalized DATABASE_URL)
-// Reduces connection churn when multiple handlers run in the same isolate.
+// Global singleton cache per isolate (keyed by normalized DATABASE_URL).
+// Reduces churn and avoids connection exhaustion: one client per isolate, reused
+// across requests. With Prisma Accelerate, the actual pooling is on Accelerate's
+// side (HTTP), not per-Worker connections.
 declare global {
   var __EDGE_PRISMA__: Map<string, EdgePrismaClient> | undefined;
 }
