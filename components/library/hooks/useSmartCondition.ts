@@ -131,9 +131,7 @@ export interface UseSmartConditionResult {
   refetchSummary: () => Promise<void>;
 }
 
-export function useSmartCondition(
-  conditionId: string | null | undefined
-): UseSmartConditionResult {
+export function useSmartCondition(conditionId: string | null | undefined): UseSmartConditionResult {
   const { getToken } = useAuth();
   const [summary, setSummary] = useState<ConditionSummary | null>(null);
   const [details, setDetails] = useState<ConditionDetails | null>(null);
@@ -153,18 +151,16 @@ export function useSmartCondition(
     setErrorSummary(null);
     try {
       const token = await getToken();
-      const res = await fetch(
-        `/api/content/condition/${encodeURIComponent(conditionId)}/summary`,
-        {
-          headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const res = await fetch(`/api/content/condition/${encodeURIComponent(conditionId)}/summary`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'Content-Type': 'application/json',
+        },
+      });
       const json = (await res.json()) as { data?: Record<string, unknown>; error?: string };
       if (!res.ok) {
-        const errMsg = (json?.data?.error as string) ?? json?.error ?? `Failed to load (${res.status})`;
+        const errMsg =
+          (json?.data?.error as string) ?? json?.error ?? `Failed to load (${res.status})`;
         setErrorSummary(errMsg);
         setSummary(null);
         return;
@@ -190,18 +186,16 @@ export function useSmartCondition(
     setErrorDetails(null);
     try {
       const token = await getToken();
-      const res = await fetch(
-        `/api/content/condition/${encodeURIComponent(conditionId)}/details`,
-        {
-          headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const res = await fetch(`/api/content/condition/${encodeURIComponent(conditionId)}/details`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'Content-Type': 'application/json',
+        },
+      });
       const json = (await res.json()) as { data?: Record<string, unknown>; error?: string };
       if (!res.ok) {
-        const errMsg = (json?.data?.error as string) ?? json?.error ?? `Failed to load (${res.status})`;
+        const errMsg =
+          (json?.data?.error as string) ?? json?.error ?? `Failed to load (${res.status})`;
         setErrorDetails(errMsg);
         setDetails(null);
         return;

@@ -108,7 +108,7 @@ export const DrillShell: React.FC<DrillShellProps> = ({
       className={`${containerClasses} ${bgColor} text-[var(--color-text-primary)] transition-colors duration-300`}
     >
       {/* Premium Glass Header - Matches App.tsx styling */}
-      <header 
+      <header
         className="sticky z-30 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm"
         style={fullScreen ? {} : { top: 0 }}
       >

@@ -1,21 +1,21 @@
 /**
  * Hunter-Gatherer Auto-Curator Pipeline
- * 
+ *
  * Automatically discovers, grades, and ingests open-source medical images from Open-i.
- * 
+ *
  * Pipeline:
  * 1. Search Open-i API for medical images by condition
  * 2. Grade each image using Gemini 1.5 Pro Vision (1-10 scale)
  * 3. Auto-approve and ingest images scoring > 7/10
  * 4. Discard images scoring < 5/10
- * 
+ *
  * Usage:
  *   npx tsx scripts/intelligence/hunt-images.ts
  *   npx tsx scripts/intelligence/hunt-images.ts --condition="Pneumonia"
  *   npx tsx scripts/intelligence/hunt-images.ts --system="Pulmonary" --maxPerCondition=5
  *   npx tsx scripts/intelligence/hunt-images.ts --dryRun
  *   npx tsx scripts/intelligence/hunt-images.ts --maxTotal=20
- * 
+ *
  * Requires: GEMINI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
  *           DIRECT_DATABASE_URL or DATABASE_URL
  */
@@ -147,7 +147,9 @@ async function main(): Promise<void> {
   console.log('='.repeat(60));
 }
 
-async function loadConditions(args: Args): Promise<Array<{ id: string; name: string; system: string }>> {
+async function loadConditions(
+  args: Args
+): Promise<Array<{ id: string; name: string; system: string }>> {
   const where: any = { status: 'published' };
 
   if (args.condition) {
@@ -232,7 +234,9 @@ async function processCondition(
       continue;
     }
 
-    console.log(`   📊 Score: ${grade.educationalScore}/10 | Classic: ${grade.isClassic} | Modality: ${grade.modality}`);
+    console.log(
+      `   📊 Score: ${grade.educationalScore}/10 | Classic: ${grade.isClassic} | Modality: ${grade.modality}`
+    );
     console.log(`   Reasoning: ${grade.reasoning.slice(0, 100)}...`);
 
     // Apply scoring tiers
@@ -298,7 +302,10 @@ async function ingestImage(
   const hash = createHash('sha256').update(buffer).digest('hex').slice(0, 16);
 
   // Generate filename
-  const conditionSlug = condition.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const conditionSlug = condition.name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
   const ext = inferExtension(candidate.imageUrl) || 'jpg';
   const filename = `${hash}.${ext}`;
   const storagePath = `open-i/${conditionSlug}/${filename}`;

@@ -16,10 +16,7 @@ import { updateReviewOutcome } from './srsService';
 import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
-import {
-  deriveContinuousRating,
-  applyStabilityModifierFromGrade,
-} from '../implicit-metrics';
+import { deriveContinuousRating, applyStabilityModifierFromGrade } from '../implicit-metrics';
 import { buildCircadianContext, applyCircadianModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from './userStatisticsService';
@@ -268,8 +265,7 @@ export async function submitDrillReview(
   // rather than totalDwellTime. Total dwell includes rationale-reading time and
   // inflates the latency ratio by 2-5x, systematically downgrading ratings for
   // questions where the client omits the first-click metric.
-  const effectiveFirstClick =
-    timeToFirstClick ?? Math.min(numericTime, parTimeMs * 0.85);
+  const effectiveFirstClick = timeToFirstClick ?? Math.min(numericTime, parTimeMs * 0.85);
 
   const behaviorMetrics: ImplicitBehaviorMetrics = {
     timeToFirstClick: effectiveFirstClick,
@@ -287,11 +283,7 @@ export async function submitDrillReview(
 
   // Implicit FSRS "Truth Engine": Override user-derived rating using behavioral honesty heuristics
   // Rule 1: If responseTime > (parTime * 1.5) AND rating == Easy → downgrade to Good
-  if (
-    isCorrect &&
-    rating === Rating.Easy &&
-    numericTime > parTimeMs * 1.5
-  ) {
+  if (isCorrect && rating === Rating.Easy && numericTime > parTimeMs * 1.5) {
     rating = Rating.Good;
     logger?.info?.('Behavioral override: Easy→Good (slow response)', {
       questionId,
@@ -328,11 +320,16 @@ export async function submitDrillReview(
   const quality =
     rating === Rating.Again ? 1 : rating === Rating.Hard ? 2 : rating === Rating.Easy ? 5 : 4;
 
-  updateReviewOutcome(userId, questionId, {
-    quality,
-    timeToAnswer: numericTime,
-    baselineTime: parTimeMs,
-  }, prisma as any);
+  updateReviewOutcome(
+    userId,
+    questionId,
+    {
+      quality,
+      timeToAnswer: numericTime,
+      baselineTime: parTimeMs,
+    },
+    prisma as any
+  );
 
   try {
     await applyAttemptToUserStatistics(prisma as any, userId, {
@@ -423,7 +420,9 @@ export async function submitDrillReview(
   const countForFSRS = sessionType !== 'cram' && sessionType !== 'rapid_recall';
 
   // Capture FSRS schedule for the return value so the frontend can display real data
-  let fsrsSchedule: { intervalDays: number; nextDueDate: string; stability: number; difficulty: number } | undefined;
+  let fsrsSchedule:
+    | { intervalDays: number; nextDueDate: string; stability: number; difficulty: number }
+    | undefined;
 
   if (question.conditionId && countForFSRS && !isRapidGuess) {
     try {
@@ -468,9 +467,7 @@ export async function submitDrillReview(
       // Capture real FSRS schedule for the API response
       fsrsSchedule = {
         intervalDays: updatedCard.scheduled_days,
-        nextDueDate: new Date(
-          Date.now() + updatedCard.scheduled_days * 86400000
-        ).toISOString(),
+        nextDueDate: new Date(Date.now() + updatedCard.scheduled_days * 86400000).toISOString(),
         stability: updatedCard.stability,
         difficulty: updatedCard.difficulty,
       };
@@ -478,10 +475,14 @@ export async function submitDrillReview(
       // Write to ReviewLog for FSRS v6 optimizer (MAIN/real sessions only)
       try {
         const reviewDate = new Date();
-        const hoverOscillations = (telemetry?.hover_oscillations as number | undefined) ?? undefined;
-        const vignetteRegressions = (telemetry?.vignette_regressions as number | undefined) ?? undefined;
+        const hoverOscillations =
+          (telemetry?.hover_oscillations as number | undefined) ?? undefined;
+        const vignetteRegressions =
+          (telemetry?.vignette_regressions as number | undefined) ?? undefined;
         const timeToFirstInteraction =
-          (telemetry?.time_to_first_interaction_ms as number | undefined) ?? timeToFirstClick ?? undefined;
+          (telemetry?.time_to_first_interaction_ms as number | undefined) ??
+          timeToFirstClick ??
+          undefined;
 
         await prisma.reviewLog.create({
           data: {
@@ -493,8 +494,7 @@ export async function submitDrillReview(
             grade: rating,
             state: currentCard.state,
             scheduledAt: new Date(
-              currentCard.last_review.getTime() +
-                currentCard.scheduled_days * 86400000
+              currentCard.last_review.getTime() + currentCard.scheduled_days * 86400000
             ),
             reviewedAt: reviewDate,
             responseTimeMs: effectiveDurationMs,
@@ -520,9 +520,9 @@ export async function submitDrillReview(
               // to avoid dual-source divergence between QuestionAttempt and ReviewLog
               answer_changes: (telemetry?.answer_changes as number | undefined) ?? switches,
               circadian_phase: circadianContext.circadianPhase,
-              selection_drift_ms: (telemetry?.selection_drift_ms as number | undefined),
-              cursor_entropy: (telemetry?.cursor_entropy as number | undefined),
-              tremor_score: (telemetry?.tremor_score as number | undefined),
+              selection_drift_ms: telemetry?.selection_drift_ms as number | undefined,
+              cursor_entropy: telemetry?.cursor_entropy as number | undefined,
+              tremor_score: telemetry?.tremor_score as number | undefined,
             },
           },
         });

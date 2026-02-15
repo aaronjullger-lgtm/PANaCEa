@@ -307,7 +307,10 @@ export class GeminiErrorBoundary extends Component<
 
     const maxRetries = 3;
     const canRetry = errorInfo?.retryable && retryCount < maxRetries;
-    const { title, message, primaryAction, secondaryLabel } = getUserFacingError('server', 'gemini');
+    const { title, message, primaryAction, secondaryLabel } = getUserFacingError(
+      'server',
+      'gemini'
+    );
 
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center min-h-[300px]">

@@ -88,17 +88,10 @@ export async function getMediaDrillCases(
         OR: [{ originalUrl: { not: null } }, { thumbnailUrl: { not: null } }],
       },
       {
-        OR: [
-          { isAnnotated: false },
-          { isAnnotated: null },
-        ],
+        OR: [{ isAnnotated: false }, { isAnnotated: null }],
       },
       {
-        OR: [
-          { usageType: 'quiz' },
-          { usageType: 'both' },
-          { usageType: null },
-        ],
+        OR: [{ usageType: 'quiz' }, { usageType: 'both' }, { usageType: null }],
       },
     ],
   };
@@ -175,9 +168,7 @@ export async function getMediaDrillCases(
         imageUrl,
         thumbnailUrl: thumbnailUrl || undefined,
         highResUrl:
-          highResUrl && highResUrl !== (thumbnailUrl || imageUrl)
-            ? highResUrl
-            : undefined,
+          highResUrl && highResUrl !== (thumbnailUrl || imageUrl) ? highResUrl : undefined,
         modality,
         correctDiagnosis: asset.correctDiagnosis!,
         distractors,

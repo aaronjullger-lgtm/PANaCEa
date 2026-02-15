@@ -74,6 +74,15 @@ export default defineConfig({
       },
     },
 
+    // A11y regression (axe-core) - WCAG 2.1 AA on landing page
+    {
+      name: 'a11y',
+      testMatch: /a11y-regression\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+    },
+
     // UX Polish: run without auth so design police runs on landing/dashboard without manual login
     {
       name: 'ux-polish',
@@ -90,6 +99,22 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 320, height: 568 },
+      },
+    },
+
+    // Cross-browser smoke (Firefox, WebKit) - api-health + a11y for Roo browser matrix
+    {
+      name: 'firefox-smoke',
+      testMatch: /(api-health|a11y-regression)\.spec\.ts/,
+      use: {
+        ...devices['Desktop Firefox'],
+      },
+    },
+    {
+      name: 'webkit-smoke',
+      testMatch: /(api-health|a11y-regression)\.spec\.ts/,
+      use: {
+        ...devices['Desktop Safari'],
       },
     },
   ],

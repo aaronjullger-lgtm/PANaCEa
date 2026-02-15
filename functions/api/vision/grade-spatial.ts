@@ -10,10 +10,7 @@ import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../_shared/rateLimiter';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import {
-  createEdgePrismaClient,
-  safePrismaDisconnect,
-} from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 const VISION_MODEL = 'gemini-2.5-pro';
@@ -86,10 +83,7 @@ async function callGeminiForCorrectBox(
       contents: [
         {
           role: 'user',
-          parts: [
-            { inlineData: { mimeType, data: imageBase64 } },
-            { text: prompt },
-          ],
+          parts: [{ inlineData: { mimeType, data: imageBase64 } }, { text: prompt }],
         },
       ],
       generationConfig: {
@@ -100,11 +94,18 @@ async function callGeminiForCorrectBox(
     }),
   });
   if (!res.ok) return null;
-  const data = (await res.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+  const data = (await res.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) return null;
   try {
-    const parsed = JSON.parse(text.replace(/^```json\s*/i, '').replace(/\s*```\s*$/i, '').trim()) as {
+    const parsed = JSON.parse(
+      text
+        .replace(/^```json\s*/i, '')
+        .replace(/\s*```\s*$/i, '')
+        .trim()
+    ) as {
       bounding_box?: number[];
     };
     const raw = parsed.bounding_box;
@@ -114,7 +115,12 @@ async function callGeminiForCorrectBox(
       const xmin = n[1] ?? 0;
       const ymax = n[2] ?? 0;
       const xmax = n[3] ?? 0;
-      if (Number.isFinite(ymin) && Number.isFinite(xmin) && Number.isFinite(ymax) && Number.isFinite(xmax)) {
+      if (
+        Number.isFinite(ymin) &&
+        Number.isFinite(xmin) &&
+        Number.isFinite(ymax) &&
+        Number.isFinite(xmax)
+      ) {
         return [ymin, xmin, ymax, xmax];
       }
     }
@@ -171,7 +177,12 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
   }
 
   if (!correctBox) {
-    correctBox = await callGeminiForCorrectBox(env.GEMINI_API_KEY, imageBase64, mimeType, pathology);
+    correctBox = await callGeminiForCorrectBox(
+      env.GEMINI_API_KEY,
+      imageBase64,
+      mimeType,
+      pathology
+    );
     if (correctBox && mediaAssetId && env.DATABASE_URL) {
       const prisma = createEdgePrismaClient(env.DATABASE_URL);
       try {

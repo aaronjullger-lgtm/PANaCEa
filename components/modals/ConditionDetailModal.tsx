@@ -14,6 +14,7 @@ import FormattedSection from '@/components/conditions/FormattedSection';
 import { BuzzwordBanner } from '@/components/conditions/BuzzwordBanner';
 import { ConditionFamilyView } from '@/components/library/ConditionFamilyView';
 import { useAuth } from '@clerk/clerk-react';
+import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
 /**
  * Build a standardized condition ID from metadata
@@ -120,10 +121,10 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
       try {
         const token = await getToken();
         const response = await fetch(
-          `${(import.meta as any).env.VITE_API_URL || 'http://localhost:3001'}/api/conditions/${condition.condition}/extended`,
+          getApiEndpoint(`/api/conditions/${encodeURIComponent(condition.condition)}/extended`),
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
           }
         );
@@ -332,7 +333,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               {isLoading && sections.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-64 space-y-4">
                   <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                  <p className="text-[var(--color-text-muted)] font-medium">Loading condition details...</p>
+                  <p className="text-[var(--color-text-muted)] font-medium">
+                    Loading condition details...
+                  </p>
                 </div>
               ) : (
                 <>
@@ -423,11 +426,15 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                                     key={item.id}
                                     className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)]"
                                   >
-                                    <h4 className="font-bold text-lg text-[var(--color-text-primary)]">{item.name}</h4>
+                                    <h4 className="font-bold text-lg text-[var(--color-text-primary)]">
+                                      {item.name}
+                                    </h4>
                                     <p className="text-sm text-[var(--color-text-muted)] mb-2">
                                       {item.region} • {item.system}
                                     </p>
-                                    <p className="text-[var(--color-text-secondary)]">{item.description}</p>
+                                    <p className="text-[var(--color-text-secondary)]">
+                                      {item.description}
+                                    </p>
                                   </div>
                                 ))}
                               </div>
@@ -438,7 +445,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                                     key={test.id}
                                     className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)]"
                                   >
-                                    <h4 className="font-bold text-lg text-[var(--color-text-primary)]">{test.name}</h4>
+                                    <h4 className="font-bold text-lg text-[var(--color-text-primary)]">
+                                      {test.name}
+                                    </h4>
                                     <div className="flex gap-4 text-sm text-[var(--color-text-muted)] mt-1 mb-2">
                                       {test.sensitivity && (
                                         <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">
@@ -451,13 +460,17 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-[var(--color-text-secondary)] mb-3">{test.description}</p>
+                                    <p className="text-[var(--color-text-secondary)] mb-3">
+                                      {test.description}
+                                    </p>
                                     {test.technique && (
                                       <div className="mt-2 p-3 bg-[var(--color-bg-secondary)] rounded border border-[var(--color-border)]">
                                         <span className="font-semibold text-xs uppercase text-[var(--color-text-muted)] block mb-1">
                                           Technique
                                         </span>
-                                        <p className="text-sm text-[var(--color-text-primary)]">{test.technique}</p>
+                                        <p className="text-sm text-[var(--color-text-primary)]">
+                                          {test.technique}
+                                        </p>
                                       </div>
                                     )}
                                   </div>
@@ -478,11 +491,21 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
         </div>
 
         <footer className="condition-footer">
-          <button onClick={onClose} className="condition-close">
+          <button
+            type="button"
+            onClick={onClose}
+            className="condition-close"
+            aria-label="Close condition details"
+          >
             Close
           </button>
           {onDrillCondition && (
-            <button onClick={() => onDrillCondition(condition)} className="condition-drill">
+            <button
+              type="button"
+              onClick={() => onDrillCondition(condition)}
+              className="condition-drill"
+              aria-label="Start drill for this condition"
+            >
               Drill this condition
             </button>
           )}

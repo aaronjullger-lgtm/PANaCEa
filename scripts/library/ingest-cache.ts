@@ -139,7 +139,9 @@ async function main() {
     }
     const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
     try {
-      const expiresAt = expireTime ? new Date(expireTime) : new Date(Date.now() + ttlSeconds * 1000);
+      const expiresAt = expireTime
+        ? new Date(expireTime)
+        : new Date(Date.now() + ttlSeconds * 1000);
       await prisma.educationalResource.update({
         where: { id: args.resourceId },
         data: {

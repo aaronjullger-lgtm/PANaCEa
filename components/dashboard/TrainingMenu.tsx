@@ -456,7 +456,9 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     const styles = getDrillModeStyles(mode.id);
     const isDailyRecommended = dailyRecommended === mode.id;
     const featuredClasses =
-      variant === 'featured' ? 'md:col-span-2 lg:col-span-2 shadow-[0_4px_6px_-1px_var(--color-shadow-soft)] hover:shadow-[0_18px_42px_var(--color-shadow-soft)]' : '';
+      variant === 'featured'
+        ? 'md:col-span-2 lg:col-span-2 shadow-[0_4px_6px_-1px_var(--color-shadow-soft)] hover:shadow-[0_18px_42px_var(--color-shadow-soft)]'
+        : '';
 
     return (
       <button

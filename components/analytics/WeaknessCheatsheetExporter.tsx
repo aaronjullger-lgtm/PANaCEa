@@ -66,8 +66,8 @@ export default function WeaknessCheatsheetExporter({
       </div>
 
       <p className="text-xs mb-4 text-slate-600 dark:text-slate-400">
-        Generate a study guide focused on high-yield areas to reinforce. Perfect for
-        focused review and exam prep.
+        Generate a study guide focused on high-yield areas to reinforce. Perfect for focused review
+        and exam prep.
       </p>
 
       {/* Time Period Selector */}

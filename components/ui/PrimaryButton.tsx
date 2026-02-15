@@ -75,7 +75,14 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   return (
     <motion.button
       ref={btnRef}
-      whileHover={isDisabled ? {} : { y: -2, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)' }}
+      whileHover={
+        isDisabled
+          ? {}
+          : {
+              y: -2,
+              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
+            }
+      }
       whileTap={isDisabled ? {} : { scale: 0.95 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       disabled={isDisabled}

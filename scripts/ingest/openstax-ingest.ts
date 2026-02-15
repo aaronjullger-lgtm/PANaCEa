@@ -84,7 +84,7 @@ function chunkText(text: string, maxChars: number): string[] {
     }
 
     // If adding this paragraph would exceed, flush current buffer.
-    if ((buf.length + 2 + p.length) > maxChars) {
+    if (buf.length + 2 + p.length > maxChars) {
       chunks.push(buf);
       buf = p;
       continue;
@@ -195,4 +195,3 @@ try {
 } finally {
   await disconnect();
 }
-

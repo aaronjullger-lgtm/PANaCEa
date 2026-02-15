@@ -30,15 +30,28 @@ const VISUALIZER_PREFIX = 'visualizer';
 const GenerateBodySchema = z.object({
   body: z.object({
     /** Student prompt, e.g. "Grade 3 Ankle Sprain" or "Femur fracture". */
-    prompt: z.string().min(1).max(1000).optional().default('Human hand anatomy, medical illustration style, exhibiting rheumatoid arthritis.'),
-    segmentationPrompt: z.string().max(500).optional().default('Segment the inflamed joints. Return a JSON list of segmentation masks with keys "mask" and "label".'),
+    prompt: z
+      .string()
+      .min(1)
+      .max(1000)
+      .optional()
+      .default('Human hand anatomy, medical illustration style, exhibiting rheumatoid arthritis.'),
+    segmentationPrompt: z
+      .string()
+      .max(500)
+      .optional()
+      .default(
+        'Segment the inflamed joints. Return a JSON list of segmentation masks with keys "mask" and "label".'
+      ),
     /** Firefly: uploadId from prior upload (structure reference). */
     structureReferenceImageId: z.string().optional(),
     /** Firefly: URL of reference image. Locks bone geometry to prevent hallucination. */
     structureReferenceUrl: z
       .string()
       .optional()
-      .refine((s) => s === undefined || s.startsWith('https://') || s.startsWith('http://'), { message: 'Must be http(s) URL' }),
+      .refine((s) => s === undefined || s.startsWith('https://') || s.startsWith('http://'), {
+        message: 'Must be http(s) URL',
+      }),
     /** Reference anatomy from DB: AnatomyStructure.id or MediaAsset.id. Resolved to URL for structure. */
     referenceAnatomyId: z.string().optional(),
     /** Firefly: "art" = Medical Illustration; "photo" = Hyper-realistic. */
@@ -94,7 +107,9 @@ async function resolveReferenceUrlFromDb(
 async function getAdobeToken(env: Env): Promise<string> {
   if (env.ADOBE_ACCESS_TOKEN) return env.ADOBE_ACCESS_TOKEN;
   if (!env.ADOBE_CLIENT_ID || !env.ADOBE_CLIENT_SECRET) {
-    throw new Error('Adobe credentials not configured (ADOBE_CLIENT_ID, ADOBE_CLIENT_SECRET or ADOBE_ACCESS_TOKEN)');
+    throw new Error(
+      'Adobe credentials not configured (ADOBE_CLIENT_ID, ADOBE_CLIENT_SECRET or ADOBE_ACCESS_TOKEN)'
+    );
   }
   const body = new URLSearchParams({
     grant_type: 'client_credentials',
@@ -131,7 +146,10 @@ type FireflyInput = {
   contentClass: 'art' | 'photo';
 };
 
-async function generateFireflyImage(env: Env, input: FireflyInput): Promise<{ imageBase64: string; imageMime: string } | null> {
+async function generateFireflyImage(
+  env: Env,
+  input: FireflyInput
+): Promise<{ imageBase64: string; imageMime: string } | null> {
   const token = await getAdobeToken(env);
   const { prompt, structureReferenceImageId, structureReferenceUrl, contentClass } = input;
   const fireflyBody: Record<string, unknown> = {
@@ -141,9 +159,15 @@ async function generateFireflyImage(env: Env, input: FireflyInput): Promise<{ im
     contentClass,
   };
   if (structureReferenceUrl) {
-    fireflyBody.structure = { imageReference: { source: { url: structureReferenceUrl } }, strength: 50 };
+    fireflyBody.structure = {
+      imageReference: { source: { url: structureReferenceUrl } },
+      strength: 50,
+    };
   } else if (structureReferenceImageId) {
-    fireflyBody.structure = { imageReference: { source: { uploadId: structureReferenceImageId } }, strength: 50 };
+    fireflyBody.structure = {
+      imageReference: { source: { uploadId: structureReferenceImageId } },
+      strength: 50,
+    };
   }
   assertAdobeHostAllowed(FIREFLY_GENERATE);
   const fireflyRes = await fetch(FIREFLY_GENERATE, {
@@ -174,7 +198,7 @@ async function generateFireflyImage(env: Env, input: FireflyInput): Promise<{ im
 function parseSegmentationMasks(textPart: string): Array<{ mask?: string; label?: string }> {
   try {
     const parsed = JSON.parse(textPart);
-    let masks = Array.isArray(parsed) ? parsed : parsed.masks ?? parsed.mask ?? [];
+    let masks = Array.isArray(parsed) ? parsed : (parsed.masks ?? parsed.mask ?? []);
     if (!Array.isArray(masks)) masks = [masks];
     return masks;
   } catch {
@@ -194,15 +218,18 @@ async function uploadToSupabase(
   const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
   const storagePath = `${VISUALIZER_PREFIX}/${Date.now()}_${Math.random().toString(36).slice(2, 10)}.${ext}`;
   const binary = Uint8Array.from(atob(imageBase64), (c) => c.charCodeAt(0));
-  const res = await fetch(`${env.SUPABASE_URL}/storage/v1/object/${VISUALIZER_BUCKET}/${storagePath}`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': mimeType,
-      'x-upsert': 'true',
-    },
-    body: binary,
-  });
+  const res = await fetch(
+    `${env.SUPABASE_URL}/storage/v1/object/${VISUALIZER_BUCKET}/${storagePath}`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': mimeType,
+        'x-upsert': 'true',
+      },
+      body: binary,
+    }
+  );
   if (!res.ok) return null;
   const storageUrl = `${env.SUPABASE_URL}/storage/v1/object/public/${VISUALIZER_BUCKET}/${storagePath}`;
   return { storagePath, storageUrl };
@@ -250,7 +277,10 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
     } catch (e) {
       log.error('Firefly error', e);
       return new Response(
-        JSON.stringify({ error: 'Adobe Firefly error', details: e instanceof Error ? e.message : 'Unknown' }),
+        JSON.stringify({
+          error: 'Adobe Firefly error',
+          details: e instanceof Error ? e.message : 'Unknown',
+        }),
         { status: 502, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -259,7 +289,8 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
   if (!imageBase64) {
     return new Response(
       JSON.stringify({
-        error: 'No image generated. Configure ADOBE_CLIENT_ID and ADOBE_CLIENT_SECRET (or ADOBE_ACCESS_TOKEN) for Firefly, or provide a base64 image in the request.',
+        error:
+          'No image generated. Configure ADOBE_CLIENT_ID and ADOBE_CLIENT_SECRET (or ADOBE_ACCESS_TOKEN) for Firefly, or provide a base64 image in the request.',
       }),
       { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
@@ -292,10 +323,10 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
   if (!geminiRes.ok) {
     const text = await geminiRes.text();
     log.warn('Gemini segmentation failed', { status: geminiRes.status, text: text.slice(0, 200) });
-    return new Response(
-      JSON.stringify({ error: 'Segmentation failed', details: text }),
-      { status: geminiRes.status, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Segmentation failed', details: text }), {
+      status: geminiRes.status,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const geminiData = (await geminiRes.json()) as {
@@ -336,7 +367,9 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
         });
       }
     } catch (e) {
-      log.warn('VisualizerGeneration log failed', { msg: e instanceof Error ? e.message : String(e) });
+      log.warn('VisualizerGeneration log failed', {
+        msg: e instanceof Error ? e.message : String(e),
+      });
     } finally {
       if (prisma) await safePrismaDisconnect(prisma);
     }

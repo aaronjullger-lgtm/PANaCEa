@@ -97,7 +97,17 @@ export const onRequestGet = authenticatedEndpoint(StreakParamsSchema, async (con
 
     const flameLevel = Math.min(
       5,
-      currentStreak >= 100 ? 5 : currentStreak >= 30 ? 4 : currentStreak >= 14 ? 3 : currentStreak >= 7 ? 2 : currentStreak >= 3 ? 1 : 0
+      currentStreak >= 100
+        ? 5
+        : currentStreak >= 30
+          ? 4
+          : currentStreak >= 14
+            ? 3
+            : currentStreak >= 7
+              ? 2
+              : currentStreak >= 3
+                ? 1
+                : 0
     );
 
     logger.info('Fetched user streaks', {

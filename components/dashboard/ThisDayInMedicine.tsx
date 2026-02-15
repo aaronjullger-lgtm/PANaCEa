@@ -26,7 +26,9 @@ const ThisDayInMedicine: React.FC<ThisDayInMedicineProps> = ({ onQuestionClick }
           <Calendar className="w-5 h-5 text-[var(--color-accent)]" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-[var(--color-text-primary)]">This Day in Medicine</h3>
+          <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
+            This Day in Medicine
+          </h3>
           <p className="text-sm text-[var(--color-text-muted)]">
             {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
           </p>
@@ -40,8 +42,12 @@ const ThisDayInMedicine: React.FC<ThisDayInMedicineProps> = ({ onQuestionClick }
             {event.year}
           </span>
           <div className="flex-1">
-            <h4 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">{event.title}</h4>
-            <p className="text-[var(--color-text-secondary)] leading-relaxed">{event.description}</p>
+            <h4 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
+              {event.title}
+            </h4>
+            <p className="text-[var(--color-text-secondary)] leading-relaxed">
+              {event.description}
+            </p>
           </div>
         </div>
 

@@ -48,9 +48,7 @@ export const onRequestGet = publicEndpoint(
       });
 
       if (photoCases.length === 0) {
-        console.warn(
-          `[Media Drill API] No assets found. Modality: ${modalityParam || 'all'}`
-        );
+        console.warn(`[Media Drill API] No assets found. Modality: ${modalityParam || 'all'}`);
       }
 
       return { data: photoCases };

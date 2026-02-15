@@ -52,15 +52,18 @@ async function uploadToSupabase(
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return null;
   const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
   const storagePath = `${VEO_STORAGE_PREFIX}/${Date.now()}_${Math.random().toString(36).slice(2, 10)}.${ext}`;
-  const res = await fetch(`${env.SUPABASE_URL}/storage/v1/object/${VEO_STORAGE_BUCKET}/${storagePath}`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': mimeType,
-      'x-upsert': 'true',
-    },
-    body: buffer,
-  });
+  const res = await fetch(
+    `${env.SUPABASE_URL}/storage/v1/object/${VEO_STORAGE_BUCKET}/${storagePath}`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': mimeType,
+        'x-upsert': 'true',
+      },
+      body: buffer,
+    }
+  );
   if (!res.ok) {
     console.warn('[Veo] Supabase upload failed', res.status, await res.text().catch(() => ''));
     return null;
@@ -116,18 +119,18 @@ export const onRequestGet = authenticatedEndpoint(
     const url = new URL(request.url);
     const rawOp = url.searchParams.get('operation');
     if (!rawOp?.trim()) {
-      return new Response(
-        JSON.stringify({ error: 'Missing operation query parameter' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Missing operation query parameter' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     // Sanitize: allow only alphanumeric, hyphens, underscores, slashes (Gemini op format)
     const operationName = rawOp.replace(/^\/*/, '').trim();
     if (!operationName || /\.\.|[<>"']/.test(operationName)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid operation parameter' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Invalid operation parameter' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const preset = url.searchParams.get('preset');
@@ -252,7 +255,8 @@ export const onRequestGet = authenticatedEndpoint(
           JSON.stringify({
             data: {
               status: 'ready',
-              error: 'Video generated but storage not configured. Configure Supabase for video URLs.',
+              error:
+                'Video generated but storage not configured. Configure Supabase for video URLs.',
               videoBase64: null,
             },
           }),

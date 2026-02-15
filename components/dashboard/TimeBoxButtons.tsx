@@ -1,6 +1,6 @@
 /**
  * TimeBoxButtons - Quick-start presets for time-limited study sessions
- * 
+ *
  * PA students often have 5-15 minute windows. These buttons provide
  * instant access to time-boxed sessions that auto-end at the limit.
  */
@@ -67,9 +67,7 @@ export const TimeBoxButtons: React.FC<TimeBoxButtonsProps> = ({
       {/* Header */}
       <div className="flex items-center gap-2">
         <Clock className="w-4 h-4 text-[var(--color-text-muted)]" />
-        <h3 className="text-sm font-semibold text-[var(--color-text-secondary)]">
-          Quick Start
-        </h3>
+        <h3 className="text-sm font-semibold text-[var(--color-text-secondary)]">Quick Start</h3>
       </div>
 
       {/* Time preset buttons */}

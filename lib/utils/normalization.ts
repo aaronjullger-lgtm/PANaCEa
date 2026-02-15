@@ -26,7 +26,9 @@ export function universalParser(
 
   // Step 2: Already correct type
   if (Array.isArray(nonFakeNull)) {
-    return (nonFakeNull as unknown[]).map((item: unknown) => String(item ?? '').trim()).filter(Boolean);
+    return (nonFakeNull as unknown[])
+      .map((item: unknown) => String(item ?? '').trim())
+      .filter(Boolean);
   }
   if (typeof nonFakeNull === 'object' && nonFakeNull !== null) {
     return nonFakeNull as Record<string, unknown>;

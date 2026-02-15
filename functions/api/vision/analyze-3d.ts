@@ -47,7 +47,7 @@ function parse3DResponse(text: string): Array<{ label: string; box_3d: Box3D }> 
     const parsed = JSON.parse(stripped) as
       | Array<{ label?: string; box_3d?: unknown }>
       | { boxes?: Array<{ label?: string; box_3d?: unknown }>; units?: string };
-    const list = Array.isArray(parsed) ? parsed : parsed?.boxes ?? [];
+    const list = Array.isArray(parsed) ? parsed : (parsed?.boxes ?? []);
     for (const item of list) {
       const label = typeof item.label === 'string' ? item.label : 'unknown';
       const raw = item.box_3d;
@@ -82,7 +82,11 @@ export const onRequestPost = authenticatedEndpoint(Analyze3DBodySchema, async (c
   }
 
   const identifier = getRateLimitIdentifier(request);
-  const { response: rateLimitResponse, headers: rateLimitHeaders } = await withRateLimit(env, identifier, 'gemini');
+  const { response: rateLimitResponse, headers: rateLimitHeaders } = await withRateLimit(
+    env,
+    identifier,
+    'gemini'
+  );
   if (rateLimitResponse) return rateLimitResponse;
 
   const { imageBase64, mimeType, labels, prompt: customPrompt } = validated.body;
@@ -96,9 +100,7 @@ export const onRequestPost = authenticatedEndpoint(Analyze3DBodySchema, async (c
   const structureList = labels?.length
     ? labels.join(', ')
     : 'anatomical structures visible in the image (e.g. femur, tibia, talus)';
-  const prompt =
-    customPrompt ??
-    `Detect the following: ${structureList}. ${BOX_3D_PROMPT}`.trim();
+  const prompt = customPrompt ?? `Detect the following: ${structureList}. ${BOX_3D_PROMPT}`.trim();
 
   const requestBody: Record<string, unknown> = {
     contents: [
@@ -126,7 +128,9 @@ export const onRequestPost = authenticatedEndpoint(Analyze3DBodySchema, async (c
       body: JSON.stringify(requestBody),
     });
   } catch (err) {
-    log.warn('Vision analyze-3d fetch error', { msg: err instanceof Error ? err.message : String(err) });
+    log.warn('Vision analyze-3d fetch error', {
+      msg: err instanceof Error ? err.message : String(err),
+    });
     return new Response(JSON.stringify({ error: 'Vision 3D service unavailable' }), {
       status: 502,
       headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },

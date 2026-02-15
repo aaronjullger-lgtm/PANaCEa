@@ -39,7 +39,11 @@ export const onRequestGet = async (context: any) => {
     if (dbUrl) {
       const isAccelerate = dbUrl.startsWith('prisma://') || dbUrl.startsWith('prisma+postgres://');
       const isPostgres = dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://');
-      diagnostics.dbUrlType = isAccelerate ? 'accelerate' : isPostgres ? 'direct-postgres' : 'unknown';
+      diagnostics.dbUrlType = isAccelerate
+        ? 'accelerate'
+        : isPostgres
+          ? 'direct-postgres'
+          : 'unknown';
       if (isPostgres) {
         diagnostics.warning =
           'Direct PostgreSQL URLs do not work on Cloudflare Workers (no TCP). Use Prisma Accelerate.';

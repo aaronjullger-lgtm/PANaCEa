@@ -420,7 +420,7 @@ router.post(
     try {
       if (!process.env.DATABASE_URL) {
         res.status(503).json({ error: 'Database not configured' });
-      return;
+        return;
       }
 
       const body = req.body as { config?: Record<string, unknown>; count?: number };
@@ -488,7 +488,9 @@ router.post(
         if (typeof data.correctIndex === 'number') {
           correct = letters[data.correctIndex] ?? 'A';
         }
-        const correctIndex = opts.findIndex((o) => o === correct || (typeof o === 'string' && o.includes(correct)));
+        const correctIndex = opts.findIndex(
+          (o) => o === correct || (typeof o === 'string' && o.includes(correct))
+        );
         return {
           id: r.id,
           question: (data.question as string) || (data.text as string) || 'Question text missing',
@@ -588,7 +590,9 @@ router.get('/pool', async (req: Request, res: Response): Promise<void> => {
       questions = fallbackQs.map((q) => {
         const opts = q.options || [];
         const correctIdx = opts.findIndex(
-          (o) => o === (q as { correctAnswer?: string }).correctAnswer || o.includes((q as { correctAnswer?: string }).correctAnswer ?? '')
+          (o) =>
+            o === (q as { correctAnswer?: string }).correctAnswer ||
+            o.includes((q as { correctAnswer?: string }).correctAnswer ?? '')
         );
         const letter = (correctIdx >= 0 ? letters[correctIdx] : undefined) ?? 'A';
         return {

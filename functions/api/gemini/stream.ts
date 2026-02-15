@@ -154,9 +154,7 @@ async function processGeminiStream(
       }
     }
     if (thoughtSignatures.length > 0) {
-      await writer.write(
-        encoder.encode(`data: ${JSON.stringify({ thoughtSignatures })}\n\n`)
-      );
+      await writer.write(encoder.encode(`data: ${JSON.stringify({ thoughtSignatures })}\n\n`));
     }
     await writer.write(encoder.encode('data: [DONE]\n\n'));
     await writer.close();
@@ -327,7 +325,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       promptLength: prompt.length,
       temperature,
       hasCachedContent: !!cachedContent,
-      hasHistory: !!(history?.length),
+      hasHistory: !!history?.length,
     });
 
     // Build contents: multi-turn history + current user message (with thought signatures)

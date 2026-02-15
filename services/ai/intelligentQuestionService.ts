@@ -178,8 +178,8 @@ export async function getIntelligentQuestions(
       adaptations.push({
         type: 'system',
         reason: firstTarget.reason,
-      original: 'all systems',
-      adapted: targeting.targetSystems.map((t) => t.system).join(', '),
+        original: 'all systems',
+        adapted: targeting.targetSystems.map((t) => t.system).join(', '),
       });
     }
   }
@@ -617,9 +617,10 @@ export function enhanceSessionSettings(
   if (baseSettings.focus === 'all' && systemMastery.length > 0) {
     const initial = systemMastery[0];
     const filtered = systemMastery.filter((s) => s.questionsSeen >= 10);
-    const weakest = initial && filtered.length > 0
-      ? filtered.reduce((a, b) => (a.masteryLevel < b.masteryLevel ? a : b), initial)
-      : initial;
+    const weakest =
+      initial && filtered.length > 0
+        ? filtered.reduce((a, b) => (a.masteryLevel < b.masteryLevel ? a : b), initial)
+        : initial;
 
     if (weakest && weakest.masteryLevel < 60) {
       // Don't override, but note recommendation

@@ -1,9 +1,9 @@
 /**
  * Open-i (NLM) API Client - Fetch Open-Source Medical Images
- * 
+ *
  * Open-i aggregates medical images from MedPix, PubMed Central, and other
  * open-access sources. This client wraps the Open-i search API.
- * 
+ *
  * @see https://openi.nlm.nih.gov/faq#collection
  */
 
@@ -23,7 +23,7 @@ export interface SearchOpenIOptions {
 
 /**
  * Search Open-i for medical images matching the query.
- * 
+ *
  * @param query - Medical condition or keyword (e.g., "Pneumonia")
  * @param options - Search options
  * @returns Array of image candidates with metadata
@@ -59,7 +59,7 @@ async function fetchWithRetry(url: string, maxAttempts = 3): Promise<any> {
     try {
       const res = await fetch(url, {
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'User-Agent': 'PANaCEa-Hunter-Gatherer/1.0',
         },
       });
@@ -96,7 +96,7 @@ function shouldRetry(status: number, attempt: number, maxAttempts: number): bool
 
 /**
  * Parse Open-i API response into standardized image objects.
- * 
+ *
  * Open-i response structure (observed):
  * {
  *   "list": [
@@ -122,9 +122,7 @@ function parseOpenIResponse(data: any): OpenIImage[] {
     const imgPath = item.imgLarge || item.imgGrid || item.imgThumb;
     if (!imgPath) continue;
 
-    const imageUrl = imgPath.startsWith('http')
-      ? imgPath
-      : `https://openi.nlm.nih.gov${imgPath}`;
+    const imageUrl = imgPath.startsWith('http') ? imgPath : `https://openi.nlm.nih.gov${imgPath}`;
 
     results.push({
       imageUrl,

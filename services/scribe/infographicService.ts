@@ -1,16 +1,16 @@
 /**
  * Infographic Generation Service
- * 
+ *
  * Dynamic remediation graphics using Google AI Studio's info_genius.
  * Generates tailored visual learning aids when students make mistakes or need clarification.
- * 
+ *
  * Features:
  * - Side-by-side comparisons (e.g., Erythema Nodosum vs. Migrans)
  * - Algorithm flowcharts
  * - Differential diagnosis tables
  * - Mnemonic visualizations
  * - Audience-appropriate complexity
- * 
+ *
  * @module infographicService
  */
 
@@ -351,9 +351,7 @@ export function createInfoGraphicService(geminiApiKey: string): InfoGraphicServi
 /**
  * Build library of high-yield comparisons.
  */
-export async function buildHighYieldLibrary(
-  service: InfoGraphicService
-): Promise<void> {
+export async function buildHighYieldLibrary(service: InfoGraphicService): Promise<void> {
   const highYieldComparisons = [
     { conceptA: 'Erythema Nodosum', conceptB: 'Erythema Migrans' },
     { conceptA: 'Crohns Disease', conceptB: 'Ulcerative Colitis' },

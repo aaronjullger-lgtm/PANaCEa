@@ -155,10 +155,10 @@ export const onRequestGet = authenticatedEndpoint(ConceptGapsSchema, async ({ en
     prisma = createEdgePrismaClient(env.DATABASE_URL);
     const userId = await resolveUserId(prisma, auth.userId);
     if (!userId) {
-      return new Response(
-        JSON.stringify({ error: 'User not found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Fetch question attempts for analysis

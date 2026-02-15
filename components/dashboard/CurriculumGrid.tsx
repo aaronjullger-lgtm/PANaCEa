@@ -53,7 +53,11 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
     return (
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
         {Array.from({ length: 15 }).map((_, i) => (
-          <SkeletonLoader key={`skeleton-${i}`} variant="rectangular" className="h-16 w-full rounded-xl" />
+          <SkeletonLoader
+            key={`skeleton-${i}`}
+            variant="rectangular"
+            className="h-16 w-full rounded-xl"
+          />
         ))}
       </div>
     );
@@ -78,7 +82,9 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
             variants={prefersReducedMotion ? undefined : itemVariants}
             onClick={() => onSystemToggle(system)}
             whileHover={
-              prefersReducedMotion ? undefined : { scale: 1.03, y: -4, boxShadow: '0 10px 20px -4px rgba(15,23,42,0.15)' }
+              prefersReducedMotion
+                ? undefined
+                : { scale: 1.03, y: -4, boxShadow: '0 10px 20px -4px rgba(15,23,42,0.15)' }
             }
             whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
@@ -88,15 +94,18 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
               relative flex flex-col justify-between p-3 min-h-0 rounded-xl text-left
               bg-[var(--color-bg-secondary)] shadow-sm
               transition-colors duration-300
-              ${isSelected
-                ? 'border-l-4 border-l-muted-amber-500 bg-[var(--color-bg-tertiary)]'
-                : 'hover:bg-[var(--color-bg-tertiary)]'
+              ${
+                isSelected
+                  ? 'border-l-4 border-l-muted-amber-500 bg-[var(--color-bg-tertiary)]'
+                  : 'hover:bg-[var(--color-bg-tertiary)]'
               }
               ${isSelected ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)]'}
             `}
           >
             <div className="flex justify-between items-start w-full gap-2">
-              <span className={`font-semibold text-xs truncate ${isSelected ? 'text-[var(--color-text-primary)]' : ''}`}>
+              <span
+                className={`font-semibold text-xs truncate ${isSelected ? 'text-[var(--color-text-primary)]' : ''}`}
+              >
                 {system}
               </span>
               {isSelected && (

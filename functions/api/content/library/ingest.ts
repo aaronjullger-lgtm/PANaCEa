@@ -41,7 +41,10 @@ export const onRequestPost = authenticatedEndpoint(IngestBodySchema, async (cont
   const log = createEndpointLogger('/api/content/library/ingest', auth.userId);
 
   try {
-    validateFunctionEnv(env as unknown as Record<string, unknown>, ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']);
+    validateFunctionEnv(env as unknown as Record<string, unknown>, [
+      'SUPABASE_URL',
+      'SUPABASE_SERVICE_ROLE_KEY',
+    ]);
   } catch (e) {
     if (e instanceof MissingEnvError) return e.toResponse();
     throw e;
@@ -56,10 +59,10 @@ export const onRequestPost = authenticatedEndpoint(IngestBodySchema, async (cont
       select: { id: true, title: true, approvalStatus: true },
     });
     if (!resource) {
-      return new Response(
-        JSON.stringify({ error: 'Resource not found', resourceId }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Resource not found', resourceId }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const storagePath = `extracts/${resourceId}/structuredData.json`;
@@ -78,9 +81,15 @@ export const onRequestPost = authenticatedEndpoint(IngestBodySchema, async (cont
 
     if (!uploadRes.ok) {
       const errText = await uploadRes.text();
-      log.warn('Supabase storage upload failed', { status: uploadRes.status, error: errText.slice(0, 200) });
+      log.warn('Supabase storage upload failed', {
+        status: uploadRes.status,
+        error: errText.slice(0, 200),
+      });
       return new Response(
-        JSON.stringify({ error: 'Failed to upload structuredData to storage', details: errText.slice(0, 300) }),
+        JSON.stringify({
+          error: 'Failed to upload structuredData to storage',
+          details: errText.slice(0, 300),
+        }),
         { status: 502, headers: { 'Content-Type': 'application/json' } }
       );
     }

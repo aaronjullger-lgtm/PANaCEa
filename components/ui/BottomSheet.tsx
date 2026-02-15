@@ -1,9 +1,9 @@
 /**
  * BottomSheet - Mobile-native modal alternative
- * 
+ *
  * Provides thumb-friendly, swipe-to-dismiss bottom sheet for mobile devices.
  * Auto-switches to center modal on desktop for optimal UX on all screen sizes.
- * 
+ *
  * Features:
  * - Drag handle with visual affordance
  * - Swipe down to dismiss
@@ -168,7 +168,10 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               {/* Header */}
               {title && (
                 <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--color-border)]">
-                  <h2 id="bottom-sheet-title" className="text-lg font-bold text-[var(--color-text-primary)]">
+                  <h2
+                    id="bottom-sheet-title"
+                    className="text-lg font-bold text-[var(--color-text-primary)]"
+                  >
                     {title}
                   </h2>
                   <button
@@ -182,9 +185,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               )}
 
               {/* Content */}
-              <div className={`flex-1 overflow-y-auto ${className}`}>
-                {children}
-              </div>
+              <div className={`flex-1 overflow-y-auto ${className}`}>{children}</div>
             </motion.div>
           </>
         )}
@@ -228,7 +229,10 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               {/* Header */}
               {title && (
                 <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
-                  <h2 id="modal-title" className="text-xl font-bold text-[var(--color-text-primary)]">
+                  <h2
+                    id="modal-title"
+                    className="text-xl font-bold text-[var(--color-text-primary)]"
+                  >
                     {title}
                   </h2>
                   <button
@@ -242,9 +246,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               )}
 
               {/* Content */}
-              <div className={`flex-1 overflow-y-auto ${className}`}>
-                {children}
-              </div>
+              <div className={`flex-1 overflow-y-auto ${className}`}>{children}</div>
             </motion.div>
           </motion.div>
         </>

@@ -107,11 +107,14 @@ export function useDatabaseStats(): UseDatabaseStatsResult {
 
         if (result) {
           setStats(result as DatabaseStats);
-          setLastFetched(Date.now());        } else {
-          setError('Failed to fetch stats');        }
+          setLastFetched(Date.now());
+        } else {
+          setError('Failed to fetch stats');
+        }
       } catch (err) {
         console.error('[useDatabaseStats] Error fetching stats:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');      } finally {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
         setIsLoading(false);
       }
     },

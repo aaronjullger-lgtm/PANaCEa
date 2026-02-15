@@ -16,9 +16,9 @@ import {
 // Note: Polypharmacy mode is database-driven (not yet implemented)
 
 describe('New Training Modes Configuration', () => {
-  it('should not have medical_wordle in MODE_REGISTRY (deprecated)', () => {
+  it('should have medical_wordle in MODE_REGISTRY (legacy)', () => {
     const wordleMode = MODE_REGISTRY.find((m) => m.id === ('medical_wordle' as any));
-    expect(wordleMode).toBeUndefined();
+    expect(wordleMode).toBeDefined();
   });
 
   it('should have ventilator_hero in MODE_REGISTRY', () => {

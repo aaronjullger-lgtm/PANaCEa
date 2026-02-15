@@ -13,13 +13,18 @@ import { prisma, disconnectPrisma } from '../helpers/prisma-client';
 const DRY_RUN = process.argv.includes('--dry-run');
 
 function normalize(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
 }
 
 async function main() {
   console.log('╔════════════════════════════════════════════════════════════╗');
   console.log('║  Phase 4c: Normalize Question.relatedDrugs                ║');
-  console.log(`║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`);
+  console.log(
+    `║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`
+  );
   console.log('╚════════════════════════════════════════════════════════════╝');
 
   // Build drug lookup

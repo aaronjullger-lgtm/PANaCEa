@@ -48,13 +48,10 @@ export async function onRequestGet(context: any) {
       count,
     });
 
-    return new Response(
-      JSON.stringify({ data: photoCases }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ data: photoCases }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('[Photo Batch] Error:', error);
     return new Response(

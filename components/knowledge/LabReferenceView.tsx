@@ -102,13 +102,7 @@ export const LabReferenceView: React.FC = () => {
   }
 
   if (error) {
-    return (
-      <ErrorState
-        title="Failed to load lab reference"
-        message={error}
-        onRetry={fetchLabs}
-      />
-    );
+    return <ErrorState title="Failed to load lab reference" message={error} onRetry={fetchLabs} />;
   }
 
   return (
@@ -171,7 +165,9 @@ export const LabReferenceView: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <Beaker className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0" />
-                      <h3 className="font-bold text-[var(--color-text-primary)] truncate">{lab.name}</h3>
+                      <h3 className="font-bold text-[var(--color-text-primary)] truncate">
+                        {lab.name}
+                      </h3>
                       {lab.isHighYield && (
                         <span className="px-2 py-0.5 text-xs font-semibold bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] rounded">
                           High Yield
@@ -201,7 +197,10 @@ export const LabReferenceView: React.FC = () => {
                         </div>
                         <ul className="space-y-1">
                           {lab.increaseIndicates.map((cause, idx) => (
-                            <li key={idx} className="text-sm text-[var(--color-text-secondary)] ml-4">
+                            <li
+                              key={idx}
+                              className="text-sm text-[var(--color-text-secondary)] ml-4"
+                            >
                               • {cause}
                             </li>
                           ))}
@@ -219,7 +218,10 @@ export const LabReferenceView: React.FC = () => {
                         </div>
                         <ul className="space-y-1">
                           {lab.decreaseIndicates.map((cause, idx) => (
-                            <li key={idx} className="text-sm text-[var(--color-text-secondary)] ml-4">
+                            <li
+                              key={idx}
+                              className="text-sm text-[var(--color-text-secondary)] ml-4"
+                            >
                               • {cause}
                             </li>
                           ))}
@@ -237,7 +239,10 @@ export const LabReferenceView: React.FC = () => {
                         </div>
                         <ul className="space-y-1">
                           {lab.commonAbnormalities.map((finding, idx) => (
-                            <li key={idx} className="text-sm text-[var(--color-text-secondary)] ml-4">
+                            <li
+                              key={idx}
+                              className="text-sm text-[var(--color-text-secondary)] ml-4"
+                            >
                               • {finding}
                             </li>
                           ))}

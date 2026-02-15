@@ -132,7 +132,7 @@ export interface SessionSettings {
 
   /** Optional time limit in milliseconds - session auto-ends at limit (for time-boxed study) */
   timeLimit?: number;
-  
+
   /** Question count (legacy field name, kept for compatibility with 'count') */
   questionCount?: number;
 }

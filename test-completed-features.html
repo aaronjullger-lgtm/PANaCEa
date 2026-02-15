@@ -1,205 +1,268 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PANaCEa Feature Test Suite</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #0f172a;
-      color: #f1f5f9;
-    }
-    h1 {
-      color: #60a5fa;
-      border-bottom: 2px solid #1e293b;
-      padding-bottom: 10px;
-    }
-    .test-section {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-    .test-item {
-      padding: 12px;
-      margin: 8px 0;
-      background: #0f172a;
-      border-left: 4px solid #64748b;
-      border-radius: 4px;
-    }
-    .test-item.pass {
-      border-left-color: #22c55e;
-    }
-    .test-item.fail {
-      border-left-color: #ef4444;
-    }
-    .test-item.running {
-      border-left-color: #eab308;
-    }
-    button {
-      background: #3b82f6;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      margin: 5px;
-    }
-    button:hover {
-      background: #2563eb;
-    }
-    button:disabled {
-      background: #475569;
-      cursor: not-allowed;
-    }
-    .results {
-      margin-top: 20px;
-      padding: 15px;
-      background: #0f172a;
-      border-radius: 6px;
-    }
-    .status {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 4px;
-      font-size: 14px;
-      font-weight: bold;
-    }
-    .status.pass { background: #166534; color: #86efac; }
-    .status.fail { background: #7f1d1d; color: #fca5a5; }
-    .status.pending { background: #713f12; color: #fde047; }
-    pre {
-      background: #020617;
-      padding: 12px;
-      border-radius: 4px;
-      overflow-x: auto;
-      font-size: 12px;
-    }
-    .link-test {
-      color: #60a5fa;
-      text-decoration: underline;
-      cursor: pointer;
-      margin: 5px 0;
-      display: block;
-    }
-  </style>
-</head>
-<body>
-  <h1>🧪 PANaCEa Feature Test Suite</h1>
-  <p>Testing all completed and polished features</p>
-
-  <div class="test-section">
-    <h2>🎯 Quick Link Tests</h2>
-    <p>Click these to manually test navigation and features:</p>
-    
-    <a href="http://localhost:3000/" class="link-test" target="_blank">→ Dashboard (Home)</a>
-    <a href="http://localhost:3000/menu" class="link-test" target="_blank">→ Training Menu</a>
-    <a href="http://localhost:3000/study/toolkit" class="link-test" target="_blank">→ Toolkit (Calculators)</a>
-    <a href="http://localhost:3000/study/reference" class="link-test" target="_blank">→ Reference Library</a>
-    <a href="http://localhost:3000/invalid-test-url" class="link-test" target="_blank">→ 404 Page Test</a>
-    <a href="http://localhost:3000/clinical-eye" class="link-test" target="_blank">→ Clinical Eye Mode</a>
-  </div>
-
-  <div class="test-section">
-    <h2>🧪 Automated API Tests</h2>
-    <button onclick="runAllTests()">Run All Tests</button>
-    <button onclick="clearResults()">Clear Results</button>
-    
-    <div id="results" class="results"></div>
-  </div>
-
-  <div class="test-section">
-    <h2>📋 Manual Test Checklist</h2>
-    <div id="manual-tests"></div>
-  </div>
-
-  <script>
-    const resultsDiv = document.getElementById('results');
-    const manualTestsDiv = document.getElementById('manual-tests');
-    let testResults = [];
-
-    const manualTests = [
-      {
-        name: 'Medical Wordle Access',
-        steps: ['Go to Training Menu', 'Find "Medical Wordle" in list', 'Should be clickable (not grayed out)']
-      },
-      {
-        name: 'Polypharmacy Puzzle',
-        steps: ['Training Menu → Polypharmacy Puzzle', 'Patient case loads', 'Can click medications', 'Select 2 drugs', 'Click "Check Interaction"', 'Toast notification appears', 'Double-click drug for contraindication']
-      },
-      {
-        name: 'Pediatric Dosing',
-        steps: ['Toolkit → Calculators → Pediatric Dosing', 'Select Amoxicillin', 'Enter weight: 20', 'Dose calculates: 800mg', 'Frequency shows: "divided q8h"']
-      },
-      {
-        name: 'Clinical Guidelines',
-        steps: ['Toolkit → Calculators → Clinical Guidelines', '6 guidelines displayed', 'Search "CURB" → CURB-65 appears', 'Clear search → all 6 show']
-      },
-      {
-        name: 'Quiz Submit Spinner',
-        steps: ['Start Session', 'Answer question', 'Click Submit', 'Spinner shows', 'Text says "Submitting..."', 'Button disabled during submit']
-      },
-      {
-        name: '404 Page',
-        steps: ['Navigate to /invalid-url', '404 page appears', '"Page Not Found" text shows', '"Go to Dashboard" button present']
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PANaCEa Feature Test Suite</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #0f172a;
+        color: #f1f5f9;
       }
-    ];
+      h1 {
+        color: #60a5fa;
+        border-bottom: 2px solid #1e293b;
+        padding-bottom: 10px;
+      }
+      .test-section {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .test-item {
+        padding: 12px;
+        margin: 8px 0;
+        background: #0f172a;
+        border-left: 4px solid #64748b;
+        border-radius: 4px;
+      }
+      .test-item.pass {
+        border-left-color: #22c55e;
+      }
+      .test-item.fail {
+        border-left-color: #ef4444;
+      }
+      .test-item.running {
+        border-left-color: #eab308;
+      }
+      button {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 5px;
+      }
+      button:hover {
+        background: #2563eb;
+      }
+      button:disabled {
+        background: #475569;
+        cursor: not-allowed;
+      }
+      .results {
+        margin-top: 20px;
+        padding: 15px;
+        background: #0f172a;
+        border-radius: 6px;
+      }
+      .status {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: bold;
+      }
+      .status.pass {
+        background: #166534;
+        color: #86efac;
+      }
+      .status.fail {
+        background: #7f1d1d;
+        color: #fca5a5;
+      }
+      .status.pending {
+        background: #713f12;
+        color: #fde047;
+      }
+      pre {
+        background: #020617;
+        padding: 12px;
+        border-radius: 4px;
+        overflow-x: auto;
+        font-size: 12px;
+      }
+      .link-test {
+        color: #60a5fa;
+        text-decoration: underline;
+        cursor: pointer;
+        margin: 5px 0;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 PANaCEa Feature Test Suite</h1>
+    <p>Testing all completed and polished features</p>
 
-    // Render manual checklist
-    manualTestsDiv.innerHTML = manualTests.map((test, idx) => `
+    <div class="test-section">
+      <h2>🎯 Quick Link Tests</h2>
+      <p>Click these to manually test navigation and features:</p>
+
+      <a href="http://localhost:3000/" class="link-test" target="_blank">→ Dashboard (Home)</a>
+      <a href="http://localhost:3000/menu" class="link-test" target="_blank">→ Training Menu</a>
+      <a href="http://localhost:3000/study/toolkit" class="link-test" target="_blank"
+        >→ Toolkit (Calculators)</a
+      >
+      <a href="http://localhost:3000/study/reference" class="link-test" target="_blank"
+        >→ Reference Library</a
+      >
+      <a href="http://localhost:3000/invalid-test-url" class="link-test" target="_blank"
+        >→ 404 Page Test</a
+      >
+      <a href="http://localhost:3000/clinical-eye" class="link-test" target="_blank"
+        >→ Clinical Eye Mode</a
+      >
+    </div>
+
+    <div class="test-section">
+      <h2>🧪 Automated API Tests</h2>
+      <button onclick="runAllTests()">Run All Tests</button>
+      <button onclick="clearResults()">Clear Results</button>
+
+      <div id="results" class="results"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>📋 Manual Test Checklist</h2>
+      <div id="manual-tests"></div>
+    </div>
+
+    <script>
+      const resultsDiv = document.getElementById('results');
+      const manualTestsDiv = document.getElementById('manual-tests');
+      let testResults = [];
+
+      const manualTests = [
+        {
+          name: 'Medical Wordle Access',
+          steps: [
+            'Go to Training Menu',
+            'Find "Medical Wordle" in list',
+            'Should be clickable (not grayed out)',
+          ],
+        },
+        {
+          name: 'Polypharmacy Puzzle',
+          steps: [
+            'Training Menu → Polypharmacy Puzzle',
+            'Patient case loads',
+            'Can click medications',
+            'Select 2 drugs',
+            'Click "Check Interaction"',
+            'Toast notification appears',
+            'Double-click drug for contraindication',
+          ],
+        },
+        {
+          name: 'Pediatric Dosing',
+          steps: [
+            'Toolkit → Calculators → Pediatric Dosing',
+            'Select Amoxicillin',
+            'Enter weight: 20',
+            'Dose calculates: 800mg',
+            'Frequency shows: "divided q8h"',
+          ],
+        },
+        {
+          name: 'Clinical Guidelines',
+          steps: [
+            'Toolkit → Calculators → Clinical Guidelines',
+            '6 guidelines displayed',
+            'Search "CURB" → CURB-65 appears',
+            'Clear search → all 6 show',
+          ],
+        },
+        {
+          name: 'Quiz Submit Spinner',
+          steps: [
+            'Start Session',
+            'Answer question',
+            'Click Submit',
+            'Spinner shows',
+            'Text says "Submitting..."',
+            'Button disabled during submit',
+          ],
+        },
+        {
+          name: '404 Page',
+          steps: [
+            'Navigate to /invalid-url',
+            '404 page appears',
+            '"Page Not Found" text shows',
+            '"Go to Dashboard" button present',
+          ],
+        },
+      ];
+
+      // Render manual checklist
+      manualTestsDiv.innerHTML = manualTests
+        .map(
+          (test, idx) => `
       <div class="test-item">
         <h3>${idx + 1}. ${test.name}</h3>
         <ul>
-          ${test.steps.map(step => `<li>${step}</li>`).join('')}
+          ${test.steps.map((step) => `<li>${step}</li>`).join('')}
         </ul>
       </div>
-    `).join('');
+    `
+        )
+        .join('');
 
-    async function runTest(name, testFn) {
-      addResult(name, 'running', 'Testing...');
-      try {
-        const result = await testFn();
-        addResult(name, 'pass', result);
-        return true;
-      } catch (error) {
-        addResult(name, 'fail', error.message);
-        return false;
+      async function runTest(name, testFn) {
+        addResult(name, 'running', 'Testing...');
+        try {
+          const result = await testFn();
+          addResult(name, 'pass', result);
+          return true;
+        } catch (error) {
+          addResult(name, 'fail', error.message);
+          return false;
+        }
       }
-    }
 
-    function addResult(name, status, message) {
-      const existing = testResults.find(r => r.name === name);
-      if (existing) {
-        existing.status = status;
-        existing.message = message;
-      } else {
-        testResults.push({ name, status, message });
+      function addResult(name, status, message) {
+        const existing = testResults.find((r) => r.name === name);
+        if (existing) {
+          existing.status = status;
+          existing.message = message;
+        } else {
+          testResults.push({ name, status, message });
+        }
+        renderResults();
       }
-      renderResults();
-    }
 
-    function renderResults() {
-      const html = testResults.map(result => `
+      function renderResults() {
+        const html = testResults
+          .map(
+            (result) => `
         <div class="test-item ${result.status}">
           <strong>${result.name}</strong>
           <span class="status ${result.status}">${result.status.toUpperCase()}</span>
           <div style="margin-top: 8px; color: #94a3b8;">${result.message}</div>
         </div>
-      `).join('');
-      
-      const summary = {
-        pass: testResults.filter(r => r.status === 'pass').length,
-        fail: testResults.filter(r => r.status === 'fail').length,
-        running: testResults.filter(r => r.status === 'running').length
-      };
-      
-      resultsDiv.innerHTML = `
+      `
+          )
+          .join('');
+
+        const summary = {
+          pass: testResults.filter((r) => r.status === 'pass').length,
+          fail: testResults.filter((r) => r.status === 'fail').length,
+          running: testResults.filter((r) => r.status === 'running').length,
+        };
+
+        resultsDiv.innerHTML = `
         <div style="margin-bottom: 20px;">
           <strong>Summary:</strong>
           <span class="status pass">${summary.pass} Passed</span>
@@ -208,112 +271,114 @@
         </div>
         ${html}
       `;
-    }
-
-    function clearResults() {
-      testResults = [];
-      renderResults();
-    }
-
-    async function runAllTests() {
-      testResults = [];
-      
-      // Test 1: Server Health
-      await runTest('Server Reachability', async () => {
-        const response = await fetch('http://localhost:3000');
-        if (!response.ok) throw new Error(`Server returned ${response.status}`);
-        return 'Server responding with 200 OK';
-      });
-
-      // Test 2: 404 Handling
-      await runTest('404 Page', async () => {
-        const response = await fetch('http://localhost:3000/invalid-test-path-12345');
-        const html = await response.text();
-        if (!html.includes('404') && !html.includes('Not Found')) {
-          throw new Error('404 page not detected');
-        }
-        return '404 page renders for invalid paths';
-      });
-
-      // Test 3: Main Routes
-      await runTest('Dashboard Route', async () => {
-        const response = await fetch('http://localhost:3000/study');
-        if (!response.ok) throw new Error(`Dashboard returned ${response.status}`);
-        return 'Dashboard accessible at /study';
-      });
-
-      await runTest('Menu Route', async () => {
-        const response = await fetch('http://localhost:3000/menu');
-        if (!response.ok) throw new Error(`Menu returned ${response.status}`);
-        return 'Menu accessible at /menu';
-      });
-
-      await runTest('Toolkit Route', async () => {
-        const response = await fetch('http://localhost:3000/study/toolkit');
-        if (!response.ok) throw new Error(`Toolkit returned ${response.status}`);
-        return 'Toolkit accessible at /study/toolkit';
-      });
-
-      await runTest('Reference Route', async () => {
-        const response = await fetch('http://localhost:3000/study/reference');
-        if (!response.ok) throw new Error(`Reference returned ${response.status}`);
-        return 'Reference accessible at /study/reference';
-      });
-
-      // Test 4: Check for sportsbook references (should be 0)
-      await runTest('No Sportsbook References', async () => {
-        const response = await fetch('http://localhost:3000');
-        const html = await response.text();
-        if (html.toLowerCase().includes('sportsbook')) {
-          throw new Error('Found "sportsbook" reference in HTML');
-        }
-        return 'Zero "sportsbook" references found';
-      });
-
-      // Test 5: Check bundle loads
-      await runTest('JavaScript Bundle', async () => {
-        const response = await fetch('http://localhost:3000');
-        const html = await response.text();
-        if (!html.includes('script') && !html.includes('module')) {
-          throw new Error('No script tags found');
-        }
-        return 'JavaScript bundle referenced correctly';
-      });
-
-      // Summary
-      const passed = testResults.filter(r => r.status === 'pass').length;
-      const failed = testResults.filter(r => r.status === 'fail').length;
-      
-      if (failed === 0) {
-        alert(`✅ All ${passed} automated tests passed!`);
-      } else {
-        alert(`⚠️ ${passed} passed, ${failed} failed. Check results below.`);
       }
-    }
 
-    // Run tests on load
-    console.log('Test suite ready. Click "Run All Tests" button to start.');
-  </script>
+      function clearResults() {
+        testResults = [];
+        renderResults();
+      }
 
-  <div class="test-section">
-    <h2>📝 Testing Notes</h2>
-    <ul>
-      <li>Dev server must be running on port 3000</li>
-      <li>Some tests require authentication (Clerk)</li>
-      <li>API tests may fail if backend not configured</li>
-      <li>Manual tests verify UI/UX, automated tests verify infrastructure</li>
-      <li>Check browser console for detailed logs</li>
-    </ul>
-    
-    <h3>Expected Test Results</h3>
-    <pre>✅ Server Reachability
+      async function runAllTests() {
+        testResults = [];
+
+        // Test 1: Server Health
+        await runTest('Server Reachability', async () => {
+          const response = await fetch('http://localhost:3000');
+          if (!response.ok) throw new Error(`Server returned ${response.status}`);
+          return 'Server responding with 200 OK';
+        });
+
+        // Test 2: 404 Handling
+        await runTest('404 Page', async () => {
+          const response = await fetch('http://localhost:3000/invalid-test-path-12345');
+          const html = await response.text();
+          if (!html.includes('404') && !html.includes('Not Found')) {
+            throw new Error('404 page not detected');
+          }
+          return '404 page renders for invalid paths';
+        });
+
+        // Test 3: Main Routes
+        await runTest('Dashboard Route', async () => {
+          const response = await fetch('http://localhost:3000/study');
+          if (!response.ok) throw new Error(`Dashboard returned ${response.status}`);
+          return 'Dashboard accessible at /study';
+        });
+
+        await runTest('Menu Route', async () => {
+          const response = await fetch('http://localhost:3000/menu');
+          if (!response.ok) throw new Error(`Menu returned ${response.status}`);
+          return 'Menu accessible at /menu';
+        });
+
+        await runTest('Toolkit Route', async () => {
+          const response = await fetch('http://localhost:3000/study/toolkit');
+          if (!response.ok) throw new Error(`Toolkit returned ${response.status}`);
+          return 'Toolkit accessible at /study/toolkit';
+        });
+
+        await runTest('Reference Route', async () => {
+          const response = await fetch('http://localhost:3000/study/reference');
+          if (!response.ok) throw new Error(`Reference returned ${response.status}`);
+          return 'Reference accessible at /study/reference';
+        });
+
+        // Test 4: Check for sportsbook references (should be 0)
+        await runTest('No Sportsbook References', async () => {
+          const response = await fetch('http://localhost:3000');
+          const html = await response.text();
+          if (html.toLowerCase().includes('sportsbook')) {
+            throw new Error('Found "sportsbook" reference in HTML');
+          }
+          return 'Zero "sportsbook" references found';
+        });
+
+        // Test 5: Check bundle loads
+        await runTest('JavaScript Bundle', async () => {
+          const response = await fetch('http://localhost:3000');
+          const html = await response.text();
+          if (!html.includes('script') && !html.includes('module')) {
+            throw new Error('No script tags found');
+          }
+          return 'JavaScript bundle referenced correctly';
+        });
+
+        // Summary
+        const passed = testResults.filter((r) => r.status === 'pass').length;
+        const failed = testResults.filter((r) => r.status === 'fail').length;
+
+        if (failed === 0) {
+          alert(`✅ All ${passed} automated tests passed!`);
+        } else {
+          alert(`⚠️ ${passed} passed, ${failed} failed. Check results below.`);
+        }
+      }
+
+      // Run tests on load
+      console.log('Test suite ready. Click "Run All Tests" button to start.');
+    </script>
+
+    <div class="test-section">
+      <h2>📝 Testing Notes</h2>
+      <ul>
+        <li>Dev server must be running on port 3000</li>
+        <li>Some tests require authentication (Clerk)</li>
+        <li>API tests may fail if backend not configured</li>
+        <li>Manual tests verify UI/UX, automated tests verify infrastructure</li>
+        <li>Check browser console for detailed logs</li>
+      </ul>
+
+      <h3>Expected Test Results</h3>
+      <pre>
+✅ Server Reachability
 ✅ 404 Page  
 ✅ Dashboard Route
 ✅ Menu Route
 ✅ Toolkit Route
 ✅ Reference Route
 ✅ No Sportsbook References
-✅ JavaScript Bundle</pre>
-  </div>
-</body>
+✅ JavaScript Bundle</pre
+      >
+    </div>
+  </body>
 </html>

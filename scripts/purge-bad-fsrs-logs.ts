@@ -72,7 +72,9 @@ async function purgeBadFsrsData() {
         fsrsVersion: 'archived_purge',
       },
     });
-    console.log(`\n✅ Sanitized ${result.count} log(s) → review_type = 'cram', fsrsVersion = 'archived_purge'.`);
+    console.log(
+      `\n✅ Sanitized ${result.count} log(s) → review_type = 'cram', fsrsVersion = 'archived_purge'.`
+    );
   }
 
   console.log('\nAffected user ids (for optional Card recalc):', affectedUserIds);

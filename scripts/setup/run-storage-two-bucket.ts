@@ -13,8 +13,7 @@ import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const connectionString =
-  process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
+const connectionString = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
 if (!connectionString) {
   console.error('Missing DIRECT_DATABASE_URL or DATABASE_URL in env');
   process.exit(1);

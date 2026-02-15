@@ -79,11 +79,7 @@ function parseVitalsFromSession(physicalFindings: unknown): VitalsDisplay {
         ? v.respiratoryRate
         : DEFAULT_VITALS.rr;
   const o2 =
-    typeof v.o2 === 'number'
-      ? v.o2
-      : typeof v.o2Sat === 'number'
-        ? v.o2Sat
-        : DEFAULT_VITALS.o2;
+    typeof v.o2 === 'number' ? v.o2 : typeof v.o2Sat === 'number' ? v.o2Sat : DEFAULT_VITALS.o2;
 
   return {
     hr,

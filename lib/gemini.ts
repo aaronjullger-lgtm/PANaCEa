@@ -44,7 +44,7 @@ export interface GradeResult {
 
 /**
  * Grade a medical image for educational quality using Gemini 1.5 Pro Vision.
- * 
+ *
  * @param imageUrl - Public URL of the image to grade
  * @param conditionName - Medical condition name (e.g., "Pneumonia")
  * @param apiKey - Gemini API key
@@ -95,7 +95,7 @@ Return your assessment as **valid JSON only** (no markdown, no code fences):
 }`;
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${VISION_MODEL}:generateContent?key=${apiKey}`;
-  
+
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

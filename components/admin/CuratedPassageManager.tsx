@@ -304,4 +304,3 @@ export const CuratedPassageManager: React.FC<CuratedPassageManagerProps> = ({
 };
 
 export default CuratedPassageManager;
-

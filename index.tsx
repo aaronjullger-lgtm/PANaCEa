@@ -35,25 +35,25 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
-      <AuthProvider>
-        <PersistQueryClientProvider
-          client={queryClient}
-          persistOptions={{
-            persister,
-            maxAge: 1000 * 60 * 60 * 12, // 12 hours - due queue available offline
-          }}
-        >
-          <ShortcutProvider>
-            <BrowserRouter>
-              <ThemeProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <PersistQueryClientProvider
+            client={queryClient}
+            persistOptions={{
+              persister,
+              maxAge: 1000 * 60 * 60 * 12, // 12 hours - due queue available offline
+            }}
+          >
+            <ShortcutProvider>
+              <BrowserRouter>
                 <MasteryHeatmapProvider>
                   <App />
                 </MasteryHeatmapProvider>
-              </ThemeProvider>
-            </BrowserRouter>
-          </ShortcutProvider>
-        </PersistQueryClientProvider>
-      </AuthProvider>
+              </BrowserRouter>
+            </ShortcutProvider>
+          </PersistQueryClientProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   </React.StrictMode>
 );

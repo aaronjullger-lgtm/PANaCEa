@@ -116,9 +116,7 @@ const MetricCard: React.FC<{
           }`}
         >
           {trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'}
-          {trend === 'neutral' && (
-            <span className="text-xs font-normal">No change</span>
-          )}
+          {trend === 'neutral' && <span className="text-xs font-normal">No change</span>}
         </span>
       )}
     </div>

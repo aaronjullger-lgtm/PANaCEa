@@ -1,6 +1,6 @@
 /**
  * Initial Load Time Optimizer for StudyPANaCEa
- * 
+ *
  * Comprehensive system for improving initial page load performance
  * Implements critical path optimization, resource prioritization, and monitoring
  */
@@ -223,23 +223,30 @@ export class InitialLoadOptimizer {
 
     // Check against performance budget
     if (totalSize > this.performanceBudget.maxBundleSize) {
-      recommendations.push(`Total bundle size ${totalSize.toFixed(2)}KB exceeds budget of ${this.performanceBudget.maxBundleSize}KB`);
+      recommendations.push(
+        `Total bundle size ${totalSize.toFixed(2)}KB exceeds budget of ${this.performanceBudget.maxBundleSize}KB`
+      );
     }
 
     // Identify large chunks
-    const largeChunks = chunks.filter(chunk => chunk.size > 100); // Chunks larger than 100KB
+    const largeChunks = chunks.filter((chunk) => chunk.size > 100); // Chunks larger than 100KB
     if (largeChunks.length > 0) {
-      recommendations.push(`Large chunks detected: ${largeChunks.map(c => `${c.name} (${c.size.toFixed(2)}KB)`).join(', ')}`);
+      recommendations.push(
+        `Large chunks detected: ${largeChunks.map((c) => `${c.name} (${c.size.toFixed(2)}KB)`).join(', ')}`
+      );
     }
 
     // Check third-party scripts
     const thirdPartyScripts = this.resourceTimings.filter(
-      r => r.initiatorType === 'script' && 
-      !r.name.includes(window.location.origin) &&
-      !r.name.includes('localhost')
+      (r) =>
+        r.initiatorType === 'script' &&
+        !r.name.includes(window.location.origin) &&
+        !r.name.includes('localhost')
     );
     if (thirdPartyScripts.length > this.performanceBudget.maxThirdPartyScripts) {
-      recommendations.push(`Too many third-party scripts: ${thirdPartyScripts.length} (max: ${this.performanceBudget.maxThirdPartyScripts})`);
+      recommendations.push(
+        `Too many third-party scripts: ${thirdPartyScripts.length} (max: ${this.performanceBudget.maxThirdPartyScripts})`
+      );
     }
 
     return {
@@ -259,7 +266,7 @@ export class InitialLoadOptimizer {
     const nonCriticalLinks = document.querySelectorAll<HTMLLinkElement>(
       'link[rel="stylesheet"]:not([media="print"])'
     );
-    nonCriticalLinks.forEach(link => {
+    nonCriticalLinks.forEach((link) => {
       if (!link.media || link.media === 'all') {
         link.media = 'print';
         link.onload = () => {
@@ -270,7 +277,7 @@ export class InitialLoadOptimizer {
 
     // Lazy load images below the fold
     const images = document.querySelectorAll<HTMLImageElement>('img[loading="lazy"]');
-    images.forEach(img => {
+    images.forEach((img) => {
       if (!img.loading) {
         img.loading = 'lazy';
       }
@@ -283,7 +290,7 @@ export class InitialLoadOptimizer {
       'https://clerk.com',
     ];
 
-    criticalOrigins.forEach(origin => {
+    criticalOrigins.forEach((origin) => {
       const link = document.createElement('link');
       link.rel = 'preconnect';
       link.href = origin;
@@ -296,7 +303,7 @@ export class InitialLoadOptimizer {
       { href: '/fonts/inter-var.woff2', as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' },
     ];
 
-    criticalResources.forEach(resource => {
+    criticalResources.forEach((resource) => {
       const link = document.createElement('link');
       link.rel = 'preload';
       link.href = resource.href;
@@ -314,34 +321,18 @@ export class InitialLoadOptimizer {
     if (typeof document === 'undefined') return;
 
     // DNS prefetch for external domains
-    const externalDomains = [
-      'clerk.com',
-      'fonts.googleapis.com',
-      'fonts.gstatic.com',
-    ];
+    const externalDomains = ['clerk.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
-    externalDomains.forEach(domain => {
+    externalDomains.forEach((domain) => {
       const link = document.createElement('link');
       link.rel = 'dns-prefetch';
       link.href = `//${domain}`;
       document.head.appendChild(link);
     });
 
-    // Prefetch critical API endpoints that will be needed
-    const criticalEndpoints = [
-      '/api/dashboard/stats',
-      '/api/user/profile',
-      '/api/questions/batch',
-    ];
-
-    criticalEndpoints.forEach(endpoint => {
-      const link = document.createElement('link');
-      link.rel = 'prefetch';
-      link.href = endpoint;
-      link.as = 'fetch';
-      link.crossOrigin = 'anonymous';
-      document.head.appendChild(link);
-    });
+    // Do not prefetch API endpoints: /api/dashboard/stats and /api/user/profile require
+    // authentication (cookies). Prefetch does not send credentials, so it would trigger
+    // 503/401 and wasted requests. Let the app fetch them when the user is signed in.
 
     // Preconnect to critical origins
     const preconnectOrigins = [
@@ -350,7 +341,7 @@ export class InitialLoadOptimizer {
       'https://fonts.gstatic.com',
     ];
 
-    preconnectOrigins.forEach(origin => {
+    preconnectOrigins.forEach((origin) => {
       const link = document.createElement('link');
       link.rel = 'preconnect';
       link.href = origin;
@@ -398,16 +389,16 @@ export class InitialLoadOptimizer {
    */
   initialize(): void {
     console.log('[Performance] Initial Load Optimizer initialized');
-    
+
     // Optimize critical path
     this.optimizeCriticalPath();
-    
+
     // Add resource hints
     this.addResourceHints();
-    
+
     // Start monitoring
     this.setupPerformanceObserver();
-    
+
     // Report initial performance
     setTimeout(() => {
       const report = this.getPerformanceReport();
@@ -460,10 +451,7 @@ export function useInitialLoadOptimization(): {
 /**
  * Utility to measure function execution time
  */
-export function measureExecutionTime<T>(
-  fn: () => T,
-  label: string
-): T {
+export function measureExecutionTime<T>(fn: () => T, label: string): T {
   const start = performance.now();
   const result = fn();
   const end = performance.now();

@@ -178,7 +178,10 @@ export const onRequestGet = authenticatedEndpoint(
       const system = validated.system || null;
       const systemsParam = validated.systems;
       const systems: string[] | null = systemsParam
-        ? systemsParam.split(',').map((s) => s.trim()).filter(Boolean)
+        ? systemsParam
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
         : null;
       const category = validated.category || null;
       const difficulty = validated.difficulty || null;
@@ -295,7 +298,9 @@ export const onRequestGet = authenticatedEndpoint(
       return {
         data: {
           error: isDbUnavailable ? 'Pool unavailable' : 'Failed to fetch pool questions',
-          message: isDbUnavailable ? 'Database is temporarily unavailable. Please try again.' : errMsg || 'Please try again later.',
+          message: isDbUnavailable
+            ? 'Database is temporarily unavailable. Please try again.'
+            : errMsg || 'Please try again later.',
         },
         status: isDbUnavailable ? 503 : 500,
       };
@@ -588,7 +593,9 @@ async function getFromMainTable(
       explanation: q.explanation ?? undefined,
       system: q.system ?? 'General',
       difficulty: q.difficulty || 'medium',
-      tags: Array.isArray(q.tags) ? (q.tags.filter((x): x is string => typeof x === 'string') as string[]) : [],
+      tags: Array.isArray(q.tags)
+        ? (q.tags.filter((x): x is string => typeof x === 'string') as string[])
+        : [],
       source: 'main',
       fromStaging: false,
     });

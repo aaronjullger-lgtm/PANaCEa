@@ -1,6 +1,6 @@
 /**
  * Avatar Display
- * 
+ *
  * Shows user's evolving avatar with progression indicators.
  * Displays current stage, XP, and equipped accessories.
  */
@@ -19,14 +19,16 @@ export function AvatarDisplay({ avatar, compact = false, className = '' }: Avata
   const avatarXP = avatar?.xp || 0;
   const currentLevel = Math.floor(avatarXP / 100);
   const xpInLevel = avatarXP % 100;
-  
+
   if (!avatar) {
     return compact ? (
       <div className="w-10 h-10 rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center">
         <User className="w-5 h-5 text-[var(--color-text-muted)]" />
       </div>
     ) : (
-      <div className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 ${className}`}>
+      <div
+        className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 ${className}`}
+      >
         <p className="text-sm text-[var(--color-text-muted)]">
           Complete your profile to see your avatar!
         </p>
@@ -58,7 +60,9 @@ export function AvatarDisplay({ avatar, compact = false, className = '' }: Avata
   };
 
   return (
-    <div className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 ${className}`}>
+    <div
+      className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 ${className}`}
+    >
       <div className="flex items-center gap-4 mb-4">
         {/* Avatar Circle */}
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-secondary)] flex items-center justify-center border-4 border-[var(--color-bg-primary)]">
@@ -83,9 +87,7 @@ export function AvatarDisplay({ avatar, compact = false, className = '' }: Avata
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2 text-sm">
           <span className="text-[var(--color-text-muted)]">XP Progress</span>
-          <span className="text-[var(--color-text-primary)] font-mono">
-            {xpInLevel}/100
-          </span>
+          <span className="text-[var(--color-text-primary)] font-mono">{xpInLevel}/100</span>
         </div>
         <div className="w-full h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <div
@@ -100,9 +102,7 @@ export function AvatarDisplay({ avatar, compact = false, className = '' }: Avata
         <div className="pt-4 border-t border-[var(--color-border)]">
           <div className="flex items-center gap-2 mb-2">
             <Award className="w-4 h-4 text-[var(--color-accent)]" />
-            <span className="text-sm font-semibold text-[var(--color-text-primary)]">
-              Equipped
-            </span>
+            <span className="text-sm font-semibold text-[var(--color-text-primary)]">Equipped</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {avatar.equippedAccessories.map((accessory: any, i: number) => (
@@ -119,10 +119,10 @@ export function AvatarDisplay({ avatar, compact = false, className = '' }: Avata
 
       {/* Next Unlock */}
       <div className="mt-4 p-3 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]">
-        <div className="text-xs text-[var(--color-text-muted)] mb-1">Next unlock at Level {currentLevel + 1}</div>
-        <div className="text-sm text-[var(--color-text-secondary)]">
-          {100 - xpInLevel} XP to go
+        <div className="text-xs text-[var(--color-text-muted)] mb-1">
+          Next unlock at Level {currentLevel + 1}
         </div>
+        <div className="text-sm text-[var(--color-text-secondary)]">{100 - xpInLevel} XP to go</div>
       </div>
     </div>
   );

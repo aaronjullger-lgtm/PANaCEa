@@ -24,14 +24,24 @@ export interface PreGenQuestionForVariant {
 function getOptionsAsStrings(data: Record<string, unknown>): string[] {
   const raw = data.options ?? data.answers ?? data.choices;
   if (!Array.isArray(raw)) return [];
-  return raw.map((o) => (typeof o === 'string' ? o : (o as { value?: string; text?: string; label?: string })?.value ?? (o as { value?: string; text?: string; label?: string })?.text ?? (o as { value?: string; text?: string; label?: string })?.label ?? String(o)));
+  return raw.map((o) =>
+    typeof o === 'string'
+      ? o
+      : ((o as { value?: string; text?: string; label?: string })?.value ??
+        (o as { value?: string; text?: string; label?: string })?.text ??
+        (o as { value?: string; text?: string; label?: string })?.label ??
+        String(o))
+  );
 }
 
 /** Get correct answer string from questionData */
 function getCorrectAnswerString(data: Record<string, unknown>, options: string[]): string {
   const correct = data.correctAnswer ?? data.answer ?? data.correct_option ?? data.correctChoice;
   if (typeof correct === 'string') return correct;
-  const idx = typeof data.correctAnswerIndex === 'number' ? data.correctAnswerIndex : (data.correctIndex as number | undefined);
+  const idx =
+    typeof data.correctAnswerIndex === 'number'
+      ? data.correctAnswerIndex
+      : (data.correctIndex as number | undefined);
   if (typeof idx === 'number' && options[idx]) return options[idx];
   return options[0] ?? '';
 }
@@ -70,7 +80,10 @@ export async function ensureDueVariant(
     const data = (question.questionData ?? {}) as Record<string, unknown>;
     const options = getOptionsAsStrings(data);
     const correctAnswer = getCorrectAnswerString(data, options);
-    const questionText = [data.vignette, data.question].filter(Boolean).join('\n\n') || (data.question as string) || '';
+    const questionText =
+      [data.vignette, data.question].filter(Boolean).join('\n\n') ||
+      (data.question as string) ||
+      '';
     const explanation = (data.rationale ?? data.explanation ?? '') as string;
 
     if (!questionText || options.length === 0) {
@@ -98,7 +111,8 @@ export async function ensureDueVariant(
     const finalIndex = Math.max(0, correctAnswerIndex);
 
     const newId =
-      typeof crypto !== 'undefined' && typeof (crypto as { randomUUID?: () => string }).randomUUID === 'function'
+      typeof crypto !== 'undefined' &&
+      typeof (crypto as { randomUUID?: () => string }).randomUUID === 'function'
         ? (crypto as { randomUUID: () => string }).randomUUID()
         : `gen-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 

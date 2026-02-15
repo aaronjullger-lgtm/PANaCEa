@@ -375,7 +375,10 @@ async function optimizeUserFSRS(
       improvementOverDefault: result.improvementOverDefault,
       validationBrierScore: result.brierScore,
       optimizationIterations: result.iterations,
-      systemModifiers: result.systemModifiers != null ? JSON.parse(JSON.stringify(result.systemModifiers)) : undefined,
+      systemModifiers:
+        result.systemModifiers != null
+          ? JSON.parse(JSON.stringify(result.systemModifiers))
+          : undefined,
     },
     update: {
       w: result.w,
@@ -384,7 +387,10 @@ async function optimizeUserFSRS(
       improvementOverDefault: result.improvementOverDefault,
       validationBrierScore: result.brierScore,
       optimizationIterations: result.iterations,
-      systemModifiers: result.systemModifiers != null ? JSON.parse(JSON.stringify(result.systemModifiers)) : undefined,
+      systemModifiers:
+        result.systemModifiers != null
+          ? JSON.parse(JSON.stringify(result.systemModifiers))
+          : undefined,
     },
   });
 

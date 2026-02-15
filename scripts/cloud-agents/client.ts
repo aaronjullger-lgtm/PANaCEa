@@ -4,7 +4,7 @@
  * @see https://docs.cursor.com/background-agent/api/launch-an-agent
  */
 
-const DEFAULT_BASE_URL = "https://api.cursor.com";
+const DEFAULT_BASE_URL = 'https://api.cursor.com';
 
 export interface LaunchAgentOptions {
   /** Instruction/prompt for the agent */
@@ -38,11 +38,11 @@ export async function launchAgent(options: LaunchAgentOptions): Promise<LaunchAg
   const apiKey = process.env.CURSOR_AGENTS_API_KEY;
   if (!apiKey?.trim()) {
     throw new Error(
-      "CURSOR_AGENTS_API_KEY is required. Set it in .env or GitHub Secrets. Get the key from Cursor Dashboard."
+      'CURSOR_AGENTS_API_KEY is required. Set it in .env or GitHub Secrets. Get the key from Cursor Dashboard.'
     );
   }
 
-  const baseUrl = (process.env.CURSOR_AGENTS_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
+  const baseUrl = (process.env.CURSOR_AGENTS_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, '');
   const url = `${baseUrl}/v0/agents`;
 
   const body: Record<string, unknown> = {
@@ -70,12 +70,12 @@ export async function launchAgent(options: LaunchAgentOptions): Promise<LaunchAg
     }
   }
 
-  const auth = Buffer.from(`${apiKey}:`, "utf8").toString("base64");
+  const auth = Buffer.from(`${apiKey}:`, 'utf8').toString('base64');
   const res = await fetch(url, {
-    method: "POST",
+    method: 'POST',
     headers: {
       Authorization: `Basic ${auth}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
   });
@@ -87,7 +87,7 @@ export async function launchAgent(options: LaunchAgentOptions): Promise<LaunchAg
 
   const data = (await res.json()) as Record<string, unknown>;
   const id = (data?.id ?? data?.agentId ?? data?.runId) as string | undefined;
-  if (!id || typeof id !== "string") {
+  if (!id || typeof id !== 'string') {
     throw new Error(`Cloud Agents API returned no run ID: ${JSON.stringify(data)}`);
   }
 

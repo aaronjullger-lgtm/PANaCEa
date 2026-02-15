@@ -46,9 +46,7 @@ export const CacheDashboard: React.FC = () => {
   return (
     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-          Cache Dashboard
-        </h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Cache Dashboard</h3>
         <button
           onClick={handleClearAll}
           className="px-3 py-1 text-sm bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
@@ -108,7 +106,8 @@ export const CacheDashboard: React.FC = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm text-[var(--color-text-muted)]">Cache Distribution</div>
               <div className="text-sm font-medium text-[var(--color-text-primary)]">
-                {stats[selectedCache].memoryEntries} memory / {stats[selectedCache].persistentEntries} persistent
+                {stats[selectedCache].memoryEntries} memory /{' '}
+                {stats[selectedCache].persistentEntries} persistent
               </div>
             </div>
             <div className="w-full bg-[var(--color-bg-secondary)] rounded-full h-2">

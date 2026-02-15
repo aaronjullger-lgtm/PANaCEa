@@ -1,6 +1,6 @@
 /**
  * Echo Path Visualization
- * 
+ *
  * Visualizes the conversation decision tree, showing optimal path vs. actual path.
  * Highlights rabbit holes (unproductive questioning) in red.
  */
@@ -112,13 +112,14 @@ export function EchoPathVisualization({ echoPath, className = '' }: EchoPathVisu
           </h3>
           <div className="space-y-3">
             {echoPath.rabbitHoles.map((rh, i) => (
-              <div key={i} className="p-3 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]">
+              <div
+                key={i}
+                className="p-3 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]"
+              >
                 <div className="text-sm text-[var(--color-text-primary)] font-medium mb-1">
                   Time wasted: {rh.timeWasted}s
                 </div>
-                <div className="text-xs text-[var(--color-text-muted)]">
-                  Reason: {rh.reason}
-                </div>
+                <div className="text-xs text-[var(--color-text-muted)]">Reason: {rh.reason}</div>
               </div>
             ))}
           </div>
@@ -146,9 +147,7 @@ export function EchoPathVisualization({ echoPath, className = '' }: EchoPathVisu
         {/* Missed */}
         {echoPath.criticalPathsMissed.length > 0 && (
           <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-4">
-            <h4 className="text-sm font-semibold text-rose-500 mb-2">
-              ✗ Critical Paths Missed
-            </h4>
+            <h4 className="text-sm font-semibold text-rose-500 mb-2">✗ Critical Paths Missed</h4>
             <ul className="space-y-1">
               {echoPath.criticalPathsMissed.map((path, i) => (
                 <li key={i} className="text-xs text-[var(--color-text-secondary)]">

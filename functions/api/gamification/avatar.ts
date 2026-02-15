@@ -1,7 +1,7 @@
 /**
  * API: User Avatar Management
  * GET/POST /api/gamification/avatar
- * 
+ *
  * Manages user avatar, XP, and accessory unlocks.
  */
 
@@ -13,46 +13,43 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 export const onRequestOptions = withCors();
 
 // GET: Fetch user avatar
-export const onRequestGet = authenticatedEndpoint(
-  z.object({}),
-  async ({ env, auth }) => {
-    const log = createEndpointLogger('/api/gamification/avatar [GET]', auth.userId);
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+export const onRequestGet = authenticatedEndpoint(z.object({}), async ({ env, auth }) => {
+  const log = createEndpointLogger('/api/gamification/avatar [GET]', auth.userId);
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    try {
-      const user = await prisma.user.findUnique({
-        where: { clerkId: auth.userId },
-        include: { UserAvatarV2: true },
+  try {
+    const user = await prisma.user.findUnique({
+      where: { clerkId: auth.userId },
+      include: { UserAvatarV2: true },
+    });
+
+    if (!user) {
+      return { status: 404, error: 'User not found' };
+    }
+
+    if (!user.UserAvatarV2) {
+      // Create default avatar
+      const avatar = await prisma.userAvatar.create({
+        data: {
+          userId: user.id,
+          stage: 'student_year_1',
+          equippedAccessories: [],
+          xp: 0,
+        },
       });
 
-      if (!user) {
-        return { status: 404, error: 'User not found' };
-      }
-
-      if (!user.UserAvatarV2) {
-        // Create default avatar
-        const avatar = await prisma.userAvatar.create({
-          data: {
-            userId: user.id,
-            stage: 'student_year_1',
-            equippedAccessories: [],
-            xp: 0,
-          },
-        });
-
-        log.info('Created default avatar');
-        return { data: { success: true, avatar } };
-      }
-
-      return { data: { success: true, avatar: user.UserAvatarV2 } };
-    } catch (error: any) {
-      log.error('Error fetching avatar', error);
-      return { status: 500, error: 'Internal server error' };
-    } finally {
-      await safePrismaDisconnect(prisma);
+      log.info('Created default avatar');
+      return { data: { success: true, avatar } };
     }
+
+    return { data: { success: true, avatar: user.UserAvatarV2 } };
+  } catch (error: any) {
+    log.error('Error fetching avatar', error);
+    return { status: 500, error: 'Internal server error' };
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-);
+});
 
 // POST: Award XP and check for unlocks
 const AwardXPSchema = z.object({

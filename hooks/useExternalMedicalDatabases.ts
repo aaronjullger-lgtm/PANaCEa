@@ -3,12 +3,12 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { 
-  ExternalMedicalDatabaseService, 
-  MedicalDatabaseSearchParams, 
+import {
+  ExternalMedicalDatabaseService,
+  MedicalDatabaseSearchParams,
   MedicalDatabaseResult,
   DatabaseHealthStatus,
-  ClinicalTrialResult
+  ClinicalTrialResult,
 } from '@/services/externalMedicalDatabaseService';
 
 export function useExternalMedicalDatabases() {
@@ -23,88 +23,104 @@ export function useExternalMedicalDatabases() {
   /**
    * Search external medical databases
    */
-  const searchDatabases = useCallback(async (params: MedicalDatabaseSearchParams) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const instance = new service();
-      const results = await instance.searchWithCache(params);
-      setSearchResults(results);
-      return results;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to search medical databases';
-      setError(errorMessage);
-      setSearchResults([]);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [service]);
+  const searchDatabases = useCallback(
+    async (params: MedicalDatabaseSearchParams) => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const instance = new service();
+        const results = await instance.searchWithCache(params);
+        setSearchResults(results);
+        return results;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to search medical databases';
+        setError(errorMessage);
+        setSearchResults([]);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [service]
+  );
 
   /**
    * Search PubMed specifically
    */
-  const searchPubMed = useCallback(async (query: string, limit: number = 10) => {
-    return searchDatabases({
-      query,
-      database: 'pubmed',
-      limit
-    });
-  }, [searchDatabases]);
+  const searchPubMed = useCallback(
+    async (query: string, limit: number = 10) => {
+      return searchDatabases({
+        query,
+        database: 'pubmed',
+        limit,
+      });
+    },
+    [searchDatabases]
+  );
 
   /**
    * Search ClinicalTrials.gov
    */
-  const searchClinicalTrials = useCallback(async (query: string, limit: number = 10) => {
-    return searchDatabases({
-      query,
-      database: 'clinicaltrials',
-      limit
-    });
-  }, [searchDatabases]);
+  const searchClinicalTrials = useCallback(
+    async (query: string, limit: number = 10) => {
+      return searchDatabases({
+        query,
+        database: 'clinicaltrials',
+        limit,
+      });
+    },
+    [searchDatabases]
+  );
 
   /**
    * Get clinical trial details
    */
-  const getClinicalTrialDetails = useCallback(async (trialId: string) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const instance = new service();
-      const trial = await instance.getClinicalTrialDetails(trialId);
-      setSelectedTrial(trial);
-      return trial;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to get trial details';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [service]);
+  const getClinicalTrialDetails = useCallback(
+    async (trialId: string) => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const instance = new service();
+        const trial = await instance.getClinicalTrialDetails(trialId);
+        setSelectedTrial(trial);
+        return trial;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to get trial details';
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [service]
+  );
 
   /**
    * Get related articles for a medical concept
    */
-  const getRelatedArticles = useCallback(async (concept: string, maxResults: number = 5) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const instance = new service();
-      const results = await instance.getRelatedArticles(concept, maxResults);
-      setSearchResults(results);
-      return results;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to get related articles';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [service]);
+  const getRelatedArticles = useCallback(
+    async (concept: string, maxResults: number = 5) => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const instance = new service();
+        const results = await instance.getRelatedArticles(concept, maxResults);
+        setSearchResults(results);
+        return results;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to get related articles';
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [service]
+  );
 
   /**
    * Check database health status
@@ -112,7 +128,7 @@ export function useExternalMedicalDatabases() {
   const checkDatabaseHealth = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const instance = new service();
       const health = await instance.checkDatabaseHealth();
@@ -148,14 +164,14 @@ export function useExternalMedicalDatabases() {
    * Check if databases are healthy
    */
   const areDatabasesHealthy = useCallback(() => {
-    return databaseHealth.every(db => db.status === 'healthy');
+    return databaseHealth.every((db) => db.status === 'healthy');
   }, [databaseHealth]);
 
   /**
    * Get unhealthy databases
    */
   const getUnhealthyDatabases = useCallback(() => {
-    return databaseHealth.filter(db => db.status !== 'healthy');
+    return databaseHealth.filter((db) => db.status !== 'healthy');
   }, [databaseHealth]);
 
   // Initial health check on mount
@@ -170,7 +186,7 @@ export function useExternalMedicalDatabases() {
     error,
     databaseHealth,
     selectedTrial,
-    
+
     // Actions
     searchDatabases,
     searchPubMed,
@@ -180,13 +196,13 @@ export function useExternalMedicalDatabases() {
     checkDatabaseHealth,
     clearResults,
     formatResultsForDisplay,
-    
+
     // Utilities
     areDatabasesHealthy,
     getUnhealthyDatabases,
-    
+
     // Service instance (for advanced usage)
-    service: new service()
+    service: new service(),
   };
 }
 

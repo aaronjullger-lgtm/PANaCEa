@@ -223,7 +223,9 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
         });
 
         if (!response.ok) {
-          const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string };
+          const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
+            error?: string;
+          };
           throw new Error(errorData.error || `HTTP ${response.status}`);
         }
 

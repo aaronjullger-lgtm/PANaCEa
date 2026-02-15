@@ -191,9 +191,7 @@ export function BodyMapWidget({
                 <>
                   <strong>{hoveredSystem}</strong>: {s.accuracy.toFixed(0)}% ({s.correct}/{s.total})
                   {toMaster > 0 ? (
-                    <span className="block text-slate-300 mt-0.5">
-                      ~{toMaster} more to master
-                    </span>
+                    <span className="block text-slate-300 mt-0.5">~{toMaster} more to master</span>
                   ) : null}
                 </>
               );

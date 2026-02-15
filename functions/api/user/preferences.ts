@@ -275,8 +275,7 @@ export const onRequestPatch = authenticatedEndpoint<z.infer<typeof PartialPrefer
       // Build update data: merge customSettings so partial updates don't wipe other keys
       const updateData: Record<string, unknown> = { ...payload, updatedAt: new Date() };
       if (payload.customSettings !== undefined) {
-        const existingCustom =
-          (existing.customSettings as Record<string, unknown>) ?? {};
+        const existingCustom = (existing.customSettings as Record<string, unknown>) ?? {};
         const merged: Record<string, unknown> = {
           ...existingCustom,
           ...(payload.customSettings as Record<string, unknown>),

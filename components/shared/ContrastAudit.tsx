@@ -1,21 +1,13 @@
 /**
  * ContrastAudit - Component for auditing and improving color contrast ratios
- * 
+ *
  * This component helps identify and fix contrast ratio issues across the application.
  * It checks WCAG compliance (AA/AAA) for all key color combinations.
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Eye, 
-  CheckCircle, 
-  AlertCircle, 
-  Contrast,
-  Palette,
-  RefreshCw,
-  X
-} from 'lucide-react';
+import { Eye, CheckCircle, AlertCircle, Contrast, Palette, RefreshCw, X } from 'lucide-react';
 import { StandardButton } from './StandardButton';
 import { getContrastRatio, meetsContrastStandard } from '@/lib/utils/accessibility';
 
@@ -52,7 +44,7 @@ interface ContrastAuditProps {
 
 export const ContrastAudit: React.FC<ContrastAuditProps> = ({
   defaultOpen = false,
-  onIssuesFound
+  onIssuesFound,
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [issues, setIssues] = useState<ContrastIssue[]>([]);
@@ -69,7 +61,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary',
       usage: 'Primary text on canvas',
       standard: 'AAA',
-      size: 'normal'
+      size: 'normal',
     },
     {
       foreground: '#475569', // --color-text-secondary
@@ -78,7 +70,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary',
       usage: 'Secondary text on canvas',
       standard: 'AA',
-      size: 'normal'
+      size: 'normal',
     },
     {
       foreground: '#64748b', // --color-text-muted
@@ -87,7 +79,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary',
       usage: 'Muted text on canvas',
       standard: 'AA',
-      size: 'normal'
+      size: 'normal',
     },
     {
       foreground: '#9a8f72', // --color-accent
@@ -96,7 +88,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary',
       usage: 'Accent text on canvas',
       standard: 'AA',
-      size: 'normal'
+      size: 'normal',
     },
     {
       foreground: '#7B6C4F', // --color-accent-button
@@ -105,7 +97,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'white',
       usage: 'Button text on white',
       standard: 'AA',
-      size: 'normal'
+      size: 'normal',
     },
     {
       foreground: '#f8fafc', // --color-text-inverse
@@ -114,7 +106,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'accent-button',
       usage: 'Inverse text on accent button',
       standard: 'AA',
-      size: 'normal'
+      size: 'normal',
     },
     // Dark mode primary combinations
     {
@@ -124,7 +116,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary (dark)',
       usage: 'Primary text on dark canvas',
       standard: 'AAA',
-      size: 'normal'
+      size: 'normal',
     },
     {
       foreground: '#cbd5e1', // --color-text-secondary (dark)
@@ -133,7 +125,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary (dark)',
       usage: 'Secondary text on dark canvas',
       standard: 'AA',
-      size: 'normal'
+      size: 'normal',
     },
     {
       foreground: '#94a3b8', // --color-text-muted (dark)
@@ -142,7 +134,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary (dark)',
       usage: 'Muted text on dark canvas',
       standard: 'AA',
-      size: 'normal'
+      size: 'normal',
     },
     {
       foreground: '#a89b7a', // --color-accent (dark)
@@ -151,7 +143,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary (dark)',
       usage: 'Accent text on dark canvas',
       standard: 'AA',
-      size: 'normal'
+      size: 'normal',
     },
     // Semantic colors
     {
@@ -161,7 +153,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary',
       usage: 'Success text on canvas',
       standard: 'AA',
-      size: 'normal'
+      size: 'normal',
     },
     {
       foreground: '#b91c1c', // --color-data-fail
@@ -170,7 +162,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary',
       usage: 'Error text on canvas',
       standard: 'AA',
-      size: 'normal'
+      size: 'normal',
     },
     {
       foreground: '#b45309', // --color-data-provisional
@@ -179,7 +171,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary',
       usage: 'Warning text on canvas',
       standard: 'AA',
-      size: 'normal'
+      size: 'normal',
     },
     // Large text variants (for headings, large buttons)
     {
@@ -189,7 +181,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary',
       usage: 'Large secondary text',
       standard: 'AA',
-      size: 'large'
+      size: 'large',
     },
     {
       foreground: '#64748b', // --color-text-muted
@@ -198,7 +190,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       backgroundName: 'bg-primary',
       usage: 'Large muted text',
       standard: 'AA',
-      size: 'large'
+      size: 'large',
     },
   ];
 
@@ -210,13 +202,18 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
     colorPairs.forEach((pair, index) => {
       try {
         const ratio = getContrastRatio(pair.foreground, pair.background);
-        const requiredRatio = pair.standard === 'AAA' 
-          ? (pair.size === 'large' ? 4.5 : 7)
-          : (pair.size === 'large' ? 3 : 4.5);
-        
+        const requiredRatio =
+          pair.standard === 'AAA'
+            ? pair.size === 'large'
+              ? 4.5
+              : 7
+            : pair.size === 'large'
+              ? 3
+              : 4.5;
+
         const meetsStandard = meetsContrastStandard(
-          ratio, 
-          pair.standard || 'AA', 
+          ratio,
+          pair.standard || 'AA',
           pair.size || 'normal'
         );
 
@@ -232,7 +229,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
             meetsStandard: false,
             standard: pair.standard || 'AA',
             size: pair.size || 'normal',
-            usage: pair.usage
+            usage: pair.usage,
           });
         }
       } catch (error) {
@@ -380,7 +377,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
                       const isIssue = 'id' in pairOrIssue;
                       const issue = isIssue ? pairOrIssue : null;
                       const pair = isIssue ? null : pairOrIssue;
-                      
+
                       let ratio = 0;
                       let requiredRatio = 4.5;
                       let meetsStandard = true;
@@ -406,12 +403,17 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
                       } else if (pair) {
                         try {
                           ratio = getContrastRatio(pair.foreground, pair.background);
-                          requiredRatio = pair.standard === 'AAA' 
-                            ? (pair.size === 'large' ? 4.5 : 7)
-                            : (pair.size === 'large' ? 3 : 4.5);
+                          requiredRatio =
+                            pair.standard === 'AAA'
+                              ? pair.size === 'large'
+                                ? 4.5
+                                : 7
+                              : pair.size === 'large'
+                                ? 3
+                                : 4.5;
                           meetsStandard = meetsContrastStandard(
-                            ratio, 
-                            pair.standard || 'AA', 
+                            ratio,
+                            pair.standard || 'AA',
                             pair.size || 'normal'
                           );
                           foreground = pair.foreground;
@@ -438,28 +440,34 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
                                 <p className="font-medium text-sm text-[var(--color-text-primary)]">
                                   {usage}
                                 </p>
-                                <span className={`text-xs font-bold ${getRatioColor(ratio, requiredRatio)}`}>
+                                <span
+                                  className={`text-xs font-bold ${getRatioColor(ratio, requiredRatio)}`}
+                                >
                                   {ratio.toFixed(2)}:1
                                 </span>
                               </div>
-                              
+
                               <div className="flex items-center gap-2 mt-1">
                                 <div className="flex items-center gap-1">
-                                  <div 
+                                  <div
                                     className="w-4 h-4 rounded border border-[var(--color-border)]"
                                     style={{ backgroundColor: foreground }}
                                     title={foreground}
                                   />
-                                  <span className="text-xs text-[var(--color-text-muted)]">{foregroundName}</span>
+                                  <span className="text-xs text-[var(--color-text-muted)]">
+                                    {foregroundName}
+                                  </span>
                                 </div>
                                 <span className="text-xs text-[var(--color-text-muted)]">on</span>
                                 <div className="flex items-center gap-1">
-                                  <div 
+                                  <div
                                     className="w-4 h-4 rounded border border-[var(--color-border)]"
                                     style={{ backgroundColor: background }}
                                     title={background}
                                   />
-                                  <span className="text-xs text-[var(--color-text-muted)]">{backgroundName}</span>
+                                  <span className="text-xs text-[var(--color-text-muted)]">
+                                    {backgroundName}
+                                  </span>
                                 </div>
                               </div>
 
@@ -474,7 +482,7 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
 
                               {!meetsStandard && (
                                 <p className="text-xs mt-2 text-[var(--color-data-fail)]">
-                                  {getFixSuggestion(issue || { ratio, requiredRatio } as any)}
+                                  {getFixSuggestion(issue || ({ ratio, requiredRatio } as any))}
                                 </p>
                               )}
                             </div>

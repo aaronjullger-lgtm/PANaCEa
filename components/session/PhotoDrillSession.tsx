@@ -27,10 +27,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { SpatialAnswerCanvas } from '@/components/drill/SpatialAnswerCanvas';
-import {
-  useSpatialGrading,
-  imageUrlToBase64,
-} from '@/hooks/useSpatialGrading';
+import { useSpatialGrading, imageUrlToBase64 } from '@/hooks/useSpatialGrading';
 
 export type PhotoDrillFilterType = 'ecg' | 'derm' | 'imaging' | 'all';
 
@@ -118,7 +115,12 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
   const [requestHighRes, setRequestHighRes] = useState<boolean>(false);
   /** Draw to locate: spatial verification for ECG/radiology */
   const [drawModeActive, setDrawModeActive] = useState<boolean>(false);
-  const { grade: gradeSpatial, loading: spatialLoading, result: spatialResult, reset: resetSpatial } = useSpatialGrading();
+  const {
+    grade: gradeSpatial,
+    loading: spatialLoading,
+    result: spatialResult,
+    reset: resetSpatial,
+  } = useSpatialGrading();
 
   // Thumbnail first (lightweight), high-res only on zoom (image optimization audit)
   const resolvedThumbnailSrc = useMemo(
@@ -129,7 +131,8 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
     () => resolveImageUrl(currentCase?.highResUrl || currentCase?.imageUrl),
     [currentCase?.highResUrl, currentCase?.imageUrl]
   );
-  const displaySrc = requestHighRes && currentCase?.highResUrl ? resolvedHighResSrc : resolvedThumbnailSrc;
+  const displaySrc =
+    requestHighRes && currentCase?.highResUrl ? resolvedHighResSrc : resolvedThumbnailSrc;
 
   // Reset imageRevealed and zoom when case changes
   useEffect(() => {
@@ -190,7 +193,12 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
     nextCase();
   };
 
-  const handleDrawBoxComplete = async (box: { x: number; y: number; width: number; height: number }) => {
+  const handleDrawBoxComplete = async (box: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }) => {
     if (!currentCase || !displaySrc) return;
     try {
       const base64 = await imageUrlToBase64(displaySrc);
@@ -513,123 +521,141 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                 )}
 
                 {/* Image View (shown for non-derm cases or when revealed) — thumbnail first, high-res on zoom (image optimization audit) */}
-                {(imageRevealed || !currentCase.clinicalContext) && !(drawModeActive && (currentCase.modality === 'ecg' || currentCase.modality === 'xray')) && (
-                  <div className="relative bg-[var(--color-bg-tertiary)] rounded-xl overflow-hidden shadow-[0_18px_42px_var(--color-shadow-soft)] w-full max-w-3xl mx-auto">
-                    {/* Draw to locate: for ECG and radiology */}
-                    {(currentCase.modality === 'ecg' || currentCase.modality === 'xray') && !spatialResult && (
-                      <button
-                        type="button"
-                        onClick={() => setDrawModeActive(true)}
-                        className="absolute bottom-3 left-3 px-3 py-2 bg-[var(--color-accent)]/90 hover:bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium rounded-lg flex items-center gap-2 transition-colors"
-                      >
-                        <Pencil className="w-4 h-4" aria-hidden />
-                        Draw to locate
-                      </button>
-                    )}
-                    <div
-                      className={`absolute inset-0 bg-[var(--color-bg-elevated)] animate-pulse transition-opacity duration-300 ${isImageLoaded ? 'opacity-0' : 'opacity-100'}`}
-                      aria-hidden
-                    />
-                    <img
-                      src={displaySrc}
-                      alt={`Medical ${currentCase.modality.toUpperCase()} case`}
-                      className={`w-full max-h-[50vh] object-contain transition-all duration-500 ${isImageLoaded ? 'blur-0 scale-100 opacity-100' : 'blur-md scale-[1.01] opacity-80'}`}
-                      onLoad={() => setIsImageLoaded(true)}
-                      onError={() => setImageErrored(true)}
-                    />
-                    {imageErrored && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-bg-tertiary)]/80 text-[var(--color-text-secondary)] text-sm">
-                        Unable to load image. Check public/images path.
-                      </div>
-                    )}
-                    {/* Zoom on demand: load high-res only when user requests (saves data for X-rays/derm) */}
-                    {currentCase.highResUrl && !requestHighRes && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRequestHighRes(true);
-                          setIsImageLoaded(false);
-                        }}
-                        className="absolute top-3 right-3 px-2.5 py-1.5 bg-[var(--color-bg-secondary)]/90 backdrop-blur-sm rounded-lg text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] flex items-center gap-1.5"
-                        aria-label="View full resolution (loads high-res image)"
-                        title="Load full-resolution image for zoom/detail"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        Full resolution
-                      </button>
-                    )}
-                    {/* Modality Badge */}
-                    <div className="absolute top-3 left-3 px-2.5 py-1 bg-[var(--color-bg-secondary)]/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
-                      {currentCase.modality === 'derm'
-                        ? 'Clinical Presentation'
-                        : currentCase.modality}
-                    </div>
-                  </div>
-                )}
-
-                {/* Draw mode: SpatialAnswerCanvas for ECG/radiology (replaces image when active) */}
-                {(imageRevealed || !currentCase.clinicalContext) && drawModeActive && (currentCase.modality === 'ecg' || currentCase.modality === 'xray') && (
-                  <div className="w-full space-y-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                        Draw a box around the finding
-                      </span>
-                      {!spatialResult && (
-                        <button
-                          type="button"
-                          onClick={() => setDrawModeActive(false)}
-                          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-                        >
-                          Skip
-                        </button>
-                      )}
-                    </div>
-                    <SpatialAnswerCanvas
-                      imageUrl={displaySrc}
-                      imageAlt={`Locate the finding - ${currentCase.modality}`}
-                      onBoxComplete={handleDrawBoxComplete}
-                      correctBox={spatialResult && !spatialResult.isCorrect ? spatialResult.correctBox : undefined}
-                      disabled={!!spatialResult || spatialLoading}
-                    />
-                    {spatialLoading && (
-                      <p className="text-sm text-[var(--color-text-muted)] text-center">Grading…</p>
-                    )}
-                    {spatialResult && (
-                      <div
-                        className={`rounded-xl p-4 text-center ${
-                          spatialResult.isCorrect
-                            ? 'bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30'
-                            : 'bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30'
-                        }`}
-                      >
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                          {spatialResult.isCorrect ? (
-                            <CheckCircle className="w-5 h-5 text-[var(--color-data-pass)]" aria-hidden />
-                          ) : null}
-                          <span
-                            className={`font-semibold ${
-                              spatialResult.isCorrect
-                                ? 'text-[var(--color-data-pass)]'
-                                : 'text-[var(--color-data-fail)]'
-                            }`}
+                {(imageRevealed || !currentCase.clinicalContext) &&
+                  !(
+                    drawModeActive &&
+                    (currentCase.modality === 'ecg' || currentCase.modality === 'xray')
+                  ) && (
+                    <div className="relative bg-[var(--color-bg-tertiary)] rounded-xl overflow-hidden shadow-[0_18px_42px_var(--color-shadow-soft)] w-full max-w-3xl mx-auto">
+                      {/* Draw to locate: for ECG and radiology */}
+                      {(currentCase.modality === 'ecg' || currentCase.modality === 'xray') &&
+                        !spatialResult && (
+                          <button
+                            type="button"
+                            onClick={() => setDrawModeActive(true)}
+                            className="absolute bottom-3 left-3 px-3 py-2 bg-[var(--color-accent)]/90 hover:bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium rounded-lg flex items-center gap-2 transition-colors"
                           >
-                            {spatialResult.isCorrect ? 'Correct location' : 'Incorrect — see red outline for correct area'}
-                          </span>
+                            <Pencil className="w-4 h-4" aria-hidden />
+                            Draw to locate
+                          </button>
+                        )}
+                      <div
+                        className={`absolute inset-0 bg-[var(--color-bg-elevated)] animate-pulse transition-opacity duration-300 ${isImageLoaded ? 'opacity-0' : 'opacity-100'}`}
+                        aria-hidden
+                      />
+                      <img
+                        src={displaySrc}
+                        alt={`Medical ${currentCase.modality.toUpperCase()} case`}
+                        className={`w-full max-h-[50vh] object-contain transition-all duration-500 ${isImageLoaded ? 'blur-0 scale-100 opacity-100' : 'blur-md scale-[1.01] opacity-80'}`}
+                        onLoad={() => setIsImageLoaded(true)}
+                        onError={() => setImageErrored(true)}
+                      />
+                      {imageErrored && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-bg-tertiary)]/80 text-[var(--color-text-secondary)] text-sm">
+                          Unable to load image. Check public/images path.
                         </div>
+                      )}
+                      {/* Zoom on demand: load high-res only when user requests (saves data for X-rays/derm) */}
+                      {currentCase.highResUrl && !requestHighRes && (
                         <button
                           type="button"
                           onClick={() => {
-                            setDrawModeActive(false);
-                            resetSpatial();
+                            setRequestHighRes(true);
+                            setIsImageLoaded(false);
                           }}
-                          className="text-sm text-[var(--color-accent)] hover:underline"
+                          className="absolute top-3 right-3 px-2.5 py-1.5 bg-[var(--color-bg-secondary)]/90 backdrop-blur-sm rounded-lg text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] flex items-center gap-1.5"
+                          aria-label="View full resolution (loads high-res image)"
+                          title="Load full-resolution image for zoom/detail"
                         >
-                          Continue to diagnosis
+                          <Eye className="w-3.5 h-3.5" />
+                          Full resolution
                         </button>
+                      )}
+                      {/* Modality Badge */}
+                      <div className="absolute top-3 left-3 px-2.5 py-1 bg-[var(--color-bg-secondary)]/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                        {currentCase.modality === 'derm'
+                          ? 'Clinical Presentation'
+                          : currentCase.modality}
                       </div>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  )}
+
+                {/* Draw mode: SpatialAnswerCanvas for ECG/radiology (replaces image when active) */}
+                {(imageRevealed || !currentCase.clinicalContext) &&
+                  drawModeActive &&
+                  (currentCase.modality === 'ecg' || currentCase.modality === 'xray') && (
+                    <div className="w-full space-y-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Draw a box around the finding
+                        </span>
+                        {!spatialResult && (
+                          <button
+                            type="button"
+                            onClick={() => setDrawModeActive(false)}
+                            className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+                          >
+                            Skip
+                          </button>
+                        )}
+                      </div>
+                      <SpatialAnswerCanvas
+                        imageUrl={displaySrc}
+                        imageAlt={`Locate the finding - ${currentCase.modality}`}
+                        onBoxComplete={handleDrawBoxComplete}
+                        correctBox={
+                          spatialResult && !spatialResult.isCorrect
+                            ? spatialResult.correctBox
+                            : undefined
+                        }
+                        disabled={!!spatialResult || spatialLoading}
+                      />
+                      {spatialLoading && (
+                        <p className="text-sm text-[var(--color-text-muted)] text-center">
+                          Grading…
+                        </p>
+                      )}
+                      {spatialResult && (
+                        <div
+                          className={`rounded-xl p-4 text-center ${
+                            spatialResult.isCorrect
+                              ? 'bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30'
+                              : 'bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30'
+                          }`}
+                        >
+                          <div className="flex items-center justify-center gap-2 mb-2">
+                            {spatialResult.isCorrect ? (
+                              <CheckCircle
+                                className="w-5 h-5 text-[var(--color-data-pass)]"
+                                aria-hidden
+                              />
+                            ) : null}
+                            <span
+                              className={`font-semibold ${
+                                spatialResult.isCorrect
+                                  ? 'text-[var(--color-data-pass)]'
+                                  : 'text-[var(--color-data-fail)]'
+                              }`}
+                            >
+                              {spatialResult.isCorrect
+                                ? 'Correct location'
+                                : 'Incorrect — see red outline for correct area'}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDrawModeActive(false);
+                              resetSpatial();
+                            }}
+                            className="text-sm text-[var(--color-accent)] hover:underline"
+                          >
+                            Continue to diagnosis
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -654,11 +680,11 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                       Click and drag on the image to draw a box around the finding
                     </p>
                   ) : (
-                  <DiagnosisInput
-                    onSubmit={handleDiagnosisSubmit}
-                    autoFocus
-                    options={validDiagnoses}
-                  />
+                    <DiagnosisInput
+                      onSubmit={handleDiagnosisSubmit}
+                      autoFocus
+                      options={validDiagnoses}
+                    />
                   )}
                 </div>
               </motion.div>

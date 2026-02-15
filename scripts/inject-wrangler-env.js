@@ -52,7 +52,13 @@ function main() {
     ...entries.map(([k, v]) => `${k}=${v}`),
   ];
   fs.writeFileSync(OUT_PATH, lines.join('\n') + '\n', 'utf8');
-  console.log('[inject-wrangler-env] Wrote', OUT_PATH, 'with', entries.length, 'VITE_* vars (process.env + wrangler.toml)');
+  console.log(
+    '[inject-wrangler-env] Wrote',
+    OUT_PATH,
+    'with',
+    entries.length,
+    'VITE_* vars (process.env + wrangler.toml)'
+  );
 }
 
 main();

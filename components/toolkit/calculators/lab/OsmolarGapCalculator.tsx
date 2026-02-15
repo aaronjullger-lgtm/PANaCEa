@@ -45,7 +45,8 @@ export const OsmolarGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
     return {
       score: gap,
       interpretation: 'Normal osmolar gap',
-      recommendation: 'Gap ≤10 is normal. Elevated AG metabolic acidosis without elevated gap suggests DKA, lactic acidosis, uremia.',
+      recommendation:
+        'Gap ≤10 is normal. Elevated AG metabolic acidosis without elevated gap suggests DKA, lactic acidosis, uremia.',
       riskLevel: 'low',
       details: 'Normal range: ≤10 mOsm/kg.',
     };
@@ -67,7 +68,9 @@ export const OsmolarGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
             <div className="font-mono text-lg font-semibold text-[var(--color-text-primary)]">
               Calculated = 2×Na + Glu/18 + BUN/2.8
             </div>
-            <div className="text-sm text-[var(--color-text-secondary)] mt-1">Gap = Measured − Calculated (normal ≤10)</div>
+            <div className="text-sm text-[var(--color-text-secondary)] mt-1">
+              Gap = Measured − Calculated (normal ≤10)
+            </div>
           </div>
         </div>
       </div>
@@ -108,9 +111,15 @@ export const OsmolarGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         </div>
         {calculatedOsm !== null && (
           <div className="text-[var(--color-text-secondary)]">
-            Calculated osmolarity = <strong className="text-[var(--color-text-primary)]">{calculatedOsm.toFixed(1)}</strong> mOsm/kg
+            Calculated osmolarity ={' '}
+            <strong className="text-[var(--color-text-primary)]">{calculatedOsm.toFixed(1)}</strong>{' '}
+            mOsm/kg
             {gap !== null && (
-              <> &nbsp;| &nbsp;Osmolar gap = <strong className="text-[var(--color-text-primary)]">{gap}</strong> mOsm/kg</>
+              <>
+                {' '}
+                &nbsp;| &nbsp;Osmolar gap ={' '}
+                <strong className="text-[var(--color-text-primary)]">{gap}</strong> mOsm/kg
+              </>
             )}
           </div>
         )}

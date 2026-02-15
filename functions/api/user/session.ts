@@ -93,14 +93,14 @@ export const onRequestPatch = authenticatedEndpoint(SessionUpdateSchema, async (
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const { sessionId, action, questionsAnswered, correctCount, thinkingTimeMs } = validated
-      .body as {
-      sessionId: string;
-      action: string;
-      questionsAnswered?: number;
-      correctCount?: number;
-      thinkingTimeMs?: number;
-    };
+    const { sessionId, action, questionsAnswered, correctCount, thinkingTimeMs } =
+      validated.body as {
+        sessionId: string;
+        action: string;
+        questionsAnswered?: number;
+        correctCount?: number;
+        thinkingTimeMs?: number;
+      };
 
     // Get user's internal ID
     const user = await prisma.user.findUnique({

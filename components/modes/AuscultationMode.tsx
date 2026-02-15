@@ -386,6 +386,7 @@ export function AuscultationMode({
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="px-3 py-1.5 text-sm rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+              aria-label="Filter by category"
             >
               <option value="all">All Categories</option>
               {(activeTab === 'heart' ? HEART_SOUND_CATEGORIES : LUNG_SOUND_CATEGORIES).map(
@@ -402,6 +403,7 @@ export function AuscultationMode({
             value={difficultyFilter}
             onChange={(e) => setDifficultyFilter(e.target.value)}
             className="px-3 py-1.5 text-sm rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+            aria-label="Filter by difficulty level"
           >
             <option value="all">All Levels</option>
             <option value="basic">Basic</option>
@@ -455,7 +457,9 @@ export function AuscultationMode({
                       `}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-[var(--color-text-primary)]">{option}</span>
+                        <span className="font-medium text-[var(--color-text-primary)]">
+                          {option}
+                        </span>
                         {showAnswer &&
                           (isCorrect || isSelected) &&
                           (isCorrect ? (
@@ -585,8 +589,9 @@ export function AuscultationMode({
                     min={0}
                     max={duration || 100}
                     value={currentTime}
-                    onChange={(e) => seek(parseFloat(e.target.value))}
+                    onChange={(e) => seek(Number.parseFloat(e.target.value))}
                     className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer"
+                    aria-label="Playback position"
                   />
                   <div className="flex justify-between text-xs text-slate-500 mt-1">
                     <span>{formatTime(currentTime)}</span>
@@ -597,32 +602,48 @@ export function AuscultationMode({
                 {/* Controls */}
                 <div className="flex items-center justify-center gap-4">
                   <button
+                    type="button"
                     onClick={() => setIsLooping(!isLooping)}
                     className={`p-2 rounded-full ${
                       isLooping ? 'text-indigo-600 bg-indigo-100' : 'text-slate-400'
                     }`}
+                    aria-label={isLooping ? 'Disable loop' : 'Loop track'}
                   >
                     <Repeat className="h-5 w-5" />
                   </button>
 
-                  <button onClick={skipBack} className="p-2 text-slate-600 hover:text-slate-900">
+                  <button
+                    type="button"
+                    onClick={skipBack}
+                    className="p-2 text-slate-600 hover:text-slate-900"
+                    aria-label="Skip back 2 seconds"
+                  >
                     <SkipBack className="h-6 w-6" />
                   </button>
 
                   <button
+                    type="button"
                     onClick={togglePlay}
                     className="p-4 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
+                    aria-label={isPlaying ? 'Pause' : 'Play'}
                   >
                     {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
                   </button>
 
-                  <button onClick={skipForward} className="p-2 text-slate-600 hover:text-slate-900">
+                  <button
+                    type="button"
+                    onClick={skipForward}
+                    className="p-2 text-slate-600 hover:text-slate-900"
+                    aria-label="Skip forward 2 seconds"
+                  >
                     <SkipForward className="h-6 w-6" />
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => setIsMuted(!isMuted)}
                     className={`p-2 rounded-full ${isMuted ? 'text-red-500' : 'text-slate-400'}`}
+                    aria-label={isMuted ? 'Unmute' : 'Mute'}
                   >
                     {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
                   </button>
@@ -656,7 +677,9 @@ export function AuscultationMode({
               {/* Sound Info (Learn Mode) */}
               {mode === 'learn' && (
                 <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
-                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-3">Description</h4>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-3">
+                    Description
+                  </h4>
                   <p className="text-slate-600 dark:text-slate-400 mb-4">
                     {selectedSound.description}
                   </p>

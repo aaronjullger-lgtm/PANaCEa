@@ -65,7 +65,9 @@ export const ChartContainer: React.FC<ChartContainerProps> = ({
       }}
       {...(ariaHidden === true ? { 'aria-hidden': true } : {})}
     >
-      {ready ? children : fallback ?? <div style={{ height: minHeight, minHeight }} aria-hidden />}
+      {ready
+        ? children
+        : (fallback ?? <div style={{ height: minHeight, minHeight }} aria-hidden />)}
     </div>
   );
 };

@@ -57,7 +57,8 @@ export const onRequestPost = authenticatedEndpoint(SubmitSchema, async (context)
 
     const total = validated.answers.length;
     const accuracy = total > 0 ? (correctCount / total) * 100 : 0;
-    const systemBreakdown: Record<string, { correct: number; total: number; accuracy: number }> = {};
+    const systemBreakdown: Record<string, { correct: number; total: number; accuracy: number }> =
+      {};
     for (const [sys, s] of Object.entries(systemStats)) {
       systemBreakdown[sys] = {
         correct: s.correct,
@@ -70,7 +71,10 @@ export const onRequestPost = authenticatedEndpoint(SubmitSchema, async (context)
       .filter(([, v]) => v.total > 0)
       .sort(([, a], [, b]) => a.accuracy - b.accuracy);
     const weakestSystems = sorted.slice(0, 3).map(([sys]) => sys);
-    const strongestSystems = sorted.slice(-3).reverse().map(([sys]) => sys);
+    const strongestSystems = sorted
+      .slice(-3)
+      .reverse()
+      .map(([sys]) => sys);
 
     const id = crypto.randomUUID();
     await prisma.baselineAssessment.upsert({

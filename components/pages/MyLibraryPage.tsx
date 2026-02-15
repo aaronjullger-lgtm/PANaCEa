@@ -51,10 +51,8 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
   const [libraryLoading, setLibraryLoading] = useState(false);
   const [libraryError, setLibraryError] = useState<string | null>(null);
 
-  const activeCacheName =
-    (preferences.customSettings as Record<string, unknown> | undefined)?.activeKnowledgeCacheName as
-      | string
-      | undefined;
+  const activeCacheName = (preferences.customSettings as Record<string, unknown> | undefined)
+    ?.activeKnowledgeCacheName as string | undefined;
 
   const fetchCaches = useCallback(async () => {
     const token = await getToken();
@@ -77,9 +75,13 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
       const list = data.caches ?? [];
       setCaches(list);
       // Clear active if it's no longer in the non-expired list (expired or deleted)
-      const activeName =
-        (preferences.customSettings as Record<string, unknown> | undefined)?.activeKnowledgeCacheName;
-      if (activeName && typeof activeName === 'string' && !list.some((c) => c.geminiCacheName === activeName)) {
+      const activeName = (preferences.customSettings as Record<string, unknown> | undefined)
+        ?.activeKnowledgeCacheName;
+      if (
+        activeName &&
+        typeof activeName === 'string' &&
+        !list.some((c) => c.geminiCacheName === activeName)
+      ) {
         const custom = (preferences.customSettings as Record<string, unknown>) ?? {};
         const next = { ...custom };
         delete next.activeKnowledgeCacheName;
@@ -127,7 +129,10 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
       setDeletingName(geminiCacheName);
       try {
         const url = getApiBaseUrl() + API_ENDPOINTS.KNOWLEDGE_CACHE_DELETE(geminiCacheName);
-        const res = await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(url, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (!res.ok) {
           const errBody = (await res.json().catch(() => ({}))) as { error?: string };
           throw new Error(errBody.error || `HTTP ${res.status}`);
@@ -238,7 +243,10 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
         </summary>
         <div className="px-4 pb-3 pt-0 text-sm text-[var(--color-text-secondary)] space-y-2">
           <p>
-            My Library uses <strong>context caching</strong> so the AI Tutor can answer from your own materials (e.g. a textbook PDF). Upload a PDF, set it as active, then use &quot;Ask Tutor&quot; in quiz explanations—answers will be grounded in that document. Caches expire after about an hour; you can re-upload or create a new cache anytime.
+            My Library uses <strong>context caching</strong> so the AI Tutor can answer from your
+            own materials (e.g. a textbook PDF). Upload a PDF, set it as active, then use &quot;Ask
+            Tutor&quot; in quiz explanations—answers will be grounded in that document. Caches
+            expire after about an hour; you can re-upload or create a new cache anytime.
           </p>
           <p className="text-xs text-[var(--color-text-muted)]">
             PDF only, max 50MB. Your active choice is saved in your preferences.
@@ -271,7 +279,10 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
 
       {/* Upload */}
       <div className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-        <label htmlFor="my-library-display-name" className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+        <label
+          htmlFor="my-library-display-name"
+          className="block text-sm font-medium text-[var(--color-text-primary)] mb-2"
+        >
           Add a document
         </label>
         <input
@@ -285,9 +296,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
         <div className="flex items-center gap-2">
           <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--color-accent)]/20 text-[var(--color-accent)] cursor-pointer hover:bg-[var(--color-accent)]/30 transition-colors">
             <Upload className="w-4 h-4" />
-            <span className="text-sm font-medium">
-              {uploading ? 'Uploading…' : 'Choose PDF'}
-            </span>
+            <span className="text-sm font-medium">{uploading ? 'Uploading…' : 'Choose PDF'}</span>
             <input
               type="file"
               accept="application/pdf"
@@ -328,7 +337,9 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
                   <p className="font-medium text-[var(--color-text-primary)] truncate">
                     {c.displayName}
                   </p>
-                  <p className="text-xs text-[var(--color-text-secondary)]">{formatExpiry(c.expiresAt)}</p>
+                  <p className="text-xs text-[var(--color-text-secondary)]">
+                    {formatExpiry(c.expiresAt)}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {activeCacheName === c.geminiCacheName ? (
@@ -354,9 +365,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
                     {deletingName === c.geminiCacheName && (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     )}
-                    {deletingName !== c.geminiCacheName && (
-                      <Trash2 className="w-4 h-4" />
-                    )}
+                    {deletingName !== c.geminiCacheName && <Trash2 className="w-4 h-4" />}
                   </button>
                 </div>
               </li>

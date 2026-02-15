@@ -143,10 +143,10 @@ ${text.slice(0, 45000)}`;
     }
 
     if (!script) {
-      return new Response(
-        JSON.stringify({ error: 'No script generated' }),
-        { status: 502, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
-      );
+      return new Response(JSON.stringify({ error: 'No script generated' }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+      });
     }
 
     return new Response(
@@ -162,9 +162,9 @@ ${text.slice(0, 45000)}`;
     );
   } catch (err) {
     log.error('Lecture script error', err);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 });

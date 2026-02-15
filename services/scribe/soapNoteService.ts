@@ -1,16 +1,16 @@
 /**
  * SOAP Note Service
- * 
+ *
  * Real-time SOAP note generation using gemini-dictation during OSCE sessions.
  * Provides automated "gold standard" notes and comparison with student notes.
- * 
+ *
  * Features:
  * - Background note drafting during encounter
  * - Element-by-element tracking with confidence scores
  * - Side-by-side comparison (student vs. AI)
  * - Missing element highlighting
  * - Completeness scoring
- * 
+ *
  * @module soapNoteService
  */
 
@@ -98,10 +98,7 @@ export class SOAPNoteService {
   /**
    * Add vitals update to the generator.
    */
-  async addVitals(
-    sessionId: string,
-    vitals: Record<string, string | number>
-  ): Promise<void> {
+  async addVitals(sessionId: string, vitals: Record<string, string | number>): Promise<void> {
     const generator = this.activeGenerators.get(sessionId);
     if (!generator) return;
 
@@ -117,10 +114,7 @@ export class SOAPNoteService {
   /**
    * Add physical findings to the generator.
    */
-  async addPhysicalFindings(
-    sessionId: string,
-    findings: Record<string, unknown>
-  ): Promise<void> {
+  async addPhysicalFindings(sessionId: string, findings: Record<string, unknown>): Promise<void> {
     const generator = this.activeGenerators.get(sessionId);
     if (!generator) return;
 
@@ -196,10 +190,7 @@ export class SOAPNoteService {
         feedback = `Missing ${element.replace('_', ' ')}: ${goldElement.content}`;
         severity = goldElement.isCritical ? 'critical' : 'important';
       } else {
-        const similarity = this.calculateSimilarity(
-          studentElement.content,
-          goldElement.content
-        );
+        const similarity = this.calculateSimilarity(studentElement.content, goldElement.content);
 
         if (similarity > 0.8) {
           status = 'present';
@@ -236,9 +227,7 @@ export class SOAPNoteService {
         studentContent: studentVitals?.content,
         goldStandardContent: goldVitals.content,
         status: studentVitals ? 'present' : 'missing',
-        feedback: studentVitals
-          ? 'Vital signs documented'
-          : 'Missing vital signs documentation',
+        feedback: studentVitals ? 'Vital signs documented' : 'Missing vital signs documentation',
         severity: 'critical',
       });
     }
@@ -258,9 +247,7 @@ export class SOAPNoteService {
         studentContent: studentDx?.content,
         goldStandardContent: goldDx.content,
         status: dxCorrect ? 'present' : studentDx ? 'incorrect' : 'missing',
-        feedback: dxCorrect
-          ? 'Correct diagnosis'
-          : `Diagnosis should be: ${goldDx.content}`,
+        feedback: dxCorrect ? 'Correct diagnosis' : `Diagnosis should be: ${goldDx.content}`,
         severity: 'critical',
       });
     }
@@ -430,10 +417,7 @@ export class SOAPNoteService {
   /**
    * Extract SOAP elements using Gemini.
    */
-  private async extractSOAPElements(
-    context: string,
-    currentNote: SOAPNote
-  ): Promise<SOAPNote> {
+  private async extractSOAPElements(context: string, currentNote: SOAPNote): Promise<SOAPNote> {
     const prompt = `You are a medical scribe. Extract SOAP note elements from this clinical encounter.
 
 ${context}
@@ -471,9 +455,7 @@ Important: Only include information that is explicitly stated or can be confiden
       }
 
       const data = await response.json();
-      const extractedNote = JSON.parse(
-        data.candidates?.[0]?.content?.parts?.[0]?.text || '{}'
-      );
+      const extractedNote = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
 
       // Merge with current note
       return this.mergeNotes(currentNote, extractedNote);
@@ -585,9 +567,7 @@ Important: Only include information that is explicitly stated or can be confiden
   /**
    * Generate teaching points from comparison.
    */
-  private generateTeachingPoints(
-    elementComparison: SOAPComparison['elementComparison']
-  ): string[] {
+  private generateTeachingPoints(elementComparison: SOAPComparison['elementComparison']): string[] {
     const points: string[] = [];
 
     const missedCritical = elementComparison.filter(
@@ -595,7 +575,9 @@ Important: Only include information that is explicitly stated or can be confiden
     );
 
     if (missedCritical.length > 0) {
-      points.push(`Critical elements missed: Always document ${missedCritical.map((e) => e.elementType).join(', ')}`);
+      points.push(
+        `Critical elements missed: Always document ${missedCritical.map((e) => e.elementType).join(', ')}`
+      );
     }
 
     const incorrectAssessment = elementComparison.find(
@@ -603,7 +585,9 @@ Important: Only include information that is explicitly stated or can be confiden
     );
 
     if (incorrectAssessment) {
-      points.push(`Consider the diagnostic criteria for ${incorrectAssessment.goldStandardContent}`);
+      points.push(
+        `Consider the diagnostic criteria for ${incorrectAssessment.goldStandardContent}`
+      );
     }
 
     return points;

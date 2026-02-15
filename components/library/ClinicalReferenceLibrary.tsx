@@ -173,8 +173,14 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
         setContent([]);
         return;
       }
-      const data = JSON.parse(text);
-      setContent(data.content || []);
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        throw new Error('Invalid response from server');
+      }
+      const data = parsed as { content?: unknown[] };
+      setContent(Array.isArray(data?.content) ? data.content : []);
     } catch (err) {
       console.error('[ClinicalReferenceLibrary] content fetch failed', err);
       setError(err instanceof Error ? err.message : 'Failed to load clinical data');
@@ -259,7 +265,10 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   // Group content by system + subcategory so headers always match the conditions (no ID/label mismatch).
   // When viewing "All Systems", subcategory names can repeat across systems; grouping by (system, subcategory) keeps e.g. ENT conditions under ENT headers only.
   const groupedContent = useMemo(() => {
-    const map = new Map<string, { system: string; subcategory: string; items: Partial<MedicalContentDisplay>[] }>();
+    const map = new Map<
+      string,
+      { system: string; subcategory: string; items: Partial<MedicalContentDisplay>[] }
+    >();
     for (const item of filteredContent) {
       const system = item.system || 'Unknown';
       const subcategory = item.subcategory || 'Uncategorized';
@@ -447,11 +456,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
           ) : isSearchMode ? (
             // Semantic search mode: show answer (SGE style) + flat results
             semanticError ? (
-              <ErrorState
-                title="Search failed"
-                message={semanticError}
-                onRetry={() => {}}
-              />
+              <ErrorState title="Search failed" message={semanticError} onRetry={() => {}} />
             ) : semanticLoading ? (
               <LoadingOverlay message="Searching reference library..." />
             ) : displayContent.length === 0 ? (
@@ -461,7 +466,8 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                   No results found
                 </h3>
                 <p className="text-sm text-[var(--color-text-muted)] max-w-md">
-                  No reference cards matched &quot;{searchQuery}&quot;. Try different wording or browse by system.
+                  No reference cards matched &quot;{searchQuery}&quot;. Try different wording or
+                  browse by system.
                 </p>
               </div>
             ) : (
@@ -912,9 +918,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h2
-          className="text-3xl font-bold text-[var(--color-text-primary)] tracking-wide mb-3 font-teko"
-        >
+        <h2 className="text-3xl font-bold text-[var(--color-text-primary)] tracking-wide mb-3 font-teko">
           {normalized.condition}
         </h2>
         <div className="flex items-center gap-3 flex-wrap">

@@ -49,18 +49,17 @@ test.describe('Feature console audit', () => {
       // Filter out known benign messages
       const isBenign = (t: string) =>
         t.includes('Download the React DevTools') ||
-        t.includes('clerk-telemetry') && !t.includes('violates') ||
-        t.includes('ResizeObserver') && t.includes('loop') ||
-        t.includes('404') && t.includes('favicon');
+        (t.includes('clerk-telemetry') && !t.includes('violates')) ||
+        (t.includes('ResizeObserver') && t.includes('loop')) ||
+        (t.includes('404') && t.includes('favicon'));
 
       const errors = consoleLogs.filter((e) => e.type === 'error' && !isBenign(e.text));
       const warnings = consoleLogs.filter((e) => e.type === 'warning' && !isBenign(e.text));
 
       // Fail on uncaught page errors
-      expect(
-        pageErrors,
-        `Uncaught page errors on ${name}: ${pageErrors.join('; ')}`
-      ).toHaveLength(0);
+      expect(pageErrors, `Uncaught page errors on ${name}: ${pageErrors.join('; ')}`).toHaveLength(
+        0
+      );
 
       // Log for human review (do not fail on console.error unless critical)
       if (errors.length > 0 || warnings.length > 0) {
@@ -94,7 +93,11 @@ test.describe('Feature console audit', () => {
     await page.waitForTimeout(2000);
 
     // Only assert if we're on the app (not sign-in) and user can start a session
-    const startButton = page.locator('button:has-text(/start|begin|build session/i), [aria-label*="Start"], a:has-text(/start session/i)').first();
+    const startButton = page
+      .locator(
+        'button:has-text(/start|begin|build session/i), [aria-label*="Start"], a:has-text(/start session/i)'
+      )
+      .first();
     const visible = await startButton.isVisible().catch(() => false);
     if (!visible) {
       test.skip();
@@ -112,7 +115,9 @@ test.describe('Feature console audit', () => {
     }
 
     // If we got to quiz, session API should have been called
-    const sessionCalled = sessionRequests.some((r) => r.startsWith('GET') && r.includes('/api/questions/session'));
+    const sessionCalled = sessionRequests.some(
+      (r) => r.startsWith('GET') && r.includes('/api/questions/session')
+    );
     if (sessionCalled) {
       expect(sessionRequests.length).toBeGreaterThan(0);
     }

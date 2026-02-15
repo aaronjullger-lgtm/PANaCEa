@@ -40,7 +40,13 @@ const NODE_COLORS: Record<GraphNode['type'], string> = {
   differential: '#d97706',
 };
 
-function buildGraphData(nodes: GraphNode[], edges: GraphEdge[]): { nodes: Array<GraphNode & { x?: number; y?: number }>; links: Array<{ source: string; target: string; relationshipType?: string }> } {
+function buildGraphData(
+  nodes: GraphNode[],
+  edges: GraphEdge[]
+): {
+  nodes: Array<GraphNode & { x?: number; y?: number }>;
+  links: Array<{ source: string; target: string; relationshipType?: string }>;
+} {
   const nodeMap = new Map(nodes.map((n) => [n.id, { ...n }]));
   const links = edges.map((e) => ({
     source: typeof e.source === 'string' ? e.source : (e.source as GraphNode).id,
@@ -95,7 +101,11 @@ export const ClinicalNetwork: React.FC<ClinicalNetworkProps> = ({
       })
       .then((res: unknown) => {
         if (cancelled) return;
-        const r = res as { data?: { nodes?: unknown[]; edges?: unknown[] }; nodes?: unknown[]; edges?: unknown[] };
+        const r = res as {
+          data?: { nodes?: unknown[]; edges?: unknown[] };
+          nodes?: unknown[];
+          edges?: unknown[];
+        };
         const payload = r?.data ?? r;
         if (payload?.nodes && payload?.edges) {
           setData({
@@ -168,7 +178,10 @@ export const ClinicalNetwork: React.FC<ClinicalNetworkProps> = ({
   }
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900 overflow-hidden" style={{ width, height }}>
+    <div
+      className="rounded-xl border border-slate-700 bg-slate-900 overflow-hidden"
+      style={{ width, height }}
+    >
       <ForceGraph2D
         graphData={{ nodes, links }}
         width={width}
@@ -195,11 +208,26 @@ export const ClinicalNetwork: React.FC<ClinicalNetworkProps> = ({
         }}
       />
       <div className="flex flex-wrap gap-3 p-2 border-t border-slate-700 bg-slate-800/80 text-xs text-slate-300">
-        <span><span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1" />Condition</span>
-        <span><span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1" />Drug</span>
-        <span><span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1" />Anatomy</span>
-        <span><span className="inline-block w-2 h-2 rounded-full bg-slate-500 mr-1" />Lab</span>
-        <span><span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1" />Differential</span>
+        <span>
+          <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1" />
+          Condition
+        </span>
+        <span>
+          <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1" />
+          Drug
+        </span>
+        <span>
+          <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1" />
+          Anatomy
+        </span>
+        <span>
+          <span className="inline-block w-2 h-2 rounded-full bg-slate-500 mr-1" />
+          Lab
+        </span>
+        <span>
+          <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1" />
+          Differential
+        </span>
       </div>
     </div>
   );

@@ -18,7 +18,12 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 
 const SubmitSchema = z.object({
   answerIndex: z.number().int().min(0).max(10),
-  timeSpentMs: z.number().int().min(0).max(60 * 60 * 1000).optional(),
+  timeSpentMs: z
+    .number()
+    .int()
+    .min(0)
+    .max(60 * 60 * 1000)
+    .optional(),
 });
 
 function getUtcDateStart(d: Date): Date {
@@ -42,7 +47,10 @@ function normalizeCorrectIndexFromAny(data: any): number {
   if (typeof data?.correctIndex === 'number') return data.correctIndex;
 
   // Fallback: if main table correctAnswer is actual text, we can't map reliably here; default 0
-  if (typeof data?.correctAnswer === 'string' && !(data.correctAnswer.trim().charAt(0).toUpperCase() in letterToIndex)) {
+  if (
+    typeof data?.correctAnswer === 'string' &&
+    !(data.correctAnswer.trim().charAt(0).toUpperCase() in letterToIndex)
+  ) {
     return 0;
   }
 
@@ -135,4 +143,3 @@ export const onRequestPost = authenticatedEndpoint(
   },
   { source: 'body', requestsPerMinute: 120 }
 );
-

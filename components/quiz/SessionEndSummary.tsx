@@ -105,19 +105,13 @@ function getAccuracyClass(accuracy: number): string {
 }
 
 /** Bar fill with width set via ref to satisfy no-inline-style linter; width is dynamic (accuracy %). */
-function AccuracyBarFill({
-  accuracy,
-  barClass,
-}: Readonly<{ accuracy: number; barClass: string }>) {
+function AccuracyBarFill({ accuracy, barClass }: Readonly<{ accuracy: number; barClass: string }>) {
   const ref = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     if (ref.current) ref.current.style.setProperty('--bar-pct', `${accuracy}%`);
   }, [accuracy]);
   return (
-    <div
-      ref={ref}
-      className={`h-full rounded-full transition-all ${barClass} ${styles.barFill}`}
-    />
+    <div ref={ref} className={`h-full rounded-full transition-all ${barClass} ${styles.barFill}`} />
   );
 }
 
@@ -199,7 +193,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 
     const correct = performanceData.filter((p) => p.isCorrect).length;
     const accuracy = correct / performanceData.length;
-    
+
     // Find weakest system from this session
     const systemStats: Record<string, { correct: number; total: number }> = {};
     for (const p of performanceData) {
@@ -209,7 +203,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       systemStats[sys].total++;
       if (p.isCorrect) systemStats[sys].correct++;
     }
-    
+
     let weakSystem: SystemCode | undefined;
     let lowestAccuracy = 1;
     for (const [sys, stats] of Object.entries(systemStats)) {
@@ -221,13 +215,17 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
       }
     }
 
-    const fallbackSettings: SessionSettings = { focus: 'all', systems: [], count: performanceData.length };
+    const fallbackSettings: SessionSettings = {
+      focus: 'all',
+      systems: [],
+      count: performanceData.length,
+    };
     const mergedSettings: SessionSettings = sessionSettings
-      ? { 
-          ...fallbackSettings, 
-          ...sessionSettings, 
+      ? {
+          ...fallbackSettings,
+          ...sessionSettings,
           mode: sessionSettings.mode as SessionSettings['mode'],
-          focus: (sessionSettings.focus ?? 'all') as SessionSettings['focus'] 
+          focus: (sessionSettings.focus ?? 'all') as SessionSettings['focus'],
         }
       : fallbackSettings;
     saveLastSession({
@@ -489,7 +487,10 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           >
             <Trophy className={`w-16 h-16 mx-auto ${grade.color}`} />
           </motion.div>
-          <h2 id="session-summary-title" className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+          <h2
+            id="session-summary-title"
+            className="text-2xl font-bold text-[var(--color-text-primary)] mb-2"
+          >
             Session Complete!
           </h2>
           <div className="flex items-center justify-center gap-4">
@@ -725,7 +726,9 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               <span className="font-medium text-[var(--color-accent)]">AI Summary</span>
             </div>
             {aiSummary ? (
-              <p className="text-sm text-[var(--color-text-primary)] leading-relaxed">{aiSummary}</p>
+              <p className="text-sm text-[var(--color-text-primary)] leading-relaxed">
+                {aiSummary}
+              </p>
             ) : (
               <button
                 onClick={fetchAiSummary}

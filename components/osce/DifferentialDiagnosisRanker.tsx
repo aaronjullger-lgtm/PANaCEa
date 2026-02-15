@@ -221,7 +221,9 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
 
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-bold text-[var(--color-text-primary)]">{result.name}</h4>
+                          <h4 className="font-bold text-[var(--color-text-primary)]">
+                            {result.name}
+                          </h4>
                           <div className="flex gap-2">
                             <span
                               className={`text-xs font-semibold px-2 py-1 rounded ${

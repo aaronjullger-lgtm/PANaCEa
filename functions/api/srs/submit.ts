@@ -19,7 +19,10 @@ import {
 } from '../../../lib/fsrs';
 import { VariantQueueService } from '../../../services/core/variantQueueService';
 import { getTaskTypeFromContent } from '../../../lib/taskTypes';
-import { analyzeBehaviorGemini, type BehaviorTelemetryInput } from '../_shared/analyzeBehaviorGemini';
+import {
+  analyzeBehaviorGemini,
+  type BehaviorTelemetryInput,
+} from '../_shared/analyzeBehaviorGemini';
 
 const SRSSubmitSchema = z.object({
   body: z.object({
@@ -47,8 +50,16 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
   try {
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const { srsItemId, topicProgressId, questionId, rating, isCorrect, variantId, attemptId, telemetry } =
-      validated.body;
+    const {
+      srsItemId,
+      topicProgressId,
+      questionId,
+      rating,
+      isCorrect,
+      variantId,
+      attemptId,
+      telemetry,
+    } = validated.body;
 
     let effectiveRating = rating;
     let implicitDifficulty: number | null = null;
@@ -57,7 +68,9 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       try {
         let wasCorrect = isCorrect;
         let selectedAnswer: string | undefined;
-        let effectiveTelemetry: BehaviorTelemetryInput | undefined = telemetry as BehaviorTelemetryInput | undefined;
+        let effectiveTelemetry: BehaviorTelemetryInput | undefined = telemetry as
+          | BehaviorTelemetryInput
+          | undefined;
         if (attemptId && env.DATABASE_URL) {
           const prismaForAttempt = createEdgePrismaClient(env.DATABASE_URL);
           const attempt = await prismaForAttempt.questionAttempt.findFirst({
@@ -68,7 +81,8 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
             wasCorrect = attempt.wasCorrect;
             selectedAnswer = attempt.selectedAnswer ?? undefined;
             if (attempt.telemetryJson && typeof attempt.telemetryJson === 'object')
-              effectiveTelemetry = (effectiveTelemetry ?? attempt.telemetryJson) as BehaviorTelemetryInput;
+              effectiveTelemetry = (effectiveTelemetry ??
+                attempt.telemetryJson) as BehaviorTelemetryInput;
           }
           await safePrismaDisconnect(prismaForAttempt);
         }
@@ -266,7 +280,8 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
           questionId: questionId ?? undefined,
           conditionId: conditionId ?? undefined,
           topicProgressId: topicProgress?.id ?? undefined,
-          visualRegenerationHint: 'Call POST /api/srs/generate-visual with front/back (or question text) and style: "exaggerated" for cartoon mnemonic; display with Flip animation.',
+          visualRegenerationHint:
+            'Call POST /api/srs/generate-visual with front/back (or question text) and style: "exaggerated" for cartoon mnemonic; display with Flip animation.',
         }),
       },
     };

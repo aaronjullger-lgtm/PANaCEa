@@ -8,7 +8,10 @@ import { useCallback } from 'react';
 type ViewTransitionCallback = () => void | Promise<void>;
 
 type DocumentWithViewTransition = Document & {
-  startViewTransition?(callback: ViewTransitionCallback): { ready: Promise<void>; finished: Promise<void> };
+  startViewTransition?(callback: ViewTransitionCallback): {
+    ready: Promise<void>;
+    finished: Promise<void>;
+  };
 };
 
 /**
@@ -17,7 +20,8 @@ type DocumentWithViewTransition = Document & {
  */
 export function useViewTransition(): (callback: ViewTransitionCallback) => Promise<void> {
   return useCallback(async (callback: ViewTransitionCallback) => {
-    const doc = typeof document !== 'undefined' ? (document as unknown as DocumentWithViewTransition) : null;
+    const doc =
+      typeof document !== 'undefined' ? (document as unknown as DocumentWithViewTransition) : null;
     if (doc?.startViewTransition) {
       const transition = doc.startViewTransition(callback);
       await transition.ready;

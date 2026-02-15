@@ -7,7 +7,11 @@
 
 import React, { useState } from 'react';
 import { X, Beaker, Droplet, Flame } from 'lucide-react';
-import { AnionGapCalculator, OsmolarGapCalculator, ParklandCalculator } from '@/components/toolkit/calculators/lab';
+import {
+  AnionGapCalculator,
+  OsmolarGapCalculator,
+  ParklandCalculator,
+} from '@/components/toolkit/calculators/lab';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface QuizLabCalcModalProps {
@@ -65,7 +69,9 @@ export const QuizLabCalcModal: React.FC<QuizLabCalcModalProps> = ({ onClose }) =
                     className="flex items-center gap-3 p-4 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:border-[var(--color-accent)] hover:bg-[var(--color-bg-tertiary)] transition-colors text-left"
                   >
                     <Icon className="w-8 h-8 text-[var(--color-accent)] flex-shrink-0" />
-                    <span className="font-medium text-[var(--color-text-primary)]">{tab.label}</span>
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      {tab.label}
+                    </span>
                   </button>
                 );
               })}
@@ -78,15 +84,9 @@ export const QuizLabCalcModal: React.FC<QuizLabCalcModalProps> = ({ onClose }) =
               exit={{ opacity: 0, x: -8 }}
               className="flex-1 overflow-y-auto p-4"
             >
-              {selectedTab === 'anion_gap' && (
-                <AnionGapCalculator onBack={handleBack} />
-              )}
-              {selectedTab === 'osmolar_gap' && (
-                <OsmolarGapCalculator onBack={handleBack} />
-              )}
-              {selectedTab === 'parkland' && (
-                <ParklandCalculator onBack={handleBack} />
-              )}
+              {selectedTab === 'anion_gap' && <AnionGapCalculator onBack={handleBack} />}
+              {selectedTab === 'osmolar_gap' && <OsmolarGapCalculator onBack={handleBack} />}
+              {selectedTab === 'parkland' && <ParklandCalculator onBack={handleBack} />}
             </motion.div>
           )}
         </AnimatePresence>

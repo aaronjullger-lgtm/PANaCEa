@@ -106,7 +106,12 @@ export const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
     icon: <TrendingUp className="w-5 h-5" />,
     enabled: true,
   },
-  { id: 'currentStreak', label: 'Study Continuity', icon: <Zap className="w-5 h-5" />, enabled: true },
+  {
+    id: 'currentStreak',
+    label: 'Study Continuity',
+    icon: <Zap className="w-5 h-5" />,
+    enabled: true,
+  },
   {
     id: 'overallAccuracy',
     label: 'Current Accuracy',
@@ -157,18 +162,18 @@ export const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
 
 /** Short descriptions for Settings tooltip preview (reduces cognitive load when toggling widgets) */
 export const WIDGET_PREVIEW_INFO: Record<WidgetId, { description: string }> = {
-  todayProgress: { description: "Questions done today and session accuracy." },
-  recentTrend: { description: "Trend vs previous 50 questions (+/- %)." },
-  currentStreak: { description: "Consecutive correct answers in a row." },
-  overallAccuracy: { description: "Current accuracy (today/week/month scope)." },
-  questionsAttempted: { description: "Total questions in selected time scope." },
-  bestStreak: { description: "Personal best consecutive correct streak." },
-  studyDays: { description: "Number of days with at least one question." },
+  todayProgress: { description: 'Questions done today and session accuracy.' },
+  recentTrend: { description: 'Trend vs previous 50 questions (+/- %).' },
+  currentStreak: { description: 'Consecutive correct answers in a row.' },
+  overallAccuracy: { description: 'Current accuracy (today/week/month scope).' },
+  questionsAttempted: { description: 'Total questions in selected time scope.' },
+  bestStreak: { description: 'Personal best consecutive correct streak.' },
+  studyDays: { description: 'Number of days with at least one question.' },
   weekProgress: { description: "This week's questions and accuracy." },
-  vignetteStamina: { description: "Accuracy on short vs long questions (Case Endurance)." },
-  speedVsAccuracy: { description: "Fast (<30s) vs slow (>60s) answer accuracy." },
-  secondGuessFactor: { description: "Accuracy when you changed your answer." },
-  topicSplit: { description: "Diagnosis vs management question accuracy." },
+  vignetteStamina: { description: 'Accuracy on short vs long questions (Case Endurance).' },
+  speedVsAccuracy: { description: 'Fast (<30s) vs slow (>60s) answer accuracy.' },
+  secondGuessFactor: { description: 'Accuracy when you changed your answer.' },
+  topicSplit: { description: 'Diagnosis vs management question accuracy.' },
 };
 
 // ============================================================================
@@ -200,9 +205,7 @@ const StatCard: React.FC<StatCardProps> = ({
 }) => {
   const isHighlight = isGoldAchievement || isClinicalAchievement;
   const highlightClass = isClinicalAchievement ? 'clinical-achievement' : 'gold-achievement';
-  const highlightTextClass = isClinicalAchievement
-    ? 'text-teal-700'
-    : 'text-amber-900';
+  const highlightTextClass = isClinicalAchievement ? 'text-teal-700' : 'text-amber-900';
   const highlightIconClass = isClinicalAchievement ? 'text-teal-500' : 'text-amber-500';
   return (
     <motion.div

@@ -157,9 +157,7 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
           </h3>
           <div className="grid grid-cols-4 gap-4 mb-3">
             <div className="text-center">
-              <div className="text-2xl font-bold text-[var(--color-data-fail)]">
-                {taskStats.p4}
-              </div>
+              <div className="text-2xl font-bold text-[var(--color-data-fail)]">{taskStats.p4}</div>
               <div className="text-xs text-[var(--color-text-muted)]">P4 (Critical)</div>
             </div>
             <div className="text-center">
@@ -169,9 +167,7 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
               <div className="text-xs text-[var(--color-text-muted)]">P3 (High)</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-[var(--color-accent)]">
-                {taskStats.p2}
-              </div>
+              <div className="text-2xl font-bold text-[var(--color-accent)]">{taskStats.p2}</div>
               <div className="text-xs text-[var(--color-text-muted)]">P2 (Medium)</div>
             </div>
             <div className="text-center">
@@ -210,7 +206,9 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
       {showInstructions && (
         <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)]">
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <pre className="whitespace-pre-wrap text-xs text-[var(--color-text-secondary)]">{TODOIST_IMPORT_INSTRUCTIONS}</pre>
+            <pre className="whitespace-pre-wrap text-xs text-[var(--color-text-secondary)]">
+              {TODOIST_IMPORT_INSTRUCTIONS}
+            </pre>
           </div>
         </div>
       )}

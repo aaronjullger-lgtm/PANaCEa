@@ -1,9 +1,9 @@
 /**
  * RecommendedActionCard - AI-powered smart suggestion
- * 
+ *
  * Analyzes user data to recommend the most impactful action right now.
  * Reduces decision fatigue by providing a clear "do this next" path.
- * 
+ *
  * Priority Algorithm:
  * 1. Due SRS reviews (time-sensitive)
  * 2. Weak systems (<70% accuracy, ≥10 attempts)
@@ -14,11 +14,11 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Brain, 
-  Target, 
-  Zap, 
-  BookOpen, 
+import {
+  Brain,
+  Target,
+  Zap,
+  BookOpen,
   TrendingDown,
   Clock,
   AlertCircle,
@@ -96,7 +96,7 @@ function getRecommendedAction(
   if (weakSystems[0]) {
     const sys = weakSystems[0];
     const avgAccuracy = Math.round(
-      systemStats.reduce((sum, s) => sum + s.accuracy, 0) / systemStats.length * 100
+      (systemStats.reduce((sum, s) => sum + s.accuracy, 0) / systemStats.length) * 100
     );
     return {
       type: 'weak_system',
@@ -118,7 +118,10 @@ function getRecommendedAction(
       icon: Zap,
       gradient: 'from-red-500/10 to-pink-500/10',
       priority: 85,
-      action: onStartCramMode || (() => onStartSession({ focus: 'all', systems: [], difficulty: 'medium', questionCount: 50 })),
+      action:
+        onStartCramMode ||
+        (() =>
+          onStartSession({ focus: 'all', systems: [], difficulty: 'medium', questionCount: 50 })),
     };
   }
 
@@ -134,7 +137,8 @@ function getRecommendedAction(
       icon: BookOpen,
       gradient: 'from-blue-500/10 to-cyan-500/10',
       priority: 70,
-      action: () => onStartSession({ focus: 'all', systems: [], difficulty: 'medium', questionCount: 20 }),
+      action: () =>
+        onStartSession({ focus: 'all', systems: [], difficulty: 'medium', questionCount: 20 }),
     };
   }
 
@@ -158,7 +162,8 @@ function getRecommendedAction(
     icon: Brain,
     gradient: 'from-[var(--color-accent)]/10 to-[var(--color-accent)]/5',
     priority: 50,
-    action: () => onStartSession({ focus: 'all', systems: [], difficulty: 'medium', questionCount: 40 }),
+    action: () =>
+      onStartSession({ focus: 'all', systems: [], difficulty: 'medium', questionCount: 40 }),
   };
 }
 

@@ -34,9 +34,7 @@ export async function updateUserProgressWithHistory(
 
   // 1. Atomic append to existing row (merge review logs; never overwrite whole array)
   const executeRaw =
-    typeof prisma.$executeRaw === 'function'
-      ? prisma.$executeRaw.bind(prisma)
-      : null;
+    typeof prisma.$executeRaw === 'function' ? prisma.$executeRaw.bind(prisma) : null;
 
   if (executeRaw) {
     try {
@@ -86,9 +84,8 @@ export async function updateUserProgressWithHistory(
     where: { userId_conditionId: { userId, conditionId } },
   });
 
-  let reviewHistory: any[] = existing && Array.isArray(existing.reviewHistory)
-    ? [...existing.reviewHistory]
-    : [];
+  let reviewHistory: any[] =
+    existing && Array.isArray(existing.reviewHistory) ? [...existing.reviewHistory] : [];
   const oneYearAgo = new Date();
   oneYearAgo.setDate(oneYearAgo.getDate() - 365);
   reviewHistory = reviewHistory.filter((entry: any) => new Date(entry.date) >= oneYearAgo);
@@ -100,7 +97,7 @@ export async function updateUserProgressWithHistory(
 
   const now = new Date();
   const nextReviewDate = new Date(now.getTime() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000);
-  
+
   try {
     await prisma.userProgress.upsert({
       where: { userId_conditionId: { userId, conditionId } },
@@ -152,7 +149,10 @@ export async function updateUserProgressWithHistory(
     if (error.code === 'P2003' || error.code === 'P2002') {
       // Log the error but don't throw - this allows the review to continue
       // even if UserProgress can't be created due to missing user/condition
-      console.warn(`Failed to create/update UserProgress for user ${userId}, condition ${conditionId}:`, error.message);
+      console.warn(
+        `Failed to create/update UserProgress for user ${userId}, condition ${conditionId}:`,
+        error.message
+      );
       return;
     }
     // Re-throw other errors

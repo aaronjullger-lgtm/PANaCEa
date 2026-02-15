@@ -26,7 +26,12 @@ interface ABGInterpretation {
   recommendation: string;
 }
 
-function interpretABG(pH: number, pCO2: number, hco3: number, pao2?: number): ABGInterpretation | null {
+function interpretABG(
+  pH: number,
+  pCO2: number,
+  hco3: number,
+  pao2?: number
+): ABGInterpretation | null {
   const isAcidosis = pH < 7.35;
   const isAlkalosis = pH > 7.45;
   if (!isAcidosis && !isAlkalosis) {
@@ -129,7 +134,10 @@ function interpretABG(pH: number, pCO2: number, hco3: number, pao2?: number): AB
       const expectedHCO3 = 24 - (40 - pCO2) * 0.2;
       if (Math.abs(hco3 - expectedHCO3) < 3) compensation = 'full';
       else if (hco3 > 22) compensation = 'partial';
-      compensationNote = compensation === 'full' ? 'Appropriate renal compensation.' : 'Acute respiratory alkalosis.';
+      compensationNote =
+        compensation === 'full'
+          ? 'Appropriate renal compensation.'
+          : 'Acute respiratory alkalosis.';
     } else if (highHCO3) {
       primary = 'metabolic';
       differential = [
@@ -161,7 +169,8 @@ function interpretABG(pH: number, pCO2: number, hco3: number, pao2?: number): AB
         compensationNote,
         oxygenStatus: pao2 !== undefined && pao2 < 80 ? 'Hypoxemia present' : undefined,
         differential,
-        recommendation: 'Check urine chloride. Saline-responsive vs saline-resistant. Correct hypokalemia.',
+        recommendation:
+          'Check urine chloride. Saline-responsive vs saline-resistant. Correct hypokalemia.',
       };
     } else {
       primary = 'respiratory';
@@ -186,7 +195,8 @@ function interpretABG(pH: number, pCO2: number, hco3: number, pao2?: number): AB
     compensationNote,
     oxygenStatus: pao2 !== undefined && pao2 < 80 ? 'Hypoxemia present' : undefined,
     differential,
-    recommendation: 'Address underlying cause. Monitor electrolytes and repeat ABG as clinically indicated.',
+    recommendation:
+      'Address underlying cause. Monitor electrolytes and repeat ABG as clinically indicated.',
   };
 }
 
@@ -310,14 +320,18 @@ export const ABGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
                   <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
                     {interpretation.primaryDisorder}
                   </h3>
-                  <p className="text-[var(--color-text-secondary)]">{interpretation.compensationNote}</p>
+                  <p className="text-[var(--color-text-secondary)]">
+                    {interpretation.compensationNote}
+                  </p>
                   {interpretation.wintersExpected && (
                     <p className="text-sm text-[var(--color-text-muted)]">
                       Winter&apos;s expected pCO₂: {interpretation.wintersExpected} mmHg
                     </p>
                   )}
                   {interpretation.oxygenStatus && (
-                    <p className="text-sm text-amber-400 font-medium">{interpretation.oxygenStatus}</p>
+                    <p className="text-sm text-amber-400 font-medium">
+                      {interpretation.oxygenStatus}
+                    </p>
                   )}
                 </div>
               </div>

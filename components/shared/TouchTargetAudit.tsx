@@ -28,7 +28,7 @@ interface TouchTargetAuditProps {
 export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
   isOpen = false,
   onClose,
-  minTouchSize = 44
+  minTouchSize = 44,
 }) => {
   const [issues, setIssues] = useState<TouchTargetIssue[]>([]);
   const [isScanning, setIsScanning] = useState(false);
@@ -56,7 +56,7 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
       '[tabindex]:not([tabindex="-1"])',
       '[onclick]',
       '[onkeydown]',
-      '[onkeypress]'
+      '[onkeypress]',
     ];
 
     const elements = document.querySelectorAll(interactiveSelectors.join(', '));
@@ -66,7 +66,11 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
 
       // Skip hidden elements
       const style = window.getComputedStyle(element);
-      if (style.display === 'none' || style.visibility === 'hidden' || element.offsetParent === null) {
+      if (
+        style.display === 'none' ||
+        style.visibility === 'hidden' ||
+        element.offsetParent === null
+      ) {
         return;
       }
 
@@ -85,7 +89,12 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
         let type: TouchTargetIssue['type'] = 'custom';
         if (element.tagName === 'BUTTON') type = 'button';
         else if (element.tagName === 'A') type = 'link';
-        else if (element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA') type = 'input';
+        else if (
+          element.tagName === 'INPUT' ||
+          element.tagName === 'SELECT' ||
+          element.tagName === 'TEXTAREA'
+        )
+          type = 'input';
         else if (element.querySelector('svg') || element.classList.contains('icon')) type = 'icon';
 
         // Determine severity
@@ -99,7 +108,7 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
           padding: style.padding,
           margin: style.margin,
           fontSize: style.fontSize,
-          lineHeight: style.lineHeight
+          lineHeight: style.lineHeight,
         };
 
         // Create issue
@@ -110,12 +119,12 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
           currentSize: { width: Math.round(width), height: Math.round(height) },
           recommendedSize: {
             width: Math.max(minTouchSize, Math.round(width)),
-            height: Math.max(minTouchSize, Math.round(height))
+            height: Math.max(minTouchSize, Math.round(height)),
           },
           severity,
           description: `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}${element.className ? `.${element.className.split(' ').join('.')}` : ''} is too small for comfortable touch interaction`,
           selector: getElementSelector(element),
-          computedStyle
+          computedStyle,
         };
 
         newIssues.push(issue);
@@ -134,57 +143,57 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
 
   const getElementSelector = (element: HTMLElement): string => {
     if (element.id) return `#${element.id}`;
-    
+
     let selector = element.tagName.toLowerCase();
     if (element.className && typeof element.className === 'string') {
-      const classes = element.className.split(' ').filter(c => c.length > 0);
+      const classes = element.className.split(' ').filter((c) => c.length > 0);
       if (classes.length > 0) {
         selector += `.${classes.join('.')}`;
       }
     }
-    
+
     return selector;
   };
 
   const highlightElement = (issue: TouchTargetIssue) => {
     // Remove previous highlights
-    document.querySelectorAll('.touch-target-highlight').forEach(el => {
+    document.querySelectorAll('.touch-target-highlight').forEach((el) => {
       el.classList.remove('touch-target-highlight');
     });
 
     // Add highlight to current element
     issue.element.classList.add('touch-target-highlight');
-    
+
     // Scroll to element
     issue.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   const applyFix = (issue: TouchTargetIssue) => {
     const element = issue.element;
-    
+
     // Apply minimum touch target size
     element.style.minWidth = `${issue.recommendedSize.width}px`;
     element.style.minHeight = `${issue.recommendedSize.height}px`;
-    
+
     // Add padding if needed
     const style = window.getComputedStyle(element);
     const paddingTop = parseFloat(style.paddingTop);
     const paddingBottom = parseFloat(style.paddingBottom);
     const paddingLeft = parseFloat(style.paddingLeft);
     const paddingRight = parseFloat(style.paddingRight);
-    
+
     if (paddingTop + paddingBottom < 8) {
       element.style.paddingTop = '8px';
       element.style.paddingBottom = '8px';
     }
-    
+
     if (paddingLeft + paddingRight < 8) {
       element.style.paddingLeft = '8px';
       element.style.paddingRight = '8px';
     }
-    
+
     // Update issue list
-    setIssues(prev => prev.filter(i => i.id !== issue.id));
+    setIssues((prev) => prev.filter((i) => i.id !== issue.id));
   };
 
   const applyAllFixes = () => {
@@ -192,7 +201,7 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
   };
 
   const resetHighlights = () => {
-    document.querySelectorAll('.touch-target-highlight').forEach(el => {
+    document.querySelectorAll('.touch-target-highlight').forEach((el) => {
       el.classList.remove('touch-target-highlight');
     });
   };
@@ -247,10 +256,10 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
       // Remove test mode styles
       const style = document.getElementById('touch-target-test-styles');
       if (style) style.remove();
-      
+
       const grid = document.querySelector('.touch-target-test-grid');
       if (grid) grid.remove();
-      
+
       resetHighlights();
     }
   };
@@ -273,17 +282,23 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
 
   const severityColor = (severity: TouchTargetIssue['severity']) => {
     switch (severity) {
-      case 'high': return 'text-[var(--color-data-fail)]';
-      case 'medium': return 'text-[var(--color-data-provisional)]';
-      case 'low': return 'text-[var(--color-data-pass)]';
+      case 'high':
+        return 'text-[var(--color-data-fail)]';
+      case 'medium':
+        return 'text-[var(--color-data-provisional)]';
+      case 'low':
+        return 'text-[var(--color-data-pass)]';
     }
   };
 
   const severityBg = (severity: TouchTargetIssue['severity']) => {
     switch (severity) {
-      case 'high': return 'bg-[var(--color-data-fail)]/10';
-      case 'medium': return 'bg-[var(--color-data-provisional)]/10';
-      case 'low': return 'bg-[var(--color-data-pass)]/10';
+      case 'high':
+        return 'bg-[var(--color-data-fail)]/10';
+      case 'medium':
+        return 'bg-[var(--color-data-provisional)]/10';
+      case 'low':
+        return 'bg-[var(--color-data-pass)]/10';
     }
   };
 
@@ -314,18 +329,10 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <StandardButton
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleTestMode}
-                  >
+                  <StandardButton variant="outline" size="sm" onClick={toggleTestMode}>
                     {testMode ? 'Exit Test Mode' : 'Enter Test Mode'}
                   </StandardButton>
-                  <StandardButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={onClose}
-                  >
+                  <StandardButton variant="ghost" size="sm" onClick={onClose}>
                     Close
                   </StandardButton>
                 </div>
@@ -356,7 +363,10 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                     onChange={(e) => setHighlightIssues(e.target.checked)}
                     className="rounded border-[var(--color-border)]"
                   />
-                  <label htmlFor="highlight-issues" className="text-sm text-[var(--color-text-secondary)]">
+                  <label
+                    htmlFor="highlight-issues"
+                    className="text-sm text-[var(--color-text-secondary)]"
+                  >
                     Highlight issues
                   </label>
                 </div>
@@ -385,11 +395,7 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                       </p>
                     </div>
                     {issues.length > 0 && (
-                      <StandardButton
-                        variant="primary"
-                        size="sm"
-                        onClick={applyAllFixes}
-                      >
+                      <StandardButton variant="primary" size="sm" onClick={applyAllFixes}>
                         Apply All Fixes
                       </StandardButton>
                     )}
@@ -402,7 +408,8 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                         No Touch Target Issues Found
                       </h4>
                       <p className="text-[var(--color-text-muted)]">
-                        All interactive elements meet the minimum {minTouchSize}×{minTouchSize}px touch target size.
+                        All interactive elements meet the minimum {minTouchSize}×{minTouchSize}px
+                        touch target size.
                       </p>
                     </div>
                   ) : (
@@ -417,22 +424,26 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${severityBg(issue.severity)} ${severityColor(issue.severity)}`}>
+                                <span
+                                  className={`px-2 py-1 rounded text-xs font-medium ${severityBg(issue.severity)} ${severityColor(issue.severity)}`}
+                                >
                                   {issue.severity.toUpperCase()}
                                 </span>
                                 <span className="text-sm font-medium text-[var(--color-text-primary)]">
                                   {issue.type.charAt(0).toUpperCase() + issue.type.slice(1)}
                                 </span>
                               </div>
-                              
+
                               <p className="text-sm text-[var(--color-text-primary)] mb-3">
                                 {issue.description}
                               </p>
-                              
+
                               <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                   <p className="text-[var(--color-text-muted)]">Current Size</p>
-                                  <p className="font-medium">{issue.currentSize.width}×{issue.currentSize.height}px</p>
+                                  <p className="font-medium">
+                                    {issue.currentSize.width}×{issue.currentSize.height}px
+                                  </p>
                                 </div>
                                 <div>
                                   <p className="text-[var(--color-text-muted)]">Recommended</p>
@@ -452,7 +463,7 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                                 </div>
                               </div>
                             </div>
-                            
+
                             <div className="flex flex-col gap-2 ml-4">
                               <StandardButton
                                 variant="outline"
@@ -483,17 +494,22 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                     <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-4">
                       Touch Target Best Practices
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4">
-                        <h4 className="font-medium text-[var(--color-text-primary)] mb-2">Minimum Size</h4>
+                        <h4 className="font-medium text-[var(--color-text-primary)] mb-2">
+                          Minimum Size
+                        </h4>
                         <p className="text-sm text-[var(--color-text-secondary)] mb-3">
-                          All interactive elements should have a minimum touch target of {minTouchSize}×{minTouchSize} pixels.
+                          All interactive elements should have a minimum touch target of{' '}
+                          {minTouchSize}×{minTouchSize} pixels.
                         </p>
                         <div className="flex items-center justify-center h-32">
                           <div className="relative">
                             <div className="w-44 h-44 border-2 border-dashed border-[var(--color-border)] rounded-lg flex items-center justify-center">
-                              <span className="text-sm text-[var(--color-text-muted)]">{minTouchSize}×{minTouchSize}px</span>
+                              <span className="text-sm text-[var(--color-text-muted)]">
+                                {minTouchSize}×{minTouchSize}px
+                              </span>
                             </div>
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-[var(--color-accent)]/20 border border-[var(--color-accent)] rounded flex items-center justify-center">
                               <span className="text-xs">Small Button</span>
@@ -501,11 +517,14 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4">
-                        <h4 className="font-medium text-[var(--color-text-primary)] mb-2">Spacing</h4>
+                        <h4 className="font-medium text-[var(--color-text-primary)] mb-2">
+                          Spacing
+                        </h4>
                         <p className="text-sm text-[var(--color-text-secondary)] mb-3">
-                          Maintain at least 8px spacing between touch targets to prevent accidental taps.
+                          Maintain at least 8px spacing between touch targets to prevent accidental
+                          taps.
                         </p>
                         <div className="flex items-center justify-center h-32 gap-2">
                           {[1, 2, 3].map((i) => (
@@ -529,11 +548,14 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                           ))}
                         </div>
                       </div>
-                      
+
                       <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4">
-                        <h4 className="font-medium text-[var(--color-text-primary)] mb-2">Visual Feedback</h4>
+                        <h4 className="font-medium text-[var(--color-text-primary)] mb-2">
+                          Visual Feedback
+                        </h4>
                         <p className="text-sm text-[var(--color-text-secondary)] mb-3">
-                          Provide clear visual feedback on touch (hover, active states) and ensure sufficient contrast.
+                          Provide clear visual feedback on touch (hover, active states) and ensure
+                          sufficient contrast.
                         </p>
                         <div className="flex items-center justify-center h-32">
                           <div className="space-y-4">
@@ -554,21 +576,35 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4">
-                        <h4 className="font-medium text-[var(--color-text-primary)] mb-2">Implementation Tips</h4>
+                        <h4 className="font-medium text-[var(--color-text-primary)] mb-2">
+                          Implementation Tips
+                        </h4>
                         <ul className="space-y-2 text-sm text-[var(--color-text-secondary)]">
                           <li className="flex items-start gap-2">
                             <span className="text-[var(--color-data-pass)]">✓</span>
-                            Use <code className="bg-[var(--color-bg-tertiary)] px-1 rounded">min-height: 44px</code> for buttons
+                            Use{' '}
+                            <code className="bg-[var(--color-bg-tertiary)] px-1 rounded">
+                              min-height: 44px
+                            </code>{' '}
+                            for buttons
                           </li>
                           <li className="flex items-start gap-2">
                             <span className="text-[var(--color-data-pass)]">✓</span>
-                            Add <code className="bg-[var(--color-bg-tertiary)] px-1 rounded">padding: 8px 16px</code> for comfortable touch
+                            Add{' '}
+                            <code className="bg-[var(--color-bg-tertiary)] px-1 rounded">
+                              padding: 8px 16px
+                            </code>{' '}
+                            for comfortable touch
                           </li>
                           <li className="flex items-start gap-2">
                             <span className="text-[var(--color-data-pass)]">✓</span>
-                            Use CSS <code className="bg-[var(--color-bg-tertiary)] px-1 rounded">min-width</code> for icon buttons
+                            Use CSS{' '}
+                            <code className="bg-[var(--color-bg-tertiary)] px-1 rounded">
+                              min-width
+                            </code>{' '}
+                            for icon buttons
                           </li>
                           <li className="flex items-start gap-2">
                             <span className="text-[var(--color-data-pass)]">✓</span>
@@ -591,33 +627,45 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                     <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-4">
                       Touch Target Testing
                     </h3>
-                    
+
                     <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Test Guidelines</h4>
+                          <h4 className="font-medium text-[var(--color-text-primary)] mb-3">
+                            Test Guidelines
+                          </h4>
                           <ul className="space-y-2 text-sm text-[var(--color-text-secondary)]">
-                            <li>• The grid overlay shows {minTouchSize}×{minTouchSize}px squares</li>
-                            <li>• All interactive elements should fit within at least one square</li>
+                            <li>
+                              • The grid overlay shows {minTouchSize}×{minTouchSize}px squares
+                            </li>
+                            <li>
+                              • All interactive elements should fit within at least one square
+                            </li>
                             <li>• Tap each element to ensure it's easily clickable</li>
                             <li>• Check for sufficient spacing between elements</li>
-                            <li>• Test with different finger sizes (use the "Finger Test" below)</li>
+                            <li>
+                              • Test with different finger sizes (use the "Finger Test" below)
+                            </li>
                           </ul>
                         </div>
-                        
+
                         <div>
-                          <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Finger Size Simulation</h4>
+                          <h4 className="font-medium text-[var(--color-text-primary)] mb-3">
+                            Finger Size Simulation
+                          </h4>
                           <div className="space-y-4">
                             <div>
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-sm text-[var(--color-text-secondary)]">Finger Size</span>
+                                <span className="text-sm text-[var(--color-text-secondary)]">
+                                  Finger Size
+                                </span>
                                 <span className="text-sm font-medium">16mm (Average)</span>
                               </div>
                               <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                                 <div className="h-full w-2/3 bg-[var(--color-accent)]"></div>
                               </div>
                             </div>
-                            
+
                             <div className="flex items-center gap-4">
                               <div className="flex-1">
                                 <div className="text-center">
@@ -640,7 +688,9 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                                   <div className="w-24 h-24 rounded-full bg-[var(--color-data-fail)]/20 border-2 border-[var(--color-data-fail)] mx-auto mb-2 flex items-center justify-center">
                                     <span className="text-xs">24mm</span>
                                   </div>
-                                  <p className="text-xs text-[var(--color-text-muted)]">XL (Accessibility)</p>
+                                  <p className="text-xs text-[var(--color-text-muted)]">
+                                    XL (Accessibility)
+                                  </p>
                                 </div>
                               </div>
                             </div>
@@ -648,15 +698,17 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="mt-6">
-                      <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Test Elements</h4>
+                      <h4 className="font-medium text-[var(--color-text-primary)] mb-3">
+                        Test Elements
+                      </h4>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         {[
                           { size: '32px', meets: false, label: 'Too Small' },
                           { size: '44px', meets: true, label: 'Minimum' },
                           { size: '48px', meets: true, label: 'Good' },
-                          { size: '56px', meets: true, label: 'Excellent' }
+                          { size: '56px', meets: true, label: 'Excellent' },
                         ].map((item, index) => (
                           <div
                             key={index}
@@ -668,7 +720,9 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                           >
                             <div
                               className={`rounded flex items-center justify-center mb-2 ${
-                                item.meets ? 'bg-[var(--color-data-pass)]/20' : 'bg-[var(--color-data-fail)]/20'
+                                item.meets
+                                  ? 'bg-[var(--color-data-pass)]/20'
+                                  : 'bg-[var(--color-data-fail)]/20'
                               }`}
                               style={{ width: item.size, height: item.size }}
                             >
@@ -689,25 +743,21 @@ export const TouchTargetAudit: React.FC<TouchTargetAuditProps> = ({
                 <div className="text-sm text-[var(--color-text-muted)]">
                   {issues.length > 0 ? (
                     <span>
-                      Found <span className="font-medium text-[var(--color-text-primary)]">{issues.length}</span> touch target issues
+                      Found{' '}
+                      <span className="font-medium text-[var(--color-text-primary)]">
+                        {issues.length}
+                      </span>{' '}
+                      touch target issues
                     </span>
                   ) : (
                     <span>All touch targets meet accessibility standards</span>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <StandardButton
-                    variant="outline"
-                    size="sm"
-                    onClick={resetHighlights}
-                  >
+                  <StandardButton variant="outline" size="sm" onClick={resetHighlights}>
                     Clear Highlights
                   </StandardButton>
-                  <StandardButton
-                    variant="primary"
-                    size="sm"
-                    onClick={scanForTouchTargetIssues}
-                  >
+                  <StandardButton variant="primary" size="sm" onClick={scanForTouchTargetIssues}>
                     Run Full Audit
                   </StandardButton>
                 </div>

@@ -96,10 +96,7 @@ const VALID_PRESETS = [
 ] as const;
 
 /** Check if a preset video exists in the Atlas cache (Supabase). */
-async function checkAtlasCache(
-  env: Env,
-  preset: string
-): Promise<string | null> {
+async function checkAtlasCache(env: Env, preset: string): Promise<string | null> {
   if (!env.SUPABASE_URL || !VALID_PRESETS.includes(preset as (typeof VALID_PRESETS)[number]))
     return null;
   const atlasPath = `${VEO_ATLAS_PREFIX}/${preset}.mp4`;
@@ -213,18 +210,17 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
         : null;
 
     if (!operationName) {
-      return new Response(
-        JSON.stringify({ error: 'No operation name in Veo response' }),
-        { status: 502, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
-      );
+      return new Response(JSON.stringify({ error: 'No operation name in Veo response' }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+      });
     }
 
     log.info('Veo generation started', { operationName, preset: validated.preset });
 
-    const pollUrl =
-      preset
-        ? `/api/veo/status?operation=${encodeURIComponent(operationName)}&preset=${encodeURIComponent(preset)}`
-        : `/api/veo/status?operation=${encodeURIComponent(operationName)}`;
+    const pollUrl = preset
+      ? `/api/veo/status?operation=${encodeURIComponent(operationName)}&preset=${encodeURIComponent(preset)}`
+      : `/api/veo/status?operation=${encodeURIComponent(operationName)}`;
 
     return new Response(
       JSON.stringify({
@@ -247,9 +243,9 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
     );
   } catch (err) {
     log.error('Veo generate error', err);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 });

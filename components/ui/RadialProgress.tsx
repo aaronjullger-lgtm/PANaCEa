@@ -60,9 +60,7 @@ export const RadialProgress: React.FC<RadialProgressProps> = ({
 
     // Traffic-light system for accuracy/progress (color-blind safe; never red for "low" metric)
     const pColor =
-      color === 'var(--color-accent)' && value !== undefined
-        ? getAccuracyHex(value)
-        : color;
+      color === 'var(--color-accent)' && value !== undefined ? getAccuracyHex(value) : color;
 
     // Responsive font size based on circle size
     const fs = size < 80 ? 'text-sm' : size < 120 ? 'text-xl' : 'text-2xl';

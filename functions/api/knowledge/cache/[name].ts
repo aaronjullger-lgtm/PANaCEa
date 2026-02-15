@@ -69,7 +69,13 @@ export async function onRequestDelete(context: {
     });
 
     if (deleted.count === 0) {
-      return createErrorResponse(request, 'Cache not found or already deleted', 404, undefined, env);
+      return createErrorResponse(
+        request,
+        'Cache not found or already deleted',
+        404,
+        undefined,
+        env
+      );
     }
 
     const delRes = await fetch(`${GEMINI_BASE}/v1beta/${name}?key=${env.GEMINI_API_KEY}`, {

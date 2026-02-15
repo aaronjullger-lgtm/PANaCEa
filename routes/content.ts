@@ -133,51 +133,55 @@ router.get(
 );
 
 // Alias route for simpler frontend access
-router.get('/:conditionId', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const { conditionId } = req.params;
+router.get(
+  '/:conditionId',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const { conditionId } = req.params;
 
-    if (!conditionId || typeof conditionId !== 'string' || conditionId.trim() === '') {
-      res.status(400).json({
-        error: 'Invalid request',
-        message: 'conditionId parameter is required and must be a valid string',
+      if (!conditionId || typeof conditionId !== 'string' || conditionId.trim() === '') {
+        res.status(400).json({
+          error: 'Invalid request',
+          message: 'conditionId parameter is required and must be a valid string',
+        });
+        return;
+      }
+
+      const sanitizedId = conditionId.trim().replace(/[<>"'`;]/g, '');
+
+      const content = await prisma.medicalContent.findFirst({
+        where: {
+          OR: [
+            { conditionId: { equals: sanitizedId, mode: 'insensitive' } },
+            { condition: { equals: sanitizedId, mode: 'insensitive' } },
+          ],
+          status: 'published',
+        },
       });
-      return;
-    }
 
-    const sanitizedId = conditionId.trim().replace(/[<>"'`;]/g, '');
+      if (!content) {
+        res.status(404).json({
+          error: 'Content not found',
+          message: `No published medical content found for condition: ${sanitizedId}`,
+          conditionId: sanitizedId,
+        });
+        return;
+      }
 
-    const content = await prisma.medicalContent.findFirst({
-      where: {
-        OR: [
-          { conditionId: { equals: sanitizedId, mode: 'insensitive' } },
-          { condition: { equals: sanitizedId, mode: 'insensitive' } },
-        ],
-        status: 'published',
-      },
-    });
-
-    if (!content) {
-      res.status(404).json({
-        error: 'Content not found',
-        message: `No published medical content found for condition: ${sanitizedId}`,
-        conditionId: sanitizedId,
+      res.json(content);
+    } catch (error) {
+      console.error('[Content API] Error fetching condition:', {
+        conditionId: req.params.conditionId,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
-      return;
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to fetch medical content. Please try again later.',
+      });
     }
-
-    res.json(content);
-  } catch (error) {
-    console.error('[Content API] Error fetching condition:', {
-      conditionId: req.params.conditionId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to fetch medical content. Please try again later.',
-    });
   }
-});
+);
 
 // Content Search Endpoint
 router.get('/search', async (req: Request, res: Response): Promise<void> => {

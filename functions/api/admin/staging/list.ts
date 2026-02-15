@@ -5,12 +5,22 @@
  */
 
 import { z } from 'zod';
-import { withMiddleware, withCors, withAuth, withAdminRole, withErrorHandling, withEnvCheck } from '../../_shared/middleware';
+import {
+  withMiddleware,
+  withCors,
+  withAuth,
+  withAdminRole,
+  withErrorHandling,
+  withEnvCheck,
+} from '../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 
 const QuerySchema = z.object({
-  status: z.enum(['pending', 'graded', 'rejected', 'approved', 'all']).optional().default('pending'),
+  status: z
+    .enum(['pending', 'graded', 'rejected', 'approved', 'all'])
+    .optional()
+    .default('pending'),
   limit: z.coerce.number().int().min(1).max(100).optional().default(50),
 });
 
@@ -35,28 +45,25 @@ export const onRequestGet = withMiddleware(
     const limit = parsed.success ? parsed.data.limit : 50;
 
     try {
-      const where =
-        status === 'all'
-          ? {}
-          : { status };
+      const where = status === 'all' ? {} : { status };
 
       const items = await prisma.stagingQuestion.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      select: {
-        id: true,
-        system: true,
-        difficulty: true,
-        status: true,
-        vignette: true,
-        question: true,
-        explanation: true,
-        aiGrade: true,
-        adminReview: true,
-        createdAt: true,
-      },
-    });
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: {
+          id: true,
+          system: true,
+          difficulty: true,
+          status: true,
+          vignette: true,
+          question: true,
+          explanation: true,
+          aiGrade: true,
+          adminReview: true,
+          createdAt: true,
+        },
+      });
 
       log.info('Staging list', { status, count: items.length });
       return { data: { items, count: items.length } };

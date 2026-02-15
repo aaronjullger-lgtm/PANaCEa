@@ -13,7 +13,8 @@ import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 const PORT = process.env.PORT || 3001;
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
+const GEMINI_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
 const SCRIPT_SYSTEM = `You are producing a medical education podcast. Convert the following lecture content into a script between 'Dr. Smith' (Expert) and 'Sarah' (Student). Sarah should ask clarifying questions. Output ONLY a JSON array of objects with keys "speaker" and "text". Example: [{"speaker":"Dr. Smith","text":"..."},{"speaker":"Sarah","text":"..."}]. No other text.`;
 
 app.use(express.json({ limit: '10mb' }));
@@ -29,8 +30,14 @@ async function generateScript(text, apiKey) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: `System: ${SCRIPT_SYSTEM}\n\nLecture:\n${truncated}` }] }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 8192, responseMimeType: 'application/json' },
+      contents: [
+        { role: 'user', parts: [{ text: `System: ${SCRIPT_SYSTEM}\n\nLecture:\n${truncated}` }] },
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 8192,
+        responseMimeType: 'application/json',
+      },
     }),
   });
   if (!res.ok) {
@@ -74,9 +81,7 @@ app.post('/generate', upload.single('file'), async (req, res) => {
       return res.status(502).json({ error: 'Invalid script from Gemini', script });
     }
 
-    const ttsClient = process.env.GOOGLE_APPLICATION_CREDENTIALS
-      ? new TextToSpeechClient()
-      : null;
+    const ttsClient = process.env.GOOGLE_APPLICATION_CREDENTIALS ? new TextToSpeechClient() : null;
     let audioBase64 = null;
     if (ttsClient) {
       const voiceA = 'en-US-Journey-D';
@@ -96,7 +101,9 @@ app.post('/generate', upload.single('file'), async (req, res) => {
     return res.json({
       script,
       audioBase64: audioBase64 ?? undefined,
-      message: audioBase64 ? undefined : 'TTS skipped (set GOOGLE_APPLICATION_CREDENTIALS for audio)',
+      message: audioBase64
+        ? undefined
+        : 'TTS skipped (set GOOGLE_APPLICATION_CREDENTIALS for audio)',
     });
   } catch (e) {
     console.error(e);

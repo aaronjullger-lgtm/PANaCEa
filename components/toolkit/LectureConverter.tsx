@@ -77,7 +77,9 @@ export function LectureConverter({ onClose }: LectureConverterProps) {
       }
 
       setScript(scriptText);
-      setSummaryPoints((Array.isArray(data?.data?.summary_points) ? data.data!.summary_points : []) as string[]);
+      setSummaryPoints(
+        (Array.isArray(data?.data?.summary_points) ? data.data!.summary_points : []) as string[]
+      );
       setStatus('ready');
     } catch (err) {
       setStatus('error');
@@ -103,8 +105,8 @@ export function LectureConverter({ onClose }: LectureConverterProps) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-[var(--color-text-muted)]">
-        Paste lecture notes or slide text. Get a Host A / Host B podcast script for studying
-        on the go.
+        Paste lecture notes or slide text. Get a Host A / Host B podcast script for studying on the
+        go.
       </p>
 
       <div role="group" aria-labelledby="lecture-topic-label">
@@ -237,32 +239,32 @@ export function LectureConverter({ onClose }: LectureConverterProps) {
               </ul>
             </div>
           )}
-        <div className="rounded-xl border border-[var(--color-border)] overflow-hidden bg-[var(--color-bg-primary)]">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">
-              Generated script (Host A / Host B)
-            </span>
-            <button
-              onClick={copyToClipboard}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
-            >
-              {copied ? (
-                <>
-                  <Check className="w-4 h-4 text-emerald-500" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  Copy
-                </>
-              )}
-            </button>
+          <div className="rounded-xl border border-[var(--color-border)] overflow-hidden bg-[var(--color-bg-primary)]">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+              <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                Generated script (Host A / Host B)
+              </span>
+              <button
+                onClick={copyToClipboard}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-500" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy
+                  </>
+                )}
+              </button>
+            </div>
+            <pre className="p-4 overflow-auto max-h-[400px] text-sm text-[var(--color-text-primary)] whitespace-pre-wrap font-sans">
+              {script}
+            </pre>
           </div>
-          <pre className="p-4 overflow-auto max-h-[400px] text-sm text-[var(--color-text-primary)] whitespace-pre-wrap font-sans">
-            {script}
-          </pre>
-        </div>
         </div>
       )}
     </div>

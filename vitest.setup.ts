@@ -4,6 +4,11 @@
 
 import { afterEach, beforeEach } from 'vitest';
 
+// Ensure test env so hooks that branch on NODE_ENV use test paths (e.g. use-photo-drill fetchPhotoCases)
+if (typeof process !== 'undefined') {
+  process.env.NODE_ENV = 'test';
+}
+
 // Set DATABASE_URL for Prisma client initialization in tests
 // This prevents "DATABASE_URL environment variable is not set!" errors
 // Note: Tests should mock actual database operations

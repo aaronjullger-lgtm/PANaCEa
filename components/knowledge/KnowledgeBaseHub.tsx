@@ -67,11 +67,15 @@ const SidebarNavButton: React.FC<SidebarNavButtonProps> = ({ tab, isActive, onCl
           : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] border border-transparent'
       } ${variant === 'mobile' ? 'text-base' : 'text-sm'}`}
     >
-      <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? '' : 'group-hover:text-[var(--color-accent)]'}`} />
+      <Icon
+        className={`w-5 h-5 flex-shrink-0 ${isActive ? '' : 'group-hover:text-[var(--color-accent)]'}`}
+      />
       <div className="flex-1 min-w-0">
         <div className={`font-medium truncate ${isActive ? 'font-semibold' : ''}`}>{tab.label}</div>
         {variant === 'mobile' && (
-          <div className="text-xs text-[var(--color-text-muted)] truncate mt-0.5">{tab.description}</div>
+          <div className="text-xs text-[var(--color-text-muted)] truncate mt-0.5">
+            {tab.description}
+          </div>
         )}
       </div>
     </button>

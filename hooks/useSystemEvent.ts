@@ -1,6 +1,6 @@
 /**
  * System Event Hooks
- * 
+ *
  * React hooks for subscribing to and emitting system events
  * across all modules.
  */

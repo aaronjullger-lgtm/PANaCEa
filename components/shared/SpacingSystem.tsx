@@ -1,12 +1,17 @@
 /**
  * Spacing System Components
- * 
+ *
  * Reusable spacing components for consistent layout across PANaCEa.
  * Uses the standardized spacing constants from lib/constants/spacing.ts
  */
 
 import React from 'react';
-import { SPACING, getSpacing, generateSpacingStyles, responsiveSpacing } from '@/lib/constants/spacing';
+import {
+  SPACING,
+  getSpacing,
+  generateSpacingStyles,
+  responsiveSpacing,
+} from '@/lib/constants/spacing';
 
 // ============================================================================
 // Spacing Components
@@ -29,7 +34,7 @@ export interface SpacingProps {
 
 /**
  * Spacing component for consistent margins/padding
- * 
+ *
  * Example:
  * <Spacing size={4} direction="vertical" />
  * <Spacing size="CARD_GAP" direction="horizontal" />
@@ -43,20 +48,22 @@ export const Spacing: React.FC<SpacingProps> = ({
   children,
 }) => {
   const baseSize = getSpacing(size);
-  
+
   // Generate responsive classes if provided
   const responsiveClasses = responsive
-    ? responsive.map((s, i) => {
-        const breakpoint = i === 0 ? '' : i === 1 ? 'sm:' : i === 2 ? 'md:' : 'lg:';
-        return `${breakpoint}${getSpacing(s)}`;
-      }).join(' ')
+    ? responsive
+        .map((s, i) => {
+          const breakpoint = i === 0 ? '' : i === 1 ? 'sm:' : i === 2 ? 'md:' : 'lg:';
+          return `${breakpoint}${getSpacing(s)}`;
+        })
+        .join(' ')
     : '';
-  
+
   // Determine CSS properties based on direction
   const spacingStyles: React.CSSProperties = {
     ...style,
   };
-  
+
   if (direction === 'vertical') {
     spacingStyles.marginBottom = baseSize;
   } else if (direction === 'horizontal') {
@@ -64,20 +71,17 @@ export const Spacing: React.FC<SpacingProps> = ({
   } else if (direction === 'both') {
     spacingStyles.margin = baseSize;
   }
-  
+
   if (children) {
     return (
-      <div 
-        className={`${className} ${responsiveClasses}`.trim()}
-        style={spacingStyles}
-      >
+      <div className={`${className} ${responsiveClasses}`.trim()} style={spacingStyles}>
         {children}
       </div>
     );
   }
-  
+
   return (
-    <div 
+    <div
       className={`${className} ${responsiveClasses}`.trim()}
       style={spacingStyles}
       aria-hidden="true"
@@ -104,7 +108,7 @@ export interface ContainerProps {
 
 /**
  * Standardized container component
- * 
+ *
  * Example:
  * <Container width="narrow" padding="CONTAINER_PADDING" center>
  *   Content here
@@ -123,9 +127,9 @@ export const Container: React.FC<ContainerProps> = ({
     wide: 'max-w-6xl',
     custom: '',
   }[width];
-  
+
   const paddingValue = getSpacing(padding);
-  
+
   return (
     <div
       className={`
@@ -162,7 +166,7 @@ export interface GridProps {
 
 /**
  * Standardized grid component
- * 
+ *
  * Example:
  * <Grid cols={3} gap="GRID_GAP" responsiveCols={[1, 2, 3]}>
  *   Grid items
@@ -176,15 +180,17 @@ export const Grid: React.FC<GridProps> = ({
   children,
 }) => {
   const gapValue = getSpacing(gap);
-  
+
   // Generate responsive column classes
   const colClasses = responsiveCols
-    ? responsiveCols.map((col, i) => {
-        const breakpoint = i === 0 ? '' : i === 1 ? 'sm:' : i === 2 ? 'md:' : 'lg:';
-        return `${breakpoint}grid-cols-${col}`;
-      }).join(' ')
+    ? responsiveCols
+        .map((col, i) => {
+          const breakpoint = i === 0 ? '' : i === 1 ? 'sm:' : i === 2 ? 'md:' : 'lg:';
+          return `${breakpoint}grid-cols-${col}`;
+        })
+        .join(' ')
     : `grid-cols-${cols}`;
-  
+
   return (
     <div
       className={`
@@ -224,7 +230,7 @@ export interface StackProps {
 
 /**
  * Stack component for consistent spacing between items
- * 
+ *
  * Example:
  * <Stack direction="vertical" gap={4} align="center">
  *   Stacked items
@@ -240,12 +246,12 @@ export const Stack: React.FC<StackProps> = ({
   children,
 }) => {
   const gapValue = getSpacing(gap);
-  
+
   const directionClass = direction === 'vertical' ? 'flex-col' : 'flex-row';
   const alignClass = `items-${align}`;
   const justifyClass = `justify-${justify}`;
   const wrapClass = wrap ? 'flex-wrap' : '';
-  
+
   return (
     <div
       className={`
@@ -292,7 +298,7 @@ export interface InsetProps {
 
 /**
  * Inset component for consistent padding
- * 
+ *
  * Example:
  * <Inset all={4}>Content with padding</Inset>
  * <Inset vertical={6} horizontal={4}>Content with custom padding</Inset>
@@ -309,7 +315,7 @@ export const Inset: React.FC<InsetProps> = ({
   children,
 }) => {
   const styles: React.CSSProperties = {};
-  
+
   if (all) {
     styles.padding = getSpacing(all);
   } else {
@@ -326,7 +332,7 @@ export const Inset: React.FC<InsetProps> = ({
     if (bottom) styles.paddingBottom = getSpacing(bottom);
     if (left) styles.paddingLeft = getSpacing(left);
   }
-  
+
   return (
     <div className={className} style={styles}>
       {children}
@@ -353,7 +359,7 @@ export interface CenterProps {
 
 /**
  * Center component for easy alignment
- * 
+ *
  * Example:
  * <Center both>
  *   Centered content
@@ -368,7 +374,7 @@ export const Center: React.FC<CenterProps> = ({
 }) => {
   const isHorizontal = horizontal || both;
   const isVertical = vertical || both;
-  
+
   return (
     <div
       className={`

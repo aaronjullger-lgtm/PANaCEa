@@ -45,7 +45,9 @@ export const BuzzwordBanner: React.FC<BuzzwordBannerProps> = ({ conditionName })
             </span>
           </div>
 
-          <p className="text-lg font-bold text-[var(--color-text-primary)]">&quot;{info.buzzword}&quot;</p>
+          <p className="text-lg font-bold text-[var(--color-text-primary)]">
+            &quot;{info.buzzword}&quot;
+          </p>
         </div>
       </div>
     </div>

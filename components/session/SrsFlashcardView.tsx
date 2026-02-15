@@ -82,7 +82,8 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
       }
       const noQuestion = 'message' in data && data.message && !data.question;
       if (noQuestion) {
-        const msg = data.message === 'No items due' ? 'No cards due right now.' : String(data.message);
+        const msg =
+          data.message === 'No items due' ? 'No cards due right now.' : String(data.message);
         setError(msg);
         setLoading(false);
         return;
@@ -288,7 +289,10 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
         </div>
 
         {flipped && !mnemonicImage && (
-          <div className="flex flex-wrap justify-center gap-3 mt-6" data-testid="srs-binary-buttons">
+          <div
+            className="flex flex-wrap justify-center gap-3 mt-6"
+            data-testid="srs-binary-buttons"
+          >
             <button
               type="button"
               disabled={submitting}

@@ -1,6 +1,6 @@
 /**
  * Infographic Display
- * 
+ *
  * Displays dynamically generated remediation infographics from info_genius.
  * Shows comparison infographics when student confuses concepts.
  */
@@ -25,15 +25,13 @@ export function InfographicDisplay({ infographics, className = '' }: Infographic
     <div className={`space-y-4 ${className}`}>
       <div className="flex items-center gap-2 mb-4">
         <Image className="w-6 h-6 text-[var(--color-accent)]" />
-        <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
-          Visual Learning Aids
-        </h3>
+        <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Visual Learning Aids</h3>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         {infographics.map((infographic) => {
           const isPlaceholder = infographic.imageUrl?.includes('placeholder-infographic');
-          
+
           return (
             <div
               key={infographic.id}
@@ -62,40 +60,43 @@ export function InfographicDisplay({ infographics, className = '' }: Infographic
               <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">
                 {infographic.title}
               </h4>
-            {infographic.description && (
-              <p className="text-xs text-[var(--color-text-muted)] mb-2">
-                {infographic.description}
-              </p>
-            )}
+              {infographic.description && (
+                <p className="text-xs text-[var(--color-text-muted)] mb-2">
+                  {infographic.description}
+                </p>
+              )}
 
-            {infographic.keyTakeaways.length > 0 && (
-              <div className="mt-2">
-                <div className="text-xs font-semibold text-[var(--color-text-muted)] mb-1">
-                  Key Takeaways:
+              {infographic.keyTakeaways.length > 0 && (
+                <div className="mt-2">
+                  <div className="text-xs font-semibold text-[var(--color-text-muted)] mb-1">
+                    Key Takeaways:
+                  </div>
+                  <ul className="space-y-1">
+                    {infographic.keyTakeaways.slice(0, 2).map((takeaway, i) => (
+                      <li
+                        key={i}
+                        className="text-xs text-[var(--color-text-secondary)] flex items-start gap-1"
+                      >
+                        <span className="text-[var(--color-accent)]">•</span>
+                        <span>{takeaway}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="space-y-1">
-                  {infographic.keyTakeaways.slice(0, 2).map((takeaway, i) => (
-                    <li key={i} className="text-xs text-[var(--color-text-secondary)] flex items-start gap-1">
-                      <span className="text-[var(--color-accent)]">•</span>
-                      <span>{takeaway}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+              )}
 
-            <div className="mt-3 flex items-center gap-2">
-              <button
-                className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedInfographic(infographic);
-                }}
-              >
-                <Maximize2 className="w-3 h-3" />
-                View Full Size
-              </button>
-            </div>
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  className="text-xs text-[var(--color-accent)] hover:underline flex items-center gap-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedInfographic(infographic);
+                  }}
+                >
+                  <Maximize2 className="w-3 h-3" />
+                  View Full Size
+                </button>
+              </div>
             </div>
           );
         })}

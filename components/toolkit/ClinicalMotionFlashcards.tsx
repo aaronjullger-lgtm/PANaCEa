@@ -24,7 +24,11 @@ import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
 const PRESETS = [
   { id: 'parkinsonian_gait', label: 'Parkinsonian Gait', desc: 'Shuffling, reduced arm swing' },
-  { id: 'cerebellar_ataxia', label: 'Cerebellar Ataxia', desc: 'Wide-based, heel-to-shin dysmetria' },
+  {
+    id: 'cerebellar_ataxia',
+    label: 'Cerebellar Ataxia',
+    desc: 'Wide-based, heel-to-shin dysmetria',
+  },
   { id: 'antalgic_gait', label: 'Antalgic Gait', desc: 'Limp, shortened stance phase' },
   { id: 'hemiplegic_gait', label: 'Hemiplegic Gait', desc: 'Circumduction, foot drop' },
   { id: 'tonic_clonic_seizure', label: 'Tonic-Clonic Seizure', desc: 'Rhythmic jerking' },
@@ -56,7 +60,9 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
   const [viewMode, setViewMode] = useState<ViewMode>('single');
   const [selectedPreset, setSelectedPreset] = useState<string>('parkinsonian_gait');
   const [customPrompt, setCustomPrompt] = useState('');
-  const [status, setStatus] = useState<'idle' | 'generating' | 'polling' | 'ready' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'generating' | 'polling' | 'ready' | 'error'>(
+    'idle'
+  );
   const [operationName, setOperationName] = useState<string | null>(null);
   const [pollUrl, setPollUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -90,13 +96,34 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
         body: JSON.stringify(body),
       });
 
-      const data = (await res.json()) as { data?: { error?: string; details?: string; status?: string; videoUrl?: string; operationName?: string; pollUrl?: string; preset?: string }; error?: string };
-      type VeoPayload = { error?: string; details?: string; status?: string; videoUrl?: string; operationName?: string; pollUrl?: string; preset?: string };
+      const data = (await res.json()) as {
+        data?: {
+          error?: string;
+          details?: string;
+          status?: string;
+          videoUrl?: string;
+          operationName?: string;
+          pollUrl?: string;
+          preset?: string;
+        };
+        error?: string;
+      };
+      type VeoPayload = {
+        error?: string;
+        details?: string;
+        status?: string;
+        videoUrl?: string;
+        operationName?: string;
+        pollUrl?: string;
+        preset?: string;
+      };
       const payload = (data.data ?? data) as VeoPayload;
 
       if (!res.ok) {
         setStatus('error');
-        setErrorMessage(payload?.error || data.error || payload?.details || 'Failed to start generation');
+        setErrorMessage(
+          payload?.error || data.error || payload?.details || 'Failed to start generation'
+        );
         return;
       }
 
@@ -115,7 +142,10 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
       }
 
       setOperationName(op);
-      setPollUrl(payload.pollUrl ?? `/api/veo/status?operation=${encodeURIComponent(op)}${payload.preset ? `&preset=${encodeURIComponent(payload.preset)}` : ''}`);
+      setPollUrl(
+        payload.pollUrl ??
+          `/api/veo/status?operation=${encodeURIComponent(op)}${payload.preset ? `&preset=${encodeURIComponent(payload.preset)}` : ''}`
+      );
       setStatus('polling');
     } catch (err) {
       setStatus('error');
@@ -130,10 +160,27 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
     const headers: HeadersInit = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const url = pollUrl.startsWith('http') ? pollUrl : getApiEndpoint('/api/veo/status') + (pollUrl.includes('?') ? pollUrl.slice(pollUrl.indexOf('?')) : '');
+    const url = pollUrl.startsWith('http')
+      ? pollUrl
+      : getApiEndpoint('/api/veo/status') +
+        (pollUrl.includes('?') ? pollUrl.slice(pollUrl.indexOf('?')) : '');
     const res = await fetch(url, { headers });
-    const data = (await res.json()) as { data?: { status?: string; videoUrl?: string; videoBase64?: string; error?: string; pollIntervalSeconds?: number } };
-    type PollPayload = { status?: string; videoUrl?: string; videoBase64?: string; error?: string; pollIntervalSeconds?: number };
+    const data = (await res.json()) as {
+      data?: {
+        status?: string;
+        videoUrl?: string;
+        videoBase64?: string;
+        error?: string;
+        pollIntervalSeconds?: number;
+      };
+    };
+    type PollPayload = {
+      status?: string;
+      videoUrl?: string;
+      videoBase64?: string;
+      error?: string;
+      pollIntervalSeconds?: number;
+    };
     const payload = (data.data ?? data) as PollPayload;
 
     if (payload?.status === 'ready') {
@@ -221,8 +268,8 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
       <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
         <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-[var(--color-text-primary)]">
-          AI-generated for education only. Verify with clinical reference. Do not use for
-          diagnostic accuracy.
+          AI-generated for education only. Verify with clinical reference. Do not use for diagnostic
+          accuracy.
         </p>
       </div>
 

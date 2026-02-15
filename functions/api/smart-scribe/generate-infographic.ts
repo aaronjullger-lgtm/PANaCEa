@@ -1,7 +1,7 @@
 /**
  * API: Generate Remediation Infographic
  * POST /api/smart-scribe/generate-infographic
- * 
+ *
  * Generates dynamic remediation graphics using info_genius when students
  * make mistakes or confuse concepts.
  */
@@ -28,7 +28,7 @@ export const onRequestPost = authenticatedEndpoint(
   InfographicBodySchema,
   async ({ env, validated, auth }) => {
     const log = createEndpointLogger('/api/smart-scribe/generate-infographic', auth.userId);
-    
+
     const {
       type,
       primaryConcept,
@@ -71,7 +71,7 @@ export const onRequestPost = authenticatedEndpoint(
 
       if (!response.ok) {
         log.error('info_genius API error', { status: response.status });
-        
+
         // Return placeholder infographic
         return {
           data: {
@@ -108,7 +108,7 @@ export const onRequestPost = authenticatedEndpoint(
       return { data: { success: true, infographic } };
     } catch (error: any) {
       log.error('Error generating infographic', error);
-      
+
       // Return fallback
       return {
         data: {

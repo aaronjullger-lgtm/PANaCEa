@@ -339,8 +339,7 @@ export function deriveContinuousRating(
     const penaltyOscillation = (metrics.hoverOscillationCount ?? 0) * 0.1;
 
     // Bonuses for fast, clean response
-    const bonusFast =
-      latencyRatio < 0.5 ? 0.3 : latencyRatio < 0.7 ? 0.15 : 0;
+    const bonusFast = latencyRatio < 0.5 ? 0.3 : latencyRatio < 0.7 ? 0.15 : 0;
 
     grade =
       base -

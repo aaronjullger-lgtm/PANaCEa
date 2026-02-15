@@ -104,7 +104,9 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
               <Brain className="w-6 h-6 text-[var(--color-text-inverse)]" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-[var(--color-text-inverse)]">Memory Status</h3>
+              <h3 className="text-lg font-semibold text-[var(--color-text-inverse)]">
+                Memory Status
+              </h3>
               <p className="text-[var(--color-text-inverse)]/70 text-xs">Spaced Repetition</p>
             </div>
           </div>
@@ -134,7 +136,9 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
               </button>
             )}
             {dueCount === 0 && (
-              <div className="text-[var(--color-text-inverse)]/70 text-sm">All caught up! Great work!</div>
+              <div className="text-[var(--color-text-inverse)]/70 text-sm">
+                All caught up! Great work!
+              </div>
             )}
           </div>
 

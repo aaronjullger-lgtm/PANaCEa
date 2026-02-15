@@ -1,6 +1,6 @@
 /**
  * SOAP Draft Panel
- * 
+ *
  * Displays real-time SOAP note being generated in background during OSCE.
  * Updates every 2-5 seconds as the AI extracts elements from the conversation.
  */
@@ -18,7 +18,9 @@ interface SOAPDraftPanelProps {
 export function SOAPDraftPanel({ draftNote, isGenerating, className = '' }: SOAPDraftPanelProps) {
   if (!draftNote) {
     return (
-      <div className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 ${className}`}>
+      <div
+        className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 ${className}`}
+      >
         <div className="flex items-center gap-2 mb-3">
           <FileText className="w-5 h-5 text-[var(--color-accent)]" />
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
@@ -75,7 +77,9 @@ export function SOAPDraftPanel({ draftNote, isGenerating, className = '' }: SOAP
   const completeness = draftNote.metadata.completenessScore;
 
   return (
-    <div className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 ${className}`}>
+    <div
+      className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 ${className}`}
+    >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-[var(--color-accent)]" />
@@ -84,9 +88,7 @@ export function SOAPDraftPanel({ draftNote, isGenerating, className = '' }: SOAP
           </h3>
           {isGenerating && <Loader2 className="w-4 h-4 animate-spin text-[var(--color-accent)]" />}
         </div>
-        <div className="text-xs text-[var(--color-text-muted)]">
-          {completeness}% complete
-        </div>
+        <div className="text-xs text-[var(--color-text-muted)]">{completeness}% complete</div>
       </div>
 
       <div className="space-y-3 text-sm">

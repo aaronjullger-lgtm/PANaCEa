@@ -1,6 +1,6 @@
 /**
  * Phantom Patient Card
- * 
+ *
  * Displays the "phantom patient" whose health reflects user study activity.
  * Provides subtle motivation through visual presence on dashboard.
  */
@@ -17,12 +17,12 @@ interface PhantomPatientCardProps {
 export function PhantomPatientCard({ patient, className = '' }: PhantomPatientCardProps) {
   if (!patient) {
     return (
-      <div className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 ${className}`}>
+      <div
+        className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 ${className}`}
+      >
         <div className="flex items-center gap-2 mb-3">
           <Heart className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-            Your Patient
-          </h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Your Patient</h3>
         </div>
         <p className="text-sm text-[var(--color-text-muted)]">
           Complete your first session to meet your patient!
@@ -64,7 +64,9 @@ export function PhantomPatientCard({ patient, className = '' }: PhantomPatientCa
   const healthTrend = patient.daysSinceInteraction === 0 ? 'up' : 'down';
 
   return (
-    <div className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 ${className}`}>
+    <div
+      className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 ${className}`}
+    >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2">
           <Heart className="w-5 h-5 text-[var(--color-accent)]" />

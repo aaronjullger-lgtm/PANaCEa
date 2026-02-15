@@ -20,10 +20,7 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserId } from '../_shared/user-resolver';
 import { calculateConceptGaps } from '../intelligence/profile';
 import { NCCPA_2025_BLUEPRINT_PERCENT } from '../../../lib/constants/blueprint';
-import {
-  computeCurrentStreak as calcStreak,
-  type StreakGoalDays,
-} from '../../../lib/streakCalc';
+import { computeCurrentStreak as calcStreak, type StreakGoalDays } from '../../../lib/streakCalc';
 
 // ============================================================================
 // Validation
@@ -57,7 +54,10 @@ export const onRequestGet = authenticatedEndpoint(StatsSchema, async (context) =
   const log = createEndpointLogger('/api/dashboard/stats', auth.userId);
   if (!env.DATABASE_URL) {
     log.error('DATABASE_URL not configured');
-    return { status: 503, data: { error: 'Service temporarily unavailable. Database not configured.' } };
+    return {
+      status: 503,
+      data: { error: 'Service temporarily unavailable. Database not configured.' },
+    };
   }
   let prisma: EdgePrismaClient | null = null;
 

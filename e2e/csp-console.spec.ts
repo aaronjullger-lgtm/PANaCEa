@@ -21,9 +21,7 @@ test.describe('CSP and console', () => {
     expect(csp).toContain('https://clerk-telemetry.com');
   });
 
-  test('page loads without CSP violation for clerk-telemetry in console', async ({
-    page,
-  }) => {
+  test('page loads without CSP violation for clerk-telemetry in console', async ({ page }) => {
     const cspViolations: string[] = [];
     page.on('console', (msg) => {
       const text = msg.text();
@@ -42,8 +40,7 @@ test.describe('CSP and console', () => {
     const violating = cspViolations.filter(
       (v) =>
         v.toLowerCase().includes('clerk-telemetry') ||
-        (v.toLowerCase().includes('violates') &&
-          v.toLowerCase().includes('content-security'))
+        (v.toLowerCase().includes('violates') && v.toLowerCase().includes('content-security'))
     );
     expect(violating).toHaveLength(0);
   });

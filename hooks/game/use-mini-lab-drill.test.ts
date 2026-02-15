@@ -2,9 +2,16 @@
  * @vitest-environment jsdom
  */
 // hooks/game/use-mini-lab-drill.test.ts
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useMiniLabDrill } from './use-mini-lab-drill';
+
+vi.mock('@clerk/clerk-react', () => ({
+  useAuth: () => ({
+    getToken: vi.fn(() => Promise.resolve(null)),
+    isSignedIn: false,
+  }),
+}));
 
 describe('useMiniLabDrill', () => {
   describe('Lab Test Ordering', () => {

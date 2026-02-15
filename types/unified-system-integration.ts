@@ -1,13 +1,13 @@
 /**
  * Unified System Integration Type Definitions
- * 
+ *
  * Defines the "glue" that connects all 5 modules seamlessly:
  * - Cross-module state management
  * - Context propagation
  * - Intelligence coordination
  * - Event bus for inter-module communication
  * - Unified analytics
- * 
+ *
  * @module unified-system-integration
  */
 
@@ -127,29 +127,29 @@ export type SystemEventType =
   // Module transitions
   | 'MODULE_ENTERED'
   | 'MODULE_EXITED'
-  
+
   // Clinical events (Module 1 → Others)
   | 'DIAGNOSIS_MADE'
   | 'CRITICAL_ACTION_TAKEN'
   | 'VITALS_CRITICAL'
   | 'PATIENT_DECOMPENSATING'
-  
+
   // Learning events (All → Module 4, 5)
   | 'MISTAKE_MADE'
   | 'CONCEPT_CONFUSED'
   | 'TEACHING_POINT_RELEVANT'
   | 'WEAK_AREA_IDENTIFIED'
-  
+
   // UI events (Module 5 → Others)
   | 'UI_MODE_CHANGED'
   | 'ACHIEVEMENT_UNLOCKED'
   | 'PHANTOM_PATIENT_UPDATED'
-  
+
   // AI Tutor events
   | 'TUTOR_QUERY_MADE'
   | 'HINT_REQUESTED'
   | 'CITATION_VIEWED'
-  
+
   // Progress events
   | 'XP_GAINED'
   | 'MASTERY_UPDATED'
@@ -220,10 +220,10 @@ export interface IntelligenceCoordinator {
 
   /** Active AI services */
   activeServices: {
-    voicePatient: boolean;       // Module 1: native_audio
-    soapGenerator: boolean;      // Module 4: gemini-dictation
-    tutor: boolean;              // AI Tutor: ask_the_manual
-    timingAnalytics: boolean;    // Module 4: echoscript
+    voicePatient: boolean; // Module 1: native_audio
+    soapGenerator: boolean; // Module 4: gemini-dictation
+    tutor: boolean; // AI Tutor: ask_the_manual
+    timingAnalytics: boolean; // Module 4: echoscript
     infographicGenerator: boolean; // Module 4: info_genius
   };
 
@@ -239,13 +239,13 @@ export interface IntelligenceCoordinator {
   coordinationRules: {
     /** When diagnosis made → trigger SOAP finalization */
     onDiagnosisMade: ['finalize_soap', 'generate_debrief'];
-    
+
     /** When mistake made → trigger infographic + tutor */
     onMistakeMade: ['generate_infographic', 'offer_tutor_help'];
-    
+
     /** When critical vital → trigger state transition + alert */
     onCriticalVital: ['transition_av_state', 'haptic_alert', 'ui_notification'];
-    
+
     /** When session ends → trigger all analytics */
     onSessionEnd: ['finalize_soap', 'generate_analytics', 'create_case_file', 'update_phantom'];
   };
@@ -257,19 +257,19 @@ export interface IntelligenceCoordinator {
 export interface ContextPropagation {
   /** Source module */
   source: string;
-  
+
   /** Target modules */
   targets: string[];
-  
+
   /** Context data */
   context: {
     type: 'clinical' | 'learning' | 'performance' | 'preference';
     data: Record<string, unknown>;
   };
-  
+
   /** Propagation strategy */
   strategy: 'immediate' | 'batched' | 'on_demand';
-  
+
   /** TTL (seconds) */
   ttl?: number;
 }
@@ -347,13 +347,13 @@ export interface UnifiedAnalytics {
 
   /** Composite Scores */
   compositeScores: {
-    overallPerformance: number;      // 0-100
-    clinicalCompetence: number;      // 0-100
-    proceduralSkills: number;        // 0-100
-    visualDiagnostics: number;       // 0-100
-    documentation: number;           // 0-100
-    communication: number;           // 0-100
-    engagement: number;              // 0-100
+    overallPerformance: number; // 0-100
+    clinicalCompetence: number; // 0-100
+    proceduralSkills: number; // 0-100
+    visualDiagnostics: number; // 0-100
+    documentation: number; // 0-100
+    communication: number; // 0-100
+    engagement: number; // 0-100
   };
 }
 
@@ -367,16 +367,16 @@ export interface UnifiedAnalytics {
 export interface ModuleTransition {
   /** Transition ID */
   id: string;
-  
+
   /** From module */
   fromModule: string;
-  
+
   /** To module */
   toModule: string;
-  
+
   /** Transition type */
   type: 'natural_flow' | 'user_initiated' | 'system_recommended';
-  
+
   /** Context carried over */
   contextCarryOver: {
     clinicalScenario?: Record<string, unknown>;
@@ -384,14 +384,14 @@ export interface ModuleTransition {
     workingDiagnosis?: string;
     orderedTests?: string[];
   };
-  
+
   /** UI animation */
   animation: {
     type: 'slide' | 'fade' | 'zoom' | 'medical_scan';
     duration: number;
     easing: string;
   };
-  
+
   /** Pre-load requirements */
   preLoad: string[]; // Resources to pre-load before transition
 }
@@ -482,19 +482,19 @@ export interface IntelligentRouting {
       target: 'clinical_eye';
       reason: 'Reinforce with visual diagnostics';
     };
-    
+
     /** If imaging finding identified → Suggest related procedure */
     onFindingIdentified: {
       target: 'sim_lab';
       reason: 'Practice the intervention';
     };
-    
+
     /** If procedure completed → Suggest review */
     onProcedureComplete: {
       target: 'review';
       reason: 'Consolidate learning';
     };
-    
+
     /** If struggling (score < 60%) → Suggest AI Tutor */
     onStruggling: {
       target: 'ai_tutor';
@@ -522,21 +522,21 @@ export interface UnifiedUIState {
   layout: {
     /** Main content area module */
     mainContent: string;
-    
+
     /** Sidebar state */
     sidebar: {
       visible: boolean;
       content: 'ai_tutor' | 'analytics' | 'notes' | 'resources';
       width: number;
     };
-    
+
     /** Overlay state */
     overlay?: {
       type: 'infographic' | 'achievement' | 'notification' | 'tutorial';
       content: unknown;
       dismissible: boolean;
     };
-    
+
     /** Bottom panel (vitals, audio viz, etc.) */
     bottomPanel?: {
       visible: boolean;
@@ -627,16 +627,13 @@ export interface AIServiceContext {
 export interface ContextSyncService {
   /** Get shared context */
   getContext(sessionId: string): AIServiceContext;
-  
+
   /** Update context */
   updateContext(sessionId: string, updates: Partial<AIServiceContext>): void;
-  
+
   /** Subscribe to context changes */
-  subscribeToContext(
-    sessionId: string,
-    callback: (context: AIServiceContext) => void
-  ): () => void;
-  
+  subscribeToContext(sessionId: string, callback: (context: AIServiceContext) => void): () => void;
+
   /** Broadcast context update to all services */
   broadcastUpdate(sessionId: string, updates: Partial<AIServiceContext>): void;
 }
@@ -651,33 +648,33 @@ export interface ContextSyncService {
 export interface UnifiedRecommendation {
   /** Recommendation ID */
   id: string;
-  
+
   /** Recommendation type */
   type: 'next_activity' | 'review_material' | 'practice_area' | 'take_break';
-  
+
   /** Target activity */
   target: {
     module: string;
     activity: string;
     details: Record<string, unknown>;
   };
-  
+
   /** Reasoning */
   reasoning: string;
-  
+
   /** Expected benefit */
   expectedBenefit: {
     metric: string;
     improvement: number;
     confidence: number;
   };
-  
+
   /** Priority */
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  
+
   /** Estimated time */
   estimatedTime: number;
-  
+
   /** Expires at */
   expiresAt: string;
 }
@@ -688,10 +685,10 @@ export interface UnifiedRecommendation {
 export interface RecommendationEngine {
   /** Analyze session state and generate recommendations */
   generateRecommendations(state: UnifiedSessionState): UnifiedRecommendation[];
-  
+
   /** Get next best action */
   getNextBestAction(state: UnifiedSessionState): UnifiedRecommendation;
-  
+
   /** Evaluate recommendation effectiveness */
   trackRecommendationOutcome(
     recommendationId: string,
@@ -714,10 +711,10 @@ export interface CompleteWorkflow {
     timeToRecognition: 45; // seconds
     criticalActions: ['recognize_hypoxia', 'identify_tracheal_deviation'];
     clinicalContext: {
-      o2: 86,
-      hr: 125,
-      bp: '90/60',
-      mentalStatus: 'agitated',
+      o2: 86;
+      hr: 125;
+      bp: '90/60';
+      mentalStatus: 'agitated';
     };
   };
 

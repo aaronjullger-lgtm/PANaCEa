@@ -90,7 +90,11 @@ async function runDesignPolice(page: Page, pageName: string): Promise<DesignViol
           const bgLum = getBgLuminance(el);
           if (bgLum > 0.6) {
             seenEls.add(el);
-            const sel = el.id ? `#${el.id}` : el.className ? `${el.tagName.toLowerCase()}.${el.className.split(/\s+/)[0]}` : el.tagName.toLowerCase();
+            const sel = el.id
+              ? `#${el.id}`
+              : el.className
+                ? `${el.tagName.toLowerCase()}.${el.className.split(/\s+/)[0]}`
+                : el.tagName.toLowerCase();
             out.push({
               kind: 'contrast',
               selector: sel,
@@ -102,11 +106,17 @@ async function runDesignPolice(page: Page, pageName: string): Promise<DesignViol
       }
 
       // --- Sizing: buttons/links < 44px ---
-      const clickables = document.querySelectorAll('button, a[href], [role="button"], [role="link"]');
+      const clickables = document.querySelectorAll(
+        'button, a[href], [role="button"], [role="link"]'
+      );
       clickables.forEach((el) => {
         const rect = (el as HTMLElement).getBoundingClientRect();
         if (rect.width < minTapPx || rect.height < minTapPx) {
-          const sel = el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.split(/\s+/).filter(Boolean)[0] : '');
+          const sel =
+            el.tagName.toLowerCase() +
+            (el.className && typeof el.className === 'string'
+              ? '.' + el.className.split(/\s+/).filter(Boolean)[0]
+              : '');
           out.push({
             kind: 'sizing',
             selector: sel,
@@ -126,7 +136,9 @@ async function runDesignPolice(page: Page, pageName: string): Promise<DesignViol
         if (allZero && text.length > 10 && el.children.length > 0) {
           const tag = el.tagName.toLowerCase();
           if (['div', 'section', 'article', 'main', 'aside'].includes(tag)) {
-            const sel = el.id ? `#${el.id}` : tag + (el.className ? '.' + (el.className as string).split(/\s+/)[0] : '');
+            const sel = el.id
+              ? `#${el.id}`
+              : tag + (el.className ? '.' + (el.className as string).split(/\s+/)[0] : '');
             out.push({
               kind: 'spacing',
               selector: sel,
@@ -138,11 +150,17 @@ async function runDesignPolice(page: Page, pageName: string): Promise<DesignViol
       });
 
       // --- Cursors: button/link without cursor pointer ---
-      const interactives = document.querySelectorAll('button, a[href], [role="button"], [role="link"]');
+      const interactives = document.querySelectorAll(
+        'button, a[href], [role="button"], [role="link"]'
+      );
       interactives.forEach((el) => {
         const cursor = getComputedStyle(el).cursor;
         if (cursor !== 'pointer') {
-          const sel = el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + (el.className as string).split(/\s+/).filter(Boolean)[0] : '');
+          const sel =
+            el.tagName.toLowerCase() +
+            (el.className && typeof el.className === 'string'
+              ? '.' + (el.className as string).split(/\s+/).filter(Boolean)[0]
+              : '');
           out.push({
             kind: 'cursor',
             selector: sel,
@@ -206,7 +224,10 @@ test.describe('UX Polish — User Simulation + Design Police', () => {
       if (total > 0) {
         const report = allViolations
           .filter(({ violations }) => violations.length > 0)
-          .map(({ page: p, violations }) => `${p}:\n${violations.map((v) => `  [${v.kind}] ${v.selector} — ${v.detail}`).join('\n')}`)
+          .map(
+            ({ page: p, violations }) =>
+              `${p}:\n${violations.map((v) => `  [${v.kind}] ${v.selector} — ${v.detail}`).join('\n')}`
+          )
           .join('\n\n');
         throw new Error(`Design Police found ${total} violation(s):\n\n${report}`);
       }
@@ -241,7 +262,11 @@ test.describe('UX Polish — User Simulation + Design Police', () => {
     allViolations.push({ page: 'Study / SRS Flashcards', violations: studyViolations });
 
     // --- Interact: Flip Card → Rating (1–4) ---
-    const flipArea = page.locator('[aria-label*="Show question"], [aria-label*="Show answer"], [data-testid="srs-flashcards-heading"]').first();
+    const flipArea = page
+      .locator(
+        '[aria-label*="Show question"], [aria-label*="Show answer"], [data-testid="srs-flashcards-heading"]'
+      )
+      .first();
     const cardArea = page.locator('.cursor-pointer.select-none, [role="button"]').first();
     const ratingGood = page.locator('button:has-text("Good")').first();
     const ratingAgain = page.locator('button:has-text("Again")').first();
@@ -283,7 +308,10 @@ test.describe('UX Polish — User Simulation + Design Police', () => {
     if (total > 0) {
       const report = allViolations
         .filter(({ violations }) => violations.length > 0)
-        .map(({ page: p, violations }) => `${p}:\n${violations.map((v) => `  [${v.kind}] ${v.selector} — ${v.detail}`).join('\n')}`)
+        .map(
+          ({ page: p, violations }) =>
+            `${p}:\n${violations.map((v) => `  [${v.kind}] ${v.selector} — ${v.detail}`).join('\n')}`
+        )
         .join('\n\n');
       throw new Error(`Design Police found ${total} violation(s):\n\n${report}`);
     }

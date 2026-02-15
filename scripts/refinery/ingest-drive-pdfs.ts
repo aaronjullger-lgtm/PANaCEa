@@ -184,7 +184,10 @@ async function extractTextFromBuffer(buffer: Buffer, filename: string): Promise<
   if (!text) {
     throw new Error(`No text extracted from PDF: ${filename}`);
   }
-  return text.replaceAll(/\r\n/g, '\n').replaceAll(/\n{3,}/g, '\n\n').trim();
+  return text
+    .replaceAll(/\r\n/g, '\n')
+    .replaceAll(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 /* ─────────────── Gemini Structuring ─────────────── */

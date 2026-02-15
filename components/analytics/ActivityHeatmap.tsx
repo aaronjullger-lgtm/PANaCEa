@@ -89,20 +89,7 @@ function formatDateKey(date: Date): string {
   return date.toISOString().split('T')[0] ?? '';
 }
 
-const MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /**
  * Get month labels for the header, aligned left-flush with the first week of each month (GitHub-style).
@@ -487,7 +474,11 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
 
                 {/* Date cells — GPU layer; no stagger/hover when low power (battery drain audit) */}
                 {(dateGrid[0] ?? []).map((_, colIdx) => (
-                  <div key={colIdx} className="flex flex-col gap-0.5 sm:gap-1" style={{ transform: 'translateZ(0)' }}>
+                  <div
+                    key={colIdx}
+                    className="flex flex-col gap-0.5 sm:gap-1"
+                    style={{ transform: 'translateZ(0)' }}
+                  >
                     {dateGrid.map((row, rowIdx) => {
                       const date = row[colIdx];
                       const dateKey = date ? formatDateKey(date) : null;
@@ -500,9 +491,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
                           initial={lowPower ? false : { opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={
-                            lowPower
-                              ? { duration: 0 }
-                              : { delay: colIdx * 0.01, duration: 0.2 }
+                            lowPower ? { duration: 0 } : { delay: colIdx * 0.01, duration: 0.2 }
                           }
                           whileHover={lowPower ? undefined : { scale: 1.2, zIndex: 10 }}
                           whileTap={lowPower ? undefined : { scale: 0.95 }}

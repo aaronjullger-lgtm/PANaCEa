@@ -107,7 +107,9 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
         {/* Patient Case */}
         <div className="space-y-4">
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg">
-            <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">Patient Case</h3>
+            <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
+              Patient Case
+            </h3>
 
             <div className="space-y-4">
               <div>
@@ -356,9 +358,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                     >
                       {gradingResult.totalScore}
                     </div>
-                    <div className="text-sm text-[var(--color-text-muted)]">
-                      Total Score / 100
-                    </div>
+                    <div className="text-sm text-[var(--color-text-muted)]">Total Score / 100</div>
                   </div>
                 </div>
               </div>

@@ -85,4 +85,3 @@ export const onRequestGet = authenticatedEndpoint(
   },
   { source: 'query' }
 );
-

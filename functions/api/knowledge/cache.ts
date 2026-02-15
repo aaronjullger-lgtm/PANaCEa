@@ -67,10 +67,10 @@ export const onRequestPost = authenticatedEndpoint(CreateCacheSchema, async (con
     if (!res.ok) {
       const text = await res.text();
       logger.warn('Gemini cache create failed', { status: res.status, text: text.slice(0, 200) });
-      return new Response(
-        JSON.stringify({ error: `Failed to create cache: ${res.status}` }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: `Failed to create cache: ${res.status}` }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     const data = (await res.json()) as { name?: string; expireTime?: string };
     const geminiCacheName = data.name;

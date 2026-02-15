@@ -18,10 +18,7 @@ export const CircadianInsightCard: React.FC<CircadianInsightCardProps> = ({
   performanceRecords,
   className = '',
 }) => {
-  const insights = useMemo(
-    () => getCircadianInsights(performanceRecords),
-    [performanceRecords]
-  );
+  const insights = useMemo(() => getCircadianInsights(performanceRecords), [performanceRecords]);
 
   if (!insights) {
     return null;

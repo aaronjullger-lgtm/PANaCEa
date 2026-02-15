@@ -27,12 +27,20 @@ const MISSING_CONDITIONS: NewCondition[] = [
   // DERM
   { name: 'Tinea Capitis', system: 'DERM', subcategory: 'Infectious Diseases' },
   { name: 'Tinea Cruris', system: 'DERM', subcategory: 'Infectious Diseases' },
-  { name: 'DRESS Syndrome (Drug Reaction with Eosinophilia and Systemic Symptoms)', system: 'DERM', subcategory: 'Drug Reactions' },
+  {
+    name: 'DRESS Syndrome (Drug Reaction with Eosinophilia and Systemic Symptoms)',
+    system: 'DERM',
+    subcategory: 'Drug Reactions',
+  },
   { name: 'Keratoacanthoma', system: 'DERM', subcategory: 'Neoplasms' },
 
   // ENDO
   { name: 'Secondary Adrenal Insufficiency', system: 'ENDO', subcategory: 'Adrenal Disorders' },
-  { name: 'Sick Euthyroid Syndrome (Nonthyroidal Illness Syndrome)', system: 'ENDO', subcategory: 'Thyroid Disorders' },
+  {
+    name: 'Sick Euthyroid Syndrome (Nonthyroidal Illness Syndrome)',
+    system: 'ENDO',
+    subcategory: 'Thyroid Disorders',
+  },
 
   // GI
   { name: "Meckel's Diverticulum", system: 'GI', subcategory: 'Small Bowel Disorders' },
@@ -99,8 +107,12 @@ Return ONLY valid JSON, no markdown.`;
   try {
     await new Promise((r) => setTimeout(r, 2000)); // Rate limit
     const result = await model.generateContent(prompt);
-    let jsonStr = result.response.text().trim()
-      .replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
+    let jsonStr = result.response
+      .text()
+      .trim()
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/, '')
+      .replace(/```\s*$/, '');
     const first = jsonStr.indexOf('{');
     const last = jsonStr.lastIndexOf('}');
     if (first === -1 || last === -1) throw new Error('No JSON found');
@@ -115,7 +127,9 @@ Return ONLY valid JSON, no markdown.`;
 async function main() {
   console.log('╔════════════════════════════════════════════════════════════╗');
   console.log('║  Phase 4a: Add Missing PANCE Conditions                   ║');
-  console.log(`║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`);
+  console.log(
+    `║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`
+  );
   console.log('╚════════════════════════════════════════════════════════════╝');
 
   let created = 0;

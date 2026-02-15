@@ -60,10 +60,7 @@ export function applyHonestRating(input: GhostGraderInput): Rating {
   const effectiveOscillations = oscillations + Math.min(vignetteRegressions, 2);
   if (effectiveOscillations > OSCILLATION_THRESHOLD) return Rating.Hard;
 
-  if (
-    selectionDriftMs != null &&
-    selectionDriftMs > SELECTION_DRIFT_THRESHOLD_MS
-  ) {
+  if (selectionDriftMs != null && selectionDriftMs > SELECTION_DRIFT_THRESHOLD_MS) {
     return Rating.Hard;
   }
 

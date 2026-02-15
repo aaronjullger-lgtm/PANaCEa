@@ -13,11 +13,11 @@ const GUEST_MODE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 export function isGuestModeActive(): boolean {
   const guestMode = localStorage.getItem(GUEST_MODE_STORAGE_KEY);
   const expiry = localStorage.getItem(GUEST_MODE_EXPIRY_KEY);
-  
+
   if (guestMode !== 'true') {
     return false;
   }
-  
+
   if (expiry) {
     const expiryTime = parseInt(expiry, 10);
     if (Date.now() > expiryTime) {
@@ -26,7 +26,7 @@ export function isGuestModeActive(): boolean {
       return false;
     }
   }
-  
+
   return true;
 }
 
@@ -37,7 +37,7 @@ export function enableGuestMode(): void {
   localStorage.setItem(GUEST_MODE_STORAGE_KEY, 'true');
   const expiryTime = Date.now() + GUEST_MODE_DURATION_MS;
   localStorage.setItem(GUEST_MODE_EXPIRY_KEY, expiryTime.toString());
-  
+
   console.log('[GuestAuth] Guest mode enabled, expires at:', new Date(expiryTime).toISOString());
 }
 
@@ -56,7 +56,7 @@ export function exitGuestMode(): void {
 export function getGuestModeExpiry(): Date | null {
   const expiry = localStorage.getItem(GUEST_MODE_EXPIRY_KEY);
   if (!expiry) return null;
-  
+
   return new Date(parseInt(expiry, 10));
 }
 
@@ -65,10 +65,10 @@ export function getGuestModeExpiry(): Date | null {
  */
 export function getGuestModeTimeRemaining(): number {
   if (!isGuestModeActive()) return 0;
-  
+
   const expiry = localStorage.getItem(GUEST_MODE_EXPIRY_KEY);
   if (!expiry) return 0;
-  
+
   const remaining = parseInt(expiry, 10) - Date.now();
   return Math.max(0, Math.floor(remaining / (60 * 1000))); // Convert to minutes
 }
@@ -83,26 +83,26 @@ export function isFeatureAvailableInGuestMode(feature: string): boolean {
     'flashcards',
     'reference-library',
     'analytics-view',
-    'settings-view'
+    'settings-view',
   ];
-  
+
   const restrictedFeatures = [
     'save-progress',
     'sync-data',
     'premium-content',
     'community-features',
     'export-data',
-    'admin-features'
+    'admin-features',
   ];
-  
+
   if (guestFeatures.includes(feature)) {
     return true;
   }
-  
+
   if (restrictedFeatures.includes(feature)) {
     return false;
   }
-  
+
   // Default to allowing features with a warning
   return true;
 }
@@ -122,7 +122,7 @@ export function getGuestUser(): {
     email: 'guest@panacea.app',
     firstName: 'Guest',
     lastName: 'User',
-    isGuest: true
+    isGuest: true,
   };
 }
 
@@ -138,13 +138,17 @@ export function getGuestToken(): string {
  */
 export function initializeGuestMode(): void {
   if (isGuestModeActive()) {
-    console.log('[GuestAuth] Guest mode is active, time remaining:', getGuestModeTimeRemaining(), 'minutes');
-    
+    console.log(
+      '[GuestAuth] Guest mode is active, time remaining:',
+      getGuestModeTimeRemaining(),
+      'minutes'
+    );
+
     // Show guest mode notification
     if (typeof window !== 'undefined') {
       setTimeout(() => {
         const event = new CustomEvent('guest-mode-active', {
-          detail: { timeRemaining: getGuestModeTimeRemaining() }
+          detail: { timeRemaining: getGuestModeTimeRemaining() },
         });
         window.dispatchEvent(event);
       }, 1000);
@@ -158,13 +162,13 @@ export function initializeGuestMode(): void {
 export function shouldOfferGuestMode(): boolean {
   const authFailureCount = parseInt(localStorage.getItem('pance-auth-failure-count') || '0', 10);
   const lastFailureTime = parseInt(localStorage.getItem('pance-auth-last-failure') || '0', 10);
-  
+
   // Reset failure count if it's been more than 1 hour
   if (Date.now() - lastFailureTime > 60 * 60 * 1000) {
     localStorage.setItem('pance-auth-failure-count', '0');
     return false;
   }
-  
+
   return authFailureCount >= 2;
 }
 

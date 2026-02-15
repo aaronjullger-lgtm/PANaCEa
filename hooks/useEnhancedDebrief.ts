@@ -1,12 +1,16 @@
 /**
  * Enhanced Debrief Hook
- * 
+ *
  * Coordinates the enhanced debrief experience with SOAP comparison,
  * echo path visualization, and infographic generation.
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import type { SOAPComparison, SessionTimingAnalytics, GeneratedInfographic } from '@/types/smart-scribe-system';
+import type {
+  SOAPComparison,
+  SessionTimingAnalytics,
+  GeneratedInfographic,
+} from '@/types/smart-scribe-system';
 
 interface UseEnhancedDebriefOptions {
   sessionId: string | null;

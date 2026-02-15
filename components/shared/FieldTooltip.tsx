@@ -63,7 +63,7 @@ const severityConfig = {
 
 /**
  * FieldTooltip Component
- * 
+ *
  * A specialized tooltip component for form fields that provides contextual help
  * and validation guidance. Automatically associates with form fields via fieldId.
  */
@@ -88,11 +88,11 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
 
   const showTooltip = () => {
     if (alwaysVisible) return;
-    
+
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    
+
     timeoutRef.current = setTimeout(() => {
       setIsVisible(true);
       onShow?.();
@@ -101,12 +101,12 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
 
   const hideTooltip = () => {
     if (alwaysVisible) return;
-    
+
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    
+
     setIsVisible(false);
     onHide?.();
   };
@@ -200,7 +200,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
     if (field) {
       const currentAriaDescribedBy = field.getAttribute('aria-describedby');
       const tooltipId = `field-tooltip-${fieldId}`;
-      
+
       // Add tooltip ID to aria-describedby if not already present
       if (currentAriaDescribedBy) {
         if (!currentAriaDescribedBy.includes(tooltipId)) {
@@ -246,9 +246,17 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
           <motion.div
             ref={tooltipRef}
             id={`field-tooltip-${fieldId}`}
-            initial={{ opacity: 0, scale: 0.9, y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0 }}
+            initial={{
+              opacity: 0,
+              scale: 0.9,
+              y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0,
+            }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0 }}
+            exit={{
+              opacity: 0,
+              scale: 0.9,
+              y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0,
+            }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className={`fixed z-[9999] ${config.bgColor} ${config.textColor} ${config.borderColor} border rounded-lg shadow-lg px-3 py-2 text-sm leading-relaxed pointer-events-none max-w-[280px]`}
             role="tooltip"
@@ -263,7 +271,13 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
             <div
               className={`absolute w-3 h-3 ${config.bgColor} ${config.borderColor} border-l border-t transform rotate-45`}
               style={{
-                [position === 'top' ? 'bottom' : position === 'bottom' ? 'top' : position === 'left' ? 'right' : 'left']: '-6px',
+                [position === 'top'
+                  ? 'bottom'
+                  : position === 'bottom'
+                    ? 'top'
+                    : position === 'left'
+                      ? 'right'
+                      : 'left']: '-6px',
                 left: position === 'left' || position === 'right' ? '50%' : '50%',
                 marginLeft: position === 'left' || position === 'right' ? '-6px' : '0',
                 marginTop: position === 'top' || position === 'bottom' ? '0' : '-6px',

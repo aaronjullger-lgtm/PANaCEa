@@ -51,7 +51,9 @@ export const onRequestPost = authenticatedEndpoint(ExtractStartBodySchema, async
 
   if (!env.ADOBE_CLIENT_ID || !env.ADOBE_CLIENT_SECRET) {
     return new Response(
-      JSON.stringify({ error: 'Adobe PDF Services not configured (ADOBE_CLIENT_ID, ADOBE_CLIENT_SECRET)' }),
+      JSON.stringify({
+        error: 'Adobe PDF Services not configured (ADOBE_CLIENT_ID, ADOBE_CLIENT_SECRET)',
+      }),
       { status: 503, headers: { 'Content-Type': 'application/json' } }
     );
   }
@@ -64,10 +66,10 @@ export const onRequestPost = authenticatedEndpoint(ExtractStartBodySchema, async
       select: { id: true },
     });
     if (!resource) {
-      return new Response(
-        JSON.stringify({ error: 'Resource not found', resourceId }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Resource not found', resourceId }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
   } finally {
     await safePrismaDisconnect(prisma);
@@ -76,17 +78,17 @@ export const onRequestPost = authenticatedEndpoint(ExtractStartBodySchema, async
   try {
     const pdfRes = await fetch(pdfUrl);
     if (!pdfRes.ok) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch PDF', status: pdfRes.status }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Failed to fetch PDF', status: pdfRes.status }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     const pdfBytes = new Uint8Array(await pdfRes.arrayBuffer());
     if (pdfBytes.length > 100 * 1024 * 1024) {
-      return new Response(
-        JSON.stringify({ error: 'PDF exceeds 100MB limit' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'PDF exceeds 100MB limit' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const token = await getPdfServicesToken(env);
@@ -110,10 +112,10 @@ export const onRequestPost = authenticatedEndpoint(ExtractStartBodySchema, async
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Extract start failed';
     log.warn('Extract start failed', { error: message });
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 502, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: message }), {
+      status: 502,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 });
 
@@ -135,14 +137,17 @@ export const onRequestGet = authenticatedEndpoint(
     const { jobId, resourceId } = validated;
 
     if (!env.ADOBE_CLIENT_ID || !env.ADOBE_CLIENT_SECRET) {
-      return new Response(
-        JSON.stringify({ error: 'Adobe PDF Services not configured' }),
-        { status: 503, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Adobe PDF Services not configured' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     try {
-      validateFunctionEnv(env as unknown as Record<string, unknown>, ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']);
+      validateFunctionEnv(env as unknown as Record<string, unknown>, [
+        'SUPABASE_URL',
+        'SUPABASE_SERVICE_ROLE_KEY',
+      ]);
     } catch (e) {
       if (e instanceof MissingEnvError) return e.toResponse();
       throw e;
@@ -153,9 +158,10 @@ export const onRequestGet = authenticatedEndpoint(
 
     const token = await getPdfServicesToken(env);
     const start = Date.now();
-    let last: { status: string; downloadUri?: string; errorCode?: string; errorMessage?: string } = {
-      status: 'in progress',
-    };
+    let last: { status: string; downloadUri?: string; errorCode?: string; errorMessage?: string } =
+      {
+        status: 'in progress',
+      };
 
     while (Date.now() - start < MAX_POLL_MS) {
       const statusRes = await pollExtractJobStatus(env, token, statusUrl);
@@ -180,11 +186,17 @@ export const onRequestGet = authenticatedEndpoint(
         const jsonEntry = jsonKey ? unzipped[jsonKey] : undefined;
         if (!jsonEntry) {
           return new Response(
-            JSON.stringify({ status: 'done', error: 'structuredData.json not found in result zip' }),
+            JSON.stringify({
+              status: 'done',
+              error: 'structuredData.json not found in result zip',
+            }),
             { status: 200, headers: { 'Content-Type': 'application/json' } }
           );
         }
-        const structuredData = JSON.parse(new TextDecoder().decode(jsonEntry)) as Record<string, unknown>;
+        const structuredData = JSON.parse(new TextDecoder().decode(jsonEntry)) as Record<
+          string,
+          unknown
+        >;
 
         const storagePath = `extracts/${resourceId}/structuredData.json`;
         const jsonBytes = new TextEncoder().encode(JSON.stringify(structuredData));
@@ -200,7 +212,10 @@ export const onRequestGet = authenticatedEndpoint(
         });
         if (!uploadRes.ok) {
           const errText = await uploadRes.text();
-          log.warn('Supabase upload failed after extract', { status: uploadRes.status, error: errText.slice(0, 200) });
+          log.warn('Supabase upload failed after extract', {
+            status: uploadRes.status,
+            error: errText.slice(0, 200),
+          });
           return new Response(
             JSON.stringify({ status: 'done', error: 'Failed to upload structuredData to storage' }),
             { status: 200, headers: { 'Content-Type': 'application/json' } }
@@ -218,10 +233,10 @@ export const onRequestGet = authenticatedEndpoint(
         }
 
         log.info('Extract completed and ingested', { resourceId, adobeDataPath: storagePath });
-        return new Response(
-          JSON.stringify({ status: 'done', adobeDataPath: storagePath }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ status: 'done', adobeDataPath: storagePath }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
 
       await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));

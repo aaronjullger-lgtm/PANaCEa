@@ -61,7 +61,10 @@ export function validateSupabaseConfig(): { valid: boolean; message: string } {
     return { valid: false, message: 'SUPABASE_URL (or VITE_SUPABASE_URL) is not configured' };
   }
   if (!supabaseAnonKey) {
-    return { valid: false, message: 'SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY) is not configured' };
+    return {
+      valid: false,
+      message: 'SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY) is not configured',
+    };
   }
   if (!supabaseUrl.startsWith('https://')) {
     return { valid: false, message: 'SUPABASE_URL must start with https://' };

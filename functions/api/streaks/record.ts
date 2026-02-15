@@ -10,14 +10,8 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import {
-  computeCurrentStreak,
-  type StreakGoalDays,
-} from '../../../lib/streakCalc';
-import {
-  calculateCoinsEarned,
-  STREAK_FREEZE_CONFIG,
-} from '../../../data/modes/dailyRitualsData';
+import { computeCurrentStreak, type StreakGoalDays } from '../../../lib/streakCalc';
+import { calculateCoinsEarned, STREAK_FREEZE_CONFIG } from '../../../data/modes/dailyRitualsData';
 
 const RecordStreakSchema = z.object({
   body: z.object({
@@ -117,55 +111,49 @@ export const onRequestPost = authenticatedEndpoint(RecordStreakSchema, async (co
       }),
     ]);
 
-      const streakGoalDays: StreakGoalDays =
-        prefs?.streakGoalDays === 'weekdays' ? 'weekdays' : 'all';
-      const activityDates = streakRows.map((r) => new Date(r.date));
-      const frozenDates = freezeRows.map((r) => new Date(r.date));
-      const { currentStreak, isActiveToday } = computeCurrentStreak({
-        activityDates,
-        frozenDates,
-        today,
-        streakGoalDays,
-      });
+    const streakGoalDays: StreakGoalDays =
+      prefs?.streakGoalDays === 'weekdays' ? 'weekdays' : 'all';
+    const activityDates = streakRows.map((r) => new Date(r.date));
+    const frozenDates = freezeRows.map((r) => new Date(r.date));
+    const { currentStreak, isActiveToday } = computeCurrentStreak({
+      activityDates,
+      frozenDates,
+      today,
+      streakGoalDays,
+    });
 
-      const hadActiveStreak = isActiveToday && currentStreak >= 1;
-      const correctAnswers = Math.round(
-        (payload.accuracyPercent / 100) * payload.questionsAnswered
-      );
-      coinsEarned = calculateCoinsEarned(
-        payload.questionsAnswered,
-        correctAnswers,
-        hadActiveStreak
-      );
+    const hadActiveStreak = isActiveToday && currentStreak >= 1;
+    const correctAnswers = Math.round((payload.accuracyPercent / 100) * payload.questionsAnswered);
+    coinsEarned = calculateCoinsEarned(payload.questionsAnswered, correctAnswers, hadActiveStreak);
 
-      if (prefs) {
-        const customSettings = (prefs.customSettings as Record<string, unknown>) ?? {};
-        const lastFreezeEarnedStreak = (customSettings.lastFreezeEarnedStreak as number) ?? 0;
-        const streakFreezes = prefs.streakFreezes ?? 0;
-        if (
-          currentStreak >= 7 &&
-          currentStreak >= lastFreezeEarnedStreak + 7 &&
-          streakFreezes < STREAK_FREEZE_CONFIG.maxFreezes
-        ) {
-          freezeEarned = true;
-          await prisma.userPreferences.update({
-            where: { userId: auth.userId },
-            data: {
-              streakFreezes: { increment: 1 },
-              userCoins: { increment: coinsEarned },
-              customSettings: {
-                ...customSettings,
-                lastFreezeEarnedStreak: currentStreak,
-              },
+    if (prefs) {
+      const customSettings = (prefs.customSettings as Record<string, unknown>) ?? {};
+      const lastFreezeEarnedStreak = (customSettings.lastFreezeEarnedStreak as number) ?? 0;
+      const streakFreezes = prefs.streakFreezes ?? 0;
+      if (
+        currentStreak >= 7 &&
+        currentStreak >= lastFreezeEarnedStreak + 7 &&
+        streakFreezes < STREAK_FREEZE_CONFIG.maxFreezes
+      ) {
+        freezeEarned = true;
+        await prisma.userPreferences.update({
+          where: { userId: auth.userId },
+          data: {
+            streakFreezes: { increment: 1 },
+            userCoins: { increment: coinsEarned },
+            customSettings: {
+              ...customSettings,
+              lastFreezeEarnedStreak: currentStreak,
             },
-          });
-        } else if (coinsEarned > 0) {
-          await prisma.userPreferences.update({
-            where: { userId: auth.userId },
-            data: { userCoins: { increment: coinsEarned } },
-          });
-        }
+          },
+        });
+      } else if (coinsEarned > 0) {
+        await prisma.userPreferences.update({
+          where: { userId: auth.userId },
+          data: { userCoins: { increment: coinsEarned } },
+        });
       }
+    }
 
     logger.info('Streak recorded', {
       userId: auth.userId,

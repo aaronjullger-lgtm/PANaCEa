@@ -189,8 +189,7 @@ export async function triggerFSRSOptimization(
     } catch {
       // ignore
     }
-    const msg =
-      errBody?.error ?? `FSRS Optimizer sidecar returned ${res.status}`;
+    const msg = errBody?.error ?? `FSRS Optimizer sidecar returned ${res.status}`;
     throw new Error(msg);
   }
 

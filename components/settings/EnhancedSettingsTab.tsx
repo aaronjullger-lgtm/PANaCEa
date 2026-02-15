@@ -135,8 +135,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
   useEffect(() => {
     if (isSignedIn && apiProfile) {
       const local = (loadUserProfile() || {}) as Partial<UserProfile>;
-      const yearInProgram =
-        (apiProfile.yearInProgram as YearInProgram) ?? local.yearInProgram;
+      const yearInProgram = (apiProfile.yearInProgram as YearInProgram) ?? local.yearInProgram;
       const currentRotation =
         (apiProfile.currentRotation as ClinicalRotation) ?? local.currentRotation;
       setUserProfileState({
@@ -149,8 +148,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
         currentRotation,
         isCertifiedPA: local.isCertifiedPA,
       });
-      if (yearInProgram != null)
-        localStorage.setItem('panceai_year_in_program', yearInProgram);
+      if (yearInProgram != null) localStorage.setItem('panceai_year_in_program', yearInProgram);
       if (currentRotation != null)
         localStorage.setItem('panceai_current_rotation', currentRotation);
     }
@@ -390,8 +388,8 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
             >
               <div className="p-4 pt-0 space-y-3">
                 <p className="text-sm text-[var(--color-text-muted)]">
-                  Choose when your streak is required. Weekdays only means Saturday and Sunday
-                  won’t break your streak — rest days matter.
+                  Choose when your streak is required. Weekdays only means Saturday and Sunday won’t
+                  break your streak — rest days matter.
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -523,7 +521,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                     pattern="\\d{4}-\\d{2}"
                     value={userProfile.graduationDate || ''}
                     onChange={(e) => handleUpdateProfile({ graduationDate: e.target.value })}
-                    aria-label={careerStage === 'student' ? 'Expected graduation month' : 'Graduation month'}
+                    aria-label={
+                      careerStage === 'student' ? 'Expected graduation month' : 'Graduation month'
+                    }
                     placeholder="YYYY-MM"
                     title="Enter month as YYYY-MM"
                     className="w-full px-4 py-2.5 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
@@ -545,9 +545,15 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                     />
                     {/* EOR Test Date - when on an EOR rotation, set date to show EOR Readiness on dashboard */}
                     {userProfile.currentRotation &&
-                      ['Emergency Medicine', 'Family Medicine', 'Internal Medicine', 'Surgery', 'Pediatrics', 'Psychiatry', 'Obstetrics & Gynecology'].includes(
-                        userProfile.currentRotation
-                      ) && (
+                      [
+                        'Emergency Medicine',
+                        'Family Medicine',
+                        'Internal Medicine',
+                        'Surgery',
+                        'Pediatrics',
+                        'Psychiatry',
+                        'Obstetrics & Gynecology',
+                      ].includes(userProfile.currentRotation) && (
                         <div>
                           <label
                             htmlFor="settings-eor-test-date"

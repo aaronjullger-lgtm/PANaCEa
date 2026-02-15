@@ -222,10 +222,10 @@ export async function syncPreferencesToDb(
     });
 
     if (!response.ok) {
-    const errBody = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
-      error?: string;
-    };
-    throw new Error(errBody.error || `HTTP ${response.status}`);
+      const errBody = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
+        error?: string;
+      };
+      throw new Error(errBody.error || `HTTP ${response.status}`);
     }
 
     const result = (await response.json()) as { preferences?: UserPreferencesPayload };
@@ -262,10 +262,10 @@ export async function fetchPreferencesFromDb(
     });
 
     if (!response.ok) {
-    const errBody = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
-      error?: string;
-    };
-    throw new Error(errBody.error || `HTTP ${response.status}`);
+      const errBody = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
+        error?: string;
+      };
+      throw new Error(errBody.error || `HTTP ${response.status}`);
     }
 
     const result = (await response.json()) as { preferences?: UserPreferencesPayload };
@@ -300,10 +300,10 @@ export async function updatePreferencesInDb(
     });
 
     if (!response.ok) {
-    const errBody = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
-      error?: string;
-    };
-    throw new Error(errBody.error || `HTTP ${response.status}`);
+      const errBody = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
+        error?: string;
+      };
+      throw new Error(errBody.error || `HTTP ${response.status}`);
     }
 
     const result = (await response.json()) as { preferences?: UserPreferencesPayload };

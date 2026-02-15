@@ -197,9 +197,7 @@ export function getSentryTraceId(request: Request): string | null {
  * Accepts either a preset key (e.g. 'DATABASE', 'FULL_STACK') or an explicit
  * list of env var names for advanced cases.
  */
-export function withEnvCheck(
-  required: EnvRequirement | readonly string[] | string[]
-): Middleware {
+export function withEnvCheck(required: EnvRequirement | readonly string[] | string[]): Middleware {
   return async (context, next) => {
     try {
       validateFunctionEnv(context.env as Record<string, unknown>, required);

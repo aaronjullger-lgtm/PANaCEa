@@ -40,7 +40,10 @@ async function extractTextFromPdf(filePath: string): Promise<string> {
   if (!text) {
     throw new Error(`No text extracted from PDF: ${filePath}`);
   }
-  return text.replaceAll(/\r\n/g, '\n').replaceAll(/\n{3,}/g, '\n\n').trim();
+  return text
+    .replaceAll(/\r\n/g, '\n')
+    .replaceAll(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 const REFINERY_SYSTEM_PROMPT = `You are a medical data structurer. Your task is to read the provided text (from a textbook or reference) and extract structured data that matches our MedicalContent schema for PA/NP education.
@@ -74,7 +77,10 @@ Critical rules:
 2. Set "needsHumanReview" to true in your output.
 3. Output only valid JSON with no markdown code fences or extra text.`;
 
-async function extractStructuredContent(rawText: string, sourceName: string): Promise<Record<string, unknown>> {
+async function extractStructuredContent(
+  rawText: string,
+  sourceName: string
+): Promise<Record<string, unknown>> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is required. Set it in .env');
@@ -163,7 +169,9 @@ async function main(): Promise<void> {
   const sourceName = args.sourceName ?? 'Unknown Source';
 
   if (!filePath) {
-    console.error('Usage: npx tsx scripts/refinery/ingest-pdf.ts --file <path-to-pdf> [--sourceName "Source Name"]');
+    console.error(
+      'Usage: npx tsx scripts/refinery/ingest-pdf.ts --file <path-to-pdf> [--sourceName "Source Name"]'
+    );
     process.exit(1);
   }
 
@@ -221,7 +229,11 @@ async function main(): Promise<void> {
   });
 
   console.log('');
-  console.log('Draft created for', conditionName, `(ID: ${medicalContent.id}). Review in Admin Dashboard.`);
+  console.log(
+    'Draft created for',
+    conditionName,
+    `(ID: ${medicalContent.id}). Review in Admin Dashboard.`
+  );
 }
 
 main()

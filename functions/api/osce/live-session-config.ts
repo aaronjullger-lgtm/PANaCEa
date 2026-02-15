@@ -25,47 +25,53 @@ const DEFAULT_SYSTEM_INSTRUCTION = `You are a 55-year-old male patient named Mar
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) => {
-  const { auth } = context as { auth: { userId: string } };
-  const log = createEndpointLogger('/api/osce/live-session-config', auth.userId);
+export const onRequestGet = authenticatedEndpoint(
+  QuerySchema,
+  async (context) => {
+    const { auth } = context as { auth: { userId: string } };
+    const log = createEndpointLogger('/api/osce/live-session-config', auth.userId);
 
-  /** Tool for simulated vitals. Gemini Live may expect snake_case (get_vitals); client sends as functionDeclarations. */
-  const tools = [
-    {
-      get_vitals: {
-        description: 'Returns simulated vitals and labs for this patient. Call when the student asks about blood pressure, heart rate, labs, or other objective data.',
+    /** Tool for simulated vitals. Gemini Live may expect snake_case (get_vitals); client sends as functionDeclarations. */
+    const tools = [
+      {
+        get_vitals: {
+          description:
+            'Returns simulated vitals and labs for this patient. Call when the student asks about blood pressure, heart rate, labs, or other objective data.',
+        },
       },
-    },
-  ];
+    ];
 
-  /** get_vitals() return shape: client uses this to respond to tool calls or mock. */
-  const getVitalsResult = {
-    BP: '160/95',
-    HR: 110,
-    RR: 18,
-    Temp: '98.6°F',
-    O2Sat: 96,
-    ECG: 'Sinus tachycardia, no ST elevation',
-    Troponin: 'Negative',
-    CK: 'Mildly elevated',
-  };
+    /** get_vitals() return shape: client uses this to respond to tool calls or mock. */
+    const getVitalsResult = {
+      BP: '160/95',
+      HR: 110,
+      RR: 18,
+      Temp: '98.6°F',
+      O2Sat: 96,
+      ECG: 'Sinus tachycardia, no ST elevation',
+      Troponin: 'Negative',
+      CK: 'Mildly elevated',
+    };
 
-  log.info('Live session config requested');
-  return new Response(
-    JSON.stringify({
-      data: {
-        systemInstruction: DEFAULT_SYSTEM_INSTRUCTION,
-        tools,
-        /** Example response for get_vitals (client calls GET /api/osce/session/:sessionId/vitals and sends toolResponse with this shape). */
-        getVitalsExample: getVitalsResult,
-        responseModalities: ['AUDIO'],
-        speechConfig: { voiceName: 'Aoede' },
-        /** Include in first setup message to receive sessionResumptionUpdate; on reconnect pass stored newHandle as sessionResumption.handle so the Patient remembers context after WiFi drop. */
-        sessionResumption: {},
-        /** Client flow: on toolCall (get_vitals), GET /api/osce/session/:sessionId/vitals with auth, then send toolResponse with functionResponses[{ id, response: { vitals: {...} } }] to Gemini. */
-        toolHandlingHint: 'On server toolCall for get_vitals, fetch GET /api/osce/session/:sessionId/vitals and send toolResponse with matching id.',
-      },
-    }),
-    { status: 200, headers: { 'Content-Type': 'application/json' } }
-  );
-}, { source: 'query' });
+    log.info('Live session config requested');
+    return new Response(
+      JSON.stringify({
+        data: {
+          systemInstruction: DEFAULT_SYSTEM_INSTRUCTION,
+          tools,
+          /** Example response for get_vitals (client calls GET /api/osce/session/:sessionId/vitals and sends toolResponse with this shape). */
+          getVitalsExample: getVitalsResult,
+          responseModalities: ['AUDIO'],
+          speechConfig: { voiceName: 'Aoede' },
+          /** Include in first setup message to receive sessionResumptionUpdate; on reconnect pass stored newHandle as sessionResumption.handle so the Patient remembers context after WiFi drop. */
+          sessionResumption: {},
+          /** Client flow: on toolCall (get_vitals), GET /api/osce/session/:sessionId/vitals with auth, then send toolResponse with functionResponses[{ id, response: { vitals: {...} } }] to Gemini. */
+          toolHandlingHint:
+            'On server toolCall for get_vitals, fetch GET /api/osce/session/:sessionId/vitals and send toolResponse with matching id.',
+        },
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  },
+  { source: 'query' }
+);

@@ -1052,7 +1052,7 @@ async function mergeDuplicates(dryRun: boolean): Promise<number> {
               treatment: mergedContent.treatment || primary.treatment,
               synonyms: group.aliases
                 ? [...new Set([...((primary.synonyms as string[] | null) ?? []), ...group.aliases])]
-                : (primary.synonyms ?? undefined) as never,
+                : ((primary.synonyms ?? undefined) as never),
               updatedBy: 'condition-doctor',
             },
           });

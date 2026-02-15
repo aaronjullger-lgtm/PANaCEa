@@ -315,9 +315,13 @@ export function CalibrationProtocolUI({
       {/* Main progress display */}
       <div className="text-center py-3">
         <div className="inline-flex items-center gap-3">
-          <span className="text-5xl font-bold text-[var(--color-text-primary)] tabular-nums">{totalQuestions}</span>
+          <span className="text-5xl font-bold text-[var(--color-text-primary)] tabular-nums">
+            {totalQuestions}
+          </span>
           <span className="text-2xl text-[var(--color-text-muted)]">/</span>
-          <span className="text-2xl text-[var(--color-text-secondary)] tabular-nums">{CALIBRATION_TARGET}</span>
+          <span className="text-2xl text-[var(--color-text-secondary)] tabular-nums">
+            {CALIBRATION_TARGET}
+          </span>
         </div>
         <p className="text-sm text-[var(--color-text-muted)] mt-2">Questions to Full Prediction</p>
       </div>
@@ -353,8 +357,11 @@ export function CalibrationProtocolUI({
       {/* Next unlock teaser */}
       <div className="bg-[var(--color-bg-tertiary)]/50 border border-[var(--color-border)] rounded-xl p-4 text-center">
         <p className="text-sm text-[var(--color-text-secondary)]">
-          <span className="text-[var(--color-data-provisional)] font-semibold tabular-nums">{questionsToNext} questions</span> until
-          you unlock <span className="text-[var(--color-text-primary)] font-medium">{nextUnlock}</span>
+          <span className="text-[var(--color-data-provisional)] font-semibold tabular-nums">
+            {questionsToNext} questions
+          </span>{' '}
+          until you unlock{' '}
+          <span className="text-[var(--color-text-primary)] font-medium">{nextUnlock}</span>
         </p>
       </div>
 

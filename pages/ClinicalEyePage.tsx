@@ -65,7 +65,11 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
           prompt: prompt.trim(),
         }),
       });
-      const json = (await res.json()) as { error?: string; details?: string; data?: AnalyzeResponse['data'] };
+      const json = (await res.json()) as {
+        error?: string;
+        details?: string;
+        data?: AnalyzeResponse['data'];
+      };
       if (!res.ok) {
         setError(json.error || json.details || 'Analysis failed');
         return;
@@ -93,17 +97,14 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
           Back
         </button>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
             <Eye className="w-8 h-8" />
             Clinical Eye
           </h1>
           <p className="text-[var(--color-text-muted)] mt-1">
-            Upload a medical image (ECG, X-ray, etc.) and ask for analysis. The model can run code for precise measurements.
+            Upload a medical image (ECG, X-ray, etc.) and ask for analysis. The model can run code
+            for precise measurements.
           </p>
         </motion.div>
 
@@ -200,7 +201,9 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
             <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">Result</h2>
             {result.reasoning && result.reasoning.length > 0 && (
               <div className="mb-4">
-                <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-2">Reasoning / code trace</h3>
+                <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-2">
+                  Reasoning / code trace
+                </h3>
                 <pre className="text-xs text-[var(--color-text-primary)] bg-[var(--color-bg-primary)] p-3 rounded-lg overflow-auto max-h-40 whitespace-pre-wrap">
                   {result.reasoning.join('\n')}
                 </pre>

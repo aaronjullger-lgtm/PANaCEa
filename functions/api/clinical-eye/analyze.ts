@@ -62,10 +62,10 @@ export const onRequestPost = authenticatedEndpoint(AnalyzeBodySchema, async (con
   const { imageBase64, mimeType, prompt, thinkingBudget } = validated;
 
   if (imageBase64.length > MAX_IMAGE_BASE64) {
-    return new Response(
-      JSON.stringify({ error: 'Image too large (max ~4MB base64)' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Image too large (max ~4MB base64)' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const apiKey = env.GEMINI_API_KEY;
@@ -174,9 +174,9 @@ export const onRequestPost = authenticatedEndpoint(AnalyzeBodySchema, async (con
     );
   } catch (err) {
     log.error('Clinical Eye analyze error', err);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 });

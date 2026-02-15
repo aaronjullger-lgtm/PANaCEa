@@ -37,10 +37,10 @@ export const onRequestPost = authenticatedEndpoint(IngestSchema, async (context)
   const logger = createEndpointLogger('/api/admin/knowledge/ingest');
 
   if (!env.GEMINI_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: 'GEMINI_API_KEY not configured' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'GEMINI_API_KEY not configured' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const { content, fileUri, category, displayName, ttlSeconds } = validated.body;
@@ -57,12 +57,13 @@ export const onRequestPost = authenticatedEndpoint(IngestSchema, async (context)
   const ttl = ttlSeconds ?? TTL_24H;
   const name = displayName ?? DEFAULT_CACHE_DISPLAY_NAME;
 
-  let contents: Array<{ role: string; parts: Array<{ text?: string; fileData?: { fileUri: string; mimeType?: string } }> }>;
+  let contents: Array<{
+    role: string;
+    parts: Array<{ text?: string; fileData?: { fileUri: string; mimeType?: string } }>;
+  }>;
 
   if (hasContent) {
-    const grouped = category
-      ? `## ${category}\n\n${content.trim()}`
-      : content.trim();
+    const grouped = category ? `## ${category}\n\n${content.trim()}` : content.trim();
     contents = [{ role: 'user', parts: [{ text: grouped }] }];
   } else {
     contents = [
@@ -81,20 +82,20 @@ export const onRequestPost = authenticatedEndpoint(IngestSchema, async (context)
   };
 
   try {
-    const res = await fetch(
-      `${GEMINI_BASE}/v1beta/cachedContents?key=${env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      }
-    );
+    const res = await fetch(`${GEMINI_BASE}/v1beta/cachedContents?key=${env.GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
 
     if (!res.ok) {
       const text = await res.text();
       logger.warn('Gemini cache create failed', { status: res.status, text: text.slice(0, 300) });
       return new Response(
-        JSON.stringify({ error: `Failed to create cache: ${res.status}`, details: text.slice(0, 500) }),
+        JSON.stringify({
+          error: `Failed to create cache: ${res.status}`,
+          details: text.slice(0, 500),
+        }),
         { status: 502, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -108,10 +109,10 @@ export const onRequestPost = authenticatedEndpoint(IngestSchema, async (context)
     const expireTime = data.expiration?.expireTime ?? data.expireTime;
 
     if (!cacheName) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid cache response: missing name' }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Invalid cache response: missing name' }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     logger.info('PANCE knowledge cache created', {

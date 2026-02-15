@@ -26,7 +26,8 @@ export const onRequestPost = withMiddleware(
     if (!baseUrl) {
       return new Response(
         JSON.stringify({
-          error: 'Podcast generation is handled by the Node service. Set PODCAST_SERVICE_URL to proxy requests.',
+          error:
+            'Podcast generation is handled by the Node service. Set PODCAST_SERVICE_URL to proxy requests.',
           hint: 'Deploy podcast-service (e.g. to Cloud Run) and set PODCAST_SERVICE_URL to its URL.',
         }),
         { status: 501, headers: { 'Content-Type': 'application/json' } }
@@ -44,10 +45,10 @@ export const onRequestPost = withMiddleware(
         try {
           body = await request.json();
         } catch {
-          return new Response(
-            JSON.stringify({ error: 'Invalid JSON body' }),
-            { status: 400, headers: { 'Content-Type': 'application/json' } }
-          );
+          return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          });
         }
 
         headers.set('Content-Type', 'application/json');

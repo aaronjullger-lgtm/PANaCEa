@@ -1,6 +1,6 @@
 /**
  * Module Transition
- * 
+ *
  * Smooth animated transitions between modules with context preservation.
  * Supports: medical scan, zoom, fade, and crossfade animations.
  */
@@ -92,23 +92,21 @@ export function ModuleTransition({
               <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">
                 Transitioning: {fromModule} → {toModule}
               </h3>
-              
+
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs">
                     ✓
                   </div>
-                  <span className="text-[var(--color-text-secondary)]">
-                    Context preserved
-                  </span>
+                  <span className="text-[var(--color-text-secondary)]">Context preserved</span>
                 </div>
-                
+
                 {contextPreview.patientName && (
                   <div className="pl-8 text-[var(--color-text-muted)]">
                     Patient: {contextPreview.patientName}
                   </div>
                 )}
-                
+
                 {contextPreview.diagnosis && (
                   <div className="pl-8 text-[var(--color-text-muted)]">
                     Diagnosis: {contextPreview.diagnosis}

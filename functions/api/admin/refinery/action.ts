@@ -45,7 +45,9 @@ interface RefineryEnv {
   SUPABASE_SERVICE_ROLE_KEY?: string;
 }
 
-type ActionResult = { data: { success: true; message: string } } | { status: number; error: string };
+type ActionResult =
+  | { data: { success: true; message: string } }
+  | { status: number; error: string };
 
 function buildMediaApproveUpdate(
   _media: { rawStoragePath: string | null },
@@ -67,7 +69,8 @@ function buildMediaApproveUpdate(
     updatedAt: now,
     provenanceStatus: 'verified',
   };
-  if (payload?.isClassicPortrayal !== undefined) data.isClassicPortrayal = payload.isClassicPortrayal;
+  if (payload?.isClassicPortrayal !== undefined)
+    data.isClassicPortrayal = payload.isClassicPortrayal;
   if (payload?.modality != null) data.modality = payload.modality;
   if (payload?.correctDiagnosis != null) data.correctDiagnosis = payload.correctDiagnosis;
   if (payload?.conditionId != null) data.conditionId = payload.conditionId;

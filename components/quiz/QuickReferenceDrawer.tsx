@@ -61,7 +61,7 @@ const DrugSearchMini: React.FC<{ onNavigate: (path: string) => void; onClose: ()
           className="w-full pl-10 pr-4 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
         />
       </div>
-      
+
       {!query && (
         <div className="text-sm text-[var(--color-text-muted)] text-center py-8">
           Type a drug name to search
@@ -107,12 +107,8 @@ const LabValuesMini: React.FC<{ onNavigate: (path: string) => void; onClose: () 
             key={lab.name}
             className="p-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]"
           >
-            <div className="font-semibold text-[var(--color-text-primary)] text-sm">
-              {lab.name}
-            </div>
-            <div className="text-xs text-[var(--color-text-muted)] mt-1">
-              Normal: {lab.range}
-            </div>
+            <div className="font-semibold text-[var(--color-text-primary)] text-sm">{lab.name}</div>
+            <div className="text-xs text-[var(--color-text-muted)] mt-1">Normal: {lab.range}</div>
           </div>
         ))}
       </div>
@@ -151,9 +147,7 @@ const CalculatorsMini: React.FC<{ onNavigate: (path: string) => void; onClose: (
             <div className="font-semibold text-[var(--color-text-primary)] text-sm group-hover:text-[var(--color-accent)] transition-colors">
               {calc.name}
             </div>
-            <div className="text-xs text-[var(--color-text-muted)] mt-1">
-              {calc.formula}
-            </div>
+            <div className="text-xs text-[var(--color-text-muted)] mt-1">{calc.formula}</div>
           </button>
         ))}
       </div>
@@ -170,10 +164,7 @@ const CalculatorsMini: React.FC<{ onNavigate: (path: string) => void; onClose: (
 /**
  * Main Quick Reference Drawer
  */
-export const QuickReferenceDrawer: React.FC<QuickReferenceDrawerProps> = ({
-  isOpen,
-  onClose,
-}) => {
+export const QuickReferenceDrawer: React.FC<QuickReferenceDrawerProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ReferenceTab>('drugs');
 
@@ -207,9 +198,10 @@ export const QuickReferenceDrawer: React.FC<QuickReferenceDrawerProps> = ({
               onClick={() => setActiveTab(tab.id)}
               className={`
                 flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all
-                ${isActive
-                  ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-sm'
-                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
+                ${
+                  isActive
+                    ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] shadow-sm'
+                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
                 }
               `}
             >
@@ -222,12 +214,8 @@ export const QuickReferenceDrawer: React.FC<QuickReferenceDrawerProps> = ({
 
       {/* Content */}
       <div className="min-h-[300px]">
-        {activeTab === 'drugs' && (
-          <DrugSearchMini onNavigate={handleNavigate} onClose={onClose} />
-        )}
-        {activeTab === 'labs' && (
-          <LabValuesMini onNavigate={handleNavigate} onClose={onClose} />
-        )}
+        {activeTab === 'drugs' && <DrugSearchMini onNavigate={handleNavigate} onClose={onClose} />}
+        {activeTab === 'labs' && <LabValuesMini onNavigate={handleNavigate} onClose={onClose} />}
         {activeTab === 'calculators' && (
           <CalculatorsMini onNavigate={handleNavigate} onClose={onClose} />
         )}

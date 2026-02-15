@@ -45,9 +45,7 @@ export function ConditionFamilyView({
       if (!canonicalName) return;
       setLoading(true);
       try {
-        const res = await fetch(
-          `/ api / conditions / family / ${encodeURIComponent(canonicalName)} `
-        );
+        const res = await fetch(`/api/conditions/family/${encodeURIComponent(canonicalName)}`);
         if (res.ok) {
           const json = (await res.json()) as FamilyData | null;
           if (mounted) setData(json);

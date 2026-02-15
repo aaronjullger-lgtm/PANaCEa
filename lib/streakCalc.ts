@@ -109,7 +109,9 @@ export function computeCurrentStreak(input: StreakCalcInput): StreakCalcResult {
   // Reference: most recent goal day on or before today
   const reference = lastGoalDayOnOrBefore(todayNorm, streakGoalDays);
   const isActiveToday =
-    streakGoalDays === 'all' ? allKeys.has(toDateKey(todayNorm)) : allKeys.has(toDateKey(reference));
+    streakGoalDays === 'all'
+      ? allKeys.has(toDateKey(todayNorm))
+      : allKeys.has(toDateKey(reference));
 
   // Start expected from reference if active "today", else from previous goal day
   let expected = isActiveToday ? reference : previousGoalDay(reference, streakGoalDays);

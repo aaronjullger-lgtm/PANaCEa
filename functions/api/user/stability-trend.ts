@@ -51,13 +51,12 @@ export const onRequestGet = authenticatedEndpoint(
     const { env, auth, validated, request } = context;
     const logger = createEndpointLogger('/api/user/stability-trend');
     const sentryTraceId = getSentryTraceId(request);
-    let prisma: ReturnType<typeof createEdgePrismaClient> | null = createEdgePrismaClient(env.DATABASE_URL);
+    const prisma: ReturnType<typeof createEdgePrismaClient> | null = createEdgePrismaClient(
+      env.DATABASE_URL
+    );
 
     try {
-      const days = Math.min(
-        MAX_DAYS,
-        Math.max(1, Number.parseInt(validated?.days || '30', 10))
-      );
+      const days = Math.min(MAX_DAYS, Math.max(1, Number.parseInt(validated?.days || '30', 10)));
 
       const work = async () => {
         if (!prisma) throw new Error('No prisma');
@@ -94,7 +93,10 @@ export const onRequestGet = authenticatedEndpoint(
               const snapshotDate = new Date(snapshot.date);
               return snapshotDate >= cutoffDate;
             })
-            .map((snapshot: ReviewSnapshot) => ({ ...snapshot, conditionId: progress.conditionId }));
+            .map((snapshot: ReviewSnapshot) => ({
+              ...snapshot,
+              conditionId: progress.conditionId,
+            }));
           for (const s of snapshots) {
             if (totalPushed >= MAX_SNAPSHOTS) break;
             allSnapshots.push(s);
@@ -115,7 +117,10 @@ export const onRequestGet = authenticatedEndpoint(
           };
         }
 
-        const dateMap = new Map<string, { stabilities: number[]; conditions: Map<string, number> }>();
+        const dateMap = new Map<
+          string,
+          { stabilities: number[]; conditions: Map<string, number> }
+        >();
 
         reviewHistory.forEach((snapshot: ReviewSnapshot & { conditionId: string }) => {
           const date = snapshot.date?.split('T')[0] ?? '';
@@ -135,10 +140,12 @@ export const onRequestGet = authenticatedEndpoint(
               date,
               avgStability: Math.round(avgStability * 100) / 100,
               totalReviews: entry.stabilities.length,
-              conditions: Array.from(entry.conditions.entries()).map(([conditionId, stability]) => ({
-                conditionId,
-                stability: Math.round(stability * 100) / 100,
-              })),
+              conditions: Array.from(entry.conditions.entries()).map(
+                ([conditionId, stability]) => ({
+                  conditionId,
+                  stability: Math.round(stability * 100) / 100,
+                })
+              ),
             };
           })
           .sort((a, b) => a.date.localeCompare(b.date));
@@ -192,7 +199,9 @@ export const onRequestGet = authenticatedEndpoint(
         status: isTimeout ? 503 : 500,
         data: {
           ...EMPTY_TREND_RESPONSE,
-          error: isTimeout ? 'Request timed out. Please try again.' : 'Failed to fetch stability trend',
+          error: isTimeout
+            ? 'Request timed out. Please try again.'
+            : 'Failed to fetch stability trend',
           ...(sentryTraceId ? { sentryTraceId } : {}),
         },
       };

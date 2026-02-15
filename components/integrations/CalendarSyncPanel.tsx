@@ -183,7 +183,9 @@ export const CalendarSyncPanel: React.FC<CalendarSyncPanelProps> = ({
                     - {week.endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 </div>
-                <p className="text-xs text-[var(--color-text-secondary)]">{week.topics.join(', ')}</p>
+                <p className="text-xs text-[var(--color-text-secondary)]">
+                  {week.topics.join(', ')}
+                </p>
               </div>
             ))}
           </div>

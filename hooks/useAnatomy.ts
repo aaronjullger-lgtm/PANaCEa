@@ -146,22 +146,14 @@ export function useAnatomy(options: UseAnatomyOptions = {}) {
         if (model.cameraPosition) {
           setCamera((prev) => ({
             ...prev,
-            position: [
-              model.cameraPosition!.x,
-              model.cameraPosition!.y,
-              model.cameraPosition!.z,
-            ],
+            position: [model.cameraPosition!.x, model.cameraPosition!.y, model.cameraPosition!.z],
           }));
         }
 
         if (model.cameraTarget) {
           setCamera((prev) => ({
             ...prev,
-            target: [
-              model.cameraTarget!.x,
-              model.cameraTarget!.y,
-              model.cameraTarget!.z,
-            ],
+            target: [model.cameraTarget!.x, model.cameraTarget!.y, model.cameraTarget!.z],
           }));
         }
 

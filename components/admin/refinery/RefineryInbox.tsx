@@ -24,7 +24,8 @@ interface ActionResponse {
 function serializeItem(item: RefineryItem): RefineryItem {
   return {
     ...item,
-    timestamp: typeof item.timestamp === 'string' ? item.timestamp : new Date(item.timestamp).toISOString(),
+    timestamp:
+      typeof item.timestamp === 'string' ? item.timestamp : new Date(item.timestamp).toISOString(),
   };
 }
 
@@ -66,10 +67,16 @@ export function RefineryInbox() {
   }, [fetchInbox]);
 
   const buildActionBody = useCallback(
-    (item: RefineryItem, id: string, action: 'approve' | 'reject', payload?: MediaApprovePayload) => {
+    (
+      item: RefineryItem,
+      id: string,
+      action: 'approve' | 'reject',
+      payload?: MediaApprovePayload
+    ) => {
       const body: Record<string, unknown> = { type: item.type, id, action };
       if (item.type !== 'media' || action !== 'approve' || !payload) return body;
-      if (payload.isClassicPortrayal !== undefined) body.isClassicPortrayal = payload.isClassicPortrayal;
+      if (payload.isClassicPortrayal !== undefined)
+        body.isClassicPortrayal = payload.isClassicPortrayal;
       if (payload.modality != null) body.modality = payload.modality;
       if (payload.correctDiagnosis != null) body.correctDiagnosis = payload.correctDiagnosis;
       if (payload.conditionId != null) body.conditionId = payload.conditionId;
@@ -136,7 +143,11 @@ export function RefineryInbox() {
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--color-data-fail)]/20 hover:opacity-90 text-sm font-medium disabled:opacity-50"
               aria-label="Retry"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4" />
+              )}
               Retry
             </button>
           </div>

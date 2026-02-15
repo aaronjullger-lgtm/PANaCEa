@@ -1,6 +1,6 @@
 /**
  * ProgressRingWidget - Persistent curriculum completion indicator
- * 
+ *
  * Shows at-a-glance curriculum coverage as a circular progress ring.
  * Floats in top-right corner; expands to detailed breakdown on click.
  */
@@ -143,9 +143,9 @@ export const ProgressRingWidget: React.FC<ProgressRingWidgetProps> = ({
                   strokeWidth="10"
                   strokeLinecap="round"
                   strokeDasharray={2 * Math.PI * 56}
-                  strokeDashoffset={(2 * Math.PI * 56) * (1 - percent / 100)}
+                  strokeDashoffset={2 * Math.PI * 56 * (1 - percent / 100)}
                   initial={{ strokeDashoffset: 2 * Math.PI * 56 }}
-                  animate={{ strokeDashoffset: (2 * Math.PI * 56) * (1 - percent / 100) }}
+                  animate={{ strokeDashoffset: 2 * Math.PI * 56 * (1 - percent / 100) }}
                   transition={{ duration: 1, ease: 'easeOut' }}
                 />
               </svg>
@@ -159,10 +159,10 @@ export const ProgressRingWidget: React.FC<ProgressRingWidgetProps> = ({
 
             <p className="text-sm text-[var(--color-text-secondary)] max-w-sm mx-auto">
               {percent >= 80
-                ? 'Excellent progress! You\'ve covered most of the curriculum.'
+                ? "Excellent progress! You've covered most of the curriculum."
                 : percent >= 50
-                ? 'You\'re making solid progress. Keep building your foundation.'
-                : 'Early stages - focus on consistent daily practice.'}
+                  ? "You're making solid progress. Keep building your foundation."
+                  : 'Early stages - focus on consistent daily practice.'}
             </p>
           </div>
 
@@ -195,11 +195,15 @@ export const ProgressRingWidget: React.FC<ProgressRingWidgetProps> = ({
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`text-sm font-bold ${
-                          sys.percent >= 80 ? 'text-[var(--color-data-pass)]' : 
-                          sys.percent >= 50 ? 'text-[var(--color-accent)]' : 
-                          'text-[var(--color-data-provisional)]'
-                        }`}>
+                        <span
+                          className={`text-sm font-bold ${
+                            sys.percent >= 80
+                              ? 'text-[var(--color-data-pass)]'
+                              : sys.percent >= 50
+                                ? 'text-[var(--color-accent)]'
+                                : 'text-[var(--color-data-provisional)]'
+                          }`}
+                        >
                           {Math.round(sys.percent)}%
                         </span>
                         {onSystemClick && (
@@ -207,14 +211,16 @@ export const ProgressRingWidget: React.FC<ProgressRingWidgetProps> = ({
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Progress bar */}
                     <div className="h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                       <motion.div
                         className={`h-full rounded-full ${
-                          sys.percent >= 80 ? 'bg-[var(--color-data-pass)]' : 
-                          sys.percent >= 50 ? 'bg-[var(--color-accent)]' : 
-                          'bg-[var(--color-data-provisional)]'
+                          sys.percent >= 80
+                            ? 'bg-[var(--color-data-pass)]'
+                            : sys.percent >= 50
+                              ? 'bg-[var(--color-accent)]'
+                              : 'bg-[var(--color-data-provisional)]'
                         }`}
                         initial={{ width: 0 }}
                         animate={{ width: `${sys.percent}%` }}

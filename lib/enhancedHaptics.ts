@@ -1,6 +1,6 @@
 /**
  * Enhanced Haptic Feedback
- * 
+ *
  * Extends base haptic feedback with celebration patterns for streaks,
  * milestones, and achievements. Provides richer tactile feedback for
  * motivational moments.
@@ -21,13 +21,13 @@ const PATTERNS = {
   selection: { pattern: [10], intensity: 'light' as const },
   correct: { pattern: [30], intensity: 'medium' as const },
   incorrect: { pattern: [50, 50, 50], intensity: 'medium' as const },
-  
+
   // New celebration patterns
   streak: { pattern: [20, 40, 20], intensity: 'medium' as const },
   milestone: { pattern: [30, 50, 30, 50, 30], intensity: 'heavy' as const },
   goalComplete: { pattern: [50, 100, 50, 100, 50], intensity: 'heavy' as const },
   levelUp: { pattern: [40, 60, 40, 60, 80], intensity: 'heavy' as const },
-  
+
   // Soft feedback
   buttonPress: { pattern: [8], intensity: 'light' as const },
   toggle: { pattern: [15], intensity: 'light' as const },
@@ -38,11 +38,7 @@ const PATTERNS = {
  * Check if device supports haptic feedback
  */
 function supportsHaptics(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    'navigator' in window &&
-    'vibrate' in navigator
-  );
+  return typeof window !== 'undefined' && 'navigator' in window && 'vibrate' in navigator;
 }
 
 /**
@@ -50,7 +46,7 @@ function supportsHaptics(): boolean {
  */
 function triggerPattern(pattern: HapticPattern): void {
   if (!supportsHaptics()) return;
-  
+
   try {
     // Check if vibration is allowed (some browsers require user gesture)
     navigator.vibrate(pattern.pattern);
@@ -70,11 +66,11 @@ export const enhancedHaptics = {
   selection: () => baseFeedback.selection(),
   correct: () => baseFeedback.correct(),
   incorrect: () => baseFeedback.incorrect(),
-  
+
   /**
    * Celebration patterns for motivational moments
    */
-  
+
   /** Fired on streak milestones (3, 5, 10+ correct in a row) */
   streak: (streakCount: number) => {
     if (streakCount >= 10) {
@@ -85,41 +81,41 @@ export const enhancedHaptics = {
       triggerPattern(PATTERNS.streak); // Light celebration for 3+
     }
   },
-  
+
   /** Fired on goal completion (daily target, weekly goal, etc.) */
   goalComplete: () => {
     triggerPattern(PATTERNS.goalComplete);
   },
-  
+
   /** Fired on level up or mastery threshold */
   levelUp: () => {
     triggerPattern(PATTERNS.levelUp);
   },
-  
+
   /** Fired on achievement unlock */
   achievementUnlock: () => {
     triggerPattern(PATTERNS.milestone);
   },
-  
+
   /**
    * Soft feedback for UI interactions
    */
-  
+
   /** Light tap on button press */
   buttonPress: () => {
     triggerPattern(PATTERNS.buttonPress);
   },
-  
+
   /** Light tap on toggle switch */
   toggle: () => {
     triggerPattern(PATTERNS.toggle);
   },
-  
+
   /** Light tap on swipe navigation */
   swipe: () => {
     triggerPattern(PATTERNS.swipe);
   },
-  
+
   /**
    * Check if haptics are supported
    */

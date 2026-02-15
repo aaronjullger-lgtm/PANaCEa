@@ -143,7 +143,7 @@ export class RealTimeCollaborationService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
-  private eventListeners: Map<string, Function[]> = new Map();
+  private eventListeners: Map<string, Array<(...args: unknown[]) => void>> = new Map();
   private presenceInterval: NodeJS.Timeout | null = null;
 
   constructor(private apiBaseUrl: string = '') {
@@ -234,7 +234,7 @@ export class RealTimeCollaborationService {
         type: 'presence',
         userId,
         timestamp: new Date().toISOString(),
-        status: 'online'
+        status: 'online',
       });
     }, 30000); // Every 30 seconds
   }
@@ -288,14 +288,14 @@ export class RealTimeCollaborationService {
   // EVENT SYSTEM
   // ===========================================================================
 
-  on(event: string, callback: Function): void {
+  on(event: string, callback: (...args: unknown[]) => void): void {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, []);
     }
     this.eventListeners.get(event)!.push(callback);
   }
 
-  off(event: string, callback: Function): void {
+  off(event: string, callback: (...args: unknown[]) => void): void {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
       const index = listeners.indexOf(callback);
@@ -308,7 +308,7 @@ export class RealTimeCollaborationService {
   private emit(event: string, data: any): void {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
-      listeners.forEach(callback => {
+      listeners.forEach((callback) => {
         try {
           callback(data);
         } catch (error) {
@@ -327,7 +327,7 @@ export class RealTimeCollaborationService {
       type: 'join-session',
       sessionId,
       userId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -336,11 +336,17 @@ export class RealTimeCollaborationService {
       type: 'leave-session',
       sessionId,
       userId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
-  async submitAnswer(sessionId: string, questionId: string, userId: string, answer: number, timeSpent: number): Promise<void> {
+  async submitAnswer(
+    sessionId: string,
+    questionId: string,
+    userId: string,
+    answer: number,
+    timeSpent: number
+  ): Promise<void> {
     this.send({
       type: 'submit-answer',
       sessionId,
@@ -348,18 +354,23 @@ export class RealTimeCollaborationService {
       userId,
       answer,
       timeSpent,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
-  async sendChatMessage(sessionId: string, userId: string, content: string, type: 'text' | 'question' | 'answer' = 'text'): Promise<void> {
+  async sendChatMessage(
+    sessionId: string,
+    userId: string,
+    content: string,
+    type: 'text' | 'question' | 'answer' = 'text'
+  ): Promise<void> {
     this.send({
       type: 'chat-message',
       sessionId,
       userId,
       content,
       messageType: type,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -369,17 +380,21 @@ export class RealTimeCollaborationService {
       sessionId,
       userId,
       questionId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
-  async updatePresence(userId: string, status: PeerPresence['status'], activity?: PeerPresence['currentActivity']): Promise<void> {
+  async updatePresence(
+    userId: string,
+    status: PeerPresence['status'],
+    activity?: PeerPresence['currentActivity']
+  ): Promise<void> {
     this.send({
       type: 'update-presence',
       userId,
       status,
       activity,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -398,31 +413,34 @@ export class RealTimeCollaborationService {
         peerAverage: 0.72,
         percentile: 90,
         rank: 15,
-        totalPeers: 150
+        totalPeers: 150,
       },
       strengths: system ? [`Strong in ${system}`] : ['Cardiovascular', 'Pulmonary'],
       weaknesses: system ? [`Needs improvement in ${system}`] : ['GI/Nutrition', 'Musculoskeletal'],
       recommendations: [
         'Focus on GI/Nutrition system questions',
         'Join a study group for Musculoskeletal topics',
-        'Try contrastive drills for weak areas'
-      ]
+        'Try contrastive drills for weak areas',
+      ],
     };
   }
 
-  async getLiveLeaderboard(groupId: string, period: 'daily' | 'weekly' | 'monthly' = 'weekly'): Promise<LiveLeaderboardEntry[]> {
+  async getLiveLeaderboard(
+    groupId: string,
+    period: 'daily' | 'weekly' | 'monthly' = 'weekly'
+  ): Promise<LiveLeaderboardEntry[]> {
     // In a real implementation, this would fetch from an API
     // For now, return mock data
     return Array.from({ length: 10 }, (_, i) => ({
       userId: `user-${i + 1}`,
       displayName: `Student ${i + 1}`,
       rank: i + 1,
-      score: 1000 - (i * 100),
-      questionsAnswered: 50 - (i * 5),
-      accuracy: 0.9 - (i * 0.05),
+      score: 1000 - i * 100,
+      questionsAnswered: 50 - i * 5,
+      accuracy: 0.9 - i * 0.05,
       streak: 7 - i,
       trend: i < 3 ? 'up' : i > 7 ? 'down' : 'stable',
-      delta: i < 5 ? 50 : -20
+      delta: i < 5 ? 50 : -20,
     }));
   }
 
@@ -436,7 +454,7 @@ export class RealTimeCollaborationService {
 
   getConnectionStatus(): 'connected' | 'connecting' | 'disconnected' | 'error' {
     if (!this.ws) return 'disconnected';
-    
+
     switch (this.ws.readyState) {
       case WebSocket.CONNECTING:
         return 'connecting';
@@ -468,14 +486,16 @@ export interface UseRealTimeCollaborationOptions {
 
 export function useRealTimeCollaboration(options: UseRealTimeCollaborationOptions) {
   const { userId, token, autoConnect = true, onConnected, onDisconnected, onError } = options;
-  
+
   const [service] = useState(() => new RealTimeCollaborationService());
   const [isConnected, setIsConnected] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'error'>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<
+    'connected' | 'connecting' | 'disconnected' | 'error'
+  >('disconnected');
   const [presence, setPresence] = useState<PeerPresence[]>([]);
   const [activeSessions, setActiveSessions] = useState<LiveSession[]>([]);
   const [chatMessages, setChatMessages] = useState<CollaborationMessage[]>([]);
-  
+
   const serviceRef = useRef(service);
 
   // Connect on mount if autoConnect is true
@@ -519,7 +539,7 @@ export function useRealTimeCollaboration(options: UseRealTimeCollaborationOption
     });
 
     svc.on('chat-message', (data: CollaborationMessage) => {
-      setChatMessages(prev => [...prev, data]);
+      setChatMessages((prev) => [...prev, data]);
     });
 
     return () => {
@@ -549,33 +569,54 @@ export function useRealTimeCollaboration(options: UseRealTimeCollaborationOption
     setConnectionStatus('disconnected');
   }, []);
 
-  const joinSession = useCallback(async (sessionId: string) => {
-    await serviceRef.current.joinSession(sessionId, userId);
-  }, [userId]);
+  const joinSession = useCallback(
+    async (sessionId: string) => {
+      await serviceRef.current.joinSession(sessionId, userId);
+    },
+    [userId]
+  );
 
-  const leaveSession = useCallback(async (sessionId: string) => {
-    await serviceRef.current.leaveSession(sessionId, userId);
-  }, [userId]);
+  const leaveSession = useCallback(
+    async (sessionId: string) => {
+      await serviceRef.current.leaveSession(sessionId, userId);
+    },
+    [userId]
+  );
 
-  const submitAnswer = useCallback(async (sessionId: string, questionId: string, answer: number, timeSpent: number) => {
-    await serviceRef.current.submitAnswer(sessionId, questionId, userId, answer, timeSpent);
-  }, [userId]);
+  const submitAnswer = useCallback(
+    async (sessionId: string, questionId: string, answer: number, timeSpent: number) => {
+      await serviceRef.current.submitAnswer(sessionId, questionId, userId, answer, timeSpent);
+    },
+    [userId]
+  );
 
-  const sendChatMessage = useCallback(async (sessionId: string, content: string, type: 'text' | 'question' | 'answer' = 'text') => {
-    await serviceRef.current.sendChatMessage(sessionId, userId, content, type);
-  }, [userId]);
+  const sendChatMessage = useCallback(
+    async (sessionId: string, content: string, type: 'text' | 'question' | 'answer' = 'text') => {
+      await serviceRef.current.sendChatMessage(sessionId, userId, content, type);
+    },
+    [userId]
+  );
 
-  const updatePresence = useCallback(async (status: PeerPresence['status'], activity?: PeerPresence['currentActivity']) => {
-    await serviceRef.current.updatePresence(userId, status, activity);
-  }, [userId]);
+  const updatePresence = useCallback(
+    async (status: PeerPresence['status'], activity?: PeerPresence['currentActivity']) => {
+      await serviceRef.current.updatePresence(userId, status, activity);
+    },
+    [userId]
+  );
 
-  const getPeerBenchmark = useCallback(async (system?: string) => {
-    return await serviceRef.current.getPeerBenchmark(userId, system);
-  }, [userId]);
+  const getPeerBenchmark = useCallback(
+    async (system?: string) => {
+      return await serviceRef.current.getPeerBenchmark(userId, system);
+    },
+    [userId]
+  );
 
-  const getLiveLeaderboard = useCallback(async (groupId: string, period: 'daily' | 'weekly' | 'monthly' = 'weekly') => {
-    return await serviceRef.current.getLiveLeaderboard(groupId, period);
-  }, []);
+  const getLiveLeaderboard = useCallback(
+    async (groupId: string, period: 'daily' | 'weekly' | 'monthly' = 'weekly') => {
+      return await serviceRef.current.getLiveLeaderboard(groupId, period);
+    },
+    []
+  );
 
   return {
     service: serviceRef.current,
@@ -592,6 +633,6 @@ export function useRealTimeCollaboration(options: UseRealTimeCollaborationOption
     sendChatMessage,
     updatePresence,
     getPeerBenchmark,
-    getLiveLeaderboard
+    getLiveLeaderboard,
   };
 }

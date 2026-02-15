@@ -60,10 +60,7 @@ export const onRequestPost = authenticatedEndpoint(CustomSessionSchema, async (c
     }
 
     // Build where for Question model (no status/approval field)
-    const whereClause =
-      whereConditions.length > 0
-        ? { AND: whereConditions }
-        : {};
+    const whereClause = whereConditions.length > 0 ? { AND: whereConditions } : {};
     const poolQuestions = await prisma.question.findMany({
       where: whereClause,
       select: {
@@ -99,8 +96,7 @@ export const onRequestPost = authenticatedEndpoint(CustomSessionSchema, async (c
     const shuffled = shuffleArray(weightedQuestions);
     const selectedQuestions = shuffled.slice(0, requestedCount);
 
-    const optionsArr = (opts: unknown): string[] =>
-      Array.isArray(opts) ? opts as string[] : [];
+    const optionsArr = (opts: unknown): string[] => (Array.isArray(opts) ? (opts as string[]) : []);
 
     const questions = selectedQuestions.map((q) => {
       const opts = optionsArr(q.options);

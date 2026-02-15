@@ -100,7 +100,7 @@ export function useLoadingState(
     progressIntervalRef.current = setInterval(() => {
       if (startTimeRef.current) {
         const elapsed = Date.now() - startTimeRef.current;
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           elapsedTime: elapsed,
           // Update estimated remaining if we have an estimated duration
@@ -112,36 +112,39 @@ export function useLoadingState(
     }, 100); // Update every 100ms for smooth progress
   }, [estimatedDurationMs]);
 
-  const start = useCallback((initialProgress = 0) => {
-    cleanup();
-    
-    startTimeRef.current = Date.now();
-    setState({
-      isLoading: true,
-      error: null,
-      progress: showProgress ? initialProgress : null,
-      elapsedTime: 0,
-      hasTimedOut: false,
-      estimatedRemaining: estimatedDurationMs || null,
-    });
+  const start = useCallback(
+    (initialProgress = 0) => {
+      cleanup();
 
-    startElapsedTimer();
+      startTimeRef.current = Date.now();
+      setState({
+        isLoading: true,
+        error: null,
+        progress: showProgress ? initialProgress : null,
+        elapsedTime: 0,
+        hasTimedOut: false,
+        estimatedRemaining: estimatedDurationMs || null,
+      });
 
-    // Set timeout
-    if (timeoutMs > 0) {
-      timeoutRef.current = setTimeout(() => {
-        setState(prev => ({
-          ...prev,
-          hasTimedOut: true,
-          isLoading: false,
-        }));
-        onTimeout?.();
-      }, timeoutMs);
-    }
-  }, [cleanup, showProgress, estimatedDurationMs, timeoutMs, startElapsedTimer, onTimeout]);
+      startElapsedTimer();
+
+      // Set timeout
+      if (timeoutMs > 0) {
+        timeoutRef.current = setTimeout(() => {
+          setState((prev) => ({
+            ...prev,
+            hasTimedOut: true,
+            isLoading: false,
+          }));
+          onTimeout?.();
+        }, timeoutMs);
+      }
+    },
+    [cleanup, showProgress, estimatedDurationMs, timeoutMs, startElapsedTimer, onTimeout]
+  );
 
   const updateProgress = useCallback((progress: number) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       progress: Math.min(100, Math.max(0, progress)),
     }));
@@ -149,7 +152,7 @@ export function useLoadingState(
 
   const complete = useCallback(() => {
     cleanup();
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isLoading: false,
       progress: showProgress ? 100 : null,
@@ -158,16 +161,19 @@ export function useLoadingState(
     onComplete?.();
   }, [cleanup, showProgress, onComplete]);
 
-  const setError = useCallback((error: string) => {
-    cleanup();
-    setState(prev => ({
-      ...prev,
-      isLoading: false,
-      error,
-      hasTimedOut: false,
-    }));
-    onError?.(error);
-  }, [cleanup, onError]);
+  const setError = useCallback(
+    (error: string) => {
+      cleanup();
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error,
+        hasTimedOut: false,
+      }));
+      onError?.(error);
+    },
+    [cleanup, onError]
+  );
 
   const reset = useCallback(() => {
     cleanup();
@@ -227,26 +233,35 @@ export function useProgressLoading(
     /** Callback to update progress at regular intervals */
     onProgressUpdate?: (progress: number, elapsed: number) => void;
   } = {}
-): [LoadingState, LoadingActions & {
-  /** Increment progress by a specific amount */
-  incrementProgress: (amount: number) => void;
-  /** Set progress to a specific value */
-  setProgress: (progress: number) => void;
-}] {
+): [
+  LoadingState,
+  LoadingActions & {
+    /** Increment progress by a specific amount */
+    incrementProgress: (amount: number) => void;
+    /** Set progress to a specific value */
+    setProgress: (progress: number) => void;
+  },
+] {
   const [state, actions] = useLoadingState({
     ...options,
     showProgress: true,
   });
 
-  const incrementProgress = useCallback((amount: number) => {
-    if (state.progress !== null) {
-      actions.updateProgress(state.progress + amount);
-    }
-  }, [state.progress, actions]);
+  const incrementProgress = useCallback(
+    (amount: number) => {
+      if (state.progress !== null) {
+        actions.updateProgress(state.progress + amount);
+      }
+    },
+    [state.progress, actions]
+  );
 
-  const setProgress = useCallback((progress: number) => {
-    actions.updateProgress(progress);
-  }, [actions]);
+  const setProgress = useCallback(
+    (progress: number) => {
+      actions.updateProgress(progress);
+    },
+    [actions]
+  );
 
   return [state, { ...actions, incrementProgress, setProgress }];
 }
@@ -266,19 +281,21 @@ export function useMultiLoading(
   overallProgress: number;
 } {
   const [states, setStates] = useState<LoadingState[]>(
-    Array(count).fill(null).map(() => ({
-      isLoading: false,
-      error: null,
-      progress: null,
-      elapsedTime: 0,
-      hasTimedOut: false,
-      estimatedRemaining: null,
-    }))
+    Array(count)
+      .fill(null)
+      .map(() => ({
+        isLoading: false,
+        error: null,
+        progress: null,
+        elapsedTime: 0,
+        hasTimedOut: false,
+        estimatedRemaining: null,
+      }))
   );
 
   const actions = states.map((_, index) => {
     const updateState = (updater: (prev: LoadingState) => LoadingState) => {
-      setStates(prev => {
+      setStates((prev) => {
         const newStates = [...prev];
         newStates[index] = updater(newStates[index]);
         return newStates;
@@ -287,7 +304,7 @@ export function useMultiLoading(
 
     return {
       start: (initialProgress?: number) => {
-        updateState(prev => ({
+        updateState((prev) => ({
           ...prev,
           isLoading: true,
           error: null,
@@ -297,13 +314,13 @@ export function useMultiLoading(
         }));
       },
       updateProgress: (progress: number) => {
-        updateState(prev => ({
+        updateState((prev) => ({
           ...prev,
           progress: Math.min(100, Math.max(0, progress)),
         }));
       },
       complete: () => {
-        updateState(prev => ({
+        updateState((prev) => ({
           ...prev,
           isLoading: false,
           progress: options.showProgress ? 100 : null,
@@ -312,7 +329,7 @@ export function useMultiLoading(
         options.onComplete?.();
       },
       setError: (error: string) => {
-        updateState(prev => ({
+        updateState((prev) => ({
           ...prev,
           isLoading: false,
           error,
@@ -331,7 +348,7 @@ export function useMultiLoading(
         }));
       },
       retry: () => {
-        updateState(prev => ({
+        updateState((prev) => ({
           ...prev,
           isLoading: true,
           error: null,
@@ -343,13 +360,14 @@ export function useMultiLoading(
     };
   });
 
-  const allComplete = states.every(s => !s.isLoading && !s.error);
-  const anyLoading = states.some(s => s.isLoading);
-  const anyError = states.some(s => s.error !== null);
-  
-  const overallProgress = states.reduce((total, state) => {
-    return total + (state.progress || 0);
-  }, 0) / count;
+  const allComplete = states.every((s) => !s.isLoading && !s.error);
+  const anyLoading = states.some((s) => s.isLoading);
+  const anyError = states.some((s) => s.error !== null);
+
+  const overallProgress =
+    states.reduce((total, state) => {
+      return total + (state.progress || 0);
+    }, 0) / count;
 
   return {
     states,

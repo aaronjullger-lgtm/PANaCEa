@@ -9,19 +9,19 @@
  * Requires CURSOR_AGENTS_API_KEY in env (or .env). Optional: CURSOR_AGENTS_REPO (defaults to current git remote).
  */
 
-import { execSync } from "node:child_process";
-import { config } from "dotenv";
+import { execSync } from 'node:child_process';
+import { config } from 'dotenv';
 
-config({ path: ".env.local" });
-config({ path: ".env" });
+config({ path: '.env.local' });
+config({ path: '.env' });
 
-import { launchAgent } from "./client.js";
+import { launchAgent } from './client.js';
 
 function getRepoFromGit(): string | undefined {
   try {
-    const out = execSync("git config --get remote.origin.url", { encoding: "utf8" }).trim();
-    if (out.startsWith("https://github.com/") || out.startsWith("git@github.com:")) {
-      return out.replace(/^git@github.com:/, "https://github.com/").replace(/\.git$/, "");
+    const out = execSync('git config --get remote.origin.url', { encoding: 'utf8' }).trim();
+    if (out.startsWith('https://github.com/') || out.startsWith('git@github.com:')) {
+      return out.replace(/^git@github.com:/, 'https://github.com/').replace(/\.git$/, '');
     }
     return out;
   } catch {
@@ -31,27 +31,31 @@ function getRepoFromGit(): string | undefined {
 
 async function main() {
   const args = process.argv.slice(2);
-  let instruction = "";
-  let branch = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || "main";
+  let instruction = '';
+  let branch = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || 'main';
   let repo = process.env.CURSOR_AGENTS_REPO || process.env.GITHUB_REPOSITORY;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--instruction" || args[i] === "-i") {
-      instruction = args[++i] ?? "";
-    } else if (args[i] === "--branch" || args[i] === "-b") {
+    if (args[i] === '--instruction' || args[i] === '-i') {
+      instruction = args[++i] ?? '';
+    } else if (args[i] === '--branch' || args[i] === '-b') {
       branch = args[++i] ?? branch;
-    } else if (args[i] === "--repo" || args[i] === "-r") {
+    } else if (args[i] === '--repo' || args[i] === '-r') {
       repo = args[++i] ?? repo;
     }
   }
 
   if (!instruction.trim()) {
-    console.error("Usage: npx tsx scripts/cloud-agents/trigger.ts --instruction \"<task>\" [--branch BRANCH] [--repo URL]");
+    console.error(
+      'Usage: npx tsx scripts/cloud-agents/trigger.ts --instruction "<task>" [--branch BRANCH] [--repo URL]'
+    );
     process.exit(1);
   }
 
-  const repository = repo?.includes("/")
-    ? (repo.startsWith("http") ? repo : `https://github.com/${repo}`)
+  const repository = repo?.includes('/')
+    ? repo.startsWith('http')
+      ? repo
+      : `https://github.com/${repo}`
     : getRepoFromGit();
 
   const result = await launchAgent({
@@ -61,8 +65,8 @@ async function main() {
     autoCreatePr: false,
   });
 
-  console.log("Agent launched:", result.id);
-  console.log("(Fire-and-forget; check Cursor Dashboard or webhook for status.)");
+  console.log('Agent launched:', result.id);
+  console.log('(Fire-and-forget; check Cursor Dashboard or webhook for status.)');
 }
 
 main().catch((err) => {

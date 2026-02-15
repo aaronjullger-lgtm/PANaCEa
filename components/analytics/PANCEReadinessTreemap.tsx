@@ -45,7 +45,16 @@ function renderTreemapContent(props: {
   masteryPercent?: number;
   volume?: number;
 }) {
-  const { x = 0, y = 0, width = 0, height = 0, name = '', depth = 0, masteryPercent = 0, volume = 0 } = props;
+  const {
+    x = 0,
+    y = 0,
+    width = 0,
+    height = 0,
+    name = '',
+    depth = 0,
+    masteryPercent = 0,
+    volume = 0,
+  } = props;
   if (width <= 0 || height <= 0) return <g />;
   const fill = getMasteryColor(masteryPercent, volume);
   const opacity = depth === 0 ? 0.85 : 0.75;
@@ -129,7 +138,9 @@ export const PANCEReadinessTreemap: React.FC<PANCEReadinessTreemapProps> = ({
   };
 
   return (
-    <div className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-4 ${className}`}>
+    <div
+      className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-4 ${className}`}
+    >
       <div className="flex items-center gap-2 mb-3">
         {drilled && (
           <button
@@ -154,7 +165,14 @@ export const PANCEReadinessTreemap: React.FC<PANCEReadinessTreemapProps> = ({
             aspectRatio={4 / 3}
             stroke="var(--color-border)"
             content={(props) => {
-              const p = props as unknown as { payload?: { name?: string; masteryPercent?: number; volume?: number }; x?: number; y?: number; width?: number; height?: number; depth?: number };
+              const p = props as unknown as {
+                payload?: { name?: string; masteryPercent?: number; volume?: number };
+                x?: number;
+                y?: number;
+                width?: number;
+                height?: number;
+                depth?: number;
+              };
               return renderTreemapContent({
                 ...p,
                 name: p.payload?.name,
@@ -168,7 +186,8 @@ export const PANCEReadinessTreemap: React.FC<PANCEReadinessTreemapProps> = ({
       </div>
       <div className="flex flex-wrap gap-4 mt-2 text-xs text-[var(--color-text-muted)]">
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-[var(--color-bg-tertiary)] opacity-80" /> Not Yet Studied
+          <span className="w-3 h-3 rounded bg-[var(--color-bg-tertiary)] opacity-80" /> Not Yet
+          Studied
         </span>
         <span className="flex items-center gap-1">
           <span className="w-3 h-3 rounded bg-[var(--color-data-fail)] opacity-80" /> Weak

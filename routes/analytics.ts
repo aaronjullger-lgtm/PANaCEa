@@ -161,96 +161,101 @@ router.post('/soap-note', async (req: Request, res: Response) => {
  * GET /performance-deltas
  * Computes performance deltas for a user compared to their cohort.
  */
-router.get('/performance-deltas', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const userId = req.auth?.userId;
-    if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
-    const cohortId = req.query.cohortId as string | undefined;
-
-    // Use dynamic import to avoid circular cycles if service imports routes (unlikely but safe)
-    const { generatePeerComparison, getCohortBenchmarks } =
-      await import('../lib/services/analyticsService');
-
-    const peerComparison = await generatePeerComparison(userId, cohortId);
-
-    let effectiveCohortId = cohortId;
-    if (!effectiveCohortId) {
-      const userCohort = await prisma.cohortMember.findFirst({
-        where: { userId },
-        select: { cohortId: true },
-      });
-      effectiveCohortId = userCohort?.cohortId || 'global';
-    }
-
-    const cohortBenchmarks = await getCohortBenchmarks(effectiveCohortId!);
-
-    const p90Map = new Map<string, number>();
-    for (const benchmark of cohortBenchmarks) {
-      p90Map.set(benchmark.system, benchmark.p90Accuracy);
-    }
-
-    const totalAttempts = peerComparison.reduce((sum, item) => sum + item.totalQuestions, 0);
-    const averagePercentile =
-      peerComparison.length > 0
-        ? peerComparison.reduce((sum, item) => sum + item.userPercentile, 0) / peerComparison.length
-        : 0;
-
-    const systems = peerComparison.map((item) => {
-      const cohortP90 = p90Map.get(item.system) || item.cohortAverage;
-
-      const cohortDelta = item.userAccuracy - item.cohortAverage;
-      const topPerformerGap = cohortP90 - item.userAccuracy;
-      const yieldScore = topPerformerGap * (item.totalQuestions / 10);
-      const isInsufficientData = item.totalQuestions < 10;
-
-      let status: 'strength' | 'average' | 'weakness' | 'critical';
-      if (isInsufficientData) {
-        status = cohortDelta >= 0 ? 'average' : 'weakness';
-      } else if (cohortDelta >= 10) {
-        status = 'strength';
-      } else if (cohortDelta >= -5) {
-        status = 'average';
-      } else if (cohortDelta >= -15) {
-        status = 'weakness';
-      } else {
-        status = 'critical';
+router.get(
+  '/performance-deltas',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const userId = req.auth?.userId;
+      if (!userId) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
       }
 
-      return {
-        name: item.system,
-        accuracy: Math.round(item.userAccuracy * 10) / 10,
-        cohortAverage: Math.round(item.cohortAverage * 10) / 10,
-        cohortP90: Math.round(cohortP90 * 10) / 10,
-        cohortDelta: Math.round(cohortDelta * 10) / 10,
-        topPerformerGap: Math.round(topPerformerGap * 10) / 10,
-        yieldScore: Math.round(yieldScore * 10) / 10,
-        status,
-        isInsufficientData,
-      };
-    });
+      const cohortId = req.query.cohortId as string | undefined;
 
-    systems.sort((a, b) => b.yieldScore - a.yieldScore);
+      // Use dynamic import to avoid circular cycles if service imports routes (unlikely but safe)
+      const { generatePeerComparison, getCohortBenchmarks } =
+        await import('../lib/services/analyticsService');
 
-    res.json({
-      success: true,
-      data: {
-        userTotalAttempts: totalAttempts,
-        overallPercentile: Math.round(averagePercentile * 10) / 10,
-        systems,
-      },
-    });
-  } catch (error) {
-    console.error('Failed to compute performance deltas:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to compute performance deltas',
-      details: error instanceof Error ? error.message : 'Unknown error',
-    });
+      const peerComparison = await generatePeerComparison(userId, cohortId);
+
+      let effectiveCohortId = cohortId;
+      if (!effectiveCohortId) {
+        const userCohort = await prisma.cohortMember.findFirst({
+          where: { userId },
+          select: { cohortId: true },
+        });
+        effectiveCohortId = userCohort?.cohortId || 'global';
+      }
+
+      const cohortBenchmarks = await getCohortBenchmarks(effectiveCohortId!);
+
+      const p90Map = new Map<string, number>();
+      for (const benchmark of cohortBenchmarks) {
+        p90Map.set(benchmark.system, benchmark.p90Accuracy);
+      }
+
+      const totalAttempts = peerComparison.reduce((sum, item) => sum + item.totalQuestions, 0);
+      const averagePercentile =
+        peerComparison.length > 0
+          ? peerComparison.reduce((sum, item) => sum + item.userPercentile, 0) /
+            peerComparison.length
+          : 0;
+
+      const systems = peerComparison.map((item) => {
+        const cohortP90 = p90Map.get(item.system) || item.cohortAverage;
+
+        const cohortDelta = item.userAccuracy - item.cohortAverage;
+        const topPerformerGap = cohortP90 - item.userAccuracy;
+        const yieldScore = topPerformerGap * (item.totalQuestions / 10);
+        const isInsufficientData = item.totalQuestions < 10;
+
+        let status: 'strength' | 'average' | 'weakness' | 'critical';
+        if (isInsufficientData) {
+          status = cohortDelta >= 0 ? 'average' : 'weakness';
+        } else if (cohortDelta >= 10) {
+          status = 'strength';
+        } else if (cohortDelta >= -5) {
+          status = 'average';
+        } else if (cohortDelta >= -15) {
+          status = 'weakness';
+        } else {
+          status = 'critical';
+        }
+
+        return {
+          name: item.system,
+          accuracy: Math.round(item.userAccuracy * 10) / 10,
+          cohortAverage: Math.round(item.cohortAverage * 10) / 10,
+          cohortP90: Math.round(cohortP90 * 10) / 10,
+          cohortDelta: Math.round(cohortDelta * 10) / 10,
+          topPerformerGap: Math.round(topPerformerGap * 10) / 10,
+          yieldScore: Math.round(yieldScore * 10) / 10,
+          status,
+          isInsufficientData,
+        };
+      });
+
+      systems.sort((a, b) => b.yieldScore - a.yieldScore);
+
+      res.json({
+        success: true,
+        data: {
+          userTotalAttempts: totalAttempts,
+          overallPercentile: Math.round(averagePercentile * 10) / 10,
+          systems,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to compute performance deltas:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to compute performance deltas',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
-});
+);
 
 export default router;

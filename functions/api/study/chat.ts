@@ -41,17 +41,15 @@ async function sleep(ms: number): Promise<void> {
 }
 
 /** Exponential backoff for Gemini 429 */
-async function withRetry<T>(
-  fn: () => Promise<T>,
-  maxAttempts = 4
-): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, maxAttempts = 4): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       return await fn();
     } catch (e) {
       lastError = e;
-      const status = e && typeof e === 'object' && 'status' in e ? (e as { status: number }).status : 0;
+      const status =
+        e && typeof e === 'object' && 'status' in e ? (e as { status: number }).status : 0;
       if (status === 429 && attempt < maxAttempts - 1) {
         const delayMs = Math.pow(2, attempt) * 1000;
         await sleep(delayMs);
@@ -75,7 +73,10 @@ async function downloadPdfFromSupabase(
     return res.arrayBuffer();
   }
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY || !storagePath) {
-    throw new StudyChatError(400, 'Resource has no fileUrl or storagePath; Supabase env required for storagePath');
+    throw new StudyChatError(
+      400,
+      'Resource has no fileUrl or storagePath; Supabase env required for storagePath'
+    );
   }
   const url = `${env.SUPABASE_URL}/storage/v1/object/${RESOURCE_BUCKET}/${storagePath}`;
   const res = await fetch(url, {
@@ -107,7 +108,10 @@ async function uploadPdfToGemini(
 
   if (!startRes.ok) {
     const text = await startRes.text();
-    throw new StudyChatError(startRes.status === 429 ? 429 : 502, `Gemini upload start failed: ${text}`);
+    throw new StudyChatError(
+      startRes.status === 429 ? 429 : 502,
+      `Gemini upload start failed: ${text}`
+    );
   }
 
   const uploadUrl = startRes.headers.get('x-goog-upload-url');
@@ -125,13 +129,17 @@ async function uploadPdfToGemini(
 
   if (!uploadRes.ok) {
     const text = await uploadRes.text();
-    throw new StudyChatError(uploadRes.status === 429 ? 429 : 502, `Gemini upload finalize failed: ${text}`);
+    throw new StudyChatError(
+      uploadRes.status === 429 ? 429 : 502,
+      `Gemini upload finalize failed: ${text}`
+    );
   }
 
   const data = (await uploadRes.json()) as { file?: { uri?: string; name?: string } };
   const fileUri = data.file?.uri;
   const fileName = data.file?.name;
-  if (!fileUri || !fileName) throw new StudyChatError(502, 'Gemini upload response missing file.uri or file.name');
+  if (!fileUri || !fileName)
+    throw new StudyChatError(502, 'Gemini upload response missing file.uri or file.name');
   return { fileUri, fileName };
 }
 
@@ -169,7 +177,8 @@ async function createGeminiCache(
   const data = (await res.json()) as { name?: string; expireTime?: string };
   const cacheName = data.name;
   const expireTime = data.expireTime;
-  if (!cacheName || !expireTime) throw new StudyChatError(502, 'Gemini cache response missing name or expireTime');
+  if (!cacheName || !expireTime)
+    throw new StudyChatError(502, 'Gemini cache response missing name or expireTime');
   return { cacheName, expireTime };
 }
 
@@ -194,7 +203,10 @@ async function generateWithCache(
 
   if (!res.ok) {
     const text = await res.text();
-    throw new StudyChatError(res.status === 429 ? 429 : 502, `Gemini generateContent failed: ${text}`);
+    throw new StudyChatError(
+      res.status === 429 ? 429 : 502,
+      `Gemini generateContent failed: ${text}`
+    );
   }
 
   const data = (await res.json()) as {
@@ -254,13 +266,21 @@ async function getCitationHighlightBoxes(
   adobeDataPath: string | null,
   env: Env
 ): Promise<{
-  citations: Array<{ page: number; highlightBox: { top: number; left: number; width: number; height: number } }>;
+  citations: Array<{
+    page: number;
+    highlightBox: { top: number; left: number; width: number; height: number };
+  }>;
   citationsFallback: boolean;
 }> {
   const fallbackBox = { top: 0, left: 0, width: 100, height: 10 };
   const fallback = pageNumbers.map((page) => ({ page, highlightBox: fallbackBox }));
 
-  if (!pageNumbers.length || !adobeDataPath || !env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (
+    !pageNumbers.length ||
+    !adobeDataPath ||
+    !env.SUPABASE_URL ||
+    !env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
     return { citations: fallback, citationsFallback: true };
   }
 
@@ -280,8 +300,7 @@ async function getCitationHighlightBoxes(
 
   const pages = adobe.pages ?? [];
   const citations = pageNumbers.map((pageNum) => {
-    const pageData =
-      pages.find((p) => (p.pageNumber ?? 0) === pageNum) ?? pages[pageNum - 1];
+    const pageData = pages.find((p) => (p.pageNumber ?? 0) === pageNum) ?? pages[pageNum - 1];
     const pageWidth = pageData?.width ?? 612;
     const pageHeight = pageData?.height ?? 792;
     const bounds = pageData?.bounds ?? pageData?.elements?.[0]?.bounds;
@@ -346,10 +365,10 @@ export const onRequestPost = authenticatedEndpoint(
       });
 
       if (!resource) {
-        return new Response(
-          JSON.stringify({ error: 'Resource not found', resourceId }),
-          { status: 404, headers: { 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: 'Resource not found', resourceId }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
 
       if (resource.approvalStatus !== 'approved') {
@@ -359,10 +378,15 @@ export const onRequestPost = authenticatedEndpoint(
         );
       }
 
-      const needsSupabase = (resource.storagePath != null && resource.fileUrl == null) || resource.adobeDataPath != null;
+      const needsSupabase =
+        (resource.storagePath != null && resource.fileUrl == null) ||
+        resource.adobeDataPath != null;
       if (needsSupabase) {
         try {
-          validateFunctionEnv(env as unknown as Record<string, unknown>, ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']);
+          validateFunctionEnv(env as unknown as Record<string, unknown>, [
+            'SUPABASE_URL',
+            'SUPABASE_SERVICE_ROLE_KEY',
+          ]);
         } catch (e) {
           if (e instanceof MissingEnvError) return e.toResponse();
           throw e;
@@ -380,9 +404,7 @@ export const onRequestPost = authenticatedEndpoint(
           resource.storagePath,
           env
         );
-        const { fileUri } = await withRetry(() =>
-          uploadPdfToGemini(pdfBuffer, env.GEMINI_API_KEY)
-        );
+        const { fileUri } = await withRetry(() => uploadPdfToGemini(pdfBuffer, env.GEMINI_API_KEY));
         const cache = await withRetry(() => createGeminiCache(fileUri, env.GEMINI_API_KEY));
         cacheName = cache.cacheName;
         cacheExpiresAt = new Date(cache.expireTime);
@@ -432,10 +454,10 @@ export const onRequestPost = authenticatedEndpoint(
         });
       }
       logger.error('Study chat unexpected error', e);
-      return new Response(
-        JSON.stringify({ error: 'Internal server error' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Internal server error' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     } finally {
       await safePrismaDisconnect(prisma);
     }

@@ -1,6 +1,6 @@
 /**
  * Circadian UI Hook
- * 
+ *
  * Automatically adapts UI theme based on time of day and user's circadian profile.
  * Implements Module 5: Interface Fabric adaptive UI system.
  */

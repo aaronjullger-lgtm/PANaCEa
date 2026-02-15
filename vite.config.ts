@@ -314,7 +314,10 @@ export default defineConfig(({ mode }) => {
               },
               telemetry: false,
               errorHandler: (err) => {
-                console.warn('[Sentry] Source map upload failed (build continues):', err?.message || err);
+                console.warn(
+                  '[Sentry] Source map upload failed (build continues):',
+                  err?.message || err
+                );
               },
             }),
           ]
@@ -409,7 +412,13 @@ if (typeof process === 'undefined') {
       },
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', '@clerk/clerk-react', 'framer-motion', '@tanstack/react-virtual'],
+      include: [
+        'react',
+        'react-dom',
+        '@clerk/clerk-react',
+        'framer-motion',
+        '@tanstack/react-virtual',
+      ],
       // Avoid prebundling the entire lucide icon set; rely on per-icon ESM imports for tree-shaking
       exclude: ['lucide-react'],
     },

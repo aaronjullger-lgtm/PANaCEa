@@ -56,10 +56,10 @@ export const onRequestPost = authenticatedEndpoint(StudentContextBodySchema, asy
       select: { id: true },
     });
     if (!user) {
-      return new Response(
-        JSON.stringify({ error: 'User not found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const now = new Date();
@@ -115,7 +115,10 @@ export const onRequestPost = authenticatedEndpoint(StudentContextBodySchema, asy
       parts: [{ text: `## Weak Spot Profile\n${weakSpotText}` }],
     };
 
-    const staticParts: { role: 'user'; parts: Array<{ fileData: { fileUri: string; mimeType: string } }> }[] = [];
+    const staticParts: {
+      role: 'user';
+      parts: Array<{ fileData: { fileUri: string; mimeType: string } }>;
+    }[] = [];
     if (fileUris && fileUris.length > 0) {
       for (const fileUri of fileUris) {
         staticParts.push({
@@ -142,7 +145,10 @@ export const onRequestPost = authenticatedEndpoint(StudentContextBodySchema, asy
 
     if (!res.ok) {
       const text = await res.text();
-      log.warn('Gemini student-context cache create failed', { status: res.status, text: text.slice(0, 300) });
+      log.warn('Gemini student-context cache create failed', {
+        status: res.status,
+        text: text.slice(0, 300),
+      });
       return new Response(
         JSON.stringify({ error: 'Failed to create student context cache', details: text }),
         { status: res.status === 429 ? 429 : 502, headers: { 'Content-Type': 'application/json' } }
@@ -189,10 +195,10 @@ export const onRequestPost = authenticatedEndpoint(StudentContextBodySchema, asy
     );
   } catch (err) {
     log.error('Student context cache error', err);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } finally {
     await safePrismaDisconnect(prisma);
   }

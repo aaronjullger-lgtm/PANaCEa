@@ -79,7 +79,11 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
       transport: (options: Parameters<NonNullable<typeof Sentry>['makeFetchTransport']>[0]) => {
         const defaultTransport = Sentry!.makeFetchTransport(options);
         return {
-          send: (envelope: Parameters<ReturnType<NonNullable<typeof Sentry>['makeFetchTransport']>['send']>[0]) => {
+          send: (
+            envelope: Parameters<
+              ReturnType<NonNullable<typeof Sentry>['makeFetchTransport']>['send']
+            >[0]
+          ) => {
             // Wrap PromiseLike in Promise.resolve() to get .catch() support
             return Promise.resolve(defaultTransport.send(envelope)).catch((error: unknown) => {
               // Suppress sentry-tunnel errors to avoid console spam

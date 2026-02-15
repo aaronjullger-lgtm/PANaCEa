@@ -256,7 +256,7 @@ class AnatomyModelService {
         institution: dbModel.institution || 'National Institutes of Health',
         license: dbModel.license || 'Public Domain',
         url: dbModel.sourceUrl ?? 'https://3d.nih.gov',
-        dateAccessed: (new Date().toISOString().split('T')[0] ?? ''),
+        dateAccessed: new Date().toISOString().split('T')[0] ?? '',
         citationText: `${dbModel.sourceName || 'NIH 3D Print Exchange'}. ${dbModel.displayName || dbModel.name}. ${dbModel.sourceUrl || 'https://3d.nih.gov'}.`,
       },
       clinicalRelevance: dbModel.clinicalRelevance || [],

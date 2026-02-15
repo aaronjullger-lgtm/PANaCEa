@@ -33,14 +33,14 @@ export const HighContrastDataToggle: React.FC<HighContrastDataToggleProps> = ({
         ${highContrastData ? 'ring-2 ring-[var(--color-accent)] ring-offset-2 ring-offset-[var(--color-bg-primary)]' : ''}
         ${className}
       `}
-      title={highContrastData ? 'Disable high-contrast charts' : 'High-contrast charts (accessibility)'}
+      title={
+        highContrastData ? 'Disable high-contrast charts' : 'High-contrast charts (accessibility)'
+      }
       aria-pressed={highContrastData ? 'true' : 'false'}
       aria-label={highContrastData ? 'High-contrast data on' : 'High-contrast data off'}
     >
       <Contrast className="h-4 w-4 shrink-0" aria-hidden />
-      {!compact && (
-        <span>{highContrastData ? 'High contrast on' : 'High contrast charts'}</span>
-      )}
+      {!compact && <span>{highContrastData ? 'High contrast on' : 'High contrast charts'}</span>}
     </button>
   );
 };

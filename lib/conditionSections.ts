@@ -61,12 +61,7 @@ export const CONDITION_SECTION_CONFIG: ConditionSectionConfig[] = [
     id: 'pathophysiology',
     title: 'Pathophysiology & Etiology',
     category: 'background',
-    conditionEntryKeys: [
-      'etiologyPathophysiology',
-      'etiology',
-      'epidemiology',
-      'riskFactors',
-    ],
+    conditionEntryKeys: ['etiologyPathophysiology', 'etiology', 'epidemiology', 'riskFactors'],
     medicalContentFields: ['pathophysiology', 'etiology', 'epidemiology', 'riskFactors'],
   },
   {
@@ -81,7 +76,13 @@ export const CONDITION_SECTION_CONFIG: ConditionSectionConfig[] = [
     title: 'Diagnosis (Labs, Imaging, Special Tests)',
     category: 'workup',
     conditionEntryKeys: ['diagnostics'],
-    medicalContentFields: ['diagnostics', 'gold_standard_dx', 'best_initial_test', 'labs', 'imaging'],
+    medicalContentFields: [
+      'diagnostics',
+      'gold_standard_dx',
+      'best_initial_test',
+      'labs',
+      'imaging',
+    ],
   },
   {
     id: 'differentialDiagnosis',

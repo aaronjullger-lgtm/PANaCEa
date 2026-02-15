@@ -86,7 +86,10 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen,
                 <div className="p-2 bg-[var(--color-bg-secondary)] rounded-lg">
                   <Keyboard className="w-5 h-5 text-[var(--color-text-secondary)]" />
                 </div>
-                <h2 id="keyboard-shortcuts-title" className="text-xl font-bold text-[var(--color-text-primary)]">
+                <h2
+                  id="keyboard-shortcuts-title"
+                  className="text-xl font-bold text-[var(--color-text-primary)]"
+                >
                   Keyboard Shortcuts
                 </h2>
               </div>

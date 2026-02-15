@@ -40,20 +40,28 @@ Rules:
 
   try {
     const result = await model.generateContent(prompt);
-    let jsonStr = result.response.text().trim()
-      .replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
+    let jsonStr = result.response
+      .text()
+      .trim()
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/, '')
+      .replace(/```\s*$/, '');
     const first = jsonStr.indexOf('[');
     const last = jsonStr.lastIndexOf(']');
     if (first === -1 || last === -1) return [];
-    jsonStr = jsonStr.substring(first, last + 1)
-      .replace(/['']/g, "'").replace(/[""]/g, '"').replace(/,(\s*[\]}])/g, '$1');
+    jsonStr = jsonStr
+      .substring(first, last + 1)
+      .replace(/['']/g, "'")
+      .replace(/[""]/g, '"')
+      .replace(/,(\s*[\]}])/g, '$1');
 
     const parsed = JSON.parse(jsonStr);
     const links: Array<{ conditionId: string; isFirstLine: boolean; notes: string }> = [];
 
     for (const item of parsed) {
       const condition = conditions.find(
-        (c) => c.name.toLowerCase() === item.conditionName?.toLowerCase() ||
+        (c) =>
+          c.name.toLowerCase() === item.conditionName?.toLowerCase() ||
           c.name.toLowerCase().includes(item.conditionName?.toLowerCase()) ||
           item.conditionName?.toLowerCase().includes(c.name.toLowerCase())
       );
@@ -75,7 +83,9 @@ Rules:
 async function main() {
   console.log('╔════════════════════════════════════════════════════════════╗');
   console.log('║  Phase 3c: Populate AntibioticConditionLink               ║');
-  console.log(`║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`);
+  console.log(
+    `║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`
+  );
   console.log('╚════════════════════════════════════════════════════════════╝');
 
   const antibiotics = await prisma.antibioticGuideline.findMany({
@@ -103,7 +113,10 @@ async function main() {
 
     for (const link of links) {
       const key = `${abx.id}:${link.conditionId}`;
-      if (existingSet.has(key)) { skipped++; continue; }
+      if (existingSet.has(key)) {
+        skipped++;
+        continue;
+      }
 
       if (!DRY_RUN) {
         try {
@@ -119,8 +132,12 @@ async function main() {
           });
           existingSet.add(key);
           created++;
-        } catch { skipped++; }
-      } else { created++; }
+        } catch {
+          skipped++;
+        }
+      } else {
+        created++;
+      }
     }
     console.log(`   Created ${links.length} links`);
     await new Promise((r) => setTimeout(r, 2000));

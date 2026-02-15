@@ -180,7 +180,9 @@ export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({ userExamDa
       {showInstructions && (
         <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)]">
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <pre className="whitespace-pre-wrap text-xs text-[var(--color-text-secondary)]">{TRELLO_IMPORT_INSTRUCTIONS}</pre>
+            <pre className="whitespace-pre-wrap text-xs text-[var(--color-text-secondary)]">
+              {TRELLO_IMPORT_INSTRUCTIONS}
+            </pre>
           </div>
         </div>
       )}

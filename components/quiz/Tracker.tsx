@@ -96,7 +96,7 @@ export function BehavioralTrackerProvider({ children }: BehavioralTrackerProvide
 
   const recordHover = useCallback((optionIndex: number, optionLabel: string, deltaMs: number) => {
     if (!activeRef.current) return;
-    const key = optionLabel in hoverMsRef.current ? optionLabel : LETTERS[optionIndex] ?? 'A';
+    const key = optionLabel in hoverMsRef.current ? optionLabel : (LETTERS[optionIndex] ?? 'A');
     hoverMsRef.current[key] = (hoverMsRef.current[key] ?? 0) + deltaMs;
   }, []);
 
@@ -137,9 +137,7 @@ export function BehavioralTrackerProvider({ children }: BehavioralTrackerProvide
   );
 
   return (
-    <BehavioralTrackerContext.Provider value={api}>
-      {children}
-    </BehavioralTrackerContext.Provider>
+    <BehavioralTrackerContext.Provider value={api}>{children}</BehavioralTrackerContext.Provider>
   );
 }
 

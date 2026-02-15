@@ -1,6 +1,6 @@
 /**
  * Error Message Generator
- * 
+ *
  * Utility for generating user-friendly, actionable error messages from various error types.
  * Maps technical errors to human-readable messages with clear next steps.
  */
@@ -37,7 +37,8 @@ const errorPatterns = [
     pattern: /network.*error|failed.*fetch|offline|connection.*lost/i,
     category: 'network' as const,
     title: 'Connection Issue',
-    description: 'There was a problem connecting to our servers. This could be due to your internet connection, server maintenance, or a temporary outage.',
+    description:
+      'There was a problem connecting to our servers. This could be due to your internet connection, server maintenance, or a temporary outage.',
     actions: [
       {
         label: 'Check Internet Connection',
@@ -65,7 +66,8 @@ const errorPatterns = [
     pattern: /timeout|timed.*out|request.*too.*long/i,
     category: 'timeout' as const,
     title: 'Request Timeout',
-    description: 'The request took too long to complete. This could be due to high server load, network latency, or a complex operation.',
+    description:
+      'The request took too long to complete. This could be due to high server load, network latency, or a complex operation.',
     actions: [
       {
         label: 'Try Again',
@@ -85,13 +87,14 @@ const errorPatterns = [
     showHelp: true,
     severity: 'warning' as const,
   },
-  
+
   // Authentication errors
   {
     pattern: /auth|login|session.*expired|invalid.*token|unauthorized/i,
     category: 'authentication' as const,
     title: 'Authentication Required',
-    description: 'Your session has expired or there was an issue verifying your identity. You may need to sign in again.',
+    description:
+      'Your session has expired or there was an issue verifying your identity. You may need to sign in again.',
     actions: [
       {
         label: 'Sign In Again',
@@ -119,13 +122,14 @@ const errorPatterns = [
     helpUrl: 'https://docs.panacea.study/troubleshooting/authentication',
     severity: 'warning' as const,
   },
-  
+
   // Validation errors
   {
     pattern: /validation|invalid.*input|required.*field|missing.*field/i,
     category: 'validation' as const,
     title: 'Validation Error',
-    description: 'The information you provided contains errors or is incomplete. Please check your input and try again.',
+    description:
+      'The information you provided contains errors or is incomplete. Please check your input and try again.',
     actions: [
       {
         label: 'Review Input',
@@ -145,7 +149,7 @@ const errorPatterns = [
     helpUrl: 'https://docs.panacea.study/troubleshooting/validation-errors',
     severity: 'warning' as const,
   },
-  
+
   // Permission errors
   {
     pattern: /permission.*denied|forbidden|access.*denied|not.*authorized/i,
@@ -173,13 +177,14 @@ const errorPatterns = [
     helpUrl: 'https://docs.panacea.study/troubleshooting/permissions',
     severity: 'warning' as const,
   },
-  
+
   // Rate limiting
   {
     pattern: /rate.*limit|too.*many.*requests|429/i,
     category: 'rate_limit' as const,
     title: 'Too Many Requests',
-    description: 'You have made too many requests in a short period. Please wait a moment before trying again.',
+    description:
+      'You have made too many requests in a short period. Please wait a moment before trying again.',
     actions: [
       {
         label: 'Wait 30 Seconds',
@@ -201,13 +206,14 @@ const errorPatterns = [
     helpUrl: 'https://docs.panacea.study/troubleshooting/rate-limiting',
     severity: 'warning' as const,
   },
-  
+
   // Not found errors
   {
     pattern: /not.*found|404|resource.*not.*found/i,
     category: 'not_found' as const,
     title: 'Resource Not Found',
-    description: 'The requested resource could not be found. It may have been moved, deleted, or the URL might be incorrect.',
+    description:
+      'The requested resource could not be found. It may have been moved, deleted, or the URL might be incorrect.',
     actions: [
       {
         label: 'Go to Home',
@@ -229,13 +235,14 @@ const errorPatterns = [
     helpUrl: 'https://docs.panacea.study/troubleshooting/not-found',
     severity: 'info' as const,
   },
-  
+
   // Server errors
   {
     pattern: /server.*error|500|internal.*error/i,
     category: 'server' as const,
     title: 'Server Error',
-    description: 'An unexpected error occurred on our servers. Our engineering team has been notified and will investigate.',
+    description:
+      'An unexpected error occurred on our servers. Our engineering team has been notified and will investigate.',
     actions: [
       {
         label: 'Try Again Later',
@@ -257,13 +264,14 @@ const errorPatterns = [
     helpUrl: 'https://status.panacea.study',
     severity: 'error' as const,
   },
-  
+
   // Maintenance mode
   {
     pattern: /maintenance|service.*unavailable|503/i,
     category: 'maintenance' as const,
     title: 'System Maintenance',
-    description: 'The system is currently undergoing scheduled maintenance. We should be back online shortly.',
+    description:
+      'The system is currently undergoing scheduled maintenance. We should be back online shortly.',
     actions: [
       {
         label: 'Check Status',
@@ -285,7 +293,7 @@ const errorPatterns = [
     helpUrl: 'https://status.panacea.study',
     severity: 'info' as const,
   },
-  
+
   // Default fallback
   {
     pattern: /.*/,
@@ -325,28 +333,31 @@ export function generateErrorMessage(
     retryCallback?: () => void;
   }
 ): ActionableErrorMessage {
-  const errorMessage = typeof error === 'string' ? error : error instanceof Error ? error.message : String(error);
+  const errorMessage =
+    typeof error === 'string' ? error : error instanceof Error ? error.message : String(error);
   const errorString = errorMessage.toLowerCase();
-  
+
   // Find matching pattern
-  const matchedPattern = errorPatterns.find(pattern => 
-    pattern.pattern.test(errorString) || 
-    (error instanceof Error && pattern.pattern.test(error.name.toLowerCase()))
-  ) || errorPatterns[errorPatterns.length - 1]; // Default fallback
-  
+  const matchedPattern =
+    errorPatterns.find(
+      (pattern) =>
+        pattern.pattern.test(errorString) ||
+        (error instanceof Error && pattern.pattern.test(error.name.toLowerCase()))
+    ) || errorPatterns[errorPatterns.length - 1]; // Default fallback
+
   // Customize based on context
   let title = matchedPattern.title;
   let description = matchedPattern.description;
   const actions = [...matchedPattern.actions];
-  
+
   if (context?.operation) {
     description = `${description} Operation: ${context.operation}.`;
   }
-  
+
   if (context?.resource) {
     title = `${title}: ${context.resource}`;
   }
-  
+
   // Add retry callback if provided
   if (context?.retryCallback && matchedPattern.showRetry) {
     actions.unshift({
@@ -355,7 +366,7 @@ export function generateErrorMessage(
       priority: 'primary',
     });
   }
-  
+
   return {
     title,
     description,
@@ -381,7 +392,8 @@ export function generateErrorMessageFromStatusCode(
   const statusMessages: Record<number, Partial<ActionableErrorMessage>> = {
     400: {
       title: 'Bad Request',
-      description: 'The server could not understand your request. Please check your input and try again.',
+      description:
+        'The server could not understand your request. Please check your input and try again.',
       severity: 'warning',
     },
     401: {
@@ -430,10 +442,10 @@ export function generateErrorMessageFromStatusCode(
       severity: 'warning',
     },
   };
-  
+
   const defaultMessage = statusMessages[statusCode] || statusMessages[500]!;
   const error = new Error(`HTTP ${statusCode}: ${defaultMessage.title}`);
-  
+
   return generateErrorMessage(error, context);
 }
 
@@ -442,44 +454,50 @@ export function generateErrorMessageFromStatusCode(
  */
 export function useErrorMessaging() {
   const [currentError, setCurrentError] = React.useState<ActionableErrorMessage | null>(null);
-  
-  const showError = React.useCallback((
-    error: Error | string | unknown,
-    context?: {
-      operation?: string;
-      resource?: string;
-      userId?: string;
-      retryCallback?: () => void;
-    }
-  ) => {
-    const errorMessage = generateErrorMessage(error, context);
-    setCurrentError(errorMessage);
-    
-    // Log to console in development
-    if (import.meta.env.DEV) {
-      console.error('User-facing error:', errorMessage.title, error);
-    }
-    
-    return errorMessage;
-  }, []);
-  
-  const showErrorFromStatusCode = React.useCallback((
-    statusCode: number,
-    context?: {
-      endpoint?: string;
-      method?: string;
-      retryCallback?: () => void;
-    }
-  ) => {
-    const errorMessage = generateErrorMessageFromStatusCode(statusCode, context);
-    setCurrentError(errorMessage);
-    return errorMessage;
-  }, []);
-  
+
+  const showError = React.useCallback(
+    (
+      error: Error | string | unknown,
+      context?: {
+        operation?: string;
+        resource?: string;
+        userId?: string;
+        retryCallback?: () => void;
+      }
+    ) => {
+      const errorMessage = generateErrorMessage(error, context);
+      setCurrentError(errorMessage);
+
+      // Log to console in development
+      if (import.meta.env.DEV) {
+        console.error('User-facing error:', errorMessage.title, error);
+      }
+
+      return errorMessage;
+    },
+    []
+  );
+
+  const showErrorFromStatusCode = React.useCallback(
+    (
+      statusCode: number,
+      context?: {
+        endpoint?: string;
+        method?: string;
+        retryCallback?: () => void;
+      }
+    ) => {
+      const errorMessage = generateErrorMessageFromStatusCode(statusCode, context);
+      setCurrentError(errorMessage);
+      return errorMessage;
+    },
+    []
+  );
+
   const clearError = React.useCallback(() => {
     setCurrentError(null);
   }, []);
-  
+
   return {
     currentError,
     showError,
@@ -507,14 +525,14 @@ export async function withEnhancedErrorHandling<T>(
       operation: options?.operationName,
       resource: options?.resourceName,
     });
-    
+
     if (options?.onError) {
       options.onError(errorMessage);
     } else {
       // Default error handling - could integrate with toast system
       console.error('Operation failed:', errorMessage.title, error);
     }
-    
+
     return options?.fallbackValue;
   }
 }
@@ -528,14 +546,14 @@ export function createErrorResponse(
   context?: Record<string, unknown>
 ) {
   const errorMessage = generateErrorMessage(error, context);
-  
+
   return {
     success: false,
     error: {
       code: statusCode,
       message: errorMessage.title,
       description: errorMessage.description,
-      actions: errorMessage.actions.map(action => action.label),
+      actions: errorMessage.actions.map((action) => action.label),
       helpUrl: errorMessage.helpUrl,
       timestamp: new Date().toISOString(),
       ...context,

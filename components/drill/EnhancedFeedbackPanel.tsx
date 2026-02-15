@@ -118,7 +118,17 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
         if (response.ok) {
           const result = (await response.json()) as {
             success?: boolean;
-            data?: { primary?: unknown; related?: Array<{ id?: string; displayName?: string; name?: string; description?: string; normalRange?: string; category?: string }> };
+            data?: {
+              primary?: unknown;
+              related?: Array<{
+                id?: string;
+                displayName?: string;
+                name?: string;
+                description?: string;
+                normalRange?: string;
+                category?: string;
+              }>;
+            };
           };
           if (result.success && result.data) {
             if (result.data.primary) {
@@ -130,7 +140,8 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
                   type: category as RelatedReference['type'],
                   id: item.id ?? '',
                   name: item.displayName ?? item.name ?? '',
-                  preview: item.description?.slice(0, 100) ?? item.normalRange ?? item.category ?? '',
+                  preview:
+                    item.description?.slice(0, 100) ?? item.normalRange ?? item.category ?? '',
                 }))
               );
             }

@@ -104,34 +104,36 @@ export const onRequestPost = authenticatedEndpoint(QueryBodySchema, async (conte
       body: JSON.stringify(body),
     });
   } catch (err) {
-    log.warn('Library query fetch error', { msg: err instanceof Error ? err.message : String(err) });
-    return new Response(
-      JSON.stringify({ error: 'Library query service unavailable' }),
-      { status: 502, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
-    );
+    log.warn('Library query fetch error', {
+      msg: err instanceof Error ? err.message : String(err),
+    });
+    return new Response(JSON.stringify({ error: 'Library query service unavailable' }), {
+      status: 502,
+      headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+    });
   }
 
   if (res.ok) {
     const data = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  const answer = typeof rawText === 'string' ? rawText.trim() : '';
-  const pageNumbers = parsePageCitations(answer);
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const answer = typeof rawText === 'string' ? rawText.trim() : '';
+    const pageNumbers = parsePageCitations(answer);
 
-  return new Response(
-    JSON.stringify({
-      data: {
-        answer,
-        citations: pageNumbers.map((page) => ({ page })),
-        pageNumbers,
-      },
-    }),
-    {
-      status: 200,
-      headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
-    }
-  );
+    return new Response(
+      JSON.stringify({
+        data: {
+          answer,
+          citations: pageNumbers.map((page) => ({ page })),
+          pageNumbers,
+        },
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+      }
+    );
   }
 
   const text = await res.text();

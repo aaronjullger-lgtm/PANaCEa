@@ -29,7 +29,14 @@ const AnalyzeBodySchema = z.object({
     mimeType: z.string().optional().default('image/png'),
     /** Student question, e.g. "Where is the fracture?" Overrides default prompt when set. */
     studentQuery: z.string().min(1).max(2000).optional(),
-    prompt: z.string().min(1).max(4096).optional().default('Detect the primary pathology. Return a JSON object with "diagnosis", "reasoning", and "bounding_box" as [ymin, xmin, ymax, xmax] normalized 0-1000.'),
+    prompt: z
+      .string()
+      .min(1)
+      .max(4096)
+      .optional()
+      .default(
+        'Detect the primary pathology. Return a JSON object with "diagnosis", "reasoning", and "bounding_box" as [ymin, xmin, ymax, xmax] normalized 0-1000.'
+      ),
     /** Set true for ECG images to enable code_execution (numpy/PIL for R-R intervals / HR). */
     isEcg: z.boolean().optional().default(false),
     /** Override model; default gemini-3-pro-preview (spatial). Use gemini-2.5-pro if 3 unavailable. */
@@ -67,7 +74,12 @@ function parseVisionResponse(text: string): {
       const xmin = n[1] ?? 0;
       const ymax = n[2] ?? 0;
       const xmax = n[3] ?? 0;
-      if (Number.isFinite(ymin) && Number.isFinite(xmin) && Number.isFinite(ymax) && Number.isFinite(xmax)) {
+      if (
+        Number.isFinite(ymin) &&
+        Number.isFinite(xmin) &&
+        Number.isFinite(ymax) &&
+        Number.isFinite(xmax)
+      ) {
         bounding_box = [ymin, xmin, ymax, xmax];
       }
     }
@@ -96,10 +108,21 @@ export const onRequestPost = authenticatedEndpoint(AnalyzeBodySchema, async (con
   }
 
   const identifier = getRateLimitIdentifier(request);
-  const { response: rateLimitResponse, headers: rateLimitHeaders } = await withRateLimit(env, identifier, 'gemini');
+  const { response: rateLimitResponse, headers: rateLimitHeaders } = await withRateLimit(
+    env,
+    identifier,
+    'gemini'
+  );
   if (rateLimitResponse) return rateLimitResponse;
 
-  const { imageBase64, mimeType, studentQuery, prompt: defaultPrompt, isEcg, modelName: modelOverride } = validated.body;
+  const {
+    imageBase64,
+    mimeType,
+    studentQuery,
+    prompt: defaultPrompt,
+    isEcg,
+    modelName: modelOverride,
+  } = validated.body;
   const modelName = modelOverride ?? VISION_MODEL;
   const prompt = studentQuery
     ? `${studentQuery}\n\nReturn a JSON object with "diagnosis", "reasoning", and "bounding_box" as [ymin, xmin, ymax, xmax] normalized 0-1000 for overlay.`
@@ -138,7 +161,9 @@ export const onRequestPost = authenticatedEndpoint(AnalyzeBodySchema, async (con
       body: JSON.stringify(requestBody),
     });
   } catch (err) {
-    log.warn('Vision analyze fetch error', { msg: err instanceof Error ? err.message : String(err) });
+    log.warn('Vision analyze fetch error', {
+      msg: err instanceof Error ? err.message : String(err),
+    });
     return new Response(JSON.stringify({ error: 'Vision service unavailable' }), {
       status: 502,
       headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },

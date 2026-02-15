@@ -1,16 +1,16 @@
 /**
  * System Integration Service
- * 
+ *
  * Central coordination layer that connects all 5 modules seamlessly.
  * Manages event bus, context sharing, intelligent routing, and analytics aggregation.
- * 
+ *
  * Features:
  * - Event bus for inter-module communication
  * - Context synchronization across AI services
  * - Intelligent navigation recommendations
  * - Unified analytics aggregation
  * - Smooth module transitions
- * 
+ *
  * @module systemIntegrationService
  */
 
@@ -141,7 +141,7 @@ export class SystemIntegrationService {
       case 'MISTAKE_MADE':
         // Generate infographic
         this.triggerInfographicGeneration(event);
-        
+
         // Offer AI Tutor help
         this.offerTutorHelp(event);
         break;
@@ -257,11 +257,11 @@ export class SystemIntegrationService {
    */
   private estimateTimeForModule(module: string): number {
     const estimates: Record<string, number> = {
-      osce: 600,         // 10 minutes
+      osce: 600, // 10 minutes
       clinical_eye: 180, // 3 minutes
-      sim_lab: 480,      // 8 minutes
-      review: 300,       // 5 minutes
-      dashboard: 60,     // 1 minute
+      sim_lab: 480, // 8 minutes
+      review: 300, // 5 minutes
+      dashboard: 60, // 1 minute
     };
     return estimates[module] ?? 300;
   }
@@ -273,10 +273,7 @@ export class SystemIntegrationService {
   /**
    * Execute smooth transition between modules.
    */
-  async transitionToModule(
-    sessionId: string,
-    transition: ModuleTransition
-  ): Promise<void> {
+  async transitionToModule(sessionId: string, transition: ModuleTransition): Promise<void> {
     const state = this.sessionStates.get(sessionId);
     if (!state) return;
 
@@ -373,7 +370,9 @@ export class SystemIntegrationService {
     };
   }
 
-  private getClinicalEyeAnalytics(state: UnifiedSessionState): UnifiedAnalytics['clinicalEyeAnalytics'] {
+  private getClinicalEyeAnalytics(
+    state: UnifiedSessionState
+  ): UnifiedAnalytics['clinicalEyeAnalytics'] {
     return {
       questionsAttempted: 3,
       pointAndClickAccuracy: 90,
@@ -394,7 +393,9 @@ export class SystemIntegrationService {
     };
   }
 
-  private getDocumentationAnalytics(state: UnifiedSessionState): UnifiedAnalytics['documentationAnalytics'] {
+  private getDocumentationAnalytics(
+    state: UnifiedSessionState
+  ): UnifiedAnalytics['documentationAnalytics'] {
     return {
       soapCompletenessScore: 85,
       soapAccuracyScore: 90,
@@ -405,7 +406,9 @@ export class SystemIntegrationService {
     };
   }
 
-  private getEngagementAnalytics(state: UnifiedSessionState): UnifiedAnalytics['engagementAnalytics'] {
+  private getEngagementAnalytics(
+    state: UnifiedSessionState
+  ): UnifiedAnalytics['engagementAnalytics'] {
     return {
       uiModeTransitions: 2,
       avatarXPGained: 50,

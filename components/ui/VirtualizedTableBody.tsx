@@ -50,9 +50,7 @@ export function VirtualizedTableBody<T>({
   }
 
   return (
-    <div
-      style={{ height: `${totalSize}px`, position: 'relative', width: '100%' }}
-    >
+    <div style={{ height: `${totalSize}px`, position: 'relative', width: '100%' }}>
       {virtualItems.map((virtualRow) => {
         const item = items[virtualRow.index];
         if (item == null) return null;

@@ -22,12 +22,7 @@ export function fireStreakCelebration(options?: {
   /** Custom colors (default: brand palette) */
   colors?: string[];
 }): void {
-  const {
-    count = 2,
-    spread = 55,
-    origin = 'center',
-    colors = DEFAULT_COLORS,
-  } = options ?? {};
+  const { count = 2, spread = 55, origin = 'center', colors = DEFAULT_COLORS } = options ?? {};
 
   let originX = 0.5;
   if (origin === 'left') originX = 0.2;

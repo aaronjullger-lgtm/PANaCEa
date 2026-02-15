@@ -35,7 +35,10 @@ import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { CalibrationProgress } from '@/components/analytics/CalibrationProgress';
 import { EmptyLineChart } from '@/components/analytics/EmptyChartState';
-import { PANCEReadinessTreemap, type SystemNode } from '@/components/analytics/PANCEReadinessTreemap';
+import {
+  PANCEReadinessTreemap,
+  type SystemNode,
+} from '@/components/analytics/PANCEReadinessTreemap';
 import { ChartContainer } from '@/components/shared/ChartContainer';
 import chartTheme from '@/lib/chartTheme';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
@@ -216,7 +219,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           throw new Error(`Expected JSON but got ${contentType || 'text/html'}`);
         }
 
-        const result = (await response.json()) as { data?: Array<{ date: string; avgStability?: number; totalReviews?: number }> };
+        const result = (await response.json()) as {
+          data?: Array<{ date: string; avgStability?: number; totalReviews?: number }>;
+        };
 
         if (result.data && Array.isArray(result.data)) {
           // Format dates for display
@@ -427,11 +432,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <span className="font-medium">Exam Readiness</span>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <div className="text-4xl font-bold text-action-primary">{formatPercentForDisplay(readinessScore)}</div>
+                <div className="text-4xl font-bold text-action-primary">
+                  {formatPercentForDisplay(readinessScore)}
+                </div>
                 <TrendingUp className="w-5 h-5 text-action-primary" />
               </div>
               <p className="text-xs text-action-muted">
-                Based on accuracy ({formatPercentForDisplay(userStats.stats.overall.accuracy)}) + coverage
+                Based on accuracy ({formatPercentForDisplay(userStats.stats.overall.accuracy)}) +
+                coverage
               </p>
             </div>
 
@@ -517,7 +525,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     icon: HelpCircle,
                     label: getQuadrantLabel('lucky_guess').short,
                     count: calibrationData.calibration.luckyGuess,
-                    className: 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]',
+                    className:
+                      'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]',
                   },
                   {
                     key: 'unconfident_wrong' as const,
@@ -569,10 +578,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       </div>
                       <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="text-2xl font-bold text-action-primary">
-                          {Math.round(
-                            (userStats.stats.speedByType.recall.avgTimeMs ?? 0) / 1000
-                          )}
-                          s
+                          {Math.round((userStats.stats.speedByType.recall.avgTimeMs ?? 0) / 1000)}s
                         </span>
                         <span className="text-xs text-action-muted">
                           (Target: &lt;{RECALL_TARGET_SEC}s)
@@ -703,39 +709,51 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 </div>
               ) : (
                 <ChartContainer minHeight={320} className="min-h-[320px] w-full" aria-hidden>
-                  <ResponsiveContainer width="100%" height={Math.max(320, systemPerformanceBarData.length * 36)} minHeight={200} minWidth={0}>
-                  <BarChart
-                    layout="vertical"
-                    data={systemPerformanceBarData}
-                    margin={{ top: 4, right: 24, left: 0, bottom: 24 }}
+                  <ResponsiveContainer
+                    width="100%"
+                    height={Math.max(320, systemPerformanceBarData.length * 36)}
+                    minHeight={200}
+                    minWidth={0}
                   >
-                    <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
-                    <XAxis type="number" domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
-                    <YAxis
-                      type="category"
-                      dataKey="system"
-                      width={100}
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                    />
-                    <Tooltip
-                      formatter={(value?: number) => [formatPercentForDisplay(value ?? 0), 'Accuracy']}
-                      contentStyle={chartTheme.tooltip.contentStyle}
-                      labelStyle={chartTheme.tooltip.labelStyle}
-                    />
-                    <Bar dataKey="accuracy" name="Accuracy" radius={[0, 4, 4, 0]} maxBarSize={28}>
-                      {systemPerformanceBarData.map((_, index) => {
-                        const isRedZone = index >= systemPerformanceBarData.length - 3;
-                        return (
-                          <Cell
-                            key={index}
-                            fill={isRedZone ? 'var(--color-data-fail)' : 'var(--color-accent)'}
-                            fillOpacity={isRedZone ? 0.9 : 0.7}
-                          />
-                        );
-                      })}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                    <BarChart
+                      layout="vertical"
+                      data={systemPerformanceBarData}
+                      margin={{ top: 4, right: 24, left: 0, bottom: 24 }}
+                    >
+                      <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
+                      <XAxis
+                        type="number"
+                        domain={[0, 100]}
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                      />
+                      <YAxis
+                        type="category"
+                        dataKey="system"
+                        width={100}
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                      />
+                      <Tooltip
+                        formatter={(value?: number) => [
+                          formatPercentForDisplay(value ?? 0),
+                          'Accuracy',
+                        ]}
+                        contentStyle={chartTheme.tooltip.contentStyle}
+                        labelStyle={chartTheme.tooltip.labelStyle}
+                      />
+                      <Bar dataKey="accuracy" name="Accuracy" radius={[0, 4, 4, 0]} maxBarSize={28}>
+                        {systemPerformanceBarData.map((_, index) => {
+                          const isRedZone = index >= systemPerformanceBarData.length - 3;
+                          return (
+                            <Cell
+                              key={index}
+                              fill={isRedZone ? 'var(--color-data-fail)' : 'var(--color-accent)'}
+                              fillOpacity={isRedZone ? 0.9 : 0.7}
+                            />
+                          );
+                        })}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </ChartContainer>
               )}
             </div>
@@ -771,16 +789,22 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                         const prev7 = userStats.stats.recentPerformance.previous7Days.accuracy ?? 0;
                         const delta = last7 - prev7;
                         const deltaStr =
-                          delta > 0 ? `+${formatPercentForDisplay(delta)}` : formatPercentForDisplay(delta);
+                          delta > 0
+                            ? `+${formatPercentForDisplay(delta)}`
+                            : formatPercentForDisplay(delta);
                         return deltaStr;
                       })()}
                   </p>
                   <p className="text-sm text-action-muted text-center max-w-xs">
-                    Last 7 days: {formatPercentForDisplay(userStats.stats.recentPerformance.last7Days.accuracy)} (
-                    {userStats.stats.recentPerformance.last7Days.attempts} questions)
+                    Last 7 days:{' '}
+                    {formatPercentForDisplay(userStats.stats.recentPerformance.last7Days.accuracy)}{' '}
+                    ({userStats.stats.recentPerformance.last7Days.attempts} questions)
                     <br />
-                    Previous 7 days: {formatPercentForDisplay(userStats.stats.recentPerformance.previous7Days.accuracy)} (
-                    {userStats.stats.recentPerformance.previous7Days.attempts} questions)
+                    Previous 7 days:{' '}
+                    {formatPercentForDisplay(
+                      userStats.stats.recentPerformance.previous7Days.accuracy
+                    )}{' '}
+                    ({userStats.stats.recentPerformance.previous7Days.attempts} questions)
                   </p>
                 </div>
               )}
@@ -815,42 +839,45 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             ) : (
               <>
                 <ChartContainer minHeight={320} className="min-h-[320px] w-full" aria-hidden>
-                <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
-                  <LineChart data={stabilityTrendData} margin={{ top: 4, right: 24, left: 0, bottom: 28 }}>
-                    <CartesianGrid {...chartTheme.grid} />
-                    <XAxis dataKey="date" tick={chartTheme.axis.tick} angle={-20} height={60} />
-                    <YAxis
-                      tick={chartTheme.axis.tick}
-                      label={{
-                        value: 'Stability',
-                        angle: -90,
-                        position: 'insideLeft',
-                        style: { fill: 'var(--color-text-muted)' },
-                      }}
-                    />
-                    <Tooltip
-                      contentStyle={chartTheme.tooltip.contentStyle}
-                      labelStyle={chartTheme.tooltip.labelStyle}
-                      formatter={(value: number | string | undefined, name?: string) => {
-                        if (value === undefined) return ['—', name ?? ''];
-                        if (name === 'avgStability')
-                          return [
-                            typeof value === 'number' ? value.toFixed(1) : value,
-                            'Stability',
-                          ];
-                        return [value, name ?? ''];
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="avgStability"
-                      stroke="var(--color-accent)"
-                      strokeWidth={3}
-                      dot={{ fill: 'var(--color-accent)', r: 4 }}
-                      name="avgStability"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
+                    <LineChart
+                      data={stabilityTrendData}
+                      margin={{ top: 4, right: 24, left: 0, bottom: 28 }}
+                    >
+                      <CartesianGrid {...chartTheme.grid} />
+                      <XAxis dataKey="date" tick={chartTheme.axis.tick} angle={-20} height={60} />
+                      <YAxis
+                        tick={chartTheme.axis.tick}
+                        label={{
+                          value: 'Stability',
+                          angle: -90,
+                          position: 'insideLeft',
+                          style: { fill: 'var(--color-text-muted)' },
+                        }}
+                      />
+                      <Tooltip
+                        contentStyle={chartTheme.tooltip.contentStyle}
+                        labelStyle={chartTheme.tooltip.labelStyle}
+                        formatter={(value: number | string | undefined, name?: string) => {
+                          if (value === undefined) return ['—', name ?? ''];
+                          if (name === 'avgStability')
+                            return [
+                              typeof value === 'number' ? value.toFixed(1) : value,
+                              'Stability',
+                            ];
+                          return [value, name ?? ''];
+                        }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="avgStability"
+                        stroke="var(--color-accent)"
+                        strokeWidth={3}
+                        dot={{ fill: 'var(--color-accent)', r: 4 }}
+                        name="avgStability"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </ChartContainer>
                 <div className="mt-3 p-3 bg-surface-card rounded-lg border border-[var(--color-border)]">
                   <p className="text-xs text-action-muted">
@@ -898,47 +925,47 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </p>
             ) : (
               <ChartContainer minHeight={320} className="min-h-[320px] w-full" aria-hidden>
-              <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
-                <BarChart data={timeData} margin={{ bottom: 28 }}>
-                  <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
-                  <XAxis
-                    dataKey="system"
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                    interval={0}
-                    angle={-20}
-                    height={60}
-                  />
-                  <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
-                  <Tooltip
-                    formatter={(
-                      value: number | string | undefined,
-                      name?: string,
-                      props?: { payload?: TimeDatum }
-                    ) => {
-                      if (value === undefined) return ['—', 'Avg time'];
-                      const entry = props?.payload;
-                      return [
-                        `${value}s (${entry?.count ?? 0} review${entry?.count !== 1 ? 's' : ''})`,
-                        'Avg time',
-                      ];
-                    }}
-                  />
-                  <Bar
-                    dataKey="seconds"
-                    fill="var(--color-accent)"
-                    radius={[6, 6, 0, 0]}
-                    name="Avg seconds"
-                  >
-                    {timeData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill="var(--color-accent)"
-                        fillOpacity={entry.count >= MIN_SYSTEM_REVIEWS ? 1 : 0.3}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
+                  <BarChart data={timeData} margin={{ bottom: 28 }}>
+                    <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
+                    <XAxis
+                      dataKey="system"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                      interval={0}
+                      angle={-20}
+                      height={60}
+                    />
+                    <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+                    <Tooltip
+                      formatter={(
+                        value: number | string | undefined,
+                        name?: string,
+                        props?: { payload?: TimeDatum }
+                      ) => {
+                        if (value === undefined) return ['—', 'Avg time'];
+                        const entry = props?.payload;
+                        return [
+                          `${value}s (${entry?.count ?? 0} review${entry?.count !== 1 ? 's' : ''})`,
+                          'Avg time',
+                        ];
+                      }}
+                    />
+                    <Bar
+                      dataKey="seconds"
+                      fill="var(--color-accent)"
+                      radius={[6, 6, 0, 0]}
+                      name="Avg seconds"
+                    >
+                      {timeData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill="var(--color-accent)"
+                          fillOpacity={entry.count >= MIN_SYSTEM_REVIEWS ? 1 : 0.3}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </ChartContainer>
             )}
           </div>

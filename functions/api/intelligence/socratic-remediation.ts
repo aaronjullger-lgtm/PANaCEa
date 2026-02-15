@@ -21,9 +21,7 @@ const BodySchema = z.object({
     correctAnswer: z.string().min(1),
     userWrongAnswer: z.string().min(1),
     options: z.array(z.string()).optional(),
-    history: z
-      .array(z.object({ role: z.enum(['user', 'tutor']), text: z.string() }))
-      .optional(),
+    history: z.array(z.object({ role: z.enum(['user', 'tutor']), text: z.string() })).optional(),
   }),
 });
 
@@ -111,7 +109,8 @@ ${historyBlock}Generate ONE short guiding question. Do not give the answer.`;
 
   return {
     data: {
-      guidingQuestion: text || "What detail in the vignette suggests your answer might not fit this patient?",
+      guidingQuestion:
+        text || 'What detail in the vignette suggests your answer might not fit this patient?',
     },
   };
 });

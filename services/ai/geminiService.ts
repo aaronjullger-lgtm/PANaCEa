@@ -1078,7 +1078,9 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
         textbookContext && textbookContext.excerpts.length > 0
           ? `\n\nTextbook excerpt (OpenStax: ${textbookContext.title}):\n${textbookContext.excerpts
               .map((excerpt, idx) => `${idx + 1}. ${excerpt}`)
-              .join('\n')}\nUse these excerpts to keep the vignette aligned with authoritative content.`
+              .join(
+                '\n'
+              )}\nUse these excerpts to keep the vignette aligned with authoritative content.`
           : '';
 
       const topicFieldInstruction = `The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".`;
@@ -1236,7 +1238,9 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       textbookContext && textbookContext.excerpts.length > 0
         ? `\n\nTextbook excerpt (OpenStax: ${textbookContext.title}):\n${textbookContext.excerpts
             .map((excerpt, idx) => `${idx + 1}. ${excerpt}`)
-            .join('\n')}\nUse these excerpts to keep the vignette aligned with authoritative content.`
+            .join(
+              '\n'
+            )}\nUse these excerpts to keep the vignette aligned with authoritative content.`
         : '';
 
     prompt = `You are generating a structured JSON object for a PANCE practice question.
@@ -1662,8 +1666,8 @@ Return ONLY raw JSON (no markdown formatting) with this structure:
     const normalizedCorrect = (correctDiagnosis || '').toLowerCase();
     const isCorrect = Boolean(
       normalizedUser &&
-        normalizedCorrect &&
-        (normalizedUser.includes(normalizedCorrect) || normalizedCorrect.includes(normalizedUser))
+      normalizedCorrect &&
+      (normalizedUser.includes(normalizedCorrect) || normalizedCorrect.includes(normalizedUser))
     );
     return {
       isCorrect,

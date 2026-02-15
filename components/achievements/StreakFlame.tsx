@@ -61,7 +61,10 @@ export function StreakFlame({
   const intensity = getAnimationIntensity();
 
   return (
-    <div className="relative inline-flex flex-col items-center gap-1" style={{ transform: 'translateZ(0)' }}>
+    <div
+      className="relative inline-flex flex-col items-center gap-1"
+      style={{ transform: 'translateZ(0)' }}
+    >
       {/* Flame Icon Container — GPU layer; no glow/bounce when low power (battery drain audit) */}
       <div className="relative">
         {/* Outer glow */}

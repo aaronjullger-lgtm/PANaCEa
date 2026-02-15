@@ -108,17 +108,14 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
           Back
         </button>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
             <ImageIcon className="w-8 h-8" />
             Anatomy Visualizer
           </h1>
           <p className="text-[var(--color-text-muted)] mt-1">
-            Generate an anatomy image (Firefly) and segment regions (Gemini). Click regions for labels.
+            Generate an anatomy image (Firefly) and segment regions (Gemini). Click regions for
+            labels.
           </p>
         </motion.div>
 
@@ -145,11 +142,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             </p>
           )}
           {result && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-4"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
               <div className="relative inline-block max-w-full">
                 <img
                   ref={imgRef}
@@ -165,7 +158,9 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
               </div>
               {result.masks.length > 0 && (
                 <div className="mt-4">
-                  <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-2">Segments</h3>
+                  <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-2">
+                    Segments
+                  </h3>
                   <ul className="flex flex-wrap gap-2">
                     {result.masks.map((m, i) => (
                       <li key={i}>
@@ -185,9 +180,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                     ))}
                   </ul>
                   {hoveredLabel && (
-                    <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-                      {hoveredLabel}
-                    </p>
+                    <p className="mt-2 text-sm text-[var(--color-text-muted)]">{hoveredLabel}</p>
                   )}
                 </div>
               )}

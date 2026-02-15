@@ -134,9 +134,7 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
   return (
     <div className="rounded-xl border border-slate-700 bg-[var(--color-bg-primary)] overflow-hidden">
       <div className="p-4 border-b border-slate-700 flex flex-wrap items-center gap-3">
-        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-          Staging Lake
-        </h2>
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Staging Lake</h2>
         <select
           aria-label="Filter by status"
           value={statusFilter}
@@ -159,9 +157,7 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
         </button>
       </div>
 
-      {loading && (
-        <div className="p-8 text-center text-[var(--color-text-muted)]">Loading…</div>
-      )}
+      {loading && <div className="p-8 text-center text-[var(--color-text-muted)]">Loading…</div>}
       {!loading && items.length === 0 && (
         <div className="p-8 text-center text-[var(--color-text-muted)]">
           No staging questions for status &quot;{statusFilter}&quot;.
@@ -177,19 +173,20 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
                     <span className="text-xs font-medium text-slate-400">
                       {item.system} · {item.difficulty}
                     </span>
-                    {item.aiGrade != null && (() => {
-                      const score = aiScore(item) ?? 0;
-                      let badgeClass = 'bg-red-500/20 text-red-400';
-                      if (score >= 70) badgeClass = 'bg-emerald-500/20 text-emerald-400';
-                      else if (score >= 40) badgeClass = 'bg-amber-500/20 text-amber-400';
-                      return (
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass}`}
-                        >
-                          AI: {aiScore(item) ?? '—'}%
-                        </span>
-                      );
-                    })()}
+                    {item.aiGrade != null &&
+                      (() => {
+                        const score = aiScore(item) ?? 0;
+                        let badgeClass = 'bg-red-500/20 text-red-400';
+                        if (score >= 70) badgeClass = 'bg-emerald-500/20 text-emerald-400';
+                        else if (score >= 40) badgeClass = 'bg-amber-500/20 text-amber-400';
+                        return (
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass}`}
+                          >
+                            AI: {aiScore(item) ?? '—'}%
+                          </span>
+                        );
+                      })()}
                   </div>
                   <div className="text-sm text-[var(--color-text-muted)] line-clamp-2">
                     {item.vignette}

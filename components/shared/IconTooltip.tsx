@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, Info, AlertCircle, CheckCircle, XCircle, ChevronRight, ExternalLink } from 'lucide-react';
+import {
+  HelpCircle,
+  Info,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  ChevronRight,
+  ExternalLink,
+} from 'lucide-react';
 
 export type TooltipVariant = 'info' | 'help' | 'warning' | 'success' | 'error' | 'action';
 
@@ -78,7 +86,7 @@ const variantConfig = {
 
 /**
  * IconTooltip Component
- * 
+ *
  * A standardized tooltip component for icon-only buttons and unclear controls.
  * Provides accessible tooltips with proper positioning, delay, and variant styling.
  */
@@ -109,7 +117,7 @@ export const IconTooltip: React.FC<IconTooltipProps> = ({
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    
+
     timeoutRef.current = setTimeout(() => {
       setIsVisible(true);
       onShow?.();
@@ -121,7 +129,7 @@ export const IconTooltip: React.FC<IconTooltipProps> = ({
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    
+
     setIsVisible(false);
     onHide?.();
   };
@@ -245,9 +253,17 @@ export const IconTooltip: React.FC<IconTooltipProps> = ({
         {isVisible && (
           <motion.div
             ref={tooltipRef}
-            initial={{ opacity: 0, scale: 0.9, y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0 }}
+            initial={{
+              opacity: 0,
+              scale: 0.9,
+              y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0,
+            }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0 }}
+            exit={{
+              opacity: 0,
+              scale: 0.9,
+              y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0,
+            }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className={`fixed z-[9999] ${config.bgColor} ${config.textColor} ${config.borderColor} border rounded-lg shadow-lg px-3 py-2 text-sm leading-relaxed pointer-events-none ${
               interactive ? 'pointer-events-auto' : ''
@@ -266,7 +282,13 @@ export const IconTooltip: React.FC<IconTooltipProps> = ({
               <div
                 className={`absolute w-3 h-3 ${config.bgColor} ${config.borderColor} border-l border-t transform rotate-45`}
                 style={{
-                  [position === 'top' ? 'bottom' : position === 'bottom' ? 'top' : position === 'left' ? 'right' : 'left']: '-6px',
+                  [position === 'top'
+                    ? 'bottom'
+                    : position === 'bottom'
+                      ? 'top'
+                      : position === 'left'
+                        ? 'right'
+                        : 'left']: '-6px',
                   left: position === 'left' || position === 'right' ? '50%' : '50%',
                   marginLeft: position === 'left' || position === 'right' ? '-6px' : '0',
                   marginTop: position === 'top' || position === 'bottom' ? '0' : '-6px',

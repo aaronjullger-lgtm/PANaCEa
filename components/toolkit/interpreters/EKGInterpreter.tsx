@@ -107,40 +107,62 @@ function interpretEKG(
       findings.primaryFinding = 'Atrial fibrillation';
       findings.urgency = rate > 120 ? 'urgent' : 'routine';
       findings.differential = ['Hypertension', 'CAD', 'HF', 'Thyrotoxicosis', 'EtOH', 'Lone AF'];
-      findings.pearls = ['Irregularly irregular. No P waves. Check CHA₂DS₂-VASc for anticoagulation.'];
-      findings.recommendation = 'Rate vs rhythm control. Anticoagulation per CHA₂DS₂-VASc. Treat reversible causes.';
+      findings.pearls = [
+        'Irregularly irregular. No P waves. Check CHA₂DS₂-VASc for anticoagulation.',
+      ];
+      findings.recommendation =
+        'Rate vs rhythm control. Anticoagulation per CHA₂DS₂-VASc. Treat reversible causes.';
       break;
     case 'aflutter':
       findings.primaryFinding = 'Atrial flutter';
       findings.differential = ['Same as AF', 'Post-cardiac surgery', 'Pulmonary disease'];
       findings.pearls = ['Sawtooth flutter waves. Often 2:1 or 4:1 block. Consider ablation.'];
-      findings.recommendation = 'Rate control; anticoagulation. Consider cardioversion or ablation.';
+      findings.recommendation =
+        'Rate control; anticoagulation. Consider cardioversion or ablation.';
       break;
     case 'svt':
       findings.primaryFinding = 'Narrow complex tachycardia (SVT)';
       findings.urgency = 'urgent';
-      findings.differential = ['AVNRT', 'AVRT (WPW)', 'Atrial tachycardia', 'Junctional tachycardia'];
-      findings.pearls = ['Vagal maneuvers, adenosine. If WPW + AF → avoid nodal blockers (use procainamide/amiodarone).'];
-      findings.recommendation = 'Vagal maneuvers first. Adenosine 6→12→12 mg if stable. Cardiovert if unstable.';
+      findings.differential = [
+        'AVNRT',
+        'AVRT (WPW)',
+        'Atrial tachycardia',
+        'Junctional tachycardia',
+      ];
+      findings.pearls = [
+        'Vagal maneuvers, adenosine. If WPW + AF → avoid nodal blockers (use procainamide/amiodarone).',
+      ];
+      findings.recommendation =
+        'Vagal maneuvers first. Adenosine 6→12→12 mg if stable. Cardiovert if unstable.';
       break;
     case 'vt':
       findings.primaryFinding = 'Wide complex tachycardia (presumed VT)';
       findings.urgency = 'emergent';
       findings.differential = ['VT', 'SVT with aberrancy', 'WPW + AF'];
-      findings.pearls = ['Treat as VT until proven otherwise. Amiodarone or procainamide. Synchronized cardioversion if unstable.'];
+      findings.pearls = [
+        'Treat as VT until proven otherwise. Amiodarone or procainamide. Synchronized cardioversion if unstable.',
+      ];
       findings.recommendation = 'ACLS protocol. Unstable → immediate synchronized cardioversion.';
       break;
     case 'brady':
       findings.primaryFinding = 'Sinus bradycardia';
-      findings.differential = ['Athlete', 'Hypothyroidism', 'Medications (β-blockers)', 'Sick sinus', 'Hypoxia'];
+      findings.differential = [
+        'Athlete',
+        'Hypothyroidism',
+        'Medications (β-blockers)',
+        'Sick sinus',
+        'Hypoxia',
+      ];
       findings.pearls = ['If symptomatic → atropine, pacing. Check for reversible causes.'];
-      findings.recommendation = 'Symptomatic? Treat underlying cause. Atropine 0.5 mg IV; consider transcutaneous pacing.';
+      findings.recommendation =
+        'Symptomatic? Treat underlying cause. Atropine 0.5 mg IV; consider transcutaneous pacing.';
       break;
     case 'heart_block_1':
       findings.primaryFinding = 'First-degree AV block';
       findings.differential = ['Normal variant', 'Medications', 'Lyme', 'Inferior MI'];
       findings.pearls = ['PR > 200 ms. Usually benign. Monitor.'];
-      findings.recommendation = 'Usually no treatment. Avoid aggravating meds. Repeat EKG if symptomatic.';
+      findings.recommendation =
+        'Usually no treatment. Avoid aggravating meds. Repeat EKG if symptomatic.';
       break;
     case 'heart_block_2_type1':
       findings.primaryFinding = 'Second-degree AV block (Mobitz I / Wenckebach)';
@@ -152,15 +174,19 @@ function interpretEKG(
       findings.primaryFinding = 'Second-degree AV block (Mobitz II)';
       findings.urgency = 'urgent';
       findings.differential = ['Anterior MI', 'Infranodal', 'Progresses to 3° block'];
-      findings.pearls = ['Constant PR, sudden dropped beat. Infranodal; often needs permanent pacemaker.'];
-      findings.recommendation = 'Consult cardiology. High risk of complete heart block. Temporary pacing if unstable.';
+      findings.pearls = [
+        'Constant PR, sudden dropped beat. Infranodal; often needs permanent pacemaker.',
+      ];
+      findings.recommendation =
+        'Consult cardiology. High risk of complete heart block. Temporary pacing if unstable.';
       break;
     case 'heart_block_3':
       findings.primaryFinding = 'Third-degree AV block (complete heart block)';
       findings.urgency = 'emergent';
       findings.differential = ['Inferior MI', 'Anterior MI', 'Lyme', 'Idiopathic fibrosis'];
       findings.pearls = ['P and QRS dissociated. Escape rhythm (junctional or ventricular).'];
-      findings.recommendation = 'Temporary pacing. Treat reversible causes. Often needs permanent pacemaker.';
+      findings.recommendation =
+        'Temporary pacing. Treat reversible causes. Often needs permanent pacemaker.';
       break;
     case 'sinus':
       findings.primaryFinding = 'Sinus rhythm';
@@ -171,7 +197,8 @@ function interpretEKG(
       findings.primaryFinding = 'PVCs / ventricular ectopy';
       findings.differential = ['Benign', 'CAD', 'CMP', 'Electrolytes', 'Caffeine'];
       findings.pearls = ['> 6/min, couplets, R-on-T → higher risk. Echo if concerning.'];
-      findings.recommendation = 'Treat reversible causes. β-blockers if symptomatic. Workup if high burden.';
+      findings.recommendation =
+        'Treat reversible causes. β-blockers if symptomatic. Workup if high burden.';
       break;
     default:
       findings.primaryFinding = rhythm;
@@ -183,7 +210,8 @@ function interpretEKG(
     findings.criteria.push('ST elevation');
     findings.differential = ['STEMI', 'Pericarditis', 'BER', 'LV aneurysm', 'Prinzmetal'];
     findings.pearls.push('STEMI: regional, convex, reciprocal changes. Activate cath lab.');
-    findings.recommendation = 'If STEMI criteria met: aspirin, heparin, activate cath lab. Nitrates avoid if inferior+RV.';
+    findings.recommendation =
+      'If STEMI criteria met: aspirin, heparin, activate cath lab. Nitrates avoid if inferior+RV.';
   } else if (st === 'depression') {
     findings.urgency = findings.urgency === 'routine' ? 'urgent' : findings.urgency;
     findings.criteria.push('ST depression');
@@ -194,7 +222,14 @@ function interpretEKG(
   // T-wave
   if (tWave === 'inverted') {
     findings.criteria.push('T-wave inversion');
-    findings.differential = [...findings.differential, 'Ischemia', 'PE', 'LVH', 'HOCM', 'CNS event'];
+    findings.differential = [
+      ...findings.differential,
+      'Ischemia',
+      'PE',
+      'LVH',
+      'HOCM',
+      'CNS event',
+    ];
   } else if (tWave === 'peaked') {
     findings.criteria.push('Peaked T-waves');
     findings.differential = [...findings.differential, 'Hyperkalemia', 'Early STEMI', 'BER'];
@@ -204,8 +239,16 @@ function interpretEKG(
   // Prolonged QT
   if (qt > 440) {
     findings.urgency = findings.urgency === 'routine' ? 'urgent' : findings.urgency;
-    findings.differential = [...findings.differential, 'Drugs (QT-prolonging)', 'HypoCa', 'HypoMg', 'LQTS'];
-    findings.pearls.push('Prolonged QT → Torsades risk. Hold QT-prolonging drugs; correct electrolytes.');
+    findings.differential = [
+      ...findings.differential,
+      'Drugs (QT-prolonging)',
+      'HypoCa',
+      'HypoMg',
+      'LQTS',
+    ];
+    findings.pearls.push(
+      'Prolonged QT → Torsades risk. Hold QT-prolonging drugs; correct electrolytes.'
+    );
   }
 
   return findings;
@@ -248,8 +291,9 @@ export const EKGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
         <div className="flex items-center gap-3">
           <Heart className="w-6 h-6 text-[var(--color-accent)]" />
           <div className="text-sm text-[var(--color-text-muted)]">
-            Enter key EKG findings for rule-based interpretation. For full ECG patterns and DDx, use the{' '}
-            <strong className="text-[var(--color-text-primary)]">Knowledge Base</strong> Condition Library.
+            Enter key EKG findings for rule-based interpretation. For full ECG patterns and DDx, use
+            the <strong className="text-[var(--color-text-primary)]">Knowledge Base</strong>{' '}
+            Condition Library.
           </div>
         </div>
       </div>
@@ -332,9 +376,7 @@ export const EKGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
             exit={{ opacity: 0 }}
             className="space-y-4"
           >
-            <div
-              className={`rounded-2xl p-6 border-2 ${urgencyColors[interpretation.urgency]}`}
-            >
+            <div className={`rounded-2xl p-6 border-2 ${urgencyColors[interpretation.urgency]}`}>
               <div className="flex items-start gap-4">
                 <Activity
                   className={`w-10 h-10 flex-shrink-0 ${

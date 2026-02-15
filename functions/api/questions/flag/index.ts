@@ -77,7 +77,10 @@ export const onRequestPost = authenticatedEndpoint(
           if (shouldReject) killSwitchTriggered = true;
         }
       } catch (killSwitchError) {
-        console.error('[KillSwitch] Failed to update PreGeneratedQuestion flag stats:', killSwitchError);
+        console.error(
+          '[KillSwitch] Failed to update PreGeneratedQuestion flag stats:',
+          killSwitchError
+        );
       }
 
       // Check for auto-demotion: if question has >= 3 pending flags, demote it
@@ -100,10 +103,8 @@ export const onRequestPost = authenticatedEndpoint(
             const qd = (preGenQuestion.questionData as Record<string, unknown>) || {};
             const question = typeof qd.question === 'string' ? qd.question : '';
             const options = Array.isArray(qd.options) ? qd.options : [];
-            const correctAnswer =
-              typeof qd.correctAnswer === 'string' ? qd.correctAnswer : 'A';
-            const explanation =
-              typeof qd.explanation === 'string' ? qd.explanation : 'See review.';
+            const correctAnswer = typeof qd.correctAnswer === 'string' ? qd.correctAnswer : 'A';
+            const explanation = typeof qd.explanation === 'string' ? qd.explanation : 'See review.';
             const vignette = typeof qd.vignette === 'string' ? qd.vignette : '';
 
             await prisma.stagingQuestion.create({
@@ -158,7 +159,8 @@ export const onRequestPost = authenticatedEndpoint(
         message =
           'Question flagged; high flag rate triggered automatic removal from the pool. Thank you for your feedback!';
       } else if (demoted) {
-        message = 'Question flagged and automatically removed from pool for review. Thank you for your feedback!';
+        message =
+          'Question flagged and automatically removed from pool for review. Thank you for your feedback!';
       }
       return {
         status: 200,

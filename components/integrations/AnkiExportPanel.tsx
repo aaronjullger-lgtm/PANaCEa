@@ -79,7 +79,9 @@ export const AnkiExportPanel: React.FC<AnkiExportPanelProps> = ({
       {/* Export Options */}
       <div className="space-y-3 mb-6 p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium text-[var(--color-text-secondary)]">Deck Name:</label>
+          <label className="text-sm font-medium text-[var(--color-text-secondary)]">
+            Deck Name:
+          </label>
           <input
             type="text"
             value={options.deckName}

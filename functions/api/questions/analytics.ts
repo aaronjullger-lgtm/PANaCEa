@@ -237,9 +237,7 @@ async function getPoolStats(
     _count: { id: true },
   });
 
-  const usedMap = new Map<string, number>(
-    usedBySystem.map((u) => [u.system ?? '', u._count.id])
-  );
+  const usedMap = new Map<string, number>(usedBySystem.map((u) => [u.system ?? '', u._count.id]));
 
   const systemBreakdown: Record<string, { total: number; used: number; unused: number }> = {};
   for (const s of bySystem) {

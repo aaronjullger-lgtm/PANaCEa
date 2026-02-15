@@ -12,7 +12,7 @@ import {
   shouldOfferGuestMode as checkShouldOfferGuestMode,
   recordAuthFailure,
   clearAuthFailures,
-  getGuestModeTimeRemaining
+  getGuestModeTimeRemaining,
 } from '@/services/auth/guestAuth';
 
 interface EnhancedAuthResult {
@@ -50,7 +50,7 @@ const MAX_RETRIES = 3;
 export function useEnhancedAuth(): EnhancedAuthResult {
   const { isLoaded: clerkLoaded, isSignedIn } = useUser();
   const { getToken } = useAuth();
-  
+
   const [error, setError] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [hasTimedOut, setHasTimedOut] = useState(false);
@@ -67,7 +67,11 @@ export function useEnhancedAuth(): EnhancedAuthResult {
     setIsGuestMode(guestActive);
     if (guestActive) {
       setGuestTimeRemaining(getGuestModeTimeRemaining());
-      console.log('[Auth] Guest mode restored, time remaining:', getGuestModeTimeRemaining(), 'minutes');
+      console.log(
+        '[Auth] Guest mode restored, time remaining:',
+        getGuestModeTimeRemaining(),
+        'minutes'
+      );
     }
   }, []);
 
@@ -86,7 +90,9 @@ export function useEnhancedAuth(): EnhancedAuthResult {
 
       if (currentElapsed > AUTH_TIMEOUT_MS) {
         setHasTimedOut(true);
-        setError('Authentication is taking longer than expected. You can try guest mode or check your connection.');
+        setError(
+          'Authentication is taking longer than expected. You can try guest mode or check your connection.'
+        );
         recordAuthFailure(); // Record this as an auth failure
         clearInterval(interval);
       }
@@ -98,11 +104,11 @@ export function useEnhancedAuth(): EnhancedAuthResult {
   // Update guest mode time remaining
   useEffect(() => {
     if (!isGuestMode) return;
-    
+
     const interval = setInterval(() => {
       setGuestTimeRemaining(getGuestModeTimeRemaining());
     }, 60000); // Update every minute
-    
+
     return () => clearInterval(interval);
   }, [isGuestMode]);
 
@@ -121,9 +127,13 @@ export function useEnhancedAuth(): EnhancedAuthResult {
 
         // Check for console errors (simplified - in real app would use error boundary)
         const originalConsoleError = console.error;
-        console.error = function(...args) {
+        console.error = function (...args) {
           const errorStr = args.join(' ');
-          if (errorStr.includes('Clerk') || errorStr.includes('authentication') || errorStr.includes('token')) {
+          if (
+            errorStr.includes('Clerk') ||
+            errorStr.includes('authentication') ||
+            errorStr.includes('token')
+          ) {
             setError(`Authentication error: ${errorStr.substring(0, 100)}...`);
             recordAuthFailure();
           }
@@ -144,13 +154,15 @@ export function useEnhancedAuth(): EnhancedAuthResult {
     setError(null);
     setElapsedTime(0);
     setHasTimedOut(false);
-    
+
     const newRetryCount = retryCount + 1;
     setRetryCount(newRetryCount);
     localStorage.setItem(AUTH_RETRY_COUNT_KEY, newRetryCount.toString());
 
     if (newRetryCount >= MAX_RETRIES) {
-      setError(`Authentication failed after ${MAX_RETRIES} attempts. Try guest mode or check your Clerk configuration.`);
+      setError(
+        `Authentication failed after ${MAX_RETRIES} attempts. Try guest mode or check your Clerk configuration.`
+      );
     } else {
       // Force Clerk to retry by reloading the page (simplest approach)
       console.log(`[Auth] Retry attempt ${newRetryCount}/${MAX_RETRIES}`);
@@ -199,15 +211,17 @@ export function shouldOfferGuestMode(): boolean {
  */
 export function exitGuestMode(): void {
   // Call the imported exitGuestMode function from guestAuth service
-  import('@/services/auth/guestAuth').then(({ exitGuestMode: guestAuthExit }) => {
-    guestAuthExit();
-    window.location.reload();
-  }).catch(() => {
-    // Fallback if import fails
-    localStorage.removeItem('pance-guest-mode');
-    localStorage.removeItem('pance-guest-expiry');
-    window.location.reload();
-  });
+  import('@/services/auth/guestAuth')
+    .then(({ exitGuestMode: guestAuthExit }) => {
+      guestAuthExit();
+      window.location.reload();
+    })
+    .catch(() => {
+      // Fallback if import fails
+      localStorage.removeItem('pance-guest-mode');
+      localStorage.removeItem('pance-guest-expiry');
+      window.location.reload();
+    });
 }
 
 /**

@@ -48,10 +48,10 @@ export function LiveInterface({
   const [vitals, setVitals] = useState<VitalsState>({});
   // Use a reducer for the transcript to avoid O(n) spread-copy on every incoming message.
   // The reducer pushes to a mutable array and returns a new reference to trigger re-render.
-  const [transcript, appendTranscript] = useReducer(
-    (prev: string[], line: string) => { prev.push(line); return [...prev]; },
-    [] as string[]
-  );
+  const [transcript, appendTranscript] = useReducer((prev: string[], line: string) => {
+    prev.push(line);
+    return [...prev];
+  }, [] as string[]);
   const [textInput, setTextInput] = useState('');
   const [loading, setLoading] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
@@ -64,9 +64,9 @@ export function LiveInterface({
       const token = await getToken();
       const base = getApiEndpoint('/api/osce/live-engine');
       const query = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : '';
-      const res = await fetch(`${base}${query}`,
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-      );
+      const res = await fetch(`${base}${query}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (!res.ok) throw new Error('Failed to load live config');
       const data = (await res.json()) as { data?: LiveConfig };
       setConfig(data.data ?? null);
@@ -99,26 +99,23 @@ export function LiveInterface({
     }
   }, [sessionId, getToken]);
 
-  const sendToolResponse = useCallback(
-    (id: string, name: string, result: unknown) => {
-      const wsSocket = wsRef.current;
-      if (!wsSocket || wsSocket.readyState !== WebSocket.OPEN) return;
-      wsSocket.send(
-        JSON.stringify({
-          toolResponse: {
-            functionResponses: [
-              {
-                id,
-                name,
-                response: result,
-              },
-            ],
-          },
-        })
-      );
-    },
-    []
-  );
+  const sendToolResponse = useCallback((id: string, name: string, result: unknown) => {
+    const wsSocket = wsRef.current;
+    if (!wsSocket || wsSocket.readyState !== WebSocket.OPEN) return;
+    wsSocket.send(
+      JSON.stringify({
+        toolResponse: {
+          functionResponses: [
+            {
+              id,
+              name,
+              response: result,
+            },
+          ],
+        },
+      })
+    );
+  }, []);
 
   const connect = useCallback(async () => {
     const cfg = config ?? (await fetchConfig());
@@ -146,7 +143,9 @@ export function LiveInterface({
 
         if (msg.serverContent) {
           const content = msg.serverContent as {
-            modelTurn?: { parts?: { text?: string; inlineData?: { data: string; mimeType: string } }[] };
+            modelTurn?: {
+              parts?: { text?: string; inlineData?: { data: string; mimeType: string } }[];
+            };
             interrupted?: boolean;
             generationComplete?: boolean;
           };
@@ -162,7 +161,9 @@ export function LiveInterface({
         }
 
         if (msg.toolCall) {
-          const toolCall = msg.toolCall as { functionCalls?: { id: string; name: string; args?: Record<string, unknown> }[] };
+          const toolCall = msg.toolCall as {
+            functionCalls?: { id: string; name: string; args?: Record<string, unknown> }[];
+          };
           const calls = toolCall.functionCalls ?? [];
           for (const call of calls) {
             if (call.name === 'get_current_vitals') {

@@ -1,16 +1,16 @@
 /**
  * Patient A/V Engine Runtime Service
- * 
+ *
  * Event-driven state machine that synchronizes real-time voice interaction
  * with dynamic video loops based on clinical triggers.
- * 
+ *
  * This service:
  * 1. Evaluates clinical conditions against vitals/physicalFindings
  * 2. Activates appropriate triggers
  * 3. Executes state transitions
  * 4. Emits WebSocket events for client synchronization
  * 5. Updates voice modulation and video states
- * 
+ *
  * @module patientAVEngine
  */
 
@@ -41,7 +41,7 @@ export function evaluateCondition(
   if ('field' in expression) {
     // Leaf node: evaluate field comparison
     const value = getNestedValue(context, expression.field);
-    
+
     switch (expression.operator) {
       case 'eq':
         return value === expression.value;
@@ -84,7 +84,7 @@ export function evaluateCondition(
 function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
   const parts = path.split('.');
   let current: unknown = obj;
-  
+
   for (const part of parts) {
     if (current && typeof current === 'object' && part in current) {
       current = (current as Record<string, unknown>)[part];
@@ -92,7 +92,7 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
       return undefined;
     }
   }
-  
+
   return current;
 }
 
@@ -170,7 +170,7 @@ export class PatientAVEngine {
   ): void {
     const previousVitals = { ...this.engineState.currentVitals };
     this.engineState.currentVitals = { ...this.engineState.currentVitals, ...vitals };
-    
+
     if (physicalFindings) {
       this.engineState.currentPhysicalFindings = {
         ...this.engineState.currentPhysicalFindings,
@@ -178,9 +178,7 @@ export class PatientAVEngine {
       };
     }
 
-    const changedFields = Object.keys(vitals).filter(
-      (key) => previousVitals[key] !== vitals[key]
-    );
+    const changedFields = Object.keys(vitals).filter((key) => previousVitals[key] !== vitals[key]);
 
     // Evaluate all triggers
     const triggersEvaluated = this.evaluateTriggers();

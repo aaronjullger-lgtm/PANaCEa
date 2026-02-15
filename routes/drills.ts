@@ -70,7 +70,11 @@ function parseLabValue(
   };
 }
 
-const PANEL_CONFIGS: { key: string; name: string; mappings: { key: string; name: string; unit: string; range: string }[] }[] = [
+const PANEL_CONFIGS: {
+  key: string;
+  name: string;
+  mappings: { key: string; name: string; unit: string; range: string }[];
+}[] = [
   {
     key: 'completeBloodCount',
     name: 'Complete Blood Count',
@@ -103,7 +107,12 @@ const PANEL_CONFIGS: { key: string; name: string; mappings: { key: string; name:
   },
 ];
 
-function transformLabCase(dbCase: { id: string; clinicalVignette: string; correctDiagnosis: string; labs: Record<string, unknown> }): TransformedLabCase {
+function transformLabCase(dbCase: {
+  id: string;
+  clinicalVignette: string;
+  correctDiagnosis: string;
+  labs: Record<string, unknown>;
+}): TransformedLabCase {
   const labs = dbCase.labs || {};
   const panels: LabPanel[] = [];
   const keyFindings: string[] = [];
@@ -119,7 +128,9 @@ function transformLabCase(dbCase: { id: string; clinicalVignette: string; correc
       if (parsed) {
         labPanel.values.push({ name: m.name, ...parsed });
         if (parsed.isAbnormal && parsed.abnormalDirection) {
-          keyFindings.push(`${m.name}: ${parsed.value} ${parsed.unit} (${parsed.abnormalDirection})`);
+          keyFindings.push(
+            `${m.name}: ${parsed.value} ${parsed.unit} (${parsed.abnormalDirection})`
+          );
         }
       }
     }
@@ -128,12 +139,42 @@ function transformLabCase(dbCase: { id: string; clinicalVignette: string; correc
 
   const diagnosis = dbCase.correctDiagnosis.toLowerCase();
   let category = 'random';
-  if (diagnosis.includes('anemia') || diagnosis.includes('hematology') || diagnosis.includes('hemolytic')) category = 'hematology';
-  else if (diagnosis.includes('diabetic') || diagnosis.includes('dka') || diagnosis.includes('acidosis')) category = 'metabolic';
-  else if (diagnosis.includes('thyroid') || diagnosis.includes('addison') || diagnosis.includes('siadh')) category = 'endocrine';
-  else if (diagnosis.includes('renal') || diagnosis.includes('kidney') || diagnosis.includes('nephrotic')) category = 'renal';
-  else if (diagnosis.includes('hepat') || diagnosis.includes('liver') || diagnosis.includes('cirrhosis')) category = 'hepatic';
-  else if (diagnosis.includes('cardiac') || diagnosis.includes('heart') || diagnosis.includes('infarction')) category = 'cardiac';
+  if (
+    diagnosis.includes('anemia') ||
+    diagnosis.includes('hematology') ||
+    diagnosis.includes('hemolytic')
+  )
+    category = 'hematology';
+  else if (
+    diagnosis.includes('diabetic') ||
+    diagnosis.includes('dka') ||
+    diagnosis.includes('acidosis')
+  )
+    category = 'metabolic';
+  else if (
+    diagnosis.includes('thyroid') ||
+    diagnosis.includes('addison') ||
+    diagnosis.includes('siadh')
+  )
+    category = 'endocrine';
+  else if (
+    diagnosis.includes('renal') ||
+    diagnosis.includes('kidney') ||
+    diagnosis.includes('nephrotic')
+  )
+    category = 'renal';
+  else if (
+    diagnosis.includes('hepat') ||
+    diagnosis.includes('liver') ||
+    diagnosis.includes('cirrhosis')
+  )
+    category = 'hepatic';
+  else if (
+    diagnosis.includes('cardiac') ||
+    diagnosis.includes('heart') ||
+    diagnosis.includes('infarction')
+  )
+    category = 'cardiac';
 
   const explanation = `The lab findings are consistent with ${dbCase.correctDiagnosis}.`;
 
@@ -185,24 +226,28 @@ router.get('/lab-cases', requireAuth, async (req: Request, res: Response): Promi
   }
 });
 
-router.post('/lab-cases', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    if (!process.env.DATABASE_URL) {
-      res.status(503).json({ success: false, error: 'Database not configured' });
-      return;
+router.post(
+  '/lab-cases',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        res.status(503).json({ success: false, error: 'Database not configured' });
+        return;
+      }
+      const action = req.body?.action;
+      if (action !== 'getDiagnoses') {
+        res.status(400).json({ success: false, error: 'Invalid action' });
+        return;
+      }
+      const cases = await prisma.labCase.findMany({ select: { correctDiagnosis: true } });
+      const diagnoses = [...new Set(cases.map((c) => c.correctDiagnosis))].sort();
+      res.json({ success: true, diagnoses });
+    } catch (error) {
+      console.error('Error in lab-cases POST:', error);
+      res.status(500).json({ success: false, error: 'Request failed' });
     }
-    const action = req.body?.action;
-    if (action !== 'getDiagnoses') {
-      res.status(400).json({ success: false, error: 'Invalid action' });
-      return;
-    }
-    const cases = await prisma.labCase.findMany({ select: { correctDiagnosis: true } });
-    const diagnoses = [...new Set(cases.map((c) => c.correctDiagnosis))].sort();
-    res.json({ success: true, diagnoses });
-  } catch (error) {
-    console.error('Error in lab-cases POST:', error);
-    res.status(500).json({ success: false, error: 'Request failed' });
   }
-});
+);
 
 export default router;

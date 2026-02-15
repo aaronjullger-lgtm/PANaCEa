@@ -72,11 +72,7 @@ interface ProductTourProps {
   onComplete?: () => void;
 }
 
-export const ProductTour: React.FC<ProductTourProps> = ({
-  isOpen,
-  onClose,
-  onComplete,
-}) => {
+export const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onComplete }) => {
   const [stepIndex, setStepIndex] = useState(0);
   const step = STEPS[stepIndex];
   const isLastStep = stepIndex === STEPS.length - 1;
@@ -190,7 +186,10 @@ export const ProductTour: React.FC<ProductTourProps> = ({
                     <Icon className="w-6 h-6 text-[var(--color-accent)]" />
                   </div>
                   <div>
-                    <h3 id="product-tour-title" className="text-lg font-bold text-[var(--color-text-primary)]">
+                    <h3
+                      id="product-tour-title"
+                      className="text-lg font-bold text-[var(--color-text-primary)]"
+                    >
                       {step.title}
                     </h3>
                     <p className="text-sm text-[var(--color-text-muted)] mt-1">

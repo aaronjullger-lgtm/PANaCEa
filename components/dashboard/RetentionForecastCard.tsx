@@ -44,8 +44,7 @@ function buildChartData(decayCurveData: DecayPoint[]): Array<{
     return Array.from({ length: 31 }, (_, day) => ({
       day,
       withoutReview: Math.max(0, Math.min(100, Math.exp(-day / 5) * 100)),
-      afterReview:
-        day === 0 ? 100 : Math.max(0, Math.min(100, Math.exp(-(day - 1) / 5) * 100)),
+      afterReview: day === 0 ? 100 : Math.max(0, Math.min(100, Math.exp(-(day - 1) / 5) * 100)),
     }));
   }
   return decayCurveData.map((d, i) => ({
@@ -151,11 +150,7 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
                 <stop offset="95%" stopColor="var(--color-data-pass)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="var(--color-border)"
-              vertical={false}
-            />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
             <XAxis
               dataKey="day"
               stroke="var(--color-text-muted)"
@@ -176,7 +171,10 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
               strokeDasharray="3 3"
               strokeWidth={1}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--color-accent)', strokeWidth: 1 }} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ stroke: 'var(--color-accent)', strokeWidth: 1 }}
+            />
             <Legend
               wrapperStyle={{ fontSize: 11 }}
               formatter={(value) => (

@@ -31,7 +31,9 @@ async function waitForAppReady(page: Page) {
 async function checkHorizontalScroll(page: Page): Promise<LayoutViolation[]> {
   return page.evaluate(() => {
     const out: LayoutViolation[] = [];
-    const scrollables = document.querySelectorAll('body, main, [data-testid="app-container"], #root, [role="main"]');
+    const scrollables = document.querySelectorAll(
+      'body, main, [data-testid="app-container"], #root, [role="main"]'
+    );
     scrollables.forEach((el) => {
       const overflowX = getComputedStyle(el).overflowX;
       const scrollWidth = (el as HTMLElement).scrollWidth;
@@ -61,7 +63,12 @@ async function checkCrampedFlexRows(page: Page): Promise<LayoutViolation[]> {
         const cls = (el.className as string).split(/\s+/).find((c) => c.startsWith('flex'));
         out.push({
           kind: 'awkward_wrap',
-          selector: el.tagName.toLowerCase() + (el.className ? '.' + (el.className as string).split(/\s+/).slice(0, 2).join('.').replace(/\./g, '_') : ''),
+          selector:
+            el.tagName.toLowerCase() +
+            (el.className
+              ? '.' +
+                (el.className as string).split(/\s+/).slice(0, 2).join('.').replace(/\./g, '_')
+              : ''),
           detail: `flex-row at ${Math.round(rect.width)}px with ${children} children`,
         });
       }
@@ -98,7 +105,9 @@ test.describe('Mobile Layout Audit (320px)', () => {
 
   test.use({ viewport: VIEWPORT });
 
-  test('audit landing/dashboard for squish: horizontal scroll, cramped flex, double headers', async ({ page }) => {
+  test('audit landing/dashboard for squish: horizontal scroll, cramped flex, double headers', async ({
+    page,
+  }) => {
     await page.goto(BASE_URL);
     await waitForAppReady(page);
     await page.waitForTimeout(1500);
@@ -115,9 +124,7 @@ test.describe('Mobile Layout Audit (320px)', () => {
     violations.push(...headerViolations);
 
     if (violations.length > 0) {
-      const report = violations
-        .map((v) => `[${v.kind}] ${v.selector} — ${v.detail}`)
-        .join('\n');
+      const report = violations.map((v) => `[${v.kind}] ${v.selector} — ${v.detail}`).join('\n');
       throw new Error(`Mobile layout violations (320px):\n${report}`);
     }
   });

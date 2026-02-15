@@ -132,21 +132,16 @@ test.describe('Production Audit - Hunter Killer', () => {
 
     setupAuditTracking(page, auditResults);
 
-    const criticalPages = [
-      '/',
-      '/menu',
-      '/settings',
-      '/analytics',
-    ];
+    const criticalPages = ['/', '/menu', '/settings', '/analytics'];
 
     for (const pagePath of criticalPages) {
       try {
-        await page.goto(`${BASE_URL}${pagePath}`, { 
-          waitUntil: 'domcontentloaded', 
-          timeout: 15000 
+        await page.goto(`${BASE_URL}${pagePath}`, {
+          waitUntil: 'domcontentloaded',
+          timeout: 15000,
         });
         await page.waitForTimeout(1000);
-        
+
         // Check if page rendered (not a blank error screen)
         const bodyText = await page.textContent('body');
         if (!bodyText || bodyText.trim().length === 0) {

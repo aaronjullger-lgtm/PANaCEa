@@ -48,91 +48,94 @@ async function getAdobeToken(env: Env): Promise<string> {
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(MnemonicBodySchema, async (context) => {
-  const { env, auth, validated, params } = context;
-  const logger = createEndpointLogger('/api/conditions/[identifier]/mnemonic');
+export const onRequestPost = authenticatedEndpoint(
+  MnemonicBodySchema,
+  async (context) => {
+    const { env, auth, validated, params } = context;
+    const logger = createEndpointLogger('/api/conditions/[identifier]/mnemonic');
 
-  const identifier = (params?.identifier
-    ? decodeURIComponent(String(params.identifier))
-    : ''
-  ).trim();
-  if (!identifier) {
-    return new Response(
-      JSON.stringify({ error: 'Missing identifier in path' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-  const conditionName = identifier.replaceAll('-', ' ');
-  const keySymptom = validated.keySymptom?.trim() ?? conditionName;
+    const identifier = (
+      params?.identifier ? decodeURIComponent(String(params.identifier)) : ''
+    ).trim();
+    if (!identifier) {
+      return new Response(JSON.stringify({ error: 'Missing identifier in path' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    const conditionName = identifier.replaceAll('-', ' ');
+    const keySymptom = validated.keySymptom?.trim() ?? conditionName;
 
-  const prompt = `Medical illustration of ${conditionName} showing ${keySymptom}, white background, clinical education style.`;
+    const prompt = `Medical illustration of ${conditionName} showing ${keySymptom}, white background, clinical education style.`;
 
-  try {
-    const token = await getAdobeToken(env as Env);
-    const fireflyBody = {
-      prompt,
-      numVariations: 1,
-      contentClass: 'art',
-    };
+    try {
+      const token = await getAdobeToken(env as Env);
+      const fireflyBody = {
+        prompt,
+        numVariations: 1,
+        contentClass: 'art',
+      };
 
-    assertAdobeHostAllowed(FIREFLY_GENERATE);
-    const res = await fetch(FIREFLY_GENERATE, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        'x-api-key': env.ADOBE_CLIENT_ID ?? '',
-      },
-      body: JSON.stringify(fireflyBody),
-    });
+      assertAdobeHostAllowed(FIREFLY_GENERATE);
+      const res = await fetch(FIREFLY_GENERATE, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          'x-api-key': env.ADOBE_CLIENT_ID ?? '',
+        },
+        body: JSON.stringify(fireflyBody),
+      });
 
-    if (!res.ok) {
-      const text = await res.text();
-      logger.warn('Firefly mnemonic failed', { status: res.status, text: text.slice(0, 200) });
+      if (!res.ok) {
+        const text = await res.text();
+        logger.warn('Firefly mnemonic failed', { status: res.status, text: text.slice(0, 200) });
+        return new Response(
+          JSON.stringify({
+            error: 'Failed to generate mnemonic',
+            details: env.ADOBE_CLIENT_ID ? text.slice(0, 300) : 'Adobe credentials not configured',
+          }),
+          { status: 502, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const data = (await res.json()) as {
+        images?: Array<{ image?: { source?: { url?: string }; uploadId?: string } }>;
+      };
+      const img = data.images?.[0]?.image;
+      const imageUrl = img?.source?.url ?? (img?.uploadId ? `uploadId:${img.uploadId}` : null);
+
+      if (!imageUrl) {
+        return new Response(JSON.stringify({ error: 'No image URL in Firefly response' }), {
+          status: 502,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      logger.info('Condition mnemonic generated', {
+        identifier,
+        userId: auth.userId?.substring(0, 10),
+      });
+
+      return new Response(
+        JSON.stringify({
+          data: { imageUrl, prompt, conditionName, keySymptom },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } catch (error) {
+      logger.error('Mnemonic error', {
+        error: error instanceof Error ? error.message : String(error),
+        identifier,
+      });
       return new Response(
         JSON.stringify({
           error: 'Failed to generate mnemonic',
-          details: env.ADOBE_CLIENT_ID ? text.slice(0, 300) : 'Adobe credentials not configured',
+          message: error instanceof Error ? error.message : String(error),
         }),
         { status: 502, headers: { 'Content-Type': 'application/json' } }
       );
     }
-
-    const data = (await res.json()) as {
-      images?: Array<{ image?: { source?: { url?: string }; uploadId?: string } }>;
-    };
-    const img = data.images?.[0]?.image;
-    const imageUrl = img?.source?.url ?? (img?.uploadId ? `uploadId:${img.uploadId}` : null);
-
-    if (!imageUrl) {
-      return new Response(
-        JSON.stringify({ error: 'No image URL in Firefly response' }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    logger.info('Condition mnemonic generated', {
-      identifier,
-      userId: auth.userId?.substring(0, 10),
-    });
-
-    return new Response(
-      JSON.stringify({
-        data: { imageUrl, prompt, conditionName, keySymptom },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    logger.error('Mnemonic error', {
-      error: error instanceof Error ? error.message : String(error),
-      identifier,
-    });
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to generate mnemonic',
-        message: error instanceof Error ? error.message : String(error),
-      }),
-      { status: 502, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-}, { source: 'params' });
+  },
+  { source: 'params' }
+);

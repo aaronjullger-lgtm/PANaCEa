@@ -116,13 +116,10 @@ export const onRequestPost = authenticatedEndpoint(
         data.totalTimeMs != null ? Math.round(data.totalTimeMs / 60000) : undefined;
       const systemDistribution =
         (data.systemsCovered?.length ?? 0) > 0
-          ? (data.systemsCovered as string[]).reduce(
-              (acc: Record<string, number>, s: string) => {
-                acc[s] = (acc[s] ?? 0) + 1;
-                return acc;
-              },
-              {}
-            )
+          ? (data.systemsCovered as string[]).reduce((acc: Record<string, number>, s: string) => {
+              acc[s] = (acc[s] ?? 0) + 1;
+              return acc;
+            }, {})
           : undefined;
       await prisma.sessionAnalytics.create({
         data: {
@@ -159,6 +156,12 @@ export const onRequestPost = authenticatedEndpoint(
 export const onRequestGet = authenticatedEndpoint(
   sessionAnalyticsQuerySchema,
   async (context: AuthenticatedContext & ValidatedContext<SessionAnalyticsQuery>) => {
+    if (!context.env.DATABASE_URL) {
+      return {
+        status: 503,
+        data: { error: 'Analytics temporarily unavailable. Database not configured.' },
+      };
+    }
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
     try {
@@ -248,6 +251,11 @@ export const onRequestGet = authenticatedEndpoint(
             : null,
           aggregateStats,
         },
+      };
+    } catch (error) {
+      return {
+        status: 500,
+        data: { error: 'Server error loading analytics. Please try again later.' },
       };
     } finally {
       await safePrismaDisconnect(prisma);

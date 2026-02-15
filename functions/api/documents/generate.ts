@@ -49,10 +49,10 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
   const log = createEndpointLogger('/api/documents/generate', auth.userId);
 
   if (!env.ADOBE_CLIENT_ID || !env.ADOBE_CLIENT_SECRET) {
-    return new Response(
-      JSON.stringify({ error: 'Adobe PDF Services not configured' }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Adobe PDF Services not configured' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const templateAssetId =
@@ -98,10 +98,10 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
         assertAdobeHostAllowed(statusRes.downloadUri);
         const res = await fetch(statusRes.downloadUri);
         if (!res.ok) {
-          return new Response(
-            JSON.stringify({ error: 'Failed to download generated document' }),
-            { status: 502, headers: { 'Content-Type': 'application/json' } }
-          );
+          return new Response(JSON.stringify({ error: 'Failed to download generated document' }), {
+            status: 502,
+            headers: { 'Content-Type': 'application/json' },
+          });
         }
         const bytes = await res.arrayBuffer();
         const contentType =
@@ -121,16 +121,16 @@ export const onRequestPost = authenticatedEndpoint(GenerateBodySchema, async (co
       await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
     }
 
-    return new Response(
-      JSON.stringify({ error: 'Document generation timeout' }),
-      { status: 504, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Document generation timeout' }), {
+      status: 504,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Document generation failed';
     log.warn('Document generation failed', { error: message });
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 502, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: message }), {
+      status: 502,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 });

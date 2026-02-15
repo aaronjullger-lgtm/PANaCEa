@@ -54,7 +54,7 @@ export function imageElementToBase64(img: HTMLImageElement, format = 'image/png'
   if (!ctx) return '';
   ctx.drawImage(img, 0, 0);
   const dataUrl = canvas.toDataURL(format);
-  return dataUrl.includes(',') ? dataUrl.split(',')[1] ?? '' : dataUrl;
+  return dataUrl.includes(',') ? (dataUrl.split(',')[1] ?? '') : dataUrl;
 }
 
 export function useSpatialGrading() {

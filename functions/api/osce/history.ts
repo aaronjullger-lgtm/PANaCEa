@@ -11,7 +11,13 @@
  */
 
 import { z } from 'zod';
-import { withCors, withMiddleware, withAuth, withErrorHandling, withLogging } from '../_shared/middleware';
+import {
+  withCors,
+  withMiddleware,
+  withAuth,
+  withErrorHandling,
+  withLogging,
+} from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { resolveUserByClerkId } from '../_shared/resolveUser';
@@ -31,9 +37,9 @@ export const onRequestGet = withMiddleware(
   withAuth(),
   withLogging(),
   async (context: any) => {
-      const { env, auth } = context;
-      const log = createEndpointLogger('/api/osce/history', auth.userId);
-      const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const { env, auth } = context;
+    const log = createEndpointLogger('/api/osce/history', auth.userId);
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
       const url = new URL(context.request.url);

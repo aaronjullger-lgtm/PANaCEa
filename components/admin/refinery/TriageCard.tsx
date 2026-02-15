@@ -43,7 +43,11 @@ export interface MediaApprovePayload {
 
 interface TriageCardProps {
   readonly item: RefineryItem;
-  readonly onAction: (id: string, action: 'approve' | 'reject', payload?: MediaApprovePayload) => void;
+  readonly onAction: (
+    id: string,
+    action: 'approve' | 'reject',
+    payload?: MediaApprovePayload
+  ) => void;
   readonly actionLoading?: boolean;
 }
 
@@ -77,7 +81,8 @@ function TypeBadge({ type }: { type: RefineryItemType }) {
     content: {
       label: 'Content',
       icon: BookOpen,
-      className: 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/40',
+      className:
+        'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/40',
     },
     media: {
       label: 'Media',
@@ -110,14 +115,22 @@ function sourceName(item: RefineryItem): string {
     const name = (item.data.SourceMaterial as { sourceName?: string }).sourceName;
     if (typeof name === 'string') return name;
   }
-  if (item.type === 'media' && item.data.attribution !== undefined && item.data.attribution !== null) {
+  if (
+    item.type === 'media' &&
+    item.data.attribution !== undefined &&
+    item.data.attribution !== null
+  ) {
     const att = item.data.attribution;
     return typeof att === 'string' ? att : '—';
   }
   return '—';
 }
 
-export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({ item, onAction, actionLoading = false }) => {
+export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({
+  item,
+  onAction,
+  actionLoading = false,
+}) => {
   const { getToken } = useAuth();
   const dateStr = formatDate(item.timestamp);
   const source = sourceName(item);
@@ -139,10 +152,15 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({ item, onAction
     typeof item.data.licenseType === 'string' ? item.data.licenseType : ''
   );
   const [conditionSearchQuery, setConditionSearchQuery] = useState('');
-  const [conditionSearchResults, setConditionSearchResults] = useState<{ id: string; condition: string }[]>([]);
+  const [conditionSearchResults, setConditionSearchResults] = useState<
+    { id: string; condition: string }[]
+  >([]);
   const [conditionSearchOpen, setConditionSearchOpen] = useState(false);
 
-  const rawPath = item.type === 'media' && typeof item.data.rawStoragePath === 'string' ? item.data.rawStoragePath : null;
+  const rawPath =
+    item.type === 'media' && typeof item.data.rawStoragePath === 'string'
+      ? item.data.rawStoragePath
+      : null;
 
   useEffect(() => {
     if (!rawPath || item.type !== 'media') return;
@@ -181,7 +199,9 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({ item, onAction
       const res = await fetch(`/api/conditions/search?q=${encodeURIComponent(trimmed)}&limit=10`);
       const json = await res.json();
       const list = Array.isArray(json?.data) ? json.data : [];
-      setConditionSearchResults(list.map((r: { id: string; condition: string }) => ({ id: r.id, condition: r.condition })));
+      setConditionSearchResults(
+        list.map((r: { id: string; condition: string }) => ({ id: r.id, condition: r.condition }))
+      );
     } catch {
       setConditionSearchResults([]);
     }
@@ -220,7 +240,11 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({ item, onAction
       );
     }
     if (imageLoadError) {
-      return <span className="text-xs text-[var(--color-text-muted)] p-2 text-center">Image unavailable</span>;
+      return (
+        <span className="text-xs text-[var(--color-text-muted)] p-2 text-center">
+          Image unavailable
+        </span>
+      );
     }
     return <Loader2 className="w-6 h-6 animate-spin text-[var(--color-text-muted)]" aria-hidden />;
   }

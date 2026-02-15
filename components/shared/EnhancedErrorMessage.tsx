@@ -1,24 +1,32 @@
 /**
  * Enhanced Error Message Component
- * 
+ *
  * Provides standardized, actionable error messages with clear next steps.
  * Supports different error types, severity levels, and user-friendly explanations.
  */
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, AlertCircle, Info, CheckCircle, RefreshCw, ExternalLink, HelpCircle } from 'lucide-react';
+import {
+  AlertTriangle,
+  AlertCircle,
+  Info,
+  CheckCircle,
+  RefreshCw,
+  ExternalLink,
+  HelpCircle,
+} from 'lucide-react';
 import { StandardButton, PrimaryButton, SecondaryButton, OutlineButton } from './StandardButton';
 
 export type ErrorSeverity = 'error' | 'warning' | 'info' | 'success';
-export type ErrorCategory = 
-  | 'network' 
-  | 'authentication' 
-  | 'validation' 
-  | 'permission' 
-  | 'data' 
-  | 'system' 
-  | 'timeout' 
+export type ErrorCategory =
+  | 'network'
+  | 'authentication'
+  | 'validation'
+  | 'permission'
+  | 'data'
+  | 'system'
+  | 'timeout'
   | 'not_found'
   | 'rate_limit'
   | 'maintenance';
@@ -99,15 +107,18 @@ const severityConfig = {
 const categoryMessages: Record<ErrorCategory, { title: string; defaultDescription: string }> = {
   network: {
     title: 'Connection Issue',
-    defaultDescription: 'There was a problem connecting to the server. This could be due to network connectivity, server maintenance, or a temporary outage.',
+    defaultDescription:
+      'There was a problem connecting to the server. This could be due to network connectivity, server maintenance, or a temporary outage.',
   },
   authentication: {
     title: 'Authentication Error',
-    defaultDescription: 'There was an issue verifying your identity. Your session may have expired or there might be a problem with your login credentials.',
+    defaultDescription:
+      'There was an issue verifying your identity. Your session may have expired or there might be a problem with your login credentials.',
   },
   validation: {
     title: 'Validation Error',
-    defaultDescription: 'The information provided contains errors or is incomplete. Please check your input and try again.',
+    defaultDescription:
+      'The information provided contains errors or is incomplete. Please check your input and try again.',
   },
   permission: {
     title: 'Permission Denied',
@@ -119,19 +130,23 @@ const categoryMessages: Record<ErrorCategory, { title: string; defaultDescriptio
   },
   system: {
     title: 'System Error',
-    defaultDescription: 'An unexpected system error occurred. Our team has been notified and will investigate.',
+    defaultDescription:
+      'An unexpected system error occurred. Our team has been notified and will investigate.',
   },
   timeout: {
     title: 'Request Timeout',
-    defaultDescription: 'The request took too long to complete. This could be due to high server load or network latency.',
+    defaultDescription:
+      'The request took too long to complete. This could be due to high server load or network latency.',
   },
   not_found: {
     title: 'Resource Not Found',
-    defaultDescription: 'The requested resource could not be found. It may have been moved, deleted, or the URL might be incorrect.',
+    defaultDescription:
+      'The requested resource could not be found. It may have been moved, deleted, or the URL might be incorrect.',
   },
   rate_limit: {
     title: 'Rate Limit Exceeded',
-    defaultDescription: 'You have made too many requests in a short period. Please wait a moment before trying again.',
+    defaultDescription:
+      'You have made too many requests in a short period. Please wait a moment before trying again.',
   },
   maintenance: {
     title: 'System Maintenance',
@@ -140,8 +155,8 @@ const categoryMessages: Record<ErrorCategory, { title: string; defaultDescriptio
 };
 
 const getDefaultActions = (
-  category: ErrorCategory, 
-  onRetry?: () => void, 
+  category: ErrorCategory,
+  onRetry?: () => void,
   helpUrl?: string
 ): ActionStep[] => {
   const actions: ActionStep[] = [];
@@ -194,19 +209,17 @@ const getDefaultActions = (
       );
       break;
     case 'validation':
-      actions.push(
-        {
-          label: 'Review Input',
-          action: () => {
-            // Focus on first invalid field if possible
-            const invalidField = document.querySelector('[aria-invalid="true"]');
-            if (invalidField) {
-              (invalidField as HTMLElement).focus();
-            }
-          },
-          variant: 'primary',
-        }
-      );
+      actions.push({
+        label: 'Review Input',
+        action: () => {
+          // Focus on first invalid field if possible
+          const invalidField = document.querySelector('[aria-invalid="true"]');
+          if (invalidField) {
+            (invalidField as HTMLElement).focus();
+          }
+        },
+        variant: 'primary',
+      });
       break;
     case 'timeout':
       actions.push(
@@ -228,20 +241,23 @@ const getDefaultActions = (
       );
       break;
     case 'rate_limit':
-      actions.push(
-        {
-          label: 'Wait & Retry',
-          action: () => {
-            setTimeout(() => window.location.reload(), 30000); // 30 seconds
-          },
-          variant: 'primary',
-        }
-      );
+      actions.push({
+        label: 'Wait & Retry',
+        action: () => {
+          setTimeout(() => window.location.reload(), 30000); // 30 seconds
+        },
+        variant: 'primary',
+      });
       break;
   }
 
   // Add retry action if provided
-  if (onRetry && !actions.some(a => a.label.toLowerCase().includes('retry') || a.label.toLowerCase().includes('try again'))) {
+  if (
+    onRetry &&
+    !actions.some(
+      (a) => a.label.toLowerCase().includes('retry') || a.label.toLowerCase().includes('try again')
+    )
+  ) {
     actions.unshift({
       label: 'Try Again',
       action: onRetry,
@@ -254,7 +270,9 @@ const getDefaultActions = (
   if (helpUrl) {
     actions.push({
       label: 'View Help',
-      action: () => { window.open(helpUrl, '_blank'); },
+      action: () => {
+        window.open(helpUrl, '_blank');
+      },
       variant: 'outline',
       icon: <ExternalLink className="w-4 h-4" />,
     });
@@ -291,7 +309,7 @@ export const EnhancedErrorMessage: React.FC<EnhancedErrorMessageProps> = ({
   const allActions = [...defaultActions, ...actions];
 
   // Add retry action if requested
-  if (showRetry && onRetry && !allActions.some(a => a.label.toLowerCase().includes('retry'))) {
+  if (showRetry && onRetry && !allActions.some((a) => a.label.toLowerCase().includes('retry'))) {
     allActions.unshift({
       label: 'Try Again',
       action: onRetry,
@@ -329,9 +347,7 @@ export const EnhancedErrorMessage: React.FC<EnhancedErrorMessageProps> = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h3 className={`text-lg font-semibold ${config.titleColor} mb-1`}>
-                  {title}
-                </h3>
+                <h3 className={`text-lg font-semibold ${config.titleColor} mb-1`}>{title}</h3>
                 <p className={`text-sm ${config.textColor} mb-3`}>
                   {description || categoryInfo.defaultDescription}
                 </p>
@@ -378,11 +394,14 @@ export const EnhancedErrorMessage: React.FC<EnhancedErrorMessageProps> = ({
             {allActions.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {allActions.map((action, index) => {
-                  const ButtonComponent = 
-                    action.variant === 'primary' ? PrimaryButton :
-                    action.variant === 'secondary' ? SecondaryButton :
-                    action.variant === 'outline' ? OutlineButton :
-                    StandardButton;
+                  const ButtonComponent =
+                    action.variant === 'primary'
+                      ? PrimaryButton
+                      : action.variant === 'secondary'
+                        ? SecondaryButton
+                        : action.variant === 'outline'
+                          ? OutlineButton
+                          : StandardButton;
 
                   return (
                     <ButtonComponent
@@ -400,7 +419,7 @@ export const EnhancedErrorMessage: React.FC<EnhancedErrorMessageProps> = ({
             )}
 
             {/* Help link */}
-            {showHelpLink && !allActions.some(a => a.label === 'View Help') && (
+            {showHelpLink && !allActions.some((a) => a.label === 'View Help') && (
               <div className="mt-3 pt-3 border-t border-[var(--color-border)]/50">
                 <a
                   href={helpUrl}
@@ -432,23 +451,26 @@ export function useEnhancedError() {
     technicalDetails?: string;
   } | null>(null);
 
-  const showError = React.useCallback((
-    title: string,
-    options?: {
-      description?: string;
-      severity?: ErrorSeverity;
-      category?: ErrorCategory;
-      technicalDetails?: string;
-    }
-  ) => {
-    setError({
-      title,
-      description: options?.description,
-      severity: options?.severity || 'error',
-      category: options?.category || 'system',
-      technicalDetails: options?.technicalDetails,
-    });
-  }, []);
+  const showError = React.useCallback(
+    (
+      title: string,
+      options?: {
+        description?: string;
+        severity?: ErrorSeverity;
+        category?: ErrorCategory;
+        technicalDetails?: string;
+      }
+    ) => {
+      setError({
+        title,
+        description: options?.description,
+        severity: options?.severity || 'error',
+        category: options?.category || 'system',
+        technicalDetails: options?.technicalDetails,
+      });
+    },
+    []
+  );
 
   const clearError = React.useCallback(() => {
     setError(null);
@@ -484,7 +506,10 @@ export const NetworkErrorMessage: React.FC<{
 }> = ({ title, description, onRetry }) => (
   <EnhancedErrorMessage
     title={title || 'Connection Lost'}
-    description={description || 'Unable to connect to the server. Please check your internet connection and try again.'}
+    description={
+      description ||
+      'Unable to connect to the server. Please check your internet connection and try again.'
+    }
     severity="error"
     category="network"
     showRetry={!!onRetry}
@@ -499,7 +524,9 @@ export const AuthenticationErrorMessage: React.FC<{
 }> = ({ title, description }) => (
   <EnhancedErrorMessage
     title={title || 'Authentication Required'}
-    description={description || 'Your session has expired or you need to sign in to access this feature.'}
+    description={
+      description || 'Your session has expired or you need to sign in to access this feature.'
+    }
     severity="warning"
     category="authentication"
     showHelpLink
@@ -513,7 +540,12 @@ export const ValidationErrorMessage: React.FC<{
 }> = ({ title, description, fieldName }) => (
   <EnhancedErrorMessage
     title={title || 'Validation Error'}
-    description={description || (fieldName ? `Please check the "${fieldName}" field.` : 'Please check your input and try again.')}
+    description={
+      description ||
+      (fieldName
+        ? `Please check the "${fieldName}" field.`
+        : 'Please check your input and try again.')
+    }
     severity="warning"
     category="validation"
   />
@@ -526,7 +558,12 @@ export const NotFoundErrorMessage: React.FC<{
 }> = ({ title, description, resourceType }) => (
   <EnhancedErrorMessage
     title={title || 'Not Found'}
-    description={description || (resourceType ? `The ${resourceType} you're looking for could not be found.` : 'The requested resource could not be found.')}
+    description={
+      description ||
+      (resourceType
+        ? `The ${resourceType} you're looking for could not be found.`
+        : 'The requested resource could not be found.')
+    }
     severity="info"
     category="not_found"
     showHelpLink
@@ -540,7 +577,12 @@ export const RateLimitErrorMessage: React.FC<{
 }> = ({ title, description, retryAfter }) => (
   <EnhancedErrorMessage
     title={title || 'Too Many Requests'}
-    description={description || (retryAfter ? `Please wait ${retryAfter} seconds before trying again.` : 'You have made too many requests. Please wait a moment.')}
+    description={
+      description ||
+      (retryAfter
+        ? `Please wait ${retryAfter} seconds before trying again.`
+        : 'You have made too many requests. Please wait a moment.')
+    }
     severity="warning"
     category="rate_limit"
   />

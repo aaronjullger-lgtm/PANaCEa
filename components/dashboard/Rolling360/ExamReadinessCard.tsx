@@ -123,7 +123,12 @@ interface CollectingStateProps {
   examLabel?: 'PANCE' | 'EOR';
 }
 
-function CollectingState({ stats, onStartSession, isStarting, examLabel = 'PANCE' }: CollectingStateProps) {
+function CollectingState({
+  stats,
+  onStartSession,
+  isStarting,
+  examLabel = 'PANCE',
+}: CollectingStateProps) {
   const progress = (stats.totalInWindow / 50) * 100;
   const questionsNeeded = 50 - stats.totalInWindow;
 
@@ -181,7 +186,8 @@ function CollectingState({ stats, onStartSession, isStarting, examLabel = 'PANCE
       <div className="bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/20 rounded-xl p-4">
         <p className="text-sm text-[var(--color-data-provisional)] text-center">
           Answer <span className="font-semibold">{questionsNeeded} more questions</span> in Main
-          Session to unlock your preliminary {examLabel === 'EOR' ? 'EOR' : 'PANCE'} score prediction.
+          Session to unlock your preliminary {examLabel === 'EOR' ? 'EOR' : 'PANCE'} score
+          prediction.
         </p>
       </div>
 
@@ -209,7 +215,12 @@ interface ProvisionalStateProps {
   examLabel?: 'PANCE' | 'EOR';
 }
 
-function ProvisionalState({ stats, onStartSession, isStarting, examLabel = 'PANCE' }: ProvisionalStateProps) {
+function ProvisionalState({
+  stats,
+  onStartSession,
+  isStarting,
+  examLabel = 'PANCE',
+}: ProvisionalStateProps) {
   const questionsToConfident = 180 - stats.totalInWindow;
   const readinessTitle = examLabel === 'EOR' ? 'EOR Readiness' : 'Exam Readiness';
 
@@ -307,7 +318,12 @@ interface ConfidentStateProps {
   examLabel?: 'PANCE' | 'EOR';
 }
 
-function ConfidentState({ stats, onStartSession, isStarting, examLabel = 'PANCE' }: ConfidentStateProps) {
+function ConfidentState({
+  stats,
+  onStartSession,
+  isStarting,
+  examLabel = 'PANCE',
+}: ConfidentStateProps) {
   const isPassing = (stats.predictedScore || 0) >= 350;
   const passLikelihood = stats.passLikelihood || 0;
   const readinessTitle = examLabel === 'EOR' ? 'EOR Readiness' : 'Exam Readiness';

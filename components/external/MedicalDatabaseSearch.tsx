@@ -1,6 +1,6 @@
 /**
  * Medical Database Search Component
- * 
+ *
  * Provides UI for searching external medical databases and displaying results
  */
 
@@ -8,11 +8,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useExternalMedicalDatabases } from '@/hooks/useExternalMedicalDatabases';
 import { StandardButton } from '@/components/shared/StandardButton';
-import { 
-  Search, 
-  Database, 
-  ExternalLink, 
-  FileText, 
+import {
+  Search,
+  Database,
+  ExternalLink,
+  FileText,
   Calendar,
   Users,
   AlertTriangle,
@@ -20,7 +20,7 @@ import {
   RefreshCw,
   X,
   Filter,
-  Download
+  Download,
 } from 'lucide-react';
 
 interface MedicalDatabaseSearchProps {
@@ -32,7 +32,7 @@ interface MedicalDatabaseSearchProps {
 export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
   initialQuery = '',
   onClose,
-  onSelectResult
+  onSelectResult,
 }) => {
   const {
     isLoading,
@@ -47,11 +47,13 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
     clearResults,
     formatResultsForDisplay,
     areDatabasesHealthy,
-    getUnhealthyDatabases
+    getUnhealthyDatabases,
   } = useExternalMedicalDatabases();
 
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [selectedDatabase, setSelectedDatabase] = useState<'pubmed' | 'clinicaltrials' | 'guidelines'>('pubmed');
+  const [selectedDatabase, setSelectedDatabase] = useState<
+    'pubmed' | 'clinicaltrials' | 'guidelines'
+  >('pubmed');
   const [resultLimit, setResultLimit] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab] = useState<'search' | 'results' | 'health'>('search');
@@ -70,7 +72,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
       await searchDatabases({
         query: searchQuery,
         database: selectedDatabase,
-        limit: resultLimit
+        limit: resultLimit,
       });
       setActiveTab('results');
     } catch (err) {
@@ -96,7 +98,9 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
 
   const handleExportResults = () => {
     const formattedResults = formatResultsForDisplay();
-    const blob = new Blob([JSON.stringify(formattedResults, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(formattedResults, null, 2)], {
+      type: 'application/json',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -107,28 +111,40 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
 
   const getDatabaseIcon = (db: string) => {
     switch (db) {
-      case 'pubmed': return <FileText className="w-4 h-4" />;
-      case 'clinicaltrials': return <Database className="w-4 h-4" />;
-      case 'guidelines': return <FileText className="w-4 h-4" />;
-      default: return <Database className="w-4 h-4" />;
+      case 'pubmed':
+        return <FileText className="w-4 h-4" />;
+      case 'clinicaltrials':
+        return <Database className="w-4 h-4" />;
+      case 'guidelines':
+        return <FileText className="w-4 h-4" />;
+      default:
+        return <Database className="w-4 h-4" />;
     }
   };
 
   const getDatabaseName = (db: string) => {
     switch (db) {
-      case 'pubmed': return 'PubMed';
-      case 'clinicaltrials': return 'ClinicalTrials.gov';
-      case 'guidelines': return 'Medical Guidelines';
-      default: return db;
+      case 'pubmed':
+        return 'PubMed';
+      case 'clinicaltrials':
+        return 'ClinicalTrials.gov';
+      case 'guidelines':
+        return 'Medical Guidelines';
+      default:
+        return db;
     }
   };
 
   const getHealthStatusIcon = (status: string) => {
     switch (status) {
-      case 'healthy': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'degraded': return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
-      case 'unavailable': return <X className="w-4 h-4 text-red-500" />;
-      default: return <AlertTriangle className="w-4 h-4 text-gray-500" />;
+      case 'healthy':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'degraded':
+        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+      case 'unavailable':
+        return <X className="w-4 h-4 text-red-500" />;
+      default:
+        return <AlertTriangle className="w-4 h-4 text-gray-500" />;
     }
   };
 
@@ -235,10 +251,25 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                 {showFilters ? 'Hide Filters' : 'Show Filters'}
               </button>
               <StandardButton
+                type="button"
                 variant="primary"
                 onClick={handleSearch}
                 disabled={isLoading || !searchQuery.trim()}
                 icon={<Search className="w-4 h-4" />}
+                title={
+                  !searchQuery.trim()
+                    ? 'Enter a search term to search'
+                    : isLoading
+                      ? 'Searching...'
+                      : 'Search databases'
+                }
+                aria-label={
+                  !searchQuery.trim()
+                    ? 'Search (enter a term first)'
+                    : isLoading
+                      ? 'Searching'
+                      : 'Search'
+                }
               >
                 {isLoading ? 'Searching...' : 'Search'}
               </StandardButton>
@@ -284,9 +315,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-[var(--color-text-primary)]">
-                  Search Results
-                </h3>
+                <h3 className="font-semibold text-[var(--color-text-primary)]">Search Results</h3>
                 <p className="text-sm text-[var(--color-text-muted)]">
                   {searchResults.length} results from {getDatabaseName(selectedDatabase)}
                 </p>
@@ -300,11 +329,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                 >
                   Export
                 </StandardButton>
-                <StandardButton
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearResults}
-                >
+                <StandardButton variant="ghost" size="sm" onClick={clearResults}>
                   Clear
                 </StandardButton>
               </div>
@@ -338,10 +363,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                 <p className="text-sm text-[var(--color-text-muted)] mb-4">
                   Try a different search query or select another database
                 </p>
-                <StandardButton
-                  variant="outline"
-                  onClick={() => setActiveTab('search')}
-                >
+                <StandardButton variant="outline" onClick={() => setActiveTab('search')}>
                   New Search
                 </StandardButton>
               </div>
@@ -364,7 +386,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                           {result.source}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-4 text-xs text-[var(--color-text-muted)] mb-3">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
@@ -447,35 +469,37 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                         </p>
                       </div>
                     </div>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      db.status === 'healthy' ? 'bg-green-500/20 text-green-600' :
-                      db.status === 'degraded' ? 'bg-yellow-500/20 text-yellow-600' :
-                      'bg-red-500/20 text-red-600'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        db.status === 'healthy'
+                          ? 'bg-green-500/20 text-green-600'
+                          : db.status === 'degraded'
+                            ? 'bg-yellow-500/20 text-yellow-600'
+                            : 'bg-red-500/20 text-red-600'
+                      }`}
+                    >
                       {db.status.toUpperCase()}
                     </span>
                   </div>
-                  
+
                   {db.responseTime && (
                     <div className="text-sm text-[var(--color-text-muted)]">
                       Response time: {db.responseTime}ms
                     </div>
                   )}
-                  
-                  {db.error && (
-                    <div className="mt-2 text-sm text-red-600">
-                      Error: {db.error}
-                    </div>
-                  )}
+
+                  {db.error && <div className="mt-2 text-sm text-red-600">Error: {db.error}</div>}
                 </div>
               ))}
             </div>
 
-            <div className={`p-4 rounded-lg border ${
-              areDatabasesHealthy() 
-                ? 'bg-green-500/10 border-green-500/30' 
-                : 'bg-yellow-500/10 border-yellow-500/30'
-            }`}>
+            <div
+              className={`p-4 rounded-lg border ${
+                areDatabasesHealthy()
+                  ? 'bg-green-500/10 border-green-500/30'
+                  : 'bg-yellow-500/10 border-yellow-500/30'
+              }`}
+            >
               <div className="flex items-center gap-2 mb-1">
                 {areDatabasesHealthy() ? (
                   <CheckCircle className="w-5 h-5 text-green-500" />
@@ -487,10 +511,9 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                 </span>
               </div>
               <p className="text-sm text-[var(--color-text-muted)]">
-                {areDatabasesHealthy() 
+                {areDatabasesHealthy()
                   ? 'All external medical databases are responding normally.'
-                  : `${getUnhealthyDatabases().length} database(s) are experiencing issues.`
-                }
+                  : `${getUnhealthyDatabases().length} database(s) are experiencing issues.`}
               </p>
             </div>
           </div>

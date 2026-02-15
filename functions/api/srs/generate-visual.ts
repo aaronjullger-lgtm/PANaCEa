@@ -74,10 +74,7 @@ async function getAdobeToken(env: Env): Promise<string> {
   return data.access_token;
 }
 
-async function resolveReferenceUrl(
-  env: Env,
-  referenceId: string
-): Promise<string | null> {
+async function resolveReferenceUrl(env: Env, referenceId: string): Promise<string | null> {
   if (!env.DATABASE_URL || !env.SUPABASE_URL) return null;
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   try {
@@ -121,7 +118,15 @@ export const onRequestPost = authenticatedEndpoint(GenerateVisualBodySchema, asy
     validated: z.infer<typeof GenerateVisualBodySchema>;
   };
   const log = createEndpointLogger('/api/srs/generate-visual', auth.userId);
-  const { front, back, style, structureReferenceId, structureReferenceUrl, conditionId, questionId } = validated.body;
+  const {
+    front,
+    back,
+    style,
+    structureReferenceId,
+    structureReferenceUrl,
+    conditionId,
+    questionId,
+  } = validated.body;
 
   try {
     const token = await getAdobeToken(env);
@@ -176,24 +181,28 @@ export const onRequestPost = authenticatedEndpoint(GenerateVisualBodySchema, asy
     const img = data.images?.[0]?.image;
     const imageUrl = img?.source?.url ?? img?.uploadId;
     if (!imageUrl?.startsWith('http')) {
-      return new Response(
-        JSON.stringify({ error: 'No image URL in Firefly response' }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'No image URL in Firefly response' }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const imgRes = await fetch(imageUrl);
     if (!imgRes.ok) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch generated image' }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Failed to fetch generated image' }), {
+        status: 502,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
     const buf = await imgRes.arrayBuffer();
     const imageBase64 = arrayBufferToBase64(buf);
     const imageMime = imgRes.headers.get('content-type') || 'image/png';
 
-    log.info('SRS mnemonic generated', { front: front.slice(0, 30), style, conditionId: conditionId ?? undefined });
+    log.info('SRS mnemonic generated', {
+      front: front.slice(0, 30),
+      style,
+      conditionId: conditionId ?? undefined,
+    });
 
     return new Response(
       JSON.stringify({
@@ -211,9 +220,14 @@ export const onRequestPost = authenticatedEndpoint(GenerateVisualBodySchema, asy
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (err) {
-    log.error('SRS generate-visual error', { error: err instanceof Error ? err.message : String(err) });
+    log.error('SRS generate-visual error', {
+      error: err instanceof Error ? err.message : String(err),
+    });
     return new Response(
-      JSON.stringify({ error: 'Failed to generate visual mnemonic', details: err instanceof Error ? err.message : 'Unknown' }),
+      JSON.stringify({
+        error: 'Failed to generate visual mnemonic',
+        details: err instanceof Error ? err.message : 'Unknown',
+      }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

@@ -23,55 +23,55 @@ export const onRequestOptions = withCors();
 export const onRequestGet = authenticatedEndpoint(
   QuerySchema,
   async (context) => {
-  const { env, validated } = context;
-  const logger = createEndpointLogger('/api/questions/answer-distribution');
-  const { questionId } = validated;
+    const { env, validated } = context;
+    const logger = createEndpointLogger('/api/questions/answer-distribution');
+    const { questionId } = validated;
 
-  if (!env.DATABASE_URL) {
-    throw new Error('Database not configured');
-  }
-
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
-
-  try {
-    const attempts = await prisma.questionAttempt.findMany({
-      where: {
-        questionId,
-        selectedAnswer: { not: null },
-      },
-      select: { selectedAnswer: true },
-    });
-
-    const letters = ['A', 'B', 'C', 'D'] as const;
-    const counts: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
-    for (const a of attempts) {
-      const letter = a.selectedAnswer?.toUpperCase();
-      if (letter && counts[letter] !== undefined) counts[letter]++;
+    if (!env.DATABASE_URL) {
+      throw new Error('Database not configured');
     }
-    const total = attempts.length;
 
-    const distribution = letters.map((optionLetter) => ({
-      optionLetter,
-      count: counts[optionLetter] ?? 0,
-      percent: total > 0 ? Math.round(((counts[optionLetter] ?? 0) / total) * 100) : 0,
-    }));
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    return {
-      data: {
+    try {
+      const attempts = await prisma.questionAttempt.findMany({
+        where: {
+          questionId,
+          selectedAnswer: { not: null },
+        },
+        select: { selectedAnswer: true },
+      });
+
+      const letters = ['A', 'B', 'C', 'D'] as const;
+      const counts: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
+      for (const a of attempts) {
+        const letter = a.selectedAnswer?.toUpperCase();
+        if (letter && counts[letter] !== undefined) counts[letter]++;
+      }
+      const total = attempts.length;
+
+      const distribution = letters.map((optionLetter) => ({
+        optionLetter,
+        count: counts[optionLetter] ?? 0,
+        percent: total > 0 ? Math.round(((counts[optionLetter] ?? 0) / total) * 100) : 0,
+      }));
+
+      return {
+        data: {
+          questionId,
+          totalAttempts: total,
+          distribution,
+        },
+      };
+    } catch (error: unknown) {
+      logger.error('Answer distribution error', {
+        error: error instanceof Error ? error.message : String(error),
         questionId,
-        totalAttempts: total,
-        distribution,
-      },
-    };
-  } catch (error: unknown) {
-    logger.error('Answer distribution error', {
-      error: error instanceof Error ? error.message : String(error),
-      questionId,
-    });
-    throw new Error('Failed to get answer distribution');
-  } finally {
-    await safePrismaDisconnect(prisma);
-  }
-},
+      });
+      throw new Error('Failed to get answer distribution');
+    } finally {
+      await safePrismaDisconnect(prisma);
+    }
+  },
   { source: 'query' }
 );

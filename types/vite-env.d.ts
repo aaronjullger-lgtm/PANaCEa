@@ -6,6 +6,10 @@ interface ImportMetaEnv {
   readonly VITE_SENTRY_ENABLE_DEV?: string;
   readonly VITE_CLERK_DEBUG?: string;
   readonly VITE_API_URL?: string;
+  /** Optional: Gemini API key when calling AI from client (e.g. Patient Encounter mode) */
+  readonly VITE_GEMINI_API_KEY?: string;
+  /** Optional: use mock session service when true */
+  readonly VITE_USE_MOCK?: string;
   /** Adobe PDF Embed API client ID for SmartPDFViewer */
   readonly VITE_ADOBE_PDF_EMBED_CLIENT_ID?: string;
   /** Adobe client ID for client-side use (e.g. Embed / Firefly) */

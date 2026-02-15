@@ -87,8 +87,8 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
           className="mt-4 p-3 bg-emerald-500/10 rounded-lg"
         >
           <p className="text-xs text-[var(--color-text-secondary)]">
-            <span className="font-semibold">Final stretch:</span> Focus on rotation-relevant
-            content and high-yield systems.
+            <span className="font-semibold">Final stretch:</span> Focus on rotation-relevant content
+            and high-yield systems.
           </p>
         </motion.div>
       )}

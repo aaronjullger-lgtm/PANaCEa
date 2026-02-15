@@ -3,13 +3,13 @@ import { cn } from '@/lib/utils';
 
 // Spacing scale constants
 export const SPACING = {
-  xs: '0.5rem',   // 8px
-  sm: '0.75rem',  // 12px
-  md: '1rem',     // 16px
-  lg: '1.5rem',   // 24px
-  xl: '2rem',     // 32px
+  xs: '0.5rem', // 8px
+  sm: '0.75rem', // 12px
+  md: '1rem', // 16px
+  lg: '1.5rem', // 24px
+  xl: '2rem', // 32px
   '2xl': '2.5rem', // 40px
-  '3xl': '3rem',   // 48px
+  '3xl': '3rem', // 48px
 } as const;
 
 // Tailwind class equivalents
@@ -54,11 +54,7 @@ export const Spacing: React.FC<SpacingProps> = ({
     '3xl': vertical ? 'space-y-12' : 'space-x-12',
   }[size];
 
-  return (
-    <div className={cn(baseClass, sizeClass, className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn(baseClass, sizeClass, className)}>{children}</div>;
 };
 
 export interface StackProps {
@@ -159,14 +155,9 @@ export const HStack: React.FC<HStackProps> = ({
   }[justify];
 
   return (
-    <div className={cn(
-      'flex',
-      spacingClass,
-      alignClass,
-      justifyClass,
-      wrap && 'flex-wrap',
-      className
-    )}>
+    <div
+      className={cn('flex', spacingClass, alignClass, justifyClass, wrap && 'flex-wrap', className)}
+    >
       {children}
     </div>
   );
@@ -182,12 +173,7 @@ export interface GridProps {
 /**
  * Grid component for consistent grid layouts
  */
-export const Grid: React.FC<GridProps> = ({
-  cols = 1,
-  gap = 'md',
-  children,
-  className,
-}) => {
+export const Grid: React.FC<GridProps> = ({ cols = 1, gap = 'md', children, className }) => {
   const gridColsClass = {
     1: 'grid-cols-1',
     2: 'grid-cols-2',
@@ -213,11 +199,7 @@ export const Grid: React.FC<GridProps> = ({
     '3xl': 'gap-12',
   }[gap];
 
-  return (
-    <div className={cn('grid', gridColsClass, gapClass, className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn('grid', gridColsClass, gapClass, className)}>{children}</div>;
 };
 
 export interface ContainerProps {
@@ -246,21 +228,20 @@ export const Container: React.FC<ContainerProps> = ({
     fluid: 'w-full',
   }[size];
 
-  const paddingClass = padding === 'none' ? '' : {
-    xs: 'p-2',
-    sm: 'p-3',
-    md: 'p-4',
-    lg: 'p-6',
-    xl: 'p-8',
-    '2xl': 'p-10',
-    '3xl': 'p-12',
-  }[padding];
+  const paddingClass =
+    padding === 'none'
+      ? ''
+      : {
+          xs: 'p-2',
+          sm: 'p-3',
+          md: 'p-4',
+          lg: 'p-6',
+          xl: 'p-8',
+          '2xl': 'p-10',
+          '3xl': 'p-12',
+        }[padding];
 
-  return (
-    <div className={cn('mx-auto', sizeClass, paddingClass, className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn('mx-auto', sizeClass, paddingClass, className)}>{children}</div>;
 };
 
 export interface CardProps {
@@ -300,12 +281,7 @@ export const Card: React.FC<CardProps> = ({
   }[spacing];
 
   return (
-    <div className={cn(
-      'rounded-lg border bg-card',
-      paddingClass,
-      spacingClass,
-      className
-    )}>
+    <div className={cn('rounded-lg border bg-card', paddingClass, spacingClass, className)}>
       {children}
     </div>
   );
@@ -320,11 +296,7 @@ export interface FormGroupProps {
 /**
  * FormGroup component for consistent form spacing
  */
-export const FormGroup: React.FC<FormGroupProps> = ({
-  spacing = 'md',
-  children,
-  className,
-}) => {
+export const FormGroup: React.FC<FormGroupProps> = ({ spacing = 'md', children, className }) => {
   const spacingClass = {
     xs: 'space-y-1',
     sm: 'space-y-2',
@@ -335,11 +307,7 @@ export const FormGroup: React.FC<FormGroupProps> = ({
     '3xl': 'space-y-8',
   }[spacing];
 
-  return (
-    <div className={cn('flex flex-col', spacingClass, className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn('flex flex-col', spacingClass, className)}>{children}</div>;
 };
 
 export interface ButtonGroupProps {
@@ -358,29 +326,27 @@ export const ButtonGroup: React.FC<ButtonGroupProps> = ({
   children,
   className,
 }) => {
-  const spacingClass = vertical ? {
-    xs: 'space-y-1',
-    sm: 'space-y-2',
-    md: 'space-y-3',
-    lg: 'space-y-4',
-    xl: 'space-y-5',
-    '2xl': 'space-y-6',
-  }[spacing] : {
-    xs: 'gap-1',
-    sm: 'gap-2',
-    md: 'gap-3',
-    lg: 'gap-4',
-    xl: 'gap-5',
-    '2xl': 'gap-6',
-  }[spacing];
+  const spacingClass = vertical
+    ? {
+        xs: 'space-y-1',
+        sm: 'space-y-2',
+        md: 'space-y-3',
+        lg: 'space-y-4',
+        xl: 'space-y-5',
+        '2xl': 'space-y-6',
+      }[spacing]
+    : {
+        xs: 'gap-1',
+        sm: 'gap-2',
+        md: 'gap-3',
+        lg: 'gap-4',
+        xl: 'gap-5',
+        '2xl': 'gap-6',
+      }[spacing];
 
   const directionClass = vertical ? 'flex-col' : 'flex-row';
 
-  return (
-    <div className={cn('flex', directionClass, spacingClass, className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn('flex', directionClass, spacingClass, className)}>{children}</div>;
 };
 
 /**
@@ -450,14 +416,14 @@ export function useSpacing() {
     // Check if element has consistent spacing
     checkConsistency: (element: HTMLElement): boolean => {
       const style = window.getComputedStyle(element);
-      const padding = style.padding.split(' ').map(v => parseFloat(v) || 0);
-      const margin = style.margin.split(' ').map(v => parseFloat(v) || 0);
-      
+      const padding = style.padding.split(' ').map((v) => parseFloat(v) || 0);
+      const margin = style.margin.split(' ').map((v) => parseFloat(v) || 0);
+
       // Check if all padding values are the same
       const paddingConsistent = padding.every((val, _, arr) => val === arr[0]);
       // Check if all margin values are the same (or zero)
       const marginConsistent = margin.every((val, _, arr) => val === arr[0]);
-      
+
       return paddingConsistent && marginConsistent;
     },
 
@@ -465,16 +431,28 @@ export function useSpacing() {
     applyConsistentSpacing: (element: HTMLElement, size: SpacingSize = 'md'): void => {
       const paddingClass = useSpacing().getClass('p', size);
       element.classList.add(paddingClass);
-      
+
       // Remove any existing padding/margin classes
       const spacingClasses = [
-        'p-', 'px-', 'py-', 'pt-', 'pb-', 'pl-', 'pr-',
-        'm-', 'mx-', 'my-', 'mt-', 'mb-', 'ml-', 'mr-',
+        'p-',
+        'px-',
+        'py-',
+        'pt-',
+        'pb-',
+        'pl-',
+        'pr-',
+        'm-',
+        'mx-',
+        'my-',
+        'mt-',
+        'mb-',
+        'ml-',
+        'mr-',
       ];
-      
-      spacingClasses.forEach(prefix => {
-        const classes = Array.from(element.classList).filter(cls => cls.startsWith(prefix));
-        classes.forEach(cls => element.classList.remove(cls));
+
+      spacingClasses.forEach((prefix) => {
+        const classes = Array.from(element.classList).filter((cls) => cls.startsWith(prefix));
+        classes.forEach((cls) => element.classList.remove(cls));
       });
     },
   };
@@ -488,7 +466,7 @@ export const SpacingExample: React.FC = () => {
     <Container size="lg" padding="lg">
       <Stack spacing="lg">
         <h2 className="text-2xl font-bold">Spacing Examples</h2>
-        
+
         <Card>
           <Stack spacing="md">
             <h3 className="text-lg font-semibold">Stack (Vertical)</h3>
@@ -515,7 +493,7 @@ export const SpacingExample: React.FC = () => {
           <Stack spacing="md">
             <h3 className="text-lg font-semibold">Grid</h3>
             <Grid cols={3} gap="md">
-              {[1, 2, 3, 4, 5, 6].map(i => (
+              {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="p-4 bg-green-100 rounded text-center">
                   Item {i}
                 </div>
@@ -529,7 +507,9 @@ export const SpacingExample: React.FC = () => {
             <h3 className="text-lg font-semibold">Form Group</h3>
             <FormGroup spacing="md">
               <div>
-                <label htmlFor="email-example" className="block text-sm font-medium mb-1">Email</label>
+                <label htmlFor="email-example" className="block text-sm font-medium mb-1">
+                  Email
+                </label>
                 <input
                   id="email-example"
                   className="w-full p-2 border rounded"
@@ -538,7 +518,9 @@ export const SpacingExample: React.FC = () => {
                 />
               </div>
               <div>
-                <label htmlFor="password-example" className="block text-sm font-medium mb-1">Password</label>
+                <label htmlFor="password-example" className="block text-sm font-medium mb-1">
+                  Password
+                </label>
                 <input
                   id="password-example"
                   type="password"

@@ -7,7 +7,12 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, RefreshCw, User, Clock, WifiOff, Shield } from 'lucide-react';
 import { useEnhancedAuth, shouldOfferGuestMode } from '@/hooks/useEnhancedAuth';
-import { StandardButton, PrimaryButton, SecondaryButton, OutlineButton } from '@/components/shared/StandardButton';
+import {
+  StandardButton,
+  PrimaryButton,
+  SecondaryButton,
+  OutlineButton,
+} from '@/components/shared/StandardButton';
 
 interface EnhancedLoaderProps {
   /** Custom message to display */
@@ -18,24 +23,17 @@ interface EnhancedLoaderProps {
   isAuthLoading?: boolean;
 }
 
-const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({ 
-  message, 
+const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
+  message,
   forceDark = false,
-  isAuthLoading = true 
+  isAuthLoading = true,
 }) => {
   const [localMessage, setLocalMessage] = useState(message || 'Loading...');
   const [progress, setProgress] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
-  
-  const { 
-    isLoading, 
-    error, 
-    elapsedTime, 
-    hasTimedOut, 
-    retryAuth, 
-    enterGuestMode,
-    isGuestMode 
-  } = useEnhancedAuth();
+
+  const { isLoading, error, elapsedTime, hasTimedOut, retryAuth, enterGuestMode, isGuestMode } =
+    useEnhancedAuth();
 
   // Prevent scrolling behind the overlay
   useEffect(() => {
@@ -97,7 +95,9 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
             <Shield className={`w-6 h-6 ${accentClass}`} />
           </div>
           <h1 className={`text-xl font-semibold ${textClass} mb-1`}>PANaCEa</h1>
-          <p className={`text-sm ${textClass}/70`}>Physician Assistant National Certifying Exam Adaptive Engine</p>
+          <p className={`text-sm ${textClass}/70`}>
+            Physician Assistant National Certifying Exam Adaptive Engine
+          </p>
         </div>
 
         {/* Progress section */}
@@ -115,14 +115,14 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
           {/* Status message and time */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${isLoading ? 'animate-pulse bg-[var(--color-accent)]' : successColor}`} />
+              <div
+                className={`w-2 h-2 rounded-full ${isLoading ? 'animate-pulse bg-[var(--color-accent)]' : successColor}`}
+              />
               <span className={`text-sm font-medium ${textClass}`}>{localMessage}</span>
             </div>
             <div className="flex items-center space-x-1">
               <Clock className={`w-3 h-3 ${textClass}/60`} />
-              <span className={`text-xs ${textClass}/60`}>
-                {(elapsedTime / 1000).toFixed(1)}s
-              </span>
+              <span className={`text-xs ${textClass}/60`}>{(elapsedTime / 1000).toFixed(1)}s</span>
             </div>
           </div>
         </div>
@@ -143,9 +143,10 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
                     {hasTimedOut ? 'Authentication is taking too long' : 'Authentication issue'}
                   </h3>
                   <p className={`text-sm ${textClass}/80 mb-3`}>
-                    {error || 'The authentication service is not responding. This could be due to network issues or service downtime.'}
+                    {error ||
+                      'The authentication service is not responding. This could be due to network issues or service downtime.'}
                   </p>
-                  
+
                   <div className="flex flex-wrap gap-3">
                     <PrimaryButton
                       onClick={retryAuth}
@@ -154,7 +155,7 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
                     >
                       Try Again
                     </PrimaryButton>
-                    
+
                     {offerGuestMode && (
                       <SecondaryButton
                         onClick={enterGuestMode}
@@ -164,11 +165,8 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
                         Try Guest Mode
                       </SecondaryButton>
                     )}
-                    
-                    <OutlineButton
-                      onClick={() => setShowDetails(!showDetails)}
-                      size="md"
-                    >
+
+                    <OutlineButton onClick={() => setShowDetails(!showDetails)} size="md">
                       {showDetails ? 'Hide Details' : 'Show Details'}
                     </OutlineButton>
                   </div>
@@ -262,9 +260,9 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
         <div className="pt-4 border-t border-[var(--color-border)]">
           <p className={`text-center text-xs ${textClass}/60`}>
             Need help?{' '}
-            <a 
-              href="https://github.com/yourusername/panacea/issues" 
-              target="_blank" 
+            <a
+              href="https://github.com/yourusername/panacea/issues"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-[var(--color-accent)] hover:underline"
             >

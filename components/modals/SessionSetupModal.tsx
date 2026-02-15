@@ -91,7 +91,9 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
         className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] p-8 w-full max-w-md max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="session-setup-title" className="text-2xl font-bold text-action-primary mb-2">New Study Session</h2>
+        <h2 id="session-setup-title" className="text-2xl font-bold text-action-primary mb-2">
+          New Study Session
+        </h2>
 
         {!isCustomizing ? (
           <>

@@ -463,12 +463,7 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
         // Log implicit metrics result for debugging
         const im = result.implicitMetrics;
         if (im) {
-          console.log(
-            '[FSRS] Implicit rating:',
-            im.rating,
-            'confidence:',
-            im.confidence
-          );
+          console.log('[FSRS] Implicit rating:', im.rating, 'confidence:', im.confidence);
         }
 
         // Record JOL calibration observation for metacognitive tracking

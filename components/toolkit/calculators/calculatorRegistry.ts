@@ -3,16 +3,7 @@
  * Used by both ToolkitHub (grid, search, pinned/recent) and CalculatorHub (tabs, grid, render).
  */
 
-import {
-  Activity,
-  AlertCircle,
-  Beaker,
-  BookOpen,
-  Droplet,
-  Heart,
-  Pill,
-  Wind,
-} from 'lucide-react';
+import { Activity, AlertCircle, Beaker, BookOpen, Droplet, Heart, Pill, Wind } from 'lucide-react';
 import type { Calculator } from './types';
 
 export interface CalculatorCategoryTab {

@@ -148,7 +148,18 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
     setInputStr(toInputValue(next));
     onChange(next);
     onCommit?.(next);
-  }, [inputStr, value, min, max, snapValues, snapInputOnBlur, fromInputValue, toInputValue, onChange, onCommit]);
+  }, [
+    inputStr,
+    value,
+    min,
+    max,
+    snapValues,
+    snapInputOnBlur,
+    fromInputValue,
+    toInputValue,
+    onChange,
+    onCommit,
+  ]);
 
   const handleInputFocus = useCallback(() => {
     setIsFocused(true);
@@ -158,7 +169,7 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
     let next: number;
     if (snapValues && snapValues.length > 0) {
       const idx = indexOfNearest(value, snapValues);
-      next = idx <= 0 ? min : (snapValues[idx - 1] ?? min) as number;
+      next = idx <= 0 ? min : ((snapValues[idx - 1] ?? min) as number);
     } else {
       next = Math.max(min, value - step);
     }
@@ -172,7 +183,7 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
     let next: number;
     if (snapValues && snapValues.length > 0) {
       const idx = indexOfNearest(value, snapValues);
-      next = idx >= snapValues.length - 1 ? max : (snapValues[idx + 1] ?? max) as number;
+      next = idx >= snapValues.length - 1 ? max : ((snapValues[idx + 1] ?? max) as number);
     } else {
       next = Math.min(max, value + step);
     }
@@ -190,9 +201,9 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
     return value;
   }, [value, snapValues]);
 
-  const sliderMin = snapValues && snapValues.length > 0 ? snapValues[0] ?? min : min;
+  const sliderMin = snapValues && snapValues.length > 0 ? (snapValues[0] ?? min) : min;
   const sliderMax =
-    snapValues && snapValues.length > 0 ? snapValues[snapValues.length - 1] ?? max : max;
+    snapValues && snapValues.length > 0 ? (snapValues[snapValues.length - 1] ?? max) : max;
   const sliderStep =
     snapValues && snapValues.length > 1
       ? Math.min(
@@ -206,9 +217,10 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
   const handleSliderChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const v = parseFloat(e.target.value);
-      const next = snapValues && snapValues.length > 0
-        ? snapValues[indexOfNearest(v, snapValues)] ?? v
-        : Math.max(min, Math.min(max, v));
+      const next =
+        snapValues && snapValues.length > 0
+          ? (snapValues[indexOfNearest(v, snapValues)] ?? v)
+          : Math.max(min, Math.min(max, v));
       onChange(next);
       setInputStr(toInputValue(next));
     },
@@ -220,7 +232,11 @@ export const SliderWithInput: React.FC<SliderWithInputProps> = ({
   }, [value, onCommit]);
 
   return (
-    <div className="space-y-2" role="group" aria-label={ariaLabel ?? (typeof label === 'string' ? label : undefined)}>
+    <div
+      className="space-y-2"
+      role="group"
+      aria-label={ariaLabel ?? (typeof label === 'string' ? label : undefined)}
+    >
       {label != null && (
         <div className="flex items-center justify-between">
           {typeof label === 'string' ? (

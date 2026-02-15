@@ -12,7 +12,7 @@ const maxWidthClasses: Record<PageContainerMaxWidth, string> = {
   '4xl': 'max-w-4xl',
   '6xl': 'max-w-6xl',
   '7xl': 'max-w-7xl',
-  'full': 'max-w-full',
+  full: 'max-w-full',
 };
 
 const defaultPadding = 'px-4 sm:px-6 lg:px-8';
@@ -34,14 +34,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   as: Component = 'div',
 }) => {
   return (
-    <Component
-      className={cn(
-        'mx-auto',
-        maxWidthClasses[maxWidth],
-        defaultPadding,
-        className
-      )}
-    >
+    <Component className={cn('mx-auto', maxWidthClasses[maxWidth], defaultPadding, className)}>
       {children}
     </Component>
   );

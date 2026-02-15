@@ -23,4 +23,3 @@ describe('resolveUserByClerkId', () => {
     expect(result).toBeNull();
   });
 });
-

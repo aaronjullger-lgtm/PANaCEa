@@ -1,12 +1,21 @@
 /**
  * Performance Monitor Component
- * 
+ *
  * Displays real-time performance metrics and optimization recommendations
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Zap, AlertTriangle, CheckCircle, Clock, BarChart, Download, Cpu } from 'lucide-react';
+import {
+  Activity,
+  Zap,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  BarChart,
+  Download,
+  Cpu,
+} from 'lucide-react';
 import { StandardButton, PrimaryButton, SecondaryButton } from './StandardButton';
 import { useInitialLoadOptimization, type LoadTimeMetrics } from '@/services/initialLoadOptimizer';
 
@@ -27,7 +36,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const { report, optimize } = useInitialLoadOptimization();
-  
+
   // Notify parent of score changes
   useEffect(() => {
     if (onScoreChange && report.score > 0) {
@@ -69,11 +78,11 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`p-4 rounded-xl border ${
-        status === 'good' 
-          ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20' 
+        status === 'good'
+          ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20'
           : status === 'warning'
-          ? 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20'
-          : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
+            ? 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20'
+            : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
       }`}
     >
       <div className="flex items-center justify-between mb-2">
@@ -81,22 +90,27 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
           {icon}
           <span className="font-medium text-sm">{title}</span>
         </div>
-        <span className={`text-sm font-semibold ${
-          status === 'good' ? 'text-green-600 dark:text-green-400' :
-          status === 'warning' ? 'text-yellow-600 dark:text-yellow-400' :
-          'text-red-600 dark:text-red-400'
-        }`}>
+        <span
+          className={`text-sm font-semibold ${
+            status === 'good'
+              ? 'text-green-600 dark:text-green-400'
+              : status === 'warning'
+                ? 'text-yellow-600 dark:text-yellow-400'
+                : 'text-red-600 dark:text-red-400'
+          }`}
+        >
           {value}
         </span>
       </div>
-      <div className="text-xs text-[var(--color-text-muted)]">
-        Target: {target}
-      </div>
+      <div className="text-xs text-[var(--color-text-muted)]">Target: {target}</div>
     </motion.div>
   );
 
   const renderResourceCard = (resource: { name: string; size: number }) => (
-    <div key={resource.name} className="flex items-center justify-between py-2 px-3 bg-[var(--color-bg-secondary)] rounded-lg">
+    <div
+      key={resource.name}
+      className="flex items-center justify-between py-2 px-3 bg-[var(--color-bg-secondary)] rounded-lg"
+    >
       <div className="flex items-center gap-2">
         <Download className="w-4 h-4 text-[var(--color-text-muted)]" />
         <span className="text-sm font-medium truncate max-w-[200px]">{resource.name}</span>
@@ -115,11 +129,11 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed bottom-6 right-6 z-50 flex items-center justify-center w-12 h-12 rounded-full shadow-lg ${
-          report.score >= 70 
-            ? 'bg-green-500 hover:bg-green-600' 
+          report.score >= 70
+            ? 'bg-green-500 hover:bg-green-600'
             : report.score >= 50
-            ? 'bg-yellow-500 hover:bg-yellow-600'
-            : 'bg-red-500 hover:bg-red-600'
+              ? 'bg-yellow-500 hover:bg-yellow-600'
+              : 'bg-red-500 hover:bg-red-600'
         } text-white transition-colors`}
         aria-label="Performance Monitor"
       >
@@ -160,7 +174,12 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                   aria-label="Close"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -168,7 +187,9 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               {/* Overall Score */}
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <div className="text-sm text-[var(--color-text-muted)] mb-1">Performance Score</div>
+                  <div className="text-sm text-[var(--color-text-muted)] mb-1">
+                    Performance Score
+                  </div>
                   <div className={`text-3xl font-bold ${getScoreColor(report.score)}`}>
                     {report.score}
                     <span className="text-lg">/100</span>
@@ -200,9 +221,11 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                   animate={{ width: `${report.score}%` }}
                   transition={{ duration: 0.5, ease: 'easeOut' }}
                   className={`h-full ${
-                    report.score >= 70 ? 'bg-green-500' :
-                    report.score >= 50 ? 'bg-yellow-500' :
-                    'bg-red-500'
+                    report.score >= 70
+                      ? 'bg-green-500'
+                      : report.score >= 50
+                        ? 'bg-yellow-500'
+                        : 'bg-red-500'
                   }`}
                 />
               </div>
@@ -228,32 +251,44 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                         'First Contentful Paint',
                         formatMetric(report.metrics?.firstContentfulPaint),
                         '< 1.8s',
-                        (report.metrics?.firstContentfulPaint || 0) < 1800 ? 'good' : 
-                        (report.metrics?.firstContentfulPaint || 0) < 3000 ? 'warning' : 'poor',
+                        (report.metrics?.firstContentfulPaint || 0) < 1800
+                          ? 'good'
+                          : (report.metrics?.firstContentfulPaint || 0) < 3000
+                            ? 'warning'
+                            : 'poor',
                         <Clock className="w-4 h-4" />
                       )}
                       {renderMetricCard(
                         'Largest Contentful Paint',
                         formatMetric(report.metrics?.largestContentfulPaint),
                         '< 2.5s',
-                        (report.metrics?.largestContentfulPaint || 0) < 2500 ? 'good' : 
-                        (report.metrics?.largestContentfulPaint || 0) < 4000 ? 'warning' : 'poor',
+                        (report.metrics?.largestContentfulPaint || 0) < 2500
+                          ? 'good'
+                          : (report.metrics?.largestContentfulPaint || 0) < 4000
+                            ? 'warning'
+                            : 'poor',
                         <Download className="w-4 h-4" />
                       )}
                       {renderMetricCard(
                         'First Input Delay',
                         formatMetric(report.metrics?.firstInputDelay),
                         '< 100ms',
-                        (report.metrics?.firstInputDelay || 0) < 100 ? 'good' : 
-                        (report.metrics?.firstInputDelay || 0) < 300 ? 'warning' : 'poor',
+                        (report.metrics?.firstInputDelay || 0) < 100
+                          ? 'good'
+                          : (report.metrics?.firstInputDelay || 0) < 300
+                            ? 'warning'
+                            : 'poor',
                         <Cpu className="w-4 h-4" />
                       )}
                       {renderMetricCard(
                         'Layout Shift',
                         formatMetric(report.metrics?.cumulativeLayoutShift, ''),
                         '< 0.1',
-                        (report.metrics?.cumulativeLayoutShift || 0) < 0.1 ? 'good' : 
-                        (report.metrics?.cumulativeLayoutShift || 0) < 0.25 ? 'warning' : 'poor',
+                        (report.metrics?.cumulativeLayoutShift || 0) < 0.1
+                          ? 'good'
+                          : (report.metrics?.cumulativeLayoutShift || 0) < 0.25
+                            ? 'warning'
+                            : 'poor',
                         <AlertTriangle className="w-4 h-4" />
                       )}
                     </div>
@@ -270,7 +305,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                         Total: {formatSize(report.resourceAnalysis.totalSize)}
                       </span>
                     </div>
-                    
+
                     {report.resourceAnalysis.largestChunks.length > 0 ? (
                       <div className="space-y-2">
                         {report.resourceAnalysis.largestChunks.slice(0, 3).map(renderResourceCard)}
@@ -317,13 +352,17 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 bg-[var(--color-bg-secondary)] rounded-lg">
-                      <div className="text-xs text-[var(--color-text-muted)] mb-1">Total Blocking Time</div>
+                      <div className="text-xs text-[var(--color-text-muted)] mb-1">
+                        Total Blocking Time
+                      </div>
                       <div className="font-semibold">
                         {formatMetric(report.metrics?.totalBlockingTime)}
                       </div>
                     </div>
                     <div className="p-3 bg-[var(--color-bg-secondary)] rounded-lg">
-                      <div className="text-xs text-[var(--color-text-muted)] mb-1">Time to Interactive</div>
+                      <div className="text-xs text-[var(--color-text-muted)] mb-1">
+                        Time to Interactive
+                      </div>
                       <div className="font-semibold">
                         {formatMetric(report.metrics?.timeToInteractive)}
                       </div>
@@ -368,13 +407,18 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
             <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    report.score >= 70 ? 'bg-green-500' :
-                    report.score >= 50 ? 'bg-yellow-500' :
-                    'bg-red-500'
-                  }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      report.score >= 70
+                        ? 'bg-green-500'
+                        : report.score >= 50
+                          ? 'bg-yellow-500'
+                          : 'bg-red-500'
+                    }`}
+                  />
                   <span className="text-[var(--color-text-muted)]">
-                    Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    Last updated:{' '}
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
                 <span className="text-xs text-[var(--color-text-muted)]">

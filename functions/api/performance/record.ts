@@ -82,8 +82,7 @@ export const onRequestPost = authenticatedEndpoint<PerformanceRecordInput>(
           streak: bestStreak ?? 0,
           sessionStart: new Date(startTime),
           sessionEnd: new Date(endTime),
-          metadata:
-            metadata != null ? (JSON.parse(JSON.stringify(metadata)) as object) : undefined,
+          metadata: metadata != null ? (JSON.parse(JSON.stringify(metadata)) as object) : undefined,
         },
       });
 

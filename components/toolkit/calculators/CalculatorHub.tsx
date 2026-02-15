@@ -118,9 +118,7 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <h1
-              className="text-5xl font-bold text-[var(--color-text-primary)] tracking-wide mb-2 font-teko"
-            >
+            <h1 className="text-5xl font-bold text-[var(--color-text-primary)] tracking-wide mb-2 font-teko">
               Clinical Calculators
             </h1>
             <p className="text-[var(--color-text-muted)]">Evidence-based decision support tools</p>

@@ -1,6 +1,6 @@
 /**
  * External Medical Database Integration Service
- * 
+ *
  * Provides integration with external medical databases and resources:
  * - PubMed/NCBI
  * - UpToDate (via API if available)
@@ -70,7 +70,7 @@ export class ExternalMedicalDatabaseService {
     uptodate: 'https://api.uptodate.com',
     guidelines: 'https://guidelines.gov/api',
     cdc: 'https://data.cdc.gov/api',
-    nih: 'https://api.nih.gov'
+    nih: 'https://api.nih.gov',
   };
 
   private readonly apiKeys: Record<string, string> = {};
@@ -84,7 +84,9 @@ export class ExternalMedicalDatabaseService {
   /**
    * Search across multiple medical databases
    */
-  async searchMedicalDatabases(params: MedicalDatabaseSearchParams): Promise<MedicalDatabaseResult[]> {
+  async searchMedicalDatabases(
+    params: MedicalDatabaseSearchParams
+  ): Promise<MedicalDatabaseResult[]> {
     switch (params.database) {
       case 'pubmed':
         return this.searchPubMed(params);
@@ -100,11 +102,13 @@ export class ExternalMedicalDatabaseService {
   /**
    * Search PubMed/NCBI database
    */
-  private async searchPubMed(params: MedicalDatabaseSearchParams): Promise<MedicalDatabaseResult[]> {
+  private async searchPubMed(
+    params: MedicalDatabaseSearchParams
+  ): Promise<MedicalDatabaseResult[]> {
     try {
       const { query, limit = 10 } = params;
       const searchUrl = `${this.baseUrls.pubmed}/esearch.fcgi?db=pubmed&term=${encodeURIComponent(query)}&retmax=${limit}&retmode=json`;
-      
+
       const response = await fetch(searchUrl);
       if (!response.ok) {
         throw new Error(`PubMed API error: ${response.statusText}`);
@@ -137,7 +141,7 @@ export class ExternalMedicalDatabaseService {
             source: 'PubMed',
             url: `https://pubmed.ncbi.nlm.nih.gov/${article.uid}/`,
             citationCount: article.pmcids ? parseInt(article.pmcids) : undefined,
-            tags: article.attributes?.term || []
+            tags: article.attributes?.term || [],
           });
         }
       }
@@ -152,11 +156,13 @@ export class ExternalMedicalDatabaseService {
   /**
    * Search ClinicalTrials.gov database
    */
-  private async searchClinicalTrials(params: MedicalDatabaseSearchParams): Promise<MedicalDatabaseResult[]> {
+  private async searchClinicalTrials(
+    params: MedicalDatabaseSearchParams
+  ): Promise<MedicalDatabaseResult[]> {
     try {
       const { query, limit = 10 } = params;
       const searchUrl = `https://clinicaltrials.gov/api/v2/studies?query=${encodeURIComponent(query)}&limit=${limit}`;
-      
+
       const response = await fetch(searchUrl);
       if (!response.ok) {
         throw new Error(`ClinicalTrials API error: ${response.statusText}`);
@@ -167,13 +173,17 @@ export class ExternalMedicalDatabaseService {
 
       return studies.map((study: any) => ({
         id: study.protocolSection.identificationModule.nctId,
-        title: study.protocolSection.identificationModule.briefTitle || study.protocolSection.identificationModule.officialTitle,
+        title:
+          study.protocolSection.identificationModule.briefTitle ||
+          study.protocolSection.identificationModule.officialTitle,
         abstract: study.protocolSection.descriptionModule?.briefSummary,
-        authors: study.protocolSection.identificationModule?.organization?.fullName ? [study.protocolSection.identificationModule.organization.fullName] : [],
+        authors: study.protocolSection.identificationModule?.organization?.fullName
+          ? [study.protocolSection.identificationModule.organization.fullName]
+          : [],
         publicationDate: study.protocolSection.statusModule.startDate,
         source: 'ClinicalTrials.gov',
         url: `https://clinicaltrials.gov/study/${study.protocolSection.identificationModule.nctId}`,
-        tags: study.protocolSection.conditionsModule?.conditions || []
+        tags: study.protocolSection.conditionsModule?.conditions || [],
       }));
     } catch (error) {
       console.error('ClinicalTrials search error:', error);
@@ -184,12 +194,14 @@ export class ExternalMedicalDatabaseService {
   /**
    * Search medical guidelines databases
    */
-  private async searchGuidelines(params: MedicalDatabaseSearchParams): Promise<MedicalDatabaseResult[]> {
+  private async searchGuidelines(
+    params: MedicalDatabaseSearchParams
+  ): Promise<MedicalDatabaseResult[]> {
     try {
       const { query, limit = 10 } = params;
       // Using a mock implementation since guidelines.gov API may require authentication
       // In production, this would connect to actual guidelines APIs
-      
+
       const mockGuidelines: MedicalDatabaseResult[] = [
         {
           id: 'guideline-1',
@@ -199,7 +211,7 @@ export class ExternalMedicalDatabaseService {
           publicationDate: '2023-01-15',
           source: 'AHA/ACC Guidelines',
           url: 'https://www.ahajournals.org/doi/10.1161/HYP.0000000000000065',
-          tags: ['Cardiovascular', 'Hypertension', 'Guidelines']
+          tags: ['Cardiovascular', 'Hypertension', 'Guidelines'],
         },
         {
           id: 'guideline-2',
@@ -209,16 +221,17 @@ export class ExternalMedicalDatabaseService {
           publicationDate: '2023-12-01',
           source: 'ADA Standards of Care',
           url: 'https://diabetesjournals.org/care/issue/46/Supplement_1',
-          tags: ['Endocrine', 'Diabetes', 'Guidelines']
-        }
+          tags: ['Endocrine', 'Diabetes', 'Guidelines'],
+        },
       ];
 
       // Filter mock data based on query
       return mockGuidelines
-        .filter(g => 
-          g.title.toLowerCase().includes(query.toLowerCase()) ||
-          g.abstract?.toLowerCase().includes(query.toLowerCase()) ||
-          g.tags?.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
+        .filter(
+          (g) =>
+            g.title.toLowerCase().includes(query.toLowerCase()) ||
+            g.abstract?.toLowerCase().includes(query.toLowerCase()) ||
+            g.tags?.some((tag) => tag.toLowerCase().includes(query.toLowerCase()))
         )
         .slice(0, limit);
     } catch (error) {
@@ -234,7 +247,7 @@ export class ExternalMedicalDatabaseService {
     try {
       const url = `https://clinicaltrials.gov/api/v2/studies/${trialId}`;
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error(`ClinicalTrial details error: ${response.statusText}`);
       }
@@ -248,11 +261,15 @@ export class ExternalMedicalDatabaseService {
         status: study.protocolSection.statusModule.overallStatus,
         phase: study.protocolSection.designModule?.phases?.[0],
         conditions: study.protocolSection.conditionsModule?.conditions || [],
-        interventions: study.protocolSection.armsInterventionsModule?.interventions?.map((i: any) => i.name) || [],
-        locations: study.protocolSection.contactsLocationsModule?.locations?.map((l: any) => l.facility) || [],
+        interventions:
+          study.protocolSection.armsInterventionsModule?.interventions?.map((i: any) => i.name) ||
+          [],
+        locations:
+          study.protocolSection.contactsLocationsModule?.locations?.map((l: any) => l.facility) ||
+          [],
         startDate: study.protocolSection.statusModule.startDate,
         completionDate: study.protocolSection.statusModule.completionDate,
-        url: `https://clinicaltrials.gov/study/${study.protocolSection.identificationModule.nctId}`
+        url: `https://clinicaltrials.gov/study/${study.protocolSection.identificationModule.nctId}`,
       };
     } catch (error) {
       console.error('Clinical trial details error:', error);
@@ -263,11 +280,14 @@ export class ExternalMedicalDatabaseService {
   /**
    * Get related articles for a medical concept
    */
-  async getRelatedArticles(concept: string, maxResults: number = 5): Promise<MedicalDatabaseResult[]> {
+  async getRelatedArticles(
+    concept: string,
+    maxResults: number = 5
+  ): Promise<MedicalDatabaseResult[]> {
     return this.searchPubMed({
       query: concept,
       database: 'pubmed',
-      limit: maxResults
+      limit: maxResults,
     });
   }
 
@@ -281,32 +301,33 @@ export class ExternalMedicalDatabaseService {
     for (const db of databases) {
       try {
         const startTime = Date.now();
-        let responseTime: number | undefined;
-        
+
         // Simple health check - try a basic search
         switch (db) {
           case 'pubmed':
-            await fetch(`${this.baseUrls.pubmed}/esearch.fcgi?db=pubmed&term=test&retmax=1&retmode=json`);
+            await fetch(
+              `${this.baseUrls.pubmed}/esearch.fcgi?db=pubmed&term=test&retmax=1&retmode=json`
+            );
             break;
           case 'clinicaltrials':
             await fetch('https://clinicaltrials.gov/api/v2/studies?query=test&limit=1');
             break;
         }
-        
-        responseTime = Date.now() - startTime;
-        
+
+        const responseTime = Date.now() - startTime;
+
         statuses.push({
           database: db,
           status: 'healthy',
           responseTime,
-          lastChecked: new Date().toISOString()
+          lastChecked: new Date().toISOString(),
         });
       } catch (error) {
         statuses.push({
           database: db,
           status: 'unavailable',
           lastChecked: new Date().toISOString(),
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
@@ -322,7 +343,7 @@ export class ExternalMedicalDatabaseService {
       const cacheItem = {
         results,
         timestamp: Date.now(),
-        ttl
+        ttl,
       };
       localStorage.setItem(`medical-db-cache-${key}`, JSON.stringify(cacheItem));
     } catch (error) {
@@ -340,7 +361,7 @@ export class ExternalMedicalDatabaseService {
 
       const cacheItem = JSON.parse(cached);
       const now = Date.now();
-      
+
       if (now - cacheItem.timestamp > cacheItem.ttl) {
         localStorage.removeItem(`medical-db-cache-${key}`);
         return null;
@@ -358,7 +379,7 @@ export class ExternalMedicalDatabaseService {
    */
   async searchWithCache(params: MedicalDatabaseSearchParams): Promise<MedicalDatabaseResult[]> {
     const cacheKey = `${params.database}-${params.query}-${params.limit}`;
-    
+
     // Try to get cached results
     const cached = this.getCachedResults(cacheKey);
     if (cached) {
@@ -367,10 +388,10 @@ export class ExternalMedicalDatabaseService {
 
     // Perform fresh search
     const results = await this.searchMedicalDatabases(params);
-    
+
     // Cache the results
     this.cacheResults(cacheKey, results);
-    
+
     return results;
   }
 
@@ -386,14 +407,14 @@ export class ExternalMedicalDatabaseService {
     abstract: string;
     url: string;
   }> {
-    return results.map(result => ({
+    return results.map((result) => ({
       id: result.id,
       title: result.title,
       source: result.source,
       date: result.publicationDate || 'Unknown date',
       authors: result.authors?.join(', ') || 'Unknown authors',
       abstract: result.abstract || 'No abstract available',
-      url: result.url || '#'
+      url: result.url || '#',
     }));
   }
 }
@@ -408,7 +429,7 @@ export function getExternalMedicalDatabaseService(): ExternalMedicalDatabaseServ
       // uptodate: process.env.UPTODATE_API_KEY,
       // guidelines: process.env.GUIDELINES_API_KEY
     };
-    
+
     instance = new ExternalMedicalDatabaseService(apiKeys);
   }
   return instance;

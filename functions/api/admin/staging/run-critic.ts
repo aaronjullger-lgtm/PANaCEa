@@ -11,7 +11,10 @@ import { createEndpointLogger } from '../../_shared/secureLogger';
 import { processStagingQueueWithCritic } from '../../_shared/stagingExports';
 
 const BodySchema = z.object({
-  body: z.object({ limit: z.number().int().min(1).max(50).optional().default(10) }).optional().default({ limit: 10 }),
+  body: z
+    .object({ limit: z.number().int().min(1).max(50).optional().default(10) })
+    .optional()
+    .default({ limit: 10 }),
 });
 
 export const onRequestOptions = withCors();

@@ -106,10 +106,7 @@ export const onRequestPost = authenticatedEndpoint(
           if (conceptId) {
             relatedContent = await prisma.labTest.findFirst({
               where: {
-                OR: [
-                  { id: conceptId },
-                  { name: { contains: conceptId, mode: 'insensitive' } },
-                ],
+                OR: [{ id: conceptId }, { name: { contains: conceptId, mode: 'insensitive' } }],
               },
             });
           }

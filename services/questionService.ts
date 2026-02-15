@@ -8,7 +8,10 @@
 
 import type { Question, SessionSettings } from '../types';
 import { parseJsonOrThrow } from '../lib/utils/safeJsonResponse';
-import { getSystemsForRotation, ALL_SYSTEMS as ROTATION_ALL_SYSTEMS } from '../config/rotation-systems';
+import {
+  getSystemsForRotation,
+  ALL_SYSTEMS as ROTATION_ALL_SYSTEMS,
+} from '../config/rotation-systems';
 
 // Pool status tracking
 let lastPoolCheck = 0;
@@ -211,7 +214,8 @@ async function fetchFromPool(
   token?: string | null
 ): Promise<{ questions: Question[]; poolStatus: PoolStatus }> {
   // Validate token is available
-  if (!token) {    console.warn('[QuestionService] No auth token provided to fetchFromPool');
+  if (!token) {
+    console.warn('[QuestionService] No auth token provided to fetchFromPool');
     // Return empty result instead of throwing - allows graceful fallback to Gemini
     return {
       questions: [],
@@ -482,8 +486,7 @@ function getClinicalContextFromStorage(): {
   yearInProgram: string | null;
   currentRotation: string | null;
 } {
-  if (typeof window === 'undefined')
-    return { yearInProgram: null, currentRotation: null };
+  if (typeof window === 'undefined') return { yearInProgram: null, currentRotation: null };
   try {
     const year = localStorage.getItem('panceai_year_in_program');
     const rotation = localStorage.getItem('panceai_current_rotation');
@@ -551,9 +554,7 @@ export async function getQuestionBatch(
   // Clinical Year 60/40: 60% current rotation topic, 40% background PANCE prep
   const { yearInProgram, currentRotation } = getClinicalContextFromStorage();
   const isClinicalRotationMode =
-    yearInProgram === 'Clinical Year' &&
-    currentRotation &&
-    currentRotation.trim().length > 0;
+    yearInProgram === 'Clinical Year' && currentRotation && currentRotation.trim().length > 0;
   const rotationSystems = isClinicalRotationMode
     ? getSystemsForRotation(currentRotation as import('../types').ClinicalRotation)
     : undefined;
@@ -577,14 +578,7 @@ export async function getQuestionBatch(
     if (do60_40 && backgroundCount > 0) {
       // Fetch 60% from current rotation systems, 40% from background PANCE; merge and shuffle
       const [rotationResult, backgroundResult] = await Promise.all([
-        fetchFromPool(
-          rotationCount,
-          undefined,
-          rotationSystems,
-          undefined,
-          poolDifficulty,
-          token
-        ),
+        fetchFromPool(rotationCount, undefined, rotationSystems, undefined, poolDifficulty, token),
         fetchFromPool(
           backgroundCount,
           undefined,
@@ -602,13 +596,7 @@ export async function getQuestionBatch(
       if (combined.length >= count) {
         cachedPoolStatus = rotationResult.poolStatus;
         if (rotationResult.poolStatus.needsGeneration) {
-          triggerBackgroundGeneration(
-            undefined,
-            undefined,
-            poolDifficulty,
-            20,
-            token
-          );
+          triggerBackgroundGeneration(undefined, undefined, poolDifficulty, 20, token);
         }
         return combined.slice(0, count);
       }

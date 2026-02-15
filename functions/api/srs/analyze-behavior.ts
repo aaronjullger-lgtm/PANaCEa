@@ -8,7 +8,10 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
-import { analyzeBehaviorGemini, type BehaviorTelemetryInput } from '../_shared/analyzeBehaviorGemini';
+import {
+  analyzeBehaviorGemini,
+  type BehaviorTelemetryInput,
+} from '../_shared/analyzeBehaviorGemini';
 
 const AnalyzeBehaviorSchema = z.object({
   body: z.object({
@@ -55,10 +58,21 @@ export const onRequestPost = authenticatedEndpoint(AnalyzeBehaviorSchema, async 
       return { data: { error: 'User not found' }, status: 404 };
     }
 
-    const { attemptId, questionId: _qId, rating, selectedAnswer, wasCorrect, telemetry } =
-      validated.body;
+    const {
+      attemptId,
+      questionId: _qId,
+      rating,
+      selectedAnswer,
+      wasCorrect,
+      telemetry,
+    } = validated.body;
 
-    let attempt: { id: string; telemetryJson: unknown; wasCorrect: boolean; selectedAnswer: string | null } | null = null;
+    let attempt: {
+      id: string;
+      telemetryJson: unknown;
+      wasCorrect: boolean;
+      selectedAnswer: string | null;
+    } | null = null;
     let effectiveTelemetry: BehaviorTelemetryInput | null = telemetry ?? null;
 
     if (attemptId) {

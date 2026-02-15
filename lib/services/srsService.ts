@@ -1368,10 +1368,15 @@ export async function requestMnemonicImage(
         },
       }),
     });
-    const json = (await response.json().catch(() => ({}))) as { data?: GenerateVisualResponse; error?: string };
+    const json = (await response.json().catch(() => ({}))) as {
+      data?: GenerateVisualResponse;
+      error?: string;
+    };
     const data = json?.data ?? json;
     if (!response.ok) {
-      return { error: (data as { error?: string })?.error ?? json?.error ?? `HTTP ${response.status}` };
+      return {
+        error: (data as { error?: string })?.error ?? json?.error ?? `HTTP ${response.status}`,
+      };
     }
     return { data: data as GenerateVisualResponse };
   } catch (error) {

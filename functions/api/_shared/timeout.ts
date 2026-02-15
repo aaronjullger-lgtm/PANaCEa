@@ -9,7 +9,10 @@
  */
 
 export class TimeoutError extends Error {
-  constructor(message: string, public readonly ms: number) {
+  constructor(
+    message: string,
+    public readonly ms: number
+  ) {
     super(message);
     this.name = 'TimeoutError';
   }

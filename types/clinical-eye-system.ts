@@ -1,12 +1,12 @@
 /**
  * Module 2: Clinical Eye System Type Definitions
- * 
+ *
  * Visual diagnostics system using:
  * - veo_cameos for standardized patient videos
  * - spatial-understanding for interactive radiology/pathology
  * - Point-and-click diagnostics
  * - Reveal-on-hover heatmaps
- * 
+ *
  * @module clinical-eye-system
  */
 
@@ -30,14 +30,14 @@ export type ClinicalSetting =
  * Physical examination finding categories.
  */
 export type PhysicalFindingCategory =
-  | 'general_appearance'  // Diaphoresis, distress, body habitus
-  | 'vital_signs_visual'  // Tachypnea, accessory muscle use
-  | 'skin'                // Cyanosis, jaundice, rashes
-  | 'cardiovascular'      // JVD, peripheral edema
-  | 'respiratory'         // Tripod position, pursed-lip breathing
-  | 'neurological'        // Facial droop, gait abnormality
-  | 'musculoskeletal'     // Joint swelling, deformity
-  | 'abdominal';          // Distension, guarding
+  | 'general_appearance' // Diaphoresis, distress, body habitus
+  | 'vital_signs_visual' // Tachypnea, accessory muscle use
+  | 'skin' // Cyanosis, jaundice, rashes
+  | 'cardiovascular' // JVD, peripheral edema
+  | 'respiratory' // Tripod position, pursed-lip breathing
+  | 'neurological' // Facial droop, gait abnormality
+  | 'musculoskeletal' // Joint swelling, deformity
+  | 'abdominal'; // Distension, guarding
 
 /**
  * Specific physical examination finding with video representation.
@@ -45,34 +45,34 @@ export type PhysicalFindingCategory =
 export interface PhysicalFinding {
   /** Unique finding ID */
   id: string;
-  
+
   /** Finding name */
   name: string;
-  
+
   /** Category */
   category: PhysicalFindingCategory;
-  
+
   /** Description */
   description: string;
-  
+
   /** Clinical significance */
   significance: string;
-  
+
   /** Associated conditions */
   associatedConditions: string[];
-  
+
   /** Veo cameo prompt for generating this finding */
   veoCameoPrompt: string;
-  
+
   /** Video URL (once generated) */
   videoUrl?: string;
-  
+
   /** Sensitivity (how often present when condition exists) */
   sensitivity: number;
-  
+
   /** Specificity (how often absent when condition doesn't exist) */
   specificity: number;
-  
+
   /** Is this a "red flag" finding */
   isRedFlag: boolean;
 }
@@ -83,35 +83,35 @@ export interface PhysicalFinding {
 export interface StandardizedPatientVideo {
   /** Video ID */
   id: string;
-  
+
   /** Patient demographics */
   demographics: {
     age: number;
     gender: 'male' | 'female' | 'nonbinary';
     ethnicity?: string;
   };
-  
+
   /** Clinical setting */
   setting: ClinicalSetting;
-  
+
   /** Chief complaint */
   chiefComplaint: string;
-  
+
   /** Physical findings to display */
   findings: PhysicalFinding[];
-  
+
   /** Complete veo_cameos prompt */
   fullPrompt: string;
-  
+
   /** Generated video URL */
   videoUrl?: string;
-  
+
   /** Video duration (seconds) */
   duration: number;
-  
+
   /** Generation status */
   status: 'pending' | 'generating' | 'ready' | 'failed';
-  
+
   /** Generation metadata */
   metadata?: {
     generatedAt: string;
@@ -145,25 +145,25 @@ export type ImagingModality =
 export interface PathologicalFinding {
   /** Finding ID */
   id: string;
-  
+
   /** Finding name (e.g., "Pneumothorax", "Fracture", "Mass") */
   name: string;
-  
+
   /** Description */
   description: string;
-  
+
   /** Bounding box or polygon coordinates */
   coordinates: {
     type: 'box' | 'polygon' | 'point';
     points: Array<{ x: number; y: number }>; // Normalized 0-1
   };
-  
+
   /** Confidence score (for AI-generated findings) */
   confidence?: number;
-  
+
   /** Clinical significance */
   significance: 'critical' | 'important' | 'incidental';
-  
+
   /** Is this the primary pathology for the case */
   isPrimary: boolean;
 }
@@ -174,34 +174,34 @@ export interface PathologicalFinding {
 export interface InteractiveImage {
   /** Image ID */
   id: string;
-  
+
   /** Imaging modality */
   modality: ImagingModality;
-  
+
   /** Image URL */
   imageUrl: string;
-  
+
   /** Image dimensions */
   dimensions: {
     width: number;
     height: number;
   };
-  
+
   /** Pathological findings */
   findings: PathologicalFinding[];
-  
+
   /** Heatmap overlay (AI-generated) */
   heatmap?: {
     /** Heatmap image URL (0-1 probability overlay) */
     imageUrl: string;
-    
+
     /** Model used to generate heatmap */
     model: string;
-    
+
     /** Threshold for "highlighting" */
     threshold: number;
   };
-  
+
   /** Metadata */
   metadata?: {
     patientAge?: number;
@@ -216,56 +216,56 @@ export interface InteractiveImage {
 export interface PointAndClickDiagnostic {
   /** Question ID */
   questionId: string;
-  
+
   /** Interactive image */
   image: InteractiveImage;
-  
+
   /** Student's click coordinates */
   studentClicks: Array<{
     x: number;
     y: number;
     timestamp: string;
   }>;
-  
+
   /** Correct answer regions */
   correctRegions: PathologicalFinding[];
-  
+
   /** Scoring config */
   scoring: {
     /** Max distance from finding center (normalized) */
     maxDistanceForCredit: number;
-    
+
     /** Points per correct click */
     pointsPerFinding: number;
-    
+
     /** Penalty for incorrect clicks */
     penaltyPerWrongClick: number;
   };
-  
+
   /** Attempts allowed */
   maxAttempts: number;
-  
+
   /** Current attempt number */
   currentAttempt: number;
-  
+
   /** Hint system */
   hints: {
     /** Subtle hint (text) */
     subtle: string;
-    
+
     /** Moderate hint (highlight quadrant) */
     moderate: {
       text: string;
       highlightRegion: 'upper_left' | 'upper_right' | 'lower_left' | 'lower_right' | 'central';
     };
-    
+
     /** Explicit hint (show partial heatmap) */
     explicit: {
       text: string;
       revealHeatmapOpacity: number; // 0.3 for partial reveal
     };
   };
-  
+
   /** Current hint level unlocked */
   currentHintLevel: 'none' | 'subtle' | 'moderate' | 'explicit';
 }
@@ -280,22 +280,22 @@ export interface PointAndClickDiagnostic {
 export interface HoverInteraction {
   /** Is hovering enabled */
   isEnabled: boolean;
-  
+
   /** Hover duration required to trigger reveal (ms) */
   hoverDurationMs: number;
-  
+
   /** Current hover position */
   currentPosition?: {
     x: number;
     y: number;
   };
-  
+
   /** Hover start time */
   hoverStartTime?: number;
-  
+
   /** Has the hint been revealed */
   hintRevealed: boolean;
-  
+
   /** Penalty for using hover hint */
   penaltyPoints?: number;
 }
@@ -306,20 +306,20 @@ export interface HoverInteraction {
 export interface HeatmapReveal {
   /** Initial opacity (0 = hidden) */
   initialOpacity: number;
-  
+
   /** Target opacity on reveal */
   revealOpacity: number;
-  
+
   /** Transition duration (ms) */
   transitionDuration: number;
-  
+
   /** Color scheme */
   colorScheme: {
-    low: string;      // Low probability (e.g., blue)
-    medium: string;   // Medium probability (e.g., yellow)
-    high: string;     // High probability (e.g., red)
+    low: string; // Low probability (e.g., blue)
+    medium: string; // Medium probability (e.g., yellow)
+    high: string; // High probability (e.g., red)
   };
-  
+
   /** Blur radius (px) */
   blurRadius: number;
 }
@@ -334,17 +334,17 @@ export interface HeatmapReveal {
 export interface ComparativeAnatomy {
   /** Comparison ID */
   id: string;
-  
+
   /** Modality */
   modality: ImagingModality;
-  
+
   /** Normal (reference) image */
   normalImage: {
     imageUrl: string;
     label: string;
     annotations?: string[];
   };
-  
+
   /** Abnormal (pathological) image */
   abnormalImage: {
     imageUrl: string;
@@ -352,10 +352,10 @@ export interface ComparativeAnatomy {
     findings: PathologicalFinding[];
     annotations?: string[];
   };
-  
+
   /** Interactive toggle */
   toggleMode: 'side_by_side' | 'slider' | 'overlay' | 'blink';
-  
+
   /** Teaching points */
   teachingPoints: string[];
 }
@@ -368,11 +368,11 @@ export interface ComparativeAnatomy {
  * Clinical eye question type.
  */
 export type ClinicalEyeQuestionType =
-  | 'identify_finding'      // Point-and-click to identify pathology
-  | 'compare_images'        // Which image shows the abnormality
-  | 'match_finding'         // Match finding to clinical presentation
-  | 'sequence_diagnosis'    // Order images by diagnostic priority
-  | 'interpret_video';      // Identify physical findings in patient video
+  | 'identify_finding' // Point-and-click to identify pathology
+  | 'compare_images' // Which image shows the abnormality
+  | 'match_finding' // Match finding to clinical presentation
+  | 'sequence_diagnosis' // Order images by diagnostic priority
+  | 'interpret_video'; // Identify physical findings in patient video
 
 /**
  * Clinical eye question.
@@ -380,19 +380,19 @@ export type ClinicalEyeQuestionType =
 export interface ClinicalEyeQuestion {
   /** Question ID */
   id: string;
-  
+
   /** Question type */
   type: ClinicalEyeQuestionType;
-  
+
   /** Question stem */
   stem: string;
-  
+
   /** Media (images/videos) */
   media: Array<InteractiveImage | StandardizedPatientVideo | ComparativeAnatomy>;
-  
+
   /** Correct answer */
   correctAnswer: string | number | PathologicalFinding[];
-  
+
   /** Scoring */
   scoring: {
     basePoints: number;
@@ -400,16 +400,16 @@ export interface ClinicalEyeQuestion {
     accuracyBonus?: number;
     hintPenalty?: number;
   };
-  
+
   /** Explanation */
   explanation: string;
-  
+
   /** Teaching points */
   teachingPoints: string[];
-  
+
   /** Difficulty */
   difficulty: 'easy' | 'medium' | 'hard';
-  
+
   /** PANCE relevance */
   panceRelevance: number;
 }
@@ -424,19 +424,19 @@ export interface ClinicalEyeQuestion {
 export interface SpatialUnderstandingRequest {
   /** Image to analyze */
   imageUrl: string;
-  
+
   /** Query */
   query: string;
-  
+
   /** Model */
   model: 'gemini-pro-vision' | 'gemini-2.0-flash-exp';
-  
+
   /** Return bounding boxes */
   returnBoundingBoxes: boolean;
-  
+
   /** Return heatmap */
   returnHeatmap: boolean;
-  
+
   /** Confidence threshold */
   confidenceThreshold: number;
 }
@@ -457,10 +457,10 @@ export interface SpatialUnderstandingResponse {
     };
     description: string;
   }>;
-  
+
   /** Heatmap (base64 encoded image) */
   heatmap?: string;
-  
+
   /** Overall interpretation */
   interpretation: string;
 }
@@ -524,7 +524,8 @@ export const EXAMPLE_LEVINE_SIGN_VIDEO: StandardizedPatientVideo = {
       isRedFlag: true,
     },
   ],
-  fullPrompt: '55yo male in ED bay, sitting on stretcher, clutching fist to center of chest (Levine sign), grimacing in pain, visible diaphoresis on forehead, cardiac monitor in background',
+  fullPrompt:
+    '55yo male in ED bay, sitting on stretcher, clutching fist to center of chest (Levine sign), grimacing in pain, visible diaphoresis on forehead, cardiac monitor in background',
   duration: 5,
   status: 'ready',
 };

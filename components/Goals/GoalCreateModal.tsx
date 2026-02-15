@@ -8,7 +8,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
 import { X, Target } from 'lucide-react';
-import { useFormValidation, validateRequired, validateDateFuture } from '@/components/shared/FormValidation';
+import {
+  useFormValidation,
+  validateRequired,
+  validateDateFuture,
+} from '@/components/shared/FormValidation';
 import { PrimaryButton, SecondaryButton } from '@/components/shared/StandardButton';
 import type { UserGoal } from './GoalsDashboard';
 
@@ -20,7 +24,7 @@ interface GoalCreateModalProps {
 export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCreate }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Form validation
   const {
     messages,
@@ -38,7 +42,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
   // Validate form on changes
   useEffect(() => {
     clearMessages();
-    
+
     // Validate title
     if (formData.title.trim()) {
       clearFieldMessages('goal-title');
@@ -106,7 +110,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Check for validation errors
     if (hasErrors) {
       addMessage({
@@ -176,7 +180,10 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
-            <h2 id="goal-create-title" className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <h2
+              id="goal-create-title"
+              className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2"
+            >
               <Target className="w-6 h-6 text-blue-600" />
               Create New Goal
             </h2>
@@ -197,7 +204,10 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
 
             {/* Title */}
             <div>
-              <label htmlFor="goal-title" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label
+                htmlFor="goal-title"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              >
                 Goal Title *
               </label>
               <input
@@ -206,20 +216,29 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 ${
-                  messages.some(m => m.fieldId === 'goal-title' && m.severity === 'error')
+                  messages.some((m) => m.fieldId === 'goal-title' && m.severity === 'error')
                     ? 'border-[var(--color-data-fail)] focus:border-[var(--color-data-fail)] focus:ring-[var(--color-data-fail)]'
                     : 'border-slate-300 dark:border-slate-600 focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
                 }`}
                 placeholder="e.g., Complete 40 questions daily"
-                aria-invalid={messages.some(m => m.fieldId === 'goal-title' && m.severity === 'error')}
-                aria-describedby={messages.some(m => m.fieldId === 'goal-title') ? 'validation-messages' : undefined}
+                aria-invalid={messages.some(
+                  (m) => m.fieldId === 'goal-title' && m.severity === 'error'
+                )}
+                aria-describedby={
+                  messages.some((m) => m.fieldId === 'goal-title')
+                    ? 'validation-messages'
+                    : undefined
+                }
                 required
               />
             </div>
 
             {/* Description */}
             <div>
-              <label htmlFor="goal-description" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label
+                htmlFor="goal-description"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              >
                 Description
               </label>
               <textarea
@@ -234,7 +253,10 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
 
             {/* Goal Type */}
             <div>
-              <label htmlFor="goal-type" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label
+                htmlFor="goal-type"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              >
                 Goal Type *
               </label>
               <select
@@ -255,7 +277,10 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
             {formData.goalType !== 'exam_date' && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="goal-target-value" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label
+                    htmlFor="goal-target-value"
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                  >
                     Target Value
                   </label>
                   <input
@@ -266,18 +291,33 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                       setFormData({ ...formData, targetValue: parseInt(e.target.value) })
                     }
                     className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 ${
-                      messages.some(m => m.fieldId === 'goal-target-value' && m.severity === 'error')
+                      messages.some(
+                        (m) => m.fieldId === 'goal-target-value' && m.severity === 'error'
+                      )
                         ? 'border-[var(--color-data-fail)] focus:border-[var(--color-data-fail)] focus:ring-[var(--color-data-fail)]'
                         : 'border-slate-300 dark:border-slate-600 focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
                     }`}
                     min="1"
-                    aria-invalid={messages.some(m => m.fieldId === 'goal-target-value' && m.severity === 'error') ? 'true' : 'false'}
-                    aria-describedby={messages.some(m => m.fieldId === 'goal-target-value') ? 'validation-messages' : undefined}
+                    aria-invalid={
+                      messages.some(
+                        (m) => m.fieldId === 'goal-target-value' && m.severity === 'error'
+                      )
+                        ? 'true'
+                        : 'false'
+                    }
+                    aria-describedby={
+                      messages.some((m) => m.fieldId === 'goal-target-value')
+                        ? 'validation-messages'
+                        : undefined
+                    }
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="goal-target-unit" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label
+                    htmlFor="goal-target-unit"
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                  >
                     Unit
                   </label>
                   <select
@@ -301,7 +341,10 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
             {/* Target Date (exam_date only) */}
             {formData.goalType === 'exam_date' && (
               <div>
-                <label htmlFor="goal-target-date" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label
+                  htmlFor="goal-target-date"
+                  className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                >
                   Target Date *
                 </label>
                 <input
@@ -310,13 +353,21 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                   value={formData.targetDate}
                   onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
                   className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 ${
-                    messages.some(m => m.fieldId === 'goal-target-date' && m.severity === 'error')
+                    messages.some((m) => m.fieldId === 'goal-target-date' && m.severity === 'error')
                       ? 'border-[var(--color-data-fail)] focus:border-[var(--color-data-fail)] focus:ring-[var(--color-data-fail)]'
                       : 'border-slate-300 dark:border-slate-600 focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
                   }`}
                   required={formData.goalType === 'exam_date'}
-                  aria-invalid={messages.some(m => m.fieldId === 'goal-target-date' && m.severity === 'error') ? 'true' : 'false'}
-                  aria-describedby={messages.some(m => m.fieldId === 'goal-target-date') ? 'validation-messages' : undefined}
+                  aria-invalid={
+                    messages.some((m) => m.fieldId === 'goal-target-date' && m.severity === 'error')
+                      ? 'true'
+                      : 'false'
+                  }
+                  aria-describedby={
+                    messages.some((m) => m.fieldId === 'goal-target-date')
+                      ? 'validation-messages'
+                      : undefined
+                  }
                 />
               </div>
             )}
@@ -325,7 +376,10 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
             {formData.goalType === 'mastery' && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="goal-target-system" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label
+                    htmlFor="goal-target-system"
+                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                  >
                     System *
                   </label>
                   <input
@@ -334,14 +388,26 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                     value={formData.targetSystem}
                     onChange={(e) => setFormData({ ...formData, targetSystem: e.target.value })}
                     className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 ${
-                      messages.some(m => m.fieldId === 'goal-target-system' && m.severity === 'error')
+                      messages.some(
+                        (m) => m.fieldId === 'goal-target-system' && m.severity === 'error'
+                      )
                         ? 'border-[var(--color-data-fail)] focus:border-[var(--color-data-fail)] focus:ring-[var(--color-data-fail)]'
                         : 'border-slate-300 dark:border-slate-600 focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
                     }`}
                     placeholder="e.g., CV, PULM"
                     required={formData.goalType === 'mastery'}
-                    aria-invalid={messages.some(m => m.fieldId === 'goal-target-system' && m.severity === 'error') ? 'true' : 'false'}
-                    aria-describedby={messages.some(m => m.fieldId === 'goal-target-system') ? 'validation-messages' : undefined}
+                    aria-invalid={
+                      messages.some(
+                        (m) => m.fieldId === 'goal-target-system' && m.severity === 'error'
+                      )
+                        ? 'true'
+                        : 'false'
+                    }
+                    aria-describedby={
+                      messages.some((m) => m.fieldId === 'goal-target-system')
+                        ? 'validation-messages'
+                        : undefined
+                    }
                   />
                 </div>
 

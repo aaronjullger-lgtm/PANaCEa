@@ -1,8 +1,8 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import {
   usePhotoDrill,
   MOCK_CASES,
@@ -11,6 +11,26 @@ import {
   MASTER_CONDITION_LIST,
   type PhotoCase,
 } from './use-photo-drill';
+
+vi.mock('@clerk/clerk-react', () => ({
+  useAuth: () => ({
+    getToken: vi.fn(() => Promise.resolve(null)),
+    isSignedIn: false,
+  }),
+}));
+
+/** Wait for session queue to be populated after startSession (async fetch) */
+async function waitForQueue(result: {
+  current: { queue: PhotoCase[]; currentCase: PhotoCase | null };
+}) {
+  await waitFor(
+    () => {
+      expect(result.current.queue.length).toBeGreaterThan(0);
+      expect(result.current.currentCase).toBeDefined();
+    },
+    { timeout: 3000 }
+  );
+}
 
 describe('usePhotoDrill hook', () => {
   describe('initial state', () => {
@@ -77,24 +97,25 @@ describe('usePhotoDrill hook', () => {
       expect(result.current.selectedCategory).toBe('ecg');
     });
 
-    it('should generate initial queue when starting session', () => {
+    it('should generate initial queue when starting session', async () => {
       const { result } = renderHook(() => usePhotoDrill());
 
-      act(() => {
+      await act(async () => {
         result.current.startSession('derm');
       });
+      await waitForQueue(result);
 
       expect(result.current.queue.length).toBeGreaterThan(0);
       expect(result.current.currentCase).toBeDefined();
     });
 
-    it('should reset score and streak when starting new session', () => {
+    it('should reset score and streak when starting new session', async () => {
       const { result } = renderHook(() => usePhotoDrill());
 
-      // Start session and make progress
-      act(() => {
+      await act(async () => {
         result.current.startSession('ecg');
       });
+      await waitForQueue(result);
 
       act(() => {
         result.current.submitAnswer(result.current.currentCase!.correctDiagnosis);
@@ -102,8 +123,7 @@ describe('usePhotoDrill hook', () => {
 
       expect(result.current.score).toBe(1);
 
-      // Start new session
-      act(() => {
+      await act(async () => {
         result.current.startSession('derm');
       });
 
@@ -113,12 +133,13 @@ describe('usePhotoDrill hook', () => {
   });
 
   describe('submitAnswer (with session)', () => {
-    it('should correctly identify a correct answer (case-insensitive)', () => {
+    it('should correctly identify a correct answer (case-insensitive)', async () => {
       const { result } = renderHook(() => usePhotoDrill());
 
-      act(() => {
+      await act(async () => {
         result.current.startSession('ecg');
       });
+      await waitForQueue(result);
 
       const correctDiagnosis = result.current.currentCase!.correctDiagnosis;
 
@@ -132,12 +153,13 @@ describe('usePhotoDrill hook', () => {
       expect(result.current.streak).toBe(1);
     });
 
-    it('should correctly identify an incorrect answer', () => {
+    it('should correctly identify an incorrect answer', async () => {
       const { result } = renderHook(() => usePhotoDrill());
 
-      act(() => {
+      await act(async () => {
         result.current.startSession('ecg');
       });
+      await waitForQueue(result);
 
       act(() => {
         result.current.submitAnswer('Wrong Answer');
@@ -149,12 +171,13 @@ describe('usePhotoDrill hook', () => {
       expect(result.current.streak).toBe(0);
     });
 
-    it('should break streak on incorrect answer after correct ones', () => {
+    it('should break streak on incorrect answer after correct ones', async () => {
       const { result } = renderHook(() => usePhotoDrill());
 
-      act(() => {
+      await act(async () => {
         result.current.startSession('ecg');
       });
+      await waitForQueue(result);
 
       // Answer first correctly
       act(() => {
@@ -187,12 +210,13 @@ describe('usePhotoDrill hook', () => {
       expect(result.current.status).toBe('menu');
     });
 
-    it('should not submit when in feedback state', () => {
+    it('should not submit when in feedback state', async () => {
       const { result } = renderHook(() => usePhotoDrill());
 
-      act(() => {
+      await act(async () => {
         result.current.startSession('ecg');
       });
+      await waitForQueue(result);
 
       // Submit once to go to feedback state
       act(() => {
@@ -211,12 +235,13 @@ describe('usePhotoDrill hook', () => {
   });
 
   describe('nextCase (infinite mode)', () => {
-    it('should advance to the next case and generate new case', () => {
+    it('should advance to the next case and generate new case', async () => {
       const { result } = renderHook(() => usePhotoDrill());
 
-      act(() => {
+      await act(async () => {
         result.current.startSession('ecg');
       });
+      await waitForQueue(result);
 
       const initialQueueLength = result.current.queue.length;
 
@@ -233,12 +258,13 @@ describe('usePhotoDrill hook', () => {
       expect(result.current.queue.length).toBe(initialQueueLength + 1);
     });
 
-    it('should reset userAnswer and isCorrect when moving to next case', () => {
+    it('should reset userAnswer and isCorrect when moving to next case', async () => {
       const { result } = renderHook(() => usePhotoDrill());
 
-      act(() => {
+      await act(async () => {
         result.current.startSession('ecg');
       });
+      await waitForQueue(result);
 
       act(() => {
         result.current.submitAnswer('test');
@@ -256,12 +282,13 @@ describe('usePhotoDrill hook', () => {
   });
 
   describe('skipCase (with session)', () => {
-    it('should break streak and move to next case', () => {
+    it('should break streak and move to next case', async () => {
       const { result } = renderHook(() => usePhotoDrill());
 
-      act(() => {
+      await act(async () => {
         result.current.startSession('ecg');
       });
+      await waitForQueue(result);
 
       // Build a streak first
       act(() => {
@@ -297,12 +324,13 @@ describe('usePhotoDrill hook', () => {
   });
 
   describe('exitToMenu', () => {
-    it('should return to menu state and reset everything', () => {
+    it('should return to menu state and reset everything', async () => {
       const { result } = renderHook(() => usePhotoDrill());
 
-      act(() => {
+      await act(async () => {
         result.current.startSession('ecg');
       });
+      await waitForQueue(result);
 
       // Make some progress
       act(() => {
@@ -397,12 +425,13 @@ describe('usePhotoDrill hook', () => {
   });
 
   describe('reset (with session)', () => {
-    it('should reset score and position but keep category', () => {
+    it('should reset score and position but keep category', async () => {
       const { result } = renderHook(() => usePhotoDrill());
 
-      act(() => {
+      await act(async () => {
         result.current.startSession('derm');
       });
+      await waitForQueue(result);
 
       // Make some progress
       act(() => {

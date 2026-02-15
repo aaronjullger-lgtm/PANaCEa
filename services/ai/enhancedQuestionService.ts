@@ -87,14 +87,18 @@ async function fetchLinkedEntities(
     // Fetch lab tests linked to this condition
     const labResponse = await fetch(`/api/labtests?conditionId=${conditionId}&limit=5`);
     if (labResponse.ok) {
-      const labData = (await labResponse.json()) as { labTests?: EnhancedQuestionContext['linkedEntities']['labs'] };
+      const labData = (await labResponse.json()) as {
+        labTests?: EnhancedQuestionContext['linkedEntities']['labs'];
+      };
       entities.labs = labData.labTests?.slice(0, 5);
     }
 
     // Fetch imaging studies linked to this condition
     const imagingResponse = await fetch(`/api/imaging?conditionId=${conditionId}&limit=3`);
     if (imagingResponse.ok) {
-      const imagingData = (await imagingResponse.json()) as { imagingStudies?: EnhancedQuestionContext['linkedEntities']['imaging'] };
+      const imagingData = (await imagingResponse.json()) as {
+        imagingStudies?: EnhancedQuestionContext['linkedEntities']['imaging'];
+      };
       entities.imaging = imagingData.imagingStudies?.slice(0, 3);
     }
 
@@ -107,7 +111,9 @@ async function fetchLinkedEntities(
     drugParams.set('limit', '5');
     const drugResponse = await fetch(`/api/drugs?${drugParams.toString()}`);
     if (drugResponse.ok) {
-      const drugData = (await drugResponse.json()) as { drugs?: EnhancedQuestionContext['linkedEntities']['drugs'] };
+      const drugData = (await drugResponse.json()) as {
+        drugs?: EnhancedQuestionContext['linkedEntities']['drugs'];
+      };
       entities.drugs = drugData.drugs?.slice(0, 5);
     }
   } catch (error: unknown) {
@@ -224,7 +230,9 @@ export async function generateEnhancedQuestion(
       targetSystem = normalizeSystemCode(settings.topic) || settings.topic;
     } else if (settings.focus === 'growth' && growthAreas.length > 0) {
       // Pick from growth areas with some randomness
-      targetSystem = growthAreas[Math.floor(Math.random() * growthAreas.length)] ?? getWeightedRandomSystem(enabledSystems);
+      targetSystem =
+        growthAreas[Math.floor(Math.random() * growthAreas.length)] ??
+        getWeightedRandomSystem(enabledSystems);
     } else {
       // Use PANCE-weighted distribution
       targetSystem = getWeightedRandomSystem(enabledSystems);
@@ -288,7 +296,10 @@ export async function generateEnhancedQuestion(
         id: data.question.id || `enhanced-${Date.now()}`,
         question: data.question.vignette || data.question.question,
         options: Array.isArray(data.question.options) ? data.question.options : [],
-        correctAnswerIndex: typeof data.question.correctAnswerIndex === 'number' ? data.question.correctAnswerIndex : 0,
+        correctAnswerIndex:
+          typeof data.question.correctAnswerIndex === 'number'
+            ? data.question.correctAnswerIndex
+            : 0,
         rationale: data.question.rationale,
         topic: condition.system,
         conditionId: condition.id,

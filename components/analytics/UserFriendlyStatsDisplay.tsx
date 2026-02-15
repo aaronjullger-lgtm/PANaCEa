@@ -255,7 +255,9 @@ const ReadinessGauge: React.FC<{
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {hasData ? (
               <>
-                <span className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)]">{safeScore}</span>
+                <span className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)]">
+                  {safeScore}
+                </span>
                 <span className="text-xs text-[var(--color-text-muted)]">/ 100</span>
               </>
             ) : (
@@ -280,7 +282,9 @@ const ReadinessGauge: React.FC<{
             <div className="mt-3">
               <div className="flex items-center justify-between text-xs mb-1">
                 <span className="text-[var(--color-text-muted)]">Pass Probability</span>
-                <span className="font-medium text-[var(--color-text-primary)]">{safePassProb}%</span>
+                <span className="font-medium text-[var(--color-text-primary)]">
+                  {safePassProb}%
+                </span>
               </div>
               <div className="h-2 bg-surface-primary rounded-full overflow-hidden">
                 <motion.div
@@ -314,7 +318,9 @@ const SystemStrengthBar: React.FC<{
 
   return (
     <div className="flex items-center gap-3">
-      <div className="w-20 text-xs font-medium text-[var(--color-text-primary)] truncate">{system}</div>
+      <div className="w-20 text-xs font-medium text-[var(--color-text-primary)] truncate">
+        {system}
+      </div>
       <div className="flex-1 h-2 bg-surface-primary rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
@@ -323,7 +329,9 @@ const SystemStrengthBar: React.FC<{
           className={`h-full rounded-full ${getBarColor(mastery)}`}
         />
       </div>
-      <div className="w-10 text-xs font-medium text-right text-[var(--color-text-primary)]">{mastery}%</div>
+      <div className="w-10 text-xs font-medium text-right text-[var(--color-text-primary)]">
+        {mastery}%
+      </div>
       <div
         className={`w-4 ${
           trend === 'improving'
@@ -357,7 +365,10 @@ const RecommendationCard: React.FC<{ recommendation: string; index: number }> = 
       className="border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] rounded-xl p-4"
     >
       <div className="flex items-start gap-3">
-        <Lightbulb className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0 mt-0.5" aria-hidden />
+        <Lightbulb
+          className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0 mt-0.5"
+          aria-hidden
+        />
         <p className="font-medium text-[var(--color-text-primary)] text-sm">{recommendation}</p>
       </div>
     </motion.div>
@@ -652,7 +663,9 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-stretch">
               <StatCard
                 label="Lifetime Accuracy"
-                value={displayData.hasData ? formatPercentForDisplay(displayData.accuracyLifetime) : '—'}
+                value={
+                  displayData.hasData ? formatPercentForDisplay(displayData.accuracyLifetime) : '—'
+                }
                 icon={<Target className="w-5 h-5" />}
                 trend={
                   displayData.accuracyTrend === 'improving'
@@ -661,7 +674,11 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                       ? 'down'
                       : 'stable'
                 }
-                trendValue={displayData.accuracyChange > 0 ? `+${formatPercentForDisplay(displayData.accuracyChange)}` : formatPercentForDisplay(displayData.accuracyChange)}
+                trendValue={
+                  displayData.accuracyChange > 0
+                    ? `+${formatPercentForDisplay(displayData.accuracyChange)}`
+                    : formatPercentForDisplay(displayData.accuracyChange)
+                }
                 color={
                   displayData.accuracyLifetime >= 80
                     ? 'green'
@@ -755,7 +772,8 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                 if (validInsights.length === 0) {
                   return (
                     <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">
-                      Not enough data yet. Complete more questions to see personalized insights here.
+                      Not enough data yet. Complete more questions to see personalized insights
+                      here.
                     </p>
                   );
                 }
@@ -881,7 +899,8 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                 if (validRecs.length === 0) {
                   return (
                     <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">
-                      Not enough data yet. Complete more questions to see personalized recommendations.
+                      Not enough data yet. Complete more questions to see personalized
+                      recommendations.
                     </p>
                   );
                 }

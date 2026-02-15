@@ -169,7 +169,11 @@ export function useUserStats(): UseUserStatsResult {
 
       const result = (await response.json()) as {
         success?: boolean;
-        data?: { performanceRecords?: PerformanceRecord[]; srsItems?: Parameters<typeof loadSRSItemsFromCloud>[0]; savedQuestions?: SavedQuestionWithType[] };
+        data?: {
+          performanceRecords?: PerformanceRecord[];
+          srsItems?: Parameters<typeof loadSRSItemsFromCloud>[0];
+          savedQuestions?: SavedQuestionWithType[];
+        };
       };
 
       // Process server response and update local state with merged data
@@ -244,7 +248,11 @@ export function useUserStats(): UseUserStatsResult {
 
       const result = (await response.json()) as {
         success?: boolean;
-        data?: { performanceRecords?: PerformanceRecord[]; srsItems?: Parameters<typeof loadSRSItemsFromCloud>[0]; savedQuestions?: SavedQuestionWithType[] };
+        data?: {
+          performanceRecords?: PerformanceRecord[];
+          srsItems?: Parameters<typeof loadSRSItemsFromCloud>[0];
+          savedQuestions?: SavedQuestionWithType[];
+        };
       };
 
       if (result.success && result.data) {
@@ -261,8 +269,8 @@ export function useUserStats(): UseUserStatsResult {
           setFlaggedQuestionsState(flagged);
         }
 
-      setLastSyncTime(Date.now());
-      logger.debug('useUserStats', 'Sync from cloud successful');
+        setLastSyncTime(Date.now());
+        logger.debug('useUserStats', 'Sync from cloud successful');
       }
     } catch (error) {
       logger.warn('useUserStats', 'Sync from cloud failed', error);

@@ -151,7 +151,9 @@ export function OfflineSyncIndicator() {
         </div>
         {!syncing && status.lastSyncTime && (
           <div className="text-xs opacity-80">
-            {status.pendingCount > 0 ? 'Will sync when ready' : `Synced ${formatLastSync(status.lastSyncTime)}`}
+            {status.pendingCount > 0
+              ? 'Will sync when ready'
+              : `Synced ${formatLastSync(status.lastSyncTime)}`}
           </div>
         )}
       </div>

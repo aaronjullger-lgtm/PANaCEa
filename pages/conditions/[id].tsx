@@ -112,7 +112,9 @@ const ConditionPage: React.FC = () => {
           visibility.set(id, entry.isIntersecting ? entry.intersectionRatio : 0);
         });
         const visible = sectionIds.filter((id) => (visibility.get(id) ?? 0) > 0);
-        const byRatio = [...visible].sort((a, b) => (visibility.get(b) ?? 0) - (visibility.get(a) ?? 0));
+        const byRatio = [...visible].sort(
+          (a, b) => (visibility.get(b) ?? 0) - (visibility.get(a) ?? 0)
+        );
         setActiveSectionId(byRatio[0] ?? sectionIds[0]);
       },
       { rootMargin: '-80px 0px -60% 0px', threshold: [0, 0.1, 0.5, 1] }
@@ -129,7 +131,8 @@ const ConditionPage: React.FC = () => {
     if (loading || error || sectionIds.length === 0) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+        return;
       if (e.key !== 'j' && e.key !== 'k') return;
       const currentIdx = activeSectionId ? sectionIds.indexOf(activeSectionId) : 0;
       const idx = currentIdx < 0 ? 0 : currentIdx;
@@ -137,12 +140,16 @@ const ConditionPage: React.FC = () => {
         const next = Math.min(idx + 1, sectionIds.length - 1);
         const id = sectionIds[next];
         setExpandedSections((prev) => new Set(prev).add(id));
-        document.getElementById(`section-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document
+          .getElementById(`section-${id}`)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else {
         const prev = Math.max(idx - 1, 0);
         const id = sectionIds[prev];
         setExpandedSections((prev) => new Set(prev).add(id));
-        document.getElementById(`section-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document
+          .getElementById(`section-${id}`)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -194,9 +201,7 @@ const ConditionPage: React.FC = () => {
 
     const secs = conditionContent.sections;
     return CONDITION_SECTION_CONFIG.map((config) => {
-      const content = mergeConditionContent(
-        config.conditionEntryKeys.map((key) => secs[key])
-      );
+      const content = mergeConditionContent(config.conditionEntryKeys.map((key) => secs[key]));
       return {
         ...config,
         Icon: SECTION_ICONS[config.id],
@@ -264,7 +269,10 @@ const ConditionPage: React.FC = () => {
   }, [conditionContent?.sections]);
 
   return (
-    <main className="condition-page max-w-5xl mx-auto p-6 overflow-x-hidden" id="condition-page-main">
+    <main
+      className="condition-page max-w-5xl mx-auto p-6 overflow-x-hidden"
+      id="condition-page-main"
+    >
       {/* Loading State - skeleton aligned with design system (slate-700/800) */}
       {loading && (
         <div className="condition-page-loading space-y-6 py-8">
@@ -323,9 +331,13 @@ const ConditionPage: React.FC = () => {
               <ChevronLeft className="w-4 h-4" />
               Back
             </button>
-            <span aria-hidden className="select-none">·</span>
+            <span aria-hidden className="select-none">
+              ·
+            </span>
             <span>Clinical reference</span>
-            <span aria-hidden className="select-none">·</span>
+            <span aria-hidden className="select-none">
+              ·
+            </span>
             <span className="text-[var(--color-text-primary)] font-medium truncate max-w-[12rem] sm:max-w-none">
               {displayName}
             </span>
@@ -360,7 +372,10 @@ const ConditionPage: React.FC = () => {
           </header>
 
           {/* Key facts hero block (at-a-glance) */}
-          {(heroValues.goldStandard || heroValues.bestInitialTest || heroValues.firstLineRx || heroValues.classicPatient) && (
+          {(heroValues.goldStandard ||
+            heroValues.bestInitialTest ||
+            heroValues.firstLineRx ||
+            heroValues.classicPatient) && (
             <div className="mb-8 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {heroValues.goldStandard && (
@@ -510,16 +525,16 @@ const ConditionPage: React.FC = () => {
             )}
 
             <div className="min-w-0 flex-1">
-          {/* Tabbed interface for subtypes */}
-          {subtypes.length > 0 && (
-            <div className="mb-6">
-              <div className="border-b border-[var(--color-border)]">
-                <nav className="flex gap-4" aria-label="Condition subtypes">
-                  {subtypes.map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveSubtype(tab.id)}
-                      className={`
+              {/* Tabbed interface for subtypes */}
+              {subtypes.length > 0 && (
+                <div className="mb-6">
+                  <div className="border-b border-[var(--color-border)]">
+                    <nav className="flex gap-4" aria-label="Condition subtypes">
+                      {subtypes.map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveSubtype(tab.id)}
+                          className={`
                     px-4 py-3 font-medium text-sm border-b-2 transition-colors
                     ${
                       activeSubtype === tab.id
@@ -527,119 +542,117 @@ const ConditionPage: React.FC = () => {
                         : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)]'
                     }
                   `}
-                      aria-current={activeSubtype === tab.id ? 'page' : undefined}
-                    >
-                      <span>{tab.label}</span>
-                      {tab.description && (
-                        <span className="block text-xs text-[var(--color-text-muted)]">
-                          {tab.description}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </nav>
-              </div>
-            </div>
-          )}
+                          aria-current={activeSubtype === tab.id ? 'page' : undefined}
+                        >
+                          <span>{tab.label}</span>
+                          {tab.description && (
+                            <span className="block text-xs text-[var(--color-text-muted)]">
+                              {tab.description}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </nav>
+                  </div>
+                </div>
+              )}
 
               {/* Content sections: Expand all / Collapse all */}
               {sections.length > 0 && (
                 <>
-                <div className="flex gap-2 mb-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setExpandedSections(new Set(sections.map((s) => s.id)))
-                    }
-                    className="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-                  >
-                    Expand all
-                  </button>
-                  <span className="text-[var(--color-border)]">|</span>
-                  <button
-                    type="button"
-                    onClick={() => setExpandedSections(new Set())}
-                    className="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-                  >
-                    Collapse all
-                  </button>
-                </div>
-              <div className="condition-sections space-y-4">
-            {sections.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-[var(--color-text-muted)]">
-                  Condition content isn&apos;t available for this entry.
-                </p>
-              </div>
-            )}
-
-            {sections.map((section, index) => (
-              <motion.section
-                key={section.id}
-                id={`section-${section.id}`}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={
-                  prefersReducedMotion
-                    ? { duration: 0 }
-                    : { duration: 0.25, delay: index * 0.04 }
-                }
-                className="bg-[var(--color-bg-secondary)] rounded-xl shadow-sm border border-[var(--color-border)] overflow-hidden"
-              >
-                <button
-                  onClick={() => toggleSection(section.id)}
-                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-[var(--color-bg-tertiary)] transition-colors rounded-xl"
-                >
-                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
-                    {section.Icon && (
-                      <section.Icon className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0" />
-                    )}
-                    <span>{section.title}</span>
-                    {section.id === 'pearls' && (
-                      <span className="ml-2 px-2 py-0.5 rounded-md text-xs font-semibold bg-[var(--color-accent)]/15 text-[var(--color-accent)] border border-[var(--color-accent)]/30">
-                        High-yield
-                      </span>
-                    )}
-                  </h3>
-                  <svg
-                    className={`w-5 h-5 text-[var(--color-text-muted)] transition-transform ${
-                      expandedSections.has(section.id) ? 'rotate-180' : ''
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-
-                <AnimatePresence>
-                  {expandedSections.has(section.id) && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={
-                        prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }
-                      }
-                      className="border-t border-[var(--color-border)]"
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedSections(new Set(sections.map((s) => s.id)))}
+                      className="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
                     >
-                      <div className="px-6 py-4 condition-content">
-                        <FormattedSection content={section.content} />
+                      Expand all
+                    </button>
+                    <span className="text-[var(--color-border)]">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedSections(new Set())}
+                      className="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                    >
+                      Collapse all
+                    </button>
+                  </div>
+                  <div className="condition-sections space-y-4">
+                    {sections.length === 0 && (
+                      <div className="text-center py-12">
+                        <p className="text-[var(--color-text-muted)]">
+                          Condition content isn&apos;t available for this entry.
+                        </p>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.section>
-            ))}
-              </div>
-            </>
-      )}
+                    )}
+
+                    {sections.map((section, index) => (
+                      <motion.section
+                        key={section.id}
+                        id={`section-${section.id}`}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={
+                          prefersReducedMotion
+                            ? { duration: 0 }
+                            : { duration: 0.25, delay: index * 0.04 }
+                        }
+                        className="bg-[var(--color-bg-secondary)] rounded-xl shadow-sm border border-[var(--color-border)] overflow-hidden"
+                      >
+                        <button
+                          onClick={() => toggleSection(section.id)}
+                          className="w-full px-6 py-4 flex items-center justify-between hover:bg-[var(--color-bg-tertiary)] transition-colors rounded-xl"
+                        >
+                          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
+                            {section.Icon && (
+                              <section.Icon className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0" />
+                            )}
+                            <span>{section.title}</span>
+                            {section.id === 'pearls' && (
+                              <span className="ml-2 px-2 py-0.5 rounded-md text-xs font-semibold bg-[var(--color-accent)]/15 text-[var(--color-accent)] border border-[var(--color-accent)]/30">
+                                High-yield
+                              </span>
+                            )}
+                          </h3>
+                          <svg
+                            className={`w-5 h-5 text-[var(--color-text-muted)] transition-transform ${
+                              expandedSections.has(section.id) ? 'rotate-180' : ''
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </button>
+
+                        <AnimatePresence>
+                          {expandedSections.has(section.id) && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={
+                                prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }
+                              }
+                              className="border-t border-[var(--color-border)]"
+                            >
+                              <div className="px-6 py-4 condition-content">
+                                <FormattedSection content={section.content} />
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.section>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </>

@@ -31,13 +31,15 @@ interface TypographyAuditProps {
 export const TypographyAudit: React.FC<TypographyAuditProps> = ({
   isOpen = false,
   onClose,
-  mobileBreakpoint = 768
+  mobileBreakpoint = 768,
 }) => {
   const [issues, setIssues] = useState<TypographyIssue[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [activeTab, setActiveTab] = useState<'issues' | 'guidelines' | 'test'>('issues');
   const [highlightIssues, setHighlightIssues] = useState(true);
-  const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Mobile typography standards
@@ -48,7 +50,7 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
     maxLineHeight: 1.8,
     optimalLetterSpacing: '0.01em',
     minContrastRatio: 4.5, // WCAG AA for normal text
-    headingHierarchy: [2.5, 2, 1.75, 1.5, 1.25, 1.125] // rem sizes for h1-h6
+    headingHierarchy: [2.5, 2, 1.75, 1.5, 1.25, 1.125], // rem sizes for h1-h6
   };
 
   useEffect(() => {
@@ -71,13 +73,18 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
       'p',
       'span',
       'div',
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
       'a',
       'button',
       'label',
       'li',
       'td',
-      'th'
+      'th',
     ];
 
     const elements = document.querySelectorAll(textSelectors.join(', '));
@@ -87,7 +94,11 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
 
       // Skip hidden elements
       const style = window.getComputedStyle(element);
-      if (style.display === 'none' || style.visibility === 'hidden' || element.offsetParent === null) {
+      if (
+        style.display === 'none' ||
+        style.visibility === 'hidden' ||
+        element.offsetParent === null
+      ) {
         return;
       }
 
@@ -100,7 +111,7 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
         fontWeight: style.fontWeight,
         fontFamily: style.fontFamily,
         color: style.color,
-        backgroundColor: style.backgroundColor
+        backgroundColor: style.backgroundColor,
       };
 
       // Parse values
@@ -120,7 +131,10 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
           description: `Font size too small for mobile readability (${fontSizePx}px < ${mobileStandards.minFontSize}px minimum)`,
           selector: getElementSelector(element),
           computedStyle,
-          mobileReadabilityScore: Math.max(0, Math.min(100, (fontSizePx / mobileStandards.minFontSize) * 100))
+          mobileReadabilityScore: Math.max(
+            0,
+            Math.min(100, (fontSizePx / mobileStandards.minFontSize) * 100)
+          ),
         };
         newIssues.push(issue);
       }
@@ -128,7 +142,10 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
       // Check line height
       if (lineHeight > 0) {
         const lineHeightRatio = lineHeight / fontSize;
-        if (lineHeightRatio < mobileStandards.minLineHeight || lineHeightRatio > mobileStandards.maxLineHeight) {
+        if (
+          lineHeightRatio < mobileStandards.minLineHeight ||
+          lineHeightRatio > mobileStandards.maxLineHeight
+        ) {
           const issue: TypographyIssue = {
             id: `line-height-${index}`,
             element,
@@ -139,7 +156,11 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
             description: `Line height ${lineHeightRatio.toFixed(2)} is outside optimal range (${mobileStandards.minLineHeight}-${mobileStandards.maxLineHeight}) for mobile`,
             selector: getElementSelector(element),
             computedStyle,
-            mobileReadabilityScore: lineHeightRatio >= mobileStandards.minLineHeight && lineHeightRatio <= mobileStandards.maxLineHeight ? 100 : 50
+            mobileReadabilityScore:
+              lineHeightRatio >= mobileStandards.minLineHeight &&
+              lineHeightRatio <= mobileStandards.maxLineHeight
+                ? 100
+                : 50,
           };
           newIssues.push(issue);
         }
@@ -150,7 +171,7 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
         const headingLevel = parseInt(element.tagName[1]);
         const expectedSize = mobileStandards.headingHierarchy[headingLevel - 1];
         const currentSizeRem = fontSizePx / 16; // Convert px to rem (assuming 16px base)
-        
+
         if (Math.abs(currentSizeRem - expectedSize) > 0.5) {
           const issue: TypographyIssue = {
             id: `hierarchy-${index}`,
@@ -162,7 +183,7 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
             description: `Heading h${headingLevel} size doesn't follow mobile-optimized hierarchy`,
             selector: getElementSelector(element),
             computedStyle,
-            mobileReadabilityScore: 70
+            mobileReadabilityScore: 70,
           };
           newIssues.push(issue);
         }
@@ -181,34 +202,34 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
 
   const getElementSelector = (element: HTMLElement): string => {
     if (element.id) return `#${element.id}`;
-    
+
     let selector = element.tagName.toLowerCase();
     if (element.className && typeof element.className === 'string') {
-      const classes = element.className.split(' ').filter(c => c.length > 0);
+      const classes = element.className.split(' ').filter((c) => c.length > 0);
       if (classes.length > 0) {
         selector += `.${classes.join('.')}`;
       }
     }
-    
+
     return selector;
   };
 
   const highlightElement = (issue: TypographyIssue) => {
     // Remove previous highlights
-    document.querySelectorAll('.typography-highlight').forEach(el => {
+    document.querySelectorAll('.typography-highlight').forEach((el) => {
       el.classList.remove('typography-highlight');
     });
 
     // Add highlight to current element
     issue.element.classList.add('typography-highlight');
-    
+
     // Scroll to element
     issue.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   const applyFix = (issue: TypographyIssue) => {
     const element = issue.element;
-    
+
     switch (issue.type) {
       case 'font-size':
         element.style.fontSize = issue.recommendedValue as string;
@@ -220,9 +241,9 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
         element.style.fontSize = issue.recommendedValue as string;
         break;
     }
-    
+
     // Update issue list
-    setIssues(prev => prev.filter(i => i.id !== issue.id));
+    setIssues((prev) => prev.filter((i) => i.id !== issue.id));
   };
 
   const applyAllFixes = () => {
@@ -230,14 +251,14 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
   };
 
   const resetHighlights = () => {
-    document.querySelectorAll('.typography-highlight').forEach(el => {
+    document.querySelectorAll('.typography-highlight').forEach((el) => {
       el.classList.remove('typography-highlight');
     });
   };
 
   const getReadabilityScore = () => {
     if (issues.length === 0) return 100;
-    
+
     const totalScore = issues.reduce((sum, issue) => sum + issue.mobileReadabilityScore, 0);
     return Math.round(totalScore / issues.length);
   };
@@ -256,27 +277,38 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
 
   const severityColor = (severity: TypographyIssue['severity']) => {
     switch (severity) {
-      case 'high': return 'text-[var(--color-data-fail)]';
-      case 'medium': return 'text-[var(--color-data-provisional)]';
-      case 'low': return 'text-[var(--color-data-pass)]';
+      case 'high':
+        return 'text-[var(--color-data-fail)]';
+      case 'medium':
+        return 'text-[var(--color-data-provisional)]';
+      case 'low':
+        return 'text-[var(--color-data-pass)]';
     }
   };
 
   const severityBg = (severity: TypographyIssue['severity']) => {
     switch (severity) {
-      case 'high': return 'bg-[var(--color-data-fail)]/10';
-      case 'medium': return 'bg-[var(--color-data-provisional)]/10';
-      case 'low': return 'bg-[var(--color-data-pass)]/10';
+      case 'high':
+        return 'bg-[var(--color-data-fail)]/10';
+      case 'medium':
+        return 'bg-[var(--color-data-provisional)]/10';
+      case 'low':
+        return 'bg-[var(--color-data-pass)]/10';
     }
   };
 
   const typeIcon = (type: TypographyIssue['type']) => {
     switch (type) {
-      case 'font-size': return 'A';
-      case 'line-height': return '↕';
-      case 'letter-spacing': return '↔';
-      case 'contrast': return '◐';
-      case 'hierarchy': return 'H';
+      case 'font-size':
+        return 'A';
+      case 'line-height':
+        return '↕';
+      case 'letter-spacing':
+        return '↔';
+      case 'contrast':
+        return '◐';
+      case 'hierarchy':
+        return 'H';
     }
   };
 
@@ -303,15 +335,12 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                     Mobile Typography Audit
                   </h2>
                   <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                    Viewport: {viewportWidth}px • {isMobileViewport ? 'Mobile' : 'Desktop'} • Readability Score: {getReadabilityScore()}%
+                    Viewport: {viewportWidth}px • {isMobileViewport ? 'Mobile' : 'Desktop'} •
+                    Readability Score: {getReadabilityScore()}%
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <StandardButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={onClose}
-                  >
+                  <StandardButton variant="ghost" size="sm" onClick={onClose}>
                     Close
                   </StandardButton>
                 </div>
@@ -342,7 +371,10 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                     onChange={(e) => setHighlightIssues(e.target.checked)}
                     className="rounded border-[var(--color-border)]"
                   />
-                  <label htmlFor="highlight-issues" className="text-sm text-[var(--color-text-secondary)]">
+                  <label
+                    htmlFor="highlight-issues"
+                    className="text-sm text-[var(--color-text-secondary)]"
+                  >
                     Highlight issues
                   </label>
                 </div>
@@ -367,15 +399,12 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                         Typography Issues
                       </h3>
                       <p className="text-sm text-[var(--color-text-muted)]">
-                        Found {issues.length} elements with suboptimal typography for {isMobileViewport ? 'mobile' : 'desktop'}
+                        Found {issues.length} elements with suboptimal typography for{' '}
+                        {isMobileViewport ? 'mobile' : 'desktop'}
                       </p>
                     </div>
                     {issues.length > 0 && (
-                      <StandardButton
-                        variant="primary"
-                        size="sm"
-                        onClick={applyAllFixes}
-                      >
+                      <StandardButton variant="primary" size="sm" onClick={applyAllFixes}>
                         Apply All Fixes
                       </StandardButton>
                     )}
@@ -403,10 +432,14 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
-                                <span className={`w-6 h-6 flex items-center justify-center rounded text-xs font-medium ${severityBg(issue.severity)} ${severityColor(issue.severity)}`}>
+                                <span
+                                  className={`w-6 h-6 flex items-center justify-center rounded text-xs font-medium ${severityBg(issue.severity)} ${severityColor(issue.severity)}`}
+                                >
                                   {typeIcon(issue.type)}
                                 </span>
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${severityBg(issue.severity)} ${severityColor(issue.severity)}`}>
+                                <span
+                                  className={`px-2 py-1 rounded text-xs font-medium ${severityBg(issue.severity)} ${severityColor(issue.severity)}`}
+                                >
                                   {issue.severity.toUpperCase()}
                                 </span>
                                 <span className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -416,11 +449,11 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                                   Score: {issue.mobileReadabilityScore}%
                                 </span>
                               </div>
-                              
+
                               <p className="text-sm text-[var(--color-text-primary)] mb-3">
                                 {issue.description}
                               </p>
-                              
+
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                 <div>
                                   <p className="text-[var(--color-text-muted)]">Current</p>
@@ -440,13 +473,16 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                                 </div>
                                 <div>
                                   <p className="text-[var(--color-text-muted)]">Font</p>
-                                  <p className="font-medium truncate" title={issue.computedStyle.fontFamily}>
+                                  <p
+                                    className="font-medium truncate"
+                                    title={issue.computedStyle.fontFamily}
+                                  >
                                     {issue.computedStyle.fontFamily.split(',')[0]}
                                   </p>
                                 </div>
                               </div>
                             </div>
-                            
+
                             <div className="flex flex-col gap-2 ml-4">
                               <StandardButton
                                 variant="outline"
@@ -477,56 +513,76 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                     <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-4">
                       Mobile Typography Guidelines
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4">
-                        <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Font Sizes</h4>
+                        <h4 className="font-medium text-[var(--color-text-primary)] mb-3">
+                          Font Sizes
+                        </h4>
                         <div className="space-y-4">
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-sm text-[var(--color-text-secondary)]">Body Text</span>
+                              <span className="text-sm text-[var(--color-text-secondary)]">
+                                Body Text
+                              </span>
                               <span className="text-sm font-medium">16px minimum</span>
                             </div>
                             <div className="space-y-2">
-                              <div className="text-4xl font-bold text-[var(--color-text-primary)]">Aa</div>
+                              <div className="text-4xl font-bold text-[var(--color-text-primary)]">
+                                Aa
+                              </div>
                               <div className="text-sm text-[var(--color-text-muted)]">
                                 Ensures comfortable reading on mobile screens
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="pt-4 border-t border-[var(--color-border)]">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm text-[var(--color-text-secondary)]">Heading Hierarchy</span>
+                              <span className="text-sm text-[var(--color-text-secondary)]">
+                                Heading Hierarchy
+                              </span>
                             </div>
                             <div className="space-y-2">
                               {mobileStandards.headingHierarchy.map((size, index) => (
                                 <div key={index} className="flex items-center justify-between">
-                                  <span className={`font-bold text-[var(--color-text-primary)]`} style={{ fontSize: `${size}rem` }}>
+                                  <span
+                                    className={`font-bold text-[var(--color-text-primary)]`}
+                                    style={{ fontSize: `${size}rem` }}
+                                  >
                                     H{index + 1}
                                   </span>
-                                  <span className="text-xs text-[var(--color-text-muted)]">{size}rem</span>
+                                  <span className="text-xs text-[var(--color-text-muted)]">
+                                    {size}rem
+                                  </span>
                                 </div>
                               ))}
                             </div>
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4">
-                        <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Line Height & Spacing</h4>
+                        <h4 className="font-medium text-[var(--color-text-primary)] mb-3">
+                          Line Height & Spacing
+                        </h4>
                         <div className="space-y-4">
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-sm text-[var(--color-text-secondary)]">Optimal Line Height</span>
+                              <span className="text-sm text-[var(--color-text-secondary)]">
+                                Optimal Line Height
+                              </span>
                               <span className="text-sm font-medium">1.5× font size</span>
                             </div>
                             <div className="space-y-2">
                               <div className="relative">
                                 <div className="h-12 bg-gradient-to-r from-[var(--color-bg-tertiary)] to-transparent rounded"></div>
                                 <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-between">
-                                  {[0, 1, 2, 3].map(i => (
-                                    <div key={i} className="h-3 border-b border-[var(--color-border)]"></div>
+                                  {[0, 1, 2, 3].map((i) => (
+                                    <div
+                                      key={i}
+                                      className="h-3 border-b border-[var(--color-border)]"
+                                    ></div>
                                   ))}
                                 </div>
                               </div>
@@ -535,10 +591,12 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="pt-4 border-t border-[var(--color-border)]">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm text-[var(--color-text-secondary)]">Paragraph Spacing</span>
+                              <span className="text-sm text-[var(--color-text-secondary)]">
+                                Paragraph Spacing
+                              </span>
                               <span className="text-sm font-medium">1.5× line height</span>
                             </div>
                             <div className="space-y-4">
@@ -554,13 +612,17 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4">
-                        <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Contrast & Weight</h4>
+                        <h4 className="font-medium text-[var(--color-text-primary)] mb-3">
+                          Contrast & Weight
+                        </h4>
                         <div className="space-y-4">
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-sm text-[var(--color-text-secondary)]">Minimum Contrast</span>
+                              <span className="text-sm text-[var(--color-text-secondary)]">
+                                Minimum Contrast
+                              </span>
                               <span className="text-sm font-medium">4.5:1 (WCAG AA)</span>
                             </div>
                             <div className="space-y-2">
@@ -569,7 +631,9 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                                   <span className="text-white text-sm">Text</span>
                                 </div>
                                 <div className="flex-1 h-10 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded flex items-center justify-center">
-                                  <span className="text-[var(--color-text-primary)] text-sm">Background</span>
+                                  <span className="text-[var(--color-text-primary)] text-sm">
+                                    Background
+                                  </span>
                                 </div>
                               </div>
                               <div className="text-sm text-[var(--color-text-muted)]">
@@ -577,19 +641,30 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="pt-4 border-t border-[var(--color-border)]">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm text-[var(--color-text-secondary)]">Font Weights</span>
+                              <span className="text-sm text-[var(--color-text-secondary)]">
+                                Font Weights
+                              </span>
                             </div>
                             <div className="space-y-2">
-                              {[400, 500, 600, 700].map(weight => (
+                              {[400, 500, 600, 700].map((weight) => (
                                 <div key={weight} className="flex items-center justify-between">
-                                  <span className="text-[var(--color-text-primary)]" style={{ fontWeight: weight }}>
+                                  <span
+                                    className="text-[var(--color-text-primary)]"
+                                    style={{ fontWeight: weight }}
+                                  >
                                     Weight {weight}
                                   </span>
                                   <span className="text-xs text-[var(--color-text-muted)]">
-                                    {weight === 400 ? 'Body' : weight === 500 ? 'Medium' : weight === 600 ? 'Semibold' : 'Bold'}
+                                    {weight === 400
+                                      ? 'Body'
+                                      : weight === 500
+                                        ? 'Medium'
+                                        : weight === 600
+                                          ? 'Semibold'
+                                          : 'Bold'}
                                   </span>
                                 </div>
                               ))}
@@ -597,9 +672,11 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4">
-                        <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Implementation Tips</h4>
+                        <h4 className="font-medium text-[var(--color-text-primary)] mb-3">
+                          Implementation Tips
+                        </h4>
                         <ul className="space-y-3 text-sm text-[var(--color-text-secondary)]">
                           <li className="flex items-start gap-2">
                             <span className="text-[var(--color-data-pass)]">✓</span>
@@ -611,7 +688,11 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                           </li>
                           <li className="flex items-start gap-2">
                             <span className="text-[var(--color-data-pass)]">✓</span>
-                            Use <code className="bg-[var(--color-bg-tertiary)] px-1 rounded">line-height: 1.5</code> for body text
+                            Use{' '}
+                            <code className="bg-[var(--color-bg-tertiary)] px-1 rounded">
+                              line-height: 1.5
+                            </code>{' '}
+                            for body text
                           </li>
                           <li className="flex items-start gap-2">
                             <span className="text-[var(--color-data-pass)]">✓</span>
@@ -646,37 +727,46 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                     <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-4">
                       Typography Readability Test
                     </h3>
-                    
+
                     <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Test Samples</h4>
+                          <h4 className="font-medium text-[var(--color-text-primary)] mb-3">
+                            Test Samples
+                          </h4>
                           <div className="space-y-4">
-                            <div className={`p-4 rounded-lg border ${isMobileViewport ? 'border-[var(--color-data-pass)]' : 'border-[var(--color-border)]'}`}>
+                            <div
+                              className={`p-4 rounded-lg border ${isMobileViewport ? 'border-[var(--color-data-pass)]' : 'border-[var(--color-border)]'}`}
+                            >
                               <p className="text-sm font-medium mb-2">Mobile Optimized (16px)</p>
                               <p className="text-base leading-relaxed">
-                                This text uses 16px font size with 1.5 line height, which is optimal for mobile reading comfort and accessibility.
+                                This text uses 16px font size with 1.5 line height, which is optimal
+                                for mobile reading comfort and accessibility.
                               </p>
                             </div>
-                            
+
                             <div className="p-4 rounded-lg border border-[var(--color-border)]">
                               <p className="text-sm font-medium mb-2">Too Small (12px)</p>
                               <p className="text-xs leading-relaxed">
-                                This text uses 12px font size which may be difficult to read on mobile devices, especially for users with visual impairments.
+                                This text uses 12px font size which may be difficult to read on
+                                mobile devices, especially for users with visual impairments.
                               </p>
                             </div>
-                            
+
                             <div className="p-4 rounded-lg border border-[var(--color-border)]">
                               <p className="text-sm font-medium mb-2">Poor Line Height (1.2)</p>
                               <p className="text-base leading-tight">
-                                This text has tight line spacing which can make reading difficult on mobile screens as lines blend together reducing readability.
+                                This text has tight line spacing which can make reading difficult on
+                                mobile screens as lines blend together reducing readability.
                               </p>
                             </div>
                           </div>
                         </div>
-                        
+
                         <div>
-                          <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Readability Checklist</h4>
+                          <h4 className="font-medium text-[var(--color-text-primary)] mb-3">
+                            Readability Checklist
+                          </h4>
                           <div className="space-y-3">
                             <div className="flex items-center gap-3">
                               <div className="w-6 h-6 rounded-full bg-[var(--color-data-pass)] flex items-center justify-center">
@@ -684,35 +774,35 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                               </div>
                               <span className="text-sm">Font size ≥ 16px for body text</span>
                             </div>
-                            
+
                             <div className="flex items-center gap-3">
                               <div className="w-6 h-6 rounded-full bg-[var(--color-data-pass)] flex items-center justify-center">
                                 <span className="text-white text-xs">✓</span>
                               </div>
                               <span className="text-sm">Line height between 1.4-1.8</span>
                             </div>
-                            
+
                             <div className="flex items-center gap-3">
                               <div className="w-6 h-6 rounded-full bg-[var(--color-data-pass)] flex items-center justify-center">
                                 <span className="text-white text-xs">✓</span>
                               </div>
                               <span className="text-sm">Sufficient contrast (4.5:1 minimum)</span>
                             </div>
-                            
+
                             <div className="flex items-center gap-3">
                               <div className="w-6 h-6 rounded-full bg-[var(--color-data-pass)] flex items-center justify-center">
                                 <span className="text-white text-xs">✓</span>
                               </div>
                               <span className="text-sm">Clear heading hierarchy</span>
                             </div>
-                            
+
                             <div className="flex items-center gap-3">
                               <div className="w-6 h-6 rounded-full bg-[var(--color-data-pass)] flex items-center justify-center">
                                 <span className="text-white text-xs">✓</span>
                               </div>
                               <span className="text-sm">Adequate paragraph spacing</span>
                             </div>
-                            
+
                             <div className="flex items-center gap-3">
                               <div className="w-6 h-6 rounded-full bg-[var(--color-data-pass)] flex items-center justify-center">
                                 <span className="text-white text-xs">✓</span>
@@ -720,9 +810,11 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                               <span className="text-sm">Responsive typography scaling</span>
                             </div>
                           </div>
-                          
+
                           <div className="mt-6 pt-4 border-t border-[var(--color-border)]">
-                            <h5 className="font-medium text-[var(--color-text-primary)] mb-2">Testing Instructions</h5>
+                            <h5 className="font-medium text-[var(--color-text-primary)] mb-2">
+                              Testing Instructions
+                            </h5>
                             <ul className="space-y-2 text-sm text-[var(--color-text-secondary)]">
                               <li>• View on actual mobile device</li>
                               <li>• Test in different lighting conditions</li>
@@ -744,25 +836,21 @@ export const TypographyAudit: React.FC<TypographyAuditProps> = ({
                 <div className="text-sm text-[var(--color-text-muted)]">
                   {issues.length > 0 ? (
                     <span>
-                      Found <span className="font-medium text-[var(--color-text-primary)]">{issues.length}</span> typography issues • Readability: {getReadabilityScore()}%
+                      Found{' '}
+                      <span className="font-medium text-[var(--color-text-primary)]">
+                        {issues.length}
+                      </span>{' '}
+                      typography issues • Readability: {getReadabilityScore()}%
                     </span>
                   ) : (
                     <span>All typography meets mobile readability standards • Score: 100%</span>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <StandardButton
-                    variant="outline"
-                    size="sm"
-                    onClick={resetHighlights}
-                  >
+                  <StandardButton variant="outline" size="sm" onClick={resetHighlights}>
                     Clear Highlights
                   </StandardButton>
-                  <StandardButton
-                    variant="primary"
-                    size="sm"
-                    onClick={scanForTypographyIssues}
-                  >
+                  <StandardButton variant="primary" size="sm" onClick={scanForTypographyIssues}>
                     Run Full Audit
                   </StandardButton>
                 </div>

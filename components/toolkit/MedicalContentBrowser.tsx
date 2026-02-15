@@ -145,8 +145,15 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
         });
 
         if (response.ok) {
-          const systems = (await response.json()) as Array<{ system: string }>;
-          setAvailableSystems(systems.map((s) => s.system));
+          // API returns array of { id, label, count } (GET /api/content/systems)
+          const systems = (await response.json()) as Array<{
+            id?: string;
+            label?: string;
+            system?: string;
+          }>;
+          setAvailableSystems(
+            systems.map((s) => s.id ?? s.label ?? s.system ?? '').filter(Boolean)
+          );
         }
       } catch (err) {
         console.warn('[MedicalContentBrowser] Failed to fetch systems:', err);
@@ -237,6 +244,7 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
           actions={
             !selectedContent && (
               <button
+                type="button"
                 onClick={fetchContent}
                 disabled={loading}
                 className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/80 border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium transition-colors disabled:opacity-50"

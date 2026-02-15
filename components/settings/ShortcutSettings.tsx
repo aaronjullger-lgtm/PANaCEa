@@ -208,9 +208,8 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
 
       <div className="mt-6 p-4 bg-[var(--color-bg-secondary)]/70 rounded-lg border border-[var(--color-border)]">
         <p className="text-[var(--color-text-muted)] text-xs">
-          <strong className="text-[var(--color-text-secondary)]">Note:</strong> Shortcuts are
-          saved to your browser&apos;s local storage. They will not trigger when typing in text
-          fields.
+          <strong className="text-[var(--color-text-secondary)]">Note:</strong> Shortcuts are saved
+          to your browser&apos;s local storage. They will not trigger when typing in text fields.
         </p>
       </div>
     </div>

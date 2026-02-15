@@ -61,7 +61,9 @@ async function main() {
       },
     });
 
-    console.log(`✓ Rubric created/updated for: ${c.patientName} (${c.chiefComplaint.slice(0, 40)}...)`);
+    console.log(
+      `✓ Rubric created/updated for: ${c.patientName} (${c.chiefComplaint.slice(0, 40)}...)`
+    );
   }
 
   console.log(`\n✅ Seeded ${casesWithoutRubric.length} CaseRubric(s).`);

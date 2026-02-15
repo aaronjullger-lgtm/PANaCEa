@@ -36,7 +36,9 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
       <div className="flex items-baseline justify-between">
         <label className="text-sm font-semibold text-[var(--color-text-primary)]">
           {label}
-          {unit && <span className="ml-2 text-[var(--color-text-muted)] font-normal">({unit})</span>}
+          {unit && (
+            <span className="ml-2 text-[var(--color-text-muted)] font-normal">({unit})</span>
+          )}
         </label>
         {range && (
           <span className="text-xs text-[var(--color-text-muted)] px-2 py-0.5 bg-[var(--color-bg-tertiary)] rounded">
@@ -137,7 +139,9 @@ export const CheckboxCriteria: React.FC<CheckboxCriteriaProps> = ({
                 </span>
               )}
             </div>
-            <div className="text-sm text-[var(--color-text-muted)] leading-relaxed">{item.description}</div>
+            <div className="text-sm text-[var(--color-text-muted)] leading-relaxed">
+              {item.description}
+            </div>
           </div>
         </label>
       ))}
@@ -258,20 +262,26 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                 Clinical Recommendation
               </h4>
             </div>
-            <p className="text-[var(--color-text-secondary)] leading-relaxed">{result.recommendation}</p>
+            <p className="text-[var(--color-text-secondary)] leading-relaxed">
+              {result.recommendation}
+            </p>
           </div>
 
           {/* Additional Details */}
           {result.details && (
             <div className="pt-3 border-t border-[var(--color-border)]">
-              <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">{result.details}</p>
+              <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
+                {result.details}
+              </p>
             </div>
           )}
 
           {/* Reference */}
           {result.reference && (
             <div className="pt-2">
-              <p className="text-xs text-[var(--color-text-muted)] italic">Reference: {result.reference}</p>
+              <p className="text-xs text-[var(--color-text-muted)] italic">
+                Reference: {result.reference}
+              </p>
             </div>
           )}
         </div>
@@ -293,9 +303,7 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ title, subti
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <h2
-          className="text-4xl font-bold text-[var(--color-text-primary)] tracking-wide mb-1 font-teko"
-        >
+        <h2 className="text-4xl font-bold text-[var(--color-text-primary)] tracking-wide mb-1 font-teko">
           {title}
         </h2>
         <p className="text-[var(--color-text-muted)]">{subtitle}</p>
@@ -319,11 +327,19 @@ interface SimpleResultProps {
   highlight?: boolean;
 }
 
-export const SimpleCalculatorResult: React.FC<SimpleResultProps> = ({ label, value, highlight = false }) => {
+export const SimpleCalculatorResult: React.FC<SimpleResultProps> = ({
+  label,
+  value,
+  highlight = false,
+}) => {
   return (
-    <div className={`p-4 rounded-lg border ${highlight ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/50' : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)]'}`}>
+    <div
+      className={`p-4 rounded-lg border ${highlight ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/50' : 'bg-[var(--color-bg-tertiary)] border-[var(--color-border)]'}`}
+    >
       <div className="text-sm text-[var(--color-text-muted)] mb-1">{label}</div>
-      <div className={`text-2xl font-bold ${highlight ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-primary)]'}`}>
+      <div
+        className={`text-2xl font-bold ${highlight ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-primary)]'}`}
+      >
         {value}
       </div>
     </div>

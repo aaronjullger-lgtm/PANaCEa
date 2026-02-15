@@ -1,9 +1,9 @@
 /**
  * Spacing Constants & Design Tokens
- * 
+ *
  * Standardized spacing system for consistent UI layout across PANaCEa.
  * Based on 4px base unit (0.25rem) with semantic naming.
- * 
+ *
  * Usage:
  * - Use semantic tokens (SPACING.CONTAINER_PADDING) for maintainability
  * - Use numeric values (SPACING[4]) for fine-grained control
@@ -13,26 +13,26 @@
 export const SPACING = {
   // Base unit: 4px (0.25rem)
   BASE_UNIT: 4,
-  
+
   // Numeric scale (multiples of 4px)
   0: '0px',
-  1: '4px',    // 0.25rem
-  2: '8px',    // 0.5rem
-  3: '12px',   // 0.75rem
-  4: '16px',   // 1rem
-  5: '20px',   // 1.25rem
-  6: '24px',   // 1.5rem
-  8: '32px',   // 2rem
-  10: '40px',  // 2.5rem
-  12: '48px',  // 3rem
-  16: '64px',  // 4rem
-  20: '80px',  // 5rem
-  24: '96px',  // 6rem
+  1: '4px', // 0.25rem
+  2: '8px', // 0.5rem
+  3: '12px', // 0.75rem
+  4: '16px', // 1rem
+  5: '20px', // 1.25rem
+  6: '24px', // 1.5rem
+  8: '32px', // 2rem
+  10: '40px', // 2.5rem
+  12: '48px', // 3rem
+  16: '64px', // 4rem
+  20: '80px', // 5rem
+  24: '96px', // 6rem
   32: '128px', // 8rem
   40: '160px', // 10rem
   48: '192px', // 12rem
   64: '256px', // 16rem
-  
+
   // Semantic spacing tokens
   SEMANTIC: {
     // Container spacing
@@ -40,45 +40,45 @@ export const SPACING = {
     CONTAINER_PADDING_MOBILE: '12px', // SPACING[3]
     CONTAINER_MAX_WIDTH: '1280px',
     CONTAINER_MAX_WIDTH_NARROW: '800px',
-    
+
     // Section spacing
     SECTION_VERTICAL: '48px', // SPACING[12]
     SECTION_VERTICAL_MOBILE: '32px', // SPACING[8]
     SECTION_HORIZONTAL: '32px', // SPACING[8]
-    
+
     // Card spacing
     CARD_PADDING: '20px', // SPACING[5]
     CARD_PADDING_MOBILE: '16px', // SPACING[4]
     CARD_GAP: '16px', // SPACING[4]
     CARD_BORDER_RADIUS: '12px',
-    
+
     // Form spacing
     FORM_FIELD_GAP: '12px', // SPACING[3]
     FORM_LABEL_MARGIN: '4px', // SPACING[1]
     FORM_INPUT_PADDING: '12px', // SPACING[3]
     FORM_BUTTON_GAP: '8px', // SPACING[2]
-    
+
     // Button spacing
     BUTTON_PADDING_X: '16px', // SPACING[4]
     BUTTON_PADDING_Y: '10px', // SPACING[2.5] (custom)
     BUTTON_ICON_GAP: '8px', // SPACING[2]
     BUTTON_BORDER_RADIUS: '8px',
-    
+
     // Navigation spacing
     NAV_ITEM_PADDING: '12px', // SPACING[3]
     NAV_ITEM_GAP: '8px', // SPACING[2]
     NAV_BAR_HEIGHT: '64px', // SPACING[16]
     NAV_BAR_HEIGHT_MOBILE: '56px', // SPACING[14] (custom)
-    
+
     // Modal spacing
     MODAL_PADDING: '24px', // SPACING[6]
     MODAL_GAP: '16px', // SPACING[4]
     MODAL_BACKDROP_BLUR: '8px',
-    
+
     // Grid spacing
     GRID_GAP: '24px', // SPACING[6]
     GRID_GAP_MOBILE: '16px', // SPACING[4]
-    
+
     // Typography spacing
     HEADING_MARGIN: '16px', // SPACING[4]
     PARAGRAPH_MARGIN: '12px', // SPACING[3]
@@ -86,7 +86,7 @@ export const SPACING = {
     LINE_HEIGHT_NORMAL: '1.5',
     LINE_HEIGHT_LOOSE: '1.75',
   },
-  
+
   // Responsive spacing utilities
   RESPONSIVE: {
     CONTAINER: {
@@ -108,7 +108,7 @@ export const SPACING = {
       sm: '24px',
     },
   },
-  
+
   // Accessibility spacing
   ACCESSIBILITY: {
     MIN_TOUCH_TARGET: '44px',
@@ -123,7 +123,7 @@ export const SPACING = {
  */
 export const SPACING_CSS_VARS = {
   '--spacing-base': SPACING.BASE_UNIT + 'px',
-  
+
   // Semantic CSS variables
   '--spacing-container-padding': SPACING.SEMANTIC.CONTAINER_PADDING,
   '--spacing-container-padding-mobile': SPACING.SEMANTIC.CONTAINER_PADDING_MOBILE,
@@ -136,7 +136,7 @@ export const SPACING_CSS_VARS = {
   '--spacing-nav-bar-height': SPACING.SEMANTIC.NAV_BAR_HEIGHT,
   '--spacing-nav-bar-height-mobile': SPACING.SEMANTIC.NAV_BAR_HEIGHT_MOBILE,
   '--spacing-grid-gap': SPACING.SEMANTIC.GRID_GAP,
-  
+
   // Accessibility
   '--spacing-min-touch-target': SPACING.ACCESSIBILITY.MIN_TOUCH_TARGET,
   '--spacing-focus-ring-offset': SPACING.ACCESSIBILITY.FOCUS_RING_OFFSET,
@@ -156,11 +156,11 @@ export function getSpacing(token: SpacingScale | SemanticSpacing): string {
   if (typeof token === 'number' || !isNaN(Number(token))) {
     return SPACING[token as SpacingScale] || `${Number(token) * 4}px`;
   }
-  
+
   // Handle semantic tokens
   const semanticValue = SPACING.SEMANTIC[token as SemanticSpacing];
   if (semanticValue) return semanticValue;
-  
+
   // Fallback to 16px
   return '16px';
 }
@@ -169,12 +169,20 @@ export function getSpacing(token: SpacingScale | SemanticSpacing): string {
  * Generate spacing CSS for a component
  */
 export function generateSpacingStyles(options: {
-  padding?: SpacingScale | SemanticSpacing | [SpacingScale, SpacingScale] | [SpacingScale, SpacingScale, SpacingScale, SpacingScale];
-  margin?: SpacingScale | SemanticSpacing | [SpacingScale, SpacingScale] | [SpacingScale, SpacingScale, SpacingScale, SpacingScale];
+  padding?:
+    | SpacingScale
+    | SemanticSpacing
+    | [SpacingScale, SpacingScale]
+    | [SpacingScale, SpacingScale, SpacingScale, SpacingScale];
+  margin?:
+    | SpacingScale
+    | SemanticSpacing
+    | [SpacingScale, SpacingScale]
+    | [SpacingScale, SpacingScale, SpacingScale, SpacingScale];
   gap?: SpacingScale | SemanticSpacing;
 }): Record<string, string> {
   const styles: Record<string, string> = {};
-  
+
   // Handle padding
   if (options.padding) {
     if (Array.isArray(options.padding)) {
@@ -187,7 +195,7 @@ export function generateSpacingStyles(options: {
       styles.padding = getSpacing(options.padding);
     }
   }
-  
+
   // Handle margin
   if (options.margin) {
     if (Array.isArray(options.margin)) {
@@ -200,12 +208,12 @@ export function generateSpacingStyles(options: {
       styles.margin = getSpacing(options.margin);
     }
   }
-  
+
   // Handle gap
   if (options.gap) {
     styles.gap = getSpacing(options.gap);
   }
-  
+
   return styles;
 }
 
@@ -222,7 +230,7 @@ export function responsiveSpacing(
   const smValue = sm ? getSpacing(sm) : baseValue;
   const mdValue = md ? getSpacing(md) : smValue;
   const lgValue = lg ? getSpacing(lg) : mdValue;
-  
+
   return `
     ${baseValue}
     ${sm !== undefined ? `sm:${smValue}` : ''}

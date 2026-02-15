@@ -59,7 +59,10 @@ const GRADE_CHECKLIST_ITEM = z.object({
 });
 type GradeChecklistItem = z.infer<typeof GRADE_CHECKLIST_ITEM>;
 
-function validateGradeChecklist(items: unknown[], log?: (msg: string, meta?: object) => void): ChecklistItem[] {
+function validateGradeChecklist(
+  items: unknown[],
+  log?: (msg: string, meta?: object) => void
+): ChecklistItem[] {
   if (!Array.isArray(items)) return [];
   const validated: ChecklistItem[] = [];
   for (let i = 0; i < items.length; i++) {
@@ -67,7 +70,10 @@ function validateGradeChecklist(items: unknown[], log?: (msg: string, meta?: obj
     if (result.success) {
       validated.push(result.data);
     } else if (log) {
-      log('Dropped invalid checklist item from grade payload', { index: i, issues: result.error.issues });
+      log('Dropped invalid checklist item from grade payload', {
+        index: i,
+        issues: result.error.issues,
+      });
     }
   }
   return validated;
@@ -117,11 +123,18 @@ async function callGeminiSoftSkills(
     }),
   });
   if (!res.ok) return null;
-  const data = (await res.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+  const data = (await res.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) return null;
   try {
-    return JSON.parse(text.replace(/^```json\s*/i, '').replace(/\s*```\s*$/i, '').trim()) as SoftSkillsReport;
+    return JSON.parse(
+      text
+        .replace(/^```json\s*/i, '')
+        .replace(/\s*```\s*$/i, '')
+        .trim()
+    ) as SoftSkillsReport;
   } catch {
     return null;
   }
@@ -157,8 +170,14 @@ async function callGeminiGrade(
   return text;
 }
 
-function parseGradePayload(rawText: string, log?: (msg: string, meta?: object) => void): GradePayload {
-  const stripped = rawText.replace(/^```json\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+function parseGradePayload(
+  rawText: string,
+  log?: (msg: string, meta?: object) => void
+): GradePayload {
+  const stripped = rawText
+    .replace(/^```json\s*/i, '')
+    .replace(/\s*```\s*$/i, '')
+    .trim();
   const parsed = JSON.parse(stripped) as GradePayload;
   const rawChecklist = Array.isArray(parsed.checklist) ? parsed.checklist : [];
   const checklist = validateGradeChecklist(rawChecklist, log);
@@ -181,9 +200,7 @@ interface SessionWithCase {
   caseId: string;
   status: string;
   messages: unknown;
-  PatientEncounterCase: Awaited<
-    ReturnType<EdgePrismaClient['patientEncounterCase']['findUnique']>
-  >;
+  PatientEncounterCase: Awaited<ReturnType<EdgePrismaClient['patientEncounterCase']['findUnique']>>;
   User: { id: string } | null;
 }
 
@@ -195,7 +212,12 @@ async function resolveSessionAndRubric(
   | {
       ok: true;
       session: SessionWithCase;
-      caseRecord: { chiefComplaint: string; correctDiagnosis: string; patientName: string; age: string };
+      caseRecord: {
+        chiefComplaint: string;
+        correctDiagnosis: string;
+        patientName: string;
+        age: string;
+      };
       checklistText: string;
       transcript: unknown;
       caseLabel: string;
@@ -305,52 +327,50 @@ async function persistGradeAndConceptGap(
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(
-  GradeBodySchema,
-  async (context) => {
-    const { request, env, validated, auth } = context as {
-      request: Request;
-      env: Env;
-      validated: z.infer<typeof GradeBodySchema>;
-      auth: { userId: string };
-    };
-    const log = createEndpointLogger('/api/osce/analysis/grade', auth.userId);
+export const onRequestPost = authenticatedEndpoint(GradeBodySchema, async (context) => {
+  const { request, env, validated, auth } = context as {
+    request: Request;
+    env: Env;
+    validated: z.infer<typeof GradeBodySchema>;
+    auth: { userId: string };
+  };
+  const log = createEndpointLogger('/api/osce/analysis/grade', auth.userId);
 
-    try {
-      validateFunctionEnv(env as unknown as Record<string, unknown>, 'GEMINI');
-    } catch (e) {
-      if (e instanceof MissingEnvError) return e.toResponse();
-      throw e;
-    }
+  try {
+    validateFunctionEnv(env as unknown as Record<string, unknown>, 'GEMINI');
+  } catch (e) {
+    if (e instanceof MissingEnvError) return e.toResponse();
+    throw e;
+  }
 
-    // Tight Gemini-specific rate limiting on top of standard API limits
-    const identifier = getRateLimitIdentifier(request);
-    const { response: rateLimitResponse } = await withRateLimit(
-      env as { RATE_LIMIT_KV?: KVNamespace },
-      identifier,
-      'gemini'
-    );
-    if (rateLimitResponse) {
-      return rateLimitResponse;
-    }
+  // Tight Gemini-specific rate limiting on top of standard API limits
+  const identifier = getRateLimitIdentifier(request);
+  const { response: rateLimitResponse } = await withRateLimit(
+    env as { RATE_LIMIT_KV?: KVNamespace },
+    identifier,
+    'gemini'
+  );
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
 
-    const { sessionId } = validated.body;
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  const { sessionId } = validated.body;
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    const user = await resolveUserByClerkId(prisma, auth.userId);
-    if (!user) {
-      log.warn('User not found', { clerkId: auth.userId });
-      return { status: 404, error: 'User not found' };
-    }
+  const user = await resolveUserByClerkId(prisma, auth.userId);
+  if (!user) {
+    log.warn('User not found', { clerkId: auth.userId });
+    return { status: 404, error: 'User not found' };
+  }
 
-    const resolved = await resolveSessionAndRubric(prisma, sessionId, user.id);
-    if (!resolved.ok) {
-      if (resolved.status === 404) log.warn('Session or rubric not found', { sessionId });
-      return { status: resolved.status, error: resolved.error };
-    }
+  const resolved = await resolveSessionAndRubric(prisma, sessionId, user.id);
+  if (!resolved.ok) {
+    if (resolved.status === 404) log.warn('Session or rubric not found', { sessionId });
+    return { status: resolved.status, error: resolved.error };
+  }
 
-    const { session, caseRecord, checklistText, transcript, caseLabel } = resolved;
-    const systemPrompt = `You are a senior PA faculty member grading an OSCE. Evaluate the following transcript against the provided Clinical Checklist. Be strict. If the student missed a 'Red Flag' question, mark it as a critical fail.
+  const { session, caseRecord, checklistText, transcript, caseLabel } = resolved;
+  const systemPrompt = `You are a senior PA faculty member grading an OSCE. Evaluate the following transcript against the provided Clinical Checklist. Be strict. If the student missed a 'Red Flag' question, mark it as a critical fail.
 
 Evaluate using the 4 PANCE blueprint skill areas (weight them in your overall score):
 - History Taking (16%)
@@ -361,7 +381,7 @@ Evaluate using the 4 PANCE blueprint skill areas (weight them in your overall sc
 Respond with ONLY a single JSON object (no markdown, no code fence), in this exact shape:
 {"score": number 0-100, "checklist": [{"item": "exact rubric item text", "status": "PASS" or "FAIL", "feedback": "brief feedback"}], "redFlagsMissed": ["list of red flag items the student missed"], "clinicalReasoningScore": number 0-100, "billingCodeSuggestion": "ICD-10 code or N/A"}`;
 
-    const userPrompt = `Case: ${caseLabel}
+  const userPrompt = `Case: ${caseLabel}
 
 Clinical Checklist:
 ${checklistText}
@@ -371,76 +391,75 @@ ${JSON.stringify(transcript)}
 
 Output your grading as a single JSON object only.`;
 
+  try {
+    let rawText: string;
     try {
-      let rawText: string;
-      try {
-        rawText = await callGeminiGrade(env.GEMINI_API_KEY, systemPrompt, userPrompt);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        const is429 = msg.startsWith('Gemini 429');
-        log.warn('Gemini grading error', { msg: msg.slice(0, 200) });
-        return {
-          status: is429 ? 429 : 502,
-          error: is429 ? 'Rate limit exceeded' : 'Grading service failed',
-        };
-      }
+      rawText = await callGeminiGrade(env.GEMINI_API_KEY, systemPrompt, userPrompt);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const is429 = msg.startsWith('Gemini 429');
+      log.warn('Gemini grading error', { msg: msg.slice(0, 200) });
+      return {
+        status: is429 ? 429 : 502,
+        error: is429 ? 'Rate limit exceeded' : 'Grading service failed',
+      };
+    }
 
-      let payload: GradePayload;
-      try {
-        payload = parseGradePayload(rawText, (msg, meta) =>
+    let payload: GradePayload;
+    try {
+      payload = parseGradePayload(rawText, (msg, meta) =>
         log.warn(msg, meta as Record<string, unknown>)
       );
-      } catch (error_) {
-        log.error('Failed to parse Gemini JSON', { raw: rawText.slice(0, 300), err: error_ });
-        return { status: 502, error: 'Invalid grading response format' };
-      }
+    } catch (error_) {
+      log.error('Failed to parse Gemini JSON', { raw: rawText.slice(0, 300), err: error_ });
+      return { status: 502, error: 'Invalid grading response format' };
+    }
 
-      // Ghost Listener: Bedside manner analysis (soft skills) - non-blocking, best-effort
-      let softSkillsReport: SoftSkillsReport | null = null;
-      try {
-        softSkillsReport = await callGeminiSoftSkills(env.GEMINI_API_KEY, transcript);
-      } catch {
-        log.warn('Soft skills analysis skipped or failed', { sessionId });
-      }
+    // Ghost Listener: Bedside manner analysis (soft skills) - non-blocking, best-effort
+    let softSkillsReport: SoftSkillsReport | null = null;
+    try {
+      softSkillsReport = await callGeminiSoftSkills(env.GEMINI_API_KEY, transcript);
+    } catch {
+      log.warn('Soft skills analysis skipped or failed', { sessionId });
+    }
 
-      const sessionForPersist = {
-        User: session.User,
-        PatientEncounterCase: {
-          chiefComplaint: caseRecord.chiefComplaint,
-          correctDiagnosis: caseRecord.correctDiagnosis,
-        },
-      };
-      const { resultId, conceptGapCreated } = await persistGradeAndConceptGap(
-        prisma,
-        sessionId,
-        payload,
-        sessionForPersist,
-        softSkillsReport
-      );
-      if (conceptGapCreated) {
-        log.info('ConceptGap created for Tutor', {
+    const sessionForPersist = {
+      User: session.User,
+      PatientEncounterCase: {
+        chiefComplaint: caseRecord.chiefComplaint,
+        correctDiagnosis: caseRecord.correctDiagnosis,
+      },
+    };
+    const { resultId, conceptGapCreated } = await persistGradeAndConceptGap(
+      prisma,
+      sessionId,
+      payload,
+      sessionForPersist,
+      softSkillsReport
+    );
+    if (conceptGapCreated) {
+      log.info('ConceptGap created for Tutor', {
         userId: session.User?.id,
         sessionId,
       });
-      }
-      log.info('OSCE grading completed', { sessionId, score: payload.score });
-      return {
-        data: {
-          resultId,
-          score: payload.score,
-          checklist: payload.checklist,
-          redFlagsMissed: payload.redFlagsMissed,
-          clinicalReasoningScore: payload.clinicalReasoningScore,
-          billingCodeSuggestion: payload.billingCodeSuggestion,
-          softSkillsReport: softSkillsReport ?? undefined,
-          conceptGapCreated,
-        },
-      };
-    } catch (err) {
-      log.error('Grade analysis error', err);
-      return { status: 500, error: 'Internal server error' };
-    } finally {
-      await safePrismaDisconnect(prisma);
     }
+    log.info('OSCE grading completed', { sessionId, score: payload.score });
+    return {
+      data: {
+        resultId,
+        score: payload.score,
+        checklist: payload.checklist,
+        redFlagsMissed: payload.redFlagsMissed,
+        clinicalReasoningScore: payload.clinicalReasoningScore,
+        billingCodeSuggestion: payload.billingCodeSuggestion,
+        softSkillsReport: softSkillsReport ?? undefined,
+        conceptGapCreated,
+      },
+    };
+  } catch (err) {
+    log.error('Grade analysis error', err);
+    return { status: 500, error: 'Internal server error' };
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-);
+});

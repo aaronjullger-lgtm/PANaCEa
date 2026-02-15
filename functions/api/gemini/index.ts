@@ -54,8 +54,15 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
     return rateLimitResponse;
   }
 
-  const { modelName, prompt, temperature, maxTokens, systemInstruction, cachedContent, thinkingLevel } =
-    validated;
+  const {
+    modelName,
+    prompt,
+    temperature,
+    maxTokens,
+    systemInstruction,
+    cachedContent,
+    thinkingLevel,
+  } = validated;
   // Use context.env first (Cloudflare); fallback to process.env for local dev (e.g. wrangler + .env)
   const apiKey =
     (env.GEMINI_API_KEY && String(env.GEMINI_API_KEY).trim()) ||
@@ -65,7 +72,8 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
     return new Response(
       JSON.stringify({
         success: false,
-        error: 'GEMINI_API_KEY is not configured. Set it in Cloudflare Pages Environment Variables or in .dev.vars for local dev.',
+        error:
+          'GEMINI_API_KEY is not configured. Set it in Cloudflare Pages Environment Variables or in .dev.vars for local dev.',
       }),
       { status: 503, headers: { 'Content-Type': 'application/json' } }
     );
@@ -133,7 +141,8 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
         };
       }
 
-      if (statusCode === 401 || statusCode === 403) {        return {
+      if (statusCode === 401 || statusCode === 403) {
+        return {
           status: 500,
           error: 'API authentication failed. Please contact support.',
         };

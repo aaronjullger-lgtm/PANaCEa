@@ -195,8 +195,9 @@ export const DrillEmptyState: React.FC<DrillEmptyStateProps> = ({
 
         {onAction && (
           <button
+            type="button"
             onClick={onAction}
-            className="px-6 py-3 bg-[var(--color-accent)] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+            className="px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold rounded-xl hover:opacity-90 transition-opacity min-h-[44px]"
           >
             {actionLabel}
           </button>

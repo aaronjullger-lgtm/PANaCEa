@@ -261,4 +261,3 @@ export const onRequestGet = authenticatedEndpoint(
   },
   { source: 'query', requestsPerMinute: 120 }
 );
-

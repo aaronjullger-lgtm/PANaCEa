@@ -76,7 +76,9 @@ export const SmartSchedulerGantt: React.FC<SmartSchedulerGanttProps> = ({
   }, [blocks, startDate, dayLabels]);
 
   return (
-    <div className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-4 ${className}`}>
+    <div
+      className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-4 ${className}`}
+    >
       <div className="flex items-center gap-2 mb-4 text-[var(--color-text-primary)]">
         <Calendar className="w-5 h-5 text-[var(--color-accent)]" />
         <h3 className="font-semibold">Spaced repetition schedule</h3>
@@ -90,7 +92,9 @@ export const SmartSchedulerGantt: React.FC<SmartSchedulerGanttProps> = ({
               key={dateStr}
               className="flex-shrink-0 w-24 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-2 min-h-[80px]"
             >
-              <div className={`text-xs font-medium mb-2 ${isToday ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}>
+              <div
+                className={`text-xs font-medium mb-2 ${isToday ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}
+              >
                 {formatDayLabel(dateStr)}
               </div>
               <div className="space-y-1">

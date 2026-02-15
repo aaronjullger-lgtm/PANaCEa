@@ -1,6 +1,6 @@
 /**
  * useSwipeGestures - Touch gesture detection for mobile navigation
- * 
+ *
  * Provides swipe left/right/down detection for quiz navigation and dismissal.
  * Respects minimum swipe distance to prevent accidental triggers.
  */

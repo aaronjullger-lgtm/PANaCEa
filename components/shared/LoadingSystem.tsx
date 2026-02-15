@@ -125,7 +125,7 @@ export const LoadingSystem: React.FC<LoadingSystemProps> = ({
             >
               <IconComponent size={iconSize} className="w-full h-full" />
             </motion.div>
-            
+
             {/* Progress ring for progress-based loading */}
             {progress !== null && (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -138,9 +138,7 @@ export const LoadingSystem: React.FC<LoadingSystemProps> = ({
 
           {/* Message */}
           <div className="space-y-2">
-            <p className={`font-medium ${textSize} text-[var(--color-text-primary)]`}>
-              {message}
-            </p>
+            <p className={`font-medium ${textSize} text-[var(--color-text-primary)]`}>{message}</p>
 
             {/* Progress bar */}
             {showProgress && progress !== null && (
@@ -163,8 +161,7 @@ export const LoadingSystem: React.FC<LoadingSystemProps> = ({
                   </span>
                   {formattedRemaining && (
                     <span className="flex items-center gap-1">
-                      <Zap size={12} />
-                      ~{formattedRemaining} remaining
+                      <Zap size={12} />~{formattedRemaining} remaining
                     </span>
                   )}
                 </div>
@@ -175,11 +172,7 @@ export const LoadingSystem: React.FC<LoadingSystemProps> = ({
           {/* Cancel button */}
           {onCancel && (
             <div className="pt-2">
-              <SecondaryButton
-                size="xs"
-                onClick={onCancel}
-                className="text-xs"
-              >
+              <SecondaryButton size="xs" onClick={onCancel} className="text-xs">
                 Cancel
               </SecondaryButton>
             </div>
@@ -222,9 +215,7 @@ export const LoadingSystem: React.FC<LoadingSystemProps> = ({
             <h3 className="font-semibold text-lg text-[var(--color-text-primary)]">
               Something went wrong
             </h3>
-            <p className="text-sm text-[var(--color-text-secondary)]">
-              {error}
-            </p>
+            <p className="text-sm text-[var(--color-text-secondary)]">{error}</p>
           </div>
           {onRetry && (
             <PrimaryButton size="sm" onClick={onRetry}>
@@ -283,9 +274,7 @@ export const InlineLoader: React.FC<{
         <Loader2 size={iconSize} />
       </motion.div>
       {message && (
-        <span className={`${textSize} text-[var(--color-text-secondary)]`}>
-          {message}
-        </span>
+        <span className={`${textSize} text-[var(--color-text-secondary)]`}>{message}</span>
       )}
     </div>
   );
@@ -300,7 +289,15 @@ export const LoadingButton: React.FC<{
   children: React.ReactNode;
   onClick?: () => void;
   disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success' | 'warning' | 'accent';
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'outline'
+    | 'ghost'
+    | 'danger'
+    | 'success'
+    | 'warning'
+    | 'accent';
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }> = ({
@@ -374,7 +371,9 @@ export const ContentSkeleton: React.FC<{
 
   if (type === 'card') {
     return (
-      <div className={`p-4 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] ${className}`}>
+      <div
+        className={`p-4 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] ${className}`}
+      >
         <div className="h-6 bg-[var(--color-bg-tertiary)] rounded w-3/4 mb-3 animate-pulse" />
         <div className="space-y-2">
           <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-full" />
@@ -389,7 +388,10 @@ export const ContentSkeleton: React.FC<{
     return (
       <div className={`space-y-2 ${className}`}>
         {Array.from({ length: lines }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 p-3 border border-[var(--color-border)] rounded-lg">
+          <div
+            key={i}
+            className="flex items-center gap-3 p-3 border border-[var(--color-border)] rounded-lg"
+          >
             <div className="w-8 h-8 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse" />
             <div className="flex-1 space-y-1">
               <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-3/4 animate-pulse" />

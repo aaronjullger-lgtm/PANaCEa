@@ -27,8 +27,8 @@ const COMMON_GUIDELINES: Guideline[] = [
       'Respiratory rate ≥30',
       'Blood pressure (SBP <90 or DBP ≤60)',
       'Age ≥65 years',
-      'Score 0-1: Outpatient, 2: Consider admission, ≥3: ICU consideration'
-    ]
+      'Score 0-1: Outpatient, 2: Consider admission, ≥3: ICU consideration',
+    ],
   },
   {
     name: 'CHADS₂-VASc',
@@ -43,8 +43,8 @@ const COMMON_GUIDELINES: Guideline[] = [
       'Vascular disease (1 point)',
       'Age 65-74 (1 point)',
       'Sex (female, 1 point)',
-      'Score ≥2: Consider anticoagulation'
-    ]
+      'Score ≥2: Consider anticoagulation',
+    ],
   },
   {
     name: 'Ottawa Ankle Rules',
@@ -53,8 +53,8 @@ const COMMON_GUIDELINES: Guideline[] = [
     keyPoints: [
       'X-ray only if: bone tenderness at posterior edge/tip of lateral or medial malleolus',
       'OR inability to bear weight (4 steps) immediately and in ED',
-      'Sensitivity 98-99%, reduces unnecessary X-rays by 30-40%'
-    ]
+      'Sensitivity 98-99%, reduces unnecessary X-rays by 30-40%',
+    ],
   },
   {
     name: 'PECARN Head Injury',
@@ -63,8 +63,8 @@ const COMMON_GUIDELINES: Guideline[] = [
     keyPoints: [
       '<2 years: Altered mental status, palpable skull fracture, scalp hematoma, LOC >5s, severe mechanism',
       '≥2 years: Altered mental status, basilar skull fracture signs, LOC, severe mechanism, severe headache',
-      'Low risk (<0.02% ciTBI) if no criteria met'
-    ]
+      'Low risk (<0.02% ciTBI) if no criteria met',
+    ],
   },
   {
     name: 'SIRS Criteria',
@@ -75,8 +75,8 @@ const COMMON_GUIDELINES: Guideline[] = [
       'HR >90 bpm',
       'RR >20 or PaCO₂ <32 mmHg',
       'WBC >12k or <4k or >10% bands',
-      '≥2 criteria = SIRS; + infection = sepsis'
-    ]
+      '≥2 criteria = SIRS; + infection = sepsis',
+    ],
   },
   {
     name: 'Ranson Criteria',
@@ -85,18 +85,19 @@ const COMMON_GUIDELINES: Guideline[] = [
     keyPoints: [
       'On admission: Age >55, WBC >16k, glucose >200, LDH >350, AST >250',
       'At 48h: Hct drop >10%, BUN rise >5, Ca <8, PaO₂ <60, base deficit >4, fluid >6L',
-      'Score 0-2: 2% mortality, 3-4: 15%, 5-6: 40%, >6: 100%'
-    ]
-  }
+      'Score 0-2: 2% mortality, 3-4: 15%, 5-6: 40%, >6: 100%',
+    ],
+  },
 ];
 
 export const ClinicalGuidelinesPlaceholder: React.FC<CalculatorProps> = ({ onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredGuidelines = COMMON_GUIDELINES.filter(
-    g => g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         g.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         g.indication.toLowerCase().includes(searchTerm.toLowerCase())
+    (g) =>
+      g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      g.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      g.indication.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -165,7 +166,9 @@ export const ClinicalGuidelinesPlaceholder: React.FC<CalculatorProps> = ({ onBac
       {filteredGuidelines.length === 0 && (
         <div className="text-center py-12">
           <BookOpen className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
-          <p className="text-[var(--color-text-muted)]">No guidelines found matching "{searchTerm}"</p>
+          <p className="text-[var(--color-text-muted)]">
+            No guidelines found matching "{searchTerm}"
+          </p>
         </div>
       )}
     </div>

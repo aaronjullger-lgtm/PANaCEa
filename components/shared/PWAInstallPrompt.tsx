@@ -1,6 +1,6 @@
 /**
  * PWA Install Prompt Component
- * 
+ *
  * Shows install prompt for Progressive Web App with enhanced features
  */
 
@@ -34,7 +34,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
   const [hasInteracted, setHasInteracted] = useState(false);
   const [sessionStartTime] = useState(Date.now());
   const [showDetails, setShowDetails] = useState(false);
-  
+
   const {
     status,
     showInstallPrompt,
@@ -60,7 +60,14 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [status.isInstalled, status.hasInstallPrompt, hasInteracted, delay, minSessionDuration, sessionStartTime]);
+  }, [
+    status.isInstalled,
+    status.hasInstallPrompt,
+    hasInteracted,
+    delay,
+    minSessionDuration,
+    sessionStartTime,
+  ]);
 
   const handleInstall = async () => {
     const installed = await showInstallPrompt();
@@ -68,7 +75,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
       setHasInteracted(true);
       setIsVisible(false);
       onInstall?.();
-      
+
       // Show welcome notification
       setTimeout(() => {
         showNotification('PANaCEa Installed!', {
@@ -83,7 +90,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
     setHasInteracted(true);
     setIsVisible(false);
     onDismiss?.();
-    
+
     // Store dismissal in localStorage to avoid showing too frequently
     localStorage.setItem('pwa_prompt_dismissed', Date.now().toString());
   };
@@ -96,7 +103,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
     const permission = await requestNotificationPermission();
     if (permission === 'granted') {
       await showNotification('Test Notification', {
-        body: 'Notifications are working! You\'ll receive study reminders and updates.',
+        body: "Notifications are working! You'll receive study reminders and updates.",
         icon: '/pwa-192x192.png',
       });
     }
@@ -189,7 +196,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                   className="px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
                 >
                   <h4 className="font-semibold mb-3">Enhanced Features</h4>
-                  
+
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg mt-0.5">
@@ -198,7 +205,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                       <div>
                         <h5 className="font-medium text-sm">Offline Study Mode</h5>
                         <p className="text-xs text-[var(--color-text-muted)]">
-                          Continue studying without internet connection. Questions and progress sync when you're back online.
+                          Continue studying without internet connection. Questions and progress sync
+                          when you're back online.
                         </p>
                       </div>
                     </div>
@@ -210,7 +218,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                       <div>
                         <h5 className="font-medium text-sm">Smart Reminders</h5>
                         <p className="text-xs text-[var(--color-text-muted)]">
-                          Get notified about due reviews, study goals, and personalized recommendations.
+                          Get notified about due reviews, study goals, and personalized
+                          recommendations.
                         </p>
                       </div>
                     </div>
@@ -222,7 +231,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                       <div>
                         <h5 className="font-medium text-sm">Fast Performance</h5>
                         <p className="text-xs text-[var(--color-text-muted)]">
-                          Loads instantly from your home screen with cached content for lightning-fast sessions.
+                          Loads instantly from your home screen with cached content for
+                          lightning-fast sessions.
                         </p>
                       </div>
                     </div>
@@ -247,11 +257,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                         >
                           Check Updates
                         </SecondaryButton>
-                        <StandardButton
-                          variant="ghost"
-                          size="xs"
-                          onClick={handleClearCache}
-                        >
+                        <StandardButton variant="ghost" size="xs" onClick={handleClearCache}>
                           Clear Cache
                         </StandardButton>
                       </div>
@@ -271,19 +277,12 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                 >
                   Install App
                 </PrimaryButton>
-                
+
                 <div className="flex gap-2">
-                  <SecondaryButton
-                    fullWidth
-                    onClick={handleLearnMore}
-                  >
+                  <SecondaryButton fullWidth onClick={handleLearnMore}>
                     {showDetails ? 'Show Less' : 'Learn More'}
                   </SecondaryButton>
-                  <StandardButton
-                    variant="ghost"
-                    fullWidth
-                    onClick={handleDismiss}
-                  >
+                  <StandardButton variant="ghost" fullWidth onClick={handleDismiss}>
                     Not Now
                   </StandardButton>
                 </div>
@@ -293,9 +292,11 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
               {!showDetails && (
                 <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
                   <p className="text-xs text-[var(--color-text-muted)] text-center">
-                    On iOS: Tap <span className="font-semibold">Share</span> → <span className="font-semibold">Add to Home Screen</span>
+                    On iOS: Tap <span className="font-semibold">Share</span> →{' '}
+                    <span className="font-semibold">Add to Home Screen</span>
                     <br />
-                    On Android: Tap <span className="font-semibold">Menu</span> → <span className="font-semibold">Install App</span>
+                    On Android: Tap <span className="font-semibold">Menu</span> →{' '}
+                    <span className="font-semibold">Install App</span>
                   </p>
                 </div>
               )}

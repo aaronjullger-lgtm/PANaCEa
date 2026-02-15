@@ -1,6 +1,6 @@
 /**
  * Timing Metrics Panel
- * 
+ *
  * Displays real-time timing analytics during OSCE sessions.
  * Shows efficiency score, question count, and key milestones.
  */
@@ -32,12 +32,12 @@ export function TimingMetricsPanel({
   const completedMetrics = criticalMetrics.filter((m) => m.status === 'completed');
 
   return (
-    <div className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 ${className}`}>
+    <div
+      className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 ${className}`}
+    >
       <div className="flex items-center gap-2 mb-3">
         <Clock className="w-5 h-5 text-[var(--color-accent)]" />
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-          Live Analytics
-        </h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Live Analytics</h3>
       </div>
 
       <div className="space-y-3 text-sm">
@@ -55,9 +55,7 @@ export function TimingMetricsPanel({
             <MessageSquare className="w-4 h-4" />
             Questions Asked
           </span>
-          <span className="font-semibold text-[var(--color-text-primary)]">
-            {questionCount}
-          </span>
+          <span className="font-semibold text-[var(--color-text-primary)]">{questionCount}</span>
         </div>
 
         {/* Efficiency score */}
@@ -89,9 +87,7 @@ export function TimingMetricsPanel({
                     {metric.duration}s ✓
                   </span>
                 ) : (
-                  <span className="text-xs text-[var(--color-text-muted)]">
-                    In progress...
-                  </span>
+                  <span className="text-xs text-[var(--color-text-muted)]">In progress...</span>
                 )}
               </div>
             ))}

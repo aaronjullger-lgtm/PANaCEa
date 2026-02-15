@@ -336,11 +336,15 @@ export async function fetchLearningProfile(token?: string | null): Promise<{
 
     if (!response.ok) {
       const contentType = response.headers.get('content-type');
-      const error =
-        contentType?.includes('application/json')
-          ? await response.json().catch(() => ({ error: 'Unknown error' }))
-          : { error: `Request failed (${response.status})` };
-      return { profile: null, sessions: [], aggregateStats: null, error: (error as { error?: string }).error };
+      const error = contentType?.includes('application/json')
+        ? await response.json().catch(() => ({ error: 'Unknown error' }))
+        : { error: `Request failed (${response.status})` };
+      return {
+        profile: null,
+        sessions: [],
+        aggregateStats: null,
+        error: (error as { error?: string }).error,
+      };
     }
 
     const contentType = response.headers.get('content-type');

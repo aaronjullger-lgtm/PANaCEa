@@ -347,10 +347,16 @@ function ContentStep({
                   {config.systems.includes(system.code) && <Check className="w-3 h-3" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-[var(--color-text-primary)] text-sm truncate" title={system.code}>
+                  <div
+                    className="font-semibold text-[var(--color-text-primary)] text-sm truncate"
+                    title={system.code}
+                  >
                     {system.code}
                   </div>
-                  <div className="text-xs text-slate-600 dark:text-slate-400 truncate" title={fullName}>
+                  <div
+                    className="text-xs text-slate-600 dark:text-slate-400 truncate"
+                    title={fullName}
+                  >
                     {fullName}
                   </div>
                 </div>
@@ -478,7 +484,9 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
         {/* Retry missed questions */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="font-medium text-[var(--color-text-primary)]">Retry questions to review</div>
+            <div className="font-medium text-[var(--color-text-primary)]">
+              Retry questions to review
+            </div>
             <div className="text-sm text-slate-600 dark:text-slate-400">
               Review questions you got wrong at the end of each round
             </div>
@@ -576,7 +584,11 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
 
         {/* Validation Errors */}
         {!validation.valid && (
-          <div id="session-builder-validation" role="alert" className="p-4 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-xl">
+          <div
+            id="session-builder-validation"
+            role="alert"
+            className="p-4 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-xl"
+          >
             <div className="flex items-center gap-2 text-[var(--color-data-fail)] mb-2">
               <AlertCircle className="w-4 h-4" />
               <span className="font-medium">Please fix the following:</span>

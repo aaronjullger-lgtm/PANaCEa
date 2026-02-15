@@ -166,7 +166,10 @@ export async function gradeOSCESession(
     if (!response.ok) return null;
 
     const data = await parseJsonResponse(response);
-    return data?.data ?? null;
+    // API returns handler { data: payload }; middleware sends result.data as body, so we get payload directly
+    if (!data) return null;
+    const payload = data.data ?? data;
+    return typeof payload?.score === 'number' ? (payload as OsceGradeResult) : null;
   } catch (error) {
     console.error('Error grading OSCE session:', error);
     return null;

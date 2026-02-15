@@ -35,8 +35,15 @@ export const SystemRadarChart: React.FC<Props> = ({ systems }) => {
       <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={0}>
         <RadarChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
           <PolarGrid stroke="var(--chart-grid-stroke)" strokeOpacity={0.4} />
-          <PolarAngleAxis dataKey="system" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
-          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} />
+          <PolarAngleAxis
+            dataKey="system"
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+          />
+          <PolarRadiusAxis
+            angle={30}
+            domain={[0, 100]}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+          />
           <Radar
             name="Accuracy"
             dataKey="accuracy"

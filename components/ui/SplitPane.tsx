@@ -49,7 +49,7 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
       setLeftPercent(next);
       onSplitChange?.(next);
     },
-    [onSplitChange, minLeftPercent, maxLeftPercent],
+    [onSplitChange, minLeftPercent, maxLeftPercent]
   );
 
   const handleMouseDown = useCallback(() => setIsDragging(true), []);
@@ -97,12 +97,12 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
         }}
         className="flex-shrink-0 w-2 cursor-col-resize bg-[var(--color-border)] hover:bg-[var(--color-accent)]/30 transition-colors flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] border-0 p-0"
       >
-        <GripVertical className="w-4 h-4 text-[var(--color-text-muted)] pointer-events-none" aria-hidden />
+        <GripVertical
+          className="w-4 h-4 text-[var(--color-text-muted)] pointer-events-none"
+          aria-hidden
+        />
       </button>
-      <div
-        className="flex-1 overflow-auto min-w-0"
-        style={{ minWidth: 180 }}
-      >
+      <div className="flex-1 overflow-auto min-w-0" style={{ minWidth: 180 }}>
         {right}
       </div>
     </div>

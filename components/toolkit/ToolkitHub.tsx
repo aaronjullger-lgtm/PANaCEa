@@ -405,7 +405,9 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span className="text-sm">Dashboard</span>
             </button>
-            <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Clinical Utilities</h2>
+            <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
+              Clinical Utilities
+            </h2>
             <p className="text-xs text-[var(--color-text-muted)] mt-1">Tools & Calculators</p>
           </div>
 
@@ -591,9 +593,9 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
               >
                 {selectedCalculator ? (
                   <CalculatorHub
-                  initialCalculatorId={selectedCalculator}
-                  onClose={() => setSelectedCalculator(null)}
-                />
+                    initialCalculatorId={selectedCalculator}
+                    onClose={() => setSelectedCalculator(null)}
+                  />
                 ) : (
                   <div className="space-y-6">
                     {/* Search Results */}
@@ -723,8 +725,12 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                         pH, pCO₂, HCO₃, O₂ → Acidosis/alkalosis, metabolic/respiratory, compensation
                       </p>
                       <div className="flex items-center gap-2 text-xs text-[var(--color-accent)]">
-                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">Rule-based</span>
-                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">Winter&apos;s Formula</span>
+                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">
+                          Rule-based
+                        </span>
+                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">
+                          Winter&apos;s Formula
+                        </span>
                       </div>
                     </motion.button>
 
@@ -746,8 +752,12 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                         Rhythm, rate, PR, QRS, QT, ST, T-wave → Diagnostic interpretation & DDx
                       </p>
                       <div className="flex items-center gap-2 text-xs text-[var(--color-accent)]">
-                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">Interactive</span>
-                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">ECGPattern</span>
+                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">
+                          Interactive
+                        </span>
+                        <span className="px-2 py-1 bg-[var(--color-accent)]/10 rounded">
+                          ECGPattern
+                        </span>
                       </div>
                     </motion.button>
                   </div>

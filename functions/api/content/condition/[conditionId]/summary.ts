@@ -55,14 +55,19 @@ export const onRequestGet = publicEndpoint(
 
       const confusedWith = [
         ...new Map(
-          content.ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent
-            .map((p) => p.MedicalContent_ConfusionPair_selectedConditionIdToMedicalContent)
+          content.ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent.map(
+            (p) => p.MedicalContent_ConfusionPair_selectedConditionIdToMedicalContent
+          )
             .filter(Boolean)
-            .map((mc) => [mc!.id, { id: mc!.id, conditionId: mc!.conditionId, condition: mc!.condition }])
+            .map((mc) => [
+              mc!.id,
+              { id: mc!.id, conditionId: mc!.conditionId, condition: mc!.condition },
+            ])
         ).values(),
       ];
 
-      const { ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent: _, ...rest } = content;
+      const { ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent: _, ...rest } =
+        content;
       const data = {
         ...rest,
         confusedWith,

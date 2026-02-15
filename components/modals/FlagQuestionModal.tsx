@@ -103,13 +103,23 @@ export function FlagQuestionModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="flag-modal-title">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="flag-modal-title"
+    >
       <div className="relative w-full max-w-2xl bg-[var(--color-bg-secondary)] rounded-lg shadow-[0_18px_42px_var(--color-shadow-soft)] max-h-[90vh] overflow-y-auto border border-[var(--color-border)]">
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
           <div className="flex items-center gap-3">
             <Flag className="w-6 h-6 text-yellow-500" />
-            <h2 id="flag-modal-title" className="text-xl font-semibold text-[var(--color-text-primary)]">Flag Question Issue</h2>
+            <h2
+              id="flag-modal-title"
+              className="text-xl font-semibold text-[var(--color-text-primary)]"
+            >
+              Flag Question Issue
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -124,7 +134,9 @@ export function FlagQuestionModal({
           /* Success State */
           <div className="flex flex-col items-center justify-center p-12 text-center">
             <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
-            <h3 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-2">Thank You!</h3>
+            <h3 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-2">
+              Thank You!
+            </h3>
             <p className="text-[var(--color-text-secondary)] max-w-md">
               Your feedback has been submitted. We'll review this question and send you an email
               once it's fixed.
@@ -136,7 +148,9 @@ export function FlagQuestionModal({
             {/* Question Preview */}
             <div className="mb-6 p-4 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border)]">
               <p className="text-sm text-[var(--color-text-muted)] mb-2">Question:</p>
-              <p className="text-[var(--color-text-primary)] text-sm line-clamp-3">{questionText}</p>
+              <p className="text-[var(--color-text-primary)] text-sm line-clamp-3">
+                {questionText}
+              </p>
               {correctAnswer && (
                 <p className="text-sm text-[var(--color-text-muted)] mt-2">
                   Correct Answer: <span className="text-green-400">{correctAnswer}</span>
@@ -161,7 +175,9 @@ export function FlagQuestionModal({
                         : 'border-[var(--color-border)] bg-[var(--color-bg-tertiary)] hover:border-[var(--color-text-muted)]'
                     }`}
                   >
-                    <div className="font-medium text-[var(--color-text-primary)] mb-1">{type.label}</div>
+                    <div className="font-medium text-[var(--color-text-primary)] mb-1">
+                      {type.label}
+                    </div>
                     <div className="text-sm text-[var(--color-text-muted)]">{type.description}</div>
                   </button>
                 ))}

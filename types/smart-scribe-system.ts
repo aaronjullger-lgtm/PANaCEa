@@ -1,12 +1,12 @@
 /**
  * Module 4: Smart Scribe & Tutor System Type Definitions
- * 
+ *
  * Automated documentation and synthesis layer using:
  * - gemini-dictation for real-time SOAP note generation
  * - info_genius for dynamic remediation graphics
  * - echoscript for timing analysis
  * - Enhanced audio visualization with haptic feedback
- * 
+ *
  * @module smart-scribe-system
  */
 
@@ -42,19 +42,19 @@ export type HPIElement =
 export interface SOAPElement {
   /** Element content */
   content: string;
-  
+
   /** Source of information */
   source: 'transcript' | 'vitals' | 'physical_exam' | 'labs' | 'inferred';
-  
+
   /** Timestamp when captured */
   timestamp: string;
-  
+
   /** Transcript excerpt that supports this element */
   transcriptExcerpt?: string;
-  
+
   /** Confidence score (0-1) */
   confidence: number;
-  
+
   /** Is this a critical "must-have" element */
   isCritical: boolean;
 }
@@ -65,10 +65,10 @@ export interface SOAPElement {
 export interface SOAPNote {
   /** Note ID */
   id: string;
-  
+
   /** Session ID */
   sessionId: string;
-  
+
   /** Subjective section */
   subjective: {
     chiefComplaint: SOAPElement;
@@ -88,7 +88,7 @@ export interface SOAPNote {
     socialHistory?: SOAPElement;
     familyHistory?: SOAPElement;
   };
-  
+
   /** Objective section */
   objective: {
     vitalSigns: SOAPElement;
@@ -104,14 +104,14 @@ export interface SOAPNote {
     labs?: SOAPElement;
     imaging?: SOAPElement;
   };
-  
+
   /** Assessment section */
   assessment: {
     primaryDiagnosis: SOAPElement;
     differentialDiagnoses: SOAPElement[];
     clinicalReasoning: SOAPElement;
   };
-  
+
   /** Plan section */
   plan: {
     diagnosticWorkup?: SOAPElement;
@@ -120,7 +120,7 @@ export interface SOAPNote {
     followUp?: SOAPElement;
     disposition?: SOAPElement;
   };
-  
+
   /** Metadata */
   metadata: {
     author: 'student' | 'ai_gold_standard';
@@ -137,46 +137,46 @@ export interface SOAPNote {
 export interface RealtimeSOAPGenerator {
   /** Generator ID */
   id: string;
-  
+
   /** Session ID */
   sessionId: string;
-  
+
   /** Current draft note */
   draftNote: SOAPNote;
-  
+
   /** Transcript buffer */
   transcriptBuffer: Array<{
     speaker: 'student' | 'patient';
     text: string;
     timestamp: string;
   }>;
-  
+
   /** Vitals updates */
   vitalsHistory: Array<{
     vitals: Record<string, string | number>;
     timestamp: string;
   }>;
-  
+
   /** Physical findings updates */
   physicalFindingsHistory: Array<{
     findings: Record<string, unknown>;
     timestamp: string;
   }>;
-  
+
   /** Generator status */
   status: 'idle' | 'listening' | 'generating' | 'complete';
-  
+
   /** Last update timestamp */
   lastUpdateAt: string;
-  
+
   /** Configuration */
   config: {
     /** Update frequency (ms) */
     updateInterval: number;
-    
+
     /** Minimum confidence threshold to include element */
     confidenceThreshold: number;
-    
+
     /** Enable real-time streaming to UI */
     enableStreaming: boolean;
   };
@@ -188,44 +188,44 @@ export interface RealtimeSOAPGenerator {
 export interface SOAPComparison {
   /** Comparison ID */
   id: string;
-  
+
   /** Student's note */
   studentNote: SOAPNote;
-  
+
   /** AI gold standard note */
   goldStandardNote: SOAPNote;
-  
+
   /** Element-by-element comparison */
   elementComparison: Array<{
     section: SOAPSection;
     elementType: string; // e.g., "hpi.onset", "assessment.primaryDiagnosis"
-    
+
     studentContent?: string;
     goldStandardContent: string;
-    
+
     status: 'present' | 'missing' | 'incomplete' | 'incorrect';
-    
+
     /** Feedback for this element */
     feedback: string;
-    
+
     /** Severity of missing/incorrect element */
     severity: 'critical' | 'important' | 'minor';
   }>;
-  
+
   /** Overall scores */
   scores: {
     completeness: number; // 0-100
-    accuracy: number;     // 0-100
+    accuracy: number; // 0-100
     organization: number; // 0-100
-    overall: number;      // 0-100
+    overall: number; // 0-100
   };
-  
+
   /** Strengths */
   strengths: string[];
-  
+
   /** Areas for improvement */
   areasForImprovement: string[];
-  
+
   /** Teaching points */
   teachingPoints: string[];
 }
@@ -238,14 +238,14 @@ export interface SOAPComparison {
  * Infographic type for remediation.
  */
 export type InfographicType =
-  | 'comparison'           // Side-by-side comparison (e.g., Erythema Nodosum vs. Migrans)
-  | 'flowchart'            // Decision tree/algorithm
-  | 'timeline'             // Pathophysiology timeline
-  | 'anatomy'              // Anatomical diagram with labels
-  | 'drug_comparison'      // Medication comparison table
-  | 'differential_table'   // Differential diagnosis table
-  | 'algorithm'            // Treatment/diagnostic algorithm
-  | 'mnemonic_visual';     // Mnemonic with visual aids
+  | 'comparison' // Side-by-side comparison (e.g., Erythema Nodosum vs. Migrans)
+  | 'flowchart' // Decision tree/algorithm
+  | 'timeline' // Pathophysiology timeline
+  | 'anatomy' // Anatomical diagram with labels
+  | 'drug_comparison' // Medication comparison table
+  | 'differential_table' // Differential diagnosis table
+  | 'algorithm' // Treatment/diagnostic algorithm
+  | 'mnemonic_visual'; // Mnemonic with visual aids
 
 /**
  * Visual complexity level.
@@ -263,39 +263,39 @@ export type InfographicAudience = 'student' | 'resident' | 'attending';
 export interface InfographicRequest {
   /** Request ID */
   id: string;
-  
+
   /** Infographic type */
   type: InfographicType;
-  
+
   /** Primary concept */
   primaryConcept: string;
-  
+
   /** Secondary concept (for comparisons) */
   secondaryConcept?: string;
-  
+
   /** Student's confusion point */
   confusionPoint: string;
-  
+
   /** Target audience */
   audience: InfographicAudience;
-  
+
   /** Visual complexity */
   complexity: VisualComplexity;
-  
+
   /** Key teaching points to emphasize */
   teachingPoints: string[];
-  
+
   /** Color scheme */
   colorScheme: 'light' | 'dark' | 'colorblind_friendly';
-  
+
   /** Additional context */
   context?: {
     /** Related case details */
     caseContext?: string;
-    
+
     /** Student's incorrect answer */
     studentAnswer?: string;
-    
+
     /** Correct answer */
     correctAnswer?: string;
   };
@@ -307,28 +307,28 @@ export interface InfographicRequest {
 export interface GeneratedInfographic {
   /** Infographic ID */
   id: string;
-  
+
   /** Request ID */
   requestId: string;
-  
+
   /** Image URL */
   imageUrl: string;
-  
+
   /** SVG markup (for interactive elements) */
   svgMarkup?: string;
-  
+
   /** Thumbnail URL */
   thumbnailUrl: string;
-  
+
   /** Title */
   title: string;
-  
+
   /** Description */
   description: string;
-  
+
   /** Key takeaways */
   keyTakeaways: string[];
-  
+
   /** Interactive elements */
   interactiveElements?: Array<{
     elementId: string;
@@ -336,7 +336,7 @@ export interface GeneratedInfographic {
     action: 'highlight' | 'tooltip' | 'expand';
     content: string;
   }>;
-  
+
   /** Generation metadata */
   metadata: {
     generatedAt: string;
@@ -344,10 +344,10 @@ export interface GeneratedInfographic {
     generationTime: number; // ms
     cost?: number;
   };
-  
+
   /** Status */
   status: 'generating' | 'ready' | 'failed';
-  
+
   /** Error message (if failed) */
   error?: string;
 }
@@ -358,10 +358,10 @@ export interface GeneratedInfographic {
 export interface RemediationGraphicsLibrary {
   /** Library ID */
   id: string;
-  
+
   /** Infographics */
   infographics: Map<string, GeneratedInfographic>;
-  
+
   /** Common comparison pairs */
   commonComparisons: Array<{
     conceptA: string;
@@ -369,7 +369,7 @@ export interface RemediationGraphicsLibrary {
     frequency: number; // How often students confuse these
     infographicId?: string;
   }>;
-  
+
   /** Pre-generated high-yield infographics */
   preGeneratedLibrary: Array<{
     topic: string;
@@ -387,21 +387,21 @@ export interface RemediationGraphicsLibrary {
  * Audio visualization type.
  */
 export type AudioVisualizationType =
-  | 'waveform'       // Standard waveform
+  | 'waveform' // Standard waveform
   | 'vitality_meter' // Patient vitality visualization
-  | 'spectrum'       // Frequency spectrum
-  | 'circular'       // Circular audio reactive
-  | 'particle';      // Particle system
+  | 'spectrum' // Frequency spectrum
+  | 'circular' // Circular audio reactive
+  | 'particle'; // Particle system
 
 /**
  * Haptic feedback pattern.
  */
 export type HapticPattern =
-  | 'pulse'          // Rhythmic pulse (for HR)
-  | 'alarm'          // Urgent alarm pattern
-  | 'confirmation'   // Success confirmation
-  | 'warning'        // Warning vibration
-  | 'breath'         // Breathing rhythm (for RR)
+  | 'pulse' // Rhythmic pulse (for HR)
+  | 'alarm' // Urgent alarm pattern
+  | 'confirmation' // Success confirmation
+  | 'warning' // Warning vibration
+  | 'breath' // Breathing rhythm (for RR)
   | 'none';
 
 /**
@@ -410,7 +410,7 @@ export type HapticPattern =
 export interface AudioVisualizationConfig {
   /** Visualization type */
   type: AudioVisualizationType;
-  
+
   /** Color scheme */
   colorScheme: {
     primary: string;
@@ -418,21 +418,21 @@ export interface AudioVisualizationConfig {
     alert: string;
     stable: string;
   };
-  
+
   /** Theme matching */
   matchSystemTheme: boolean;
-  
+
   /** Background blur effect */
   backgroundBlur: {
     enabled: boolean;
     intensity: number; // 0-20 (blur radius in px)
     darkOverlay: number; // 0-1 (opacity)
   };
-  
+
   /** Vitality mapping */
   vitalityMapping: {
     enabled: boolean;
-    
+
     /** Map vitals to visualization parameters */
     vitalEffects: {
       o2sat: {
@@ -449,11 +449,11 @@ export interface AudioVisualizationConfig {
       };
     };
   };
-  
+
   /** Haptic feedback */
   hapticFeedback: {
     enabled: boolean;
-    
+
     /** Map events to haptic patterns */
     eventPatterns: {
       patientSpeaking: HapticPattern;
@@ -461,11 +461,11 @@ export interface AudioVisualizationConfig {
       vitalChange: HapticPattern;
       bargeIn: HapticPattern;
     };
-    
+
     /** Intensity (0-1) */
     intensity: number;
   };
-  
+
   /** Animation settings */
   animation: {
     smoothing: number; // 0-1
@@ -480,22 +480,22 @@ export interface AudioVisualizationConfig {
 export interface AudioVisualizationState {
   /** Is visualization active */
   isActive: boolean;
-  
+
   /** Current audio level (RMS) */
   audioLevel: number;
-  
+
   /** Frequency data (for spectrum) */
   frequencyData?: Uint8Array;
-  
+
   /** Current vitality color */
   vitalityColor: string;
-  
+
   /** Current animation state */
   animationState: {
     waveformPoints: number[];
     particlePositions?: Array<{ x: number; y: number; velocity: { x: number; y: number } }>;
   };
-  
+
   /** Last haptic trigger */
   lastHapticTrigger?: {
     pattern: HapticPattern;
@@ -511,12 +511,12 @@ export interface AudioVisualizationState {
  * Clinical timing metric categories.
  */
 export type TimingMetricType =
-  | 'recognition'         // Time to recognize condition
-  | 'action'              // Time to critical action
-  | 'diagnosis'           // Time to correct diagnosis
-  | 'intervention'        // Time to intervention
-  | 'communication'       // Time spent on communication
-  | 'decision';           // Decision-making time
+  | 'recognition' // Time to recognize condition
+  | 'action' // Time to critical action
+  | 'diagnosis' // Time to correct diagnosis
+  | 'intervention' // Time to intervention
+  | 'communication' // Time spent on communication
+  | 'decision'; // Decision-making time
 
 /**
  * Clinical timing metric.
@@ -524,31 +524,31 @@ export type TimingMetricType =
 export interface TimingMetric {
   /** Metric ID */
   id: string;
-  
+
   /** Metric type */
   type: TimingMetricType;
-  
+
   /** Metric name */
   name: string;
-  
+
   /** Start time */
   startTime: string;
-  
+
   /** End time */
   endTime?: string;
-  
+
   /** Duration (seconds) */
   duration?: number;
-  
+
   /** Target duration (for comparison) */
   targetDuration?: number;
-  
+
   /** Status */
   status: 'in_progress' | 'completed' | 'exceeded_target';
-  
+
   /** Clinical significance */
   significance: 'critical' | 'important' | 'routine';
-  
+
   /** Description */
   description: string;
 }
@@ -559,28 +559,28 @@ export interface TimingMetric {
 export interface EchoPathNode {
   /** Node ID */
   id: string;
-  
+
   /** Node type */
   type: 'question' | 'action' | 'finding' | 'decision';
-  
+
   /** Content */
   content: string;
-  
+
   /** Timestamp */
   timestamp: string;
-  
+
   /** Parent node ID */
   parentId?: string;
-  
+
   /** Child node IDs */
   childrenIds: string[];
-  
+
   /** Relevance score (0-1) */
   relevanceScore: number;
-  
+
   /** Was this node on the optimal path */
   isOptimalPath: boolean;
-  
+
   /** Time spent on this branch */
   timeSpent: number;
 }
@@ -591,22 +591,22 @@ export interface EchoPathNode {
 export interface EchoPath {
   /** Path ID */
   id: string;
-  
+
   /** Session ID */
   sessionId: string;
-  
+
   /** All nodes in the conversation */
   nodes: EchoPathNode[];
-  
+
   /** Optimal path (what should have been asked) */
   optimalPath: string[]; // Node IDs
-  
+
   /** Actual path taken */
   actualPath: string[];
-  
+
   /** Path efficiency score */
   efficiencyScore: number; // 0-100
-  
+
   /** Rabbit holes (unproductive branches) */
   rabbitHoles: Array<{
     startNodeId: string;
@@ -614,13 +614,13 @@ export interface EchoPath {
     timeWasted: number;
     reason: string;
   }>;
-  
+
   /** Critical paths taken */
   criticalPathsCovered: string[];
-  
+
   /** Critical paths missed */
   criticalPathsMissed: string[];
-  
+
   /** Visualization data */
   visualization: {
     layout: 'tree' | 'force_directed' | 'timeline';
@@ -635,13 +635,13 @@ export interface EchoPath {
 export interface SessionTimingAnalytics {
   /** Session ID */
   sessionId: string;
-  
+
   /** All timing metrics */
   metrics: TimingMetric[];
-  
+
   /** Echo path */
   echoPath: EchoPath;
-  
+
   /** Key milestones */
   milestones: Array<{
     name: string;
@@ -650,7 +650,7 @@ export interface SessionTimingAnalytics {
     target?: number;
     achieved: boolean;
   }>;
-  
+
   /** Overall session timeline */
   timeline: Array<{
     timestamp: string;
@@ -658,7 +658,7 @@ export interface SessionTimingAnalytics {
     duration: number;
     category: 'question' | 'action' | 'decision' | 'system';
   }>;
-  
+
   /** Performance summary */
   summary: {
     totalDuration: number;
@@ -679,10 +679,10 @@ export interface SessionTimingAnalytics {
 export interface AutomatedCaseFile {
   /** Case file ID */
   id: string;
-  
+
   /** Session ID */
   sessionId: string;
-  
+
   /** Case details */
   case: {
     patientName: string;
@@ -690,7 +690,7 @@ export interface AutomatedCaseFile {
     diagnosis: string;
     specialty: string;
   };
-  
+
   /** Transcript */
   transcript: {
     fullTranscript: string;
@@ -701,17 +701,17 @@ export interface AutomatedCaseFile {
       significance: 'critical' | 'important' | 'routine';
     }>;
   };
-  
+
   /** SOAP notes */
   soapNotes: {
     studentNote: SOAPNote;
     goldStandardNote: SOAPNote;
     comparison: SOAPComparison;
   };
-  
+
   /** Timing analytics */
   timingAnalytics: SessionTimingAnalytics;
-  
+
   /** Clinical performance */
   clinicalPerformance: {
     overallScore: number;
@@ -725,17 +725,21 @@ export interface AutomatedCaseFile {
     strengths: string[];
     areasForImprovement: string[];
   };
-  
+
   /** Personalized pearls */
   pearls: Array<{
-    category: 'missed_finding' | 'inefficient_questioning' | 'diagnosis_reasoning' | 'treatment_gap';
+    category:
+      | 'missed_finding'
+      | 'inefficient_questioning'
+      | 'diagnosis_reasoning'
+      | 'treatment_gap';
     title: string;
     description: string;
     relevantTranscriptExcerpt?: string;
     recommendedReading?: string;
     infographic?: GeneratedInfographic;
   }>;
-  
+
   /** AI tutor insights */
   tutorInsights: {
     keyTeachingPoints: string[];
@@ -743,10 +747,10 @@ export interface AutomatedCaseFile {
     similarCasesToReview: string[];
     nextSteps: string[];
   };
-  
+
   /** Generated at */
   generatedAt: string;
-  
+
   /** Export formats available */
   exportFormats: {
     pdf: string;
@@ -765,7 +769,7 @@ export interface AutomatedCaseFile {
 export interface GeminiDictationRequest {
   /** Audio stream */
   audioStream: ReadableStream<Uint8Array>;
-  
+
   /** Clinical context for improved accuracy */
   context: {
     specialty?: string;
@@ -773,13 +777,13 @@ export interface GeminiDictationRequest {
     chiefComplaint?: string;
     priorNotes?: string;
   };
-  
+
   /** Language model */
   model: string;
-  
+
   /** Enable real-time streaming */
   enableStreaming: boolean;
-  
+
   /** Custom vocabulary (medical terms) */
   customVocabulary?: string[];
 }
@@ -790,16 +794,16 @@ export interface GeminiDictationRequest {
 export interface GeminiDictationResponse {
   /** Transcribed text */
   text: string;
-  
+
   /** Confidence score */
   confidence: number;
-  
+
   /** Is final (vs. interim result) */
   isFinal: boolean;
-  
+
   /** Timestamp */
   timestamp: string;
-  
+
   /** Detected medical terms */
   medicalTerms?: string[];
 }
@@ -823,10 +827,10 @@ export const EXAMPLE_SOAP_GENERATOR_CONFIG: RealtimeSOAPGenerator['config'] = {
 export const EXAMPLE_COPD_AUDIO_VIZ: AudioVisualizationConfig = {
   type: 'vitality_meter',
   colorScheme: {
-    primary: '#3b82f6',    // Blue
-    secondary: '#8b5cf6',  // Purple
-    alert: '#ef4444',      // Red
-    stable: '#10b981',     // Green
+    primary: '#3b82f6', // Blue
+    secondary: '#8b5cf6', // Purple
+    alert: '#ef4444', // Red
+    stable: '#10b981', // Green
   },
   matchSystemTheme: true,
   backgroundBlur: {

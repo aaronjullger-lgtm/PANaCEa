@@ -52,7 +52,8 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
     },
     early: {
       title: 'Early Calibration',
-      description: 'We need ~60 reviews to tune your curve. Predictions are approximate until then.',
+      description:
+        'We need ~60 reviews to tune your curve. Predictions are approximate until then.',
     },
     developing: {
       title: 'Building Your Model',

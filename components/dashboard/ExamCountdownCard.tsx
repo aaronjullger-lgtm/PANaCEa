@@ -1,6 +1,6 @@
 /**
  * ExamCountdownCard - Displays PANCE/PANRE countdown and pacing status
- * 
+ *
  * Critical for PA students: Shows days remaining, curriculum progress,
  * and whether they're on track for their exam date.
  */
@@ -42,7 +42,9 @@ function getPacingTargets(
   const daysRemaining = getDaysRemaining(examDateStr);
   const totalDaysToExam = 365;
   const daysElapsed = Math.max(0, Math.min(totalDaysToExam, totalDaysToExam - daysRemaining));
-  const targetQuestionsForPace = Math.round((daysElapsed / totalDaysToExam) * TARGET_TOTAL_QUESTIONS);
+  const targetQuestionsForPace = Math.round(
+    (daysElapsed / totalDaysToExam) * TARGET_TOTAL_QUESTIONS
+  );
   const questionsRemaining = Math.max(0, TARGET_TOTAL_QUESTIONS - questionsAnswered);
   const dailyTargetRaw = daysRemaining > 0 ? Math.ceil(questionsRemaining / daysRemaining) : 0;
   const dailyTarget = Math.min(80, Math.max(10, dailyTargetRaw));
@@ -108,11 +110,13 @@ export const ExamCountdownCard: React.FC<ExamCountdownCardProps> = ({
   className = '',
 }) => {
   const daysRemaining = getDaysRemaining(examDate);
-  const { targetQuestionsForPace: computedTarget, dailyTarget, totalDaysToExam } = getPacingTargets(
-    examDate,
-    questionsAnswered
-  );
-  const targetQuestionsForPace = targetProp !== undefined && targetProp > 0 ? targetProp : computedTarget;
+  const {
+    targetQuestionsForPace: computedTarget,
+    dailyTarget,
+    totalDaysToExam,
+  } = getPacingTargets(examDate, questionsAnswered);
+  const targetQuestionsForPace =
+    targetProp !== undefined && targetProp > 0 ? targetProp : computedTarget;
 
   const paceInfo = getPaceStatus(curriculumPercent, daysRemaining, totalDaysToExam);
   const PaceIcon = paceInfo.icon;
@@ -189,7 +193,11 @@ export const ExamCountdownCard: React.FC<ExamCountdownCardProps> = ({
       {/* Daily target (exam countdown–driven) */}
       {daysRemaining > 0 && dailyTarget > 0 && (
         <p className="mt-3 text-xs text-[var(--color-text-muted)]">
-          Aim for <span className="font-semibold text-[var(--color-text-secondary)]">~{dailyTarget} questions/day</span> to stay on pace
+          Aim for{' '}
+          <span className="font-semibold text-[var(--color-text-secondary)]">
+            ~{dailyTarget} questions/day
+          </span>{' '}
+          to stay on pace
         </p>
       )}
 
@@ -201,7 +209,8 @@ export const ExamCountdownCard: React.FC<ExamCountdownCardProps> = ({
           className="mt-4 p-3 bg-muted-amber-500/10 rounded-lg"
         >
           <p className="text-xs text-[var(--color-text-secondary)]">
-            <span className="font-semibold">Final sprint:</span> Review weak areas and high-yield content daily.
+            <span className="font-semibold">Final sprint:</span> Review weak areas and high-yield
+            content daily.
           </p>
         </motion.div>
       )}

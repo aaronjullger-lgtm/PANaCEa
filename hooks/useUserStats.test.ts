@@ -129,6 +129,7 @@ describe('useUserStats', () => {
       const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
+          headers: { get: (name: string) => (name === 'content-type' ? 'application/json' : null) },
           json: () =>
             Promise.resolve({
               success: true,
@@ -171,6 +172,7 @@ describe('useUserStats', () => {
       const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
+          headers: { get: (name: string) => (name === 'content-type' ? 'application/json' : null) },
           json: () =>
             Promise.resolve({
               success: true,

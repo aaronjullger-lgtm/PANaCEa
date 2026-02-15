@@ -44,7 +44,7 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [highContrastData, setHighContrastData] = useState<boolean>(getInitialHighContrastData);
   const value = useMemo<ThemeContextValue>(
     () => ({ theme, setTheme, highContrastData, setHighContrastData }),
-    [theme, highContrastData],
+    [theme, highContrastData]
   );
 
   useEffect(() => {

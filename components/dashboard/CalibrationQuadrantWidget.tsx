@@ -16,15 +16,10 @@ import { motion } from 'framer-motion';
 import useSWR from 'swr';
 import { useAuth } from '@clerk/clerk-react';
 import { Brain, CheckCircle, AlertTriangle, HelpCircle, XCircle } from 'lucide-react';
-import {
-  getQuadrantLabel,
-  type CalibrationQuadrant,
-} from '@/lib/calibrationQuadrants';
+import { getQuadrantLabel, type CalibrationQuadrant } from '@/lib/calibrationQuadrants';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
-function keyToQuadrantType(
-  key: keyof CalibrationQuadrantData
-): CalibrationQuadrant {
+function keyToQuadrantType(key: keyof CalibrationQuadrantData): CalibrationQuadrant {
   switch (key) {
     case 'dangerousMisconception':
       return 'dangerous_misconception';
@@ -101,16 +96,12 @@ const quadrants: Array<{
 
 const CALIBRATION_URL = `${getApiEndpoint(API_ENDPOINTS.ANALYTICS_CALIBRATION)}?days=90`;
 
-export function CalibrationQuadrantWidget({
-  className = '',
-}: Readonly<{ className?: string }>) {
+export function CalibrationQuadrantWidget({ className = '' }: Readonly<{ className?: string }>) {
   const { getToken } = useAuth();
   const fetcher = React.useMemo(() => makeCalibrationFetcher(getToken), [getToken]);
-  const { data, error, isLoading } = useSWR<CalibrationApiResponse>(
-    CALIBRATION_URL,
-    fetcher,
-    { revalidateOnFocus: false }
-  );
+  const { data, error, isLoading } = useSWR<CalibrationApiResponse>(CALIBRATION_URL, fetcher, {
+    revalidateOnFocus: false,
+  });
 
   if (error) {
     return (
@@ -193,18 +184,13 @@ export function CalibrationQuadrantWidget({
           const label = getQuadrantLabel(quadrantType);
           const pct = total > 0 ? Math.round((count / total) * 100) : 0;
           return (
-            <div
-              key={key}
-              className={`rounded-xl border p-3 ${bgClass} ${borderClass}`}
-            >
+            <div key={key} className={`rounded-xl border p-3 ${bgClass} ${borderClass}`}>
               <div className="flex items-center gap-2 mb-1">
                 <Icon className={`w-4 h-4 shrink-0 ${textClass}`} />
                 <span className={`text-xs font-medium ${textClass}`}>{label.short}</span>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-[var(--color-text-primary)]">
-                  {count}
-                </span>
+                <span className="text-2xl font-bold text-[var(--color-text-primary)]">{count}</span>
                 <span className="text-xs text-[var(--color-text-muted)]">({pct}%)</span>
               </div>
             </div>

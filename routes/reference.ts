@@ -11,42 +11,50 @@ import { requireAuth, AuthenticatedRequest } from '../lib/middleware/clerkAuth';
 const router = Router();
 
 // Anatomy
-router.get('/anatomy', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const { referenceService } = await import('../lib/services/referenceService');
-    const { system, query } = req.query;
-    if (query) {
-      const results = await referenceService.searchAnatomy(query as string);
-      res.json({ success: true, data: results });
-    } else {
-      const results = await referenceService.getAnatomyStructures((system as string) ?? '');
-      res.json({ success: true, data: results });
+router.get(
+  '/anatomy',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const { referenceService } = await import('../lib/services/referenceService');
+      const { system, query } = req.query;
+      if (query) {
+        const results = await referenceService.searchAnatomy(query as string);
+        res.json({ success: true, data: results });
+      } else {
+        const results = await referenceService.getAnatomyStructures((system as string) ?? '');
+        res.json({ success: true, data: results });
+      }
+    } catch (error) {
+      console.error('Error fetching anatomy:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch anatomy' });
     }
-  } catch (error) {
-    console.error('Error fetching anatomy:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch anatomy' });
   }
-});
+);
 
-router.get('/anatomy/:id', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    const { referenceService } = await import('../lib/services/referenceService');
-    const id = req.params.id;
-    if (!id) {
-      res.status(400).json({ success: false, error: 'id is required' });
-      return;
+router.get(
+  '/anatomy/:id',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    try {
+      const { referenceService } = await import('../lib/services/referenceService');
+      const id = req.params.id;
+      if (!id) {
+        res.status(400).json({ success: false, error: 'id is required' });
+        return;
+      }
+      const result = await referenceService.getAnatomyStructure(id);
+      if (!result) {
+        res.status(404).json({ success: false, error: 'Not found' });
+        return;
+      }
+      res.json({ success: true, data: result });
+    } catch (error) {
+      console.error('Error fetching anatomy detail:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch anatomy detail' });
     }
-    const result = await referenceService.getAnatomyStructure(id);
-    if (!result) {
-      res.status(404).json({ success: false, error: 'Not found' });
-      return;
-    }
-    res.json({ success: true, data: result });
-  } catch (error) {
-    console.error('Error fetching anatomy detail:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch anatomy detail' });
   }
-});
+);
 
 // Special Tests
 router.get('/special-tests', requireAuth, async (req: AuthenticatedRequest, res: Response) => {

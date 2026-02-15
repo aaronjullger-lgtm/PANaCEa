@@ -69,7 +69,9 @@ const StatisticsPreferences: React.FC<StatisticsPreferencesProps> = ({
           </div>
           <span
             className={
-              isEnabled ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'
+              isEnabled
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-400 dark:text-slate-500'
             }
           >
             {isEnabled ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -141,9 +143,7 @@ const StatisticsPreferences: React.FC<StatisticsPreferencesProps> = ({
         >
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-violet-500 flex-shrink-0" />
-            <h3 className="font-medium text-slate-900 dark:text-slate-100">
-              Deep Insight Metrics
-            </h3>
+            <h3 className="font-medium text-slate-900 dark:text-slate-100">Deep Insight Metrics</h3>
           </div>
           {advancedExpanded ? (
             <ChevronUp className="w-5 h-5 text-slate-500 flex-shrink-0" aria-hidden />

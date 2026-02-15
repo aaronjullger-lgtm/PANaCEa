@@ -80,7 +80,10 @@ export const DecayCurve: React.FC<DecayCurveProps> = ({ data }) => {
           }}
         />
 
-        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--color-accent)', strokeWidth: 1 }} />
+        <Tooltip
+          content={<CustomTooltip />}
+          cursor={{ stroke: 'var(--color-accent)', strokeWidth: 1 }}
+        />
 
         <Area
           type="monotone"

@@ -71,7 +71,10 @@ export const onRequestGet = authenticatedEndpoint(DailyTriadSchema, async ({ env
 
     const where = {
       status: 'published',
-      OR: [{ gold_standard_dx: { not: null } }, { clinical_pearls: { not: Prisma.DbNull } }] as const,
+      OR: [
+        { gold_standard_dx: { not: null } },
+        { clinical_pearls: { not: Prisma.DbNull } },
+      ] as const,
     };
 
     const total = await prisma.medicalContent.count({ where: { ...where, OR: [...where.OR] } });

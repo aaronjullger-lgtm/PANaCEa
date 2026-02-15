@@ -34,10 +34,10 @@ export const onRequestPost = authenticatedEndpoint(GenerateDeepSchema, async (co
   const logger = createEndpointLogger('/api/questions/generate-deep');
 
   if (!env.GEMINI_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: 'GEMINI_API_KEY not configured' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'GEMINI_API_KEY not configured' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const { condition, category, implicitDifficulty, cachedContent, count = 1 } = validated.body;
@@ -66,7 +66,9 @@ export const onRequestPost = authenticatedEndpoint(GenerateDeepSchema, async (co
           : 'challenging; multiple plausible distractors'
       : 'match to PANCE blueprint difficulty';
 
-  const categoryRef = category ? ` Cross-reference the "${category}" section of the cached blueprint.` : '';
+  const categoryRef = category
+    ? ` Cross-reference the "${category}" section of the cached blueprint.`
+    : '';
 
   const prompt = `Generate ${count} high-quality PANCE-style multiple-choice question(s) for the condition: ${condition}.${categoryRef}
 Use the cached PANCE blueprint and textbook content as the sole source for accuracy. Ensure the vignette, answer choices, and explanation are clinically accurate and aligned with the cached material.
@@ -93,7 +95,9 @@ Output valid JSON only, no markdown:
         maxOutputTokens: 4096,
         responseMimeType: 'application/json',
       },
-      cachedContent: cacheName.startsWith('cachedContents/') ? cacheName : `cachedContents/${cacheName}`,
+      cachedContent: cacheName.startsWith('cachedContents/')
+        ? cacheName
+        : `cachedContents/${cacheName}`,
     };
 
     const res = await fetch(
@@ -120,7 +124,11 @@ Output valid JSON only, no markdown:
       }>;
     };
     const text =
-      data.candidates?.[0]?.content?.parts?.map((p) => p.text).filter(Boolean).join('')?.trim() ?? '';
+      data.candidates?.[0]?.content?.parts
+        ?.map((p) => p.text)
+        .filter(Boolean)
+        .join('')
+        ?.trim() ?? '';
 
     let questions: Array<{
       question: string;
@@ -146,10 +154,10 @@ Output valid JSON only, no markdown:
       userId: auth.userId?.substring(0, 10),
     });
 
-    return new Response(
-      JSON.stringify({ data: { questions } }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ data: { questions } }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     logger.error('generate-deep error', {
       error: error instanceof Error ? error.message : String(error),

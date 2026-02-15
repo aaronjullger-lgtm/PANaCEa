@@ -323,7 +323,11 @@ Respond with JSON only: { "score": number 0-100, "briefReason": "string" }`;
         await discardStagingQuestion(prisma, question.id);
         results.push({ id: question.id, status: 'discarded', score });
       } else {
-        await flagForReview(prisma, question.id, `Critic score ${score}: ${json.briefReason || 'Review'}`);
+        await flagForReview(
+          prisma,
+          question.id,
+          `Critic score ${score}: ${json.briefReason || 'Review'}`
+        );
         results.push({ id: question.id, status: 'flagged_for_review', score });
       }
     } catch (error) {

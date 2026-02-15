@@ -82,7 +82,7 @@ class MemoryCache {
 
     // Estimate size
     const entrySize = this.estimateSize(entry);
-    
+
     // Check if we need to evict entries
     if (this.stats.size + entrySize > this.maxSize) {
       this.evictOldest();
@@ -94,7 +94,7 @@ class MemoryCache {
 
   get<T>(key: string): CacheEntry<T> | null {
     const entry = this.cache.get(key) as CacheEntry<T> | undefined;
-    
+
     if (!entry) {
       this.stats.misses++;
       return null;
@@ -161,9 +161,10 @@ class MemoryCache {
 
   getStats(): CacheStats {
     const totalRequests = this.stats.hits + this.stats.misses;
-    const avgResponseTime = this.stats.responseTimes.length > 0
-      ? this.stats.responseTimes.reduce((a, b) => a + b, 0) / this.stats.responseTimes.length
-      : 0;
+    const avgResponseTime =
+      this.stats.responseTimes.length > 0
+        ? this.stats.responseTimes.reduce((a, b) => a + b, 0) / this.stats.responseTimes.length
+        : 0;
 
     return {
       hits: this.stats.hits,
@@ -200,10 +201,8 @@ class PersistentCache {
     };
 
     try {
-      const serialized = options.serialize
-        ? options.serialize(entry)
-        : JSON.stringify(entry);
-      
+      const serialized = options.serialize ? options.serialize(entry) : JSON.stringify(entry);
+
       localStorage.setItem(this.prefix + key, serialized);
     } catch (error) {
       console.warn('Failed to persist cache entry:', error);
@@ -226,8 +225,8 @@ class PersistentCache {
       }
 
       const entry = options.deserialize
-        ? options.deserialize(item) as CacheEntry<T>
-        : JSON.parse(item) as CacheEntry<T>;
+        ? (options.deserialize(item) as CacheEntry<T>)
+        : (JSON.parse(item) as CacheEntry<T>);
 
       // Check if expired
       if (Date.now() - entry.timestamp > entry.ttl) {
@@ -252,7 +251,7 @@ class PersistentCache {
 
   clear(): void {
     if (!this.isAvailable()) return;
-    
+
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -260,8 +259,8 @@ class PersistentCache {
         keysToRemove.push(key);
       }
     }
-    
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
   }
 
   private isAvailable(): boolean {
@@ -298,7 +297,7 @@ class PersistentCache {
       }
     }
 
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
   }
 
   getEntryCount(): number {
@@ -345,25 +344,28 @@ export class MultiLayerCache {
 
   async set<T>(key: string, data: T, options: Partial<CacheOptions> = {}): Promise<void> {
     const mergedOptions = { ...this.options, ...options };
-    
+
     // Store in memory cache
     this.memoryCache.set(key, data, mergedOptions);
-    
+
     // Store in persistent cache if enabled
     if (mergedOptions.persist) {
       this.persistentCache.set(key, data, mergedOptions);
     }
   }
 
-  async get<T>(key: string, options: Partial<CacheOptions> = {}): Promise<{ data: T | null; source: 'memory' | 'persistent' | 'none' }> {
+  async get<T>(
+    key: string,
+    options: Partial<CacheOptions> = {}
+  ): Promise<{ data: T | null; source: 'memory' | 'persistent' | 'none' }> {
     const mergedOptions = { ...this.options, ...options };
-    
+
     // Try memory cache first
     const memoryEntry = this.memoryCache.get<T>(key);
     if (memoryEntry) {
       return { data: memoryEntry.data, source: 'memory' };
     }
-    
+
     // Try persistent cache if enabled
     if (mergedOptions.persist) {
       const persistentEntry = this.persistentCache.get<T>(key, mergedOptions);
@@ -373,7 +375,7 @@ export class MultiLayerCache {
         return { data: persistentEntry.data, source: 'persistent' };
       }
     }
-    
+
     return { data: null, source: 'none' };
   }
 
@@ -384,31 +386,33 @@ export class MultiLayerCache {
   ): Promise<{ data: T; source: 'cache' | 'network'; stale: boolean }> {
     const mergedOptions = { ...this.options, ...options };
     const cacheResult = await this.get<T>(key, mergedOptions);
-    
+
     if (cacheResult.data !== null) {
       const entry = this.memoryCache.get(key) || this.persistentCache.get(key, mergedOptions);
       const isStale = entry ? Date.now() - entry.timestamp > entry.ttl * 0.8 : false; // 80% of TTL
-      
+
       // If stale and staleWhileRevalidate is enabled, fetch in background
       if (isStale && mergedOptions.staleWhileRevalidate) {
-        fetchFn().then(freshData => {
-          this.set(key, freshData, mergedOptions);
-        }).catch(() => {
-          // Silently fail background refresh
-        });
+        fetchFn()
+          .then((freshData) => {
+            this.set(key, freshData, mergedOptions);
+          })
+          .catch(() => {
+            // Silently fail background refresh
+          });
       }
-      
+
       return {
         data: cacheResult.data,
         source: 'cache',
         stale: isStale,
       };
     }
-    
+
     // Cache miss, fetch from network
     const freshData = await fetchFn();
     await this.set(key, freshData, mergedOptions);
-    
+
     return {
       data: freshData,
       source: 'network',
@@ -429,7 +433,7 @@ export class MultiLayerCache {
   getStats(): CacheStats {
     const memoryStats = this.memoryCache.getStats();
     const persistentEntries = this.persistentCache.getEntryCount();
-    
+
     return {
       ...memoryStats,
       persistentEntries,
@@ -474,11 +478,14 @@ export function useCache<T = any>(
     }
   }, [key, fetchFn, cache, options]);
 
-  const setCacheData = useCallback((newData: T) => {
-    cache.set(key, newData, options);
-    setData(newData);
-    setSource('cache');
-  }, [key, cache, options]);
+  const setCacheData = useCallback(
+    (newData: T) => {
+      cache.set(key, newData, options);
+      setData(newData);
+      setSource('cache');
+    },
+    [key, cache, options]
+  );
 
   const invalidate = useCallback(() => {
     cache.delete(key);
@@ -527,11 +534,11 @@ export function useApiCache<T = any>(
 
   const fetchFn = useCallback(async (): Promise<T> => {
     const response = await fetch(url, fetchOptions);
-    
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     return response.json();
   }, [url, fetchOptions]);
 
@@ -559,7 +566,7 @@ export const CacheStrategies = {
   /**
    * Cache-First: Try cache, fall back to network
    */
-  cacheFirst: async <T,>(
+  cacheFirst: async <T>(
     key: string,
     fetchFn: () => Promise<T>,
     cache: MultiLayerCache,
@@ -569,7 +576,7 @@ export const CacheStrategies = {
     if (result.data !== null) {
       return result.data;
     }
-    
+
     const freshData = await fetchFn();
     await cache.set(key, freshData, options);
     return freshData;
@@ -578,7 +585,7 @@ export const CacheStrategies = {
   /**
    * Network-First: Try network, fall back to cache
    */
-  networkFirst: async <T,>(
+  networkFirst: async <T>(
     key: string,
     fetchFn: () => Promise<T>,
     cache: MultiLayerCache,
@@ -600,25 +607,25 @@ export const CacheStrategies = {
   /**
    * Stale-While-Revalidate: Return cached immediately, fetch fresh in background
    */
-  staleWhileRevalidate: async <T,>(
+  staleWhileRevalidate: async <T>(
     key: string,
     fetchFn: () => Promise<T>,
     cache: MultiLayerCache,
     options: CacheOptions = {}
   ): Promise<T> => {
     const result = await cache.get<T>(key, options);
-    
+
     // Fetch fresh data in background
     fetchFn()
-      .then(freshData => cache.set(key, freshData, options))
+      .then((freshData) => cache.set(key, freshData, options))
       .catch(() => {
         // Silently fail background refresh
       });
-    
+
     if (result.data !== null) {
       return result.data;
     }
-    
+
     // If no cache, wait for network
     const freshData = await fetchFn();
     await cache.set(key, freshData, options);
@@ -628,7 +635,7 @@ export const CacheStrategies = {
   /**
    * Cache-Only: Only use cache, never network
    */
-  cacheOnly: async <T,>(
+  cacheOnly: async <T>(
     key: string,
     cache: MultiLayerCache,
     options: CacheOptions = {}
@@ -640,9 +647,7 @@ export const CacheStrategies = {
   /**
    * Network-Only: Only use network, never cache
    */
-  networkOnly: async <T,>(
-    fetchFn: () => Promise<T>
-  ): Promise<T> => {
+  networkOnly: async <T>(fetchFn: () => Promise<T>): Promise<T> => {
     return fetchFn();
   },
 };
@@ -679,7 +684,7 @@ class CacheManager {
   }
 
   clearAll(): void {
-    this.caches.forEach(cache => cache.clear());
+    this.caches.forEach((cache) => cache.clear());
     this.caches.clear();
   }
 
@@ -708,30 +713,30 @@ export function createCachedFetch(
     cacheKey?: string
   ): Promise<T> {
     const key = cacheKey || `fetch:${url}:${JSON.stringify(options)}`;
-    
+
     const fetchFn = async (): Promise<T> => {
       const response = await fetch(url, options);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       // Extract cache headers
       const etag = response.headers.get('etag');
       const lastModified = response.headers.get('last-modified');
-      
+
       const data = await response.json();
-      
+
       // Store with cache headers
       await cache.set(key, data, {
         etag,
         lastModified,
         ttl: 5 * 60 * 1000, // 5 minutes default
       });
-      
+
       return data;
     };
-    
+
     return CacheStrategies[strategy](key, fetchFn, cache);
   };
 }

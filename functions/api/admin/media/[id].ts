@@ -204,7 +204,7 @@ export const onRequestDelete = withMiddleware(
       const storagePath =
         media.storagePath ??
         (media.originalUrl?.includes(`/${MEDIA_BUCKET}/`)
-          ? media.originalUrl.split(`/${MEDIA_BUCKET}/`)[1] ?? null
+          ? (media.originalUrl.split(`/${MEDIA_BUCKET}/`)[1] ?? null)
           : null);
 
       // Delete from Supabase Storage if path exists

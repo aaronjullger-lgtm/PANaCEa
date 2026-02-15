@@ -1,15 +1,15 @@
 /**
  * Veo Cameos Video Generation Service
- * 
+ *
  * Integrates with Google AI Studio's veo_cameos to generate dynamic video
  * loops for patient encounters based on clinical state.
- * 
+ *
  * Features:
  * - Pre-generate video libraries for common clinical states
  * - On-demand generation for custom scenarios
  * - Video caching and CDN distribution
  * - Seamless loop optimization
- * 
+ *
  * @module veoCameosService
  */
 
@@ -44,38 +44,54 @@ interface VeoGenerationResponse {
  */
 const VIDEO_PROMPT_TEMPLATES = {
   // Respiratory states
-  'copd_mild': '{{age}}yo {{gender}} in {{environment}}, sitting upright, mild dyspnea, nasal cannula, pursed-lip breathing, looking at camera',
-  'copd_severe': '{{age}}yo {{gender}} in {{environment}}, severe dyspnea, tripod position, accessory muscle use, high-flow oxygen, distressed expression',
-  'asthma_attack': '{{age}}yo {{gender}} in {{environment}}, acute asthma, sitting forward, anxious expression, respiratory distress, nebulizer mask',
-  
+  copd_mild:
+    '{{age}}yo {{gender}} in {{environment}}, sitting upright, mild dyspnea, nasal cannula, pursed-lip breathing, looking at camera',
+  copd_severe:
+    '{{age}}yo {{gender}} in {{environment}}, severe dyspnea, tripod position, accessory muscle use, high-flow oxygen, distressed expression',
+  asthma_attack:
+    '{{age}}yo {{gender}} in {{environment}}, acute asthma, sitting forward, anxious expression, respiratory distress, nebulizer mask',
+
   // Cardiovascular states
-  'chest_pain_cardiac': '{{age}}yo {{gender}} in {{environment}}, clutching chest, Levine sign, diaphoresis, grimacing, cardiac monitor visible',
-  'heart_failure': '{{age}}yo {{gender}} in {{environment}}, dyspnea, orthopnea, elevated head of bed, fatigued expression',
-  
+  chest_pain_cardiac:
+    '{{age}}yo {{gender}} in {{environment}}, clutching chest, Levine sign, diaphoresis, grimacing, cardiac monitor visible',
+  heart_failure:
+    '{{age}}yo {{gender}} in {{environment}}, dyspnea, orthopnea, elevated head of bed, fatigued expression',
+
   // Neurological states
-  'stroke_acute': '{{age}}yo {{gender}} in {{environment}}, facial droop, arm weakness, confused expression, CT scanner in background',
-  'seizure_postictal': '{{age}}yo {{gender}} in {{environment}}, confused, disoriented, fatigued, side-lying position',
-  
+  stroke_acute:
+    '{{age}}yo {{gender}} in {{environment}}, facial droop, arm weakness, confused expression, CT scanner in background',
+  seizure_postictal:
+    '{{age}}yo {{gender}} in {{environment}}, confused, disoriented, fatigued, side-lying position',
+
   // Pain states
-  'abdominal_pain_severe': '{{age}}yo {{gender}} in {{environment}}, curled in fetal position, grimacing, hands on abdomen',
-  'renal_colic': '{{age}}yo {{gender}} in {{environment}}, writhing in pain, unable to find comfortable position, severe distress',
-  
+  abdominal_pain_severe:
+    '{{age}}yo {{gender}} in {{environment}}, curled in fetal position, grimacing, hands on abdomen',
+  renal_colic:
+    '{{age}}yo {{gender}} in {{environment}}, writhing in pain, unable to find comfortable position, severe distress',
+
   // Trauma states
-  'trauma_stable': '{{age}}yo {{gender}} in {{environment}}, c-spine immobilization, alert, trauma bay setting',
-  'trauma_critical': '{{age}}yo {{gender}} in {{environment}}, trauma bay, multiple IVs, oxygen mask, resuscitation in progress',
-  
+  trauma_stable:
+    '{{age}}yo {{gender}} in {{environment}}, c-spine immobilization, alert, trauma bay setting',
+  trauma_critical:
+    '{{age}}yo {{gender}} in {{environment}}, trauma bay, multiple IVs, oxygen mask, resuscitation in progress',
+
   // Baseline/stable states
-  'stable_pleasant': '{{age}}yo {{gender}} in {{environment}}, calm, making eye contact, cooperative demeanor',
-  'stable_anxious': '{{age}}yo {{gender}} in {{environment}}, fidgeting, worried expression, frequent glances around',
-  'stable_confused': '{{age}}yo {{gender}} in {{environment}}, disoriented, puzzled expression, slow responses',
+  stable_pleasant:
+    '{{age}}yo {{gender}} in {{environment}}, calm, making eye contact, cooperative demeanor',
+  stable_anxious:
+    '{{age}}yo {{gender}} in {{environment}}, fidgeting, worried expression, frequent glances around',
+  stable_confused:
+    '{{age}}yo {{gender}} in {{environment}}, disoriented, puzzled expression, slow responses',
 };
 
 /**
  * Environment-specific scene descriptors.
  */
 const ENVIRONMENT_DESCRIPTORS = {
-  emergency_department: 'ED trauma bay with cardiac monitor, IV pole, medical equipment visible in background',
-  clinic: 'outpatient exam room with examination table, blood pressure cuff, neutral medical office decor',
+  emergency_department:
+    'ED trauma bay with cardiac monitor, IV pole, medical equipment visible in background',
+  clinic:
+    'outpatient exam room with examination table, blood pressure cuff, neutral medical office decor',
   home: 'residential living room with couch, home furnishings, natural lighting',
   ambulance: 'ambulance interior with medical equipment, stretcher, paramedic visible',
 };
@@ -132,7 +148,9 @@ export class VeoCameosService {
       loop: true,
       style: options.style ?? 'realistic',
       aspectRatio: '16:9',
-      referenceImages: demographics.referenceImageUrl ? [demographics.referenceImageUrl] : undefined,
+      referenceImages: demographics.referenceImageUrl
+        ? [demographics.referenceImageUrl]
+        : undefined,
     };
 
     // Submit generation request
@@ -174,11 +192,13 @@ export class VeoCameosService {
     request: VeoGenerationRequest
   ): Promise<VeoGenerationResponse> {
     try {
-      const endpoint = this.config.apiEndpoint ?? 'https://generativelanguage.googleapis.com/v1/models/veo-2:generate';
+      const endpoint =
+        this.config.apiEndpoint ??
+        'https://generativelanguage.googleapis.com/v1/models/veo-2:generate';
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
+          Authorization: `Bearer ${this.config.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -254,15 +274,14 @@ export class VeoCameosService {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       await new Promise((resolve) => setTimeout(resolve, intervalMs));
 
-      const endpoint = this.config.apiEndpoint ?? 'https://generativelanguage.googleapis.com/v1/models/veo-2:generate';
-      const response = await fetch(
-        `${endpoint}/operations/${videoId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.config.apiKey}`,
-          },
-        }
-      );
+      const endpoint =
+        this.config.apiEndpoint ??
+        'https://generativelanguage.googleapis.com/v1/models/veo-2:generate';
+      const response = await fetch(`${endpoint}/operations/${videoId}`, {
+        headers: {
+          Authorization: `Bearer ${this.config.apiKey}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to poll status: ${response.statusText}`);
@@ -295,7 +314,7 @@ export class VeoCameosService {
       }
     }
 
-    throw new Error(`Video generation timed out after ${maxAttempts * intervalMs / 1000}s`);
+    throw new Error(`Video generation timed out after ${(maxAttempts * intervalMs) / 1000}s`);
   }
 
   /**
@@ -313,7 +332,7 @@ export class VeoCameosService {
       try {
         const result = await this.generateVideo(stateId, demographics, environment);
         results.set(stateId, result);
-        
+
         // Rate limiting: wait 1s between requests
         await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (error) {

@@ -22,13 +22,17 @@ interface MobileComponentAuditProps {
 
 export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
   isOpen = false,
-  onClose
+  onClose,
 }) => {
   const [issues, setIssues] = useState<MobileComponentIssue[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [activeTab, setActiveTab] = useState<'issues' | 'components' | 'tests'>('issues');
-  const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
-  const [viewportHeight, setViewportHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 768);
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
+  const [viewportHeight, setViewportHeight] = useState(
+    typeof window !== 'undefined' ? window.innerHeight : 768
+  );
   const [deviceType, setDeviceType] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +46,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
       description: 'Hamburger menu may be difficult to reach with one hand on large phones',
       recommendation: 'Consider bottom navigation or reachable menu placement',
       testSteps: ['Try to open menu with thumb', 'Check if menu is reachable one-handed'],
-      mobileBreakpoints: ['< 768px']
+      mobileBreakpoints: ['< 768px'],
     },
     {
       component: 'Forms',
@@ -52,7 +56,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
       description: 'Form inputs may be difficult to tap accurately on mobile',
       recommendation: 'Increase input height to at least 44px and add sufficient padding',
       testSteps: ['Tap each form field', 'Check for accurate cursor placement'],
-      mobileBreakpoints: ['< 1024px']
+      mobileBreakpoints: ['< 1024px'],
     },
     {
       component: 'Modals/Dialogs',
@@ -62,7 +66,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
       description: 'Modals may overflow viewport or be difficult to dismiss',
       recommendation: 'Use full-screen modals on mobile with swipe-to-dismiss',
       testSteps: ['Open modal', 'Try to dismiss', 'Check content visibility'],
-      mobileBreakpoints: ['< 768px']
+      mobileBreakpoints: ['< 768px'],
     },
     {
       component: 'Buttons',
@@ -72,7 +76,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
       description: 'Buttons placed too close together may cause accidental taps',
       recommendation: 'Maintain at least 8px spacing between interactive elements',
       testSteps: ['Tap buttons rapidly', 'Check for accidental adjacent taps'],
-      mobileBreakpoints: ['< 1024px']
+      mobileBreakpoints: ['< 1024px'],
     },
     {
       component: 'Images/Media',
@@ -82,7 +86,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
       description: 'Large images may cause slow loading on mobile networks',
       recommendation: 'Use responsive images with srcset and lazy loading',
       testSteps: ['Check image loading times', 'Test on slow network'],
-      mobileBreakpoints: ['all']
+      mobileBreakpoints: ['all'],
     },
     {
       component: 'Tables',
@@ -90,9 +94,10 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
       issue: 'Horizontal scrolling required',
       severity: 'high',
       description: 'Tables may force horizontal scrolling on mobile',
-      recommendation: 'Use responsive table patterns (stacked, card-based, or horizontal scroll with indicators)',
+      recommendation:
+        'Use responsive table patterns (stacked, card-based, or horizontal scroll with indicators)',
       testSteps: ['Scroll table horizontally', 'Check content readability'],
-      mobileBreakpoints: ['< 768px']
+      mobileBreakpoints: ['< 768px'],
     },
     {
       component: 'Carousels',
@@ -102,7 +107,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
       description: 'Carousels may not respond to touch gestures',
       recommendation: 'Implement touch-friendly swipe gestures with momentum scrolling',
       testSteps: ['Swipe carousel', 'Check gesture responsiveness'],
-      mobileBreakpoints: ['< 1024px']
+      mobileBreakpoints: ['< 1024px'],
     },
     {
       component: 'Dropdowns',
@@ -112,7 +117,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
       description: 'Dropdown menus may open outside viewport bounds',
       recommendation: 'Ensure dropdowns open within viewport with proper positioning',
       testSteps: ['Open dropdowns', 'Check visibility on screen edges'],
-      mobileBreakpoints: ['< 768px']
+      mobileBreakpoints: ['< 768px'],
     },
     {
       component: 'Text Inputs',
@@ -122,7 +127,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
       description: 'Virtual keyboard may cover focused input fields',
       recommendation: 'Scroll input into view when keyboard appears',
       testSteps: ['Focus input fields', 'Check keyboard interaction'],
-      mobileBreakpoints: ['< 768px']
+      mobileBreakpoints: ['< 768px'],
     },
     {
       component: 'Loading States',
@@ -132,8 +137,8 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
       description: 'Content may jump around during loading',
       recommendation: 'Implement skeleton screens for better perceived performance',
       testSteps: ['Trigger loading states', 'Check layout stability'],
-      mobileBreakpoints: ['all']
-    }
+      mobileBreakpoints: ['all'],
+    },
   ];
 
   useEffect(() => {
@@ -142,7 +147,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
       const height = window.innerHeight;
       setViewportWidth(width);
       setViewportHeight(height);
-      
+
       if (width < 768) {
         setDeviceType('mobile');
       } else if (width < 1024) {
@@ -164,7 +169,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
     // Check for common mobile component patterns
     commonMobileIssues.forEach((template, index) => {
       // Check if this issue is relevant for current viewport
-      const isRelevant = template.mobileBreakpoints.some(breakpoint => {
+      const isRelevant = template.mobileBreakpoints.some((breakpoint) => {
         if (breakpoint === 'all') return true;
         if (breakpoint.startsWith('<')) {
           const maxWidth = parseInt(breakpoint.replace('<', '').trim());
@@ -176,12 +181,12 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
       if (isRelevant) {
         // Find affected elements
         const affectedSelectors = findAffectedElements(template.component, template.type);
-        
+
         if (affectedSelectors.length > 0 || template.severity === 'high') {
           newIssues.push({
             id: `mobile-issue-${index}`,
             ...template,
-            affectedSelectors
+            affectedSelectors,
           });
         }
       }
@@ -202,12 +207,14 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
 
   const findAffectedElements = (component: string, type: string): string[] => {
     const selectors: string[] = [];
-    
+
     switch (component) {
-      case 'Navigation':
+      case 'Navigation': {
         // Look for hamburger menus
-        const hamburgers = document.querySelectorAll('[aria-label*="menu"], [aria-label*="navigation"], .hamburger, .menu-toggle');
-        hamburgers.forEach(el => {
+        const hamburgers = document.querySelectorAll(
+          '[aria-label*="menu"], [aria-label*="navigation"], .hamburger, .menu-toggle'
+        );
+        hamburgers.forEach((el) => {
           if (el instanceof HTMLElement) {
             const rect = el.getBoundingClientRect();
             // Check if menu is in hard-to-reach area (top corners)
@@ -217,11 +224,11 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
           }
         });
         break;
-        
-      case 'Forms':
+      }
+      case 'Forms': {
         // Check form input sizes
         const inputs = document.querySelectorAll('input, select, textarea');
-        inputs.forEach(el => {
+        inputs.forEach((el) => {
           if (el instanceof HTMLElement) {
             const rect = el.getBoundingClientRect();
             if (rect.height < 44) {
@@ -230,11 +237,11 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
           }
         });
         break;
-        
-      case 'Modals/Dialogs':
+      }
+      case 'Modals/Dialogs': {
         // Check modal sizes
         const modals = document.querySelectorAll('[role="dialog"], .modal, .dialog');
-        modals.forEach(el => {
+        modals.forEach((el) => {
           if (el instanceof HTMLElement) {
             const rect = el.getBoundingClientRect();
             if (rect.width > viewportWidth * 0.9) {
@@ -243,11 +250,11 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
           }
         });
         break;
-        
-      case 'Tables':
+      }
+      case 'Tables': {
         // Check for horizontally scrolling tables
         const tables = document.querySelectorAll('table');
-        tables.forEach(el => {
+        tables.forEach((el) => {
           if (el instanceof HTMLElement) {
             const rect = el.getBoundingClientRect();
             if (rect.width > viewportWidth) {
@@ -256,15 +263,16 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
           }
         });
         break;
+      }
     }
-    
+
     return selectors;
   };
 
   const checkSpecificComponentIssues = (issues: MobileComponentIssue[]) => {
     // Check for viewport overflow
     const overflowingElements = document.querySelectorAll('*');
-    overflowingElements.forEach(el => {
+    overflowingElements.forEach((el) => {
       if (el instanceof HTMLElement) {
         const rect = el.getBoundingClientRect();
         if (rect.right > viewportWidth || rect.left < 0) {
@@ -280,7 +288,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
               recommendation: 'Add overflow-x: hidden or make element responsive',
               testSteps: ['Scroll horizontally', 'Check element bounds'],
               mobileBreakpoints: [`< ${viewportWidth + 100}px`],
-              affectedSelectors: [getElementSelector(el)]
+              affectedSelectors: [getElementSelector(el)],
             });
           }
         }
@@ -289,7 +297,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
 
     // Check for fixed elements that might overlap
     const fixedElements = document.querySelectorAll('*[style*="fixed"], .fixed, .sticky');
-    fixedElements.forEach(el => {
+    fixedElements.forEach((el) => {
       if (el instanceof HTMLElement) {
         const rect = el.getBoundingClientRect();
         // Check if fixed element covers important content
@@ -304,7 +312,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
             recommendation: 'Consider making element dismissible or less intrusive on mobile',
             testSteps: ['Scroll page', 'Check content visibility'],
             mobileBreakpoints: [`< ${viewportWidth}px`],
-            affectedSelectors: [getElementSelector(el)]
+            affectedSelectors: [getElementSelector(el)],
           });
         }
       }
@@ -313,21 +321,21 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
 
   const getElementSelector = (element: HTMLElement): string => {
     if (element.id) return `#${element.id}`;
-    
+
     let selector = element.tagName.toLowerCase();
     if (element.className && typeof element.className === 'string') {
-      const classes = element.className.split(' ').filter(c => c.length > 0);
+      const classes = element.className.split(' ').filter((c) => c.length > 0);
       if (classes.length > 0) {
         selector += `.${classes.join('.')}`;
       }
     }
-    
+
     return selector;
   };
 
   const highlightElement = (selector: string) => {
     // Remove previous highlights
-    document.querySelectorAll('.mobile-component-highlight').forEach(el => {
+    document.querySelectorAll('.mobile-component-highlight').forEach((el) => {
       el.classList.remove('mobile-component-highlight');
     });
 
@@ -348,7 +356,9 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
     // For now, we'll just update the viewport display
     setViewportWidth(width);
     setViewportHeight(height);
-    alert(`Simulating viewport: ${width}×${height}px\nUse browser devtools for actual viewport simulation.`);
+    alert(
+      `Simulating viewport: ${width}×${height}px\nUse browser devtools for actual viewport simulation.`
+    );
   };
 
   useEffect(() => {
@@ -360,7 +370,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
   useEffect(() => {
     return () => {
       // Clean up highlights
-      document.querySelectorAll('.mobile-component-highlight').forEach(el => {
+      document.querySelectorAll('.mobile-component-highlight').forEach((el) => {
         el.classList.remove('mobile-component-highlight');
       });
     };
@@ -368,27 +378,38 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
 
   const severityColor = (severity: MobileComponentIssue['severity']) => {
     switch (severity) {
-      case 'high': return 'text-[var(--color-data-fail)]';
-      case 'medium': return 'text-[var(--color-data-provisional)]';
-      case 'low': return 'text-[var(--color-data-pass)]';
+      case 'high':
+        return 'text-[var(--color-data-fail)]';
+      case 'medium':
+        return 'text-[var(--color-data-provisional)]';
+      case 'low':
+        return 'text-[var(--color-data-pass)]';
     }
   };
 
   const severityBg = (severity: MobileComponentIssue['severity']) => {
     switch (severity) {
-      case 'high': return 'bg-[var(--color-data-fail)]/10';
-      case 'medium': return 'bg-[var(--color-data-provisional)]/10';
-      case 'low': return 'bg-[var(--color-data-pass)]/10';
+      case 'high':
+        return 'bg-[var(--color-data-fail)]/10';
+      case 'medium':
+        return 'bg-[var(--color-data-provisional)]/10';
+      case 'low':
+        return 'bg-[var(--color-data-pass)]/10';
     }
   };
 
   const typeIcon = (type: MobileComponentIssue['type']) => {
     switch (type) {
-      case 'layout': return '📐';
-      case 'navigation': return '🧭';
-      case 'interaction': return '👆';
-      case 'performance': return '⚡';
-      case 'accessibility': return '♿';
+      case 'layout':
+        return '📐';
+      case 'navigation':
+        return '🧭';
+      case 'interaction':
+        return '👆';
+      case 'performance':
+        return '⚡';
+      case 'accessibility':
+        return '♿';
     }
   };
 
@@ -398,7 +419,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
     { label: 'Pixel 5', width: 393, height: 851 },
     { label: 'iPad Mini', width: 768, height: 1024 },
     { label: 'iPad Air', width: 820, height: 1180 },
-    { label: 'Desktop', width: 1440, height: 900 }
+    { label: 'Desktop', width: 1440, height: 900 },
   ];
 
   return (
@@ -424,15 +445,12 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                     Mobile Component Audit
                   </h2>
                   <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                    Viewport: {viewportWidth}×{viewportHeight}px • Device: {deviceType} • Issues: {issues.length}
+                    Viewport: {viewportWidth}×{viewportHeight}px • Device: {deviceType} • Issues:{' '}
+                    {issues.length}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <StandardButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={onClose}
-                  >
+                  <StandardButton variant="ghost" size="sm" onClick={onClose}>
                     Close
                   </StandardButton>
                 </div>
@@ -501,7 +519,8 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                         No Mobile Issues Found
                       </h4>
                       <p className="text-[var(--color-text-muted)]">
-                        All components appear to be mobile-friendly at {viewportWidth}×{viewportHeight}px.
+                        All components appear to be mobile-friendly at {viewportWidth}×
+                        {viewportHeight}px.
                       </p>
                     </div>
                   ) : (
@@ -517,7 +536,9 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <span className="text-lg">{typeIcon(issue.type)}</span>
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${severityBg(issue.severity)} ${severityColor(issue.severity)}`}>
+                                <span
+                                  className={`px-2 py-1 rounded text-xs font-medium ${severityBg(issue.severity)} ${severityColor(issue.severity)}`}
+                                >
                                   {issue.severity.toUpperCase()}
                                 </span>
                                 <span className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -527,23 +548,29 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                                   {issue.type}
                                 </span>
                               </div>
-                              
+
                               <h4 className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">
                                 {issue.issue}
                               </h4>
-                              
+
                               <p className="text-sm text-[var(--color-text-secondary)] mb-3">
                                 {issue.description}
                               </p>
-                              
+
                               <div className="mb-3">
-                                <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">Recommendation</p>
-                                <p className="text-sm text-[var(--color-text-primary)]">{issue.recommendation}</p>
+                                <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                                  Recommendation
+                                </p>
+                                <p className="text-sm text-[var(--color-text-primary)]">
+                                  {issue.recommendation}
+                                </p>
                               </div>
-                              
+
                               {issue.affectedSelectors.length > 0 && (
                                 <div className="mb-3">
-                                  <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">Affected Elements</p>
+                                  <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                                    Affected Elements
+                                  </p>
                                   <div className="flex flex-wrap gap-2">
                                     {issue.affectedSelectors.map((selector, idx) => (
                                       <button
@@ -557,20 +584,24 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                                   </div>
                                 </div>
                               )}
-                              
+
                               <div>
-                                <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">Test Steps</p>
+                                <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                                  Test Steps
+                                </p>
                                 <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
                                   {issue.testSteps.map((step, idx) => (
                                     <li key={idx} className="flex items-start gap-2">
-                                      <span className="text-[var(--color-text-muted)]">{idx + 1}.</span>
+                                      <span className="text-[var(--color-text-muted)]">
+                                        {idx + 1}.
+                                      </span>
                                       <span>{step}</span>
                                     </li>
                                   ))}
                                 </ul>
                               </div>
                             </div>
-                            
+
                             <div className="flex flex-col gap-2 ml-4">
                               <StandardButton
                                 variant="outline"
@@ -603,7 +634,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                     <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-4">
                       Mobile Component Patterns
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {[
                         {
@@ -611,61 +642,76 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                           icon: '👇',
                           description: 'Place primary navigation at bottom for thumb reachability',
                           implementation: 'Use fixed positioning with safe area insets',
-                          components: ['NavRail', 'BottomTabBar']
+                          components: ['NavRail', 'BottomTabBar'],
                         },
                         {
                           title: 'Responsive Tables',
                           icon: '📊',
-                          description: 'Stack table rows or enable horizontal scroll with indicators',
+                          description:
+                            'Stack table rows or enable horizontal scroll with indicators',
                           implementation: 'CSS grid or flexbox with overflow-x: auto',
-                          components: ['DataTable', 'ResponsiveTable']
+                          components: ['DataTable', 'ResponsiveTable'],
                         },
                         {
                           title: 'Touch-Friendly Forms',
                           icon: '📝',
                           description: 'Large inputs with proper spacing and keyboard management',
                           implementation: 'min-height: 44px, inputmode attributes',
-                          components: ['Form', 'Input', 'Select']
+                          components: ['Form', 'Input', 'Select'],
                         },
                         {
                           title: 'Swipeable Carousels',
                           icon: '🔄',
                           description: 'Implement touch gestures with momentum and boundaries',
                           implementation: 'touch-action: pan-y, transform transitions',
-                          components: ['Carousel', 'ImageGallery']
+                          components: ['Carousel', 'ImageGallery'],
                         },
                         {
                           title: 'Full-Screen Modals',
                           icon: '📱',
                           description: 'Modals that fill screen on mobile with swipe-to-dismiss',
                           implementation: 'position: fixed, overscroll-behavior: contain',
-                          components: ['Modal', 'Dialog', 'Drawer']
+                          components: ['Modal', 'Dialog', 'Drawer'],
                         },
                         {
                           title: 'Adaptive Typography',
                           icon: 'A',
                           description: 'Font sizes that scale appropriately for screen size',
                           implementation: 'clamp() function, CSS custom properties',
-                          components: ['Typography', 'Text']
-                        }
+                          components: ['Typography', 'Text'],
+                        },
                       ].map((pattern, index) => (
-                        <div key={index} className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4">
+                        <div
+                          key={index}
+                          className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4"
+                        >
                           <div className="flex items-center gap-3 mb-3">
                             <span className="text-2xl">{pattern.icon}</span>
-                            <h4 className="font-medium text-[var(--color-text-primary)]">{pattern.title}</h4>
+                            <h4 className="font-medium text-[var(--color-text-primary)]">
+                              {pattern.title}
+                            </h4>
                           </div>
-                          <p className="text-sm text-[var(--color-text-secondary)] mb-3">{pattern.description}</p>
+                          <p className="text-sm text-[var(--color-text-secondary)] mb-3">
+                            {pattern.description}
+                          </p>
                           <div className="mb-3">
-                            <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">Implementation</p>
+                            <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                              Implementation
+                            </p>
                             <code className="text-xs bg-[var(--color-bg-tertiary)] px-2 py-1 rounded block">
                               {pattern.implementation}
                             </code>
                           </div>
                           <div>
-                            <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">Components</p>
+                            <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                              Components
+                            </p>
                             <div className="flex flex-wrap gap-1">
                               {pattern.components.map((comp, idx) => (
-                                <span key={idx} className="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-2 py-1 rounded">
+                                <span
+                                  key={idx}
+                                  className="text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-2 py-1 rounded"
+                                >
                                   {comp}
                                 </span>
                               ))}
@@ -684,36 +730,43 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                     <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-4">
                       Mobile Testing Suite
                     </h3>
-                    
+
                     <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Manual Tests</h4>
+                          <h4 className="font-medium text-[var(--color-text-primary)] mb-3">
+                            Manual Tests
+                          </h4>
                           <div className="space-y-4">
                             {[
                               'Test one-handed operation (thumb reach)',
                               'Check form input accuracy',
-                              'Verify keyboard doesn\'t cover inputs',
+                              "Verify keyboard doesn't cover inputs",
                               'Test swipe gestures on carousels',
                               'Check modal dismissal (tap outside, swipe)',
                               'Verify touch target sizes (44px minimum)',
                               'Test in both portrait and landscape',
                               'Check loading states and skeletons',
                               'Verify no horizontal scrolling',
-                              'Test with increased font size'
+                              'Test with increased font size',
                             ].map((test, idx) => (
                               <div key={idx} className="flex items-start gap-3">
                                 <input type="checkbox" id={`test-${idx}`} className="mt-1" />
-                                <label htmlFor={`test-${idx}`} className="text-sm text-[var(--color-text-secondary)] flex-1">
+                                <label
+                                  htmlFor={`test-${idx}`}
+                                  className="text-sm text-[var(--color-text-secondary)] flex-1"
+                                >
                                   {test}
                                 </label>
                               </div>
                             ))}
                           </div>
                         </div>
-                        
+
                         <div>
-                          <h4 className="font-medium text-[var(--color-text-primary)] mb-3">Automated Checks</h4>
+                          <h4 className="font-medium text-[var(--color-text-primary)] mb-3">
+                            Automated Checks
+                          </h4>
                           <div className="space-y-4">
                             <div className="p-4 border border-[var(--color-border)] rounded-lg">
                               <div className="flex items-center justify-between mb-2">
@@ -726,7 +779,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                                 Checking for viewport meta tag and responsive design
                               </p>
                             </div>
-                            
+
                             <div className="p-4 border border-[var(--color-border)] rounded-lg">
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-medium">Touch Target Audit</span>
@@ -735,10 +788,11 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                                 </span>
                               </div>
                               <p className="text-xs text-[var(--color-text-muted)]">
-                                {issues.filter(i => i.type === 'interaction').length} interaction issues found
+                                {issues.filter((i) => i.type === 'interaction').length} interaction
+                                issues found
                               </p>
                             </div>
-                            
+
                             <div className="p-4 border border-[var(--color-border)] rounded-lg">
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-medium">Performance Check</span>
@@ -750,7 +804,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                                 Checking for unoptimized images and heavy components
                               </p>
                             </div>
-                            
+
                             <div className="p-4 border border-[var(--color-border)] rounded-lg">
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-medium">Accessibility Scan</span>
@@ -763,9 +817,11 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                               </p>
                             </div>
                           </div>
-                          
+
                           <div className="mt-6">
-                            <h5 className="font-medium text-[var(--color-text-primary)] mb-2">Testing Tools</h5>
+                            <h5 className="font-medium text-[var(--color-text-primary)] mb-2">
+                              Testing Tools
+                            </h5>
                             <div className="flex flex-wrap gap-2">
                               <button className="px-3 py-1 text-xs border border-[var(--color-border)] rounded hover:bg-[var(--color-bg-tertiary)]">
                                 Lighthouse
@@ -794,9 +850,13 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                 <div className="text-sm text-[var(--color-text-muted)]">
                   {issues.length > 0 ? (
                     <span>
-                      Found <span className="font-medium text-[var(--color-text-primary)]">{issues.length}</span> mobile component issues • 
-                      High: {issues.filter(i => i.severity === 'high').length} • 
-                      Medium: {issues.filter(i => i.severity === 'medium').length}
+                      Found{' '}
+                      <span className="font-medium text-[var(--color-text-primary)]">
+                        {issues.length}
+                      </span>{' '}
+                      mobile component issues • High:{' '}
+                      {issues.filter((i) => i.severity === 'high').length} • Medium:{' '}
+                      {issues.filter((i) => i.severity === 'medium').length}
                     </span>
                   ) : (
                     <span>All components pass mobile usability checks</span>
@@ -807,7 +867,7 @@ export const MobileComponentAudit: React.FC<MobileComponentAuditProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      document.querySelectorAll('.mobile-component-highlight').forEach(el => {
+                      document.querySelectorAll('.mobile-component-highlight').forEach((el) => {
                         el.classList.remove('mobile-component-highlight');
                       });
                     }}

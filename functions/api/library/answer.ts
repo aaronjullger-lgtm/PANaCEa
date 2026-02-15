@@ -70,7 +70,10 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
   };
 
   try {
-    validateFunctionEnv(env as unknown as Record<string, unknown>, ['GEMINI_API_KEY', 'DATABASE_URL']);
+    validateFunctionEnv(env as unknown as Record<string, unknown>, [
+      'GEMINI_API_KEY',
+      'DATABASE_URL',
+    ]);
   } catch (e) {
     if (e instanceof MissingEnvError) return e.toResponse();
     throw e;
@@ -99,7 +102,11 @@ export const onRequestPost = authenticatedEndpoint(BodySchema, async (context) =
 
     if (rows.length === 0) {
       return {
-        data: { answer: null, results: [], message: 'No reference content found for this question.' },
+        data: {
+          answer: null,
+          results: [],
+          message: 'No reference content found for this question.',
+        },
         headers: { 'Cache-Control': 'private, max-age=60' },
       };
     }

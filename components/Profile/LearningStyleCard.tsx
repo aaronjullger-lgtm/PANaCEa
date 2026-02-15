@@ -63,11 +63,15 @@ export const LearningStyleCard: React.FC<LearningStyleCardProps> = ({ className 
         });
 
         if (!response.ok) {
-          const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string };
+          const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
+            error?: string;
+          };
           throw new Error(errorData.error || `HTTP ${response.status}`);
         }
 
-        const data = (await response.json()) as { profile?: { learningStyle?: LearningStyleProfile | null } };
+        const data = (await response.json()) as {
+          profile?: { learningStyle?: LearningStyleProfile | null };
+        };
         if (data.profile?.learningStyle != null) {
           setProfile(data.profile.learningStyle);
         }

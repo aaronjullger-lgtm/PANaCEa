@@ -1,8 +1,8 @@
 /**
  * State Machine Generator
- * 
+ *
  * Uses Gemini to generate PatientAVStateMachine JSON for clinical cases.
- * 
+ *
  * Usage:
  * ```bash
  * npx ts-node scripts/generators/stateMachine-generator.ts "Shortness of Breath" "COPD"
@@ -10,7 +10,11 @@
  */
 
 import { StateMachineBuilder } from '../../services/av/patientAVEngine';
-import type { PatientAVStateMachine, ClinicalTrigger, AVState } from '../../types/patient-av-state-machine';
+import type {
+  PatientAVStateMachine,
+  ClinicalTrigger,
+  AVState,
+} from '../../types/patient-av-state-machine';
 
 // Gemini API configuration
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
@@ -195,10 +199,12 @@ function generateFallbackStateMachine(
  */
 async function main() {
   const args = process.argv.slice(2);
-  
+
   if (args.length < 2) {
     console.log('Usage: ts-node stateMachine-generator.ts <chiefComplaint> <diagnosis>');
-    console.log('Example: ts-node stateMachine-generator.ts "Shortness of Breath" "COPD Exacerbation"');
+    console.log(
+      'Example: ts-node stateMachine-generator.ts "Shortness of Breath" "COPD Exacerbation"'
+    );
     process.exit(1);
   }
 
@@ -210,7 +216,7 @@ async function main() {
 
   try {
     const stateMachine = await generateStateMachine(chiefComplaint!, diagnosis!);
-    
+
     console.log('State Machine Generated Successfully!');
     console.log('---');
     console.log(JSON.stringify(stateMachine, null, 2));
@@ -221,14 +227,14 @@ async function main() {
     console.error('Failed to generate state machine:', error);
     console.log('---');
     console.log('Using fallback state machine instead...');
-    
+
     const fallback = generateFallbackStateMachine(
       'case-fallback',
       'Test Patient',
       chiefComplaint!,
       diagnosis!
     );
-    
+
     console.log(JSON.stringify(fallback, null, 2));
   }
 }

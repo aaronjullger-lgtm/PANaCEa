@@ -128,7 +128,11 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
       const response = await fetch(`/api/admin/media/pending?${params}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
-      const data = (await response.json()) as { success?: boolean; media?: MediaAsset[]; stats?: ApprovalStats | null };
+      const data = (await response.json()) as {
+        success?: boolean;
+        media?: MediaAsset[];
+        stats?: ApprovalStats | null;
+      };
       if (data.success) {
         setPendingMedia(data.media ?? []);
         setStats(data.stats ?? null);

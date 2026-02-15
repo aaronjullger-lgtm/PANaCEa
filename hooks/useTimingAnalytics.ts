@@ -1,6 +1,6 @@
 /**
  * Timing Analytics Hook
- * 
+ *
  * Tracks timing metrics and conversation paths during OSCE sessions.
  */
 
@@ -36,7 +36,12 @@ export function useTimingAnalytics({
    * Start a timing metric.
    */
   const startMetric = useCallback(
-    (name: string, type: TimingMetric['type'], significance?: TimingMetric['significance'], targetDuration?: number) => {
+    (
+      name: string,
+      type: TimingMetric['type'],
+      significance?: TimingMetric['significance'],
+      targetDuration?: number
+    ) => {
       if (!sessionId) return null;
       return service.startMetric(sessionId, name, type, significance, targetDuration);
     },
@@ -50,7 +55,7 @@ export function useTimingAnalytics({
     (metricId: string) => {
       if (!sessionId) return;
       service.endMetric(sessionId, metricId);
-      
+
       // Update current metrics
       const snapshot = service.getSnapshot(sessionId);
       if (snapshot) {
@@ -64,7 +69,12 @@ export function useTimingAnalytics({
    * Record a conversation node.
    */
   const recordNode = useCallback(
-    (type: 'question' | 'action' | 'finding' | 'decision', content: string, parentId?: string, relevanceScore?: number) => {
+    (
+      type: 'question' | 'action' | 'finding' | 'decision',
+      content: string,
+      parentId?: string,
+      relevanceScore?: number
+    ) => {
       if (!sessionId) return null;
       return service.recordConversationNode(sessionId, type, content, parentId, relevanceScore);
     },

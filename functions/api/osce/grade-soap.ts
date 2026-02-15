@@ -87,69 +87,62 @@ function validateChecklistResponse(items: unknown[]): ChecklistItem[] {
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(
-  GradeSoapBodySchema,
-  async (context) => {
-    const { request, env, validated, auth } = context as {
-      request: Request;
-      env: { GEMINI_API_KEY?: string; DATABASE_URL?: string; RATE_LIMIT_KV?: KVNamespace };
-      validated: z.infer<typeof GradeSoapBodySchema>;
-      auth: { userId: string };
-    };
-    const log = createEndpointLogger('/api/osce/grade-soap', auth.userId);
+export const onRequestPost = authenticatedEndpoint(GradeSoapBodySchema, async (context) => {
+  const { request, env, validated, auth } = context as {
+    request: Request;
+    env: { GEMINI_API_KEY?: string; DATABASE_URL?: string; RATE_LIMIT_KV?: KVNamespace };
+    validated: z.infer<typeof GradeSoapBodySchema>;
+    auth: { userId: string };
+  };
+  const log = createEndpointLogger('/api/osce/grade-soap', auth.userId);
 
-    try {
-      validateFunctionEnv(env as unknown as Record<string, unknown>, 'GEMINI');
-    } catch (e) {
-      if (e instanceof MissingEnvError) return e.toResponse();
-      throw e;
+  try {
+    validateFunctionEnv(env as unknown as Record<string, unknown>, 'GEMINI');
+  } catch (e) {
+    if (e instanceof MissingEnvError) return e.toResponse();
+    throw e;
+  }
+
+  const identifier = getRateLimitIdentifier(request);
+  const { response: rateLimitResponse } = await withRateLimit(env, identifier, 'gemini');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const { sessionId, soapNote } = validated.body;
+  const prisma = createEdgePrismaClient(env.DATABASE_URL!) as EdgePrismaClient;
+
+  try {
+    const user = await resolveUserByClerkId(prisma, auth.userId);
+    if (!user) {
+      return { status: 404, error: 'User not found' };
     }
 
-    const identifier = getRateLimitIdentifier(request);
-    const { response: rateLimitResponse } = await withRateLimit(
-      env,
-      identifier,
-      'gemini'
-    );
-    if (rateLimitResponse) return rateLimitResponse;
+    const session = await prisma.patientEncounterSession.findFirst({
+      where: { id: sessionId, userId: user.id },
+      include: {
+        PatientEncounterCase: true,
+      },
+    });
+    if (!session) {
+      return { status: 404, error: 'Session not found' };
+    }
+    if (session.status !== 'completed') {
+      return { status: 400, error: 'Session must be completed before grading SOAP note' };
+    }
 
-    const { sessionId, soapNote } = validated.body;
-    const prisma = createEdgePrismaClient(env.DATABASE_URL!) as EdgePrismaClient;
+    const rubric = await prisma.caseRubric.findUnique({
+      where: { caseId: session.caseId },
+      select: { checklist: true },
+    });
+    const rubricItems =
+      rubric && Array.isArray(rubric.checklist) ? parseRubricChecklist(rubric.checklist) : [];
+    const checklistText =
+      rubricItems.length > 0
+        ? rubricItems
+            .map((r) => `- ${rubricItemLabel(r)}${r.isRedFlag ? ' [RED FLAG]' : ''}`)
+            .join('\n')
+        : '- Subjective\n- Objective\n- Assessment\n- Plan';
 
-    try {
-      const user = await resolveUserByClerkId(prisma, auth.userId);
-      if (!user) {
-        return { status: 404, error: 'User not found' };
-      }
-
-      const session = await prisma.patientEncounterSession.findFirst({
-        where: { id: sessionId, userId: user.id },
-        include: {
-          PatientEncounterCase: true,
-        },
-      });
-      if (!session) {
-        return { status: 404, error: 'Session not found' };
-      }
-      if (session.status !== 'completed') {
-        return { status: 400, error: 'Session must be completed before grading SOAP note' };
-      }
-
-      const rubric = await prisma.caseRubric.findUnique({
-        where: { caseId: session.caseId },
-        select: { checklist: true },
-      });
-      const rubricItems = rubric && Array.isArray(rubric.checklist)
-        ? parseRubricChecklist(rubric.checklist)
-        : [];
-      const checklistText =
-        rubricItems.length > 0
-          ? rubricItems
-              .map((r) => `- ${rubricItemLabel(r)}${r.isRedFlag ? ' [RED FLAG]' : ''}`)
-              .join('\n')
-          : '- Subjective\n- Objective\n- Assessment\n- Plan';
-
-      const systemPrompt = `You are a senior PA faculty grading a student's SOAP note against a rubric.
+    const systemPrompt = `You are a senior PA faculty grading a student's SOAP note against a rubric.
 Use semantic matching: e.g. "Dad died young" matches "Family history of sudden death". Do not require exact keywords.
 For each rubric item, mark PASS if the student's note addresses that concept (same meaning); otherwise mark FAIL.
 If a rubric item is marked [RED FLAG] and the student did NOT address it, mark that item as FAIL and in feedback write "CRITICAL: Red flag item missing."
@@ -157,7 +150,7 @@ Compute an overall clinicalReasoningScore 0-100 based on completeness and accura
 Respond with ONLY a JSON object in this exact shape (no markdown, no code fence):
 {"checklist": [{"item": "exact rubric item/concept text", "status": "PASS" or "FAIL", "feedback": "brief feedback"}], "clinicalReasoningScore": number 0-100}`;
 
-      const soapUserPrompt = `Rubric checklist:
+    const soapUserPrompt = `Rubric checklist:
 ${checklistText}
 
 Student SOAP note:
@@ -165,77 +158,82 @@ ${soapNote}
 
 Output your grading as a single JSON object only.`;
 
-      let rawText: string;
-      try {
-        rawText = await callGemini(env.GEMINI_API_KEY!, systemPrompt, soapUserPrompt);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        log.warn('Gemini SOAP grade error', { msg: msg.slice(0, 200) });
-        return {
-          status: 502,
-          error: msg.startsWith('Gemini 429') ? 'Rate limit exceeded' : 'Grading service failed',
-        };
-      }
-
-      const stripped = rawText.replaceAll(/```json|```/gi, '').trim();
-      let parsed: { checklist?: unknown[]; clinicalReasoningScore?: number };
-      try {
-        parsed = JSON.parse(stripped) as { checklist?: unknown[]; clinicalReasoningScore?: number };
-      } catch {
-        log.error('Failed to parse Gemini SOAP JSON', { raw: stripped.slice(0, 300) });
-        return { status: 502, error: 'Invalid grading response format' };
-      }
-
-      const checklist = Array.isArray(parsed.checklist)
-        ? validateChecklistResponse(parsed.checklist)
-        : [];
-      const clinicalReasoningScore = Number(parsed.clinicalReasoningScore);
-      const score =
-        typeof clinicalReasoningScore === 'number' && clinicalReasoningScore >= 0 && clinicalReasoningScore <= 100
-          ? clinicalReasoningScore
-          : 0;
-
-      const redFlagsMissed = rubricItems
-        .filter((r) => r.isRedFlag)
-        .filter((r) => {
-          const label = rubricItemLabel(r);
-          return checklist.find((c) => c.item === label)?.status === 'FAIL';
-        })
-        .map((r) => rubricItemLabel(r));
-
-      const FAILING_CAP = 59;
-      const finalScore = redFlagsMissed.length > 0 ? Math.min(score, FAILING_CAP) : score;
-      const finalClinicalReasoning = redFlagsMissed.length > 0 ? Math.min(score, FAILING_CAP) : score;
-
-      const existingResult = await prisma.osceResult.findUnique({ where: { sessionId } });
-      const data = {
-        score: finalScore,
-        checklist: checklist as unknown as object,
-        redFlagsMissed,
-        clinicalReasoningScore: finalClinicalReasoning,
-        billingCodeSuggestion: null as string | null,
-      };
-      if (existingResult) {
-        await prisma.osceResult.update({ where: { sessionId }, data });
-      } else {
-        await prisma.osceResult.create({ data: { sessionId, ...data } });
-      }
-
-      log.info('SOAP grade saved', { sessionId, score: finalScore, redFlagsMissed: redFlagsMissed.length });
+    let rawText: string;
+    try {
+      rawText = await callGemini(env.GEMINI_API_KEY!, systemPrompt, soapUserPrompt);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      log.warn('Gemini SOAP grade error', { msg: msg.slice(0, 200) });
       return {
-        data: {
-          success: true,
-          checklist,
-          clinicalReasoningScore: finalClinicalReasoning,
-          score: finalScore,
-          redFlagsMissed,
-        },
+        status: 502,
+        error: msg.startsWith('Gemini 429') ? 'Rate limit exceeded' : 'Grading service failed',
       };
-    } catch (e) {
-      log.error('SOAP grade error', e);
-      return { status: 500, error: 'Failed to grade SOAP note' };
-    } finally {
-      await safePrismaDisconnect(prisma);
     }
+
+    const stripped = rawText.replaceAll(/```json|```/gi, '').trim();
+    let parsed: { checklist?: unknown[]; clinicalReasoningScore?: number };
+    try {
+      parsed = JSON.parse(stripped) as { checklist?: unknown[]; clinicalReasoningScore?: number };
+    } catch {
+      log.error('Failed to parse Gemini SOAP JSON', { raw: stripped.slice(0, 300) });
+      return { status: 502, error: 'Invalid grading response format' };
+    }
+
+    const checklist = Array.isArray(parsed.checklist)
+      ? validateChecklistResponse(parsed.checklist)
+      : [];
+    const clinicalReasoningScore = Number(parsed.clinicalReasoningScore);
+    const score =
+      typeof clinicalReasoningScore === 'number' &&
+      clinicalReasoningScore >= 0 &&
+      clinicalReasoningScore <= 100
+        ? clinicalReasoningScore
+        : 0;
+
+    const redFlagsMissed = rubricItems
+      .filter((r) => r.isRedFlag)
+      .filter((r) => {
+        const label = rubricItemLabel(r);
+        return checklist.find((c) => c.item === label)?.status === 'FAIL';
+      })
+      .map((r) => rubricItemLabel(r));
+
+    const FAILING_CAP = 59;
+    const finalScore = redFlagsMissed.length > 0 ? Math.min(score, FAILING_CAP) : score;
+    const finalClinicalReasoning = redFlagsMissed.length > 0 ? Math.min(score, FAILING_CAP) : score;
+
+    const existingResult = await prisma.osceResult.findUnique({ where: { sessionId } });
+    const data = {
+      score: finalScore,
+      checklist: checklist as unknown as object,
+      redFlagsMissed,
+      clinicalReasoningScore: finalClinicalReasoning,
+      billingCodeSuggestion: null as string | null,
+    };
+    if (existingResult) {
+      await prisma.osceResult.update({ where: { sessionId }, data });
+    } else {
+      await prisma.osceResult.create({ data: { sessionId, ...data } });
+    }
+
+    log.info('SOAP grade saved', {
+      sessionId,
+      score: finalScore,
+      redFlagsMissed: redFlagsMissed.length,
+    });
+    return {
+      data: {
+        success: true,
+        checklist,
+        clinicalReasoningScore: finalClinicalReasoning,
+        score: finalScore,
+        redFlagsMissed,
+      },
+    };
+  } catch (e) {
+    log.error('SOAP grade error', e);
+    return { status: 500, error: 'Failed to grade SOAP note' };
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-);
+});

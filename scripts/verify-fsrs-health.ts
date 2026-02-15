@@ -42,7 +42,9 @@ async function verify() {
   console.log('  Total sessionType = "MAIN":', totalMain);
 
   if (badCount > 0 || badByQuestionType > 0) {
-    console.error('\n❌ CRITICAL: Non-MAIN or non-eligible logs found in FSRS history. Run scripts/purge-bad-fsrs-logs.ts.');
+    console.error(
+      '\n❌ CRITICAL: Non-MAIN or non-eligible logs found in FSRS history. Run scripts/purge-bad-fsrs-logs.ts.'
+    );
     process.exit(1);
   }
 

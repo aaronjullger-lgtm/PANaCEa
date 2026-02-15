@@ -188,7 +188,10 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[var(--color-border)] bg-gradient-to-r from-[var(--color-bg-secondary)] to-transparent">
           <div>
-            <h2 id="ddx-matrix-title" className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+            <h2
+              id="ddx-matrix-title"
+              className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2"
+            >
               <ArrowLeftRight className="w-5 h-5 text-[var(--color-accent)]" />
               DDx Matrix Comparison
             </h2>
@@ -317,7 +320,9 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                   const isExpanded = expandedCategories.has(category);
                   const filteredFields = showLinkedEntities
                     ? fields
-                    : fields.filter((f) => !(f as ComparisonField & { isLinkedEntity?: boolean }).isLinkedEntity);
+                    : fields.filter(
+                        (f) => !(f as ComparisonField & { isLinkedEntity?: boolean }).isLinkedEntity
+                      );
 
                   if (filteredFields.length === 0) return null;
 
@@ -398,9 +403,17 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                                         </td>
                                         {comparisonData.conditions.map((cond) => {
                                           const value = cond[field.key as keyof DeepConditionData];
-                                          const displayValue = (field as ComparisonField & { isLinkedEntity?: boolean }).isLinkedEntity
+                                          const displayValue = (
+                                            field as ComparisonField & { isLinkedEntity?: boolean }
+                                          ).isLinkedEntity
                                             ? formatLinkedEntity(value)
-                                            : formatFieldValue(value === undefined || value === null ? '-' : Array.isArray(value) ? value : (value as string));
+                                            : formatFieldValue(
+                                                value === undefined || value === null
+                                                  ? '-'
+                                                  : Array.isArray(value)
+                                                    ? value
+                                                    : (value as string)
+                                              );
 
                                           return (
                                             <td

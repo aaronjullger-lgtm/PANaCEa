@@ -163,7 +163,9 @@ function main() {
     process.exit(1);
   }
 
-  console.log(`\n✅ Design system audit passed. (${warns.length} optional improvements found; use --strict to show)`);
+  console.log(
+    `\n✅ Design system audit passed. (${warns.length} optional improvements found; use --strict to show)`
+  );
   process.exit(0);
 }
 

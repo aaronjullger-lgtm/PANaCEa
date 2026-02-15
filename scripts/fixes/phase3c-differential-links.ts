@@ -16,13 +16,18 @@ import { v4 as uuidv4 } from 'uuid';
 const DRY_RUN = process.argv.includes('--dry-run');
 
 function normalize(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
 }
 
 async function main() {
   console.log('╔════════════════════════════════════════════════════════════╗');
   console.log('║  Phase 3c: Populate DifferentialConditionLink             ║');
-  console.log(`║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`);
+  console.log(
+    `║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`
+  );
   console.log('╚════════════════════════════════════════════════════════════╝');
 
   // Load all conditions for matching
@@ -107,7 +112,9 @@ async function main() {
       }
 
       const isMustNotMiss = (ddx.mustNotMiss || []).some((m) => normalize(m) === normalize(name));
-      const isMostDangerous = (ddx.mostDangerous || []).some((m) => normalize(m) === normalize(name));
+      const isMostDangerous = (ddx.mostDangerous || []).some(
+        (m) => normalize(m) === normalize(name)
+      );
 
       if (!DRY_RUN) {
         try {

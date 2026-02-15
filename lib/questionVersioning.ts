@@ -149,17 +149,19 @@ export async function getQuestionVersions(
       },
     });
 
-    return versions.map((v): VersionMetadata => ({
-      version: v.version,
-      changedFields: v.changedFields,
-      changeReason: v.changeReason ?? undefined,
-      changeSummary: v.changeSummary ?? undefined,
-      editedBy: v.editedBy,
-      editedByEmail: v.editedByEmail ?? undefined,
-      distractorScore: v.distractorScore ?? undefined,
-      qualityScore: v.qualityScore ?? undefined,
-      createdAt: v.createdAt,
-    }));
+    return versions.map(
+      (v): VersionMetadata => ({
+        version: v.version,
+        changedFields: v.changedFields,
+        changeReason: v.changeReason ?? undefined,
+        changeSummary: v.changeSummary ?? undefined,
+        editedBy: v.editedBy,
+        editedByEmail: v.editedByEmail ?? undefined,
+        distractorScore: v.distractorScore ?? undefined,
+        qualityScore: v.qualityScore ?? undefined,
+        createdAt: v.createdAt,
+      })
+    );
   } catch (error) {
     console.error('[Versioning] Failed to get versions:', error);
     return [];

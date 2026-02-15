@@ -60,7 +60,10 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
         const text = await res.text();
         throw new Error(text || `Request failed (${res.status})`);
       }
-      const data = (await res.json()) as { data?: { questions?: unknown[] }; questions?: unknown[] };
+      const data = (await res.json()) as {
+        data?: { questions?: unknown[] };
+        questions?: unknown[];
+      };
       const list = (data?.data?.questions ?? data?.questions ?? []) as BaselineQuestion[];
       if (!Array.isArray(list) || list.length === 0) {
         setError('No baseline questions available. Try again later.');
@@ -116,13 +119,24 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
         const text = await res.text();
         throw new Error(text || `Submit failed (${res.status})`);
       }
-      const data = (await res.json()) as { data?: Record<string, unknown>; totalQuestions?: number; correctAnswers?: number; accuracy?: number; systemBreakdown?: Record<string, unknown>; weakestSystems?: unknown[]; strongestSystems?: unknown[] };
+      const data = (await res.json()) as {
+        data?: Record<string, unknown>;
+        totalQuestions?: number;
+        correctAnswers?: number;
+        accuracy?: number;
+        systemBreakdown?: Record<string, unknown>;
+        weakestSystems?: unknown[];
+        strongestSystems?: unknown[];
+      };
       const payload = data?.data ?? data;
       const baselineResults: BaselineResults = {
-        totalQuestions: typeof payload.totalQuestions === 'number' ? payload.totalQuestions : finalAnswers.length,
+        totalQuestions:
+          typeof payload.totalQuestions === 'number' ? payload.totalQuestions : finalAnswers.length,
         correctAnswers: typeof payload.correctAnswers === 'number' ? payload.correctAnswers : 0,
         accuracy: typeof payload.accuracy === 'number' ? payload.accuracy : 0,
-        systemBreakdown: (payload.systemBreakdown && typeof payload.systemBreakdown === 'object' ? payload.systemBreakdown : {}) as Record<string, { correct: number; total: number; accuracy: number }>,
+        systemBreakdown: (payload.systemBreakdown && typeof payload.systemBreakdown === 'object'
+          ? payload.systemBreakdown
+          : {}) as Record<string, { correct: number; total: number; accuracy: number }>,
         weakestSystems: Array.isArray(payload.weakestSystems) ? payload.weakestSystems : [],
         strongestSystems: Array.isArray(payload.strongestSystems) ? payload.strongestSystems : [],
       };
@@ -292,7 +306,9 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
           className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-md w-full p-8 text-center border border-[var(--color-border)]"
         >
           <Loader2 className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
-          <p className="text-[var(--color-text-primary)] font-medium">Calculating your results...</p>
+          <p className="text-[var(--color-text-primary)] font-medium">
+            Calculating your results...
+          </p>
         </motion.div>
       </div>
     );

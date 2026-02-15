@@ -79,14 +79,19 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       selectedAnswerRaw === undefined
         ? null
         : typeof selectedAnswerRaw === 'number'
-          ? LETTERS[selectedAnswerRaw] ?? null
+          ? (LETTERS[selectedAnswerRaw] ?? null)
           : selectedAnswerRaw;
 
     type AttemptResult = { wasCorrect: boolean; system: string | null };
     type TransactionResult = {
       attemptId: string;
       stats: { totalQuestionsAnswered: number; correctAnswers: number; overallAccuracy: number };
-      systemStats: { system: string; totalAttempts: number; correctAnswers: number; accuracy: number } | null;
+      systemStats: {
+        system: string;
+        totalAttempts: number;
+        correctAnswers: number;
+        accuracy: number;
+      } | null;
     };
     const result = (await prisma.$transaction(async (tx) => {
       // 1. Record attempt (with selectedAnswer, telemetry for Ghost Grader)
@@ -205,7 +210,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
         stats: { totalQuestionsAnswered, correctAnswers, overallAccuracy },
         systemStats,
       };
-    }) as unknown) as TransactionResult;
+    })) as unknown as TransactionResult;
 
     // Get detailed system stats
     const detailedSystemStats = system ? await getUserSystemStats(prisma, userId, system) : null;

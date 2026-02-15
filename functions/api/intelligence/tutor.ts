@@ -106,9 +106,7 @@ const TutorMessageSchema = z.object({
 
 type TutorRequest = z.infer<typeof TutorMessageSchema>;
 
-interface TutorHandlerContext
-  extends AuthenticatedContext,
-    ValidatedContext<TutorRequest> {}
+interface TutorHandlerContext extends AuthenticatedContext, ValidatedContext<TutorRequest> {}
 
 interface GroundingSource {
   title: string;
@@ -153,10 +151,7 @@ async function buildWeakSpotProfile(
         },
       },
     },
-    orderBy: [
-      { consecutiveWrong: 'desc' },
-      { timestamp: 'desc' },
-    ],
+    orderBy: [{ consecutiveWrong: 'desc' }, { timestamp: 'desc' }],
     take: 25,
   });
 
@@ -204,9 +199,7 @@ async function buildWeakSpotProfile(
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([name]) => name);
-    systemSummaries.push(
-      `${system}: struggling particularly with ${topConditions.join(', ')}`
-    );
+    systemSummaries.push(`${system}: struggling particularly with ${topConditions.join(', ')}`);
   }
 
   return [
@@ -276,7 +269,15 @@ async function callGeminiTutor(
   input: TutorRequest,
   sessionCacheName?: string
 ): Promise<TutorReplyPayload> {
-  const { message, history, temperature, maxTokens, thinkingLevel, enableGoogleSearch, reasoningEffort } = input;
+  const {
+    message,
+    history,
+    temperature,
+    maxTokens,
+    thinkingLevel,
+    enableGoogleSearch,
+    reasoningEffort,
+  } = input;
 
   const contents: Array<{ role?: string; parts: Array<Record<string, unknown>> }> = [];
 
@@ -467,14 +468,20 @@ export const onRequestPost = authenticatedEndpoint(
       let sessionCacheName = validated.sessionCacheName;
 
       if (!sessionCacheName && weakSpotProfile) {
-        sessionCacheName = (await createWeakSpotCache(env, modelName, weakSpotProfile)) ?? undefined;
+        sessionCacheName =
+          (await createWeakSpotCache(env, modelName, weakSpotProfile)) ?? undefined;
         if (sessionCacheName) {
           log.info('Created weak-spot context cache', { cacheName: sessionCacheName });
         }
       }
 
       // 3) Call Gemini 3 Tutor with optional cache + thinking configuration.
-      const payload = await callGeminiTutor(env, modelName, validated, sessionCacheName ?? undefined);
+      const payload = await callGeminiTutor(
+        env,
+        modelName,
+        validated,
+        sessionCacheName ?? undefined
+      );
 
       // 4) Return structured payload for the frontend Reasoning Tutor UI.
       return {
@@ -491,4 +498,3 @@ export const onRequestPost = authenticatedEndpoint(
     }
   }
 );
-

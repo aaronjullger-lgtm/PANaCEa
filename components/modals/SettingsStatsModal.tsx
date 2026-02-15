@@ -73,8 +73,12 @@ import { getAccuracyBarClassSemantic } from '@/lib/accuracyColorUtils';
 // Lazy-load heavy analytics components — only rendered in specific tabs
 const ActivityHeatmap = lazy(() => import('@/components/analytics/ActivityHeatmap'));
 const DecisionTimeAnalysis = lazy(() => import('@/components/analytics/DecisionTimeAnalysis'));
-const LongitudinalProgressDashboard = lazy(() => import('@/components/analytics/LongitudinalProgressDashboard'));
-const WeaknessCheatsheetExporter = lazy(() => import('@/components/analytics/WeaknessCheatsheetExporter'));
+const LongitudinalProgressDashboard = lazy(
+  () => import('@/components/analytics/LongitudinalProgressDashboard')
+);
+const WeaknessCheatsheetExporter = lazy(
+  () => import('@/components/analytics/WeaknessCheatsheetExporter')
+);
 import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
 import { ARCHIVE_AND_RESET, TO_REVIEW_LABEL, CLEAR_TO_REVIEW } from '@/config/labels';
 const EnhancedSettingsTab = lazy(() => import('@/components/settings/EnhancedSettingsTab'));
@@ -422,7 +426,12 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   });
 
   // Analytics color palette state - Load from localStorage (allowlist to avoid invalid values)
-  const VALID_ANALYTICS_PALETTES = new Set<AnalyticsPalette>(['default', 'neon', 'pastel', 'high-contrast']);
+  const VALID_ANALYTICS_PALETTES = new Set<AnalyticsPalette>([
+    'default',
+    'neon',
+    'pastel',
+    'high-contrast',
+  ]);
   const [analyticsPalette, setAnalyticsPalette] = useState<AnalyticsPalette>(() => {
     const saved = localStorage.getItem('panceai_analytics_palette');
     const value = saved?.trim();
@@ -780,7 +789,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     todayCorrect: 0,
     weekQuestions: 0,
     weekCorrect: 0,
-    systemBreakdown: [] as Array<{ system: string; label: string; correct: number; total: number; accuracy: number }>,
+    systemBreakdown: [] as Array<{
+      system: string;
+      label: string;
+      correct: number;
+      total: number;
+      accuracy: number;
+    }>,
     recentTrend: 0,
     studyDays: 0,
     avgQuestionsPerDay: 0,
@@ -826,7 +841,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       todayCorrect: 0,
       weekQuestions: 0,
       weekCorrect: 0,
-      systemBreakdown: [] as Array<{ system: string; label: string; correct: number; total: number; accuracy: number }>,
+      systemBreakdown: [] as Array<{
+        system: string;
+        label: string;
+        correct: number;
+        total: number;
+        accuracy: number;
+      }>,
       recentTrend: 0,
       studyDays: 0,
       avgQuestionsPerDay: 0,
@@ -834,121 +855,121 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     };
 
     try {
-    // Calculate streaks using utility function
-    const { current: currentStreak, best: bestStreak } = calculateStreaks(performanceData);
+      // Calculate streaks using utility function
+      const { current: currentStreak, best: bestStreak } = calculateStreaks(performanceData);
 
-    // Precompute date strings and week threshold once
-    const today = new Date().toISOString().split('T')[0] ?? '';
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      // Precompute date strings and week threshold once
+      const today = new Date().toISOString().split('T')[0] ?? '';
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
-    // Single pass through performanceData for multiple aggregations
-    let totalCorrect = 0;
-    let todayCorrect = 0;
-    let todayQuestions = 0;
-    let weekCorrect = 0;
-    let weekQuestions = 0;
-    let last50Correct = 0;
-    let prev50Correct = 0;
-    const systemMap = new Map<string, { correct: number; total: number }>();
-    const uniqueDays = new Set<string>();
+      // Single pass through performanceData for multiple aggregations
+      let totalCorrect = 0;
+      let todayCorrect = 0;
+      let todayQuestions = 0;
+      let weekCorrect = 0;
+      let weekQuestions = 0;
+      let last50Correct = 0;
+      let prev50Correct = 0;
+      const systemMap = new Map<string, { correct: number; total: number }>();
+      const uniqueDays = new Set<string>();
 
-    const totalQuestions = performanceData.length;
-    const last50Start = Math.max(0, totalQuestions - 50);
-    const prev50Start = Math.max(0, totalQuestions - 100);
-    const prev50End = Math.max(0, totalQuestions - 50);
+      const totalQuestions = performanceData.length;
+      const last50Start = Math.max(0, totalQuestions - 50);
+      const prev50Start = Math.max(0, totalQuestions - 100);
+      const prev50End = Math.max(0, totalQuestions - 50);
 
-    performanceData.forEach((r, index) => {
-      // Overall stats
-      if (r.isCorrect) totalCorrect++;
+      performanceData.forEach((r, index) => {
+        // Overall stats
+        if (r.isCorrect) totalCorrect++;
 
-      // Date parsing (cache result)
-      const recordDate = new Date(r.timestamp).toISOString().split('T')[0] ?? '';
-      uniqueDays.add(recordDate);
+        // Date parsing (cache result)
+        const recordDate = new Date(r.timestamp).toISOString().split('T')[0] ?? '';
+        uniqueDays.add(recordDate);
 
-      // Today's stats
-      if (recordDate === today) {
-        todayQuestions++;
-        if (r.isCorrect) todayCorrect++;
-      }
-
-      // Week stats
-      if (r.timestamp > weekAgo) {
-        weekQuestions++;
-        if (r.isCorrect) weekCorrect++;
-      }
-
-      // System breakdown
-      if (r.system && r.system !== 'OTHER') {
-        const existing = systemMap.get(r.system);
-        if (existing) {
-          existing.total++;
-          if (r.isCorrect) existing.correct++;
-        } else {
-          systemMap.set(r.system, {
-            correct: r.isCorrect ? 1 : 0,
-            total: 1,
-          });
+        // Today's stats
+        if (recordDate === today) {
+          todayQuestions++;
+          if (r.isCorrect) todayCorrect++;
         }
+
+        // Week stats
+        if (r.timestamp > weekAgo) {
+          weekQuestions++;
+          if (r.isCorrect) weekCorrect++;
+        }
+
+        // System breakdown
+        if (r.system && r.system !== 'OTHER') {
+          const existing = systemMap.get(r.system);
+          if (existing) {
+            existing.total++;
+            if (r.isCorrect) existing.correct++;
+          } else {
+            systemMap.set(r.system, {
+              correct: r.isCorrect ? 1 : 0,
+              total: 1,
+            });
+          }
+        }
+
+        // Recent trend (last 50 vs previous 50)
+        if (index >= last50Start) {
+          if (r.isCorrect) last50Correct++;
+        } else if (index >= prev50Start && index < prev50End) {
+          if (r.isCorrect) prev50Correct++;
+        }
+      });
+
+      const overallAccuracy = calculateAccuracy(totalCorrect, totalQuestions);
+
+      const systemBreakdown = Array.from(systemMap.entries())
+        .map(([system, data]) => ({
+          system,
+          label: ABBREVIATION_TO_TOPIC_MAP[system as SystemCode] || system,
+          correct: data.correct,
+          total: data.total,
+          accuracy: calculateAccuracy(data.correct, data.total),
+        }))
+        .sort((a, b) => b.total - a.total);
+
+      // Recent trend calculation
+      const last50Count = Math.min(50, totalQuestions);
+      const prev50Count = Math.min(50, Math.max(0, totalQuestions - 50));
+      const last50Accuracy = last50Count > 0 ? last50Correct / last50Count : 0;
+      const prev50Accuracy = prev50Count > 0 ? prev50Correct / prev50Count : 0;
+      const recentTrend = Math.round((last50Accuracy - prev50Accuracy) * 100);
+
+      const studyDays = uniqueDays.size;
+      const avgQuestionsPerDay = studyDays > 0 ? Math.round(totalQuestions / studyDays) : 0;
+
+      // Calculate last 10 session accuracies for sparkline (group by sessions of ~10 questions)
+      const sessionSize = 10;
+      const recentSessionAccuracies: number[] = [];
+      for (let i = Math.max(0, totalQuestions - 100); i < totalQuestions; i += sessionSize) {
+        const sessionEnd = Math.min(i + sessionSize, totalQuestions);
+        const sessionData = performanceData.slice(i, sessionEnd);
+        const sessionCorrect = sessionData.filter((r) => r.isCorrect).length;
+        const sessionAccuracy =
+          sessionData.length > 0 ? (sessionCorrect / sessionData.length) * 100 : 0;
+        recentSessionAccuracies.push(sessionAccuracy);
       }
 
-      // Recent trend (last 50 vs previous 50)
-      if (index >= last50Start) {
-        if (r.isCorrect) last50Correct++;
-      } else if (index >= prev50Start && index < prev50End) {
-        if (r.isCorrect) prev50Correct++;
-      }
-    });
-
-    const overallAccuracy = calculateAccuracy(totalCorrect, totalQuestions);
-
-    const systemBreakdown = Array.from(systemMap.entries())
-      .map(([system, data]) => ({
-        system,
-        label: ABBREVIATION_TO_TOPIC_MAP[system as SystemCode] || system,
-        correct: data.correct,
-        total: data.total,
-        accuracy: calculateAccuracy(data.correct, data.total),
-      }))
-      .sort((a, b) => b.total - a.total);
-
-    // Recent trend calculation
-    const last50Count = Math.min(50, totalQuestions);
-    const prev50Count = Math.min(50, Math.max(0, totalQuestions - 50));
-    const last50Accuracy = last50Count > 0 ? last50Correct / last50Count : 0;
-    const prev50Accuracy = prev50Count > 0 ? prev50Correct / prev50Count : 0;
-    const recentTrend = Math.round((last50Accuracy - prev50Accuracy) * 100);
-
-    const studyDays = uniqueDays.size;
-    const avgQuestionsPerDay = studyDays > 0 ? Math.round(totalQuestions / studyDays) : 0;
-
-    // Calculate last 10 session accuracies for sparkline (group by sessions of ~10 questions)
-    const sessionSize = 10;
-    const recentSessionAccuracies: number[] = [];
-    for (let i = Math.max(0, totalQuestions - 100); i < totalQuestions; i += sessionSize) {
-      const sessionEnd = Math.min(i + sessionSize, totalQuestions);
-      const sessionData = performanceData.slice(i, sessionEnd);
-      const sessionCorrect = sessionData.filter((r) => r.isCorrect).length;
-      const sessionAccuracy =
-        sessionData.length > 0 ? (sessionCorrect / sessionData.length) * 100 : 0;
-      recentSessionAccuracies.push(sessionAccuracy);
-    }
-
-    return {
-      totalQuestions,
-      totalCorrect,
-      overallAccuracy,
-      currentStreak,
-      bestStreak,
-      todayQuestions,
-      todayCorrect,
-      weekQuestions,
-      weekCorrect,
-      systemBreakdown,
-      recentTrend,
-      studyDays,
-      avgQuestionsPerDay,
-      recentSessionAccuracies,
-    };
+      return {
+        totalQuestions,
+        totalCorrect,
+        overallAccuracy,
+        currentStreak,
+        bestStreak,
+        todayQuestions,
+        todayCorrect,
+        weekQuestions,
+        weekCorrect,
+        systemBreakdown,
+        recentTrend,
+        studyDays,
+        avgQuestionsPerDay,
+        recentSessionAccuracies,
+      };
     } catch {
       return emptyStats;
     }
@@ -1018,16 +1039,31 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <div className="p-1.5 sm:p-2 bg-[var(--color-accent)]/10 rounded-xl flex-shrink-0">
                 {activeTab === 'stats' ? (
-                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" strokeWidth={1.5} />
+                  <BarChart3
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]"
+                    strokeWidth={1.5}
+                  />
                 ) : activeTab === 'preferences' ? (
-                  <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" strokeWidth={1.5} />
+                  <LayoutDashboard
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]"
+                    strokeWidth={1.5}
+                  />
                 ) : activeTab === 'activity' ? (
-                  <ActivityIcon className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" strokeWidth={1.5} />
+                  <ActivityIcon
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]"
+                    strokeWidth={1.5}
+                  />
                 ) : (
-                  <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" strokeWidth={1.5} />
+                  <Settings
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]"
+                    strokeWidth={1.5}
+                  />
                 )}
               </div>
-              <h2 id="settings-modal-title" className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] dark:text-slate-100 truncate">
+              <h2
+                id="settings-modal-title"
+                className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] dark:text-slate-100 truncate"
+              >
                 {activeTab === 'stats'
                   ? 'Statistics'
                   : activeTab === 'preferences'
@@ -1225,9 +1261,25 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         ariaLabel={`Overall accuracy: ${stats.overallAccuracy.toFixed(0)}% correct across all questions`}
                       />
                     ) : hasNoStatsData ? (
-                      <div className="flex flex-col items-center justify-center" aria-busy="true" aria-label="Loading accuracy">
-                        <Skeleton height={100} width={100} variant="wave" radius="full" className="mb-2" />
-                        <Skeleton height={14} width={120} variant="wave" radius="sm" className="mb-1" />
+                      <div
+                        className="flex flex-col items-center justify-center"
+                        aria-busy="true"
+                        aria-label="Loading accuracy"
+                      >
+                        <Skeleton
+                          height={100}
+                          width={100}
+                          variant="wave"
+                          radius="full"
+                          className="mb-2"
+                        />
+                        <Skeleton
+                          height={14}
+                          width={120}
+                          variant="wave"
+                          radius="sm"
+                          className="mb-1"
+                        />
                         <Skeleton height={12} width={80} variant="wave" radius="sm" />
                       </div>
                     ) : (
@@ -1468,7 +1520,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               <div className="space-y-6">
                 {/* Auto-save hint so users know they don't need a Save button */}
                 <p className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
-                  <Check className="w-3.5 h-3.5 text-[var(--color-accent)] flex-shrink-0" aria-hidden />
+                  <Check
+                    className="w-3.5 h-3.5 text-[var(--color-accent)] flex-shrink-0"
+                    aria-hidden
+                  />
                   Changes save automatically. You'll see a confirmation when you update a setting.
                 </p>
                 {/* Enhanced Settings Tab - Career Stage & Profile */}
@@ -2144,7 +2199,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                   {/* Search - keeps list usable as more modes are added */}
                   <div className="relative mb-3">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" aria-hidden />
+                    <Search
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]"
+                      aria-hidden
+                    />
                     <input
                       type="search"
                       value={miniModesSearch}
@@ -2159,7 +2217,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     {(() => {
                       const q = miniModesSearch.trim().toLowerCase();
                       const match = (mode: { id: string; label: string; desc: string }) =>
-                        !q || [mode.id, mode.label, mode.desc].some((s) => s.toLowerCase().includes(q));
+                        !q ||
+                        [mode.id, mode.label, mode.desc].some((s) => s.toLowerCase().includes(q));
 
                       const visualModes = [
                         { id: 'ecg_drill', label: 'ECG', desc: 'Rhythm strips' },
@@ -2174,13 +2233,21 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         { id: 'condition_drill', label: 'Conditions', desc: '5-stage drills' },
                       ].filter(match);
                       const pharmModes = [
-                        { id: 'first_line_treatment', label: 'First Line', desc: 'Go-to treatments' },
+                        {
+                          id: 'first_line_treatment',
+                          label: 'First Line',
+                          desc: 'Go-to treatments',
+                        },
                         { id: 'pharmacology', label: 'Pharm Quiz', desc: 'Drug mechanisms' },
                       ].filter(match);
                       const clinicalModes = [
                         { id: 'fluid_electrolyte', label: 'Hydro-Mode', desc: 'Fluid/lytes calc' },
                         { id: 'antibiotic_mode', label: 'Bug-Drug', desc: 'Antibiotic choice' },
-                        { id: 'patient_encounter', label: 'Virtual OSCE', desc: 'Patient interview' },
+                        {
+                          id: 'patient_encounter',
+                          label: 'Virtual OSCE',
+                          desc: 'Patient interview',
+                        },
                       ].filter(match);
                       const engagementModes = [
                         { id: 'code_blue_speed', label: 'Code Blue', desc: 'ACLS/PALS speed' },
@@ -2205,129 +2272,129 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                       return (
                         <>
-                    {/* Visual Modes */}
-                    {visualModes.length > 0 && (
-                    <div className="mb-3">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
-                        Visual Drills
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {visualModes.map((mode) => (
-                          <button
-                            key={mode.id}
-                            onClick={() => handleToggleMiniMode(mode.id)}
-                            className={`p-3 rounded-lg text-left text-xs transition-all ${
-                              enabledMiniModes.has(mode.id)
-                                ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
-                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
-                            }`}
-                          >
-                            <div className="font-semibold">{mode.label}</div>
-                            <div className="text-xs opacity-75">{mode.desc}</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    )}
+                          {/* Visual Modes */}
+                          {visualModes.length > 0 && (
+                            <div className="mb-3">
+                              <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
+                                Visual Drills
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                {visualModes.map((mode) => (
+                                  <button
+                                    key={mode.id}
+                                    onClick={() => handleToggleMiniMode(mode.id)}
+                                    className={`p-3 rounded-lg text-left text-xs transition-all ${
+                                      enabledMiniModes.has(mode.id)
+                                        ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
+                                        : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
+                                    }`}
+                                  >
+                                    <div className="font-semibold">{mode.label}</div>
+                                    <div className="text-xs opacity-75">{mode.desc}</div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
-                    {/* Recall Modes */}
-                    {recallModes.length > 0 && (
-                    <div className="mb-3">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
-                        Recall Modes
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {recallModes.map((mode) => (
-                          <button
-                            key={mode.id}
-                            onClick={() => handleToggleMiniMode(mode.id)}
-                            className={`p-3 rounded-lg text-left text-xs transition-all ${
-                              enabledMiniModes.has(mode.id)
-                                ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
-                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
-                            }`}
-                          >
-                            <div className="font-semibold">{mode.label}</div>
-                            <div className="text-xs opacity-75">{mode.desc}</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    )}
+                          {/* Recall Modes */}
+                          {recallModes.length > 0 && (
+                            <div className="mb-3">
+                              <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
+                                Recall Modes
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                {recallModes.map((mode) => (
+                                  <button
+                                    key={mode.id}
+                                    onClick={() => handleToggleMiniMode(mode.id)}
+                                    className={`p-3 rounded-lg text-left text-xs transition-all ${
+                                      enabledMiniModes.has(mode.id)
+                                        ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
+                                        : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
+                                    }`}
+                                  >
+                                    <div className="font-semibold">{mode.label}</div>
+                                    <div className="text-xs opacity-75">{mode.desc}</div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
-                    {/* Pharmacology Modes */}
-                    {pharmModes.length > 0 && (
-                    <div className="mb-3">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
-                        Pharmacology
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {pharmModes.map((mode) => (
-                          <button
-                            key={mode.id}
-                            onClick={() => handleToggleMiniMode(mode.id)}
-                            className={`p-3 rounded-lg text-left text-xs transition-all ${
-                              enabledMiniModes.has(mode.id)
-                                ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
-                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
-                            }`}
-                          >
-                            <div className="font-semibold">{mode.label}</div>
-                            <div className="text-xs opacity-75">{mode.desc}</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    )}
+                          {/* Pharmacology Modes */}
+                          {pharmModes.length > 0 && (
+                            <div className="mb-3">
+                              <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
+                                Pharmacology
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                {pharmModes.map((mode) => (
+                                  <button
+                                    key={mode.id}
+                                    onClick={() => handleToggleMiniMode(mode.id)}
+                                    className={`p-3 rounded-lg text-left text-xs transition-all ${
+                                      enabledMiniModes.has(mode.id)
+                                        ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
+                                        : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
+                                    }`}
+                                  >
+                                    <div className="font-semibold">{mode.label}</div>
+                                    <div className="text-xs opacity-75">{mode.desc}</div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
-                    {/* Clinical Simulation Modes */}
-                    {clinicalModes.length > 0 && (
-                    <div className="mb-3">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
-                        Clinical Simulation
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {clinicalModes.map((mode) => (
-                          <button
-                            key={mode.id}
-                            onClick={() => handleToggleMiniMode(mode.id)}
-                            className={`p-3 rounded-lg text-left text-xs transition-all ${
-                              enabledMiniModes.has(mode.id)
-                                ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
-                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
-                            }`}
-                          >
-                            <div className="font-semibold">{mode.label}</div>
-                            <div className="text-xs opacity-75">{mode.desc}</div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    )}
+                          {/* Clinical Simulation Modes */}
+                          {clinicalModes.length > 0 && (
+                            <div className="mb-3">
+                              <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
+                                Clinical Simulation
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                {clinicalModes.map((mode) => (
+                                  <button
+                                    key={mode.id}
+                                    onClick={() => handleToggleMiniMode(mode.id)}
+                                    className={`p-3 rounded-lg text-left text-xs transition-all ${
+                                      enabledMiniModes.has(mode.id)
+                                        ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
+                                        : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
+                                    }`}
+                                  >
+                                    <div className="font-semibold">{mode.label}</div>
+                                    <div className="text-xs opacity-75">{mode.desc}</div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
-                    {/* Engagement Modes (Phase 7) */}
-                    {engagementModes.length > 0 && (
-                    <div className="mb-3">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
-                        Engagement Modes
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {engagementModes.map((mode) => (
-                          <div
-                            key={mode.id}
-                            className={`p-3 rounded-lg text-left text-xs cursor-not-allowed ${
-                              enabledMiniModes.has(mode.id)
-                                ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border border-[var(--color-accent)]/20 opacity-60'
-                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] opacity-60'
-                            }`}
-                          >
-                            <div className="font-semibold">{mode.label}</div>
-                            <div className="text-xs opacity-75">{mode.desc}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    )}
+                          {/* Engagement Modes (Phase 7) */}
+                          {engagementModes.length > 0 && (
+                            <div className="mb-3">
+                              <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
+                                Engagement Modes
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                {engagementModes.map((mode) => (
+                                  <div
+                                    key={mode.id}
+                                    className={`p-3 rounded-lg text-left text-xs cursor-not-allowed ${
+                                      enabledMiniModes.has(mode.id)
+                                        ? 'bg-[var(--color-accent)]/20 text-[var(--color-text-primary)] border border-[var(--color-accent)]/20 opacity-60'
+                                        : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] opacity-60'
+                                    }`}
+                                  >
+                                    <div className="font-semibold">{mode.label}</div>
+                                    <div className="text-xs opacity-75">{mode.desc}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </>
                       );
                     })()}
@@ -2637,8 +2704,12 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                               className="mt-1 px-2 py-1 text-sm border border-[var(--color-border)] rounded"
                               aria-describedby="clear-performance-hint"
                             />
-                            <p id="clear-performance-hint" className="text-xs text-[var(--color-text-muted)] mt-1">
-                              This permanently removes all session history. Type DELETE above to confirm.
+                            <p
+                              id="clear-performance-hint"
+                              className="text-xs text-[var(--color-text-muted)] mt-1"
+                            >
+                              This permanently removes all session history. Type DELETE above to
+                              confirm.
                             </p>
                           </div>
                         )}
@@ -2669,7 +2740,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                                 ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                                 : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                           }`}
-                          aria-label={confirmClear === 'performance' && clearConfirmText === 'DELETE' ? 'Confirm clear performance data' : 'Clear performance data permanently (requires typing DELETE)'}
+                          aria-label={
+                            confirmClear === 'performance' && clearConfirmText === 'DELETE'
+                              ? 'Confirm clear performance data'
+                              : 'Clear performance data permanently (requires typing DELETE)'
+                          }
                         >
                           <Trash2 className="w-4 h-4 inline-block mr-1" aria-hidden />
                           {confirmClear === 'performance' && clearConfirmText === 'DELETE'
@@ -2698,7 +2773,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                               ? 'bg-red-600 text-white'
                               : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                         }`}
-                        aria-label={confirmClear === 'missed' ? 'Confirm clear to review' : 'Clear to review (opens confirmation)'}
+                        aria-label={
+                          confirmClear === 'missed'
+                            ? 'Confirm clear to review'
+                            : 'Clear to review (opens confirmation)'
+                        }
                       >
                         <Trash2 className="w-4 h-4 inline-block mr-1" aria-hidden />
                         {confirmClear === 'missed' ? 'Confirm' : CLEAR_TO_REVIEW}
@@ -2724,7 +2803,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                               ? 'bg-red-600 text-white'
                               : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                         }`}
-                        aria-label={confirmClear === 'flagged' ? 'Confirm clear flagged questions' : 'Clear flagged questions (opens confirmation)'}
+                        aria-label={
+                          confirmClear === 'flagged'
+                            ? 'Confirm clear flagged questions'
+                            : 'Clear flagged questions (opens confirmation)'
+                        }
                       >
                         <Trash2 className="w-4 h-4 inline-block mr-1" aria-hidden />
                         {confirmClear === 'flagged' ? 'Confirm' : 'Clear Flagged Questions…'}

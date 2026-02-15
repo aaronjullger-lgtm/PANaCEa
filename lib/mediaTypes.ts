@@ -12,13 +12,7 @@ export type MediaType = 'ekg' | 'photo' | 'imaging' | 'labs' | 'diagram' | 'othe
 /** Drill UI modality (PhotoCase.modality) */
 export type DrillModality = 'ecg' | 'xray' | 'derm';
 
-export const MEDIA_CATEGORIES: MediaCategory[] = [
-  'ecg',
-  'derm',
-  'radiology',
-  'labs',
-  'diagrams',
-];
+export const MEDIA_CATEGORIES: MediaCategory[] = ['ecg', 'derm', 'radiology', 'labs', 'diagrams'];
 
 /** Category → DB type (persist this so drills/media typeFilters match) */
 export function categoryToType(category: MediaCategory): MediaType {
@@ -53,20 +47,14 @@ export function typeToCategory(type: string): MediaCategory {
 export function typeToModality(type: string): DrillModality {
   const normalized = type.toLowerCase();
   if (normalized === 'ekg' || normalized === 'ecg') return 'ecg';
-  if (
-    normalized === 'imaging' ||
-    normalized === 'xray' ||
-    normalized === 'radiology'
-  )
+  if (normalized === 'imaging' || normalized === 'xray' || normalized === 'radiology')
     return 'xray';
   if (normalized === 'photo' || normalized === 'derm') return 'derm';
   return 'xray';
 }
 
 /** Modality query param → DB type values for WHERE type IN (...) */
-export function modalityToTypeFilters(
-  modality: DrillModality
-): string[] {
+export function modalityToTypeFilters(modality: DrillModality): string[] {
   const filters: Record<DrillModality, string[]> = {
     ecg: ['ekg', 'ecg', 'ECG', 'EKG'],
     derm: ['photo', 'derm', 'PHOTO', 'DERM'],

@@ -40,9 +40,7 @@ export const onRequestGet = authenticatedEndpoint(Schema, async (context) => {
     const total = withScores.length;
     const passed = withScores.filter((s) => (s.OsceResult?.score ?? 0) >= PASS_THRESHOLD).length;
     const avgScore =
-      total > 0
-        ? withScores.reduce((sum, s) => sum + (s.OsceResult?.score ?? 0), 0) / total
-        : null;
+      total > 0 ? withScores.reduce((sum, s) => sum + (s.OsceResult?.score ?? 0), 0) / total : null;
     const avgClinicalReasoning =
       total > 0
         ? withScores.reduce((sum, s) => sum + (s.OsceResult?.clinicalReasoningScore ?? 0), 0) /

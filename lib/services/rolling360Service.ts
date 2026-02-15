@@ -485,10 +485,7 @@ export class Rolling360Service {
 
     // Calibration metrics require 2–3 extra queries; skip in Worker to avoid CPU timeout
     let calibrationMetrics: CalibrationMetrics | undefined;
-    if (
-      !options?.skipCalibration &&
-      totalInWindow < CALIBRATION_STEP_THRESHOLDS.ERROR_TYPOLOGY
-    ) {
+    if (!options?.skipCalibration && totalInWindow < CALIBRATION_STEP_THRESHOLDS.ERROR_TYPOLOGY) {
       calibrationMetrics = await this.calculateCalibrationMetrics(
         userId,
         totalInWindow,

@@ -13,8 +13,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
-const GEMINI_WS_PATH =
-  'google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
+const GEMINI_WS_PATH = 'google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
 const LIVE_MODEL = 'gemini-2.0-flash-exp';
 
 const QuerySchema = z.object({
@@ -69,84 +68,88 @@ const TOOLS = [
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(QuerySchema, async (context) => {
-  const { env, auth, validated } = context;
-  const logger = createEndpointLogger('/api/osce/live-engine');
-
-  try {
-    const systemInstruction = buildSystemInstruction({
-      patientName: validated.patientName,
-      painLevel: validated.painLevel,
-      mood: validated.mood,
-    });
-
-    const setup = {
-      model: `models/${LIVE_MODEL}`,
-      systemInstruction: {
-        parts: [{ text: systemInstruction }],
-      },
-      generationConfig: {
-        responseModalities: ['AUDIO', 'TEXT'],
-        speechConfig: { voiceName: 'Aoede' },
-        temperature: 0.8,
-      },
-      tools: TOOLS,
-      realtimeInputConfig: {
-        activityHandling: 'START_OF_ACTIVITY_INTERRUPTS', // Barge-in enabled
-      },
-    };
-
-    let token: string | null = null;
-    const now = new Date();
-    const expireTime = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
-    const newSessionExpireTime = new Date(now.getTime() + 60 * 1000).toISOString();
+export const onRequestGet = authenticatedEndpoint(
+  QuerySchema,
+  async (context) => {
+    const { env, auth, validated } = context;
+    const logger = createEndpointLogger('/api/osce/live-engine');
 
     try {
-      const createTokenUrl = `https://generativelanguage.googleapis.com/v1beta/authTokens:createToken?key=${env.GEMINI_API_KEY}`;
-      const tokenRes = await fetch(createTokenUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          authToken: {
-            expireTime,
-            newSessionExpireTime,
-          },
-          uses: 1,
-        }),
+      const systemInstruction = buildSystemInstruction({
+        patientName: validated.patientName,
+        painLevel: validated.painLevel,
+        mood: validated.mood,
       });
-      if (tokenRes.ok) {
-        const data = (await tokenRes.json()) as { name?: string };
-        token = data.name ?? null;
-      }
-    } catch (e) {
-      logger.warn('Ephemeral token creation failed', {
-        error: e instanceof Error ? e.message : String(e),
-      });
-    }
 
-    const wsBase = 'wss://generativelanguage.googleapis.com/ws';
-    const wsUrl = token
-      ? `${wsBase}/${GEMINI_WS_PATH}?access_token=${encodeURIComponent(token)}`
-      : `${wsBase}/${GEMINI_WS_PATH}?key=${env.GEMINI_API_KEY}`;
-
-    logger.info('Live engine config requested', { sessionId: validated.sessionId });
-
-    return new Response(
-      JSON.stringify({
-        data: {
-          wsUrl,
-          setup,
-          sessionId: validated.sessionId ?? null,
-          tokenUsed: !!token,
+      const setup = {
+        model: `models/${LIVE_MODEL}`,
+        systemInstruction: {
+          parts: [{ text: systemInstruction }],
         },
-      }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    logger.error('live-engine error', {
-      error: error instanceof Error ? error.message : String(error),
-      userId: auth.userId?.substring(0, 10),
-    });
-    throw new Error('Failed to get live engine config');
-  }
-}, { source: 'query' });
+        generationConfig: {
+          responseModalities: ['AUDIO', 'TEXT'],
+          speechConfig: { voiceName: 'Aoede' },
+          temperature: 0.8,
+        },
+        tools: TOOLS,
+        realtimeInputConfig: {
+          activityHandling: 'START_OF_ACTIVITY_INTERRUPTS', // Barge-in enabled
+        },
+      };
+
+      let token: string | null = null;
+      const now = new Date();
+      const expireTime = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
+      const newSessionExpireTime = new Date(now.getTime() + 60 * 1000).toISOString();
+
+      try {
+        const createTokenUrl = `https://generativelanguage.googleapis.com/v1beta/authTokens:createToken?key=${env.GEMINI_API_KEY}`;
+        const tokenRes = await fetch(createTokenUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            authToken: {
+              expireTime,
+              newSessionExpireTime,
+            },
+            uses: 1,
+          }),
+        });
+        if (tokenRes.ok) {
+          const data = (await tokenRes.json()) as { name?: string };
+          token = data.name ?? null;
+        }
+      } catch (e) {
+        logger.warn('Ephemeral token creation failed', {
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+
+      const wsBase = 'wss://generativelanguage.googleapis.com/ws';
+      const wsUrl = token
+        ? `${wsBase}/${GEMINI_WS_PATH}?access_token=${encodeURIComponent(token)}`
+        : `${wsBase}/${GEMINI_WS_PATH}?key=${env.GEMINI_API_KEY}`;
+
+      logger.info('Live engine config requested', { sessionId: validated.sessionId });
+
+      return new Response(
+        JSON.stringify({
+          data: {
+            wsUrl,
+            setup,
+            sessionId: validated.sessionId ?? null,
+            tokenUsed: !!token,
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    } catch (error) {
+      logger.error('live-engine error', {
+        error: error instanceof Error ? error.message : String(error),
+        userId: auth.userId?.substring(0, 10),
+      });
+      throw new Error('Failed to get live engine config');
+    }
+  },
+  { source: 'query' }
+);

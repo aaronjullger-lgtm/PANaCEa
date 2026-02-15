@@ -47,11 +47,46 @@ interface NavRailProps {
 }
 
 const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = [
-  { id: 'home', label: 'Home', icon: Home, href: '/study', section: 'study', showInBottomBar: true },
-  { id: 'practice', label: 'Practice', icon: Dumbbell, href: '/menu', section: 'study', showInBottomBar: true },
-  { id: 'progress', label: 'Progress', icon: BarChart3, href: '/study?tab=analytics', section: 'study', showInBottomBar: true },
-  { id: 'knowledge', label: 'Knowledge', icon: BookOpen, href: '/study/knowledge', section: 'resources', showInBottomBar: true },
-  { id: 'utilities', label: 'Utilities', icon: Calculator, href: '/study/utilities', section: 'resources', showInBottomBar: true },
+  {
+    id: 'home',
+    label: 'Home',
+    icon: Home,
+    href: '/study',
+    section: 'study',
+    showInBottomBar: true,
+  },
+  {
+    id: 'practice',
+    label: 'Practice',
+    icon: Dumbbell,
+    href: '/menu',
+    section: 'study',
+    showInBottomBar: true,
+  },
+  {
+    id: 'progress',
+    label: 'Progress',
+    icon: BarChart3,
+    href: '/study?tab=analytics',
+    section: 'study',
+    showInBottomBar: true,
+  },
+  {
+    id: 'knowledge',
+    label: 'Knowledge',
+    icon: BookOpen,
+    href: '/study/knowledge',
+    section: 'resources',
+    showInBottomBar: true,
+  },
+  {
+    id: 'utilities',
+    label: 'Utilities',
+    icon: Calculator,
+    href: '/study/utilities',
+    section: 'resources',
+    showInBottomBar: true,
+  },
 ];
 
 const RAIL_WIDTH_COLLAPSED = 56;
@@ -61,7 +96,10 @@ function isPathActive(href: string, pathname: string, search: string): boolean {
   const fullPath = pathname + search;
   if (href.includes('?')) return fullPath === href;
   if (href === '/study')
-    return (pathname === '/' || pathname === '' || pathname === '/study' || pathname === '/study/') && !search;
+    return (
+      (pathname === '/' || pathname === '' || pathname === '/study' || pathname === '/study/') &&
+      !search
+    );
   return pathname === href || pathname.startsWith(href + '/');
 }
 
@@ -83,7 +121,11 @@ function useIsMobile() {
 // Mobile: Bottom Tab Bar
 // ---------------------------------------------------------------------------
 
-function BottomTabBar({ items, pathname, search }: {
+function BottomTabBar({
+  items,
+  pathname,
+  search,
+}: {
   items: QuickActionItem[];
   pathname: string;
   search: string;
@@ -105,13 +147,17 @@ function BottomTabBar({ items, pathname, search }: {
             <span className="flex flex-col items-center justify-center gap-0.5 pt-1.5 pb-1">
               <Icon
                 className={`h-5 w-5 transition-colors ${
-                  isActive ? 'text-[#2563EB] dark:text-[var(--color-accent)]' : 'text-slate-700 dark:text-[var(--color-text-muted)]'
+                  isActive
+                    ? 'text-[#2563EB] dark:text-[var(--color-accent)]'
+                    : 'text-slate-700 dark:text-[var(--color-text-muted)]'
                 }`}
                 aria-hidden
               />
               <span
                 className={`text-[10px] leading-none font-medium transition-colors ${
-                  isActive ? 'text-[#2563EB] dark:text-[var(--color-accent)]' : 'text-slate-700 dark:text-[var(--color-text-muted)]'
+                  isActive
+                    ? 'text-[#2563EB] dark:text-[var(--color-accent)]'
+                    : 'text-slate-700 dark:text-[var(--color-text-muted)]'
                 }`}
               >
                 {item.label}
@@ -214,7 +260,10 @@ export const NavRail: React.FC<NavRailProps> = ({
     return (
       <button
         type="button"
-        onClick={() => { setHidden(false); setCollapsed(true); }}
+        onClick={() => {
+          setHidden(false);
+          setCollapsed(true);
+        }}
         className="fixed left-0 top-1/2 -translate-y-1/2 z-40 p-1.5 rounded-r-lg bg-[var(--color-bg-secondary)] border border-l-0 border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] transition-colors shadow-sm"
         aria-label="Show sidebar"
         title="Show sidebar (press [)"
@@ -304,12 +353,8 @@ export const NavRail: React.FC<NavRailProps> = ({
         </li>
       );
     }
-    
-    return (
-      <li key={item.id}>
-        {wrappedItem}
-      </li>
-    );
+
+    return <li key={item.id}>{wrappedItem}</li>;
   };
 
   const renderSection = (label: string, items: QuickActionItem[]) => (
@@ -321,9 +366,7 @@ export const NavRail: React.FC<NavRailProps> = ({
           </span>
         </div>
       )}
-      <ul className="space-y-1">
-        {items.map(renderItem)}
-      </ul>
+      <ul className="space-y-1">{items.map(renderItem)}</ul>
     </div>
   );
 
@@ -367,11 +410,7 @@ export const NavRail: React.FC<NavRailProps> = ({
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand sidebar (press [)' : 'Collapse sidebar (press [)'}
         >
-          {collapsed ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" />
-          )}
+          {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
         </button>
       </div>
 
@@ -398,9 +437,7 @@ export const NavRail: React.FC<NavRailProps> = ({
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors group-hover:bg-[var(--color-bg-tertiary)]">
               <Download className="h-5 w-5" aria-hidden />
             </span>
-            {!collapsed && (
-              <span className="truncate text-sm font-medium">Install app</span>
-            )}
+            {!collapsed && <span className="truncate text-sm font-medium">Install app</span>}
           </button>
         </div>
       )}
@@ -418,8 +455,14 @@ export const NavRail: React.FC<NavRailProps> = ({
                 ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
                 : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)]'
             }`}
-            title={commuterContext.isCommuterMode ? 'Disable Commuter Mode' : 'Enable Commuter Mode (voice + larger buttons)'}
-            aria-label={commuterContext.isCommuterMode ? 'Disable Commuter Mode' : 'Enable Commuter Mode'}
+            title={
+              commuterContext.isCommuterMode
+                ? 'Disable Commuter Mode'
+                : 'Enable Commuter Mode (voice + larger buttons)'
+            }
+            aria-label={
+              commuterContext.isCommuterMode ? 'Disable Commuter Mode' : 'Enable Commuter Mode'
+            }
           >
             <span
               className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors ${

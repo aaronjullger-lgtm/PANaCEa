@@ -38,7 +38,7 @@ export const onRequestPost = authenticatedEndpoint(
         log.warn('User not found');
         return { status: 404, error: 'User not found' };
       }
-      
+
       // NEW: Load case data to check for state machine
       const caseData = await prisma.patientEncounterCase.findUnique({
         where: { id: caseId },
@@ -56,15 +56,15 @@ export const onRequestPost = authenticatedEndpoint(
 
       if (existingSession) {
         log.info('Returning existing session', { sessionId: existingSession.id });
-        
+
         // NEW: Return enhanced session info
-        const wsUrl = env.VOICE_WEBSOCKET_URL 
+        const wsUrl = env.VOICE_WEBSOCKET_URL
           ? `${env.VOICE_WEBSOCKET_URL}/voice/${existingSession.id}`
           : null;
-          
-        return { 
-          data: { 
-            success: true, 
+
+        return {
+          data: {
+            success: true,
             session: existingSession,
             wsUrl,
             features: {
@@ -72,8 +72,8 @@ export const onRequestPost = authenticatedEndpoint(
               stateMachineAvailable: false, // Would need to check case
               realtimeSOAPAvailable: true,
               timingAnalyticsAvailable: true,
-            }
-          } 
+            },
+          },
         };
       }
 
@@ -93,24 +93,25 @@ export const onRequestPost = authenticatedEndpoint(
       });
 
       log.info('Created new OSCE session', { sessionId: session.id });
-      
+
       // NEW: Prepare WebSocket URL for voice mode (if PatientVoiceSession deployed)
-      const wsUrl = env.VOICE_WEBSOCKET_URL 
+      const wsUrl = env.VOICE_WEBSOCKET_URL
         ? `${env.VOICE_WEBSOCKET_URL}/voice/${session.id}`
         : null;
-      
-      return { 
-        data: { 
-          success: true, 
+
+      return {
+        data: {
+          success: true,
           session,
           wsUrl, // NEW: Voice mode WebSocket URL
-          features: { // NEW: Available features for this session
+          features: {
+            // NEW: Available features for this session
             voiceModeAvailable: !!env.VOICE_WEBSOCKET_URL,
             stateMachineAvailable: !!caseData?.stateMachine,
             realtimeSOAPAvailable: true,
             timingAnalyticsAvailable: true,
-          }
-        } 
+          },
+        },
       };
     } catch (error: any) {
       log.error('Error creating OSCE session', error);

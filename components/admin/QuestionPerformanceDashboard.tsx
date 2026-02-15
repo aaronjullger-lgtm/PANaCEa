@@ -278,10 +278,7 @@ export const QuestionPerformanceDashboard: React.FC = () => {
               </div>
             </div>
             {/* Scroll container: only visible rows rendered (windowing) */}
-            <div
-              ref={scrollContainerRef}
-              className="overflow-auto min-h-[200px] max-h-[60vh]"
-            >
+            <div ref={scrollContainerRef} className="overflow-auto min-h-[200px] max-h-[60vh]">
               <VirtualizedTableBody
                 items={questions}
                 parentRef={scrollContainerRef}

@@ -74,7 +74,9 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
       className={`p-3 rounded-xl transition-colors ${
-        isUnderStudied ? 'bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/20' : 'bg-[var(--color-bg-tertiary)]/30'
+        isUnderStudied
+          ? 'bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/20'
+          : 'bg-[var(--color-bg-tertiary)]/30'
       }`}
     >
       <div className="flex items-center justify-between mb-2">
@@ -120,7 +122,9 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
         <span className="tabular-nums">
           {stats.correct}/{stats.total} correct
         </span>
-        <span className={`tabular-nums ${deficit > 0 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-text-muted)]'}`}>
+        <span
+          className={`tabular-nums ${deficit > 0 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-text-muted)]'}`}
+        >
           {actualPercent.toFixed(0)}% / {targetPercent}% target
         </span>
       </div>
@@ -168,7 +172,9 @@ export function SystemPerformanceWidget({
       <div
         className={`bg-[var(--color-bg-secondary)] backdrop-blur-xl rounded-2xl p-6 border border-[var(--color-border)] ${className}`}
       >
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">System Performance</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
+          System Performance
+        </h3>
         <div className="text-center py-6">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center">
             <svg
@@ -217,7 +223,9 @@ export function SystemPerformanceWidget({
       {/* Header + inline legend (Pillar I: reduce split-attention) */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">System Performance</h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+            System Performance
+          </h3>
           {weakestCount > 0 && (
             <span className="px-3 py-1 bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] text-sm rounded-full">
               {weakestCount} weak area{weakestCount > 1 ? 's' : ''}
@@ -230,7 +238,10 @@ export function SystemPerformanceWidget({
             Strong (≥70%)
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-data-provisional)]" aria-hidden />
+            <span
+              className="w-2.5 h-2.5 rounded-full bg-[var(--color-data-provisional)]"
+              aria-hidden
+            />
             Moderate (50–69%)
           </span>
           <span className="flex items-center gap-1.5">

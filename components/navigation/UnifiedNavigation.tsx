@@ -1,6 +1,6 @@
 /**
  * Unified Navigation
- * 
+ *
  * Cross-module navigation bar with seamless transitions.
  * Shows progress, preserves context, provides quick access to all modules.
  */

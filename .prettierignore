@@ -8,3 +8,6 @@ playwright-report
 .github
 *.md
 !README.md
+# Parse errors – fix JSX/template then remove
+components/shared/MobileScreenSizeTester.tsx
+scripts/find-optimal-contrast.ts

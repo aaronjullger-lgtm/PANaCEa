@@ -1,6 +1,6 @@
 /**
  * WelcomeBackCard - Shows last session summary and suggests next action
- * 
+ *
  * Reduces cognitive load for returning students by providing context
  * and a clear "continue" path without decision fatigue.
  */
@@ -26,7 +26,8 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
 }) => {
   const accuracy = lastSession.accuracy;
   const isGoodSession = accuracy >= 0.75;
-  const weakSystemName = lastSession.weakSystemName || 
+  const weakSystemName =
+    lastSession.weakSystemName ||
     (lastSession.weakSystem ? ABBREVIATION_TO_TOPIC_MAP[lastSession.weakSystem] : null);
 
   return (
@@ -74,9 +75,13 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
           ) : (
             <TrendingDown className="w-4 h-4 text-[var(--color-data-provisional)]" />
           )}
-          <span className={`text-sm font-semibold ${
-            isGoodSession ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'
-          }`}>
+          <span
+            className={`text-sm font-semibold ${
+              isGoodSession
+                ? 'text-[var(--color-data-pass)]'
+                : 'text-[var(--color-data-provisional)]'
+            }`}
+          >
             {Math.round(accuracy * 100)}%
           </span>
         </div>
@@ -87,12 +92,18 @@ export const WelcomeBackCard: React.FC<WelcomeBackCardProps> = ({
         <p className="text-sm text-[var(--color-text-secondary)] mb-4">
           {accuracy < 0.7 ? (
             <>
-              Missed some <span className="font-semibold text-[var(--color-text-primary)]">{weakSystemName}</span> questions. 
-              Ready to review?
+              Missed some{' '}
+              <span className="font-semibold text-[var(--color-text-primary)]">
+                {weakSystemName}
+              </span>{' '}
+              questions. Ready to review?
             </>
           ) : (
             <>
-              Continue building on <span className="font-semibold text-[var(--color-text-primary)]">{weakSystemName}</span>
+              Continue building on{' '}
+              <span className="font-semibold text-[var(--color-text-primary)]">
+                {weakSystemName}
+              </span>
             </>
           )}
         </p>

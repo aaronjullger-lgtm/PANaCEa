@@ -24,9 +24,7 @@ export const AccuracyCard = () => {
 
   return (
     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-sm">
-      <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4">
-        Current Accuracy
-      </h3>
+      <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4">Current Accuracy</h3>
 
       <RadialProgress
         value={accuracy}
@@ -212,7 +210,9 @@ export const ComprehensiveDashboardCard = ({
 }) => {
   return (
     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg">
-      <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-6">Performance Overview</h2>
+      <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-6">
+        Performance Overview
+      </h2>
 
       {/* Top Row: Radial Progress + Trend */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

@@ -143,7 +143,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
 
   const showSpeedFeedback = (timeMs: number) => {
     const seconds = Math.floor(timeMs / 1000);
-    
+
     if (timeMs < 10000) {
       toast.success(`Lightning fast! ${seconds}s - Strong recall`, {
         icon: '⚡',
@@ -187,7 +187,11 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
       case 'NEW':
         return { Icon: Sparkles, label: 'New Concept', color: 'bg-blue-500 text-white' };
       default:
-        return { Icon: FileText, label: 'Review', color: 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]' };
+        return {
+          Icon: FileText,
+          label: 'Review',
+          color: 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]',
+        };
     }
   };
 

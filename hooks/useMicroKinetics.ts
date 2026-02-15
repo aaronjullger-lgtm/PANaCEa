@@ -74,10 +74,7 @@ function computeCursorEntropy(points: Point[]): number {
   const idealDistance = Math.hypot(last.x - first.x, last.y - first.y) || 1;
   let pathLength = 0;
   for (let i = 1; i < points.length; i++) {
-    pathLength += Math.hypot(
-      points[i]!.x - points[i - 1]!.x,
-      points[i]!.y - points[i - 1]!.y
-    );
+    pathLength += Math.hypot(points[i]!.x - points[i - 1]!.x, points[i]!.y - points[i - 1]!.y);
   }
   return pathLength / idealDistance;
 }
@@ -97,7 +94,7 @@ function computeTremorScore(points: Point[]): number {
     const dy = points[i]!.y - points[i - 1]!.y;
     const segLen = Math.hypot(dx, dy);
     pathLength += segLen;
-    if (i > 1 && (dx * prevDx + dy * prevDy) < 0) reversals++;
+    if (i > 1 && dx * prevDx + dy * prevDy < 0) reversals++;
     prevDx = dx;
     prevDy = dy;
   }
@@ -208,9 +205,7 @@ export function useMicroKinetics(): UseMicroKineticsResult {
   const getMetrics = useCallback((): MicroKineticsMetrics => {
     const oscillations = countOscillations(hoverSequenceRef.current);
     const selectionDriftMs =
-      selectionTimestampRef.current !== null
-        ? Date.now() - selectionTimestampRef.current
-        : null;
+      selectionTimestampRef.current !== null ? Date.now() - selectionTimestampRef.current : null;
     const tremorScore = computeTremorScore(mousePointsRef.current);
     const cursorEntropy = computeCursorEntropy(mousePointsRef.current);
     return {

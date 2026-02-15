@@ -55,9 +55,9 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
     // Validate input with Zod schema
     const validation = await validateRequest(
-    request.clone() as Request<unknown, unknown>,
-    AdminContentCreateSchema
-  );
+      request.clone() as Request<unknown, unknown>,
+      AdminContentCreateSchema
+    );
     if (!validation.success) {
       return (validation as { success: false; response: Response }).response;
     }

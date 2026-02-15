@@ -16,7 +16,10 @@ const ParamsSchema = z.object({
 export const onRequestGet = authenticatedEndpoint(
   ParamsSchema,
   async (context) => {
-    const { env, validated } = context as { env: { DATABASE_URL: string }; validated: z.infer<typeof ParamsSchema> };
+    const { env, validated } = context as {
+      env: { DATABASE_URL: string };
+      validated: z.infer<typeof ParamsSchema>;
+    };
     const logger = createEndpointLogger('/api/study/resources/:id');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -40,7 +43,8 @@ export const onRequestGet = authenticatedEndpoint(
       });
 
       if (!resource) return { status: 404, error: 'Resource not found' };
-      if (resource.approvalStatus !== 'approved') return { status: 403, error: 'Resource not approved for use' };
+      if (resource.approvalStatus !== 'approved')
+        return { status: 403, error: 'Resource not approved for use' };
 
       return { data: { resource } };
     } catch (e) {
@@ -52,4 +56,3 @@ export const onRequestGet = authenticatedEndpoint(
   },
   { source: 'params', requestsPerMinute: 120 }
 );
-

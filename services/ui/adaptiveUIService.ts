@@ -1,15 +1,15 @@
 /**
  * Adaptive UI Service
- * 
+ *
  * Implements circadian UI adaptation using lumina to adjust dashboard
  * aesthetics based on user's circadian profile and time of day.
- * 
+ *
  * Features:
  * - Focus Mode during peak hours (high contrast)
  * - Review Mode during off-hours (warmer tones, reduced contrast)
  * - Rest Mode during late evening (subdued, low energy)
  * - Metacognition widgets embedded in study flow
- * 
+ *
  * @module adaptiveUIService
  */
 
@@ -30,7 +30,9 @@ interface AdaptiveUIServiceConfig {
 export class AdaptiveUIService {
   private config: AdaptiveUIServiceConfig;
 
-  constructor(config: AdaptiveUIServiceConfig = { enableCircadianAdaptation: true, allowUserOverride: true }) {
+  constructor(
+    config: AdaptiveUIServiceConfig = { enableCircadianAdaptation: true, allowUserOverride: true }
+  ) {
     this.config = config;
   }
 
@@ -83,10 +85,7 @@ export class AdaptiveUIService {
   /**
    * Create adaptive UI state.
    */
-  createAdaptiveState(
-    profile: UserCircadianProfile,
-    userOverride?: UIMode
-  ): AdaptiveUIState {
+  createAdaptiveState(profile: UserCircadianProfile, userOverride?: UIMode): AdaptiveUIState {
     const mode = userOverride ?? this.determineUIMode(profile);
     const theme = this.getThemeConfig(mode);
 

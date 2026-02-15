@@ -1,6 +1,6 @@
 /**
  * SOAP Comparison View
- * 
+ *
  * Displays side-by-side comparison of student's SOAP note with AI-generated
  * gold standard. Highlights missing, incomplete, and incorrect elements.
  */
@@ -190,7 +190,10 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
           <h3 className="text-lg font-semibold text-emerald-500 mb-3">✓ Strengths</h3>
           <ul className="space-y-2">
             {comparison.strengths.map((strength, i) => (
-              <li key={i} className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2">
+              <li
+                key={i}
+                className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2"
+              >
                 <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
                 <span>{strength}</span>
               </li>
@@ -205,7 +208,10 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
           <h3 className="text-lg font-semibold text-amber-500 mb-3">⚠ Areas for Improvement</h3>
           <ul className="space-y-2">
             {comparison.areasForImprovement.map((area, i) => (
-              <li key={i} className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2">
+              <li
+                key={i}
+                className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2"
+              >
                 <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
                 <span>{area}</span>
               </li>
@@ -217,7 +223,9 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
       {/* Teaching Points */}
       {comparison.teachingPoints.length > 0 && (
         <div className="rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-6">
-          <h3 className="text-lg font-semibold text-[var(--color-accent)] mb-3">💡 Teaching Points</h3>
+          <h3 className="text-lg font-semibold text-[var(--color-accent)] mb-3">
+            💡 Teaching Points
+          </h3>
           <ul className="space-y-2">
             {comparison.teachingPoints.map((point, i) => (
               <li key={i} className="text-sm text-[var(--color-text-secondary)]">

@@ -5,7 +5,9 @@
 
 import { lazy } from 'react';
 
-export const QuizViewWithErrorBoundary = lazy(() => import('../components/session/QuizViewWithErrorBoundary'));
+export const QuizViewWithErrorBoundary = lazy(
+  () => import('../components/session/QuizViewWithErrorBoundary')
+);
 export const MenuView = lazy(() => import('../components/navigation/MenuView'));
 export const PhotoDrillSession = lazy(() => import('../components/session/PhotoDrillSession'));
 export const RapidRecallDrill = lazy(() => import('../components/drill/recall/RapidRecallDrill'));
@@ -43,8 +45,10 @@ export const AntibioticMode = lazy(() => import('../components/modes/AntibioticM
 export const PatientEncounterMode = lazy(() => import('../components/modes/PatientEncounterMode'));
 export const CodeBlueSpeedMode = lazy(() => import('../components/modes/CodeBlueSpeedMode'));
 export const GrandRoundsMode = lazy(() => import('../components/modes/GrandRoundsMode'));
-export const ContrastiveDrillSession = lazy(
-  () => import('../components/drill/ContrastiveDrillSession').then((m) => ({ default: m.ContrastiveDrillSession }))
+export const ContrastiveDrillSession = lazy(() =>
+  import('../components/drill/ContrastiveDrillSession').then((m) => ({
+    default: m.ContrastiveDrillSession,
+  }))
 );
 export const ReasoningTutorMode = lazy(() => import('../components/modes/ReasoningTutorMode'));
 export const CramMode = lazy(() =>
@@ -67,16 +71,22 @@ export const PANRELASimulator = lazy(
 export const CommandPalette = lazy(() => import('../components/navigation/CommandPalette'));
 export const UserProfileModal = lazy(() => import('../components/onboarding/UserProfileModal'));
 export const BaselineAssessment = lazy(() =>
-  import('../components/onboarding/BaselineAssessment').then((m) => ({ default: m.BaselineAssessment }))
+  import('../components/onboarding/BaselineAssessment').then((m) => ({
+    default: m.BaselineAssessment,
+  }))
 );
 export const OnboardingYourPlan = lazy(() =>
-  import('../components/onboarding/OnboardingYourPlan').then((m) => ({ default: m.OnboardingYourPlan }))
+  import('../components/onboarding/OnboardingYourPlan').then((m) => ({
+    default: m.OnboardingYourPlan,
+  }))
 );
 export const MediaApproval = lazy(() => import('../pages/admin/MediaApproval'));
 export const StudyGroupDashboard = lazy(() => import('../components/social/StudyGroupDashboard'));
 export const ToolkitHub = lazy(() => import('../components/toolkit/ToolkitHub'));
 export const GapAnalysisDashboard = lazy(() =>
-  import('../components/dashboard/GapAnalysisDashboard').then((m) => ({ default: m.GapAnalysisDashboard }))
+  import('../components/dashboard/GapAnalysisDashboard').then((m) => ({
+    default: m.GapAnalysisDashboard,
+  }))
 );
 export const CommandCenterHub = lazy(() => import('../components/navigation/CommandCenterHub'));
 export const TrainingMenu = lazy(() => import('../components/dashboard/TrainingMenu'));
@@ -90,11 +100,13 @@ export const ClinicalReferenceLibrary = lazy(
   () => import('../components/library/ClinicalReferenceLibrary')
 );
 export const SmartConditionView = lazy(() =>
-  import('../components/library/SmartConditionView').then((m) => ({ default: m.SmartConditionView }))
+  import('../components/library/SmartConditionView').then((m) => ({
+    default: m.SmartConditionView,
+  }))
 );
 
-export const KnowledgeBaseHub = lazy(
-  () => import('../components/knowledge/KnowledgeBaseHub').then((m) => ({ default: m.KnowledgeBaseHub }))
+export const KnowledgeBaseHub = lazy(() =>
+  import('../components/knowledge/KnowledgeBaseHub').then((m) => ({ default: m.KnowledgeBaseHub }))
 );
 export const MyLibraryPage = lazy(() =>
   import('../components/pages/MyLibraryPage').then((m) => ({ default: m.MyLibraryPage }))
@@ -129,8 +141,12 @@ export const VisualizerPage = lazy(() =>
   import('../pages/VisualizerPage').then((m) => ({ default: m.VisualizerPage }))
 );
 export const MedicalDatabaseSearch = lazy(() =>
-  import('../components/external/MedicalDatabaseSearch').then((m) => ({ default: m.MedicalDatabaseSearch }))
+  import('../components/external/MedicalDatabaseSearch').then((m) => ({
+    default: m.MedicalDatabaseSearch,
+  }))
 );
 export const LiveStudySession = lazy(() =>
-  import('../components/collaboration/LiveStudySession').then((m) => ({ default: m.LiveStudySession }))
+  import('../components/collaboration/LiveStudySession').then((m) => ({
+    default: m.LiveStudySession,
+  }))
 );

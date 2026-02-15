@@ -86,7 +86,9 @@ export const onRequestGet = authenticatedEndpoint(ReviewQueueSchema, async (cont
 
     dueToday.sort((a, b) => {
       const prio = { high: 0, medium: 1, low: 2 };
-      return (prio[a.priority as keyof typeof prio] ?? 1) - (prio[b.priority as keyof typeof prio] ?? 1);
+      return (
+        (prio[a.priority as keyof typeof prio] ?? 1) - (prio[b.priority as keyof typeof prio] ?? 1)
+      );
     });
 
     log.info('Review queue fetched', { userId, dueCount: dueToday.length });

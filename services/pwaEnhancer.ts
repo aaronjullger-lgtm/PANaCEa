@@ -1,6 +1,6 @@
 /**
  * PWA Enhancer Service
- * 
+ *
  * Enhanced Progressive Web App features for better offline experience,
  * install prompts, and background sync
  */
@@ -55,13 +55,14 @@ export class PWAEnhancer {
 
   private initialize(): void {
     // Check if app is installed as PWA
-    this.status.isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                              (window.navigator as any).standalone === true ||
-                              document.referrer.includes('android-app://');
+    this.status.isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true ||
+      document.referrer.includes('android-app://');
 
     // Check if app is installed (for iOS)
-    this.status.isInstalled = this.status.isStandalone || 
-                              localStorage.getItem('pwa_installed') === 'true';
+    this.status.isInstalled =
+      this.status.isStandalone || localStorage.getItem('pwa_installed') === 'true';
 
     // Check online status
     this.status.isOnline = navigator.onLine;
@@ -113,7 +114,7 @@ export class PWAEnhancer {
         this.status.storageEstimate = {
           usage: estimate.usage || 0,
           quota: estimate.quota || 0,
-          usagePercentage: estimate.quota ? (estimate.usage || 0) / estimate.quota * 100 : 0,
+          usagePercentage: estimate.quota ? ((estimate.usage || 0) / estimate.quota) * 100 : 0,
         };
         this.notifyListeners();
       } catch (error) {
@@ -129,7 +130,7 @@ export class PWAEnhancer {
           scope: '/',
         });
         console.log('ServiceWorker registration successful with scope:', registration.scope);
-        
+
         // Check for updates
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
@@ -148,7 +149,7 @@ export class PWAEnhancer {
   }
 
   private notifyListeners(): void {
-    this.listeners.forEach(listener => listener({ ...this.status }));
+    this.listeners.forEach((listener) => listener({ ...this.status }));
   }
 
   /**
@@ -158,9 +159,9 @@ export class PWAEnhancer {
     this.listeners.push(listener);
     // Immediately call with current status
     listener({ ...this.status });
-    
+
     return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
+      this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 
@@ -182,7 +183,7 @@ export class PWAEnhancer {
     try {
       this.installPromptEvent.prompt();
       const choice = await this.installPromptEvent.userChoice;
-      
+
       if (choice.outcome === 'accepted') {
         this.status.isInstalled = true;
         this.status.hasInstallPrompt = false;
@@ -224,12 +225,12 @@ export class PWAEnhancer {
     if ('caches' in window) {
       try {
         const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
-        
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
+
         // Clear storage estimate
         this.status.storageEstimate = null;
         this.notifyListeners();
-        
+
         return true;
       } catch (error) {
         console.error('Cache clearing failed:', error);
@@ -339,7 +340,10 @@ export class PWAEnhancer {
   destroy(): void {
     window.removeEventListener('online', this.handleOnlineStatusChange);
     window.removeEventListener('offline', this.handleOnlineStatusChange);
-    window.removeEventListener('beforeinstallprompt', this.handleBeforeInstallPrompt as EventListener);
+    window.removeEventListener(
+      'beforeinstallprompt',
+      this.handleBeforeInstallPrompt as EventListener
+    );
     window.removeEventListener('appinstalled', this.handleAppInstalled);
     this.listeners = [];
   }
@@ -363,7 +367,7 @@ export function usePWAEnhancer(): {
   useEffect(() => {
     const enhancer = PWAEnhancer.getInstance();
     const unsubscribe = enhancer.subscribe(setStatus);
-    
+
     return () => {
       unsubscribe();
     };

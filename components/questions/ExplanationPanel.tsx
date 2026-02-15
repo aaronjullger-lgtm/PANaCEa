@@ -642,7 +642,10 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         </motion.div>
 
         {contentSource === 'openstax' && (
-          <OpenStaxAttributionFooter title={contentSourceTitle || 'Textbook'} sourceUrl="https://openstax.org" />
+          <OpenStaxAttributionFooter
+            title={contentSourceTitle || 'Textbook'}
+            sourceUrl="https://openstax.org"
+          />
         )}
       </div>
     </motion.div>

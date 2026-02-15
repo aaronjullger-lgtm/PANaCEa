@@ -260,6 +260,7 @@ export const MobileScreenSizeTester: React.FC<MobileScreenSizeTesterProps> = ({
         onClick={(e) => e.stopPropagation()}
         ref={containerRef}
       >
+        <div className="flex flex-col flex-1 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[var(--color-border)]">
           <div className="flex items-center gap-3">
@@ -800,7 +801,7 @@ export const MobileScreenSizeTester: React.FC<MobileScreenSizeTesterProps> = ({
           </div>
         </div>
       </div>
-      </motion.div>
+      </div>
 
       {/* Footer */}
       <footer className="p-4 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
@@ -824,6 +825,8 @@ export const MobileScreenSizeTester: React.FC<MobileScreenSizeTesterProps> = ({
           </div>
         </div>
       </footer>
-  </motion.div>
-);
+        </div>
+      </motion.div>
+    </motion.div>
+  );
 };

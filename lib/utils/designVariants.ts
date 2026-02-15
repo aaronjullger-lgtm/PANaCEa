@@ -7,12 +7,9 @@ export const buttonVariantStyles: Record<ButtonVariant, string> = {
   /* Secondary: High-contrast border and text for visibility */
   secondary:
     'bg-transparent text-[var(--color-text-primary)] border-2 border-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] dark:text-[var(--color-text-primary)] dark:border-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-secondary)] dark:hover:border-[var(--color-accent)] shadow-sm',
-  success:
-    'bg-[#0d7a6f] text-white hover:brightness-110 shadow-sm dark:bg-[#0d7a6f]',
-  warning:
-    'bg-[#92610a] text-white hover:brightness-110 shadow-sm dark:bg-[#92610a]',
-  danger:
-    'bg-[#b91c1c] text-white hover:brightness-110 shadow-sm dark:bg-[#b91c1c]',
+  success: 'bg-[#0d7a6f] text-white hover:brightness-110 shadow-sm dark:bg-[#0d7a6f]',
+  warning: 'bg-[#92610a] text-white hover:brightness-110 shadow-sm dark:bg-[#92610a]',
+  danger: 'bg-[#b91c1c] text-white hover:brightness-110 shadow-sm dark:bg-[#b91c1c]',
   ghost:
     'bg-transparent text-[var(--color-text-primary)] dark:text-[var(--color-text-secondary)] border-2 border-transparent hover:border-[var(--color-text-primary)] dark:hover:border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] dark:hover:bg-[var(--color-bg-secondary)]',
 };

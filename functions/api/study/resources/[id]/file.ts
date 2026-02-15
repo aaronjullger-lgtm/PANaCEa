@@ -53,7 +53,8 @@ export const onRequestGet = authenticatedEndpoint(
       });
 
       if (!resource) return { status: 404, error: 'Resource not found' };
-      if (resource.approvalStatus !== 'approved') return { status: 403, error: 'Resource not approved for use' };
+      if (resource.approvalStatus !== 'approved')
+        return { status: 403, error: 'Resource not approved for use' };
 
       const range = request.headers.get('Range') ?? undefined;
 
@@ -86,12 +87,19 @@ export const onRequestGet = authenticatedEndpoint(
 
       if (!upstream.ok && upstream.status !== 206) {
         const text = await upstream.text().catch(() => '');
-        logger.warn('Upstream PDF fetch failed', { id, status: upstream.status, text: text.slice(0, 200) });
+        logger.warn('Upstream PDF fetch failed', {
+          id,
+          status: upstream.status,
+          text: text.slice(0, 200),
+        });
         return { status: 502, error: 'Failed to fetch PDF' };
       }
 
       const outHeaders = new Headers();
-      outHeaders.set('Content-Type', resource.mimeType || pickHeader(upstream.headers, 'content-type') || 'application/pdf');
+      outHeaders.set(
+        'Content-Type',
+        resource.mimeType || pickHeader(upstream.headers, 'content-type') || 'application/pdf'
+      );
       outHeaders.set('Cache-Control', 'private, max-age=0, no-store');
 
       const contentLength = pickHeader(upstream.headers, 'content-length');
@@ -121,4 +129,3 @@ export const onRequestGet = authenticatedEndpoint(
   },
   { source: 'params', requestsPerMinute: 240 }
 );
-

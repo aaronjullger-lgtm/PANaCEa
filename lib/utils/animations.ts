@@ -48,49 +48,49 @@ export const ANIMATION_VARIANTS = {
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -20 },
   },
-  
+
   /** Fade in from above */
   fadeInDown: {
     initial: { opacity: 0, y: -20 },
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: 20 },
   },
-  
+
   /** Fade in from left */
   fadeInLeft: {
     initial: { opacity: 0, x: -20 },
     animate: { opacity: 1, x: 0 },
     exit: { opacity: 0, x: 20 },
   },
-  
+
   /** Fade in from right */
   fadeInRight: {
     initial: { opacity: 0, x: 20 },
     animate: { opacity: 1, x: 0 },
     exit: { opacity: 0, x: -20 },
   },
-  
+
   /** Scale in from center */
   scaleIn: {
     initial: { opacity: 0, scale: 0.95 },
     animate: { opacity: 1, scale: 1 },
     exit: { opacity: 0, scale: 0.95 },
   },
-  
+
   /** Scale in with slight bounce */
   scaleInBounce: {
     initial: { opacity: 0, scale: 0.8 },
     animate: { opacity: 1, scale: 1 },
     exit: { opacity: 0, scale: 0.8 },
   },
-  
+
   /** Slide in from bottom (for modals, drawers) */
   slideUp: {
     initial: { y: '100%' },
     animate: { y: 0 },
     exit: { y: '100%' },
   },
-  
+
   /** Slide in from right (for side panels) */
   slideLeft: {
     initial: { x: '100%' },
@@ -108,25 +108,25 @@ export const TRANSITIONS = {
     duration: ANIMATION_DURATIONS.fast,
     ease: EASING.easeOut,
   },
-  
+
   /** Standard transition for most animations */
   normal: {
     duration: ANIMATION_DURATIONS.normal,
     ease: EASING.easeOut,
   },
-  
+
   /** Smooth transition for page/content changes */
   smooth: {
     duration: ANIMATION_DURATIONS.slow,
     ease: EASING.easeInOut,
   },
-  
+
   /** Bouncy transition for playful elements */
   bouncy: {
     duration: ANIMATION_DURATIONS.normal,
     ease: EASING.bounce,
   },
-  
+
   /** Spring physics for natural feeling animations */
   spring: {
     type: 'spring',
@@ -160,10 +160,7 @@ export function prefersReducedMotion(): boolean {
 /**
  * Get safe animation properties that respect user preferences
  */
-export function getSafeAnimation<T extends object>(
-  animation: T,
-  fallback: Partial<T> = {}
-): T {
+export function getSafeAnimation<T extends object>(animation: T, fallback: Partial<T> = {}): T {
   if (prefersReducedMotion()) {
     return {
       ...animation,
@@ -256,7 +253,7 @@ export function createAnimationProps(
 ) {
   const baseVariant = ANIMATION_VARIANTS[variant];
   const baseTransition = TRANSITIONS[transition];
-  
+
   return {
     ...baseVariant,
     ...custom,
@@ -270,19 +267,19 @@ export function createAnimationProps(
 export const CSS_TRANSITIONS = {
   /** Standard transition for colors and opacity */
   colors: 'transition-colors duration-200 ease-out',
-  
+
   /** Transition for transforms (scale, translate) */
   transforms: 'transition-transform duration-200 ease-out',
-  
+
   /** Transition for opacity only */
   opacity: 'transition-opacity duration-200 ease-out',
-  
+
   /** Transition for all properties */
   all: 'transition-all duration-200 ease-out',
-  
+
   /** Fast transition for interactive feedback */
   fast: 'transition-all duration-150 ease-out',
-  
+
   /** Slow transition for dramatic effects */
   slow: 'transition-all duration-300 ease-in-out',
 } as const;

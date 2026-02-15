@@ -136,7 +136,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
       });
 
       if (!response.ok) {
-        const errBody = (await response.json()) as { error?: string };
+        const errBody = (await response.json().catch(() => ({}))) as { error?: string };
         throw new Error(errBody.error || 'Failed to generate content');
       }
 
@@ -353,7 +353,9 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
                 Connect foundational concepts for integrated learning
               </p>
               <div className="p-4 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-center text-sm text-[var(--color-text-muted)]">
-                Basic science links: manage via <code className="text-xs">npm run generate:basic-science-links</code> or admin content pipeline.
+                Basic science links: manage via{' '}
+                <code className="text-xs">npm run generate:basic-science-links</code> or admin
+                content pipeline.
               </div>
             </div>
           </div>

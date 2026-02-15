@@ -21,7 +21,9 @@ function parseArgs(): { folderId: string | null } {
 async function main(): Promise<void> {
   const { folderId } = parseArgs();
   if (!folderId) {
-    console.error('Usage: npx tsx scripts/refinery/test-drive-connection.ts --folderId=YOUR_FOLDER_ID');
+    console.error(
+      'Usage: npx tsx scripts/refinery/test-drive-connection.ts --folderId=YOUR_FOLDER_ID'
+    );
     process.exit(1);
   }
 

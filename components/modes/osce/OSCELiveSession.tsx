@@ -26,9 +26,7 @@ function buildSystemInstruction(context: LivePatientContext | null | undefined):
   const ageStr = context.age != null ? `${context.age}-year-old` : '';
   const sexStr = context.sex ?? '';
   const demo = [ageStr, sexStr].filter(Boolean).join(' ') || 'adult';
-  const cc = context.chiefComplaint?.trim()
-    ? ` Chief complaint: ${context.chiefComplaint}.`
-    : '';
+  const cc = context.chiefComplaint?.trim() ? ` Chief complaint: ${context.chiefComplaint}.` : '';
   return `You are ${name}, a ${demo} patient.${cc} Stay in character. If the student interrupts you, stop talking immediately. When asked about your vitals, use the get_current_vitals tool to look them up.`;
 }
 
@@ -44,16 +42,19 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
   patientContext,
   onClose,
 }) => {
-  const systemInstruction = useMemo(
-    () => buildSystemInstruction(patientContext),
-    [patientContext]
-  );
+  const systemInstruction = useMemo(() => buildSystemInstruction(patientContext), [patientContext]);
   const patientLabel = patientContext?.patientName ?? 'Marcus';
   const { getToken } = useAuth();
   const [status, setStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [micMuted, setMicMuted] = useState(false);
-  const sessionRef = useRef<{ close?: () => void; sendClientContent?: (opts: unknown) => void; sendToolResponse?: (opts: { functionResponses: Array<{ id?: string; name: string; response: unknown }> }) => void } | null>(null);
+  const sessionRef = useRef<{
+    close?: () => void;
+    sendClientContent?: (opts: unknown) => void;
+    sendToolResponse?: (opts: {
+      functionResponses: Array<{ id?: string; name: string; response: unknown }>;
+    }) => void;
+  } | null>(null);
   /** Guard against setState on unmounted component (same pattern as AudioInterface) */
   const mountedRef = useRef(true);
 
@@ -87,7 +88,8 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
               functionDeclarations: [
                 {
                   name: 'get_current_vitals',
-                  description: 'Look up the current vital signs for this patient (e.g. when the student asks for BP or heart rate). Returns bp, hr, rr, temp, o2.',
+                  description:
+                    'Look up the current vital signs for this patient (e.g. when the student asks for BP or heart rate). Returns bp, hr, rr, temp, o2.',
                   parameters: { type: 'object', properties: {} } as Record<string, unknown>,
                 },
               ],
@@ -95,9 +97,14 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
           ],
         },
         callbacks: {
-          onopen: () => { if (mountedRef.current) setStatus('connected'); },
+          onopen: () => {
+            if (mountedRef.current) setStatus('connected');
+          },
           onmessage: (msg: unknown) => {
-            const m = msg as { toolCall?: { functionCalls?: Array<{ id?: string; name?: string }> }; serverContent?: { turnComplete?: boolean } };
+            const m = msg as {
+              toolCall?: { functionCalls?: Array<{ id?: string; name?: string }> };
+              serverContent?: { turnComplete?: boolean };
+            };
             const calls = m?.toolCall?.functionCalls;
             if (calls?.length && sessionRef.current?.sendToolResponse) {
               Promise.all(
@@ -108,9 +115,17 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
                     .then((r) => r.json())
                     .then((json: unknown) => {
                       const j = json as { data?: unknown };
-                      return { id: fc.id, name: fc.name ?? 'get_current_vitals', response: j?.data ?? j };
+                      return {
+                        id: fc.id,
+                        name: fc.name ?? 'get_current_vitals',
+                        response: j?.data ?? j,
+                      };
                     })
-                    .catch(() => ({ id: fc.id, name: fc.name ?? 'get_current_vitals', response: { bp: '160/90', hr: 110 } }))
+                    .catch(() => ({
+                      id: fc.id,
+                      name: fc.name ?? 'get_current_vitals',
+                      response: { bp: '160/90', hr: 110 },
+                    }))
                 )
               ).then((functionResponses) => {
                 sessionRef.current?.sendToolResponse?.({ functionResponses });
@@ -125,13 +140,16 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
           onclose: (e: { reason?: string }) => {
             if (!mountedRef.current) return;
             // Use functional update to avoid stale closure over `status`
-            setStatus((prev) => prev === 'error' ? prev : 'idle');
+            setStatus((prev) => (prev === 'error' ? prev : 'idle'));
             if (e?.reason) setErrorMessage(e.reason);
           },
         },
       });
 
-      sessionRef.current = session as { close?: () => void; sendClientContent?: (opts: unknown) => void };
+      sessionRef.current = session as {
+        close?: () => void;
+        sendClientContent?: (opts: unknown) => void;
+      };
     } catch (err) {
       setStatus('error');
       setErrorMessage(err instanceof Error ? err.message : 'Failed to connect');
@@ -163,7 +181,9 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
       className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Live voice patient</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+          Live voice patient
+        </h3>
         {onClose && (
           <button
             type="button"
@@ -175,7 +195,8 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
         )}
       </div>
       <p className="text-sm text-[var(--color-text-muted)] mb-4">
-        Connect to talk to {patientLabel} (simulated patient) with voice. They can look up vitals when you ask.
+        Connect to talk to {patientLabel} (simulated patient) with voice. They can look up vitals
+        when you ask.
       </p>
       {status === 'idle' && (
         <button

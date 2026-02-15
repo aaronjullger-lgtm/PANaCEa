@@ -82,7 +82,9 @@ export function SocraticTutorChat({
           'What clue in the vignette suggests your answer might be wrong?';
 
         setMessages((prev) =>
-          userReply ? [...prev, { role: 'user', text: userReply }, { role: 'tutor', text }] : [{ role: 'tutor', text }]
+          userReply
+            ? [...prev, { role: 'user', text: userReply }, { role: 'tutor', text }]
+            : [{ role: 'tutor', text }]
         );
       } catch {
         setMessages((prev) => [
@@ -219,9 +221,7 @@ export function SocraticTutorChat({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder={
-              userTurnCount >= MAX_TURNS - 1
-                ? 'Ready for the answer?'
-                : 'Type your response…'
+              userTurnCount >= MAX_TURNS - 1 ? 'Ready for the answer?' : 'Type your response…'
             }
             className="flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
             aria-label="Your response to the tutor"

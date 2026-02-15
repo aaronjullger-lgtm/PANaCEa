@@ -130,10 +130,7 @@ function applyIntervention(
   return out;
 }
 
-function checkEmergencyValues(
-  vitals: VitalSigns,
-  ranges: VitalSignRangeRow[]
-): boolean {
+function checkEmergencyValues(vitals: VitalSigns, ranges: VitalSignRangeRow[]): boolean {
   const hr = getNumericVital(vitals, 'heartRate', 'hr');
   const sys = getNumericVital(vitals, 'bpSystolic', 'bp') || 120;
   const rr = getNumericVital(vitals, 'respiratoryRate', 'rr');
@@ -178,78 +175,81 @@ function pushSystemMessage(messages: unknown, text: string): unknown[] {
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(
-  InterveneBodySchema,
-  async (context) => {
-    const { env, validated, auth } = context;
-    const log = createEndpointLogger('/api/osce/intervene', auth.userId);
-    const prisma = createEdgePrismaClient(env.DATABASE_URL) as EdgePrismaClient;
+export const onRequestPost = authenticatedEndpoint(InterveneBodySchema, async (context) => {
+  const { env, validated, auth } = context;
+  const log = createEndpointLogger('/api/osce/intervene', auth.userId);
+  const prisma = createEdgePrismaClient(env.DATABASE_URL) as EdgePrismaClient;
 
-    try {
-      const { sessionId, interventionId } = validated.body;
-      const user = await resolveUserByClerkId(prisma, auth.userId);
-      if (!user) {
-        return { status: 404, error: 'User not found' };
-      }
-
-      const session = await prisma.patientEncounterSession.findFirst({
-        where: { id: sessionId, userId: user.id },
-        select: { id: true, physicalFindings: true, messages: true, status: true },
-      });
-      if (!session) {
-        return { status: 404, error: 'Session not found' };
-      }
-
-      const drug = await prisma.drug.findUnique({
-        where: { id: interventionId },
-        select: { drugClass: true, mechanismOfAction: true, genericName: true },
-      });
-      if (!drug) {
-        return { status: 404, error: 'Intervention (drug) not found' };
-      }
-
-      const ranges = await prisma.vitalSignRange.findMany({
-        select: { vitalSign: true, emergencyValues: true, elevation: true, depression: true, ranges: true },
-      });
-      let vitals: VitalSigns =
-        session.physicalFindings && typeof session.physicalFindings === 'object'
-          ? (session.physicalFindings as VitalSigns)
-          : {};
-      vitals = applyIntervention(vitals, drug, ranges);
-      const isEmergency = checkEmergencyValues(vitals, ranges);
-
-      const systemMessage = `15 minutes later. ${drug.genericName} administered. Vitals updated.`;
-      const updatedMessages = pushSystemMessage(session.messages, systemMessage);
-
-      await prisma.patientEncounterSession.update({
-        where: { id: sessionId },
-        data: {
-          physicalFindings: JSON.parse(JSON.stringify(vitals)) as Prisma.InputJsonValue,
-          messages: JSON.parse(JSON.stringify(updatedMessages)) as Prisma.InputJsonValue,
-          status: isEmergency ? 'Unstable' : 'active',
-          updatedAt: new Date(),
-        },
-      });
-
-      log.info('Intervention applied', {
-        sessionId,
-        interventionId,
-        isEmergency,
-      });
-
-      return {
-        data: {
-          success: true,
-          vitals,
-          isEmergency,
-          message: systemMessage,
-        },
-      };
-    } catch (e) {
-      log.error('Intervene error', e);
-      return { status: 500, error: 'Failed to apply intervention' };
-    } finally {
-      await safePrismaDisconnect(prisma);
+  try {
+    const { sessionId, interventionId } = validated.body;
+    const user = await resolveUserByClerkId(prisma, auth.userId);
+    if (!user) {
+      return { status: 404, error: 'User not found' };
     }
+
+    const session = await prisma.patientEncounterSession.findFirst({
+      where: { id: sessionId, userId: user.id },
+      select: { id: true, physicalFindings: true, messages: true, status: true },
+    });
+    if (!session) {
+      return { status: 404, error: 'Session not found' };
+    }
+
+    const drug = await prisma.drug.findUnique({
+      where: { id: interventionId },
+      select: { drugClass: true, mechanismOfAction: true, genericName: true },
+    });
+    if (!drug) {
+      return { status: 404, error: 'Intervention (drug) not found' };
+    }
+
+    const ranges = await prisma.vitalSignRange.findMany({
+      select: {
+        vitalSign: true,
+        emergencyValues: true,
+        elevation: true,
+        depression: true,
+        ranges: true,
+      },
+    });
+    let vitals: VitalSigns =
+      session.physicalFindings && typeof session.physicalFindings === 'object'
+        ? (session.physicalFindings as VitalSigns)
+        : {};
+    vitals = applyIntervention(vitals, drug, ranges);
+    const isEmergency = checkEmergencyValues(vitals, ranges);
+
+    const systemMessage = `15 minutes later. ${drug.genericName} administered. Vitals updated.`;
+    const updatedMessages = pushSystemMessage(session.messages, systemMessage);
+
+    await prisma.patientEncounterSession.update({
+      where: { id: sessionId },
+      data: {
+        physicalFindings: JSON.parse(JSON.stringify(vitals)) as Prisma.InputJsonValue,
+        messages: JSON.parse(JSON.stringify(updatedMessages)) as Prisma.InputJsonValue,
+        status: isEmergency ? 'Unstable' : 'active',
+        updatedAt: new Date(),
+      },
+    });
+
+    log.info('Intervention applied', {
+      sessionId,
+      interventionId,
+      isEmergency,
+    });
+
+    return {
+      data: {
+        success: true,
+        vitals,
+        isEmergency,
+        message: systemMessage,
+      },
+    };
+  } catch (e) {
+    log.error('Intervene error', e);
+    return { status: 500, error: 'Failed to apply intervention' };
+  } finally {
+    await safePrismaDisconnect(prisma);
   }
-);
+});

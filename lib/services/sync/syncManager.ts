@@ -312,14 +312,19 @@ class SyncManager {
             mode: 'session',
             selectedAnswer: ['A', 'B', 'C', 'D'][answer.selectedAnswer],
             ...(answer.telemetryJson && { telemetryJson: answer.telemetryJson }),
-            ...(answer.answerChangedCount != null && { answerChangedCount: answer.answerChangedCount }),
+            ...(answer.answerChangedCount != null && {
+              answerChangedCount: answer.answerChangedCount,
+            }),
             ...(answer.durationMs != null && { durationMs: answer.durationMs }),
           }),
         });
 
         if (response.ok) {
           answer.synced = true;
-          const data = (await response.json().catch(() => ({}))) as { data?: { attemptId?: string }; attemptId?: string };
+          const data = (await response.json().catch(() => ({}))) as {
+            data?: { attemptId?: string };
+            attemptId?: string;
+          };
           const payload = data?.data ?? data;
           if (payload?.attemptId) answer.attemptId = payload.attemptId;
           synced++;

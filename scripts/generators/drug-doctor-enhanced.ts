@@ -345,9 +345,7 @@ function levenshteinDistance(a: string, b: string): number {
       const left = matrix[i]?.[j - 1] ?? 0;
       const top = matrix[i - 1]?.[j] ?? 0;
       matrix[i]![j] =
-        b.charAt(i - 1) === a.charAt(j - 1)
-          ? prev
-          : Math.min(prev + 1, left + 1, top + 1);
+        b.charAt(i - 1) === a.charAt(j - 1) ? prev : Math.min(prev + 1, left + 1, top + 1);
     }
   }
   return matrix[b.length]?.[a.length] ?? 0;

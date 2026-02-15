@@ -75,7 +75,16 @@ import { DrillLoadingState } from '@/components/drill/DrillLoadingState';
 // Icons
 import { CloseIcon } from '@/components/icons/CloseIcon';
 import { FlagIcon } from '@/components/icons/FlagIcon';
-import { AlertTriangle, BarChart3, Calculator, MessageCircle, Clock, MoreHorizontal, ChevronDown, PenLine } from 'lucide-react';
+import {
+  AlertTriangle,
+  BarChart3,
+  Calculator,
+  MessageCircle,
+  Clock,
+  MoreHorizontal,
+  ChevronDown,
+  PenLine,
+} from 'lucide-react';
 import { ArrowLeftIcon } from '@/components/icons/ArrowLeftIcon';
 import { ClearHighlightIcon } from '@/components/icons/ClearHighlightIcon';
 
@@ -88,7 +97,12 @@ import type { StructuredRationale } from '@/components/questions/ExplanationPane
 import { calculateParTime } from '@/lib/utils/questionComplexity';
 
 /** Map Question to the shape inferQuestionType expects (type, stem, hasImage, mediaAssets). */
-function questionToInferShape(q: Question): { type?: string; stem?: string; hasImage?: boolean; mediaAssets?: unknown[] } {
+function questionToInferShape(q: Question): {
+  type?: string;
+  stem?: string;
+  hasImage?: boolean;
+  mediaAssets?: unknown[];
+} {
   return {
     type: (q as { type?: string }).type,
     stem: q.question ?? (q as { vignette?: string }).vignette,
@@ -220,7 +234,10 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
         {beforeTable && <p className="whitespace-pre-wrap">{beforeTable}</p>}
 
         {/* Table */}
-        <div className="my-2" dangerouslySetInnerHTML={{ __html: sanitizeForRationale(tableHTML) }} />
+        <div
+          className="my-2"
+          dangerouslySetInnerHTML={{ __html: sanitizeForRationale(tableHTML) }}
+        />
 
         {/* Any non-final text after the table */}
         {vignetteAfterTable && <p className="whitespace-pre-wrap">{vignetteAfterTable}</p>}
@@ -313,7 +330,11 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     for (const [name, callback] of Object.entries(requiredCallbacks)) {
       if (typeof callback !== 'function') {
-        logger.error(LOG_SCOPE, `Required callback prop "${name}" is not a function`, typeof callback);
+        logger.error(
+          LOG_SCOPE,
+          `Required callback prop "${name}" is not a function`,
+          typeof callback
+        );
       }
     }
   }, []);
@@ -452,7 +473,9 @@ const QuizView: React.FC<QuizViewProps> = ({
           { headers: token ? { Authorization: `Bearer ${token}` } : {} }
         );
         if (!res.ok || cancelled) return;
-        const json = (await res.json()) as { data?: { distribution?: { optionLetter: string; count: number; percent: number }[] } };
+        const json = (await res.json()) as {
+          data?: { distribution?: { optionLetter: string; count: number; percent: number }[] };
+        };
         const dist = json?.data?.distribution;
         if (!cancelled && Array.isArray(dist)) setAnswerDistribution(dist);
       } catch {
@@ -481,8 +504,11 @@ const QuizView: React.FC<QuizViewProps> = ({
     const correctCount = performanceData.filter((p) => p.isCorrect).length;
     const totalCount = performanceData.length;
     const scorePercent = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
-    announceToScreenReader(`Session ended. Score: ${scorePercent} percent. ${correctCount} correct out of ${totalCount}.`, 'assertive');
-    
+    announceToScreenReader(
+      `Session ended. Score: ${scorePercent} percent. ${correctCount} correct out of ${totalCount}.`,
+      'assertive'
+    );
+
     // For finite sessions (review mode), show the session end summary
     if (!shouldEndlesslyReplenish || performanceData.length >= 5) {
       setShowSessionEndSummary(true);
@@ -536,11 +562,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
       try {
         if (token) {
-          const result = await fetchSessionQuestions(
-            sessionSettings,
-            token,
-            BATCH_SIZE
-          );
+          const result = await fetchSessionQuestions(sessionSettings, token, BATCH_SIZE);
           newQuestions = result.questions ?? [];
         }
       } catch (apiErr) {
@@ -642,7 +664,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       const totalQuestions = queue.length + performanceData.length; // Approximate total
       const currentNum = questionNumber + 1;
       announceToScreenReader(`Question ${currentNum} of ${totalQuestions}`, 'polite');
-      
+
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const el = document.getElementById('question-container');
@@ -707,7 +729,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   const handleSubmitAnswer = useCallback(async () => {
     // Guard against submitting without selection or already submitting
     if (selectedAnswerIndex === null || !currentQuestion || isAnswered || isSubmitting) return;
-    
+
     setIsSubmitting(true);
 
     // Runtime validation: Log undefined functions to debug "S is not a function" error
@@ -729,7 +751,11 @@ const QuizView: React.FC<QuizViewProps> = ({
       .map(([name, type]) => `${name}: ${type}`);
 
     if (undefinedFunctions.length > 0) {
-      logger.error(LOG_SCOPE, 'CRITICAL: Undefined functions detected in handleSubmitAnswer', undefinedFunctions);
+      logger.error(
+        LOG_SCOPE,
+        'CRITICAL: Undefined functions detected in handleSubmitAnswer',
+        undefinedFunctions
+      );
     }
 
     setIsAnswered(true);
@@ -931,7 +957,10 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (sessionSettings.focus === 'review') {
       updateReviewQuestion(currentQuestion, isCorrect);
       if (isCorrect && currentQuestion.dueConceptKey && removeDueConcept) {
-        removeDueConcept(currentQuestion.dueConceptKey.conditionId, currentQuestion.dueConceptKey.taskType);
+        removeDueConcept(
+          currentQuestion.dueConceptKey.conditionId,
+          currentQuestion.dueConceptKey.taskType
+        );
       }
     } else {
       if (!isCorrect) {
@@ -1011,7 +1040,9 @@ const QuizView: React.FC<QuizViewProps> = ({
             });
 
             if (!response.ok) {
-              const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string };
+              const errorData = (await response
+                .json()
+                .catch(() => ({ error: 'Unknown error' }))) as { error?: string };
               throw new Error(errorData.error || `HTTP ${response.status}`);
             }
 
@@ -1038,8 +1069,8 @@ const QuizView: React.FC<QuizViewProps> = ({
               repetition: 0,
               easiness: schedule?.stability ?? 2.5,
               dueDate: realDueDate,
-              difficulty: schedule?.difficulty ?? (payload.quality ?? 3),
-              stabilityScore: schedule?.stability ?? (payload.implicitMetrics?.latencyRatio ?? 1.0),
+              difficulty: schedule?.difficulty ?? payload.quality ?? 3,
+              stabilityScore: schedule?.stability ?? payload.implicitMetrics?.latencyRatio ?? 1.0,
               qualityAdjusted: payload.quality ?? 3,
               modifiersApplied: schedule ? ['fsrs_v5'] : [],
             });
@@ -1301,8 +1332,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     return { score, correct, total };
   }, [isAnswered, currentQuestion, performanceData]);
 
-  const getBarColor = (score: number): string =>
-    getAccuracyBarClass(score);
+  const getBarColor = (score: number): string => getAccuracyBarClass(score);
 
   // NO CURRENT QUESTION - Show appropriate screen based on context
   if (!currentQuestion) {
@@ -1341,7 +1371,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
   // Note: Swipe gestures are available via swipeContainerRef
   // Apply to main quiz container if needed (currently disabled to avoid conflicts with text selection)
-  
+
   return (
     <div className="flex flex-col">
       <div className="mb-6">
@@ -1431,7 +1461,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 <div className="absolute right-0 top-full mt-1 w-56 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 py-1 animate-fade-in">
                   {/* Report Issue */}
                   <button
-                    onClick={() => { setShowReportModal(true); setShowOverflowMenu(false); }}
+                    onClick={() => {
+                      setShowReportModal(true);
+                      setShowOverflowMenu(false);
+                    }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                   >
                     <AlertTriangle className="w-4 h-4 text-[var(--color-data-fail)]" />
@@ -1460,7 +1493,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   </button>
                   {/* Lab Calculators */}
                   <button
-                    onClick={() => { setShowLabCalcModal(true); setShowOverflowMenu(false); }}
+                    onClick={() => {
+                      setShowLabCalcModal(true);
+                      setShowOverflowMenu(false);
+                    }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                   >
                     <Calculator className="w-4 h-4 text-[var(--color-accent)]" />
@@ -1522,83 +1558,83 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           className="mb-6"
         >
           <div ref={(el) => microKinetics.registerMouseTrackingContainer(el)}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentQuestion.id ?? `${currentQuestion.question}-${questionNumber}`}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-            >
-              {/* Sprint 10: Trust Badge for question source; Beta badge when from staging */}
-              <div className="flex items-center gap-2 mb-2">
-                <TrustBadge
-                  source={currentQuestion.source}
-                  fromStaging={currentQuestion.fromStaging}
-                  size="sm"
-                />
-              </div>
-              {currentQuestion.contentSource === 'openstax' && (
-                <OpenStaxAttributionFooter
-                  title={currentQuestion.contentSourceTitle || 'Textbook'}
-                  sourceUrl="https://openstax.org"
-                />
-              )}
-              {currentQuestion.imageUrl && (
-                <div className="mb-4 rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-                  <img
-                    src={currentQuestion.imageUrl}
-                    alt="Clinical image for question"
-                    className="w-full max-h-[320px] object-contain"
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentQuestion.id ?? `${currentQuestion.question}-${questionNumber}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+              >
+                {/* Sprint 10: Trust Badge for question source; Beta badge when from staging */}
+                <div className="flex items-center gap-2 mb-2">
+                  <TrustBadge
+                    source={currentQuestion.source}
+                    fromStaging={currentQuestion.fromStaging}
+                    size="sm"
                   />
                 </div>
-              )}
-              <QuestionDisplay
-                text={
-                  useSplitPane && currentQuestion.vignette
-                    ? currentQuestion.question.replace(
-                        (currentQuestion.vignette || '') + '\n\n',
-                        ''
-                      )
-                    : currentQuestion.question
-                }
-              />
-            </motion.div>
-          </AnimatePresence>
-
-          {/* ANSWER OPTIONS */}
-          <div className="space-y-3 mt-6">
-            {(currentQuestion.options || []).map((option, index) => {
-              const isCorrect = index === currentQuestion.correctAnswerIndex;
-              const isSelected = index === selectedAnswerIndex;
-              const optionLabel = ['A', 'B', 'C', 'D'][index] ?? 'A';
-
-              return (
-                <OptionHoverTracker
-                  key={index}
-                  optionIndex={index}
-                  optionLabel={optionLabel}
-                  className="block"
-                  onHoverEnter={microKinetics.recordHoverEnter}
-                >
-                  <AnswerChoice
-                    ref={(el) => {
-                      optionButtonsRef.current[index] = el;
-                    }}
-                    text={option}
-                    index={index}
-                    isSelected={isSelected}
-                    isCorrect={isCorrect}
-                    isAnswered={isAnswered}
-                    isEliminated={eliminatedAnswers.has(index)}
-                    onSelect={handleOptionClick}
-                    onToggleEliminate={handleToggleEliminate}
-                    fontSizeAdjustment={fontSizeAdjustment}
+                {currentQuestion.contentSource === 'openstax' && (
+                  <OpenStaxAttributionFooter
+                    title={currentQuestion.contentSourceTitle || 'Textbook'}
+                    sourceUrl="https://openstax.org"
                   />
-                </OptionHoverTracker>
-              );
-            })}
-          </div>
+                )}
+                {currentQuestion.imageUrl && (
+                  <div className="mb-4 rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                    <img
+                      src={currentQuestion.imageUrl}
+                      alt="Clinical image for question"
+                      className="w-full max-h-[320px] object-contain"
+                    />
+                  </div>
+                )}
+                <QuestionDisplay
+                  text={
+                    useSplitPane && currentQuestion.vignette
+                      ? currentQuestion.question.replace(
+                          (currentQuestion.vignette || '') + '\n\n',
+                          ''
+                        )
+                      : currentQuestion.question
+                  }
+                />
+              </motion.div>
+            </AnimatePresence>
+
+            {/* ANSWER OPTIONS */}
+            <div className="space-y-3 mt-6">
+              {(currentQuestion.options || []).map((option, index) => {
+                const isCorrect = index === currentQuestion.correctAnswerIndex;
+                const isSelected = index === selectedAnswerIndex;
+                const optionLabel = ['A', 'B', 'C', 'D'][index] ?? 'A';
+
+                return (
+                  <OptionHoverTracker
+                    key={index}
+                    optionIndex={index}
+                    optionLabel={optionLabel}
+                    className="block"
+                    onHoverEnter={microKinetics.recordHoverEnter}
+                  >
+                    <AnswerChoice
+                      ref={(el) => {
+                        optionButtonsRef.current[index] = el;
+                      }}
+                      text={option}
+                      index={index}
+                      isSelected={isSelected}
+                      isCorrect={isCorrect}
+                      isAnswered={isAnswered}
+                      isEliminated={eliminatedAnswers.has(index)}
+                      onSelect={handleOptionClick}
+                      onToggleEliminate={handleToggleEliminate}
+                      fontSizeAdjustment={fontSizeAdjustment}
+                    />
+                  </OptionHoverTracker>
+                );
+              })}
+            </div>
           </div>
 
           {/* SUBMIT BUTTON - Sticky on mobile so it doesn't scroll off-screen */}
@@ -1614,9 +1650,25 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               >
                 {isSubmitting ? (
                   <>
-                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Submitting...
                   </>
@@ -1667,21 +1719,23 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 )}
 
                 {/* Peer selection stats: "42% of students also chose B" — Wisdom of the Crowds (especially when wrong) */}
-                {selectedAnswerIndex !== null && answerDistribution && (() => {
-                  const letter = ['A', 'B', 'C', 'D'][selectedAnswerIndex];
-                  const entry = answerDistribution.find((d) => d.optionLetter === letter);
-                  if (!entry || entry.count === 0) return null;
-                  return (
-                    <p className="mb-4 text-sm text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-2">
-                      <span className="font-medium text-[var(--color-text-secondary)]">
-                        {entry.percent}% of students also chose {letter}.
-                      </span>
-                      {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
-                        <> This was a tricky distractor — you&apos;re not alone.</>
-                      )}
-                    </p>
-                  );
-                })()}
+                {selectedAnswerIndex !== null &&
+                  answerDistribution &&
+                  (() => {
+                    const letter = ['A', 'B', 'C', 'D'][selectedAnswerIndex];
+                    const entry = answerDistribution.find((d) => d.optionLetter === letter);
+                    if (!entry || entry.count === 0) return null;
+                    return (
+                      <p className="mb-4 text-sm text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-2">
+                        <span className="font-medium text-[var(--color-text-secondary)]">
+                          {entry.percent}% of students also chose {letter}.
+                        </span>
+                        {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
+                          <> This was a tricky distractor — you&apos;re not alone.</>
+                        )}
+                      </p>
+                    );
+                  })()}
 
                 {/* Core PANCE: rationale – structured (5-section) or legacy HTML */}
                 {(() => {
@@ -1702,17 +1756,25 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                         })();
                   if (structured) {
                     const letters = ['A', 'B', 'C', 'D'] as const;
-                    const whyKeys = ['whyIncorrectA', 'whyIncorrectB', 'whyIncorrectC', 'whyIncorrectD'] as const;
+                    const whyKeys = [
+                      'whyIncorrectA',
+                      'whyIncorrectB',
+                      'whyIncorrectC',
+                      'whyIncorrectD',
+                    ] as const;
                     const wasIncorrect = selectedAnswerIndex !== currentQuestion.correctAnswerIndex;
                     // Find the user's wrong answer explanation (if they got it wrong)
-                    const userChoiceLetter = selectedAnswerIndex !== null ? letters[selectedAnswerIndex] : null;
-                    const userChoiceKey = selectedAnswerIndex !== null ? whyKeys[selectedAnswerIndex] : null;
+                    const userChoiceLetter =
+                      selectedAnswerIndex !== null ? letters[selectedAnswerIndex] : null;
+                    const userChoiceKey =
+                      selectedAnswerIndex !== null ? whyKeys[selectedAnswerIndex] : null;
                     const userChoiceExplanation = userChoiceKey
                       ? (structured[userChoiceKey as keyof typeof structured] as string | undefined)
                       : null;
                     // Count how many extra sections exist for the "show full" toggle
                     const hasExtraSections = !!(
-                      (structured.highYieldImageOrTable && structured.highYieldImageOrTable !== 'N/A') ||
+                      (structured.highYieldImageOrTable &&
+                        structured.highYieldImageOrTable !== 'N/A') ||
                       structured.clinicalPearl ||
                       (structured.commonPitfalls && structured.commonPitfalls.length > 0)
                     );
@@ -1745,12 +1807,18 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                             </h3>
                             <div className="px-4 py-3 rounded-lg border text-sm bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border-dusty-rose-300 dark:border-dusty-rose-700">
                               <span className="font-semibold text-[var(--color-text-muted)]">
-                                Option {userChoiceLetter} ({currentQuestion.options[selectedAnswerIndex!]}):
+                                Option {userChoiceLetter} (
+                                {currentQuestion.options[selectedAnswerIndex!]}):
                               </span>{' '}
                               <span
                                 className="text-[var(--color-text-secondary)]"
                                 dangerouslySetInnerHTML={{
-                                  __html: sanitizeForRationale(userChoiceExplanation.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
+                                  __html: sanitizeForRationale(
+                                    userChoiceExplanation.replace(
+                                      /\*\*([^*]+)\*\*/g,
+                                      '<strong>$1</strong>'
+                                    )
+                                  ),
                                 }}
                               />
                             </div>
@@ -1766,7 +1834,12 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                             <div
                               className="text-[var(--color-text-secondary)] leading-relaxed bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3"
                               dangerouslySetInnerHTML={{
-                                __html: sanitizeForRationale(structured.whyCorrect.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
+                                __html: sanitizeForRationale(
+                                  structured.whyCorrect.replace(
+                                    /\*\*([^*]+)\*\*/g,
+                                    '<strong>$1</strong>'
+                                  )
+                                ),
                               }}
                             />
                           </section>
@@ -1794,7 +1867,12 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                                     <div
                                       className="text-[var(--color-text-secondary)] leading-relaxed bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3"
                                       dangerouslySetInnerHTML={{
-                                        __html: sanitizeForRationale(structured.whyCorrect.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
+                                        __html: sanitizeForRationale(
+                                          structured.whyCorrect.replace(
+                                            /\*\*([^*]+)\*\*/g,
+                                            '<strong>$1</strong>'
+                                          )
+                                        ),
                                       }}
                                     />
                                   </section>
@@ -1826,7 +1904,12 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                                             <span
                                               className="text-[var(--color-text-secondary)]"
                                               dangerouslySetInnerHTML={{
-                                                __html: sanitizeForRationale(text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
+                                                __html: sanitizeForRationale(
+                                                  text.replace(
+                                                    /\*\*([^*]+)\*\*/g,
+                                                    '<strong>$1</strong>'
+                                                  )
+                                                ),
                                               }}
                                             />
                                           </div>
@@ -1837,16 +1920,17 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                                 )}
 
                                 {/* High-Yield Image/Table */}
-                                {structured.highYieldImageOrTable && structured.highYieldImageOrTable !== 'N/A' && (
-                                  <section>
-                                    <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
-                                      High-Yield Image / Table
-                                    </h3>
-                                    <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed bg-steel-blue-50 dark:bg-steel-blue-900/20 border border-steel-blue-200 dark:border-steel-blue-800 rounded-lg px-4 py-3">
-                                      {structured.highYieldImageOrTable}
-                                    </p>
-                                  </section>
-                                )}
+                                {structured.highYieldImageOrTable &&
+                                  structured.highYieldImageOrTable !== 'N/A' && (
+                                    <section>
+                                      <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                                        High-Yield Image / Table
+                                      </h3>
+                                      <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed bg-steel-blue-50 dark:bg-steel-blue-900/20 border border-steel-blue-200 dark:border-steel-blue-800 rounded-lg px-4 py-3">
+                                        {structured.highYieldImageOrTable}
+                                      </p>
+                                    </section>
+                                  )}
 
                                 {/* Clinical Pearl */}
                                 {structured.clinicalPearl && (
@@ -1857,25 +1941,31 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                                     <div
                                       className="text-[var(--color-text-secondary)] leading-relaxed bg-muted-amber-50 dark:bg-muted-amber-900/20 border border-muted-amber-200 dark:border-muted-amber-800 rounded-lg px-4 py-3"
                                       dangerouslySetInnerHTML={{
-                                        __html: sanitizeForRationale(structured.clinicalPearl.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')),
+                                        __html: sanitizeForRationale(
+                                          structured.clinicalPearl.replace(
+                                            /\*\*([^*]+)\*\*/g,
+                                            '<strong>$1</strong>'
+                                          )
+                                        ),
                                       }}
                                     />
                                   </section>
                                 )}
 
                                 {/* Common Pitfalls */}
-                                {structured.commonPitfalls && structured.commonPitfalls.length > 0 && (
-                                  <section>
-                                    <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
-                                      Common Pitfalls
-                                    </h3>
-                                    <ul className="list-disc list-inside space-y-1 text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-4 py-3">
-                                      {structured.commonPitfalls.map((pitfall, i) => (
-                                        <li key={i}>{pitfall}</li>
-                                      ))}
-                                    </ul>
-                                  </section>
-                                )}
+                                {structured.commonPitfalls &&
+                                  structured.commonPitfalls.length > 0 && (
+                                    <section>
+                                      <h3 className="font-bold text-base mb-1.5 text-[var(--color-text-primary)]">
+                                        Common Pitfalls
+                                      </h3>
+                                      <ul className="list-disc list-inside space-y-1 text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-4 py-3">
+                                        {structured.commonPitfalls.map((pitfall, i) => (
+                                          <li key={i}>{pitfall}</li>
+                                        ))}
+                                      </ul>
+                                    </section>
+                                  )}
                               </>
                             )}
                           </>
@@ -1888,7 +1978,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   const firstSentenceEnd = raw.search(/[.!?]\s+/);
                   const bottomLine =
                     firstSentenceEnd > 0 ? raw.slice(0, firstSentenceEnd + 1).trim() : '';
-                  const restBody = firstSentenceEnd > 0 ? raw.slice(firstSentenceEnd + 1).trim() : '';
+                  const restBody =
+                    firstSentenceEnd > 0 ? raw.slice(firstSentenceEnd + 1).trim() : '';
                   const showRest = restBody.length > 0;
                   return (
                     <div className="space-y-4">
@@ -1910,7 +2001,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                           <div
                             ref={(el) => microKinetics.registerScrollContainer(el)}
                             className="text-[var(--color-text-secondary)] leading-relaxed bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-4 py-3 max-h-[40vh] overflow-y-auto prose prose-sm dark:prose-invert max-w-none"
-                            dangerouslySetInnerHTML={{ __html: sanitizeForRationale(showRest ? restBody : raw) }}
+                            dangerouslySetInnerHTML={{
+                              __html: sanitizeForRationale(showRest ? restBody : raw),
+                            }}
                           />
                         </section>
                       )}
@@ -1972,7 +2065,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     </h3>
                     <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
                       {currentQuestion.pearls.map((pearl, index) => (
-                        <li key={index} dangerouslySetInnerHTML={{ __html: sanitizeForRationale(pearl) }} />
+                        <li
+                          key={index}
+                          dangerouslySetInnerHTML={{ __html: sanitizeForRationale(pearl) }}
+                        />
                       ))}
                     </ul>
                   </div>
@@ -2038,9 +2134,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       />
 
       {/* Lab calculators modal – Anion Gap, Osmolar Gap, Parkland (in-question Calc button) */}
-      {showLabCalcModal && (
-        <QuizLabCalcModal onClose={() => setShowLabCalcModal(false)} />
-      )}
+      {showLabCalcModal && <QuizLabCalcModal onClose={() => setShowLabCalcModal(false)} />}
 
       {/* Report Question Issue Modal */}
       {currentQuestion && (
@@ -2126,19 +2220,23 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               correctAnswer={
                 (currentQuestion.options as string[])?.[currentQuestion.correctAnswerIndex] ?? ''
               }
-              userWrongAnswer={
-                (currentQuestion.options as string[])?.[selectedAnswerIndex] ?? ''
-              }
+              userWrongAnswer={(currentQuestion.options as string[])?.[selectedAnswerIndex] ?? ''}
               options={currentQuestion.options as string[]}
               fullExplanation={(() => {
-                const stripHtml = (s: string) => s.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                const stripHtml = (s: string) =>
+                  s
+                    .replace(/<[^>]*>/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
                 const r = currentQuestion.rationale;
                 if (typeof r === 'object' && r !== null && 'bottomLine' in r) {
                   const s = r as { bottomLine?: string; whyCorrect?: string };
-                  return [s.bottomLine, s.whyCorrect]
-                    .filter((x): x is string => typeof x === 'string')
-                    .map(stripHtml)
-                    .join(' ') || 'See rationale above.';
+                  return (
+                    [s.bottomLine, s.whyCorrect]
+                      .filter((x): x is string => typeof x === 'string')
+                      .map(stripHtml)
+                      .join(' ') || 'See rationale above.'
+                  );
                 }
                 return stripHtml(typeof r === 'string' ? r : '') || 'See rationale above.';
               })()}

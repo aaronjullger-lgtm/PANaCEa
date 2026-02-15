@@ -37,10 +37,10 @@ export async function onRequestPost(context: any) {
 
     if (!envelopeBody || envelopeBody.trim() === '') {
       console.warn('[Sentry Tunnel] Empty envelope body received');
-      return new Response(
-        JSON.stringify({ error: 'Empty envelope body', reason: 'empty_body' }),
-        { status: 400, headers: corsHeaders }
-      );
+      return new Response(JSON.stringify({ error: 'Empty envelope body', reason: 'empty_body' }), {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
 
     // Sentry envelopes are newline-delimited JSON; first line is the header (may contain dsn)

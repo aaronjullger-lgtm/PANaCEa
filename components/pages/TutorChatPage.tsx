@@ -37,8 +37,9 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
 
   const customSettings = preferences.customSettings as Record<string, unknown> | undefined;
   const activeKnowledgeCacheName = customSettings?.activeKnowledgeCacheName as string | undefined;
-  const activeKnowledgeCacheDisplayName = customSettings
-    ?.activeKnowledgeCacheDisplayName as string | undefined;
+  const activeKnowledgeCacheDisplayName = customSettings?.activeKnowledgeCacheDisplayName as
+    | string
+    | undefined;
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -245,9 +246,8 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
         <Sparkles className="w-4 h-4 text-[var(--color-accent)] mt-0.5" />
         <div>
           <p className="mb-1">
-            This Tutor uses your{' '}
-            <span className="font-semibold">Intelligence Profile</span> (Concept Gaps and recent
-            misses) and, when set, your{' '}
+            This Tutor uses your <span className="font-semibold">Intelligence Profile</span>{' '}
+            (Concept Gaps and recent misses) and, when set, your{' '}
             <span className="font-semibold">active Library document</span> to personalize answers.
           </p>
           {activeKnowledgeCacheName && (
@@ -279,12 +279,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
           aria-label="Tutor conversation"
         >
           {/* Live region so screen readers announce when the tutor is thinking */}
-          <div
-            className="sr-only"
-            aria-live="assertive"
-            aria-atomic
-            role="status"
-          >
+          <div className="sr-only" aria-live="assertive" aria-atomic role="status">
             {isStreaming ? 'Thinking…' : ''}
           </div>
           {messages.length === 0 && (
@@ -353,4 +348,3 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
 };
 
 export default TutorChatPage;
-

@@ -1,16 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export type ButtonVariant = 
-  | 'primary'      // Main action buttons (accent color)
-  | 'secondary'    // Secondary actions (bg-tertiary)
-  | 'outline'      // Border-only buttons
-  | 'ghost'        // Minimal buttons (text only)
-  | 'success'      // Positive actions (data-pass)
-  | 'warning'      // Cautionary actions (data-provisional)
-  | 'danger'       // Destructive actions (data-fail)
-  | 'accent'       // Alternative accent (color-accent)
-  | 'inverse';     // For dark backgrounds
+export type ButtonVariant =
+  | 'primary' // Main action buttons (accent color)
+  | 'secondary' // Secondary actions (bg-tertiary)
+  | 'outline' // Border-only buttons
+  | 'ghost' // Minimal buttons (text only)
+  | 'success' // Positive actions (data-pass)
+  | 'warning' // Cautionary actions (data-provisional)
+  | 'danger' // Destructive actions (data-fail)
+  | 'accent' // Alternative accent (color-accent)
+  | 'inverse'; // For dark backgrounds
 
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -19,9 +19,13 @@ export interface StandardButtonProps extends React.ButtonHTMLAttributes<HTMLButt
   size?: ButtonSize;
   fullWidth?: boolean;
   loading?: boolean;
+  /** Left-side icon (alias: use `icon` for compatibility) */
   leftIcon?: React.ReactNode;
+  /** Alias for leftIcon used by many call sites */
+  icon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-  children: React.ReactNode;
+  /** Button label (optional for icon-only buttons with aria-label) */
+  children?: React.ReactNode;
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -35,18 +39,24 @@ const sizeClasses: Record<ButtonSize, string> = {
 const variantClasses: Record<ButtonVariant, { base: string; hover: string; disabled: string }> = {
   primary: {
     base: 'bg-[var(--color-accent)] text-[var(--color-text-inverse)] border-2 border-[var(--color-accent-border,var(--color-accent-hover))]',
-    hover: 'hover:bg-[var(--color-accent)]/90 hover:border-[var(--color-accent-border,var(--color-accent-hover))]/90 active:bg-[var(--color-accent)]/80',
-    disabled: 'disabled:bg-[var(--color-bg-tertiary)] disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
+    hover:
+      'hover:bg-[var(--color-accent)]/90 hover:border-[var(--color-accent-border,var(--color-accent-hover))]/90 active:bg-[var(--color-accent)]/80',
+    disabled:
+      'disabled:bg-[var(--color-bg-tertiary)] disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
   },
   secondary: {
     base: 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] border border-[var(--color-border)]',
-    hover: 'hover:bg-[var(--color-bg-tertiary)]/80 hover:border-[var(--color-border-strong)] active:bg-[var(--color-bg-tertiary)]/70',
-    disabled: 'disabled:bg-[var(--color-bg-tertiary)]/50 disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
+    hover:
+      'hover:bg-[var(--color-bg-tertiary)]/80 hover:border-[var(--color-border-strong)] active:bg-[var(--color-bg-tertiary)]/70',
+    disabled:
+      'disabled:bg-[var(--color-bg-tertiary)]/50 disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
   },
   outline: {
     base: 'bg-transparent text-[var(--color-text-primary)] border border-[var(--color-border)]',
-    hover: 'hover:bg-[var(--color-bg-tertiary)]/50 hover:border-[var(--color-accent)] active:bg-[var(--color-bg-tertiary)]/40',
-    disabled: 'disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
+    hover:
+      'hover:bg-[var(--color-bg-tertiary)]/50 hover:border-[var(--color-accent)] active:bg-[var(--color-bg-tertiary)]/40',
+    disabled:
+      'disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
   },
   ghost: {
     base: 'bg-transparent text-[var(--color-text-primary)] border border-transparent',
@@ -55,28 +65,38 @@ const variantClasses: Record<ButtonVariant, { base: string; hover: string; disab
   },
   success: {
     base: 'bg-[var(--color-data-pass)] text-[var(--color-text-inverse)] border border-[var(--color-data-pass)]',
-    hover: 'hover:bg-[var(--color-data-pass)]/90 hover:border-[var(--color-data-pass)]/90 active:bg-[var(--color-data-pass)]/80',
-    disabled: 'disabled:bg-[var(--color-bg-tertiary)] disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
+    hover:
+      'hover:bg-[var(--color-data-pass)]/90 hover:border-[var(--color-data-pass)]/90 active:bg-[var(--color-data-pass)]/80',
+    disabled:
+      'disabled:bg-[var(--color-bg-tertiary)] disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
   },
   warning: {
     base: 'bg-[var(--color-data-provisional)] text-[var(--color-text-inverse)] border border-[var(--color-data-provisional)]',
-    hover: 'hover:bg-[var(--color-data-provisional)]/90 hover:border-[var(--color-data-provisional)]/90 active:bg-[var(--color-data-provisional)]/80',
-    disabled: 'disabled:bg-[var(--color-bg-tertiary)] disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
+    hover:
+      'hover:bg-[var(--color-data-provisional)]/90 hover:border-[var(--color-data-provisional)]/90 active:bg-[var(--color-data-provisional)]/80',
+    disabled:
+      'disabled:bg-[var(--color-bg-tertiary)] disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
   },
   danger: {
     base: 'bg-[var(--color-data-fail)] text-[var(--color-text-inverse)] border border-[var(--color-data-fail)]',
-    hover: 'hover:bg-[var(--color-data-fail)]/90 hover:border-[var(--color-data-fail)]/90 active:bg-[var(--color-data-fail)]/80',
-    disabled: 'disabled:bg-[var(--color-bg-tertiary)] disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
+    hover:
+      'hover:bg-[var(--color-data-fail)]/90 hover:border-[var(--color-data-fail)]/90 active:bg-[var(--color-data-fail)]/80',
+    disabled:
+      'disabled:bg-[var(--color-bg-tertiary)] disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
   },
   accent: {
     base: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/30',
-    hover: 'hover:bg-[var(--color-accent)]/20 hover:border-[var(--color-accent)]/50 active:bg-[var(--color-accent)]/30',
-    disabled: 'disabled:bg-[var(--color-bg-tertiary)] disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
+    hover:
+      'hover:bg-[var(--color-accent)]/20 hover:border-[var(--color-accent)]/50 active:bg-[var(--color-accent)]/30',
+    disabled:
+      'disabled:bg-[var(--color-bg-tertiary)] disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
   },
   inverse: {
     base: 'bg-[var(--color-text-inverse)] text-[var(--color-bg-primary)] border border-[var(--color-text-inverse)]',
-    hover: 'hover:bg-[var(--color-text-inverse)]/90 hover:border-[var(--color-text-inverse)]/90 active:bg-[var(--color-text-inverse)]/80',
-    disabled: 'disabled:bg-[var(--color-bg-tertiary)] disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
+    hover:
+      'hover:bg-[var(--color-text-inverse)]/90 hover:border-[var(--color-text-inverse)]/90 active:bg-[var(--color-text-inverse)]/80',
+    disabled:
+      'disabled:bg-[var(--color-bg-tertiary)] disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)] disabled:cursor-not-allowed',
   },
 };
 
@@ -86,15 +106,17 @@ export const StandardButton: React.FC<StandardButtonProps> = ({
   fullWidth = false,
   loading = false,
   leftIcon,
+  icon,
   rightIcon,
   children,
   className = '',
   disabled,
   ...props
 }) => {
+  const resolvedLeftIcon = leftIcon ?? icon;
   const variantConfig = variantClasses[variant];
   const sizeClass = sizeClasses[size];
-  
+
   const baseClasses = [
     'inline-flex items-center justify-center gap-2',
     'font-medium rounded-lg',
@@ -107,17 +129,32 @@ export const StandardButton: React.FC<StandardButtonProps> = ({
     variantConfig.hover,
     variantConfig.disabled,
     className,
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const isDisabled = disabled || loading;
 
+  const passthroughProps = props as Omit<
+    StandardButtonProps,
+    | 'variant'
+    | 'size'
+    | 'fullWidth'
+    | 'loading'
+    | 'leftIcon'
+    | 'icon'
+    | 'rightIcon'
+    | 'children'
+    | 'className'
+    | 'disabled'
+  >;
   return (
     <motion.button
       className={baseClasses}
       disabled={isDisabled}
       whileHover={!isDisabled ? { scale: 1.02 } : undefined}
       whileTap={!isDisabled ? { scale: 0.98 } : undefined}
-      {...props}
+      {...passthroughProps}
     >
       {loading && (
         <svg
@@ -141,8 +178,8 @@ export const StandardButton: React.FC<StandardButtonProps> = ({
           />
         </svg>
       )}
-      {!loading && leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
-      <span className="truncate">{children}</span>
+      {!loading && resolvedLeftIcon && <span className="flex-shrink-0">{resolvedLeftIcon}</span>}
+      {children != null && <span className="truncate">{children}</span>}
       {!loading && rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
     </motion.button>
   );

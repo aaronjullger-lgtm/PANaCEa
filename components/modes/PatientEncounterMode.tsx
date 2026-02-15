@@ -29,7 +29,14 @@ import type {
 import type { PlacedOrder, ExamFinding, OSCEScoreReport } from '@/types/osce-enhanced';
 
 // Import OSCE Enhancement Components
-import { OrderPanel, ExamPanel, RapportMeter, RapportIndicator, ScoreReport, OSCELiveSession } from './osce';
+import {
+  OrderPanel,
+  ExamPanel,
+  RapportMeter,
+  RapportIndicator,
+  ScoreReport,
+  OSCELiveSession,
+} from './osce';
 import { useEnhancedOSCE } from '@/hooks/useEnhancedOSCE';
 import {
   getRandomEncounterCase,
@@ -178,14 +185,19 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   // NEW: Integration hooks
   const { integration } = useSystemIntegration();
-  
+
   // NEW: Real-time SOAP generation
-  const { draftNote, addTranscript, addVitals: addSOAPVitals, finalize: finalizeSOAP } = useRealtimeSOAP({
+  const {
+    draftNote,
+    addTranscript,
+    addVitals: addSOAPVitals,
+    finalize: finalizeSOAP,
+  } = useRealtimeSOAP({
     sessionId: session?.id || null,
     geminiApiKey: GEMINI_API_KEY,
     enabled: viewState === 'active',
   });
-  
+
   // NEW: Timing analytics
   const {
     startMetric,
@@ -199,7 +211,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     caseId: currentCase?.id || null,
     enabled: viewState === 'active',
   });
-  
+
   // Refs for cleanup: diagnosis timing metric id; debrief stream abort
   const diagnosisMetricIdRef = useRef<string | null>(null);
   const debriefAbortRef = useRef<AbortController | null>(null);
@@ -306,38 +318,38 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   useEffect(() => {
     const caseWithStateMachine = currentCase as any; // Type extension for new field
     if (!caseWithStateMachine?.stateMachine) return;
-    
+
     let unsubscribe: (() => void) | undefined;
-    
+
     try {
       const stateMachine = caseWithStateMachine.stateMachine as unknown as PatientAVStateMachine;
       const engine = new PatientAVEngine(stateMachine);
-      
+
       // Subscribe to state transitions — capture unsubscribe for cleanup
       unsubscribe = engine.on((event) => {
         if (event.type === 'TRANSITION_COMPLETED') {
           const newState = engine.getCurrentAVState();
           setCurrentAVState(newState);
-          
+
           // Emit to integration service for coordination
           integration.emit({
             type: 'MODULE_ENTERED',
             timestamp: new Date().toISOString(),
             sourceModule: 'osce',
             sessionId: session?.id || 'unknown',
-            payload: { 
+            payload: {
               stateTransition: event.payload,
-              newState: newState.id
+              newState: newState.id,
             },
           });
-          
+
           // Show notification for critical state changes
           if (newState.id.includes('critical') || newState.id.includes('severe')) {
             toast.warning(`Patient state changed: ${newState.name}`);
           }
         }
       });
-      
+
       setAVEngine(engine);
       setCurrentAVState(engine.getCurrentAVState());
     } catch (error) {
@@ -353,7 +365,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   // NEW: Update state machine when vitals change (debounced to avoid trigger cascade)
   useEffect(() => {
     if (!avEngine) return;
-    
+
     const timer = setTimeout(() => {
       const vitalsForEngine = {
         hr: currentVitals.hr,
@@ -362,12 +374,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         rr: currentVitals.rr,
         o2: currentVitals.o2,
       };
-      
+
       avEngine.updateVitals(vitalsForEngine);
-      
+
       // Also update SOAP generator
       addSOAPVitals(vitalsForEngine);
-      
+
       // Check for critical vitals
       if (currentVitals.o2 < 88 || currentVitals.hr > 150 || currentVitals.hr < 50) {
         integration.emit({
@@ -377,7 +389,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           sessionId: session?.id || 'unknown',
           payload: {
             vitals: vitalsForEngine,
-            trigger: currentVitals.o2 < 88 ? 'hypoxia_severe' : currentVitals.hr > 150 ? 'tachycardia_severe' : 'bradycardia',
+            trigger:
+              currentVitals.o2 < 88
+                ? 'hypoxia_severe'
+                : currentVitals.hr > 150
+                  ? 'tachycardia_severe'
+                  : 'bradycardia',
           },
         });
       }
@@ -514,9 +531,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       setViewState('active');
     } catch (err) {
       console.error('Failed to start encounter', err);
-      setLoadError(
-        'Unable to load patient case. Please check your connection and try again.'
-      );
+      setLoadError('Unable to load patient case. Please check your connection and try again.');
       setViewState('landing');
     } finally {
       setIsLoading(false);
@@ -530,9 +545,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     detectInterventionIntent(currentQuestion);
 
     // NEW: Track conversation node for echo path
-    const parentNodeId = session.questions.length > 0 
-      ? `node-${session.questions.length - 1}`
-      : undefined;
+    const parentNodeId =
+      session.questions.length > 0 ? `node-${session.questions.length - 1}` : undefined;
     const nodeId = recordNode('question', currentQuestion, parentNodeId, 0.8); // 0.8 = relevance
 
     // Prepare history for AI
@@ -627,7 +641,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       // NEW: Emit DIAGNOSIS_MADE event for coordination
       const isCorrect = feedback.isCorrect;
       const timeElapsed = Date.now() - new Date(session.startTime).getTime();
-      
+
       integration.emit({
         type: 'DIAGNOSIS_MADE',
         timestamp: new Date().toISOString(),
@@ -1290,9 +1304,18 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 Conversation will appear here once the patient is ready.
               </p>
               <div className="flex items-center gap-2 mt-4 text-slate-500">
-                <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div
+                  className="w-2 h-2 bg-slate-600 rounded-full animate-bounce"
+                  style={{ animationDelay: '0ms' }}
+                />
+                <div
+                  className="w-2 h-2 bg-slate-600 rounded-full animate-bounce"
+                  style={{ animationDelay: '150ms' }}
+                />
+                <div
+                  className="w-2 h-2 bg-slate-600 rounded-full animate-bounce"
+                  style={{ animationDelay: '300ms' }}
+                />
               </div>
             </div>
           </div>
@@ -1494,8 +1517,16 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               ] as const
             ).map((step, idx) => {
               const isCurrent = phase === step.id;
-              const order = ['history', 'physical', 'diagnostic', 'diagnosis', 'treatment'].indexOf(phase);
-              const stepOrder = ['history', 'physical', 'diagnostic', 'diagnosis', 'treatment'].indexOf(step.id);
+              const order = ['history', 'physical', 'diagnostic', 'diagnosis', 'treatment'].indexOf(
+                phase
+              );
+              const stepOrder = [
+                'history',
+                'physical',
+                'diagnostic',
+                'diagnosis',
+                'treatment',
+              ].indexOf(step.id);
               const isPast = stepOrder < order;
               const isFuture = stepOrder > order;
               return (
@@ -1503,18 +1534,18 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   {idx > 0 && (
                     <ChevronRight
                       className={`w-4 h-4 flex-shrink-0 ${
-                        isPast ? 'text-slate-500' : isCurrent ? 'text-[var(--color-accent)]' : 'text-slate-600'
+                        isPast
+                          ? 'text-slate-500'
+                          : isCurrent
+                            ? 'text-[var(--color-accent)]'
+                            : 'text-slate-600'
                       }`}
                       aria-hidden
                     />
                   )}
                   <span
                     className={`text-sm font-medium transition-colors ${
-                      isCurrent
-                        ? 'text-white'
-                        : isPast
-                          ? 'text-slate-400'
-                          : 'text-slate-500'
+                      isCurrent ? 'text-white' : isPast ? 'text-slate-400' : 'text-slate-500'
                     }`}
                     aria-current={isCurrent ? 'step' : undefined}
                   >
@@ -1581,7 +1612,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     >
                       {clinicalFidelity.emrInterface ? (
                         <>
-                          <div className="flex border-b border-slate-700" role="tablist" aria-label="EMR sections">
+                          <div
+                            className="flex border-b border-slate-700"
+                            role="tablist"
+                            aria-label="EMR sections"
+                          >
                             {(['hpi', 'pmh', 'meds', 'labs'] as const).map((tab) => (
                               <button
                                 key={tab}
@@ -1595,44 +1630,89 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                     : 'border-transparent text-slate-400 hover:text-slate-300'
                                 }`}
                               >
-                                {tab === 'hpi' ? 'HPI' : tab === 'pmh' ? 'PMH' : tab === 'meds' ? 'Meds' : 'Labs'}
+                                {tab === 'hpi'
+                                  ? 'HPI'
+                                  : tab === 'pmh'
+                                    ? 'PMH'
+                                    : tab === 'meds'
+                                      ? 'Meds'
+                                      : 'Labs'}
                               </button>
                             ))}
                           </div>
-                          <div className="bg-slate-950 rounded-lg p-4 border border-slate-800 min-h-[120px]" role="tabpanel">
+                          <div
+                            className="bg-slate-950 rounded-lg p-4 border border-slate-800 min-h-[120px]"
+                            role="tabpanel"
+                          >
                             {emrTab === 'hpi' && (
                               <>
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Chief Complaint</p>
-                                <p className="text-lg font-semibold text-white whitespace-pre-wrap mb-4">
-                                  {currentCase?.chiefComplaint ? getTranslatedText(currentCase.chiefComplaint) : '—'}
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                                  Chief Complaint
                                 </p>
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">History of Present Illness</p>
+                                <p className="text-lg font-semibold text-white whitespace-pre-wrap mb-4">
+                                  {currentCase?.chiefComplaint
+                                    ? getTranslatedText(currentCase.chiefComplaint)
+                                    : '—'}
+                                </p>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                                  History of Present Illness
+                                </p>
                                 <p className="text-sm text-slate-300 whitespace-pre-wrap">
-                                  {currentCase?.historyData && typeof currentCase.historyData === 'object'
-                                    ? (currentCase.historyData['HPI'] ?? currentCase.historyData['hpi'] ?? currentCase.historyData['presentIllness'] ?? (Object.entries(currentCase.historyData).map(([k, v]) => `${k}: ${v}`).join('\n\n') || 'No HPI documented.'))
+                                  {currentCase?.historyData &&
+                                  typeof currentCase.historyData === 'object'
+                                    ? (currentCase.historyData['HPI'] ??
+                                      currentCase.historyData['hpi'] ??
+                                      currentCase.historyData['presentIllness'] ??
+                                      (Object.entries(currentCase.historyData)
+                                        .map(([k, v]) => `${k}: ${v}`)
+                                        .join('\n\n') ||
+                                        'No HPI documented.'))
                                     : 'No HPI documented.'}
                                 </p>
                               </>
                             )}
                             {emrTab === 'pmh' && (
                               <p className="text-sm text-slate-300 whitespace-pre-wrap">
-                                {currentCase?.historyData && typeof currentCase.historyData === 'object'
-                                  ? (currentCase.historyData['pastMedicalHistory'] ?? currentCase.historyData['PMH'] ?? currentCase.historyData['pmh'] ?? currentCase.historyData['Past Medical History'] ?? (Object.entries(currentCase.historyData).filter(([k]) => /pmh|past|medical|history/i.test(k)).map(([k, v]) => `${k}: ${v}`).join('\n\n') || 'No PMH documented.'))
+                                {currentCase?.historyData &&
+                                typeof currentCase.historyData === 'object'
+                                  ? (currentCase.historyData['pastMedicalHistory'] ??
+                                    currentCase.historyData['PMH'] ??
+                                    currentCase.historyData['pmh'] ??
+                                    currentCase.historyData['Past Medical History'] ??
+                                    (Object.entries(currentCase.historyData)
+                                      .filter(([k]) => /pmh|past|medical|history/i.test(k))
+                                      .map(([k, v]) => `${k}: ${v}`)
+                                      .join('\n\n') ||
+                                      'No PMH documented.'))
                                   : 'No PMH documented.'}
                               </p>
                             )}
                             {emrTab === 'meds' && (
                               <p className="text-sm text-slate-300 whitespace-pre-wrap">
-                                {currentCase?.historyData && typeof currentCase.historyData === 'object'
-                                  ? (currentCase.historyData['medications'] ?? currentCase.historyData['meds'] ?? currentCase.historyData['Meds'] ?? currentCase.historyData['Medications'] ?? (Object.entries(currentCase.historyData).filter(([k]) => /med|drug|rx/i.test(k)).map(([k, v]) => `${k}: ${v}`).join('\n\n') || 'No medications documented.'))
+                                {currentCase?.historyData &&
+                                typeof currentCase.historyData === 'object'
+                                  ? (currentCase.historyData['medications'] ??
+                                    currentCase.historyData['meds'] ??
+                                    currentCase.historyData['Meds'] ??
+                                    currentCase.historyData['Medications'] ??
+                                    (Object.entries(currentCase.historyData)
+                                      .filter(([k]) => /med|drug|rx/i.test(k))
+                                      .map(([k, v]) => `${k}: ${v}`)
+                                      .join('\n\n') ||
+                                      'No medications documented.'))
                                   : 'No medications documented.'}
                               </p>
                             )}
                             {emrTab === 'labs' && (
                               <div className="text-sm text-slate-300 space-y-1">
-                                {currentCase?.labData && typeof currentCase.labData === 'object' && Object.keys(currentCase.labData).length > 0
+                                {currentCase?.labData &&
+                                typeof currentCase.labData === 'object' &&
+                                Object.keys(currentCase.labData).length > 0
                                   ? Object.entries(currentCase.labData).map(([k, v]) => (
-                                      <div key={k} className="flex justify-between gap-4 py-1 border-b border-slate-800 last:border-0">
+                                      <div
+                                        key={k}
+                                        className="flex justify-between gap-4 py-1 border-b border-slate-800 last:border-0"
+                                      >
                                         <span className="font-medium text-slate-400">{k}</span>
                                         <span className="font-mono">{String(v)}</span>
                                       </div>
@@ -1820,7 +1900,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   transition={{ delay: 0.1 }}
                   className="bg-slate-900 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-slate-100">Perform Physical Exam</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-slate-100">
+                    Perform Physical Exam
+                  </h3>
                   <p className="text-sm text-slate-400 mb-3">
                     Describe the maneuver you want to perform (e.g., "Auscultate heart", "Palpate
                     abdomen").
@@ -2153,7 +2235,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                         className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"
                         style={{ animationDelay: '300ms' }}
                       />
-                      <span className="text-sm ml-2">{TYPING_STATUS_MESSAGES[typingStatusIndex % TYPING_STATUS_MESSAGES.length]}</span>
+                      <span className="text-sm ml-2">
+                        {TYPING_STATUS_MESSAGES[typingStatusIndex % TYPING_STATUS_MESSAGES.length]}
+                      </span>
                     </div>
                   )}
 
@@ -2305,443 +2389,456 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
     if (preceptorFeedback) {
       return (
-      <div className="min-h-screen bg-slate-950 text-slate-100">
-        {/* Header */}
-        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
-          <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Award className="w-8 h-8 text-slate-400" />
-              <div>
-                <h1 className="text-2xl font-bold">Virtual Preceptor Debrief</h1>
-                <p className="text-sm text-slate-400">Performance Evaluation</p>
+        <div className="min-h-screen bg-slate-950 text-slate-100">
+          {/* Header */}
+          <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+            <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Award className="w-8 h-8 text-slate-400" />
+                <div>
+                  <h1 className="text-2xl font-bold">Virtual Preceptor Debrief</h1>
+                  <p className="text-sm text-slate-400">Performance Evaluation</p>
+                </div>
               </div>
+              {onExit && (
+                <button
+                  onClick={onExit}
+                  className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 transition-colors border border-slate-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
             </div>
-            {onExit && (
-              <button
-                onClick={onExit}
-                className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 transition-colors border border-slate-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-          {/* Overall Score Hero */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-8 text-white shadow-xl text-center"
-          >
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm mb-4">
-              <Award className="w-12 h-12" />
-            </div>
-            <h2 className="text-5xl font-bold mb-2">{Math.round(preceptorFeedback.score)}%</h2>
-            <p className="text-xl opacity-90">Overall Performance</p>
-          </motion.div>
-
-          {/* Clinical Reasoning Breakdown */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-slate-900 rounded-xl p-6 border border-slate-800 shadow-md"
-          >
-            <h3 className="text-xl font-semibold mb-4 text-white">Clinical Competencies</h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              {[
-                {
-                  label: 'History-Taking',
-                  score: preceptorFeedback?.clinicalReasoning?.historyTaking ?? 0,
-                  icon: MessageSquare,
-                },
-                {
-                  label: 'Physical Exam',
-                  score: preceptorFeedback?.clinicalReasoning?.physicalExam ?? 0,
-                  icon: Stethoscope,
-                },
-                {
-                  label: 'Diagnosis',
-                  score: preceptorFeedback?.clinicalReasoning?.diagnosis ?? 0,
-                  icon: FileText,
-                },
-                {
-                  label: 'Management',
-                  score: preceptorFeedback?.clinicalReasoning?.management ?? 0,
-                  icon: Pill,
-                },
-              ].map((item, idx) => {
-                const percentage = ((item.score ?? 0) / 10) * 100;
-                const Icon = item.icon;
-                return (
-                  <div key={idx} className="bg-slate-950 rounded-lg p-4 border border-slate-800">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Icon className="w-5 h-5 text-slate-400" />
-                        <span className="font-semibold text-white">{item.label}</span>
-                      </div>
-                      <span className={`text-2xl font-bold ${getScoreColor(percentage)}`}>
-                        {item.score}/10
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${percentage}%` }}
-                        transition={{ duration: 0.8, delay: 0.2 + idx * 0.1 }}
-                        className={`h-full rounded-full ${
-                          percentage >= 80
-                            ? 'bg-data-pass'
-                            : percentage >= 60
-                              ? 'bg-data-provisional'
-                              : 'bg-data-fail'
-                        }`}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-
-          {/* Preceptor Narrative Feedback */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-slate-900 rounded-xl p-6 border border-slate-800 shadow-md"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center">
-                <User className="w-6 h-6 text-slate-400" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-white">Your Preceptor's Feedback</h3>
-                <p className="text-sm text-slate-400">Clinical reasoning assessment</p>
-              </div>
-            </div>
-            <div className="bg-slate-950 rounded-lg p-5 border border-slate-800">
-              <p className="text-white leading-relaxed italic">"{preceptorFeedback.feedback}"</p>
-            </div>
-          </motion.div>
-
-          {/* Strengths & Areas for Improvement */}
-          <div className="grid md:grid-cols-2 gap-6">
-            {preceptorFeedback.strengths.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-slate-900 rounded-xl p-6 border border-slate-800"
-              >
-                <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-slate-500" /> Strengths
-                </h3>
-                <ul className="space-y-2">
-                  {preceptorFeedback.strengths.map((strength, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
-                      <span className="text-slate-500 mt-0.5">•</span>
-                      <span>{strength}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            )}
-
-            {preceptorFeedback.areasForImprovement.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-slate-900 rounded-xl p-6 border border-slate-800"
-              >
-                <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
-                  <ArrowRight className="w-5 h-5 text-slate-500" /> Areas for Improvement
-                </h3>
-                <ul className="space-y-2">
-                  {preceptorFeedback.areasForImprovement.map((area, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
-                      <span className="text-slate-500 mt-0.5">•</span>
-                      <span>{area}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            )}
           </div>
 
-          {/* Missed Critical Cues */}
-          {preceptorFeedback.missedCriticalCues.length > 0 && (
+          <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+            {/* Overall Score Hero */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-slate-900 rounded-xl p-6 border border-slate-800"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-8 text-white shadow-xl text-center"
             >
-              <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
-                <XCircle className="w-5 h-5 text-slate-500" /> Missed Critical Cues
-              </h3>
-              <p className="text-sm text-slate-400 mb-3">
-                The patient mentioned these important details that you didn't follow up on:
-              </p>
-              <ul className="space-y-2">
-                {preceptorFeedback.missedCriticalCues.map((cue, idx) => (
-                  <li
-                    key={idx}
-                    className="flex items-start gap-2 text-sm text-slate-300 bg-slate-950 rounded p-3 border border-slate-800"
-                  >
-                    <span className="text-slate-500 font-bold mt-0.5">!</span>
-                    <span>{cue}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          )}
-
-          {/* Dangerous or inappropriate actions */}
-          {preceptorFeedback.dangerousActions?.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.51 }}
-              className="bg-slate-900 rounded-xl p-6 border border-red-900/50"
-            >
-              <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-500" /> Dangerous or Inappropriate Actions
-              </h3>
-              <p className="text-sm text-slate-400 mb-3">
-                The preceptor identified the following safety or appropriateness concerns:
-              </p>
-              <ul className="space-y-2">
-                {preceptorFeedback.dangerousActions.map((action, idx) => (
-                  <li
-                    key={idx}
-                    className="flex items-start gap-2 text-sm text-slate-300 bg-slate-950 rounded p-3 border border-slate-800"
-                  >
-                    <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                    <span>{action}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          )}
-
-          {/* Rubric Checklist (from grade API) – always show section: loading, unavailable, or checklist */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.52 }}
-            className="bg-slate-900 rounded-xl p-6 border border-slate-800"
-          >
-            <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-slate-500" /> Rubric Checklist
-            </h3>
-            {gradeResultLoading ? (
-              <div className="space-y-2" aria-busy="true" aria-label="Grading in progress">
-                <div className="h-4 bg-slate-700 rounded animate-pulse w-3/4" />
-                <div className="h-4 bg-slate-700 rounded animate-pulse w-1/2" />
-                <div className="h-4 bg-slate-700 rounded animate-pulse w-5/6" />
-                <p className="text-sm text-slate-400 mt-2">Grading…</p>
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm mb-4">
+                <Award className="w-12 h-12" />
               </div>
-            ) : gradeResult && (gradeResult.checklist?.length > 0 || gradeResult.redFlagsMissed?.length > 0) ? (
-              <>
-                {gradeResult.checklist?.length > 0 && (
-                  <ul className="space-y-2 mb-4">
-                    {gradeResult.checklist.map((item, idx) => (
-                      <li
-                        key={idx}
-                        className={`flex items-start gap-2 text-sm rounded p-3 border ${
-                          item.status === 'PASS'
-                            ? 'bg-emerald-950/30 border-emerald-800 text-slate-300'
-                            : 'bg-slate-950 border-slate-800 text-slate-300'
-                        }`}
-                      >
-                        {item.status === 'PASS' ? (
-                          <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                        ) : (
-                          <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                        )}
-                        <span className="font-medium">{item.item}</span>
-                        {item.feedback && (
-                          <span className="text-slate-400 text-xs block mt-1 pl-6">{item.feedback}</span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {gradeResult.redFlagsMissed?.length > 0 && (
-                  <div>
-                    <p className="text-sm font-semibold text-red-400 mb-2">Red flags missed:</p>
-                    <ul className="space-y-1">
-                      {gradeResult.redFlagsMissed.map((flag, idx) => (
-                        <li key={idx} className="text-sm text-slate-300 flex items-center gap-2">
-                          <XCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
-                          {flag}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
-                <p className="font-medium text-slate-300">Rubric: Unavailable for this case</p>
-                <p className="text-sm text-slate-400 mt-1">
-                  Grading could not be completed; you still have Preceptor feedback below.
-                </p>
-                {session?.id && (
-                  <button
-                    type="button"
-                    onClick={handleRetryGrading}
-                    disabled={gradeResultLoading}
-                    className="mt-3 px-3 py-2 text-sm font-medium rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white transition-colors"
-                  >
-                    {gradeResultLoading ? 'Grading…' : 'Retry grading'}
-                  </button>
-                )}
-              </div>
-            )}
-          </motion.div>
+              <h2 className="text-5xl font-bold mb-2">{Math.round(preceptorFeedback.score)}%</h2>
+              <p className="text-xl opacity-90">Overall Performance</p>
+            </motion.div>
 
-          {/* Bedside Manner (from Ghost Listener / soft skills analysis) */}
-          {gradeResult?.softSkillsReport && (
+            {/* Clinical Reasoning Breakdown */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.53 }}
-              className="bg-slate-900 rounded-xl p-6 border border-slate-800"
+              transition={{ delay: 0.1 }}
+              className="bg-slate-900 rounded-xl p-6 border border-slate-800 shadow-md"
             >
-              <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
-                <Heart className="w-5 h-5 text-slate-500" aria-hidden />
-                Bedside Manner
-              </h3>
-              <div className="grid gap-3">
-                {(['empathy', 'professionalism', 'pacing'] as const).map((key) => {
-                  const item = gradeResult.softSkillsReport![key];
-                  if (!item) return null;
-                  const pct = (item.score / 5) * 100;
+              <h3 className="text-xl font-semibold mb-4 text-white">Clinical Competencies</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                {[
+                  {
+                    label: 'History-Taking',
+                    score: preceptorFeedback?.clinicalReasoning?.historyTaking ?? 0,
+                    icon: MessageSquare,
+                  },
+                  {
+                    label: 'Physical Exam',
+                    score: preceptorFeedback?.clinicalReasoning?.physicalExam ?? 0,
+                    icon: Stethoscope,
+                  },
+                  {
+                    label: 'Diagnosis',
+                    score: preceptorFeedback?.clinicalReasoning?.diagnosis ?? 0,
+                    icon: FileText,
+                  },
+                  {
+                    label: 'Management',
+                    score: preceptorFeedback?.clinicalReasoning?.management ?? 0,
+                    icon: Pill,
+                  },
+                ].map((item, idx) => {
+                  const percentage = ((item.score ?? 0) / 10) * 100;
+                  const Icon = item.icon;
                   return (
-                    <div key={key} className="bg-slate-950 rounded-lg p-3 border border-slate-800">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-medium text-slate-300 capitalize">{key}</span>
-                        <span
-                          className={`text-sm font-bold ${
-                            pct >= 80 ? 'text-emerald-400' : pct >= 60 ? 'text-amber-400' : 'text-red-400'
-                          }`}
-                        >
-                          {item.score}/5
+                    <div key={idx} className="bg-slate-950 rounded-lg p-4 border border-slate-800">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Icon className="w-5 h-5 text-slate-400" />
+                          <span className="font-semibold text-white">{item.label}</span>
+                        </div>
+                        <span className={`text-2xl font-bold ${getScoreColor(percentage)}`}>
+                          {item.score}/10
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400">{item.feedback}</p>
+                      <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percentage}%` }}
+                          transition={{ duration: 0.8, delay: 0.2 + idx * 0.1 }}
+                          className={`h-full rounded-full ${
+                            percentage >= 80
+                              ? 'bg-data-pass'
+                              : percentage >= 60
+                                ? 'bg-data-provisional'
+                                : 'bg-data-fail'
+                          }`}
+                        />
+                      </div>
                     </div>
                   );
                 })}
               </div>
             </motion.div>
-          )}
 
-          {/* Differential Diagnoses to Consider */}
-          {preceptorFeedback.differentialDiagnosis.length > 0 && (
+            {/* Preceptor Narrative Feedback */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="bg-slate-900 rounded-xl p-6 border border-slate-800"
+              transition={{ delay: 0.2 }}
+              className="bg-slate-900 rounded-xl p-6 border border-slate-800 shadow-md"
             >
-              <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
-                <Activity className="w-5 h-5 text-slate-500" /> Differential Diagnoses to Consider
-              </h3>
-              <p className="text-sm text-slate-400 mb-3">
-                Based on the presentation, you should have considered:
-              </p>
-              <div className="grid sm:grid-cols-2 gap-2">
-                {preceptorFeedback.differentialDiagnosis.map((dx, idx) => (
-                  <div key={idx} className="bg-slate-950 rounded-lg p-3 border border-slate-800">
-                    <span className="font-semibold text-slate-300">{dx}</span>
-                  </div>
-                ))}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center">
+                  <User className="w-6 h-6 text-slate-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-white">Your Preceptor's Feedback</h3>
+                  <p className="text-sm text-slate-400">Clinical reasoning assessment</p>
+                </div>
+              </div>
+              <div className="bg-slate-950 rounded-lg p-5 border border-slate-800">
+                <p className="text-white leading-relaxed italic">"{preceptorFeedback.feedback}"</p>
               </div>
             </motion.div>
-          )}
 
-          {/* Correct Diagnosis Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="bg-action-blue-50 dark:bg-action-blue-900/20 rounded-xl p-6 border border-action-blue-200 dark:border-action-blue-800"
-          >
-            <h3 className="text-lg font-semibold mb-3 text-action-blue-700 dark:text-action-blue-300">
-              Correct Diagnosis
-            </h3>
-            <p className="text-2xl font-bold text-action-blue-900 dark:text-action-blue-100 mb-3">
-              {currentCase.correctDiagnosis}
-            </p>
-            {currentCase.teachingPoints && currentCase.teachingPoints.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-action-blue-200 dark:border-action-blue-800">
-                <p className="text-sm font-semibold text-action-blue-700 dark:text-action-blue-300 mb-2">
-                  Teaching Points:
+            {/* Strengths & Areas for Improvement */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {preceptorFeedback.strengths.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-slate-900 rounded-xl p-6 border border-slate-800"
+                >
+                  <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-slate-500" /> Strengths
+                  </h3>
+                  <ul className="space-y-2">
+                    {preceptorFeedback.strengths.map((strength, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
+                        <span className="text-slate-500 mt-0.5">•</span>
+                        <span>{strength}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              )}
+
+              {preceptorFeedback.areasForImprovement.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-slate-900 rounded-xl p-6 border border-slate-800"
+                >
+                  <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
+                    <ArrowRight className="w-5 h-5 text-slate-500" /> Areas for Improvement
+                  </h3>
+                  <ul className="space-y-2">
+                    {preceptorFeedback.areasForImprovement.map((area, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
+                        <span className="text-slate-500 mt-0.5">•</span>
+                        <span>{area}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Missed Critical Cues */}
+            {preceptorFeedback.missedCriticalCues.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="bg-slate-900 rounded-xl p-6 border border-slate-800"
+              >
+                <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
+                  <XCircle className="w-5 h-5 text-slate-500" /> Missed Critical Cues
+                </h3>
+                <p className="text-sm text-slate-400 mb-3">
+                  The patient mentioned these important details that you didn't follow up on:
                 </p>
-                <ul className="space-y-1">
-                  {currentCase.teachingPoints.map((point, idx) => (
+                <ul className="space-y-2">
+                  {preceptorFeedback.missedCriticalCues.map((cue, idx) => (
                     <li
                       key={idx}
-                      className="text-sm text-action-blue-900 dark:text-action-blue-100 flex items-start gap-2"
+                      className="flex items-start gap-2 text-sm text-slate-300 bg-slate-950 rounded p-3 border border-slate-800"
                     >
-                      <Award className="w-4 h-4 text-action-blue-500 flex-shrink-0 mt-0.5" />
-                      <span>{point}</span>
+                      <span className="text-slate-500 font-bold mt-0.5">!</span>
+                      <span>{cue}</span>
                     </li>
                   ))}
                 </ul>
-              </div>
+              </motion.div>
             )}
-          </motion.div>
 
-          {/* Legacy AAR (if available) */}
-          {aar && (
+            {/* Dangerous or inappropriate actions */}
+            {preceptorFeedback.dangerousActions?.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.51 }}
+                className="bg-slate-900 rounded-xl p-6 border border-red-900/50"
+              >
+                <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-500" /> Dangerous or Inappropriate
+                  Actions
+                </h3>
+                <p className="text-sm text-slate-400 mb-3">
+                  The preceptor identified the following safety or appropriateness concerns:
+                </p>
+                <ul className="space-y-2">
+                  {preceptorFeedback.dangerousActions.map((action, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2 text-sm text-slate-300 bg-slate-950 rounded p-3 border border-slate-800"
+                    >
+                      <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                      <span>{action}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
+
+            {/* Rubric Checklist (from grade API) – always show section: loading, unavailable, or checklist */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="bg-slate-900 rounded-xl p-6 border border-slate-800 shadow-md"
+              transition={{ delay: 0.52 }}
+              className="bg-slate-900 rounded-xl p-6 border border-slate-800"
             >
-              <h3 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
-                <FileText className="w-5 h-5" /> Additional Notes
+              <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-slate-500" /> Rubric Checklist
               </h3>
-              <div className="prose dark:prose-invert max-w-none text-slate-400 whitespace-pre-wrap text-sm">
-                {aar}
-              </div>
+              {gradeResultLoading ? (
+                <div className="space-y-2" aria-busy="true" aria-label="Grading in progress">
+                  <div className="h-4 bg-slate-700 rounded animate-pulse w-3/4" />
+                  <div className="h-4 bg-slate-700 rounded animate-pulse w-1/2" />
+                  <div className="h-4 bg-slate-700 rounded animate-pulse w-5/6" />
+                  <p className="text-sm text-slate-400 mt-2">Grading…</p>
+                </div>
+              ) : gradeResult &&
+                (gradeResult.checklist?.length > 0 || gradeResult.redFlagsMissed?.length > 0) ? (
+                <>
+                  {gradeResult.checklist?.length > 0 && (
+                    <ul className="space-y-2 mb-4">
+                      {gradeResult.checklist.map((item, idx) => (
+                        <li
+                          key={idx}
+                          className={`flex items-start gap-2 text-sm rounded p-3 border ${
+                            item.status === 'PASS'
+                              ? 'bg-emerald-950/30 border-emerald-800 text-slate-300'
+                              : 'bg-slate-950 border-slate-800 text-slate-300'
+                          }`}
+                        >
+                          {item.status === 'PASS' ? (
+                            <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                          )}
+                          <span className="font-medium">{item.item}</span>
+                          {item.feedback && (
+                            <span className="text-slate-400 text-xs block mt-1 pl-6">
+                              {item.feedback}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {gradeResult.redFlagsMissed?.length > 0 && (
+                    <div>
+                      <p className="text-sm font-semibold text-red-400 mb-2">Red flags missed:</p>
+                      <ul className="space-y-1">
+                        {gradeResult.redFlagsMissed.map((flag, idx) => (
+                          <li key={idx} className="text-sm text-slate-300 flex items-center gap-2">
+                            <XCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
+                            {flag}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4">
+                  <p className="font-medium text-slate-300">Rubric: Unavailable for this case</p>
+                  <p className="text-sm text-slate-400 mt-1">
+                    Grading could not be completed; you still have Preceptor feedback below.
+                  </p>
+                  {session?.id && (
+                    <button
+                      type="button"
+                      onClick={handleRetryGrading}
+                      disabled={gradeResultLoading}
+                      className="mt-3 px-3 py-2 text-sm font-medium rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white transition-colors"
+                    >
+                      {gradeResultLoading ? 'Grading…' : 'Retry grading'}
+                    </button>
+                  )}
+                </div>
+              )}
             </motion.div>
-          )}
 
-          {/* Action Buttons */}
-          <div className="flex gap-4 pt-4">
-            <motion.button
-              onClick={handleNewCase}
-              className="flex-1 bg-slate-700 hover:bg-slate-600 py-4 rounded-xl font-semibold text-white
-                       transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            {/* Bedside Manner (from Ghost Listener / soft skills analysis) */}
+            {gradeResult?.softSkillsReport && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.53 }}
+                className="bg-slate-900 rounded-xl p-6 border border-slate-800"
+              >
+                <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-slate-500" aria-hidden />
+                  Bedside Manner
+                </h3>
+                <div className="grid gap-3">
+                  {(['empathy', 'professionalism', 'pacing'] as const).map((key) => {
+                    const item = gradeResult.softSkillsReport![key];
+                    if (!item) return null;
+                    const pct = (item.score / 5) * 100;
+                    return (
+                      <div
+                        key={key}
+                        className="bg-slate-950 rounded-lg p-3 border border-slate-800"
+                      >
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-sm font-medium text-slate-300 capitalize">
+                            {key}
+                          </span>
+                          <span
+                            className={`text-sm font-bold ${
+                              pct >= 80
+                                ? 'text-emerald-400'
+                                : pct >= 60
+                                  ? 'text-amber-400'
+                                  : 'text-red-400'
+                            }`}
+                          >
+                            {item.score}/5
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400">{item.feedback}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Differential Diagnoses to Consider */}
+            {preceptorFeedback.differentialDiagnosis.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="bg-slate-900 rounded-xl p-6 border border-slate-800"
+              >
+                <h3 className="text-lg font-semibold mb-4 text-slate-100 flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-slate-500" /> Differential Diagnoses to Consider
+                </h3>
+                <p className="text-sm text-slate-400 mb-3">
+                  Based on the presentation, you should have considered:
+                </p>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {preceptorFeedback.differentialDiagnosis.map((dx, idx) => (
+                    <div key={idx} className="bg-slate-950 rounded-lg p-3 border border-slate-800">
+                      <span className="font-semibold text-slate-300">{dx}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Correct Diagnosis Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="bg-action-blue-50 dark:bg-action-blue-900/20 rounded-xl p-6 border border-action-blue-200 dark:border-action-blue-800"
             >
-              <MessageSquare className="w-5 h-5" />
-              Try Another Case
-            </motion.button>
-            {onExit && (
+              <h3 className="text-lg font-semibold mb-3 text-action-blue-700 dark:text-action-blue-300">
+                Correct Diagnosis
+              </h3>
+              <p className="text-2xl font-bold text-action-blue-900 dark:text-action-blue-100 mb-3">
+                {currentCase.correctDiagnosis}
+              </p>
+              {currentCase.teachingPoints && currentCase.teachingPoints.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-action-blue-200 dark:border-action-blue-800">
+                  <p className="text-sm font-semibold text-action-blue-700 dark:text-action-blue-300 mb-2">
+                    Teaching Points:
+                  </p>
+                  <ul className="space-y-1">
+                    {currentCase.teachingPoints.map((point, idx) => (
+                      <li
+                        key={idx}
+                        className="text-sm text-action-blue-900 dark:text-action-blue-100 flex items-start gap-2"
+                      >
+                        <Award className="w-4 h-4 text-action-blue-500 flex-shrink-0 mt-0.5" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Legacy AAR (if available) */}
+            {aar && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                className="bg-slate-900 rounded-xl p-6 border border-slate-800 shadow-md"
+              >
+                <h3 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+                  <FileText className="w-5 h-5" /> Additional Notes
+                </h3>
+                <div className="prose dark:prose-invert max-w-none text-slate-400 whitespace-pre-wrap text-sm">
+                  {aar}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 pt-4">
               <motion.button
-                onClick={onExit}
-                className="px-8 py-4 bg-slate-900 hover:bg-slate-800 rounded-xl font-semibold
-                         text-white transition-colors border border-slate-800"
+                onClick={handleNewCase}
+                className="flex-1 bg-slate-700 hover:bg-slate-600 py-4 rounded-xl font-semibold text-white
+                       transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                Exit
+                <MessageSquare className="w-5 h-5" />
+                Try Another Case
               </motion.button>
-            )}
+              {onExit && (
+                <motion.button
+                  onClick={onExit}
+                  className="px-8 py-4 bg-slate-900 hover:bg-slate-800 rounded-xl font-semibold
+                         text-white transition-colors border border-slate-800"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Exit
+                </motion.button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    );
+      );
     }
   }
 

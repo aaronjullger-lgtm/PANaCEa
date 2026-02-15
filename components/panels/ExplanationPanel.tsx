@@ -186,41 +186,41 @@ const DifferentialAccordion: React.FC<{
       {differentials.map((diff, index) => {
         const isExpanded = expandedIndex === index;
         return (
-        <div
-          key={`${diff.option}-${diff.reasoning.slice(0, 40)}`}
-          className="border border-[var(--color-border)]/60 rounded-lg overflow-hidden bg-[var(--color-bg-primary)]/60"
-        >
-          <button
-            type="button"
-            onClick={() => setExpandedIndex(isExpanded ? null : index)}
-            className="w-full flex items-center justify-between p-3 text-left hover:bg-[var(--color-bg-tertiary)]/60 transition-colors"
-            {...(isExpanded ? { 'aria-expanded': true } : { 'aria-expanded': false })}
+          <div
+            key={`${diff.option}-${diff.reasoning.slice(0, 40)}`}
+            className="border border-[var(--color-border)]/60 rounded-lg overflow-hidden bg-[var(--color-bg-primary)]/60"
           >
-            <span className="font-medium text-[var(--color-text-primary)] line-clamp-1">
-              {diff.option}
-            </span>
-            {isExpanded ? (
-              <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)] flex-shrink-0" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)] flex-shrink-0" />
-            )}
-          </button>
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <div className="p-3 pt-0 text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                  {diff.reasoning}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+            <button
+              type="button"
+              onClick={() => setExpandedIndex(isExpanded ? null : index)}
+              className="w-full flex items-center justify-between p-3 text-left hover:bg-[var(--color-bg-tertiary)]/60 transition-colors"
+              {...(isExpanded ? { 'aria-expanded': true } : { 'aria-expanded': false })}
+            >
+              <span className="font-medium text-[var(--color-text-primary)] line-clamp-1">
+                {diff.option}
+              </span>
+              {isExpanded ? (
+                <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)] flex-shrink-0" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)] flex-shrink-0" />
+              )}
+            </button>
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="p-3 pt-0 text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                    {diff.reasoning}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         );
       })}
     </div>
@@ -480,7 +480,10 @@ Keep your response concise (3-5 sentences max) and supportive.`;
                 className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
               >
                 <span className="text-[var(--color-accent)] mt-1.5 flex-shrink-0">•</span>
-                <span dangerouslySetInnerHTML={{ __html: sanitizeForRationale(bullet) }} className="flex-1" />
+                <span
+                  dangerouslySetInnerHTML={{ __html: sanitizeForRationale(bullet) }}
+                  className="flex-1"
+                />
               </li>
             ))}
           </ul>
@@ -614,86 +617,89 @@ Keep your response concise (3-5 sentences max) and supportive.`;
             )}
           </div>
 
-        {/* Feedback Buttons */}
-        <FeedbackButtons onFeedback={onFeedback} />
-      </div>
-
-      {/* Curated textbook excerpt (e.g. OpenStax) */}
-      {curatedPassage && (
-        <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
-          <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
-            From textbook: {curatedPassage.title}
-          </h3>
-          <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
-            {curatedPassage.body}
-          </p>
-          <OpenStaxAttributionFooter
-            title={curatedPassage.title || contentSourceTitle || 'Textbook'}
-            sourceUrl={curatedPassage.sourceUrl}
-            licenseName={curatedPassage.license}
-          />
+          {/* Feedback Buttons */}
+          <FeedbackButtons onFeedback={onFeedback} />
         </div>
-      )}
 
-      {/* AI Tutor Section — styled when incorrect to stand out */}
-      <AnimatePresence>
-        {showTutor && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className={`mt-4 pt-4 border-t ${isCorrect ? 'border-[var(--color-border)]/60' : 'ring-2 ring-[var(--color-data-fail)]/20 rounded-xl bg-[var(--color-data-fail)]/5 border-[var(--color-data-fail)]/30'}`}
-          >
-            <div className="space-y-3">
-              <SectionHeader
-                icon={<MessageCircle className="w-5 h-5" />}
-                title="Ask Your Virtual Tutor"
-              />
-              {activeKnowledgeCacheName && (
-                <p className="text-xs text-[var(--color-text-secondary)]">
-                  Answering using: {activeKnowledgeCacheDisplayName || 'your library'}
-                </p>
-              )}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={tutorQuestion}
-                  onChange={(e) => setTutorQuestion(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAskTutor()}
-                  placeholder="Why isn't it B? or Explain like I'm 5..."
-                  className="flex-1 px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                />
-                <button
-                  onClick={handleAskTutor}
-                  disabled={!tutorQuestion.trim() || loadingTutor}
-                  className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loadingTutor ? 'Thinking...' : 'Ask'}
-                </button>
-              </div>
-              {/* Show skeleton while loading and no response yet */}
-              {loadingTutor && !tutorResponse && (
-                <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
-                  <ClinicalSkeleton variant="compact" lines={4} />
-                </div>
-              )}
-
-              {/* Show streaming response as it arrives */}
-              {tutorResponse && (
-                <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
-                  <p className="text-sm text-[var(--color-text-primary)] leading-relaxed whitespace-pre-wrap">
-                    {tutorResponse}
-                  </p>
-                </div>
-              )}
-            </div>
-          </motion.div>
+        {/* Curated textbook excerpt (e.g. OpenStax) */}
+        {curatedPassage && (
+          <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+            <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
+              From textbook: {curatedPassage.title}
+            </h3>
+            <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
+              {curatedPassage.body}
+            </p>
+            <OpenStaxAttributionFooter
+              title={curatedPassage.title || contentSourceTitle || 'Textbook'}
+              sourceUrl={curatedPassage.sourceUrl}
+              licenseName={curatedPassage.license}
+            />
+          </div>
         )}
-      </AnimatePresence>
+
+        {/* AI Tutor Section — styled when incorrect to stand out */}
+        <AnimatePresence>
+          {showTutor && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className={`mt-4 pt-4 border-t ${isCorrect ? 'border-[var(--color-border)]/60' : 'ring-2 ring-[var(--color-data-fail)]/20 rounded-xl bg-[var(--color-data-fail)]/5 border-[var(--color-data-fail)]/30'}`}
+            >
+              <div className="space-y-3">
+                <SectionHeader
+                  icon={<MessageCircle className="w-5 h-5" />}
+                  title="Ask Your Virtual Tutor"
+                />
+                {activeKnowledgeCacheName && (
+                  <p className="text-xs text-[var(--color-text-secondary)]">
+                    Answering using: {activeKnowledgeCacheDisplayName || 'your library'}
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={tutorQuestion}
+                    onChange={(e) => setTutorQuestion(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAskTutor()}
+                    placeholder="Why isn't it B? or Explain like I'm 5..."
+                    className="flex-1 px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+                  <button
+                    onClick={handleAskTutor}
+                    disabled={!tutorQuestion.trim() || loadingTutor}
+                    className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loadingTutor ? 'Thinking...' : 'Ask'}
+                  </button>
+                </div>
+                {/* Show skeleton while loading and no response yet */}
+                {loadingTutor && !tutorResponse && (
+                  <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+                    <ClinicalSkeleton variant="compact" lines={4} />
+                  </div>
+                )}
+
+                {/* Show streaming response as it arrives */}
+                {tutorResponse && (
+                  <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+                    <p className="text-sm text-[var(--color-text-primary)] leading-relaxed whitespace-pre-wrap">
+                      {tutorResponse}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {contentSource === 'openstax' && (
-          <OpenStaxAttributionFooter title={contentSourceTitle || 'Textbook'} sourceUrl="https://openstax.org" />
+          <OpenStaxAttributionFooter
+            title={contentSourceTitle || 'Textbook'}
+            sourceUrl="https://openstax.org"
+          />
         )}
       </GlassPanel>
     </motion.div>

@@ -139,7 +139,10 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   // Detect targeted mode from sessionStorage (set by CommandCenter when Didactic clicks Start)
   useEffect(() => {
     try {
-      if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('panceai_grand_rounds_targeted') === '1') {
+      if (
+        typeof sessionStorage !== 'undefined' &&
+        sessionStorage.getItem('panceai_grand_rounds_targeted') === '1'
+      ) {
         sessionStorage.removeItem('panceai_grand_rounds_targeted');
         setIsTargeted(true);
       }
@@ -161,7 +164,10 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     // Resolve targeted mode: state or sessionStorage (set by CommandCenter when Didactic clicks Start)
     let targeted = isTargeted;
     try {
-      if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('panceai_grand_rounds_targeted') === '1') {
+      if (
+        typeof sessionStorage !== 'undefined' &&
+        sessionStorage.getItem('panceai_grand_rounds_targeted') === '1'
+      ) {
         sessionStorage.removeItem('panceai_grand_rounds_targeted');
         targeted = true;
         setIsTargeted(true);
@@ -180,7 +186,10 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       if (targeted) {
         let systems: string[] = [];
         try {
-          const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('panceai_enabled_systems') : null;
+          const saved =
+            typeof localStorage !== 'undefined'
+              ? localStorage.getItem('panceai_enabled_systems')
+              : null;
           if (saved) {
             const arr = JSON.parse(saved) as string[];
             if (Array.isArray(arr) && arr.length > 0) systems = arr;
@@ -189,7 +198,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           /* ignore */
         }
         if (systems.length === 0) {
-          setError('Enable at least one system in Settings (Current Curriculum) to use Targeted Daily Question.');
+          setError(
+            'Enable at least one system in Settings (Current Curriculum) to use Targeted Daily Question.'
+          );
           setViewState('error');
           return;
         }
@@ -201,7 +212,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         });
         if (!response.ok) {
           const errData = (await response.json().catch(() => ({}))) as { error?: string };
-          throw new Error(errData?.error || `HTTP ${response.status}: Failed to fetch targeted daily`);
+          throw new Error(
+            errData?.error || `HTTP ${response.status}: Failed to fetch targeted daily`
+          );
         }
         const data = (await response.json()) as
           | {
@@ -488,10 +501,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     try {
       const token = await getToken();
       if (!token) return;
-      const res = await fetch(
-        `/api/grand-rounds/review?challengeId=${encodeURIComponent(cid)}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await fetch(`/api/grand-rounds/review?challengeId=${encodeURIComponent(cid)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) {
         setReviewError('Failed to load review');
         return;
@@ -905,15 +917,19 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                     {formatTime(timeRemaining)}
                   </span>
                   <span className="sr-only" aria-live="polite">
-                    {Math.floor(timeRemaining / 60000)} minutes {Math.floor((timeRemaining % 60000) / 1000)} seconds
-                    remaining. Question {currentQuestionIndex + 1} of {challengeData.questions.length}.
+                    {Math.floor(timeRemaining / 60000)} minutes{' '}
+                    {Math.floor((timeRemaining % 60000) / 1000)} seconds remaining. Question{' '}
+                    {currentQuestionIndex + 1} of {challengeData.questions.length}.
                   </span>
                 </div>
               )}
             </div>
 
             {/* Progress bar */}
-            <div className="space-y-2" aria-label={`Question ${currentQuestionIndex + 1} of ${challengeData.questions.length}`}>
+            <div
+              className="space-y-2"
+              aria-label={`Question ${currentQuestionIndex + 1} of ${challengeData.questions.length}`}
+            >
               <div className="h-2 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
@@ -926,7 +942,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                   <motion.div
                     animate={{ width: `${timeRemainingPercent}%` }}
                     className={`h-full ${
-                      timeRemainingPercent < 25 ? 'bg-[var(--color-data-fail)]' : 'bg-muted-amber-500'
+                      timeRemainingPercent < 25
+                        ? 'bg-[var(--color-data-fail)]'
+                        : 'bg-muted-amber-500'
                     }`}
                   />
                 </div>

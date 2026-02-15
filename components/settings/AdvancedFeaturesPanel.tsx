@@ -304,7 +304,9 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
             <div className="flex items-center gap-3">
               <FileText className="w-5 h-5 text-[var(--color-data-pass)]" />
               <div>
-                <h4 className="font-semibold text-[var(--color-text-primary)]">SOAP Note Trainer</h4>
+                <h4 className="font-semibold text-[var(--color-text-primary)]">
+                  SOAP Note Trainer
+                </h4>
                 <p className="text-sm text-[var(--color-text-muted)]">
                   Practice clinical documentation
                 </p>
@@ -352,7 +354,9 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
             <div className="flex items-center gap-3">
               <Bell className="w-5 h-5 text-[var(--color-accent)]" />
               <div>
-                <h4 className="font-semibold text-[var(--color-text-primary)]">New Drug Newsfeed</h4>
+                <h4 className="font-semibold text-[var(--color-text-primary)]">
+                  New Drug Newsfeed
+                </h4>
                 <p className="text-sm text-[var(--color-text-muted)]">
                   Stay updated on FDA approvals
                 </p>

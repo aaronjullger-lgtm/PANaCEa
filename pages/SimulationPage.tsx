@@ -97,12 +97,10 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
     const allSystems = Object.keys(ABBREVIATION_TO_TOPIC_MAP).length;
     const isDidacticWithCurriculum =
-      careerStage === 'student' &&
-      enabledSystems.size > 0 &&
-      enabledSystems.size < allSystems;
+      careerStage === 'student' && enabledSystems.size > 0 && enabledSystems.size < allSystems;
 
     const settings: SessionSettings = { focus };
-    // Core PANCE Simulation "All Topics": strict NCCIPA blueprint, no adaptive/weak-area bias
+    // Core PANCE Simulation "All Topics": strict NCCPA blueprint, no adaptive/weak-area bias
     if (selectedFocus === 'all') {
       settings.simulationStrict = true;
     }
@@ -115,7 +113,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
   const getFocusDescription = () => {
     switch (selectedFocus) {
       case 'all':
-        return 'Strict NCCIPA blueprint weighting. No weak-area bias — exam-representative mix only.';
+        return 'Strict NCCPA blueprint weighting. No weak-area bias — exam-representative mix only.';
       case 'growth':
         return `Target your ${stats.growthAreasCount} weakest areas for maximum improvement`;
       case 'flagged':
@@ -143,7 +141,12 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
       stat: stats.growthAreasCount,
     },
     { id: 'flagged', label: 'Flagged', icon: Flag, color: 'purple', stat: stats.flaggedCount },
-    { id: 'due', label: examLabel === 'PANRE' ? 'Maintenance Due' : 'Due for Review', icon: Clock, color: 'emerald' },
+    {
+      id: 'due',
+      label: examLabel === 'PANRE' ? 'Maintenance Due' : 'Due for Review',
+      icon: Clock,
+      color: 'emerald',
+    },
   ];
 
   const getFocusTone = (tone: string) => {
@@ -193,8 +196,10 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           className="mb-8"
         >
           <button
+            type="button"
             onClick={onBack}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mb-4 transition-colors"
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mb-4 transition-colors min-h-[44px]"
+            aria-label="Back to Dashboard"
           >
             <ChevronLeft className="w-4 h-4" />
             Back to Dashboard
@@ -284,17 +289,18 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
               return (
                 <button
+                  type="button"
                   key={option.id}
                   onClick={() => setSelectedFocus(option.id)}
-                  className={`relative p-5 rounded-xl border-2 transition-all text-left ${
+                  className={`relative flex min-h-[88px] p-5 rounded-xl border-2 transition-all text-left items-center ${
                     isSelected
                       ? `${tone.border} ${tone.bg}`
                       : 'border-[var(--color-border)] hover:border-[var(--color-border)] bg-[var(--color-bg-primary)]'
                   }`}
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex w-full items-center gap-4">
                     <div
-                      className={`p-3 rounded-xl ${
+                      className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${
                         isSelected
                           ? tone.icon
                           : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
@@ -302,14 +308,14 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
                     >
                       <Icon className="w-6 h-6" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-semibold text-[var(--color-text-primary)]">
                           {option.label}
                         </span>
                         {option.stat !== undefined && (
                           <span
-                            className={`text-sm px-2 py-0.5 rounded-full ${
+                            className={`text-sm px-2 py-0.5 rounded-full shrink-0 ${
                               isSelected
                                 ? tone.badge
                                 : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
@@ -350,15 +356,19 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
         {/* Start Button */}
         <motion.button
+          type="button"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           onClick={handleStart}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="w-full py-5 px-8 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] font-bold text-lg rounded-xl shadow-lg transition-all flex items-center justify-center gap-3"
+          className="w-full py-5 px-8 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] font-bold text-lg rounded-xl shadow-lg transition-all flex items-center justify-center gap-3 min-h-[48px]"
+          aria-label={
+            examLabel === 'PANRE' ? 'Start maintenance session' : `Start ${examLabel} session`
+          }
         >
-          <Award className="w-6 h-6" />
+          <Award className="w-6 h-6" aria-hidden />
           {examLabel === 'PANRE' ? 'Start Maintenance' : `Start ${examLabel} Session`}
         </motion.button>
       </div>

@@ -104,9 +104,9 @@ html {
 /* Remove tap highlight on mobile for cleaner press feedback; ensure pointer cursor on interactive elements */
 button,
 a,
-[role="button"],
-[role="tab"],
-[role="link"] {
+[role='button'],
+[role='tab'],
+[role='link'] {
   -webkit-tap-highlight-color: transparent;
   tap-highlight-color: transparent;
   cursor: pointer;
@@ -114,11 +114,15 @@ a,
 
 /* Utility: subtle lift on hover for interactive cards */
 .hover-lift {
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out;
 }
 .hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.1), 0 4px 8px -2px rgba(15, 23, 42, 0.06);
+  box-shadow:
+    0 8px 24px -4px rgba(15, 23, 42, 0.1),
+    0 4px 8px -2px rgba(15, 23, 42, 0.06);
 }
 .dark .hover-lift:hover {
   box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.4);
@@ -212,11 +216,11 @@ a,
   input:focus-visible,
   select:focus-visible,
   textarea:focus-visible,
-  [role="button"]:focus-visible,
-  [role="tab"]:focus-visible,
-  [role="menuitem"]:focus-visible,
-  [role="option"]:focus-visible,
-  [tabindex="0"]:focus-visible {
+  [role='button']:focus-visible,
+  [role='tab']:focus-visible,
+  [role='menuitem']:focus-visible,
+  [role='option']:focus-visible,
+  [tabindex='0']:focus-visible {
     outline: none;
     box-shadow:
       0 0 0 2px var(--color-bg-primary),
@@ -224,8 +228,8 @@ a,
   }
 
   /* Checkbox/radio often need larger hit area; keep ring visible */
-  input[type="checkbox"]:focus-visible,
-  input[type="radio"]:focus-visible {
+  input[type='checkbox']:focus-visible,
+  input[type='radio']:focus-visible {
     outline: none;
     box-shadow:
       0 0 0 2px var(--color-bg-primary),
@@ -311,7 +315,9 @@ a,
 
   /* Card shadow - no black; uses design token for theme-safe elevation */
   .shadow-card {
-    box-shadow: 0 4px 6px -1px var(--color-shadow-soft), 0 2px 4px -2px var(--color-shadow-soft);
+    box-shadow:
+      0 4px 6px -1px var(--color-shadow-soft),
+      0 2px 4px -2px var(--color-shadow-soft);
   }
 }
 
@@ -337,8 +343,8 @@ a,
   --color-label-secondary: #475569; /* Slate-600 */
 
   /* Navy / Gold palette tokens (same family) */
-  --color-navy: #0F172A;
-  --color-canvas: #F8FAFC; /* slate-50 */
+  --color-navy: #0f172a;
+  --color-canvas: #f8fafc; /* slate-50 */
   --color-surface: #ffffff;
   --color-gold: #9a8f72;
   --color-gold-hover: #8a7f62;
@@ -366,7 +372,7 @@ a,
   --border: #e2e8f0;
 
   /* Legacy theme-aware variables - LIGHT MODE */
-  --color-bg-primary: #F8FAFC; /* Canvas */
+  --color-bg-primary: #f8fafc; /* Canvas */
   --color-bg-secondary: #ffffff;
   --color-bg-tertiary: #f1f5f9;
   --color-text-primary: #0f172a;
@@ -377,7 +383,7 @@ a,
   --chart-grid-stroke: rgba(15, 23, 42, 0.08);
   --color-accent: #7a6f52; /* Darker gold for better contrast — 4.8:1 with bg-primary (WCAG AA) */
   --color-accent-hover: #6a5f42;
-  --color-accent-button: #7B6C4F; /* Darker gold for buttons — 4.6:1 contrast with white (WCAG AA) */
+  --color-accent-button: #7b6c4f; /* Darker gold for buttons — 4.6:1 contrast with white (WCAG AA) */
   --color-accent-border: #9a8f72; /* Lighter gold for borders to improve contrast */
   --color-accent-secondary: #728ba6; /* Steel blue - charts, secondary CTAs */
   --color-accent-light: #f5f2ec;
@@ -397,8 +403,8 @@ a,
   --color-card-bg: #ffffff;
 
   /* Semantic data colors - same hue family as dark, darker for light bg contrast */
-  --color-data-pass: #0a766c;   /* teal-700 - improved contrast 5.1:1 (WCAG AA) */
-  --color-data-fail: #b91c1c;   /* red-700 */
+  --color-data-pass: #0a766c; /* teal-700 - improved contrast 5.1:1 (WCAG AA) */
+  --color-data-fail: #b91c1c; /* red-700 */
   --color-data-provisional: #b45309; /* amber-700 */
 
   /* Semantic aliases for design system docs */
@@ -453,23 +459,23 @@ a,
   /* ===== SPACING SYSTEM VARIABLES ===== */
   /* Base unit: 4px (0.25rem) */
   --spacing-base: 4px;
-  
+
   /* Numeric scale (multiples of 4px) */
   --spacing-0: 0px;
-  --spacing-1: 4px;    /* 0.25rem */
-  --spacing-2: 8px;    /* 0.5rem */
-  --spacing-3: 12px;   /* 0.75rem */
-  --spacing-4: 16px;   /* 1rem */
-  --spacing-5: 20px;   /* 1.25rem */
-  --spacing-6: 24px;   /* 1.5rem */
-  --spacing-8: 32px;   /* 2rem */
-  --spacing-10: 40px;  /* 2.5rem */
-  --spacing-12: 48px;  /* 3rem */
-  --spacing-16: 64px;  /* 4rem */
-  --spacing-20: 80px;  /* 5rem */
-  --spacing-24: 96px;  /* 6rem */
+  --spacing-1: 4px; /* 0.25rem */
+  --spacing-2: 8px; /* 0.5rem */
+  --spacing-3: 12px; /* 0.75rem */
+  --spacing-4: 16px; /* 1rem */
+  --spacing-5: 20px; /* 1.25rem */
+  --spacing-6: 24px; /* 1.5rem */
+  --spacing-8: 32px; /* 2rem */
+  --spacing-10: 40px; /* 2.5rem */
+  --spacing-12: 48px; /* 3rem */
+  --spacing-16: 64px; /* 4rem */
+  --spacing-20: 80px; /* 5rem */
+  --spacing-24: 96px; /* 6rem */
   --spacing-32: 128px; /* 8rem */
-  
+
   /* Semantic spacing tokens */
   --spacing-container-padding: 16px;
   --spacing-container-padding-mobile: 12px;
@@ -486,7 +492,7 @@ a,
   --spacing-nav-bar-height-mobile: 56px;
   --spacing-grid-gap: 24px;
   --spacing-grid-gap-mobile: 16px;
-  
+
   /* Accessibility spacing */
   --spacing-min-touch-target: 44px;
   --spacing-focus-ring-offset: 2px;
@@ -557,8 +563,8 @@ a,
   --color-card-bg: #1e293b;
 
   /* Semantic data - muted for dark bg to avoid neon glare (teal/red/amber) */
-  --color-data-pass: #14b8a6;   /* teal-500 — toned down from teal-400 */
-  --color-data-fail: #ef4444;  /* red-500 — slightly deeper */
+  --color-data-pass: #14b8a6; /* teal-500 — toned down from teal-400 */
+  --color-data-fail: #ef4444; /* red-500 — slightly deeper */
   --color-data-provisional: #d97706; /* amber-600 — replaced neon amber-400 (#fbbf24) */
 
   /* ===== MUTED SEMANTIC CATEGORY ACCENTS (Dark Mode) ===== */
@@ -620,17 +626,17 @@ a,
   --hud-text: #e2e8f0;
 }
 .live-osce-hud .hud-vital,
-.live-osce-hud [data-hud="vital"] {
+.live-osce-hud [data-hud='vital'] {
   color: var(--hud-accent-cyan);
   text-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
 }
 .live-osce-hud .hud-timer,
-.live-osce-hud [data-hud="timer"] {
+.live-osce-hud [data-hud='timer'] {
   color: var(--hud-accent-magenta);
   font-variant-numeric: tabular-nums;
   text-shadow: 0 0 8px rgba(232, 121, 249, 0.5);
 }
-.live-osce-hud [data-hud="waveform"] {
+.live-osce-hud [data-hud='waveform'] {
   stroke: var(--hud-accent-cyan);
   stroke-width: 1.5;
   opacity: 0.9;
@@ -1565,17 +1571,16 @@ a,
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(71, 85, 105, 0.15) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg, transparent 0%, rgba(71, 85, 105, 0.15) 50%, transparent 100%);
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
 }
 @keyframes skeleton-shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* Wrapper for full layout: children get shimmer context */
@@ -1680,12 +1685,20 @@ a,
     animation: view-transition-fade-in 0.25s ease-in;
   }
   @keyframes view-transition-fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
   }
   @keyframes view-transition-fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 }
 
@@ -1796,4 +1809,90 @@ a,
 .dark [class*='from-blue-50'] p,
 .dark [class*='from-indigo-50'] p {
   color: inherit !important;
+}
+
+/* ===============================================
+   CLERK AUTH COMPONENTS – DARK MODE CONTRAST
+   Sign-in/Sign-up: labels, placeholders, social buttons, divider
+   =============================================== */
+
+.dark [class*='cl-'] {
+  color-scheme: dark;
+}
+
+/* Card and form container */
+.dark [class*='cl-card'],
+.dark [class*='cl-cardBox'] {
+  background-color: var(--color-bg-primary) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* All text in Clerk components: use semantic tokens */
+.dark [class*='cl-headerTitle'],
+.dark [class*='cl-headerSubtitle'],
+.dark [class*='cl-formFieldLabel'],
+.dark [class*='cl-formFieldLabelRow'] {
+  color: var(--color-text-primary) !important;
+}
+
+.dark [class*='cl-formFieldHintText'],
+.dark [class*='cl-footerActionText'] {
+  color: var(--color-text-muted) !important;
+}
+
+/* Input: background and text */
+.dark [class*='cl-formFieldInput'],
+.dark [class*='cl-input'] {
+  background-color: var(--color-bg-secondary) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+
+.dark [class*='cl-formFieldInput']::placeholder,
+.dark [class*='cl-input']::placeholder {
+  color: var(--color-text-muted) !important;
+}
+
+/* Social buttons (Apple, Google): ensure icon and text visible in dark mode */
+.dark [class*='cl-socialButtonsBlockButton'] {
+  background-color: var(--color-bg-secondary) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+
+.dark [class*='cl-socialButtonsBlockButton']:hover {
+  background-color: var(--color-bg-tertiary) !important;
+  border-color: var(--color-border) !important;
+}
+
+.dark [class*='cl-socialButtonsBlockButton'] svg,
+.dark [class*='cl-socialButtonsBlockButton'] [class*='cl-socialButtonsBlockButtonText'] {
+  color: var(--color-text-primary) !important;
+  fill: var(--color-text-primary) !important;
+}
+
+/* Divider "or" line and text */
+.dark [class*='cl-dividerLine'] {
+  background-color: var(--color-border) !important;
+}
+
+.dark [class*='cl-dividerText'],
+.dark [class*='cl-dividerText'] span {
+  color: var(--color-text-muted) !important;
+}
+
+/* Primary button (Continue) */
+.dark [class*='cl-formButtonPrimary'] {
+  background-color: var(--color-accent) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+.dark [class*='cl-formButtonPrimary']:hover {
+  filter: brightness(1.08);
+}
+
+/* Links */
+.dark [class*='cl-footerActionLink'],
+.dark [class*='cl-formFieldAction'] {
+  color: var(--color-accent) !important;
 }

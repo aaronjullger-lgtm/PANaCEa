@@ -87,7 +87,9 @@ async function main(): Promise<void> {
 
   console.log('Reference Library Embedding Backfill');
   console.log('====================================');
-  console.log(`Model: ${EMBED_MODEL} (${EMBED_DIMS}d) | Batch: ${batch} | Skip: ${skip} | Dry run: ${dryRun}\n`);
+  console.log(
+    `Model: ${EMBED_MODEL} (${EMBED_DIMS}d) | Batch: ${batch} | Skip: ${skip} | Dry run: ${dryRun}\n`
+  );
 
   const rows = await prisma.medicalContent.findMany({
     skip,

@@ -13,7 +13,8 @@ import type { KVNamespace as WorkersKVNamespace } from '@cloudflare/workers-type
 
 /**
  * Environment bindings available to all Cloudflare Functions
- * Add new environment variables here as the project grows
+ * Must match wrangler.toml bindings and Cloudflare Dashboard env vars.
+ * Add new environment variables here as the project grows.
  */
 export interface CloudflareEnv {
   // Database
@@ -27,13 +28,21 @@ export interface CloudflareEnv {
   GEMINI_API_KEY?: string;
   GOOGLE_API_KEY?: string;
 
+  // Supabase (storage, media) — set in Dashboard
+  SUPABASE_URL?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+
+  // Observability
+  SENTRY_DSN?: string;
+  ENVIRONMENT?: string;
+
   // Optional feature flags
   ENABLE_LOGGING?: string;
   LOG_LEVEL?: string;
 
-  // Optional KV bindings (use official types from @cloudflare/workers-types)
+  // KV bindings (names must match wrangler.toml [kv_namespaces] binding)
   CACHE?: WorkersKVNamespace;
-  RATE_LIMIT?: WorkersKVNamespace;
+  RATE_LIMIT_KV?: WorkersKVNamespace;
 
   // Optional D1 binding (for future use)
   DB?: D1Database;

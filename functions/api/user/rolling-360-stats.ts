@@ -91,7 +91,9 @@ export const onRequestGet = authenticatedEndpoint(Rolling360StatsSchema, async (
     return {
       status: isTimeout ? 503 : 500,
       data: {
-        error: isTimeout ? 'Service temporarily unavailable. Please try again.' : 'Failed to fetch statistics',
+        error: isTimeout
+          ? 'Service temporarily unavailable. Please try again.'
+          : 'Failed to fetch statistics',
         ...EMPTY_STATE_RESPONSE,
         ...(sentryTraceId ? { sentryTraceId } : {}),
       },

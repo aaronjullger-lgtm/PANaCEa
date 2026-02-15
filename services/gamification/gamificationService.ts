@@ -1,13 +1,13 @@
 /**
  * Gamification Service
- * 
+ *
  * Implements creative engagement features:
  * - Phantom Patient system (visual motivation)
  * - Audio-first reviews (podcast generation)
  * - Consult system (SBAR training)
  * - Avatar progression
  * - Achievement badges
- * 
+ *
  * @module gamificationService
  */
 
@@ -312,7 +312,9 @@ export class GamificationService {
     };
 
     // Simulate "paging" delay
-    await new Promise((resolve) => setTimeout(resolve, consultantPersona.availability.respondTime * 1000));
+    await new Promise((resolve) =>
+      setTimeout(resolve, consultantPersona.availability.respondTime * 1000)
+    );
 
     request.answeredAt = new Date().toISOString();
 

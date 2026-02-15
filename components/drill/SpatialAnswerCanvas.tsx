@@ -53,21 +53,18 @@ export function SpatialAnswerCanvas({
   const [current, setCurrent] = useState<{ x: number; y: number } | null>(null);
   const [imgSize, setImgSize] = useState({ w: 1, h: 1 });
 
-  const getImageCoords = useCallback(
-    (e: React.MouseEvent | MouseEvent) => {
-      const img = imgRef.current;
-      const cont = containerRef.current;
-      if (!img || !cont) return null;
-      const rect = img.getBoundingClientRect();
-      const scaleX = img.naturalWidth / rect.width;
-      const scaleY = img.naturalHeight / rect.height;
-      const x = (e.clientX - rect.left) * scaleX;
-      const y = (e.clientY - rect.top) * scaleY;
-      if (x < 0 || y < 0 || x > img.naturalWidth || y > img.naturalHeight) return null;
-      return { x, y };
-    },
-    []
-  );
+  const getImageCoords = useCallback((e: React.MouseEvent | MouseEvent) => {
+    const img = imgRef.current;
+    const cont = containerRef.current;
+    if (!img || !cont) return null;
+    const rect = img.getBoundingClientRect();
+    const scaleX = img.naturalWidth / rect.width;
+    const scaleY = img.naturalHeight / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    if (x < 0 || y < 0 || x > img.naturalWidth || y > img.naturalHeight) return null;
+    return { x, y };
+  }, []);
 
   useEffect(() => {
     const img = imgRef.current;
@@ -126,14 +123,15 @@ export function SpatialAnswerCanvas({
     return () => globalThis.removeEventListener('mouseup', handler);
   }, [handleMouseUp]);
 
-  const displayBox = start && current ? (
-    {
-      x: Math.min(start.x, current.x),
-      y: Math.min(start.y, current.y),
-      w: Math.abs(current.x - start.x),
-      h: Math.abs(current.y - start.y),
-    }
-  ) : null;
+  const displayBox =
+    start && current
+      ? {
+          x: Math.min(start.x, current.x),
+          y: Math.min(start.y, current.y),
+          w: Math.abs(current.x - start.x),
+          h: Math.abs(current.y - start.y),
+        }
+      : null;
 
   return (
     <div

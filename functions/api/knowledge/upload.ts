@@ -23,7 +23,11 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-const ALLOWED_MIMES = ['application/pdf', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+const ALLOWED_MIMES = [
+  'application/pdf',
+  'text/plain',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
 
 export const onRequestOptions = withCors();
 
@@ -90,10 +94,10 @@ export const onRequestPost = withMiddleware(
       const formData = await request.formData();
       const file = formData.get('file') as File | null;
       if (!file || !(file instanceof File)) {
-        return new Response(
-          JSON.stringify({ error: 'Missing or invalid "file" in form data' }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: 'Missing or invalid "file" in form data' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
       if (file.size > MAX_FILE_SIZE) {
         return new Response(

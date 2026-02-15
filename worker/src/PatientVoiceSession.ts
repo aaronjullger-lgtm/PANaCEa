@@ -1,16 +1,16 @@
 /**
  * PatientVoiceSession - Cloudflare Durable Object for Voice-to-Voice OSCE
- * 
+ *
  * Maintains persistent WebSocket connection for audio streaming, A/V state
  * synchronization, and integration with Gemini Multimodal Live API.
- * 
+ *
  * Responsibilities:
  * 1. Manage WebSocket lifecycle
  * 2. Stream audio to/from Gemini (native_audio_function_call_sandbox)
  * 3. Run PatientAVEngine and emit state transitions
  * 4. Coordinate video generation with veo_cameos
  * 5. Persist transcript to PatientEncounterSession on close
- * 
+ *
  * @module PatientVoiceSession
  */
 
@@ -266,7 +266,8 @@ Remember: You are a real patient. Be authentic, not a textbook.`;
   private handleAVEvent(event: AVEvent): void {
     if (event.type === 'TRANSITION_COMPLETED') {
       // State transition occurred - notify client and update Gemini
-      const transitionEvent = event as import('@/types/patient-av-state-machine').StateTransitionEvent;
+      const transitionEvent =
+        event as import('@/types/patient-av-state-machine').StateTransitionEvent;
       const newState = this.avEngine?.getCurrentAVState();
       if (!newState) return;
 
@@ -303,7 +304,9 @@ Remember: You are a real patient. Be authentic, not a textbook.`;
   /**
    * Update Gemini voice configuration.
    */
-  private updateGeminiVoiceConfig(voice: import('@/types/patient-av-state-machine').VoiceModulation): void {
+  private updateGeminiVoiceConfig(
+    voice: import('@/types/patient-av-state-machine').VoiceModulation
+  ): void {
     if (!this.geminiConnection) return;
 
     const configUpdate = {
@@ -330,7 +333,7 @@ Remember: You are a real patient. Be authentic, not a textbook.`;
       const response = await fetch('https://aistudio.google.com/api/veo/generate', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.env.VEO_CAMEOS_API_KEY}`,
+          Authorization: `Bearer ${this.env.VEO_CAMEOS_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -490,7 +493,7 @@ Remember: You are a real patient. Be authentic, not a textbook.`;
       const response = await fetch('https://api.clerk.dev/v1/tokens/verify', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });

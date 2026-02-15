@@ -84,10 +84,10 @@ export const NAVIGATION_CONFIG: NavigationCategory[] = [
  * @deprecated NAVIGATION_STRUCTURE contains many dead links and should NOT be used.
  * Paths like /education, /stats, /settings, /subscription, /reference/*, /skills/* do not
  * have routes in App.tsx and will show wrong content. Use NAVIGATION_CONFIG instead.
- * 
+ *
  * This export is kept only for legacy compatibility; any code using it should migrate to
  * NAVIGATION_CONFIG or NavRail, which only expose valid paths.
- * 
+ *
  * See: docs/GAP_ANALYSIS_AND_IMPROVEMENT_PLAN.md and docs/EXTRAPOLATED_DEVELOPMENT_AUDIT.md
  */
 export const NAVIGATION_STRUCTURE: NavigationCategory[] = [

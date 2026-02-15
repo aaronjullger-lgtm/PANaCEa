@@ -13,14 +13,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  BookOpen,
-  ChevronLeft,
-  Loader2,
-  MessageCircle,
-  AlertTriangle,
-  Send,
-} from 'lucide-react';
+import { BookOpen, ChevronLeft, Loader2, MessageCircle, AlertTriangle, Send } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { API_ENDPOINTS, buildApiUrl } from '@/lib/utils/apiConfig';
 import { SmartPDFViewer, type CitationHighlight } from '@/components/library';
@@ -156,7 +149,10 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
 
       const data = (await res.json()) as {
         answer?: string;
-        citations?: Array<{ page: number; highlightBox: { top: number; left: number; width: number; height: number } }>;
+        citations?: Array<{
+          page: number;
+          highlightBox: { top: number; left: number; width: number; height: number };
+        }>;
         citationsFallback?: boolean;
       };
 
@@ -175,7 +171,9 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
   const onPdfAskTutor = useCallback((selectedText: string) => {
     setSelectedTextContext(selectedText);
     // Prefill input with something actionable if blank
-    setInput((prev) => (prev.trim().length > 0 ? prev : 'Explain this selection and why it matters clinically.'));
+    setInput((prev) =>
+      prev.trim().length > 0 ? prev : 'Explain this selection and why it matters clinically.'
+    );
     requestAnimationFrame(() => inputRef.current?.focus?.());
   }, []);
 
@@ -199,7 +197,9 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
             <BookOpen className="w-5 h-5 text-[var(--color-accent)]" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">Study Companion</h1>
+            <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
+              Study Companion
+            </h1>
             <p className="text-xs text-[var(--color-text-secondary)]">
               Chat with an approved textbook and see citation highlights on the PDF.
             </p>
@@ -213,7 +213,8 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
           <div>
             <p className="font-semibold">Missing Adobe PDF Embed client ID</p>
             <p className="text-xs opacity-90">
-              Set <span className="font-mono">VITE_ADOBE_PDF_EMBED_CLIENT_ID</span> and reload to enable the PDF viewer.
+              Set <span className="font-mono">VITE_ADOBE_PDF_EMBED_CLIENT_ID</span> and reload to
+              enable the PDF viewer.
             </p>
           </div>
         </div>
@@ -293,7 +294,9 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
             <div className="p-3 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-[var(--color-accent)]" />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[var(--color-text-primary)]">Ask the textbook</p>
+                <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  Ask the textbook
+                </p>
                 <p className="text-xs text-[var(--color-text-muted)] truncate">
                   {selected?.title ?? 'No document selected'}
                 </p>
@@ -303,7 +306,9 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
             <div className="flex-1 overflow-y-auto p-3 space-y-3">
               {selectedTextContext && (
                 <div className="p-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-xs">
-                  <p className="font-semibold text-[var(--color-text-primary)] mb-1">Selected text context</p>
+                  <p className="font-semibold text-[var(--color-text-primary)] mb-1">
+                    Selected text context
+                  </p>
                   <p className="text-[var(--color-text-secondary)] whitespace-pre-wrap">
                     {selectedTextContext}
                   </p>
@@ -314,7 +319,8 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
                 <div className="p-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                   <div>
-                    Citation boxes are approximate (fallback). Adobe Extract data may be missing or unavailable.
+                    Citation boxes are approximate (fallback). Adobe Extract data may be missing or
+                    unavailable.
                   </div>
                 </div>
               )}
@@ -327,7 +333,8 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
 
               {!answer && !askError && (
                 <div className="text-xs text-[var(--color-text-muted)]">
-                  Ask a question and the answer will appear here with citation highlights on the PDF.
+                  Ask a question and the answer will appear here with citation highlights on the
+                  PDF.
                 </div>
               )}
 
@@ -367,7 +374,11 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
                   disabled={!selectedId || !input.trim() || isAsking}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:bg-[var(--color-accent)]/90 disabled:opacity-50"
                 >
-                  {isAsking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {isAsking ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
                   <span>{isAsking ? 'Asking…' : 'Ask'}</span>
                 </button>
               </div>
@@ -380,4 +391,3 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
 }
 
 export default StudyCompanionPage;
-

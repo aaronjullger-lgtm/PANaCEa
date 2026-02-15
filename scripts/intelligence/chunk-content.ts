@@ -68,10 +68,7 @@ function chunkText(text: string): string[] {
   return chunks;
 }
 
-function getFieldText(
-  row: Record<string, unknown>,
-  field: FieldName
-): string | null {
+function getFieldText(row: Record<string, unknown>, field: FieldName): string | null {
   const v = row[field];
   if (v == null) return null;
   if (typeof v === 'string') return v.trim() || null;

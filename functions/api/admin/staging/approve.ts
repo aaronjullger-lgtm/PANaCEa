@@ -66,7 +66,11 @@ export const onRequestPost = adminEndpoint(ApproveBodySchema, async (context) =>
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     if (msg.includes('has not passed adequacy check')) {
-      return { status: 400, error: 'Run adequacy check first (status must be graded) or approve from pending with force' };
+      return {
+        status: 400,
+        error:
+          'Run adequacy check first (status must be graded) or approve from pending with force',
+      };
     }
     log.error('Staging approve error', e);
     return { status: 500, error: 'Failed to approve' };

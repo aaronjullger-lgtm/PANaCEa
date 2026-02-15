@@ -42,7 +42,10 @@ export const onRequestGet = authenticatedEndpoint(
     if (!env.DATABASE_URL) {
       logger.error('DATABASE_URL not configured');
       return {
-        data: { error: 'Session service unavailable', message: 'Server database is not configured.' },
+        data: {
+          error: 'Session service unavailable',
+          message: 'Server database is not configured.',
+        },
         status: 503,
       };
     }
@@ -91,8 +94,12 @@ export const onRequestGet = authenticatedEndpoint(
         /connection|ECONNREFUSED|timeout|database.*unavailable|P1001|P1017|pool/i.test(errMsg);
       return {
         data: {
-          error: isDbUnavailable ? 'Session service unavailable' : 'Failed to fetch session questions',
-          message: isDbUnavailable ? 'Database is temporarily unavailable. Please try again.' : errMsg || 'Please try again later.',
+          error: isDbUnavailable
+            ? 'Session service unavailable'
+            : 'Failed to fetch session questions',
+          message: isDbUnavailable
+            ? 'Database is temporarily unavailable. Please try again.'
+            : errMsg || 'Please try again later.',
         },
         status: isDbUnavailable ? 503 : 500,
       };
@@ -158,8 +165,12 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
       /connection|ECONNREFUSED|timeout|database.*unavailable|P1001|P1017|pool/i.test(errMsg);
     return {
       data: {
-        error: isDbUnavailable ? 'Session service unavailable' : 'Failed to fetch session questions',
-        message: isDbUnavailable ? 'Database is temporarily unavailable. Please try again.' : errMsg || 'Please try again later.',
+        error: isDbUnavailable
+          ? 'Session service unavailable'
+          : 'Failed to fetch session questions',
+        message: isDbUnavailable
+          ? 'Database is temporarily unavailable. Please try again.'
+          : errMsg || 'Please try again later.',
       },
       status: isDbUnavailable ? 503 : 500,
     };

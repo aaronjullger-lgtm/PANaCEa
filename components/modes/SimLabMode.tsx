@@ -1,13 +1,17 @@
 /**
  * Sim Lab Mode
- * 
+ *
  * Module 3: Digital procedural simulation with equipment validation,
  * sterile field tracking, and geometry validation.
  */
 
 import React, { useState, useCallback, useRef } from 'react';
 import { X, Wrench, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-import type { ProceduralWorkflow, EquipmentItem, SterileField } from '@/types/digital-sim-lab-system';
+import type {
+  ProceduralWorkflow,
+  EquipmentItem,
+  SterileField,
+} from '@/types/digital-sim-lab-system';
 import { useSystemIntegration } from '@/contexts/SystemIntegrationContext';
 
 interface SimLabModeProps {
@@ -175,7 +179,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
         setSterileBreaches((b) => b + 1);
         setIsInSterileZone(false);
         alert('CONTAMINATION! Sterile field breached.');
-        
+
         integration.emit({
           type: 'MODULE_ENTERED',
           timestamp: new Date().toISOString(),
@@ -201,7 +205,8 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
             </div>
             <h1 className="text-4xl font-bold mb-4">Digital Sim Lab</h1>
             <p className="text-xl text-[var(--color-text-muted)] max-w-2xl mx-auto">
-              Practice procedures with equipment validation, sterile field tracking, and geometry validation.
+              Practice procedures with equipment validation, sterile field tracking, and geometry
+              validation.
             </p>
           </div>
 
@@ -327,7 +332,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
   // Simulation view with sterile field
   if (viewState === 'simulation' && procedure) {
     const step = procedure.steps[currentStep];
-    
+
     if (!step) {
       return null; // Safety check
     }
@@ -345,12 +350,17 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
             <div className="flex items-center gap-4">
               <div className="text-sm">
                 <span className="text-[var(--color-text-muted)]">Breaches:</span>
-                <span className={`font-bold ml-2 ${sterileBreaches > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                <span
+                  className={`font-bold ml-2 ${sterileBreaches > 0 ? 'text-rose-500' : 'text-emerald-500'}`}
+                >
                   {sterileBreaches}
                 </span>
               </div>
               {onExit && (
-                <button onClick={onExit} className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)]">
+                <button
+                  onClick={onExit}
+                  className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)]"
+                >
                   <X className="w-5 h-5" />
                 </button>
               )}
@@ -390,9 +400,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                 <div className="text-center py-20">
                   <p className="text-[var(--color-text-muted)] mb-4">{step.instructions}</p>
                   {currentStep === 2 && (
-                    <p className="text-sm text-amber-500">
-                      Keep your cursor within the green zone
-                    </p>
+                    <p className="text-sm text-amber-500">Keep your cursor within the green zone</p>
                   )}
                 </div>
               </div>
@@ -426,13 +434,15 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
               <div className="rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-4">
                 <h3 className="font-semibold mb-2">{step.name}</h3>
                 <p className="text-sm text-[var(--color-text-muted)] mb-3">{step.description}</p>
-                
+
                 <div className="space-y-2 text-xs">
                   <div>
                     <strong>Critical Actions:</strong>
                     <ul className="mt-1 space-y-1">
                       {step.criticalActions.map((action, i) => (
-                        <li key={i} className="text-[var(--color-text-muted)]">• {action}</li>
+                        <li key={i} className="text-[var(--color-text-muted)]">
+                          • {action}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -440,7 +450,9 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                     <strong className="text-amber-500">Common Mistakes:</strong>
                     <ul className="mt-1 space-y-1">
                       {step.commonMistakes.map((mistake, i) => (
-                        <li key={i} className="text-[var(--color-text-muted)]">• {mistake}</li>
+                        <li key={i} className="text-[var(--color-text-muted)]">
+                          • {mistake}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -503,7 +515,9 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
               <div className="p-6 rounded-xl bg-rose-500/10 border border-rose-500/30">
                 <div className="flex items-center gap-2 text-rose-500 mb-2">
                   <AlertTriangle className="w-6 h-6" />
-                  <h3 className="text-lg font-semibold">Sterile Field Breaches: {sterileBreaches}</h3>
+                  <h3 className="text-lg font-semibold">
+                    Sterile Field Breaches: {sterileBreaches}
+                  </h3>
                 </div>
                 <p className="text-sm text-[var(--color-text-secondary)]">
                   Practice maintaining awareness of the sterile field boundaries.

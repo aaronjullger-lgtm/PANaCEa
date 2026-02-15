@@ -32,7 +32,12 @@ function searchStructuredData(
   obj: unknown,
   queryLower: string,
   path: string = '',
-  results: Array<{ path: string; pageNumber?: number; bounds?: Record<string, number>; text?: string }> = []
+  results: Array<{
+    path: string;
+    pageNumber?: number;
+    bounds?: Record<string, number>;
+    text?: string;
+  }> = []
 ): typeof results {
   if (results.length >= 20) return results;
 
@@ -97,7 +102,10 @@ export const onRequestGet = authenticatedEndpoint(
     const log = createEndpointLogger('/api/content/library/citation');
 
     try {
-      validateFunctionEnv(env as unknown as Record<string, unknown>, ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']);
+      validateFunctionEnv(env as unknown as Record<string, unknown>, [
+        'SUPABASE_URL',
+        'SUPABASE_SERVICE_ROLE_KEY',
+      ]);
     } catch (e) {
       if (e instanceof MissingEnvError) return e.toResponse();
       throw e;

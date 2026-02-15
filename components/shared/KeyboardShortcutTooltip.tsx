@@ -1,6 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Keyboard, Command, Option, Control, Shift, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import {
+  Keyboard,
+  Command,
+  Option,
+  Control,
+  Shift,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+} from 'lucide-react';
 
 export interface KeyboardShortcutTooltipProps {
   /** Tooltip text content */
@@ -29,20 +39,31 @@ export interface KeyboardShortcutTooltipProps {
 function parseShortcut(shortcut: string): Array<{ key: string; isModifier: boolean }> {
   const parts: Array<{ key: string; isModifier: boolean }> = [];
   const normalized = shortcut.replace(/\s+/g, ' ').trim();
-  
+
   // Split by + or space
   const tokens = normalized.split(/[+\s]/).filter(Boolean);
-  
+
   for (const token of tokens) {
     const lowerToken = token.toLowerCase();
     const isModifier = [
-      'ctrl', 'control', 'cmd', 'command', '⌘', 'alt', 'option', 'opt', 'shift', '⇧',
-      'meta', 'win', 'super'
+      'ctrl',
+      'control',
+      'cmd',
+      'command',
+      '⌘',
+      'alt',
+      'option',
+      'opt',
+      'shift',
+      '⇧',
+      'meta',
+      'win',
+      'super',
     ].includes(lowerToken);
-    
+
     parts.push({ key: token, isModifier });
   }
-  
+
   return parts;
 }
 
@@ -51,11 +72,11 @@ function parseShortcut(shortcut: string): Array<{ key: string; isModifier: boole
  */
 function renderKey(key: string, isModifier: boolean) {
   const keyClass = `inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 rounded text-xs font-medium ${
-    isModifier 
-      ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] border border-[var(--color-border)]' 
+    isModifier
+      ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] border border-[var(--color-border)]'
       : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] border border-[var(--color-border)]'
   }`;
-  
+
   // Special handling for common keys
   switch (key.toLowerCase()) {
     case 'ctrl':
@@ -118,25 +139,53 @@ function renderKey(key: string, isModifier: boolean) {
       );
     case 'esc':
     case 'escape':
-      return <kbd key={key} className={keyClass}>Esc</kbd>;
+      return (
+        <kbd key={key} className={keyClass}>
+          Esc
+        </kbd>
+      );
     case 'enter':
-      return <kbd key={key} className={keyClass}>⏎</kbd>;
+      return (
+        <kbd key={key} className={keyClass}>
+          ⏎
+        </kbd>
+      );
     case 'tab':
-      return <kbd key={key} className={keyClass}>Tab</kbd>;
+      return (
+        <kbd key={key} className={keyClass}>
+          Tab
+        </kbd>
+      );
     case 'space':
-      return <kbd key={key} className={keyClass}>Space</kbd>;
+      return (
+        <kbd key={key} className={keyClass}>
+          Space
+        </kbd>
+      );
     case 'backspace':
-      return <kbd key={key} className={keyClass}>⌫</kbd>;
+      return (
+        <kbd key={key} className={keyClass}>
+          ⌫
+        </kbd>
+      );
     case 'delete':
-      return <kbd key={key} className={keyClass}>Del</kbd>;
+      return (
+        <kbd key={key} className={keyClass}>
+          Del
+        </kbd>
+      );
     default:
-      return <kbd key={key} className={keyClass}>{key}</kbd>;
+      return (
+        <kbd key={key} className={keyClass}>
+          {key}
+        </kbd>
+      );
   }
 }
 
 /**
  * KeyboardShortcutTooltip Component
- * 
+ *
  * A specialized tooltip component for showing keyboard shortcuts.
  * Renders keyboard keys with proper styling and icons for modifiers.
  */
@@ -163,7 +212,7 @@ export const KeyboardShortcutTooltip: React.FC<KeyboardShortcutTooltipProps> = (
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    
+
     timeoutRef.current = setTimeout(() => {
       setIsVisible(true);
       onShow?.();
@@ -175,7 +224,7 @@ export const KeyboardShortcutTooltip: React.FC<KeyboardShortcutTooltipProps> = (
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    
+
     setIsVisible(false);
     onHide?.();
   };
@@ -299,9 +348,17 @@ export const KeyboardShortcutTooltip: React.FC<KeyboardShortcutTooltipProps> = (
         {isVisible && (
           <motion.div
             ref={tooltipRef}
-            initial={{ opacity: 0, scale: 0.9, y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0 }}
+            initial={{
+              opacity: 0,
+              scale: 0.9,
+              y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0,
+            }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0 }}
+            exit={{
+              opacity: 0,
+              scale: 0.9,
+              y: position === 'top' ? -5 : position === 'bottom' ? 5 : 0,
+            }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className="fixed z-[9999] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border border-[var(--color-border)] rounded-lg shadow-lg px-3 py-2 text-sm leading-relaxed pointer-events-none max-w-[280px]"
             role="tooltip"
@@ -310,7 +367,7 @@ export const KeyboardShortcutTooltip: React.FC<KeyboardShortcutTooltipProps> = (
             <div className="flex flex-col gap-2">
               {/* Description */}
               <p className="font-medium">{content}</p>
-              
+
               {/* Keyboard shortcut */}
               <div className="flex items-center gap-1 flex-wrap">
                 <span className="text-xs text-[var(--color-text-muted)] mr-1">Shortcut:</span>
@@ -329,7 +386,13 @@ export const KeyboardShortcutTooltip: React.FC<KeyboardShortcutTooltipProps> = (
             <div
               className="absolute w-3 h-3 bg-[var(--color-bg-primary)] border-l border-t border-[var(--color-border)] transform rotate-45"
               style={{
-                [position === 'top' ? 'bottom' : position === 'bottom' ? 'top' : position === 'left' ? 'right' : 'left']: '-6px',
+                [position === 'top'
+                  ? 'bottom'
+                  : position === 'bottom'
+                    ? 'top'
+                    : position === 'left'
+                      ? 'right'
+                      : 'left']: '-6px',
                 left: position === 'left' || position === 'right' ? '50%' : '50%',
                 marginLeft: position === 'left' || position === 'right' ? '-6px' : '0',
                 marginTop: position === 'top' || position === 'bottom' ? '0' : '-6px',
@@ -369,6 +432,6 @@ export const CommonShortcutTooltip: React.FC<Omit<KeyboardShortcutTooltipProps, 
   };
 
   const shortcut = shortcutMap[content] || '';
-  
+
   return <KeyboardShortcutTooltip content={content} shortcut={shortcut} {...props} />;
 };

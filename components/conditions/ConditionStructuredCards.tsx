@@ -87,9 +87,7 @@ export function ConditionStructuredCards({
     setMnemonicLoading(true);
     try {
       const token = getToken ? await getToken() : null;
-      const url = getApiEndpoint(
-        `/api/conditions/${encodeURIComponent(conditionId)}/mnemonic`
-      );
+      const url = getApiEndpoint(`/api/conditions/${encodeURIComponent(conditionId)}/mnemonic`);
       const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -143,10 +141,7 @@ export function ConditionStructuredCards({
 
   if (loading) {
     return (
-      <div
-        className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${className}`}
-        aria-busy="true"
-      >
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${className}`} aria-busy="true">
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
@@ -159,9 +154,18 @@ export function ConditionStructuredCards({
 
   if (!data) return null;
 
-  const cards: { key: keyof ConditionStructuredData; title: string; items?: string[]; single?: string }[] = [
+  const cards: {
+    key: keyof ConditionStructuredData;
+    title: string;
+    items?: string[];
+    single?: string;
+  }[] = [
     { key: 'clinical_pearls', title: 'Clinical Pearls', items: data.clinical_pearls },
-    { key: 'history_key_features', title: 'History Key Features', items: data.history_key_features },
+    {
+      key: 'history_key_features',
+      title: 'History Key Features',
+      items: data.history_key_features,
+    },
     {
       key: 'physical_exam_findings',
       title: 'Physical Exam Findings',
@@ -181,28 +185,28 @@ export function ConditionStructuredCards({
       {/* Mnemonic: generate if missing (Firefly) */}
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-bg)] p-4">
         {mnemonicUrl ? (
-            <img
-              src={mnemonicUrl}
-              alt={`Visual mnemonic for ${conditionId}`}
-              className="w-full max-h-64 object-contain rounded-lg bg-[var(--color-bg-primary)]"
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={handleGenerateMnemonic}
-              disabled={mnemonicLoading}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-50"
-            >
-              {mnemonicLoading ? (
-                'Generating…'
-              ) : (
-                <>
-                  <Lightbulb className="w-4 h-4" />
-                  Generate visual mnemonic (Firefly)
-                </>
-              )}
-            </button>
-          )}
+          <img
+            src={mnemonicUrl}
+            alt={`Visual mnemonic for ${conditionId}`}
+            className="w-full max-h-64 object-contain rounded-lg bg-[var(--color-bg-primary)]"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={handleGenerateMnemonic}
+            disabled={mnemonicLoading}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-50"
+          >
+            {mnemonicLoading ? (
+              'Generating…'
+            ) : (
+              <>
+                <Lightbulb className="w-4 h-4" />
+                Generate visual mnemonic (Firefly)
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -247,9 +251,7 @@ export function ConditionStructuredCards({
               >
                 {single ? (
                   <p className="leading-relaxed">
-                    {key === 'treatment_first_line'
-                      ? linkify(single, 'treatment')
-                      : single}
+                    {key === 'treatment_first_line' ? linkify(single, 'treatment') : single}
                   </p>
                 ) : (
                   <ul className="list-disc list-inside space-y-1">

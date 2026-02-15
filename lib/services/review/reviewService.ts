@@ -289,12 +289,12 @@ export class ReviewService {
     const questionIds = savedQuestions.map((sq) => sq.questionId);
     const questions =
       questionIds.length > 0
-        ? (await this.prisma.question.findMany({
+        ? ((await this.prisma.question.findMany({
             where: {
               id: { in: questionIds },
               ...(system ? { system } : {}),
             },
-          })) as unknown as DBQuestion[]
+          })) as unknown as DBQuestion[])
         : [];
 
     const questionMap = new Map(questions.map((q) => [q.id, q as DBQuestion]));
@@ -347,9 +347,9 @@ export class ReviewService {
     const questionIds = uniqueAttempts.map((a) => a.questionId);
     const questions =
       questionIds.length > 0
-        ? (await this.prisma.question.findMany({
+        ? ((await this.prisma.question.findMany({
             where: { id: { in: questionIds } },
-          })) as unknown as DBQuestion[]
+          })) as unknown as DBQuestion[])
         : [];
 
     const questionMap = new Map(questions.map((q) => [q.id, q as DBQuestion]));

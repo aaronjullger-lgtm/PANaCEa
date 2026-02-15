@@ -1,6 +1,6 @@
 /**
  * Session Storage Utilities
- * 
+ *
  * Manages last session state for "Resume" functionality and welcome-back cards.
  * Helps PA students quickly continue where they left off.
  */
@@ -41,7 +41,7 @@ export function getLastSession(): LastSessionData | null {
     if (!stored) return null;
 
     const data = JSON.parse(stored) as LastSessionData;
-    
+
     // Check if stale
     const ageHours = (Date.now() - data.timestamp) / (1000 * 60 * 60);
     if (ageHours > MAX_SESSION_AGE_HOURS) {

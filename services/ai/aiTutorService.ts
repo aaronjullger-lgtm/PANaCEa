@@ -1,16 +1,16 @@
 /**
  * AI Tutor Service
- * 
+ *
  * Integrates Google AI Studio's ask_the_manual (Grounding API) to provide
  * RAG-based clinical tutoring backed by uploaded textbooks and study materials.
- * 
+ *
  * Features:
  * - Upload clinical resources to Gemini corpus
  * - Query with grounded citations
  * - Progressive hint system
  * - Contextual tutoring during OSCE
  * - Post-encounter debrief
- * 
+ *
  * @module aiTutorService
  */
 
@@ -391,10 +391,7 @@ export class AITutorService {
   /**
    * Parse citations from grounding response.
    */
-  private parseCitations(
-    response: AskTheManualResponse,
-    query: TutorQuery
-  ): Citation[] {
+  private parseCitations(response: AskTheManualResponse, query: TutorQuery): Citation[] {
     const citations: Citation[] = [];
 
     for (const attr of response.groundingAttributions) {
@@ -490,7 +487,9 @@ export class AITutorService {
   /**
    * Determine intervention type.
    */
-  private determineInterventionType(trigger: ContextualIntervention['trigger']): ContextualIntervention['type'] {
+  private determineInterventionType(
+    trigger: ContextualIntervention['trigger']
+  ): ContextualIntervention['type'] {
     if (trigger.event === 'wrong_action') return 'correction';
     if (trigger.event === 'missed_critical_finding') return 'hint';
     if (trigger.event === 'time_elapsed') return 'encouragement';
@@ -553,7 +552,9 @@ Provide:
   /**
    * Get recommended resources based on case.
    */
-  private async getRecommendedResources(caseDetails: OSCEDebrief['case']): Promise<ClinicalResource[]> {
+  private async getRecommendedResources(
+    caseDetails: OSCEDebrief['case']
+  ): Promise<ClinicalResource[]> {
     // Placeholder - in production, query database for relevant resources
     return [];
   }

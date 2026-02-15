@@ -212,8 +212,8 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
               <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-[var(--color-text-muted)]">
                 <Sparkles className="h-8 w-8 text-[var(--color-accent)]" />
                 <p className="max-w-md text-sm">
-                  Ask a complex clinical vignette or differential diagnosis question. The tutor
-                  will think through the case step-by-step before answering.
+                  Ask a complex clinical vignette or differential diagnosis question. The tutor will
+                  think through the case step-by-step before answering.
                 </p>
               </div>
             ) : (
@@ -237,21 +237,23 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
                         }`}
                       >
                         {m.text}
-                        {m.role === 'model' && m.groundingSources && m.groundingSources.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            {m.groundingSources.map((src, i) => (
-                              <a
-                                key={i}
-                                href={src.uri}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-accent)] hover:underline"
-                              >
-                                Source: {src.title}
-                              </a>
-                            ))}
-                          </div>
-                        )}
+                        {m.role === 'model' &&
+                          m.groundingSources &&
+                          m.groundingSources.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {m.groundingSources.map((src, i) => (
+                                <a
+                                  key={i}
+                                  href={src.uri}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-tertiary)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-accent)] hover:underline"
+                                >
+                                  Source: {src.title}
+                                </a>
+                              ))}
+                            </div>
+                          )}
                       </div>
                     </motion.div>
                   ))}
@@ -302,10 +304,8 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
           </div>
         </main>
       </div>
-
     </div>
   );
 };
 
 export default ReasoningTutorMode;
-

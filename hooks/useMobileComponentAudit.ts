@@ -20,15 +20,19 @@ export interface MobileComponentAuditConfig {
 
 export function useMobileComponentAudit(config: MobileComponentAuditConfig = {}) {
   const [isAuditOpen, setIsAuditOpen] = useState(false);
-  const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
-  const [viewportHeight, setViewportHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 768);
-  
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
+  const [viewportHeight, setViewportHeight] = useState(
+    typeof window !== 'undefined' ? window.innerHeight : 768
+  );
+
   const {
     checkViewportOverflow = true,
     checkTouchTargets = true,
     checkFormElements = true,
     checkNavigation = true,
-    checkModals = true
+    checkModals = true,
   } = config;
 
   useEffect(() => {
@@ -50,7 +54,7 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
   }, []);
 
   const toggleAudit = useCallback(() => {
-    setIsAuditOpen(prev => !prev);
+    setIsAuditOpen((prev) => !prev);
   }, []);
 
   const scanPageForMobileIssues = useCallback((): MobileComponentIssue[] => {
@@ -69,7 +73,7 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
           severity: 'high',
           description: `${overflowingElements.length} element(s) overflow the viewport horizontally`,
           recommendation: 'Add overflow-x: hidden or make elements responsive',
-          affectedSelectors: overflowingElements
+          affectedSelectors: overflowingElements,
         });
       }
     }
@@ -85,7 +89,7 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
           severity: 'medium',
           description: `${smallTouchTargets.length} interactive element(s) have touch targets smaller than 44px`,
           recommendation: 'Increase min-height/min-width to 44px and add sufficient padding',
-          affectedSelectors: smallTouchTargets
+          affectedSelectors: smallTouchTargets,
         });
       }
     }
@@ -101,7 +105,7 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
           severity: 'medium',
           description: `${problematicForms.length} form element(s) may be difficult to use on mobile`,
           recommendation: 'Ensure inputs are at least 44px tall and properly spaced',
-          affectedSelectors: problematicForms
+          affectedSelectors: problematicForms,
         });
       }
     }
@@ -117,7 +121,7 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
           severity: 'high',
           description: 'Navigation may be difficult to reach or use on mobile',
           recommendation: 'Consider bottom navigation or improving menu placement',
-          affectedSelectors: navigationIssues
+          affectedSelectors: navigationIssues,
         });
       }
     }
@@ -133,19 +137,27 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
           severity: 'medium',
           description: 'Modals may not display properly on mobile screens',
           recommendation: 'Use full-screen modals on mobile with proper dismissal',
-          affectedSelectors: modalIssues
+          affectedSelectors: modalIssues,
         });
       }
     }
 
     return issues;
-  }, [checkViewportOverflow, checkTouchTargets, checkFormElements, checkNavigation, checkModals, viewportWidth, viewportHeight]);
+  }, [
+    checkViewportOverflow,
+    checkTouchTargets,
+    checkFormElements,
+    checkNavigation,
+    checkModals,
+    viewportWidth,
+    viewportHeight,
+  ]);
 
   const findOverflowingElements = (): string[] => {
     const selectors: string[] = [];
     const elements = document.querySelectorAll('*');
 
-    elements.forEach(el => {
+    elements.forEach((el) => {
       if (el instanceof HTMLElement) {
         const rect = el.getBoundingClientRect();
         if (rect.right > viewportWidth || rect.left < 0) {
@@ -170,12 +182,12 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
       'textarea',
       '[role="button"]',
       '[role="link"]',
-      '[tabindex]:not([tabindex="-1"])'
+      '[tabindex]:not([tabindex="-1"])',
     ];
 
     const elements = document.querySelectorAll(interactiveSelectors.join(', '));
 
-    elements.forEach(el => {
+    elements.forEach((el) => {
       if (el instanceof HTMLElement) {
         const rect = el.getBoundingClientRect();
         if (rect.width < 44 || rect.height < 44) {
@@ -191,16 +203,16 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
     const selectors: string[] = [];
     const formElements = document.querySelectorAll('input, select, textarea');
 
-    formElements.forEach(el => {
+    formElements.forEach((el) => {
       if (el instanceof HTMLElement) {
         const rect = el.getBoundingClientRect();
         const style = window.getComputedStyle(el);
-        
+
         // Check for small form elements
         if (rect.height < 44) {
           selectors.push(getElementSelector(el));
         }
-        
+
         // Check for poor spacing
         const marginBottom = parseFloat(style.marginBottom);
         if (marginBottom < 8 && el.nextElementSibling) {
@@ -214,12 +226,12 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
 
   const findNavigationIssues = (): string[] => {
     const selectors: string[] = [];
-    
+
     // Look for top-positioned navigation on mobile
     if (viewportWidth < 768) {
       const navElements = document.querySelectorAll('nav, [role="navigation"], .navbar, .header');
-      
-      navElements.forEach(el => {
+
+      navElements.forEach((el) => {
         if (el instanceof HTMLElement) {
           const rect = el.getBoundingClientRect();
           // Check if navigation is at top (hard to reach)
@@ -237,7 +249,7 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
     const selectors: string[] = [];
     const modalElements = document.querySelectorAll('[role="dialog"], .modal, .dialog');
 
-    modalElements.forEach(el => {
+    modalElements.forEach((el) => {
       if (el instanceof HTMLElement) {
         const rect = el.getBoundingClientRect();
         // Check if modal is too wide for mobile
@@ -252,15 +264,15 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
 
   const getElementSelector = (element: HTMLElement): string => {
     if (element.id) return `#${element.id}`;
-    
+
     let selector = element.tagName.toLowerCase();
     if (element.className && typeof element.className === 'string') {
-      const classes = element.className.split(' ').filter(c => c.length > 0);
+      const classes = element.className.split(' ').filter((c) => c.length > 0);
       if (classes.length > 0) {
         selector += `.${classes.join('.')}`;
       }
     }
-    
+
     return selector;
   };
 
@@ -268,7 +280,7 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
     if (typeof window === 'undefined') return;
 
     // Remove existing highlights
-    document.querySelectorAll('.mobile-component-highlight').forEach(el => {
+    document.querySelectorAll('.mobile-component-highlight').forEach((el) => {
       el.classList.remove('mobile-component-highlight');
     });
 
@@ -302,7 +314,7 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
     }
 
     // Highlight elements
-    selectors.forEach(selector => {
+    selectors.forEach((selector) => {
       const element = document.querySelector(selector);
       if (element instanceof HTMLElement) {
         element.classList.add('mobile-component-highlight');
@@ -311,7 +323,7 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
   }, []);
 
   const clearHighlights = useCallback(() => {
-    document.querySelectorAll('.mobile-component-highlight').forEach(el => {
+    document.querySelectorAll('.mobile-component-highlight').forEach((el) => {
       el.classList.remove('mobile-component-highlight');
     });
   }, []);
@@ -325,7 +337,7 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
     const totalWeight = issues.reduce((sum, issue) => {
       const weight = severityWeights[issue.severity];
       const issueCount = issue.affectedSelectors.length || 1;
-      return sum + (weight * issueCount);
+      return sum + weight * issueCount;
     }, 0);
 
     const averageWeight = totalWeight / issues.length;
@@ -337,15 +349,21 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
     const totalIssues = issues.length;
     const totalAffected = issues.reduce((sum, issue) => sum + issue.affectedSelectors.length, 0);
 
-    const byType = issues.reduce((acc, issue) => {
-      acc[issue.type] = (acc[issue.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const byType = issues.reduce(
+      (acc, issue) => {
+        acc[issue.type] = (acc[issue.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
-    const bySeverity = issues.reduce((acc, issue) => {
-      acc[issue.severity] = (acc[issue.severity] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const bySeverity = issues.reduce(
+      (acc, issue) => {
+        acc[issue.severity] = (acc[issue.severity] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     return {
       totalIssues,
@@ -356,9 +374,9 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
       viewport: {
         width: viewportWidth,
         height: viewportHeight,
-        isMobile: viewportWidth < 768
+        isMobile: viewportWidth < 768,
       },
-      score: getMobileScore()
+      score: getMobileScore(),
     };
   }, [scanPageForMobileIssues, viewportWidth, viewportHeight, getMobileScore]);
 
@@ -377,12 +395,12 @@ export function useMobileComponentAudit(config: MobileComponentAuditConfig = {})
       checkTouchTargets,
       checkFormElements,
       checkNavigation,
-      checkModals
+      checkModals,
     },
     viewport: {
       width: viewportWidth,
       height: viewportHeight,
-      isMobile: viewportWidth < 768
-    }
+      isMobile: viewportWidth < 768,
+    },
   };
 }

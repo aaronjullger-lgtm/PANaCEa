@@ -1,6 +1,6 @@
 /**
  * Context Banner
- * 
+ *
  * Persistent banner shown across all modules displaying current clinical context.
  * Always visible at top of screen to maintain situational awareness.
  */
@@ -47,7 +47,7 @@ export function ContextBanner({
 
   const getVitalColorClass = (vital: string, value: number | string | undefined) => {
     if (typeof value !== 'number') return '';
-    
+
     if (vital === 'o2') {
       if (value < 88) return 'text-rose-500 font-semibold';
       if (value < 92) return 'text-amber-500';
@@ -56,7 +56,7 @@ export function ContextBanner({
       if (value < 50 || value > 120) return 'text-rose-500 font-semibold';
       if (value < 60 || value > 100) return 'text-amber-500';
     }
-    
+
     return '';
   };
 
@@ -91,17 +91,13 @@ export function ContextBanner({
             <Activity className="w-4 h-4 text-[var(--color-accent)]" />
             <span className="font-mono">
               {vitals.hr && (
-                <span className={getVitalColorClass('hr', vitals.hr)}>
-                  HR {vitals.hr}
-                </span>
+                <span className={getVitalColorClass('hr', vitals.hr)}>HR {vitals.hr}</span>
               )}
               {vitals.hr && vitals.bp && ' | '}
               {vitals.bp && <span>BP {vitals.bp}</span>}
               {vitals.bp && vitals.o2 && ' | '}
               {vitals.o2 !== undefined && (
-                <span className={getVitalColorClass('o2', vitals.o2)}>
-                  O2 {vitals.o2}%
-                </span>
+                <span className={getVitalColorClass('o2', vitals.o2)}>O2 {vitals.o2}%</span>
               )}
             </span>
           </div>

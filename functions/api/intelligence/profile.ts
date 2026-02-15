@@ -70,7 +70,8 @@ function mapTask(questionType: string | null | undefined): string {
   if (!questionType) return 'Clinical Intervention';
   const t = questionType.toLowerCase();
   if (t.includes('diagnos')) return 'Differential Diagnosis';
-  if (t.includes('treatment') || t.includes('management') || t.includes('pharm')) return 'Clinical Intervention';
+  if (t.includes('treatment') || t.includes('management') || t.includes('pharm'))
+    return 'Clinical Intervention';
   if (t.includes('mechanism') || t.includes('pathophys')) return 'Clinical Intervention';
   if (t.includes('history') || t.includes('hpi')) return 'History Taking';
   if (t.includes('physical') || t.includes('exam')) return 'Physical Exam';
@@ -190,7 +191,10 @@ export async function calculateConceptGaps(
         ])
       : [[], []];
 
-  const questionMap = new Map<string, { system?: string | null; category?: string | null; topic?: string | null }>();
+  const questionMap = new Map<
+    string,
+    { system?: string | null; category?: string | null; topic?: string | null }
+  >();
   for (const q of questions) {
     questionMap.set(q.id, { system: q.system, category: q.category, topic: q.topic });
   }
@@ -288,7 +292,7 @@ export async function generateTutorContext(
   }
 
   const bySystemSorted = Object.entries(gaps.bySystem).sort(
-    (a, b) => (b[1].failures / Math.max(1, b[1].total)) - (a[1].failures / Math.max(1, a[1].total))
+    (a, b) => b[1].failures / Math.max(1, b[1].total) - a[1].failures / Math.max(1, a[1].total)
   );
 
   for (const [system, data] of bySystemSorted.slice(0, 5)) {

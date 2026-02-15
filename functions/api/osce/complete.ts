@@ -36,7 +36,8 @@ export const onRequestPost = authenticatedEndpoint(
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
-      const { sessionId, diagnosis, treatmentPlan, soapComparison, timingAnalytics, infographics } = validated.body;
+      const { sessionId, diagnosis, treatmentPlan, soapComparison, timingAnalytics, infographics } =
+        validated.body;
       log.info('Completing OSCE session', { sessionId });
 
       const user = await resolveUserByClerkId(prisma, auth.userId);

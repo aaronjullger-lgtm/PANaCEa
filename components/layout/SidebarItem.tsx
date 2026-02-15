@@ -8,11 +8,12 @@ import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 
 const BASE_CLASS =
-  'w-full flex items-center gap-2 min-h-[44px] px-3 py-2.5 rounded-xl text-left transition-all duration-200 ' +
+  'w-full flex items-center gap-2 min-h-[44px] px-3 py-2.5 rounded-xl text-left transition-all duration-200 ease-out ' +
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]';
 
-/** Collapsed: fixed width so parent can center us; no full-width stretch. Icon container is w-10 h-10. */
-const COLLAPSED_WRAPPER_CLASS = 'w-10 shrink-0 justify-center items-center px-0 min-w-0';
+/** Collapsed: fixed width so parent can center us; no full-width stretch; no min-h so NavRail's h-12 controls row height. */
+const COLLAPSED_WRAPPER_CLASS =
+  'w-10 h-10 shrink-0 justify-center items-center px-0 min-w-0 min-h-0';
 
 const ACTIVE_CLASS =
   'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20';
@@ -62,7 +63,12 @@ function SidebarItemContent({
   compact,
   iconVariant = 'plain',
   collapsed = false,
-}: Readonly<Pick<SidebarItemProps, 'label' | 'icon' | 'count' | 'active' | 'leftSlot' | 'compact' | 'iconVariant' | 'collapsed'>>) {
+}: Readonly<
+  Pick<
+    SidebarItemProps,
+    'label' | 'icon' | 'count' | 'active' | 'leftSlot' | 'compact' | 'iconVariant' | 'collapsed'
+  >
+>) {
   const iconClass = active
     ? 'text-[var(--color-accent)]'
     : 'text-slate-700 dark:text-[var(--color-text-muted)] group-hover:text-slate-900 dark:group-hover:text-[var(--color-text-primary)]';
@@ -140,9 +146,10 @@ export const SidebarItem: React.FC<Readonly<SidebarItemProps>> = ({
     />
   );
 
-  const styleClass = `${BASE_CLASS} ${compact ? COMPACT_CLASS : ''} ${collapsed ? COLLAPSED_WRAPPER_CLASS : ''} group ${
-    active ? ACTIVE_CLASS : INACTIVE_CLASS
-  } ${className}`.trim();
+  const styleClass =
+    `${BASE_CLASS} ${compact ? COMPACT_CLASS : ''} ${collapsed ? COLLAPSED_WRAPPER_CLASS : ''} group ${
+      active ? ACTIVE_CLASS : INACTIVE_CLASS
+    } ${className}`.trim();
 
   if (as === 'span') {
     return (

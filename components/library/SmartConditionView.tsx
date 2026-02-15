@@ -4,7 +4,7 @@
  * Philosophy: Professional, clinical terminology (UpToDate/Dynamed style)
  * Layout: Clean, dense, information-rich
  * Tabs: High Yield (default) | Presentation | Diagnostics | Management
- * 
+ *
  * Usage:
  * - Pass `data` directly for full control (new specification)
  * - Pass `conditionId` for hook-based loading (backward compatibility)
@@ -194,7 +194,10 @@ function parseListField(value: any): string[] {
       const parsed = JSON.parse(value);
       if (Array.isArray(parsed)) return parsed.filter((v) => typeof v === 'string');
     } catch {
-      return value.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+      return value
+        .split(/[,;]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
     }
   }
   return [];
@@ -288,7 +291,11 @@ function HighYieldTab({ data }: Readonly<{ data: MedicalContent }>) {
     <div className="space-y-6">
       {/* Classic Triad/Pentad — always open first */}
       {triad.length > 0 && (
-        <CollapsibleSection title="Classic Triad / Pentad" icon={Target} defaultOpen={sectionIndex++ === 0}>
+        <CollapsibleSection
+          title="Classic Triad / Pentad"
+          icon={Target}
+          defaultOpen={sectionIndex++ === 0}
+        >
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {triad.map((item, idx) => (
               <div
@@ -298,7 +305,9 @@ function HighYieldTab({ data }: Readonly<{ data: MedicalContent }>) {
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-accent)]/20 text-[var(--color-accent)] font-bold text-sm shrink-0">
                   {idx + 1}
                 </div>
-                <span className="text-[var(--color-text-primary)] text-base leading-relaxed pt-1">{item}</span>
+                <span className="text-[var(--color-text-primary)] text-base leading-relaxed pt-1">
+                  {item}
+                </span>
               </div>
             ))}
           </div>
@@ -307,7 +316,11 @@ function HighYieldTab({ data }: Readonly<{ data: MedicalContent }>) {
 
       {/* Differential Diagnosis Table */}
       {confusionPairs.length > 0 && (
-        <CollapsibleSection title="Differential Diagnosis" icon={TrendingUp} defaultOpen={sectionIndex++ === 0}>
+        <CollapsibleSection
+          title="Differential Diagnosis"
+          icon={TrendingUp}
+          defaultOpen={sectionIndex++ === 0}
+        >
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -324,9 +337,12 @@ function HighYieldTab({ data }: Readonly<{ data: MedicalContent }>) {
                 {confusionPairs.map((pair) => {
                   // Prefer explicit conditionName, then selectedConditionId (which may be a name
                   // from the summary mapper), then mistakenForId. Filter out UUID-looking values.
-                  const rawName = pair.conditionName ?? pair.selectedConditionId ?? pair.mistakenForId;
+                  const rawName =
+                    pair.conditionName ?? pair.selectedConditionId ?? pair.mistakenForId;
                   const looksLikeUuid = rawName && /^[0-9a-f]{8}-[0-9a-f]{4}/.test(rawName);
-                  const displayName = looksLikeUuid ? 'Alternative Diagnosis' : (rawName ?? 'Alternative Diagnosis');
+                  const displayName = looksLikeUuid
+                    ? 'Alternative Diagnosis'
+                    : (rawName ?? 'Alternative Diagnosis');
                   return (
                     <tr key={pair.id} className="border-b border-[var(--color-border)]">
                       <td className="p-3 text-[var(--color-text-primary)] text-base leading-relaxed">
@@ -346,20 +362,34 @@ function HighYieldTab({ data }: Readonly<{ data: MedicalContent }>) {
 
       {/* Clinical Pearls */}
       {(pearls.length > 0 || mnemonic) && (
-        <CollapsibleSection title="Clinical Pearls" icon={Lightbulb} iconColor="text-amber-400" defaultOpen={sectionIndex++ === 0}>
+        <CollapsibleSection
+          title="Clinical Pearls"
+          icon={Lightbulb}
+          iconColor="text-amber-400"
+          defaultOpen={sectionIndex++ === 0}
+        >
           <div className="space-y-3">
             {mnemonic && (
               <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/30">
-                <h4 className="text-xs font-semibold text-violet-300 mb-2 uppercase tracking-wide">Mnemonic</h4>
-                <p className="text-[var(--color-text-primary)] text-base leading-relaxed font-medium">{mnemonic}</p>
+                <h4 className="text-xs font-semibold text-violet-300 mb-2 uppercase tracking-wide">
+                  Mnemonic
+                </h4>
+                <p className="text-[var(--color-text-primary)] text-base leading-relaxed font-medium">
+                  {mnemonic}
+                </p>
               </div>
             )}
             {pearls.length > 0 && (
               <ul className="space-y-2">
                 {pearls.map((pearl) => (
-                  <li key={pearl} className="flex items-start gap-3 p-3 rounded-lg bg-[var(--color-bg-secondary)]/50">
+                  <li
+                    key={pearl}
+                    className="flex items-start gap-3 p-3 rounded-lg bg-[var(--color-bg-secondary)]/50"
+                  >
                     <span className="text-amber-400 shrink-0">•</span>
-                    <span className="text-[var(--color-text-primary)] text-base leading-relaxed">{pearl}</span>
+                    <span className="text-[var(--color-text-primary)] text-base leading-relaxed">
+                      {pearl}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -426,7 +456,9 @@ function PresentationTab({ data }: Readonly<{ data: MedicalContent }>) {
       {classicPatient && (
         <CollapsibleSection title="Clinical Vignette" defaultOpen={sectionIndex++ === 0}>
           <div className="p-4 rounded-xl bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 italic">
-            <p className="text-[var(--color-text-primary)] text-base leading-relaxed">&quot;{classicPatient}&quot;</p>
+            <p className="text-[var(--color-text-primary)] text-base leading-relaxed">
+              &quot;{classicPatient}&quot;
+            </p>
           </div>
         </CollapsibleSection>
       )}
@@ -435,8 +467,14 @@ function PresentationTab({ data }: Readonly<{ data: MedicalContent }>) {
       {(demographicText || epidemiology) && (
         <CollapsibleSection title="Epidemiology" icon={User} defaultOpen={sectionIndex++ === 0}>
           <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] space-y-2">
-            {demographicText && <p className="text-[var(--color-text-primary)] text-base leading-relaxed">{demographicText}</p>}
-            {epidemiology && <ContentFieldRenderer value={epidemiology} className="text-base leading-relaxed" />}
+            {demographicText && (
+              <p className="text-[var(--color-text-primary)] text-base leading-relaxed">
+                {demographicText}
+              </p>
+            )}
+            {epidemiology && (
+              <ContentFieldRenderer value={epidemiology} className="text-base leading-relaxed" />
+            )}
           </div>
         </CollapsibleSection>
       )}
@@ -447,17 +485,29 @@ function PresentationTab({ data }: Readonly<{ data: MedicalContent }>) {
           <div className="space-y-3">
             {riskFactors && (
               <div>
-                <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">Risk Factors</h4>
+                <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">
+                  Risk Factors
+                </h4>
                 <div className="p-3 rounded-lg bg-[var(--color-bg-secondary)]/50">
-                  <ContentFieldRenderer value={riskFactors} variant="clinical" className="text-base leading-relaxed" />
+                  <ContentFieldRenderer
+                    value={riskFactors}
+                    variant="clinical"
+                    className="text-base leading-relaxed"
+                  />
                 </div>
               </div>
             )}
             {etiology && (
               <div>
-                <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">Etiology</h4>
+                <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">
+                  Etiology
+                </h4>
                 <div className="p-3 rounded-lg bg-[var(--color-bg-secondary)]/50">
-                  <ContentFieldRenderer value={etiology} variant="clinical" className="text-base leading-relaxed" />
+                  <ContentFieldRenderer
+                    value={etiology}
+                    variant="clinical"
+                    className="text-base leading-relaxed"
+                  />
                 </div>
               </div>
             )}
@@ -474,7 +524,11 @@ function PresentationTab({ data }: Readonly<{ data: MedicalContent }>) {
                 <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2 uppercase">
                   Subjective (History)
                 </h4>
-                <ContentFieldRenderer value={symptoms} variant="clinical" className="text-base leading-relaxed" />
+                <ContentFieldRenderer
+                  value={symptoms}
+                  variant="clinical"
+                  className="text-base leading-relaxed"
+                />
               </div>
             )}
             {(physicalExam || findings.length > 0) && (
@@ -482,11 +536,20 @@ function PresentationTab({ data }: Readonly<{ data: MedicalContent }>) {
                 <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2 uppercase">
                   Objective (Physical Exam)
                 </h4>
-                {physicalExam && <ContentFieldRenderer value={physicalExam} variant="clinical" className="text-base leading-relaxed" />}
+                {physicalExam && (
+                  <ContentFieldRenderer
+                    value={physicalExam}
+                    variant="clinical"
+                    className="text-base leading-relaxed"
+                  />
+                )}
                 {findings.length > 0 && (
                   <ul className="mt-2 space-y-1">
                     {findings.map((f) => (
-                      <li key={f.id} className="text-base leading-relaxed text-[var(--color-text-primary)]">
+                      <li
+                        key={f.id}
+                        className="text-base leading-relaxed text-[var(--color-text-primary)]"
+                      >
                         • {f.PhysicalExamFinding?.displayName ?? f.PhysicalExamFinding?.name}
                         {(f.clinicalContext || f.relationshipType) && (
                           <span className="text-[var(--color-text-muted)] ml-1">
@@ -519,7 +582,12 @@ function DiagnosticsTab({ data }: Readonly<{ data: MedicalContent }>) {
   const ecg = data.ECGConditionLink ?? [];
 
   const hasContent =
-    bestInitial || goldStandard || diagnostics || labs.length > 0 || imaging.length > 0 || ecg.length > 0;
+    bestInitial ||
+    goldStandard ||
+    diagnostics ||
+    labs.length > 0 ||
+    imaging.length > 0 ||
+    ecg.length > 0;
 
   if (!hasContent) {
     return (
@@ -547,7 +615,9 @@ function DiagnosticsTab({ data }: Readonly<{ data: MedicalContent }>) {
                     <h4 className="text-sm font-semibold text-emerald-300 mb-1 uppercase tracking-wide">
                       Best Initial Test
                     </h4>
-                    <p className="text-[var(--color-text-primary)] text-base leading-relaxed">{bestInitial}</p>
+                    <p className="text-[var(--color-text-primary)] text-base leading-relaxed">
+                      {bestInitial}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -562,7 +632,9 @@ function DiagnosticsTab({ data }: Readonly<{ data: MedicalContent }>) {
                     <h4 className="text-sm font-semibold text-amber-300 mb-1 uppercase tracking-wide">
                       Gold Standard
                     </h4>
-                    <p className="text-[var(--color-text-primary)] text-base leading-relaxed">{goldStandard}</p>
+                    <p className="text-[var(--color-text-primary)] text-base leading-relaxed">
+                      {goldStandard}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -646,7 +718,9 @@ function DiagnosticsTab({ data }: Readonly<{ data: MedicalContent }>) {
                             {e.ECGPattern?.displayName ?? e.ECGPattern?.name}
                           </span>
                           {e.findingDescription && (
-                            <p className="text-sm text-[var(--color-text-muted)] mt-1">{e.findingDescription}</p>
+                            <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                              {e.findingDescription}
+                            </p>
                           )}
                         </li>
                       ))}
@@ -663,7 +737,11 @@ function DiagnosticsTab({ data }: Readonly<{ data: MedicalContent }>) {
       {diagnostics && (
         <CollapsibleSection title="Additional Diagnostics" defaultOpen={sectionIndex++ === 0}>
           <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
-            <ContentFieldRenderer value={diagnostics} variant="clinical" className="text-base leading-relaxed" />
+            <ContentFieldRenderer
+              value={diagnostics}
+              variant="clinical"
+              className="text-base leading-relaxed"
+            />
           </div>
         </CollapsibleSection>
       )}
@@ -673,9 +751,17 @@ function DiagnosticsTab({ data }: Readonly<{ data: MedicalContent }>) {
         const diagnosticImages = (data.MediaAsset ?? [])
           .filter((asset) => {
             const mod = asset.modality?.toLowerCase() || '';
-            return mod.includes('radiology') || mod.includes('x-ray') || mod.includes('ct') || 
-                   mod.includes('mri') || mod.includes('ecg') || mod.includes('ekg') || 
-                   mod.includes('histology') || mod.includes('pathology') || mod.includes('imaging');
+            return (
+              mod.includes('radiology') ||
+              mod.includes('x-ray') ||
+              mod.includes('ct') ||
+              mod.includes('mri') ||
+              mod.includes('ecg') ||
+              mod.includes('ekg') ||
+              mod.includes('histology') ||
+              mod.includes('pathology') ||
+              mod.includes('imaging')
+            );
           })
           .sort((a, b) => {
             // Sort by: isClassic first, then quality score
@@ -696,8 +782,13 @@ function DiagnosticsTab({ data }: Readonly<{ data: MedicalContent }>) {
               images={diagnosticImages.map((asset) => ({
                 id: asset.id,
                 src: asset.thumbnailUrl || asset.originalUrl || '',
-                alt: asset.altText || asset.description || `${data.condition} ${asset.modality || 'imaging'}`,
-                title: asset.description || `${data.condition} - ${asset.modality || 'Diagnostic Image'}`,
+                alt:
+                  asset.altText ||
+                  asset.description ||
+                  `${data.condition} ${asset.modality || 'imaging'}`,
+                title:
+                  asset.description ||
+                  `${data.condition} - ${asset.modality || 'Diagnostic Image'}`,
                 source: asset.attribution || 'Open-i / NLM',
                 license: asset.licenseType || 'OPEN_ACCESS_CC_BY',
                 attribution: asset.attribution,
@@ -732,7 +823,7 @@ function ManagementTab({ data }: Readonly<{ data: MedicalContent }>) {
 
   const firstLineDrug = drugs.find((d) => d.isFirstLine);
   const firstLineTreatment = treatments.find((t) => t.isFirstLine);
-  
+
   const firstLineFromLinks = (() => {
     if (firstLineDrug?.Drug?.genericName) return firstLineDrug.Drug.genericName;
     if (firstLineDrug?.Drug?.brandName) return firstLineDrug.Drug.brandName;
@@ -770,7 +861,12 @@ function ManagementTab({ data }: Readonly<{ data: MedicalContent }>) {
     <div className="space-y-6">
       {/* Pharmacotherapy - First Line Rx — always open first */}
       {(firstLine || firstLineFromLinks) && (
-        <CollapsibleSection title="Pharmacotherapy" icon={Pill} iconColor="text-emerald-400" defaultOpen={sectionIndex++ === 0}>
+        <CollapsibleSection
+          title="Pharmacotherapy"
+          icon={Pill}
+          iconColor="text-emerald-400"
+          defaultOpen={sectionIndex++ === 0}
+        >
           <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/30 text-emerald-200">
@@ -790,12 +886,16 @@ function ManagementTab({ data }: Readonly<{ data: MedicalContent }>) {
                 {alternatives.map((alt) => {
                   let name = 'Alternative';
                   if ('Drug' in alt && alt.Drug) {
-                    name = alt.Drug.genericName ?? alt.Drug.brandName ?? alt.Drug.name ?? 'Alternative';
+                    name =
+                      alt.Drug.genericName ?? alt.Drug.brandName ?? alt.Drug.name ?? 'Alternative';
                   } else if ('Treatment' in alt && alt.Treatment) {
                     name = alt.Treatment.name ?? 'Alternative';
                   }
                   return (
-                    <li key={alt.id} className="text-[var(--color-text-primary)] text-base leading-relaxed">
+                    <li
+                      key={alt.id}
+                      className="text-[var(--color-text-primary)] text-base leading-relaxed"
+                    >
                       • {name}
                     </li>
                   );
@@ -810,14 +910,22 @@ function ManagementTab({ data }: Readonly<{ data: MedicalContent }>) {
       {treatment && (
         <CollapsibleSection title="Treatment Approach" defaultOpen={sectionIndex++ === 0}>
           <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
-            <ContentFieldRenderer value={treatment} variant="clinical" className="text-base leading-relaxed" />
+            <ContentFieldRenderer
+              value={treatment}
+              variant="clinical"
+              className="text-base leading-relaxed"
+            />
           </div>
         </CollapsibleSection>
       )}
 
       {/* Disposition */}
       {disposition && (
-        <CollapsibleSection title="Disposition" icon={Stethoscope} defaultOpen={sectionIndex++ === 0}>
+        <CollapsibleSection
+          title="Disposition"
+          icon={Stethoscope}
+          defaultOpen={sectionIndex++ === 0}
+        >
           <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
             <ContentFieldRenderer value={disposition} className="text-base leading-relaxed" />
           </div>
@@ -826,10 +934,21 @@ function ManagementTab({ data }: Readonly<{ data: MedicalContent }>) {
 
       {/* Clinical Safety - Complications */}
       {complications && (
-        <CollapsibleSection title="Clinical Safety" icon={AlertTriangle} iconColor="text-amber-400" defaultOpen={sectionIndex++ === 0}>
+        <CollapsibleSection
+          title="Clinical Safety"
+          icon={AlertTriangle}
+          iconColor="text-amber-400"
+          defaultOpen={sectionIndex++ === 0}
+        >
           <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
-            <h4 className="text-sm font-semibold text-amber-300 mb-2 uppercase tracking-wide">Complications</h4>
-            <ContentFieldRenderer value={complications} variant="clinical" className="text-base leading-relaxed" />
+            <h4 className="text-sm font-semibold text-amber-300 mb-2 uppercase tracking-wide">
+              Complications
+            </h4>
+            <ContentFieldRenderer
+              value={complications}
+              variant="clinical"
+              className="text-base leading-relaxed"
+            />
           </div>
         </CollapsibleSection>
       )}
@@ -845,11 +964,18 @@ function ManagementTab({ data }: Readonly<{ data: MedicalContent }>) {
 
       {/* Prevention & Patient Education */}
       {(prevention || patientEd) && (
-        <CollapsibleSection title="Counseling Points" icon={Heart} iconColor="text-rose-400" defaultOpen={sectionIndex++ === 0}>
+        <CollapsibleSection
+          title="Counseling Points"
+          icon={Heart}
+          iconColor="text-rose-400"
+          defaultOpen={sectionIndex++ === 0}
+        >
           <div className="space-y-3">
             {prevention && (
               <div>
-                <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">Prevention</h4>
+                <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">
+                  Prevention
+                </h4>
                 <div className="p-3 rounded-lg bg-[var(--color-bg-secondary)]/50">
                   <ContentFieldRenderer value={prevention} className="text-base leading-relaxed" />
                 </div>
@@ -857,7 +983,9 @@ function ManagementTab({ data }: Readonly<{ data: MedicalContent }>) {
             )}
             {patientEd && (
               <div>
-                <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">Patient Education</h4>
+                <h4 className="text-sm font-semibold text-[var(--color-text-muted)] mb-2">
+                  Patient Education
+                </h4>
                 <div className="p-3 rounded-lg bg-[var(--color-bg-secondary)]/50">
                   <ContentFieldRenderer value={patientEd} className="text-base leading-relaxed" />
                 </div>
@@ -950,8 +1078,12 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
               <>
                 {synonyms.length > 0 && (
                   <div className="flex items-start gap-2 mb-3">
-                    <span className="text-sm font-semibold text-[var(--color-text-muted)] shrink-0">AKA:</span>
-                    <span className="text-sm text-[var(--color-text-primary)]">{synonyms.join(', ')}</span>
+                    <span className="text-sm font-semibold text-[var(--color-text-muted)] shrink-0">
+                      AKA:
+                    </span>
+                    <span className="text-sm text-[var(--color-text-primary)]">
+                      {synonyms.join(', ')}
+                    </span>
                   </div>
                 )}
                 {buzzwords.length > 0 && (
@@ -1190,12 +1322,14 @@ export const SmartConditionView: React.FC<SmartConditionViewProps> = ({
     classic_triad: summary.classic_triad,
     clinical_pearls: summary.clinical_pearls,
     mnemonic: summary.mnemonic,
-    ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent: summary.confusedWith.map((c) => ({
-      id: c.id,
-      mistakenForId: c.conditionId,
-      selectedConditionId: c.condition,
-      conditionName: c.condition, // Explicit display name for UUID guard
-    })),
+    ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent: summary.confusedWith.map(
+      (c) => ({
+        id: c.id,
+        mistakenForId: c.conditionId,
+        selectedConditionId: c.condition,
+        conditionName: c.condition, // Explicit display name for UUID guard
+      })
+    ),
     // Add details if loaded
     ...(details
       ? {

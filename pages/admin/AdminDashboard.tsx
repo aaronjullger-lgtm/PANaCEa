@@ -82,7 +82,13 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         headers: { Authorization: `Bearer ${token}` },
       });
       const res = (await statsResponse.json()) as {
-        data?: { totalUsers?: number; activeUsersToday?: number; totalStudySessions?: number; averageAccuracy?: number; pendingFlags?: number };
+        data?: {
+          totalUsers?: number;
+          activeUsersToday?: number;
+          totalStudySessions?: number;
+          averageAccuracy?: number;
+          pendingFlags?: number;
+        };
       };
       // API returns { success, data: { totalUsers, activeUsersToday, ... } }
       const statsData = res?.data ?? {};
@@ -118,14 +124,20 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         });
 
         if (accessResponse.ok) {
-          const accessJson = (await accessResponse.json()) as { data?: { role?: string }; role?: string };
+          const accessJson = (await accessResponse.json()) as {
+            data?: { role?: string };
+            role?: string;
+          };
           const role = accessJson?.data?.role ?? accessJson?.role;
           setHasAccess(true);
           setUserRole(role === 'superadmin' ? 'superadmin' : 'admin');
           await fetchStats(token);
         } else {
           setHasAccess(false);
-          const errBody = (await accessResponse.json().catch(() => ({}))) as { error?: string; message?: string };
+          const errBody = (await accessResponse.json().catch(() => ({}))) as {
+            error?: string;
+            message?: string;
+          };
           setAccessError(errBody?.error ?? errBody?.message ?? 'Access denied');
         }
       } catch (error) {

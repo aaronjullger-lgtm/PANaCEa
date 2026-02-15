@@ -184,9 +184,7 @@ export interface GapAnalysisDashboardProps {
   onStudySystem?: (systemName: string) => void;
 }
 
-export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({
-  onStudySystem,
-}) => {
+export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onStudySystem }) => {
   const { getToken } = useAuth();
   const navigate = useNavigate();
 
@@ -207,14 +205,11 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({
         return;
       }
 
-      const response = await fetch(
-        getApiEndpoint(API_ENDPOINTS.ANALYTICS_PERFORMANCE_DELTAS),
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.ANALYTICS_PERFORMANCE_DELTAS), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         if (response.status === 404) {

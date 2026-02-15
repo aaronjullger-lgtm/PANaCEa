@@ -1,6 +1,6 @@
 /**
  * Achievement Notification
- * 
+ *
  * Displays achievement unlock notifications with celebration animation.
  * Shows badge, rarity, and XP gained.
  */
@@ -153,9 +153,7 @@ export function AchievementNotification({
                 <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
                   {badge.name}
                 </h3>
-                <p className="text-sm text-[var(--color-text-secondary)]">
-                  {badge.description}
-                </p>
+                <p className="text-sm text-[var(--color-text-secondary)]">{badge.description}</p>
               </div>
 
               {/* XP Gained */}
@@ -170,9 +168,7 @@ export function AchievementNotification({
 
               {/* Confetti Effect */}
               {badge.rarity === 'epic' || badge.rarity === 'legendary' ? (
-                <div className="text-center text-4xl">
-                  🎊 🎉 🎊
-                </div>
+                <div className="text-center text-4xl">🎊 🎉 🎊</div>
               ) : null}
             </motion.div>
 

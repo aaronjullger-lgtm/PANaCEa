@@ -52,7 +52,10 @@ export function useLowPowerMode(): boolean {
     const cleanupReducedMotion = () => {
       if (mediaQuery.removeEventListener) {
         mediaQuery.removeEventListener('change', handleReducedMotion);
-      } else if ('removeListener' in mediaQuery && typeof mediaQuery.removeListener === 'function') {
+      } else if (
+        'removeListener' in mediaQuery &&
+        typeof mediaQuery.removeListener === 'function'
+      ) {
         mediaQuery.removeListener(handleReducedMotion);
       }
     };

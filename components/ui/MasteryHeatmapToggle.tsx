@@ -36,9 +36,7 @@ export const MasteryHeatmapToggle: React.FC<MasteryHeatmapToggleProps> = ({
       aria-label={masteryHeatmapOverlay ? 'Mastery overlay on' : 'Mastery overlay off'}
     >
       <Layers className="h-4 w-4 shrink-0" aria-hidden />
-      {!compact && (
-        <span>{masteryHeatmapOverlay ? 'Overlay on' : 'Mastery overlay'}</span>
-      )}
+      {!compact && <span>{masteryHeatmapOverlay ? 'Overlay on' : 'Mastery overlay'}</span>}
     </button>
   );
 };

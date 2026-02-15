@@ -2,10 +2,10 @@
 
 /**
  * Resource Hints Optimization Script
- * 
+ *
  * This script adds resource hints (preconnect, preload, prefetch) to index.html
  * to improve initial load time and perceived performance.
- * 
+ *
  * Usage: tsx scripts/optimize-resource-hints.ts
  */
 
@@ -65,42 +65,43 @@ const PREFETCH_RESOURCES: Array<{ href: string; as: string; type: string }> = []
  */
 function generateResourceHints(): string {
   const hints: string[] = [];
-  
+
   // Preconnect hints
-  PRECONNECT_DOMAINS.forEach(domain => {
+  PRECONNECT_DOMAINS.forEach((domain) => {
     hints.push(`  <link rel="preconnect" href="${domain}" crossorigin />`);
   });
-  
+
   // DNS prefetch for additional domains
-  const dnsPrefetchDomains = [
-    'https://api.supabase.co',
-    'https://*.supabase.co',
-  ];
-  
-  dnsPrefetchDomains.forEach(domain => {
+  const dnsPrefetchDomains = ['https://api.supabase.co', 'https://*.supabase.co'];
+
+  dnsPrefetchDomains.forEach((domain) => {
     hints.push(`  <link rel="dns-prefetch" href="${domain}" />`);
   });
-  
+
   // Preload critical resources
-  CRITICAL_RESOURCES.forEach(resource => {
+  CRITICAL_RESOURCES.forEach((resource) => {
     const attributes = [
       `rel="${resource.type}"`,
       `href="${resource.href}"`,
       resource.as ? `as="${resource.as}"` : '',
       resource.crossorigin ? 'crossorigin' : '',
-    ].filter(Boolean).join(' ');
-    
+    ]
+      .filter(Boolean)
+      .join(' ');
+
     hints.push(`  <link ${attributes} />`);
   });
-  
+
   // Module preload for critical JavaScript
   hints.push(`  <link rel="modulepreload" href="/src/main.tsx" />`);
-  
+
   // Prefetch lower priority resources (none for API URLs - they require auth)
-  PREFETCH_RESOURCES.forEach(resource => {
-    hints.push(`  <link rel="prefetch" href="${resource.href}" as="${resource.as}" ${resource.type === 'preload' ? `type="${resource.as}"` : ''} crossorigin="anonymous" />`);
+  PREFETCH_RESOURCES.forEach((resource) => {
+    hints.push(
+      `  <link rel="prefetch" href="${resource.href}" as="${resource.as}" ${resource.type === 'preload' ? `type="${resource.as}"` : ''} crossorigin="anonymous" />`
+    );
   });
-  
+
   return hints.join('\n');
 }
 
@@ -109,61 +110,66 @@ function generateResourceHints(): string {
  */
 function updateIndexHtmlWithResourceHints(): void {
   const indexPath = path.join(projectRoot, 'index.html');
-  
+
   if (!fs.existsSync(indexPath)) {
     console.error('index.html not found at:', indexPath);
     process.exit(1);
   }
 
   let html = fs.readFileSync(indexPath, 'utf8');
-  
+
   // Check if resource hints are already injected
   if (html.includes('<!-- RESOURCE HINTS -->')) {
     console.log('Resource hints already injected, updating...');
-    
+
     // Update existing resource hints
     const regex = /<!-- RESOURCE HINTS -->[\s\S]*?<!-- \/RESOURCE HINTS -->/;
     const replacement = `<!-- RESOURCE HINTS -->\n${generateResourceHints()}\n  <!-- /RESOURCE HINTS -->`;
-    
+
     html = html.replace(regex, replacement);
   } else {
     console.log('Injecting resource hints for the first time...');
-    
+
     // Find the closing </head> tag and insert resource hints before it
     const headCloseIndex = html.indexOf('</head>');
-    
+
     if (headCloseIndex === -1) {
       console.error('</head> tag not found in index.html');
       process.exit(1);
     }
-    
+
     const resourceHintsBlock = `\n  <!-- RESOURCE HINTS -->\n${generateResourceHints()}\n  <!-- /RESOURCE HINTS -->\n`;
-    
+
     html = html.slice(0, headCloseIndex) + resourceHintsBlock + html.slice(headCloseIndex);
   }
-  
+
   // Also add loading="lazy" to non-critical images if not already present
   html = html.replace(/<img([^>]*)>/g, (match, attributes) => {
     // Check if loading attribute already exists
     if (attributes.includes('loading=')) {
       return match;
     }
-    
+
     // Add loading="lazy" to non-critical images
     // Don't add to critical images (like logos, hero images)
-    if (attributes.includes('critical') || attributes.includes('logo') || attributes.includes('hero')) {
+    if (
+      attributes.includes('critical') ||
+      attributes.includes('logo') ||
+      attributes.includes('hero')
+    ) {
       return match;
     }
-    
+
     return `<img${attributes} loading="lazy">`;
   });
-  
+
   // Write updated HTML back to file
   fs.writeFileSync(indexPath, html, 'utf8');
   console.log('✅ Resource hints injected into index.html');
-  
+
   // Calculate the number of hints added
-  const hintsCount = PRECONNECT_DOMAINS.length + CRITICAL_RESOURCES.length + PREFETCH_RESOURCES.length + 1; // +1 for modulepreload
+  const hintsCount =
+    PRECONNECT_DOMAINS.length + CRITICAL_RESOURCES.length + PREFETCH_RESOURCES.length + 1; // +1 for modulepreload
   console.log(`📊 Added ${hintsCount} resource hints`);
 }
 
@@ -177,13 +183,13 @@ function createPerformanceReport(): void {
 ## Resource Hints Added
 
 ### Preconnect Domains (${PRECONNECT_DOMAINS.length})
-${PRECONNECT_DOMAINS.map(domain => `- ${domain}`).join('\n')}
+${PRECONNECT_DOMAINS.map((domain) => `- ${domain}`).join('\n')}
 
 ### Preload Resources (${CRITICAL_RESOURCES.length})
-${CRITICAL_RESOURCES.map(resource => `- ${resource.href} (as: ${resource.as})`).join('\n')}
+${CRITICAL_RESOURCES.map((resource) => `- ${resource.href} (as: ${resource.as})`).join('\n')}
 
 ### Prefetch Resources (${PREFETCH_RESOURCES.length})
-${PREFETCH_RESOURCES.map(resource => `- ${resource}`).join('\n')}
+${PREFETCH_RESOURCES.map((resource) => `- ${resource}`).join('\n')}
 
 ## Expected Performance Improvements
 
@@ -219,20 +225,19 @@ Monitor these metrics after deployment:
  */
 async function main(): Promise<void> {
   console.log('🚀 Optimizing resource hints...');
-  
+
   try {
     // Update index.html with resource hints
     updateIndexHtmlWithResourceHints();
-    
+
     // Create performance report
     createPerformanceReport();
-    
+
     console.log('🎉 Resource hints optimization complete!');
     console.log('\nNext steps:');
     console.log('1. Run npm run build to test the changes');
     console.log('2. Test with Lighthouse to measure performance improvements');
     console.log('3. Deploy and monitor real user metrics');
-    
   } catch (error) {
     console.error('❌ Error optimizing resource hints:', error);
     process.exit(1);

@@ -147,8 +147,7 @@ export const onRequestPost = authenticatedEndpoint(
         };
       }
 
-      const generatedText =
-        responseData.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      const generatedText = responseData.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
       if (!generatedText) {
         return {

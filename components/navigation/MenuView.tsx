@@ -664,27 +664,27 @@ const MenuView: React.FC<MenuViewProps> = ({
               </motion.section>
 
               {/* Micro-study chips - 5–15 min sessions for clinical students */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.18 }}
-                  className="flex flex-wrap gap-2 justify-center"
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.18 }}
+                className="flex flex-wrap gap-2 justify-center"
+              >
+                <button
+                  type="button"
+                  onClick={() => onConfirmSession({ focus: 'all', count: 10 })}
+                  className="px-4 py-2 rounded-xl text-sm font-medium bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] transition-colors min-h-[44px]"
                 >
-                  <button
-                    type="button"
-                    onClick={() => onConfirmSession({ focus: 'all', count: 10 })}
-                    className="px-4 py-2 rounded-xl text-sm font-medium bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] transition-colors min-h-[44px]"
-                  >
-                    Quick 10 (~5 min)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onConfirmSession({ focus: 'all', count: 30 })}
-                    className="px-4 py-2 rounded-xl text-sm font-medium bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] transition-colors min-h-[44px]"
-                  >
-                    Quick 30 (~15 min)
-                  </button>
-                </motion.div>
+                  Quick 10 (~5 min)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onConfirmSession({ focus: 'all', count: 30 })}
+                  className="px-4 py-2 rounded-xl text-sm font-medium bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] transition-colors min-h-[44px]"
+                >
+                  Quick 30 (~15 min)
+                </button>
+              </motion.div>
 
               {/* Session controls */}
               <motion.section
@@ -747,9 +747,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                       <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                         Gap Analysis
                       </div>
-                      <div className="text-xs text-[var(--color-text-muted)]">
-                        Peer Benchmarks
-                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)]">Peer Benchmarks</div>
                     </motion.button>
                   )}
 
@@ -776,9 +774,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                     <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                       Bookmarks
                     </div>
-                    <div className="text-xs text-[var(--color-text-muted)]">
-                      Saved questions
-                    </div>
+                    <div className="text-xs text-[var(--color-text-muted)]">Saved questions</div>
                   </motion.button>
 
                   <motion.button
@@ -818,9 +814,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                       <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                         Integrations
                       </div>
-                      <div className="text-xs text-[var(--color-text-muted)]">
-                        Anki, Calendar
-                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)]">Anki, Calendar</div>
                     </motion.button>
                   )}
 
@@ -993,7 +987,9 @@ const MenuView: React.FC<MenuViewProps> = ({
                 >
                   <div className="flex items-center gap-3">
                     <Settings className="w-5 h-5 text-slate-500" />
-                    <span className="font-medium text-[var(--color-text-primary)]">Preferences</span>
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      Preferences
+                    </span>
                   </div>
                   <ChevronRight className="w-5 h-5 text-slate-400" />
                 </button>
@@ -1070,7 +1066,9 @@ const MenuView: React.FC<MenuViewProps> = ({
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <Trophy className="w-8 h-8 text-yellow-500" />
-                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Grand Rounds</h2>
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                  Grand Rounds
+                </h2>
               </div>
               <button
                 onClick={() => setShowLeaderboard(false)}

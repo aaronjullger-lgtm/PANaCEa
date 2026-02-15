@@ -99,22 +99,22 @@ export const onRequestGet = authenticatedEndpoint(
         data: {
           ...condition,
           coreContent: coreContent
-          ? {
-              ...coreContent,
-              etiology: coreContent.etiology,
-              pathophysiology: coreContent.pathophysiology,
-              // Format etiologyPathophysiology for backward compatibility
-              etiologyPathophysiology:
-                [
-                  coreContent.etiology ? `**Etiology**\n\n${coreContent.etiology}` : null,
-                  coreContent.pathophysiology
-                    ? `**Pathophysiology**\n\n${coreContent.pathophysiology}`
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join('\n\n') || undefined,
-            }
-          : null,
+            ? {
+                ...coreContent,
+                etiology: coreContent.etiology,
+                pathophysiology: coreContent.pathophysiology,
+                // Format etiologyPathophysiology for backward compatibility
+                etiologyPathophysiology:
+                  [
+                    coreContent.etiology ? `**Etiology**\n\n${coreContent.etiology}` : null,
+                    coreContent.pathophysiology
+                      ? `**Pathophysiology**\n\n${coreContent.pathophysiology}`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join('\n\n') || undefined,
+              }
+            : null,
         },
       };
     } finally {

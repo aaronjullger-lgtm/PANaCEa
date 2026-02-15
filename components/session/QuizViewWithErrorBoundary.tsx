@@ -1,6 +1,6 @@
 /**
  * QuizViewWithErrorBoundary - Wraps QuizView with enhanced error handling
- * 
+ *
  * This component provides:
  * 1. EnhancedErrorBoundary for React error catching
  * 2. AppError integration for consistent error handling
@@ -23,14 +23,13 @@ const QuizViewErrorFallback: React.FC<{
     <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
       <div className="max-w-md w-full space-y-6">
         <div className="space-y-3">
-          <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
-            Session Error
-          </h2>
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Session Error</h2>
           <p className="text-[var(--color-text-secondary)]">
-            We encountered an issue with your study session. Don't worry, your progress has been saved.
+            We encountered an issue with your study session. Don't worry, your progress has been
+            saved.
           </p>
         </div>
-        
+
         <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4 text-left">
           <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">
             Error details:
@@ -39,7 +38,7 @@ const QuizViewErrorFallback: React.FC<{
             {error.message || 'Unknown error'}
           </p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3 pt-4">
           <button
             onClick={resetErrorBoundary}
@@ -48,13 +47,13 @@ const QuizViewErrorFallback: React.FC<{
             Retry Session
           </button>
           <button
-            onClick={() => window.location.href = '/'}
+            onClick={() => (window.location.href = '/')}
             className="flex-1 min-h-[44px] px-4 py-2.5 bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] font-medium rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
           >
             Return to Dashboard
           </button>
         </div>
-        
+
         <div className="pt-6 border-t border-[var(--color-border)]">
           <p className="text-xs text-[var(--color-text-muted)]">
             If this error persists, please try:
@@ -81,7 +80,7 @@ export const QuizViewWithErrorBoundary: React.FC<QuizViewProps> = (props) => {
       onError={(error) => {
         // Log session errors for analytics
         console.error('[QuizViewErrorBoundary] Session error:', error);
-        
+
         // You could add error reporting here:
         // if (typeof window !== 'undefined' && (window as any).Sentry) {
         //   (window as any).Sentry.captureException(error);

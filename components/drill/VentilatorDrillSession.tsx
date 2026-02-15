@@ -6,15 +6,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Wind,
-  X,
-  ArrowRight,
-  RotateCcw,
-  Activity,
-  Droplets,
-  Gauge,
-} from 'lucide-react';
+import { Wind, X, ArrowRight, RotateCcw, Activity, Droplets, Gauge } from 'lucide-react';
 import { useVentilatorDrill, type VentCase } from '@/hooks/game/use-ventilator-drill';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';

@@ -351,4 +351,3 @@ function getContentType(filename: string): string {
   };
   return mimeTypes[ext || ''] || 'application/octet-stream';
 }
-

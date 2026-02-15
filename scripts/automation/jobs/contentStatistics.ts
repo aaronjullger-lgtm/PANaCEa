@@ -284,9 +284,7 @@ export async function runContentStatisticsJob(targetDate: Date = new Date()) {
       const results = await Promise.all(
         batch
           .filter((id): id is string => id != null)
-          .map((conditionId) =>
-            processCondition(prisma, conditionId, yesterday, today, dateString)
-          )
+          .map((conditionId) => processCondition(prisma, conditionId, yesterday, today, dateString))
       );
 
       // Count results

@@ -154,7 +154,13 @@ export async function onRequestPut(context: {
     return createSuccessResponse(request, updated, 200, 0, env);
   } catch (error: any) {
     console.error('Error updating content:', error);
-    return createErrorResponse(request, error.message || 'Failed to update content', 500, undefined, env);
+    return createErrorResponse(
+      request,
+      error.message || 'Failed to update content',
+      500,
+      undefined,
+      env
+    );
   } finally {
     await safePrismaDisconnect(prisma);
   }

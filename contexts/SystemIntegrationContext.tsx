@@ -1,9 +1,9 @@
 /**
  * System Integration Context
- * 
+ *
  * Provides global access to the SystemIntegrationService that coordinates
  * all 5 modules and 13 AI services.
- * 
+ *
  * Usage:
  * ```tsx
  * const { integration } = useSystemIntegration();

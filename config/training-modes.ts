@@ -433,16 +433,7 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
   },
 
   // --- ADDITIONAL MODES FOR COVERAGE ---
-  {
-    id: 'cram_mode',
-    label: 'Cram Mode',
-    description: '50 high-yield PANCE conditions – rapid last-minute review',
-    category: 'question_practice',
-    iconName: 'Zap',
-    theme: 'amber',
-    route: '/modes/cram-mode',
-    estimatedMinutes: 15,
-  },
+  // cram_mode removed – merged into rapid_recall (see training-modes.test.ts)
   {
     id: 'polypharmacy_puzzle',
     label: 'Polypharmacy Puzzle',
@@ -470,7 +461,11 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
 // ============================================================================
 
 // Standalone modes that have their own dedicated tabs (NOT in training menu categories)
-const STANDALONE_MODE_IDS: readonly string[] = ['core_adaptive', 'patient_encounter', 'grand_rounds'];
+const STANDALONE_MODE_IDS: readonly string[] = [
+  'core_adaptive',
+  'patient_encounter',
+  'grand_rounds',
+];
 
 // Filter modes by category, EXCLUDING standalone modes that have their own tabs
 export const VISUAL_DIAGNOSTICS_MODES = TRAINING_MODES.filter(

@@ -239,11 +239,15 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
                   {/* Score comparison */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-3xl font-bold text-[var(--color-text-primary)]">{userScore}%</div>
+                      <div className="text-3xl font-bold text-[var(--color-text-primary)]">
+                        {userScore}%
+                      </div>
                       <div className="text-xs text-[var(--color-text-muted)]">Your Score</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xl font-semibold text-[var(--color-text-secondary)]">{globalMeanScore}%</div>
+                      <div className="text-xl font-semibold text-[var(--color-text-secondary)]">
+                        {globalMeanScore}%
+                      </div>
                       <div className="text-xs text-[var(--color-text-muted)]">Global Mean</div>
                     </div>
                   </div>

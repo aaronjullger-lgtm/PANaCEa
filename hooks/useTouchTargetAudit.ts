@@ -8,11 +8,7 @@ export interface TouchTargetAuditConfig {
 
 export function useTouchTargetAudit(config: TouchTargetAuditConfig = {}) {
   const [isAuditOpen, setIsAuditOpen] = useState(false);
-  const {
-    minTouchSize = 44,
-    autoScanOnOpen = true,
-    showTestMode = true
-  } = config;
+  const { minTouchSize = 44, autoScanOnOpen = true, showTestMode = true } = config;
 
   const openAudit = useCallback(() => {
     setIsAuditOpen(true);
@@ -23,7 +19,7 @@ export function useTouchTargetAudit(config: TouchTargetAuditConfig = {}) {
   }, []);
 
   const toggleAudit = useCallback(() => {
-    setIsAuditOpen(prev => !prev);
+    setIsAuditOpen((prev) => !prev);
   }, []);
 
   const scanPageForTouchTargets = useCallback(() => {
@@ -48,7 +44,7 @@ export function useTouchTargetAudit(config: TouchTargetAuditConfig = {}) {
       '[role="checkbox"]',
       '[role="radio"]',
       '[role="tab"]',
-      '[tabindex]:not([tabindex="-1"])'
+      '[tabindex]:not([tabindex="-1"])',
     ];
 
     const elements = document.querySelectorAll(interactiveSelectors.join(', '));
@@ -58,7 +54,11 @@ export function useTouchTargetAudit(config: TouchTargetAuditConfig = {}) {
 
       // Skip hidden elements
       const style = window.getComputedStyle(element);
-      if (style.display === 'none' || style.visibility === 'hidden' || element.offsetParent === null) {
+      if (
+        style.display === 'none' ||
+        style.visibility === 'hidden' ||
+        element.offsetParent === null
+      ) {
         return;
       }
 
@@ -74,7 +74,12 @@ export function useTouchTargetAudit(config: TouchTargetAuditConfig = {}) {
       let type = 'custom';
       if (element.tagName === 'BUTTON') type = 'button';
       else if (element.tagName === 'A') type = 'link';
-      else if (element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA') type = 'input';
+      else if (
+        element.tagName === 'INPUT' ||
+        element.tagName === 'SELECT' ||
+        element.tagName === 'TEXTAREA'
+      )
+        type = 'input';
       else if (element.querySelector('svg') || element.classList.contains('icon')) type = 'icon';
 
       issues.push({
@@ -82,7 +87,7 @@ export function useTouchTargetAudit(config: TouchTargetAuditConfig = {}) {
         width: Math.round(width),
         height: Math.round(height),
         type,
-        meetsStandard
+        meetsStandard,
       });
     });
 
@@ -91,60 +96,63 @@ export function useTouchTargetAudit(config: TouchTargetAuditConfig = {}) {
 
   const getElementSelector = (element: HTMLElement): string => {
     if (element.id) return `#${element.id}`;
-    
+
     let selector = element.tagName.toLowerCase();
     if (element.className && typeof element.className === 'string') {
-      const classes = element.className.split(' ').filter(c => c.length > 0);
+      const classes = element.className.split(' ').filter((c) => c.length > 0);
       if (classes.length > 0) {
         selector += `.${classes.join('.')}`;
       }
     }
-    
+
     return selector;
   };
 
-  const applyTouchTargetFix = useCallback((selector: string) => {
-    const element = document.querySelector(selector);
-    if (!(element instanceof HTMLElement)) return false;
+  const applyTouchTargetFix = useCallback(
+    (selector: string) => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) return false;
 
-    const style = window.getComputedStyle(element);
-    const currentWidth = element.offsetWidth;
-    const currentHeight = element.offsetHeight;
+      const style = window.getComputedStyle(element);
+      const currentWidth = element.offsetWidth;
+      const currentHeight = element.offsetHeight;
 
-    // Apply minimum dimensions
-    if (currentWidth < minTouchSize) {
-      element.style.minWidth = `${minTouchSize}px`;
-    }
-    
-    if (currentHeight < minTouchSize) {
-      element.style.minHeight = `${minTouchSize}px`;
-    }
+      // Apply minimum dimensions
+      if (currentWidth < minTouchSize) {
+        element.style.minWidth = `${minTouchSize}px`;
+      }
 
-    // Ensure sufficient padding
-    const paddingTop = parseFloat(style.paddingTop);
-    const paddingBottom = parseFloat(style.paddingBottom);
-    const paddingLeft = parseFloat(style.paddingLeft);
-    const paddingRight = parseFloat(style.paddingRight);
+      if (currentHeight < minTouchSize) {
+        element.style.minHeight = `${minTouchSize}px`;
+      }
 
-    if (paddingTop + paddingBottom < 8) {
-      const verticalPadding = Math.max(4, (8 - (paddingTop + paddingBottom)) / 2);
-      element.style.paddingTop = `${paddingTop + verticalPadding}px`;
-      element.style.paddingBottom = `${paddingBottom + verticalPadding}px`;
-    }
+      // Ensure sufficient padding
+      const paddingTop = parseFloat(style.paddingTop);
+      const paddingBottom = parseFloat(style.paddingBottom);
+      const paddingLeft = parseFloat(style.paddingLeft);
+      const paddingRight = parseFloat(style.paddingRight);
 
-    if (paddingLeft + paddingRight < 8) {
-      const horizontalPadding = Math.max(4, (8 - (paddingLeft + paddingRight)) / 2);
-      element.style.paddingLeft = `${paddingLeft + horizontalPadding}px`;
-      element.style.paddingRight = `${paddingRight + horizontalPadding}px`;
-    }
+      if (paddingTop + paddingBottom < 8) {
+        const verticalPadding = Math.max(4, (8 - (paddingTop + paddingBottom)) / 2);
+        element.style.paddingTop = `${paddingTop + verticalPadding}px`;
+        element.style.paddingBottom = `${paddingBottom + verticalPadding}px`;
+      }
 
-    return true;
-  }, [minTouchSize]);
+      if (paddingLeft + paddingRight < 8) {
+        const horizontalPadding = Math.max(4, (8 - (paddingLeft + paddingRight)) / 2);
+        element.style.paddingLeft = `${paddingLeft + horizontalPadding}px`;
+        element.style.paddingRight = `${paddingRight + horizontalPadding}px`;
+      }
+
+      return true;
+    },
+    [minTouchSize]
+  );
 
   const getTouchTargetStats = useCallback(() => {
     const issues = scanPageForTouchTargets();
     const total = issues.length;
-    const passing = issues.filter(issue => issue.meetsStandard).length;
+    const passing = issues.filter((issue) => issue.meetsStandard).length;
     const failing = total - passing;
 
     return {
@@ -152,24 +160,25 @@ export function useTouchTargetAudit(config: TouchTargetAuditConfig = {}) {
       passing,
       failing,
       passRate: total > 0 ? (passing / total) * 100 : 100,
-      issues: issues.filter(issue => !issue.meetsStandard)
+      issues: issues.filter((issue) => !issue.meetsStandard),
     };
   }, [scanPageForTouchTargets]);
 
-  const highlightTouchTargets = useCallback((highlight: boolean) => {
-    if (typeof window === 'undefined') return;
+  const highlightTouchTargets = useCallback(
+    (highlight: boolean) => {
+      if (typeof window === 'undefined') return;
 
-    // Remove existing highlights
-    document.querySelectorAll('.touch-target-highlight').forEach(el => {
-      el.classList.remove('touch-target-highlight');
-    });
+      // Remove existing highlights
+      document.querySelectorAll('.touch-target-highlight').forEach((el) => {
+        el.classList.remove('touch-target-highlight');
+      });
 
-    if (highlight) {
-      // Add highlight style if not already present
-      if (!document.getElementById('touch-target-highlight-style')) {
-        const style = document.createElement('style');
-        style.id = 'touch-target-highlight-style';
-        style.textContent = `
+      if (highlight) {
+        // Add highlight style if not already present
+        if (!document.getElementById('touch-target-highlight-style')) {
+          const style = document.createElement('style');
+          style.id = 'touch-target-highlight-style';
+          style.textContent = `
           .touch-target-highlight {
             outline: 3px solid #3b82f6 !important;
             outline-offset: 2px !important;
@@ -191,22 +200,24 @@ export function useTouchTargetAudit(config: TouchTargetAuditConfig = {}) {
             z-index: 10000;
           }
         `;
-        document.head.appendChild(style);
-      }
-
-      // Highlight elements that don't meet touch target standards
-      const issues = scanPageForTouchTargets();
-      issues.forEach(issue => {
-        if (!issue.meetsStandard) {
-          const element = document.querySelector(issue.selector);
-          if (element instanceof HTMLElement) {
-            element.classList.add('touch-target-highlight');
-            element.setAttribute('data-touch-size', `${issue.width}×${issue.height}px`);
-          }
+          document.head.appendChild(style);
         }
-      });
-    }
-  }, [scanPageForTouchTargets]);
+
+        // Highlight elements that don't meet touch target standards
+        const issues = scanPageForTouchTargets();
+        issues.forEach((issue) => {
+          if (!issue.meetsStandard) {
+            const element = document.querySelector(issue.selector);
+            if (element instanceof HTMLElement) {
+              element.classList.add('touch-target-highlight');
+              element.setAttribute('data-touch-size', `${issue.width}×${issue.height}px`);
+            }
+          }
+        });
+      }
+    },
+    [scanPageForTouchTargets]
+  );
 
   return {
     isAuditOpen,
@@ -220,7 +231,7 @@ export function useTouchTargetAudit(config: TouchTargetAuditConfig = {}) {
     config: {
       minTouchSize,
       autoScanOnOpen,
-      showTestMode
-    }
+      showTestMode,
+    },
   };
 }

@@ -86,7 +86,10 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
-            <h2 id="goal-edit-title" className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <h2
+              id="goal-edit-title"
+              className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2"
+            >
               <Edit2 className="w-6 h-6 text-blue-600" />
               Edit Goal
             </h2>
@@ -101,14 +104,21 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {error && (
-              <div id="goal-edit-error" role="alert" className="p-3 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-lg text-[var(--color-data-fail)] text-sm">
+              <div
+                id="goal-edit-error"
+                role="alert"
+                className="p-3 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-lg text-[var(--color-data-fail)] text-sm"
+              >
                 {error}
               </div>
             )}
 
             {/* Title */}
             <div>
-              <label htmlFor="goal-edit-title-input" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label
+                htmlFor="goal-edit-title-input"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              >
                 Goal Title *
               </label>
               <input
@@ -125,7 +135,10 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
 
             {/* Description */}
             <div>
-              <label htmlFor="goal-edit-description" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label
+                htmlFor="goal-edit-description"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              >
                 Description
               </label>
               <textarea
@@ -217,7 +230,12 @@ export const GoalEditModal: React.FC<GoalEditModalProps> = ({ goal, onClose, onU
                 disabled={isSubmitting}
                 aria-busy={isSubmitting}
               >
-                {isSubmitting && <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true" />}
+                {isSubmitting && (
+                  <span
+                    className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
+                    aria-hidden="true"
+                  />
+                )}
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>
             </div>

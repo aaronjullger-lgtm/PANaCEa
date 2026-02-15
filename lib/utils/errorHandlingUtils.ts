@@ -395,7 +395,7 @@ export function getUserFacingError(
     return {
       title: 'Tutor Unavailable',
       message:
-        "The tutor is temporarily busy. Please try again in a moment, or continue without asking a follow-up.",
+        'The tutor is temporarily busy. Please try again in a moment, or continue without asking a follow-up.',
       primaryAction: 'Try Again',
       secondaryLabel: 'Go Home',
     };

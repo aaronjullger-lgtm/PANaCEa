@@ -90,10 +90,7 @@ export async function listFilesInFolder(folderId: string): Promise<DriveFileInfo
  */
 export async function downloadFileStream(fileId: string): Promise<Readable> {
   const drive = getDriveClient();
-  const res = await drive.files.get(
-    { fileId, alt: 'media' },
-    { responseType: 'stream' }
-  );
+  const res = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' });
   const stream = res.data as Readable;
   if (!stream || typeof stream.pipe !== 'function') {
     throw new Error('Drive API did not return a readable stream');

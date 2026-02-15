@@ -36,7 +36,9 @@ export const onRequestGet = publicEndpoint(ConditionContentSchema, async (contex
       },
       include: {
         DrugConditionLink: {
-          include: { Drug: { select: { id: true, genericName: true, brandName: true, drugClass: true } } },
+          include: {
+            Drug: { select: { id: true, genericName: true, brandName: true, drugClass: true } },
+          },
         },
         FindingConditionLink: {
           include: {

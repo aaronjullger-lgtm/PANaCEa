@@ -37,10 +37,7 @@ export async function analyzeBehaviorGemini(
   const tti = t.time_to_first_interaction_ms ?? null;
   const changes = t.answer_change_count ?? t.answer_changes ?? 0;
   const duration = t.duration_ms ?? 0;
-  const hovers =
-    t.mouse_hover_duration_ms ??
-    t.trajectory_metrics?.distractorHovers ??
-    {};
+  const hovers = t.mouse_hover_duration_ms ?? t.trajectory_metrics?.distractorHovers ?? {};
   const rapidGuess = t.rapid_guess ?? false;
 
   const prompt = `You are a behavioral analyst for a medical education spaced-repetition system.
@@ -86,7 +83,11 @@ Respond with a JSON object only, no markdown:
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   };
   const text =
-    data.candidates?.[0]?.content?.parts?.map((p) => p.text).filter(Boolean).join('')?.trim() ?? '';
+    data.candidates?.[0]?.content?.parts
+      ?.map((p) => p.text)
+      .filter(Boolean)
+      .join('')
+      ?.trim() ?? '';
 
   let confidence = 0.5;
   let impliedRating = rating;
@@ -94,7 +95,11 @@ Respond with a JSON object only, no markdown:
     const parsed = JSON.parse(text) as { confidence?: number; impliedRating?: number };
     if (typeof parsed.confidence === 'number')
       confidence = Math.max(0, Math.min(1, parsed.confidence));
-    if (typeof parsed.impliedRating === 'number' && parsed.impliedRating >= 1 && parsed.impliedRating <= 4)
+    if (
+      typeof parsed.impliedRating === 'number' &&
+      parsed.impliedRating >= 1 &&
+      parsed.impliedRating <= 4
+    )
       impliedRating = Math.round(parsed.impliedRating);
   } catch {
     // keep defaults

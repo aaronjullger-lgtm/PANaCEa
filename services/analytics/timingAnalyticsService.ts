@@ -1,16 +1,16 @@
 /**
  * Timing Analytics Service (echoscript + echo_paths)
- * 
+ *
  * Captures and analyzes clinical timing metrics during OSCE sessions.
  * Tracks decision-making pathways and identifies efficient vs. wasteful questioning.
- * 
+ *
  * Features:
  * - Time-to-action metrics (e.g., "Time to antibiotics")
  * - Conversation tree visualization (echo_paths)
  * - Rabbit hole detection
  * - Optimal path comparison
  * - Performance milestones
- * 
+ *
  * @module timingAnalyticsService
  */
 
@@ -30,7 +30,9 @@ export class TimingAnalyticsService {
   private activeSessions: Map<string, SessionTimingAnalytics> = new Map();
   private config: TimingAnalyticsConfig;
 
-  constructor(config: TimingAnalyticsConfig = { enableRealTimeTracking: true, captureTranscript: true }) {
+  constructor(
+    config: TimingAnalyticsConfig = { enableRealTimeTracking: true, captureTranscript: true }
+  ) {
     this.config = config;
   }
 
@@ -209,10 +211,12 @@ export class TimingAnalyticsService {
     // Calculate total duration
     const firstMilestone = analytics.milestones[0];
     const lastMilestone = analytics.milestones[analytics.milestones.length - 1];
-    
+
     if (firstMilestone && lastMilestone) {
       analytics.summary.totalDuration =
-        (new Date(lastMilestone.timestamp).getTime() - new Date(firstMilestone.timestamp).getTime()) / 1000;
+        (new Date(lastMilestone.timestamp).getTime() -
+          new Date(firstMilestone.timestamp).getTime()) /
+        1000;
     }
 
     // Analyze conversation path
@@ -310,20 +314,20 @@ export class TimingAnalyticsService {
 
       // If relevance < 0.3, consider it a rabbit hole
       if (node.relevanceScore < 0.3) {
-      // Find the subtree from this node
-      const subtree = this.getSubtree(node, nodes);
-      const timeWasted = subtree.reduce((sum, n) => sum + n.timeSpent, 0);
+        // Find the subtree from this node
+        const subtree = this.getSubtree(node, nodes);
+        const timeWasted = subtree.reduce((sum, n) => sum + n.timeSpent, 0);
 
-      if (timeWasted > 10) {
-        // > 10 seconds wasted
-        const lastNode = subtree[subtree.length - 1];
-        rabbitHoles.push({
-          startNodeId: node.id,
-          endNodeId: lastNode ? lastNode.id : node.id,
-          timeWasted,
-          reason: this.identifyRabbitHoleReason(node),
-        });
-      }
+        if (timeWasted > 10) {
+          // > 10 seconds wasted
+          const lastNode = subtree[subtree.length - 1];
+          rabbitHoles.push({
+            startNodeId: node.id,
+            endNodeId: lastNode ? lastNode.id : node.id,
+            timeWasted,
+            reason: this.identifyRabbitHoleReason(node),
+          });
+        }
       }
     }
 
@@ -354,7 +358,10 @@ export class TimingAnalyticsService {
     if (node.content.toLowerCase().includes('family history') && node.relevanceScore < 0.3) {
       return 'Excessive focus on non-critical family history';
     }
-    if (node.content.toLowerCase().includes('diet') || node.content.toLowerCase().includes('exercise')) {
+    if (
+      node.content.toLowerCase().includes('diet') ||
+      node.content.toLowerCase().includes('exercise')
+    ) {
       return 'Excessive focus on lifestyle factors when critical findings needed';
     }
     return 'Low-relevance questioning';
@@ -363,9 +370,7 @@ export class TimingAnalyticsService {
   /**
    * Generate visualization data for conversation tree.
    */
-  private generateVisualization(
-    nodes: EchoPathNode[]
-  ): EchoPath['visualization'] {
+  private generateVisualization(nodes: EchoPathNode[]): EchoPath['visualization'] {
     // Simple tree layout algorithm
     const nodePositions: Record<string, { x: number; y: number }> = {};
     const edgeList: Array<{ from: string; to: string; weight: number }> = [];
@@ -420,10 +425,7 @@ export class TimingAnalyticsService {
       .filter((n) => n.isOptimalPath)
       .reduce((sum, n) => sum + n.timeSpent, 0);
 
-    const wastefulTime = analytics.echoPath.rabbitHoles.reduce(
-      (sum, rh) => sum + rh.timeWasted,
-      0
-    );
+    const wastefulTime = analytics.echoPath.rabbitHoles.reduce((sum, rh) => sum + rh.timeWasted, 0);
 
     analytics.summary.efficientlySpent = efficientTime;
     analytics.summary.wastefullySpent = wastefulTime;
@@ -479,7 +481,10 @@ export function createTimingAnalyticsService(): TimingAnalyticsService {
 /**
  * Example: Track STEMI case timing.
  */
-export async function trackSTEMICase(service: TimingAnalyticsService, sessionId: string): Promise<void> {
+export async function trackSTEMICase(
+  service: TimingAnalyticsService,
+  sessionId: string
+): Promise<void> {
   // Start session
   service.startSession(sessionId, 'stemi-case-001');
 

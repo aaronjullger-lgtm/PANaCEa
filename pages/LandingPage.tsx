@@ -8,19 +8,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 import {
   BookOpen,
-  Brain,
-  Award,
   TrendingUp,
   CheckCircle2,
   ArrowRight,
   Activity as ActivityIcon,
   Target,
-  Repeat,
 } from 'lucide-react';
 import ThemeToggleButton from '../components/ui/ThemeToggleButton';
 import { AppBrand } from '../components/layout/AppBrand';
 import { PageContainer } from '../components/layout/PageContainer';
 import { SiteFooter } from '../components/layout/SiteFooter';
+import { SkipNavigation } from '../components/shared/SkipNavigation';
+
+const FEATURE_PILLS = [
+  'Performance Analytics',
+  '15+ Training Modes',
+  'Medical Database',
+  '1000+ Conditions',
+] as const;
 
 export function LandingPage() {
   const [showAuth, setShowAuth] = useState(false);
@@ -87,21 +92,24 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+      <SkipNavigation mainContentId="landing-main" />
       {/* Header */}
       <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
         <PageContainer maxWidth="7xl" className="py-4 flex items-center justify-between">
           <AppBrand size="lg" animate>
             <ThemeToggleButton />
             <motion.button
+              type="button"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               onClick={() => {
                 setAuthMode('sign-in');
                 setShowAuth(true);
               }}
-              className="px-6 py-2.5 bg-transparent border-2 border-[var(--color-navy,#0F172A)] dark:border-[var(--color-text-secondary)] text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-primary)] rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--color-bg-secondary)]"
+              className="px-6 py-2.5 bg-transparent border-2 border-[var(--color-navy,#0F172A)] dark:border-[var(--color-text-secondary)] text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-primary)] rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--color-bg-secondary)] min-h-[44px] min-w-[44px]"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              aria-label="Sign in to your account"
             >
               Sign In
             </motion.button>
@@ -110,7 +118,13 @@ export function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <PageContainer as="section" maxWidth="7xl" className="pt-20 pb-16">
+      <PageContainer
+        as="section"
+        id="landing-main"
+        maxWidth="7xl"
+        className="pt-20 pb-16"
+        aria-label="Introduction"
+      >
         <div className="text-center space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -119,13 +133,14 @@ export function LandingPage() {
           >
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
               <span className="text-[var(--color-text-primary)]">Your Complete </span>
-              <span className="bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-text-secondary)] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[var(--color-accent)] via-[var(--color-accent-border)] to-[var(--color-text-secondary)] bg-clip-text text-transparent">
                 PA School Resource
               </span>
             </h1>
             <p className="text-xl sm:text-2xl text-[var(--color-text-secondary)] max-w-3xl mx-auto leading-relaxed">
-              Comprehensive study platform for PA students with medical database, performance
-              tracking, clinical image training, and 15+ specialized training modes.
+              Comprehensive study platform for PA students—medical database, performance tracking,
+              clinical image training, and 15+ specialized modes. Aligned with the PANCE &amp; PANRE
+              blueprint.
             </p>
           </motion.div>
 
@@ -136,20 +151,25 @@ export function LandingPage() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             <motion.button
+              type="button"
               onClick={() => {
                 setAuthMode('sign-up');
                 setShowAuth(true);
               }}
-              className="group px-8 py-4 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)] rounded-lg font-bold text-lg shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="group px-8 py-4 bg-[var(--color-accent-button)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] rounded-xl font-bold text-lg shadow-[0_10px_40px_-10px_var(--color-shadow-soft)] hover:shadow-lg transition-all duration-300 flex items-center gap-2 min-h-[48px]"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              aria-label="Get started with a free account"
             >
               Get Started
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight
+                className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                aria-hidden
+              />
             </motion.button>
-            <div className="text-sm text-[var(--color-text-muted)]">
-              Free to start • Full access
-            </div>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Free to start • No credit card required
+            </p>
           </motion.div>
 
           {/* Feature Pills */}
@@ -159,18 +179,13 @@ export function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-wrap gap-3 justify-center mt-12"
           >
-            {[
-              'Performance Analytics',
-              '15+ Training Modes',
-              'Medical Database',
-              '1000+ Conditions',
-            ].map((pill, idx) => (
-              <div
-                key={idx}
+            {FEATURE_PILLS.map((pill) => (
+              <span
+                key={pill}
                 className="px-4 py-2 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)]"
               >
                 {pill}
-              </div>
+              </span>
             ))}
           </motion.div>
         </div>
@@ -193,15 +208,18 @@ export function LandingPage() {
 
         <div className="grid md:grid-cols-2 gap-8">
           {features.map((feature, idx) => (
-            <motion.div
-              key={idx}
+            <motion.article
+              key={feature.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: idx * 0.1 }}
-              className="group p-8 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-2xl border border-[var(--color-border)] hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+              className="group p-8 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-2xl border border-[var(--color-border)] hover:shadow-[0_18px_42px_var(--color-shadow-soft)] hover:scale-[1.02] transition-all duration-300"
             >
-              <div className="w-14 h-14 bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg border border-[var(--color-border)]">
+              <div
+                className="w-14 h-14 bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-lg border border-[var(--color-border)]"
+                aria-hidden
+              >
                 <feature.icon className="w-7 h-7 text-[var(--color-accent)]" />
               </div>
               <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
@@ -210,7 +228,7 @@ export function LandingPage() {
               <p className="text-[var(--color-text-secondary)] leading-relaxed">
                 {feature.description}
               </p>
-            </motion.div>
+            </motion.article>
           ))}
         </div>
       </PageContainer>
@@ -231,13 +249,15 @@ export function LandingPage() {
                 effectively.
               </p>
               <motion.button
+                type="button"
                 onClick={() => {
                   setAuthMode('sign-up');
                   setShowAuth(true);
                 }}
-                className="px-8 py-4 bg-transparent border-2 border-[var(--color-accent)] text-[var(--color-accent)] rounded-lg font-bold text-lg hover:bg-[var(--color-accent)]/10 transition-all duration-300"
+                className="px-8 py-4 bg-transparent border-2 border-[var(--color-accent)] text-[var(--color-accent)] rounded-xl font-bold text-lg hover:bg-[var(--color-accent)]/10 transition-all duration-300 min-h-[48px]"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                aria-label="Start studying with a free account"
               >
                 Start Studying
               </motion.button>
@@ -252,14 +272,17 @@ export function LandingPage() {
             >
               {benefits.map((benefit, idx) => (
                 <motion.div
-                  key={idx}
+                  key={benefit}
                   initial={{ opacity: 0, x: 20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: idx * 0.05 }}
                   className="flex items-start gap-3 bg-[var(--color-bg-tertiary)]/60 backdrop-blur-sm rounded-xl p-4"
                 >
-                  <CheckCircle2 className="w-6 h-6 text-[var(--color-accent)] flex-shrink-0 mt-0.5" />
+                  <CheckCircle2
+                    className="w-6 h-6 text-[var(--color-accent)] flex-shrink-0 mt-0.5"
+                    aria-hidden
+                  />
                   <span className="text-lg font-medium leading-relaxed text-[var(--color-text-secondary)]">
                     {benefit}
                   </span>
@@ -286,16 +309,18 @@ export function LandingPage() {
             Access all study modes and features with a free account.
           </p>
           <motion.button
+            type="button"
             onClick={() => {
               setAuthMode('sign-up');
               setShowAuth(true);
             }}
-            className="px-10 py-5 bg-transparent border-2 border-[var(--color-accent)] text-[var(--color-accent)] rounded-lg font-bold text-xl hover:bg-[var(--color-accent)]/10 transition-all duration-300 flex items-center gap-3 mx-auto"
+            className="px-10 py-5 bg-transparent border-2 border-[var(--color-accent)] text-[var(--color-accent)] rounded-xl font-bold text-xl hover:bg-[var(--color-accent)]/10 transition-all duration-300 flex items-center gap-3 mx-auto min-h-[48px]"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            aria-label="Sign up for free"
           >
             Sign Up Free
-            <ArrowRight className="w-6 h-6" />
+            <ArrowRight className="w-6 h-6" aria-hidden />
           </motion.button>
         </motion.div>
       </PageContainer>
@@ -310,8 +335,11 @@ export function LandingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-[var(--color-bg-tertiary)]/80 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto"
+            className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto"
             onClick={() => setShowAuth(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auth-modal-title"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -324,13 +352,14 @@ export function LandingPage() {
                 {/* Modal Header */}
                 <div className="bg-[var(--color-bg-tertiary)] px-6 py-5 text-[var(--color-text-primary)]">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-2xl font-bold">
+                    <h3 id="auth-modal-title" className="text-2xl font-bold">
                       {authMode === 'sign-up' ? 'Join PANaCEa' : 'Welcome Back'}
                     </h3>
                     <button
+                      type="button"
                       onClick={() => setShowAuth(false)}
-                      className="p-1 hover:bg-[var(--color-bg-secondary)]/60 rounded-lg transition-colors"
-                      aria-label="Close"
+                      className="p-2 hover:bg-[var(--color-bg-secondary)]/60 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      aria-label="Close sign in"
                     >
                       <svg
                         className="w-6 h-6"
@@ -354,8 +383,8 @@ export function LandingPage() {
                   </p>
                 </div>
 
-                {/* Clerk Component */}
-                <div className="p-6">
+                {/* Clerk Component – theme-aware via AuthProvider variables + index.css .dark overrides */}
+                <div className="p-6 [color-scheme:inherit]">
                   {authMode === 'sign-up' ? (
                     <SignUp
                       appearance={{
@@ -364,11 +393,15 @@ export function LandingPage() {
                           card: 'bg-transparent shadow-none',
                           headerTitle: 'hidden',
                           headerSubtitle: 'hidden',
-                          socialButtonsBlockButton: 'hover:scale-105 transition-transform',
+                          socialButtonsBlockButton:
+                            'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] hover:scale-[1.02] transition-transform',
                           formButtonPrimary:
-                            'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 hover:shadow-lg',
+                            'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 hover:shadow-lg text-[var(--color-text-inverse)]',
+                          formFieldLabel: 'text-[var(--color-text-primary)]',
+                          formFieldInput:
+                            'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]',
                           footerActionLink:
-                            'text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]',
+                            'text-[var(--color-text-muted)] hover:text-[var(--color-accent)]',
                         },
                       }}
                       fallbackRedirectUrl="/"
@@ -381,11 +414,15 @@ export function LandingPage() {
                           card: 'bg-transparent shadow-none',
                           headerTitle: 'hidden',
                           headerSubtitle: 'hidden',
-                          socialButtonsBlockButton: 'hover:scale-105 transition-transform',
+                          socialButtonsBlockButton:
+                            'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] hover:scale-[1.02] transition-transform',
                           formButtonPrimary:
-                            'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 hover:shadow-lg',
+                            'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 hover:shadow-lg text-[var(--color-text-inverse)]',
+                          formFieldLabel: 'text-[var(--color-text-primary)]',
+                          formFieldInput:
+                            'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]',
                           footerActionLink:
-                            'text-[var(--color-text-secondary)] hover:text-[var(--color-accent)]',
+                            'text-[var(--color-text-muted)] hover:text-[var(--color-accent)]',
                         },
                       }}
                       fallbackRedirectUrl="/"

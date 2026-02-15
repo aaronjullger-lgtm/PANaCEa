@@ -35,10 +35,7 @@ export interface VariantRequest {
  * apiKey: pass from Edge (context.env.GEMINI_API_KEY) or Node (process.env.GEMINI_API_KEY).
  * Omit in browser; returns null if no key.
  */
-export async function generateVariant(
-  request: VariantRequest,
-  apiKey?: string
-) {
+export async function generateVariant(request: VariantRequest, apiKey?: string) {
   const key = apiKey ?? (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ?? '';
   if (!key) return null;
   const genAI = new GoogleGenerativeAI(key);

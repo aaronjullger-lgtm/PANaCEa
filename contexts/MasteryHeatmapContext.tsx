@@ -47,7 +47,7 @@ export function MasteryHeatmapProvider({ children }: Readonly<{ children: ReactN
 
   const value = useMemo(
     () => ({ masteryHeatmapOverlay, setMasteryHeatmapOverlay }),
-    [masteryHeatmapOverlay],
+    [masteryHeatmapOverlay]
   );
 
   return (

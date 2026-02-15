@@ -23,8 +23,7 @@ describe('sanitizeForRationale', () => {
   });
 
   it('keeps safe table tags but strips attributes', () => {
-    const input =
-      '<table border="1"><tr><td style="color:red" onclick="x()">X</td></tr></table>';
+    const input = '<table border="1"><tr><td style="color:red" onclick="x()">X</td></tr></table>';
     const out = sanitizeForRationale(input);
     expect(out).toBe('<table><tr><td>X</td></tr></table>');
   });
@@ -35,4 +34,3 @@ describe('sanitizeForRationale', () => {
     expect(sanitizeForRationale('')).toBe('');
   });
 });
-

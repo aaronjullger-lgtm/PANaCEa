@@ -104,7 +104,10 @@ export async function loadConditionContent(getToken?: () => Promise<string | nul
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       const data = (await parseJsonOrThrow(response)) as Record<string, unknown>;
       dataCache.set(cacheKey, data);
-      logger.debug('dataLoader', `Loaded condition content (${Object.keys(data).length} conditions)`);
+      logger.debug(
+        'dataLoader',
+        `Loaded condition content (${Object.keys(data).length} conditions)`
+      );
       return data;
     }
 
@@ -121,7 +124,11 @@ export async function loadConditionContent(getToken?: () => Promise<string | nul
         const errorData = (await parseJsonOrThrow(response).catch(() => ({}))) as {
           message?: string;
         };
-        logger.warn('dataLoader', 'Database unavailable', errorData?.message || 'Cannot connect to database');
+        logger.warn(
+          'dataLoader',
+          'Database unavailable',
+          errorData?.message || 'Cannot connect to database'
+        );
       } catch {
         logger.warn('dataLoader', 'Database unavailable (503)');
       }
@@ -177,7 +184,9 @@ export async function loadLabCases(getToken?: () => Promise<string | null>): Pro
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       const responseData = (await parseJsonOrThrow(response)) as { data?: unknown } | unknown[];
       // Handle wrapped response format { success: true, data: [...] }
-      const data = Array.isArray(responseData) ? responseData : (responseData as { data?: unknown }).data ?? responseData;
+      const data = Array.isArray(responseData)
+        ? responseData
+        : ((responseData as { data?: unknown }).data ?? responseData);
       const cases = Array.isArray(data) ? data : [];
       dataCache.set(cacheKey, cases);
       logger.debug('dataLoader', `Loaded ${cases.length} lab cases from database`);

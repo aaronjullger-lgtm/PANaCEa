@@ -24,7 +24,11 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({
     <footer
       className={`border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)] ${className}`.trim()}
     >
-      <PageContainer as="div" maxWidth="7xl" className="py-8 text-center text-[var(--color-text-muted)]">
+      <PageContainer
+        as="div"
+        maxWidth="7xl"
+        className="py-8 text-center text-[var(--color-text-muted)]"
+      >
         <p>
           © {year} PANaCEa. {tagline}
         </p>

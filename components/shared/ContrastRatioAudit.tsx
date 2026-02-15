@@ -6,16 +6,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StandardButton } from './StandardButton';
-import { 
-  Eye, 
-  AlertTriangle, 
-  CheckCircle, 
-  Info, 
-  X, 
+import {
+  Eye,
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  X,
   ChevronDown,
   ChevronUp,
   RefreshCw,
-  Palette
+  Palette,
 } from 'lucide-react';
 
 export interface ContrastIssue {
@@ -40,6 +40,8 @@ interface ContrastRatioAuditProps {
   className?: string;
   onIssuesFound?: (issues: ContrastIssue[]) => void;
   initialColorPairs?: ColorPair[];
+  /** When false, audit panel starts collapsed (e.g. in dev tools bar) */
+  defaultOpen?: boolean;
 }
 
 /**
@@ -47,17 +49,17 @@ interface ContrastRatioAuditProps {
  */
 const getComputedColor = (cssVariable: string): string => {
   if (typeof window === 'undefined') return '#ffffff';
-  
+
   // Remove var() wrapper if present
   const varName = cssVariable.replace(/var\(|\)/g, '').trim();
-  
+
   // Get computed value
   const computed = getComputedStyle(document.documentElement).getPropertyValue(varName);
-  
+
   if (computed) {
     return computed.trim();
   }
-  
+
   // Fallback to direct value if not a CSS variable
   return cssVariable;
 };
@@ -67,14 +69,14 @@ const getComputedColor = (cssVariable: string): string => {
  */
 const toHex = (color: string): string => {
   if (!color) return '#000000';
-  
+
   // If already hex
   if (color.startsWith('#')) {
-    return color.length === 4 
+    return color.length === 4
       ? `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
       : color;
   }
-  
+
   // If rgb/rgba
   if (color.startsWith('rgb')) {
     const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
@@ -85,7 +87,7 @@ const toHex = (color: string): string => {
       return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
     }
   }
-  
+
   return '#000000';
 };
 
@@ -97,11 +99,11 @@ const getLuminance = (hex: string): number => {
   const r = ((rgb >> 16) & 0xff) / 255;
   const g = ((rgb >> 8) & 0xff) / 255;
   const b = (rgb & 0xff) / 255;
-  
-  const sRGB = [r, g, b].map(c => 
+
+  const sRGB = [r, g, b].map((c) =>
     c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
   );
-  
+
   return 0.2126 * sRGB[0] + 0.7152 * sRGB[1] + 0.0722 * sRGB[2];
 };
 
@@ -111,81 +113,85 @@ const getLuminance = (hex: string): number => {
 const getContrastRatio = (foreground: string, background: string): number => {
   const L1 = getLuminance(foreground);
   const L2 = getLuminance(background);
-  
+
   const lighter = Math.max(L1, L2);
   const darker = Math.min(L1, L2);
-  
+
   return (lighter + 0.05) / (darker + 0.05);
 };
 
 /**
  * Check if contrast meets WCAG standards
  */
-const meetsContrastStandard = (ratio: number, size: 'normal' | 'large' = 'normal'): {
+const meetsContrastStandard = (
+  ratio: number,
+  size: 'normal' | 'large' = 'normal'
+): {
   passesAA: boolean;
   passesAAA: boolean;
   level: 'fail' | 'AA' | 'AAA';
 } => {
   const aaThreshold = size === 'large' ? 3 : 4.5;
   const aaaThreshold = size === 'large' ? 4.5 : 7;
-  
+
   const passesAA = ratio >= aaThreshold;
   const passesAAA = ratio >= aaaThreshold;
-  
+
   let level: 'fail' | 'AA' | 'AAA' = 'fail';
   if (passesAAA) level = 'AAA';
   else if (passesAA) level = 'AA';
-  
+
   return { passesAA, passesAAA, level };
 };
 
 export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
   className = '',
   onIssuesFound,
-  initialColorPairs = []
+  initialColorPairs = [],
+  defaultOpen = false,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [issues, setIssues] = useState<ContrastIssue[]>([]);
   const [activeTab, setActiveTab] = useState<'audit' | 'visual' | 'recommendations'>('audit');
   const [isAuditing, setIsAuditing] = useState(false);
   const [colorPairs, setColorPairs] = useState<ColorPair[]>(initialColorPairs);
-  
+
   const defaultColorPairs: ColorPair[] = [
     {
       foreground: 'var(--color-text-primary)',
       background: 'var(--color-bg-primary)',
       foregroundName: 'Text Primary',
       backgroundName: 'Background Primary',
-      description: 'Primary text on main background'
+      description: 'Primary text on main background',
     },
     {
       foreground: 'var(--color-text-secondary)',
       background: 'var(--color-bg-primary)',
       foregroundName: 'Text Secondary',
       backgroundName: 'Background Primary',
-      description: 'Secondary text on main background'
+      description: 'Secondary text on main background',
     },
     {
       foreground: 'var(--color-accent)',
       background: 'var(--color-bg-primary)',
       foregroundName: 'Accent',
       backgroundName: 'Background Primary',
-      description: 'Accent color on main background'
+      description: 'Accent color on main background',
     },
     {
       foreground: 'var(--color-text-primary)',
       background: 'var(--color-bg-secondary)',
       foregroundName: 'Text Primary',
       backgroundName: 'Background Secondary',
-      description: 'Primary text on secondary background'
+      description: 'Primary text on secondary background',
     },
     {
       foreground: 'var(--color-text-inverse)',
       background: 'var(--color-accent)',
       foregroundName: 'Text Inverse',
       backgroundName: 'Accent',
-      description: 'Inverse text on accent background'
-    }
+      description: 'Inverse text on accent background',
+    },
   ];
 
   // Initialize color pairs if none provided
@@ -198,7 +204,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
   const runAudit = () => {
     setIsAuditing(true);
     const newIssues: ContrastIssue[] = [];
-    
+
     colorPairs.forEach((pair, index) => {
       try {
         const foreground = getComputedColor(pair.foreground);
@@ -206,21 +212,22 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
         const foregroundHex = toHex(foreground);
         const backgroundHex = toHex(background);
         const ratio = getContrastRatio(foregroundHex, backgroundHex);
-        
+
         const { passesAA, level } = meetsContrastStandard(ratio);
-        
+
         if (!passesAA) {
           let severity: 'low' | 'medium' | 'high' = 'medium';
           if (ratio < 3) severity = 'high';
           else if (ratio < 4) severity = 'medium';
           else severity = 'low';
-          
-          const recommendation = ratio < 3 
-            ? 'Consider using a significantly darker or lighter color'
-            : ratio < 4 
-            ? 'Adjust color brightness to improve contrast'
-            : 'Slight adjustment needed for AA compliance';
-          
+
+          const recommendation =
+            ratio < 3
+              ? 'Consider using a significantly darker or lighter color'
+              : ratio < 4
+                ? 'Adjust color brightness to improve contrast'
+                : 'Slight adjustment needed for AA compliance';
+
           newIssues.push({
             id: `issue-${index}`,
             severity,
@@ -228,23 +235,23 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
             foreground: foregroundHex,
             background: backgroundHex,
             ratio,
-            recommendation
+            recommendation,
           });
         }
       } catch (error) {
         console.error('Error auditing color pair:', pair, error);
       }
     });
-    
+
     // Sort by severity (high to low)
     newIssues.sort((a, b) => {
       const severityOrder = { high: 0, medium: 1, low: 2 };
       return severityOrder[a.severity] - severityOrder[b.severity];
     });
-    
+
     setIssues(newIssues);
     setIsAuditing(false);
-    
+
     if (onIssuesFound) {
       onIssuesFound(newIssues);
     }
@@ -258,29 +265,41 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
 
   const severityColor = (severity: ContrastIssue['severity']) => {
     switch (severity) {
-      case 'high': return 'text-[var(--color-data-fail)]';
-      case 'medium': return 'text-[var(--color-data-provisional)]';
-      case 'low': return 'text-[var(--color-data-pass)]';
-      default: return 'text-[var(--color-text-muted)]';
+      case 'high':
+        return 'text-[var(--color-data-fail)]';
+      case 'medium':
+        return 'text-[var(--color-data-provisional)]';
+      case 'low':
+        return 'text-[var(--color-data-pass)]';
+      default:
+        return 'text-[var(--color-text-muted)]';
     }
   };
 
   const severityIcon = (severity: ContrastIssue['severity']) => {
     switch (severity) {
-      case 'high': return <AlertTriangle className="w-4 h-4" />;
-      case 'medium': return <Info className="w-4 h-4" />;
-      case 'low': return <CheckCircle className="w-4 h-4" />;
-      default: return <Info className="w-4 h-4" />;
+      case 'high':
+        return <AlertTriangle className="w-4 h-4" />;
+      case 'medium':
+        return <Info className="w-4 h-4" />;
+      case 'low':
+        return <CheckCircle className="w-4 h-4" />;
+      default:
+        return <Info className="w-4 h-4" />;
     }
   };
 
   const ratioColor = (ratio: number) => {
     const { level } = meetsContrastStandard(ratio);
     switch (level) {
-      case 'fail': return 'text-[var(--color-data-fail)]';
-      case 'AA': return 'text-[var(--color-data-provisional)]';
-      case 'AAA': return 'text-[var(--color-data-pass)]';
-      default: return 'text-[var(--color-text-muted)]';
+      case 'fail':
+        return 'text-[var(--color-data-fail)]';
+      case 'AA':
+        return 'text-[var(--color-data-provisional)]';
+      case 'AAA':
+        return 'text-[var(--color-data-pass)]';
+      default:
+        return 'text-[var(--color-text-muted)]';
     }
   };
 
@@ -335,7 +354,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                     </p>
                   </div>
                 </div>
-                
+
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors"
@@ -349,9 +368,17 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
               <div className="border-b border-[var(--color-border)] px-6">
                 <div className="flex gap-1" role="tablist">
                   {[
-                    { id: 'audit', label: 'Audit Results', icon: <AlertTriangle className="w-4 h-4" /> },
+                    {
+                      id: 'audit',
+                      label: 'Audit Results',
+                      icon: <AlertTriangle className="w-4 h-4" />,
+                    },
                     { id: 'visual', label: 'Visual Preview', icon: <Eye className="w-4 h-4" /> },
-                    { id: 'recommendations', label: 'Recommendations', icon: <Info className="w-4 h-4" /> }
+                    {
+                      id: 'recommendations',
+                      label: 'Recommendations',
+                      icon: <Info className="w-4 h-4" />,
+                    },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -389,7 +416,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                         <h3 className="font-medium text-[var(--color-text-primary)]">
                           Accessibility Issues
                         </h3>
-                        
+
                         <StandardButton
                           variant="outline"
                           size="sm"
@@ -400,7 +427,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                           Re-run Audit
                         </StandardButton>
                       </div>
-                      
+
                       {issues.length === 0 ? (
                         <div className="text-center py-12">
                           <CheckCircle className="w-12 h-12 text-[var(--color-data-pass)] mx-auto mb-4" />
@@ -419,16 +446,18 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                               initial={{ opacity: 0, x: -20 }}
                               animate={{ opacity: 1, x: 0 }}
                               className={`p-4 rounded-lg border ${
-                                issue.severity === 'high' 
+                                issue.severity === 'high'
                                   ? 'border-[var(--color-data-fail)]/30 bg-[var(--color-data-fail)]/5'
                                   : issue.severity === 'medium'
-                                  ? 'border-[var(--color-data-provisional)]/30 bg-[var(--color-data-provisional)]/5'
-                                  : 'border-[var(--color-data-pass)]/30 bg-[var(--color-data-pass)]/5'
+                                    ? 'border-[var(--color-data-provisional)]/30 bg-[var(--color-data-provisional)]/5'
+                                    : 'border-[var(--color-data-pass)]/30 bg-[var(--color-data-pass)]/5'
                               }`}
                             >
                               <div className="flex items-start justify-between">
                                 <div className="flex items-start gap-3">
-                                  <div className={`p-2 rounded-lg ${severityColor(issue.severity)}/10`}>
+                                  <div
+                                    className={`p-2 rounded-lg ${severityColor(issue.severity)}/10`}
+                                  >
                                     {severityIcon(issue.severity)}
                                   </div>
                                   <div>
@@ -440,7 +469,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                                     </p>
                                     <div className="flex items-center gap-4">
                                       <div className="flex items-center gap-2">
-                                        <div 
+                                        <div
                                           className="w-4 h-4 rounded border border-[var(--color-border)]"
                                           style={{ backgroundColor: issue.foreground }}
                                         />
@@ -449,7 +478,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                                         </span>
                                       </div>
                                       <div className="flex items-center gap-2">
-                                        <div 
+                                        <div
                                           className="w-4 h-4 rounded border border-[var(--color-border)]"
                                           style={{ backgroundColor: issue.background }}
                                         />
@@ -460,7 +489,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                                     </div>
                                   </div>
                                 </div>
-                                
+
                                 <div className={`text-right ${ratioColor(issue.ratio)}`}>
                                   <div className="text-2xl font-bold">
                                     {issue.ratio.toFixed(1)}:1
@@ -492,7 +521,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                       <h3 className="font-medium text-[var(--color-text-primary)]">
                         Color Pair Visualizations
                       </h3>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {colorPairs.slice(0, 5).map((pair, index) => {
                           const foreground = getComputedColor(pair.foreground);
@@ -500,26 +529,17 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                           const foregroundHex = toHex(foreground);
                           const backgroundHex = toHex(background);
                           const ratio = getContrastRatio(foregroundHex, backgroundHex);
-                          
+
                           return (
                             <div
                               key={`visual-${index}`}
                               className="rounded-lg overflow-hidden border border-[var(--color-border)]"
                             >
-                              <div 
-                                className="p-4"
-                                style={{ backgroundColor: backgroundHex }}
-                              >
-                                <p 
-                                  className="text-sm font-medium"
-                                  style={{ color: foregroundHex }}
-                                >
+                              <div className="p-4" style={{ backgroundColor: backgroundHex }}>
+                                <p className="text-sm font-medium" style={{ color: foregroundHex }}>
                                   {pair.description}
                                 </p>
-                                <p 
-                                  className="text-xs mt-1"
-                                  style={{ color: foregroundHex }}
-                                >
+                                <p className="text-xs mt-1" style={{ color: foregroundHex }}>
                                   Contrast: {ratio.toFixed(1)}:1
                                 </p>
                               </div>
@@ -530,13 +550,13 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                           );
                         })}
                       </div>
-                      
+
                       <div className="text-xs text-[var(--color-text-muted)] mt-4">
                         <p className="font-medium mb-1">WCAG Standards:</p>
                         <ul className="space-y-1">
                           <li className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-[var(--color-data-fail)]" />
-                            <span>Fail: {"<"} 4.5:1</span>
+                            <span>Fail: {'<'} 4.5:1</span>
                           </li>
                           <li className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-[var(--color-data-provisional)]" />
@@ -566,7 +586,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                       <h3 className="font-medium text-[var(--color-text-primary)]">
                         Accessibility Recommendations
                       </h3>
-                      
+
                       <div className="space-y-3">
                         <div className="p-3 rounded-lg bg-[var(--color-bg-tertiary)]">
                           <h4 className="font-medium text-sm text-[var(--color-text-primary)] mb-1">
@@ -579,7 +599,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                             <li>Test with actual users when possible</li>
                           </ul>
                         </div>
-                        
+
                         <div className="p-3 rounded-lg bg-[var(--color-bg-tertiary)]">
                           <h4 className="font-medium text-sm text-[var(--color-text-primary)] mb-1">
                             Quick Fixes
@@ -591,7 +611,7 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                             <li>Consider alternative color combinations</li>
                           </ul>
                         </div>
-                        
+
                         <div className="p-3 rounded-lg bg-[var(--color-bg-tertiary)]">
                           <h4 className="font-medium text-sm text-[var(--color-text-primary)] mb-1">
                             Testing Tools
@@ -621,16 +641,12 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                       <span>All colors meet WCAG AA standards</span>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
-                    <StandardButton
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsOpen(false)}
-                    >
+                    <StandardButton variant="outline" size="sm" onClick={() => setIsOpen(false)}>
                       Close
                     </StandardButton>
-                    
+
                     {issues.length > 0 && (
                       <StandardButton
                         variant="primary"
@@ -638,7 +654,8 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
                         onClick={() => {
                           // Export issues as JSON
                           const dataStr = JSON.stringify(issues, null, 2);
-                          const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                          const dataUri =
+                            'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
                           const exportFileDefaultName = 'contrast-issues.json';
                           const linkElement = document.createElement('a');
                           linkElement.setAttribute('href', dataUri);

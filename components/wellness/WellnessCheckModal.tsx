@@ -180,7 +180,10 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
             >
               <Heart className="w-8 h-8 text-white" />
             </motion.div>
-            <h2 id="wellness-modal-title" className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+            <h2
+              id="wellness-modal-title"
+              className="text-2xl font-bold text-[var(--color-text-primary)] mb-2"
+            >
               Wellness Check
             </h2>
             <p className="text-[var(--color-text-secondary)]">{reasonMessages[reason]}</p>

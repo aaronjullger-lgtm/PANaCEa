@@ -17,7 +17,13 @@ Then POST to `http://localhost:8080` with JSON body:
 ```json
 {
   "reviews": [
-    { "card_id": "id1", "review_time": 1707062400000, "review_rating": 3, "review_state": 2, "review_duration": 12000 }
+    {
+      "card_id": "id1",
+      "review_time": 1707062400000,
+      "review_rating": 3,
+      "review_state": 2,
+      "review_duration": 12000
+    }
   ],
   "timezone": "UTC",
   "next_day_starts_at": 0

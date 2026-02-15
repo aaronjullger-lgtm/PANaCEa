@@ -289,7 +289,9 @@ export function useDifferentialDrill(): UseDDxDrillReturn {
         }
 
         const result = (await response.json()) as { data?: DDxData[] } | DDxData[];
-        const data: DDxData[] = Array.isArray(result) ? result : (result as { data?: DDxData[] }).data || [];
+        const data: DDxData[] = Array.isArray(result)
+          ? result
+          : (result as { data?: DDxData[] }).data || [];
 
         if (!data || data.length === 0) {
           throw new Error('No differential diagnosis data available.');

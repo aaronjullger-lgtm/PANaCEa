@@ -57,12 +57,15 @@ const SYSTEM_INSTRUCTION =
 
 type TutorBody = z.infer<typeof TutorChatBodySchema>['body'];
 
-function buildTutorContents(body: TutorBody): Array<{ role: string; parts: Array<Record<string, unknown>> }> {
+function buildTutorContents(
+  body: TutorBody
+): Array<{ role: string; parts: Array<Record<string, unknown>> }> {
   const contents: Array<{ role: string; parts: Array<Record<string, unknown>> }> = [];
   if (body.history?.length) {
     for (const turn of body.history) {
       const parts: Array<Record<string, unknown>> = [{ text: turn.text }];
-      if (turn.role === 'model' && turn.thoughtSignature) parts.push({ thoughtSignature: turn.thoughtSignature });
+      if (turn.role === 'model' && turn.thoughtSignature)
+        parts.push({ thoughtSignature: turn.thoughtSignature });
       contents.push({ role: turn.role, parts });
     }
   }
@@ -74,7 +77,10 @@ function buildTutorContents(body: TutorBody): Array<{ role: string; parts: Array
   return contents;
 }
 
-function buildTutorRequestBody(body: TutorBody, contents: Array<{ role: string; parts: Array<Record<string, unknown>> }>): Record<string, unknown> {
+function buildTutorRequestBody(
+  body: TutorBody,
+  contents: Array<{ role: string; parts: Array<Record<string, unknown>> }>
+): Record<string, unknown> {
   const requestBody: Record<string, unknown> = {
     contents,
     systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
@@ -101,9 +107,11 @@ interface TutorSuccessData {
   candidates?: TutorCandidate[];
   usageMetadata?: { totalTokenCount?: number };
 }
-function parseTutorSuccessResponse(
-  data: TutorSuccessData
-): { reply: string; thoughtSignatures: string[]; usageMetadata?: { totalTokenCount?: number } } {
+function parseTutorSuccessResponse(data: TutorSuccessData): {
+  reply: string;
+  thoughtSignatures: string[];
+  usageMetadata?: { totalTokenCount?: number };
+} {
   const parts = data.candidates?.[0]?.content?.parts ?? [];
   let reply = '';
   const thoughtSignatures: string[] = [];
@@ -137,7 +145,11 @@ export const onRequestPost = authenticatedEndpoint(TutorChatBodySchema, async (c
   }
 
   const identifier = getRateLimitIdentifier(request);
-  const { response: rateLimitResponse, headers: rateLimitHeaders } = await withRateLimit(env, identifier, 'gemini');
+  const { response: rateLimitResponse, headers: rateLimitHeaders } = await withRateLimit(
+    env,
+    identifier,
+    'gemini'
+  );
   if (rateLimitResponse) return rateLimitResponse;
 
   const body = validated.body;
@@ -161,13 +173,17 @@ export const onRequestPost = authenticatedEndpoint(TutorChatBodySchema, async (c
   }
 
   if (res.ok) {
-    const data = (await res.json()) as { candidates?: Array<{ content?: { parts?: Part[] } }>; usageMetadata?: { totalTokenCount?: number } };
+    const data = (await res.json()) as {
+      candidates?: Array<{ content?: { parts?: Part[] } }>;
+      usageMetadata?: { totalTokenCount?: number };
+    };
     const parsed = parseTutorSuccessResponse(data);
     return new Response(
       JSON.stringify({
         data: {
           reply: parsed.reply,
-          thoughtSignatures: parsed.thoughtSignatures.length > 0 ? parsed.thoughtSignatures : undefined,
+          thoughtSignatures:
+            parsed.thoughtSignatures.length > 0 ? parsed.thoughtSignatures : undefined,
           model: body.modelName,
           usageMetadata: parsed.usageMetadata,
         },
@@ -183,6 +199,9 @@ export const onRequestPost = authenticatedEndpoint(TutorChatBodySchema, async (c
       error: res.status === 429 ? 'Rate limit exceeded' : 'Tutor request failed',
       details: res.status === 429 ? undefined : text.slice(0, 500),
     }),
-    { status: res.status === 429 ? 429 : 502, headers: { 'Content-Type': 'application/json', ...rateLimitHeaders } }
+    {
+      status: res.status === 429 ? 429 : 502,
+      headers: { 'Content-Type': 'application/json', ...rateLimitHeaders },
+    }
   );
 });

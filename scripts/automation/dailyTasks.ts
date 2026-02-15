@@ -321,7 +321,7 @@ async function enqueueFSRSOptimization(): Promise<void> {
  */
 async function createGrandRoundsChallenge(): Promise<void> {
   const start = Date.now();
-  console.log("🏆 Grand Rounds: challenge created on first API request (today.ts)...");
+  console.log('🏆 Grand Rounds: challenge created on first API request (today.ts)...');
 
   try {
     report.tasks.push({

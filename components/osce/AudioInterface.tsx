@@ -253,7 +253,9 @@ function uint8ToBase64(bytes: Uint8Array): string {
   const CHUNK = 0x8000; // 32KB chunks — safe for String.fromCharCode.apply
   const parts: string[] = [];
   for (let i = 0; i < bytes.length; i += CHUNK) {
-    parts.push(String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK) as unknown as number[]));
+    parts.push(
+      String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK) as unknown as number[])
+    );
   }
   return btoa(parts.join(''));
 }
@@ -264,11 +266,7 @@ function uint8ToBase64(bytes: Uint8Array): string {
  *
  * TODO: Migrate to AudioWorkletProcessor for off-main-thread processing.
  */
-function startCapture(
-  audioContext: AudioContext,
-  stream: MediaStream,
-  ws: WebSocket
-): void {
+function startCapture(audioContext: AudioContext, stream: MediaStream, ws: WebSocket): void {
   const source = audioContext.createMediaStreamSource(stream);
 
   // ScriptProcessorNode runs on main thread (deprecated but broadly supported).

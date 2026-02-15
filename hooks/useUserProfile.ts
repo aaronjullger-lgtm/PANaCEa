@@ -86,7 +86,9 @@ export async function fetchUserProfile(
   });
 
   if (!res.ok) {
-    const body = (await res.json().catch(() => ({ error: res.statusText }))) as ProfileErrorResponse;
+    const body = (await res
+      .json()
+      .catch(() => ({ error: res.statusText }))) as ProfileErrorResponse;
     throw new Error(body.error || `Profile fetch failed: ${res.status}`);
   }
 
@@ -120,7 +122,9 @@ export async function updateUserProfile(
   });
 
   if (!res.ok) {
-    const body = (await res.json().catch(() => ({ error: res.statusText }))) as ProfileErrorResponse;
+    const body = (await res
+      .json()
+      .catch(() => ({ error: res.statusText }))) as ProfileErrorResponse;
     throw new Error(body.error || `Profile update failed: ${res.status}`);
   }
 

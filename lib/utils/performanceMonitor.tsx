@@ -261,10 +261,10 @@ export function analyzeChunks(): ChunkAnalysis[] {
       if (chunk && chunk[0] && chunk[1]) {
         const chunkId = chunk[0];
         const modules = chunk[1];
-        
+
         // Estimate size from module count
         const size = Object.keys(modules).length * 1024; // Rough estimate
-        
+
         chunks.push({
           name: `chunk-${chunkId}`,
           size,
@@ -397,10 +397,7 @@ export function useMemoryMonitor(interval = 5000): MemoryMetrics | null {
 /**
  * Measure execution time of a function
  */
-export function measureExecution<T>(
-  fn: () => T,
-  label: string
-): { result: T; duration: number } {
+export function measureExecution<T>(fn: () => T, label: string): { result: T; duration: number } {
   const start = performance.now();
   const result = fn();
   const end = performance.now();
@@ -438,7 +435,9 @@ export function debounceWithMetrics<T extends (...args: any[]) => any>(
       const end = performance.now();
       const executionTime = end - start;
 
-      console.debug(`⏱️ ${label}: ${executionTime.toFixed(2)}ms execution, ${callCount} calls debounced`);
+      console.debug(
+        `⏱️ ${label}: ${executionTime.toFixed(2)}ms execution, ${callCount} calls debounced`
+      );
       callCount = 0;
       totalDelay = 0;
     }, delay);
@@ -464,7 +463,9 @@ export function throttleWithMetrics<T extends (...args: any[]) => any>(
       const end = performance.now();
       const executionTime = end - start;
 
-      console.debug(`⏱️ ${label}: ${executionTime.toFixed(2)}ms execution, ${callCount} calls throttled`);
+      console.debug(
+        `⏱️ ${label}: ${executionTime.toFixed(2)}ms execution, ${callCount} calls throttled`
+      );
 
       inThrottle = true;
       setTimeout(() => {
@@ -524,7 +525,8 @@ export function analyzeBundleOptimizations(metrics: BundleMetrics): BundleOptimi
   const optimizations: BundleOptimization[] = [];
 
   // Check total bundle size
-  if (metrics.totalSize > 2 * 1024 * 1024) { // > 2MB
+  if (metrics.totalSize > 2 * 1024 * 1024) {
+    // > 2MB
     optimizations.push({
       issue: 'Bundle size exceeds 2MB',
       severity: 'high',
@@ -534,12 +536,13 @@ export function analyzeBundleOptimizations(metrics: BundleMetrics): BundleOptimi
   }
 
   // Check largest chunk size
-  if (metrics.largestChunk > 500 * 1024) { // > 500KB
+  if (metrics.largestChunk > 500 * 1024) {
+    // > 500KB
     optimizations.push({
       issue: `Largest chunk is ${(metrics.largestChunk / 1024).toFixed(0)}KB`,
       severity: 'medium',
       recommendation: 'Split large chunks into smaller, focused chunks',
-      estimatedSavings: `${Math.round(metrics.largestChunk * 0.3 / 1024)}KB`,
+      estimatedSavings: `${Math.round((metrics.largestChunk * 0.3) / 1024)}KB`,
     });
   }
 
@@ -566,7 +569,7 @@ export function analyzeBundleOptimizations(metrics: BundleMetrics): BundleOptimi
       issue: 'Low compression ratio',
       severity: 'medium',
       recommendation: 'Ensure gzip/brotli compression is enabled on server',
-      estimatedSavings: `${Math.round(metrics.totalSize * 0.3 / 1024)}KB`,
+      estimatedSavings: `${Math.round((metrics.totalSize * 0.3) / 1024)}KB`,
     });
   }
 
@@ -694,7 +697,8 @@ export const PerformanceDashboard: React.FC = () => {
               />
             </div>
             <div className="text-xs text-[var(--color-text-muted)] mt-2">
-              {formatBytes(memoryMetrics.usedJSHeapSize)} / {formatBytes(memoryMetrics.jsHeapSizeLimit)}
+              {formatBytes(memoryMetrics.usedJSHeapSize)} /{' '}
+              {formatBytes(memoryMetrics.jsHeapSizeLimit)}
             </div>
           </div>
         </div>
@@ -703,22 +707,29 @@ export const PerformanceDashboard: React.FC = () => {
       {/* Optimization Recommendations */}
       {optimizations.length > 0 && (
         <div className="space-y-3">
-          <h4 className="font-medium text-[var(--color-text-primary)]">Optimization Recommendations</h4>
+          <h4 className="font-medium text-[var(--color-text-primary)]">
+            Optimization Recommendations
+          </h4>
           <div className="space-y-2">
             {optimizations.map((opt, index) => (
               <div
                 key={index}
                 className={`p-3 rounded-lg border ${
-                  opt.severity === 'critical' ? 'border-red-500/20 bg-red-500/5' :
-                  opt.severity === 'high' ? 'border-orange-500/20 bg-orange-500/5' :
-                  opt.severity === 'medium' ? 'border-yellow-500/20 bg-yellow-500/5' :
-                  'border-green-500/20 bg-green-500/5'
+                  opt.severity === 'critical'
+                    ? 'border-red-500/20 bg-red-500/5'
+                    : opt.severity === 'high'
+                      ? 'border-orange-500/20 bg-orange-500/5'
+                      : opt.severity === 'medium'
+                        ? 'border-yellow-500/20 bg-yellow-500/5'
+                        : 'border-green-500/20 bg-green-500/5'
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="font-medium text-[var(--color-text-primary)]">{opt.issue}</div>
-                    <div className="text-sm text-[var(--color-text-muted)] mt-1">{opt.recommendation}</div>
+                    <div className="text-sm text-[var(--color-text-muted)] mt-1">
+                      {opt.recommendation}
+                    </div>
                   </div>
                   <div className="text-xs font-medium px-2 py-1 rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]">
                     {opt.severity.toUpperCase()}

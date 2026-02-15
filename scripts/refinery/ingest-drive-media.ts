@@ -86,9 +86,7 @@ async function main(): Promise<void> {
 
   console.log('Listing files in Drive folder...');
   const allFiles = await listFilesInFolder(folderId);
-  const imageFiles = allFiles.filter(
-    (f) => f.mimeType?.startsWith(IMAGE_MIME_PREFIX)
-  );
+  const imageFiles = allFiles.filter((f) => f.mimeType?.startsWith(IMAGE_MIME_PREFIX));
   console.log(`Found ${imageFiles.length} image(s) (${allFiles.length} total files).`);
 
   if (imageFiles.length === 0) {

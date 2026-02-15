@@ -1,10 +1,12 @@
 /**
  * Authentication Provider Component
- * Wraps the application with Clerk authentication
+ * Wraps the application with Clerk authentication.
+ * Must be rendered inside ThemeProvider so Clerk appearance uses app theme (light/dark).
  */
 
 import React, { useEffect } from 'react';
 import { ClerkProvider, useUser } from '@clerk/clerk-react';
+import { useThemeContext } from '@/contexts/ThemeContext';
 import { SetupRequiredPage } from './SetupRequiredPage';
 
 // Lazy import Sentry functions to avoid initialization conflicts
@@ -50,11 +52,39 @@ To fix this issue:
 
 See AUTHENTICATION_SETUP.md for detailed setup instructions.`;
 
+/** Production hosts: use pk_live_ keys; if build baked in pk_test_, show setup page */
+function isProductionHost(hostname: string): boolean {
+  return (
+    hostname === 'studypanacea.com' ||
+    hostname.endsWith('.studypanacea.com') ||
+    hostname.endsWith('.pages.dev')
+  );
+}
+
+/** Message when deployed to production but build used dev keys (e.g. missing Cloudflare build env) */
+const PRODUCTION_DEV_KEYS_ERROR = `Production is using development keys
+
+This site is running on a production host but the build was made with development keys (pk_test_...). Clerk will show "development" and auth may not work correctly.
+
+Fix (choose one):
+
+1. Cloudflare Pages (recommended)
+   • Dashboard → Workers & Pages → panacea → Settings → Environment variables
+   • For "Production" (and Preview if needed), add:
+     VITE_CLERK_PUBLISHABLE_KEY = pk_live_... (from Clerk Dashboard → API Keys)
+   • Redeploy so the build runs with production keys (VITE_* are baked in at build time).
+
+2. Wrangler / single source of truth
+   • Ensure production build runs: npm run build (which runs scripts/inject-wrangler-env.js first).
+   • wrangler.toml [vars] are then used when building so production keys from there are used.
+
+Never commit .env with production secrets. Use Cloudflare Dashboard or wrangler.toml [vars] for production.`;
+
 /**
  * Provides authentication context to the entire app
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-  // @ts-ignore
+  // @ts-ignore - import.meta.env is set at build time by Vite (from .env, wrangler inject script, or Cloudflare build env)
   const isDevelopment = import.meta.env?.DEV;
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   const isLocalhost =
@@ -70,6 +100,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   if (!publishableKey) {
     return <SetupRequiredPage message={MISSING_KEY_ERROR} />;
+  }
+
+  if (isProductionHost(hostname) && publishableKey.startsWith('pk_test_')) {
+    return <SetupRequiredPage message={PRODUCTION_DEV_KEYS_ERROR} />;
   }
 
   if (isDevelopment && isLocalhost && publishableKey.startsWith('pk_live_')) {
@@ -94,23 +128,50 @@ export function AuthProvider({ children }: AuthProviderProps) {
     console.log('[Clerk] Client timezone offset:', new Date().getTimezoneOffset());
   }
 
+  useThemeContext(); // Ensures Clerk appearance variables resolve from our theme (light/dark)
+
   return (
     <ClerkProvider
       publishableKey={publishableKey}
       telemetry={debugEnabled ? { disabled: false, debug: true } : undefined}
       appearance={{
+        variables: {
+          colorBackground: 'var(--color-bg-primary)',
+          colorForeground: 'var(--color-text-primary)',
+          colorPrimary: 'var(--color-accent)',
+          colorPrimaryForeground: 'var(--color-text-inverse)',
+          colorMuted: 'var(--color-bg-secondary)',
+          colorMutedForeground: 'var(--color-text-muted)',
+          colorInput: 'var(--color-bg-secondary)',
+          colorInputForeground: 'var(--color-text-primary)',
+          colorBorder: 'var(--color-border)',
+          colorRing: 'var(--color-accent)',
+          colorDanger: 'var(--color-data-fail)',
+          colorSuccess: 'var(--color-data-pass)',
+          borderRadius: '0.75rem',
+        },
         elements: {
-          // Hide Clerk branding and development mode indicators
           footer: 'hidden',
           footerAction: 'hidden',
           footerActionText: 'hidden',
-          // Customize the overall styling to match app theme
-          card: 'shadow-xl border border-[var(--color-border)]',
+          card: 'shadow-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]',
           headerTitle: 'text-[var(--color-text-primary)] font-semibold',
           headerSubtitle: 'text-[var(--color-text-muted)]',
-          formButtonPrimary: 'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90',
-          formFieldInput: 'border-[var(--color-border)] bg-[var(--color-bg-secondary)]',
+          formButtonPrimary:
+            'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)]',
+          formFieldInput:
+            'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]',
+          formFieldLabel: 'text-[var(--color-text-primary)]',
+          formFieldInputShowPasswordButton:
+            'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',
           footerActionLink: 'text-[var(--color-accent)] hover:text-[var(--color-accent)]/90',
+          socialButtonsBlockButton:
+            'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)]',
+          socialButtonsBlockButtonText: 'text-[var(--color-text-primary)]',
+          dividerLine: 'bg-[var(--color-border)]',
+          dividerText: 'text-[var(--color-text-muted)]',
+          identityPreviewEditButton:
+            'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',
         },
       }}
     >

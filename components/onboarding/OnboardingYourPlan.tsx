@@ -30,9 +30,7 @@ export function OnboardingYourPlan({
   const [examDateSaved, setExamDateSaved] = useState(false);
 
   const focusText =
-    weakestSystems.length > 0
-      ? weakestSystems.slice(0, 3).join(', ')
-      : 'all systems';
+    weakestSystems.length > 0 ? weakestSystems.slice(0, 3).join(', ') : 'all systems';
 
   const handleSaveExamDate = async () => {
     if (!examDateInput.trim() || !onSetExamDate) return;
@@ -81,8 +79,9 @@ export function OnboardingYourPlan({
           Your plan
         </h2>
         <p className="text-[var(--color-text-muted)] text-center mb-6">
-          We suggest focusing on <strong className="text-[var(--color-text-primary)]">{focusText}</strong>.
-          Your first goal: <strong className="text-[var(--color-text-primary)]">20 questions today</strong>.
+          We suggest focusing on{' '}
+          <strong className="text-[var(--color-text-primary)]">{focusText}</strong>. Your first
+          goal: <strong className="text-[var(--color-text-primary)]">20 questions today</strong>.
         </p>
 
         <div className="space-y-3 mb-6">

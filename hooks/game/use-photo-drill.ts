@@ -254,7 +254,9 @@ async function fetchPhotoCases(
     const response = await fetch(url);
 
     if (!response.ok) {
-      const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as { error?: string };
+      const errorData = (await response.json().catch(() => ({ error: 'Unknown error' }))) as {
+        error?: string;
+      };
       throw new Error(errorData.error || `API request failed: ${response.status}`);
     }
 

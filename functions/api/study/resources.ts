@@ -17,7 +17,10 @@ const QuerySchema = z.object({
 export const onRequestGet = authenticatedEndpoint(
   QuerySchema,
   async (context) => {
-    const { env, validated } = context as { env: { DATABASE_URL: string }; validated: z.infer<typeof QuerySchema> };
+    const { env, validated } = context as {
+      env: { DATABASE_URL: string };
+      validated: z.infer<typeof QuerySchema>;
+    };
     const logger = createEndpointLogger('/api/study/resources');
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -54,4 +57,3 @@ export const onRequestGet = authenticatedEndpoint(
   },
   { source: 'query', requestsPerMinute: 60 }
 );
-

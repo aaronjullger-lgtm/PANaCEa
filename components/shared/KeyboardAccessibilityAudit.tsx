@@ -1,6 +1,6 @@
 /**
  * KeyboardAccessibilityAudit - Component for auditing and improving keyboard navigation
- * 
+ *
  * This component helps identify and fix keyboard accessibility issues across the application.
  * It provides:
  * 1. Keyboard navigation testing tools
@@ -11,18 +11,18 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Keyboard, 
-  Eye, 
-  EyeOff, 
-  CheckCircle, 
-  AlertCircle, 
-  Zap, 
+import {
+  Keyboard,
+  Eye,
+  EyeOff,
+  CheckCircle,
+  AlertCircle,
+  Zap,
   ArrowRight,
   Focus,
   Indent,
   Command,
-  X
+  X,
 } from 'lucide-react';
 import { StandardButton } from './StandardButton';
 
@@ -51,7 +51,7 @@ interface KeyboardAccessibilityAuditProps {
 
 export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProps> = ({
   defaultOpen = false,
-  onIssuesFound
+  onIssuesFound,
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [showFocusRings, setShowFocusRings] = useState(false);
@@ -66,18 +66,78 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
 
   // Common keyboard shortcuts for the application
   const keyboardShortcuts: KeyboardShortcut[] = [
-    { key: 'Tab', description: 'Navigate forward through interactive elements', category: 'navigation', implemented: true },
-    { key: 'Shift + Tab', description: 'Navigate backward through interactive elements', category: 'navigation', implemented: true },
-    { key: 'Enter / Space', description: 'Activate buttons and links', category: 'navigation', implemented: true },
-    { key: 'Arrow Keys', description: 'Navigate within components (lists, menus)', category: 'navigation', implemented: true },
-    { key: 'Escape', description: 'Close modals, cancel actions', category: 'navigation', implemented: true },
-    { key: 'A/B/C/D', description: 'Select answer in quiz mode', category: 'quiz', implemented: true },
-    { key: 'Shift + A/B/C/D', description: 'Flag answer in quiz mode', category: 'quiz', implemented: true },
-    { key: '⌘/Ctrl + K', description: 'Open command palette', category: 'general', implemented: true },
-    { key: '⌘/Ctrl + /', description: 'Show keyboard shortcuts', category: 'general', implemented: true },
-    { key: '[', description: 'Toggle sidebar navigation', category: 'navigation', implemented: true },
-    { key: 'F6', description: 'Cycle through main regions (not implemented)', category: 'accessibility', implemented: false },
-    { key: 'Shift + F6', description: 'Cycle backward through regions (not implemented)', category: 'accessibility', implemented: false },
+    {
+      key: 'Tab',
+      description: 'Navigate forward through interactive elements',
+      category: 'navigation',
+      implemented: true,
+    },
+    {
+      key: 'Shift + Tab',
+      description: 'Navigate backward through interactive elements',
+      category: 'navigation',
+      implemented: true,
+    },
+    {
+      key: 'Enter / Space',
+      description: 'Activate buttons and links',
+      category: 'navigation',
+      implemented: true,
+    },
+    {
+      key: 'Arrow Keys',
+      description: 'Navigate within components (lists, menus)',
+      category: 'navigation',
+      implemented: true,
+    },
+    {
+      key: 'Escape',
+      description: 'Close modals, cancel actions',
+      category: 'navigation',
+      implemented: true,
+    },
+    {
+      key: 'A/B/C/D',
+      description: 'Select answer in quiz mode',
+      category: 'quiz',
+      implemented: true,
+    },
+    {
+      key: 'Shift + A/B/C/D',
+      description: 'Flag answer in quiz mode',
+      category: 'quiz',
+      implemented: true,
+    },
+    {
+      key: '⌘/Ctrl + K',
+      description: 'Open command palette',
+      category: 'general',
+      implemented: true,
+    },
+    {
+      key: '⌘/Ctrl + /',
+      description: 'Show keyboard shortcuts',
+      category: 'general',
+      implemented: true,
+    },
+    {
+      key: '[',
+      description: 'Toggle sidebar navigation',
+      category: 'navigation',
+      implemented: true,
+    },
+    {
+      key: 'F6',
+      description: 'Cycle through main regions (not implemented)',
+      category: 'accessibility',
+      implemented: false,
+    },
+    {
+      key: 'Shift + F6',
+      description: 'Cycle backward through regions (not implemented)',
+      category: 'accessibility',
+      implemented: false,
+    },
   ];
 
   // Run accessibility audit
@@ -92,11 +152,13 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
 
     interactiveElements.forEach((element, index) => {
       // Check 1: Elements with click handlers but no keyboard handlers
-      const hasClickHandler = element.onclick !== null || 
+      const hasClickHandler =
+        element.onclick !== null ||
         element.getAttribute('onclick') !== null ||
         element.hasAttribute('data-onclick');
-      
-      const hasKeyHandler = element.onkeydown !== null ||
+
+      const hasKeyHandler =
+        element.onkeydown !== null ||
         element.getAttribute('onkeydown') !== null ||
         element.hasAttribute('data-onkeydown');
 
@@ -107,7 +169,7 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
           type: 'keyboard',
           severity: 'medium',
           message: 'Element has click handler but no keyboard handler',
-          fix: 'Add onKeyDown handler or ensure element is focusable with proper role'
+          fix: 'Add onKeyDown handler or ensure element is focusable with proper role',
         });
       }
 
@@ -120,24 +182,28 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
           type: 'tabindex',
           severity: 'low',
           message: 'Interactive element has tabindex="-1" but has click handler',
-          fix: 'Consider making element focusable (tabindex="0") or adding keyboard handler'
+          fix: 'Consider making element focusable (tabindex="0") or adding keyboard handler',
         });
       }
 
       // Check 3: Missing aria labels
-      const hasAriaLabel = element.hasAttribute('aria-label') || 
+      const hasAriaLabel =
+        element.hasAttribute('aria-label') ||
         element.hasAttribute('aria-labelledby') ||
         (element.tagName === 'BUTTON' && element.textContent?.trim()) ||
         (element.tagName === 'A' && element.textContent?.trim());
-      
-      if (!hasAriaLabel && (element.tagName === 'BUTTON' || element.getAttribute('role') === 'button')) {
+
+      if (
+        !hasAriaLabel &&
+        (element.tagName === 'BUTTON' || element.getAttribute('role') === 'button')
+      ) {
         newIssues.push({
           id: `missing-aria-${index}`,
           element,
           type: 'aria',
           severity: 'medium',
           message: 'Button missing accessible label',
-          fix: 'Add aria-label or ensure button has visible text content'
+          fix: 'Add aria-label or ensure button has visible text content',
         });
       }
     });
@@ -148,7 +214,7 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
       const focusableElements = modal.querySelectorAll<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
-      
+
       if (focusableElements.length === 0 && modal.style.display !== 'none') {
         newIssues.push({
           id: `modal-no-focus-${index}`,
@@ -156,7 +222,7 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
           type: 'focus',
           severity: 'high',
           message: 'Modal dialog has no focusable elements',
-          fix: 'Add at least one focusable element to the modal'
+          fix: 'Add at least one focusable element to the modal',
         });
       }
     });
@@ -185,14 +251,18 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
   // Show tab order visualization
   useEffect(() => {
     if (showTabOrder) {
-      const focusableElements = Array.from(document.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      )).filter(el => {
+      const focusableElements = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => {
         const style = window.getComputedStyle(el);
-        return style.display !== 'none' && 
-               style.visibility !== 'hidden' && 
-               style.opacity !== '0' &&
-               !el.hasAttribute('disabled');
+        return (
+          style.display !== 'none' &&
+          style.visibility !== 'hidden' &&
+          style.opacity !== '0' &&
+          !el.hasAttribute('disabled')
+        );
       });
 
       setTabOrderElements(focusableElements);
@@ -219,22 +289,22 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
           z-index: 9999;
           pointer-events: none;
         `;
-        
+
         const rect = el.getBoundingClientRect();
         indicator.style.top = `${rect.top + window.scrollY - 10}px`;
         indicator.style.left = `${rect.left + window.scrollX - 10}px`;
         indicator.setAttribute('data-tab-index', index.toString());
-        
+
         document.body.appendChild(indicator);
       });
     } else {
       // Clean up indicators
-      document.querySelectorAll('.tab-order-indicator').forEach(el => el.remove());
+      document.querySelectorAll('.tab-order-indicator').forEach((el) => el.remove());
       setTabOrderElements([]);
     }
 
     return () => {
-      document.querySelectorAll('.tab-order-indicator').forEach(el => el.remove());
+      document.querySelectorAll('.tab-order-indicator').forEach((el) => el.remove());
     };
   }, [showTabOrder]);
 
@@ -245,17 +315,17 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
       if (e.key === 'Escape' && isOpen) {
         setIsOpen(false);
       }
-      
+
       // Toggle focus rings with Ctrl+Shift+F
       if (e.ctrlKey && e.shiftKey && e.key === 'F') {
         e.preventDefault();
-        setShowFocusRings(prev => !prev);
+        setShowFocusRings((prev) => !prev);
       }
-      
+
       // Toggle tab order with Ctrl+Shift+T
       if (e.ctrlKey && e.shiftKey && e.key === 'T') {
         e.preventDefault();
-        setShowTabOrder(prev => !prev);
+        setShowTabOrder((prev) => !prev);
       }
     };
 
@@ -280,17 +350,23 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
 
   const severityColor = (severity: AccessibilityIssue['severity']) => {
     switch (severity) {
-      case 'high': return 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/30';
-      case 'medium': return 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]/30';
-      case 'low': return 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)] border-[var(--color-data-pass)]/30';
+      case 'high':
+        return 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/30';
+      case 'medium':
+        return 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]/30';
+      case 'low':
+        return 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)] border-[var(--color-data-pass)]/30';
     }
   };
 
   const severityIcon = (severity: AccessibilityIssue['severity']) => {
     switch (severity) {
-      case 'high': return <AlertCircle className="w-4 h-4" />;
-      case 'medium': return <AlertCircle className="w-4 h-4" />;
-      case 'low': return <CheckCircle className="w-4 h-4" />;
+      case 'high':
+        return <AlertCircle className="w-4 h-4" />;
+      case 'medium':
+        return <AlertCircle className="w-4 h-4" />;
+      case 'low':
+        return <CheckCircle className="w-4 h-4" />;
     }
   };
 
@@ -355,7 +431,7 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
               <button
                 onClick={() => setActiveTab('audit')}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'audit' ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
-                aria-selected={activeTab === 'audit' ? "true" : "false"}
+                aria-selected={activeTab === 'audit' ? 'true' : 'false'}
                 role="tab"
                 id="tab-audit"
                 aria-controls="tabpanel-audit"
@@ -365,7 +441,7 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
               <button
                 onClick={() => setActiveTab('shortcuts')}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'shortcuts' ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
-                aria-selected={activeTab === 'shortcuts' ? "true" : "false"}
+                aria-selected={activeTab === 'shortcuts' ? 'true' : 'false'}
                 role="tab"
                 id="tab-shortcuts"
                 aria-controls="tabpanel-shortcuts"
@@ -375,7 +451,7 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
               <button
                 onClick={() => setActiveTab('testing')}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'testing' ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'}`}
-                aria-selected={activeTab === 'testing' ? "true" : "false"}
+                aria-selected={activeTab === 'testing' ? 'true' : 'false'}
                 role="tab"
                 id="tab-testing"
                 aria-controls="tabpanel-testing"
@@ -435,7 +511,10 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
                                 <p className="text-xs mt-1 opacity-80">{issue.fix}</p>
                                 <button
                                   onClick={() => {
-                                    issue.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    issue.element.scrollIntoView({
+                                      behavior: 'smooth',
+                                      block: 'center',
+                                    });
                                     issue.element.focus();
                                   }}
                                   className="text-xs mt-2 text-[var(--color-accent)] hover:underline"
@@ -477,7 +556,9 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
                               <kbd className="px-2 py-1 text-xs font-mono bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded">
                                 {shortcut.key}
                               </kbd>
-                              <span className={`text-xs px-2 py-1 rounded ${shortcut.category === 'navigation' ? 'bg-blue-500/20 text-blue-500' : shortcut.category === 'quiz' ? 'bg-purple-500/20 text-purple-500' : 'bg-gray-500/20 text-gray-500'}`}>
+                              <span
+                                className={`text-xs px-2 py-1 rounded ${shortcut.category === 'navigation' ? 'bg-blue-500/20 text-blue-500' : shortcut.category === 'quiz' ? 'bg-purple-500/20 text-purple-500' : 'bg-gray-500/20 text-gray-500'}`}
+                              >
                                 {shortcut.category}
                               </span>
                             </div>
@@ -485,7 +566,9 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
                               {shortcut.description}
                             </p>
                           </div>
-                          <div className={`w-2 h-2 rounded-full ${shortcut.implemented ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]'}`} />
+                          <div
+                            className={`w-2 h-2 rounded-full ${shortcut.implemented ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]'}`}
+                          />
                         </div>
                       ))}
                     </div>
@@ -504,10 +587,8 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
               >
                 {activeTab === 'testing' && (
                   <div className="space-y-4">
-                    <h3 className="font-medium text-[var(--color-text-primary)]">
-                      Testing Tools
-                    </h3>
-                    
+                    <h3 className="font-medium text-[var(--color-text-primary)]">Testing Tools</h3>
+
                     <div className="space-y-3">
                       <div className="p-3 rounded-lg bg-[var(--color-bg-tertiary)]">
                         <div className="flex items-center justify-between mb-2">
@@ -543,7 +624,7 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
                         <p className="text-sm text-[var(--color-text-muted)] mb-3">
                           Show tab navigation order (Ctrl+Shift+T)
                         </p>
-                        
+
                         {showTabOrder && tabOrderElements.length > 0 && (
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
@@ -588,8 +669,9 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
                           </button>
                           <button
                             onClick={() => {
-                              document.activeElement instanceof HTMLElement &&
-                              document.activeElement.blur();
+                              if (document.activeElement instanceof HTMLElement) {
+                                document.activeElement.blur();
+                              }
                             }}
                             className="w-full text-left p-2 text-sm rounded hover:bg-[var(--color-bg-primary)]"
                           >

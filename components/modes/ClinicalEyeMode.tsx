@@ -1,6 +1,6 @@
 /**
  * Clinical Eye Mode
- * 
+ *
  * Module 2: Interactive visual diagnostics with point-and-click pathology identification.
  * Uses spatial-understanding for AI-generated heatmaps and veo_cameos for physical findings.
  */
@@ -48,7 +48,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
           message: 'Excellent! You correctly identified the pathology.',
         });
         setScore(score + diagnostic.scoring.pointsPerFinding);
-        
+
         // Emit success event
         integration.emit({
           type: 'MODULE_ENTERED',
@@ -98,7 +98,9 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
   const handleStartExercise = useCallback(() => {
     // Sample diagnostic (in production, fetch from /api/clinical-eye/question)
     // For demo: using data URL with simple gradient to show UI/interaction pattern
-    const placeholderImageUrl = 'data:image/svg+xml;base64,' + btoa(`
+    const placeholderImageUrl =
+      'data:image/svg+xml;base64,' +
+      btoa(`
       <svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -122,7 +124,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
         </text>
       </svg>
     `);
-    
+
     const sampleDiagnostic: PointAndClickDiagnostic = {
       questionId: 'clinical-eye-001',
       image: {
@@ -266,9 +268,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
               <Eye className="w-6 h-6 text-[var(--color-accent)]" />
               <div>
                 <h1 className="text-lg font-bold">Clinical Eye: {diagnostic.image.modality}</h1>
-                <p className="text-sm text-[var(--color-text-muted)]">
-                  Click on the pathology
-                </p>
+                <p className="text-sm text-[var(--color-text-muted)]">Click on the pathology</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -365,7 +365,8 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
               <div className="rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-4">
                 <h3 className="font-semibold mb-2">Instructions</h3>
                 <p className="text-sm text-[var(--color-text-muted)]">
-                  Click directly on the pathological finding. You have {diagnostic.maxAttempts} attempts.
+                  Click directly on the pathological finding. You have {diagnostic.maxAttempts}{' '}
+                  attempts.
                 </p>
                 <div className="mt-3 p-3 rounded-lg bg-[var(--color-bg-tertiary)] text-xs">
                   <strong>Hint:</strong> Hover over the image for 2 seconds to reveal AI heatmap
@@ -378,9 +379,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
                 <div className="rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-4">
                   <h3 className="font-semibold mb-2">Need Help?</h3>
                   <button
-                    onClick={() =>
-                      setDiagnostic({ ...diagnostic, currentHintLevel: 'subtle' })
-                    }
+                    onClick={() => setDiagnostic({ ...diagnostic, currentHintLevel: 'subtle' })}
                     className="w-full px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity text-sm"
                   >
                     Get Subtle Hint
@@ -446,13 +445,14 @@ function pointInPolygon(point: { x: number; y: number }, polygon: Array<{ x: num
     const pi = polygon[i];
     const pj = polygon[j];
     if (!pi || !pj) continue;
-    
+
     const xi = pi.x;
     const yi = pi.y;
     const xj = pj.x;
     const yj = pj.y;
 
-    const intersect = yi > point.y !== yj > point.y && point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi;
+    const intersect =
+      yi > point.y !== yj > point.y && point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi;
     if (intersect) inside = !inside;
   }
   return inside;

@@ -1,7 +1,7 @@
 /**
  * API: Generate State Machine for Case
  * POST /api/osce/state-machine
- * 
+ *
  * Generates a PatientAVStateMachine using Gemini for a given case.
  */
 
@@ -24,9 +24,9 @@ export const onRequestPost = authenticatedEndpoint(
   StateMachineBodySchema,
   async ({ env, validated, auth }) => {
     const log = createEndpointLogger('/api/osce/state-machine', auth.userId);
-    
+
     const { chiefComplaint, diagnosis, patientAge = 60, patientSex = 'M' } = validated.body;
-    
+
     log.info('Generating state machine', { chiefComplaint, diagnosis });
 
     const prompt = `You are a clinical simulation expert. Generate a JSON state machine for a patient encounter simulation.

@@ -34,7 +34,11 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
   if (!env.DATABASE_URL) {
     logger.error('DATABASE_URL not configured');
     return {
-      data: { success: false, error: 'Analytics unavailable', message: 'Server database is not configured.' },
+      data: {
+        success: false,
+        error: 'Analytics unavailable',
+        message: 'Server database is not configured.',
+      },
       status: 503,
     };
   }
@@ -129,8 +133,7 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       mode?: string | null;
       durationMs?: number | null;
     };
-    const getTimeMs = (a: AttemptWithMode) =>
-      a.timeSpentMs ?? a.durationMs ?? 0;
+    const getTimeMs = (a: AttemptWithMode) => a.timeSpentMs ?? a.durationMs ?? 0;
     const recallAttempts = (recentAttempts as AttemptWithMode[]).filter(
       (a) => a.mode === 'rapid_recall' && getTimeMs(a) > 0
     );
@@ -142,9 +145,7 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     const speedByType = {
       recall: {
         avgTimeMs:
-          recallAttempts.length > 0
-            ? Math.round(recallTimeSum / recallAttempts.length)
-            : null,
+          recallAttempts.length > 0 ? Math.round(recallTimeSum / recallAttempts.length) : null,
         count: recallAttempts.length,
       },
       clinicalReasoning: {
@@ -374,9 +375,7 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     if (weakAreas.length > 0) {
       const first = weakAreas[0];
       if (first) {
-        recommendations.push(
-          `Focus on ${first.system} - currently at ${first.accuracy}% accuracy`
-        );
+        recommendations.push(`Focus on ${first.system} - currently at ${first.accuracy}% accuracy`);
       }
     }
 
@@ -446,7 +445,8 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       totalAttempts,
       accuracy: overallAccuracy,
       weakAreasCount: weakAreas.length,
-      systemsCounted: Object.keys(systemStats).filter((k) => (systemStats[k]?.total ?? 0) > 0).length,
+      systemsCounted: Object.keys(systemStats).filter((k) => (systemStats[k]?.total ?? 0) > 0)
+        .length,
     });
 
     return {
@@ -459,7 +459,11 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       userId: auth.userId,
     });
     return {
-      data: { success: false, error: 'Failed to fetch user stats', message: 'Please try again later.' },
+      data: {
+        success: false,
+        error: 'Failed to fetch user stats',
+        message: 'Please try again later.',
+      },
       status: 500,
     };
   } finally {

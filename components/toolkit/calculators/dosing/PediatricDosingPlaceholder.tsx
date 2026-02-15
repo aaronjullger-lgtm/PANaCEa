@@ -20,12 +20,66 @@ interface PediatricDrug {
 }
 
 const COMMON_PEDS_DRUGS: PediatricDrug[] = [
-  { name: 'Amoxicillin', indication: 'Otitis media', dosePerKg: 40, unit: 'mg', frequency: 'divided q8h', maxDose: 1500, minWeight: 3, route: 'PO' },
-  { name: 'Acetaminophen', indication: 'Fever/Pain', dosePerKg: 15, unit: 'mg', frequency: 'q4-6h PRN', maxDose: 1000, minWeight: 3, route: 'PO' },
-  { name: 'Ibuprofen', indication: 'Fever/Pain', dosePerKg: 10, unit: 'mg', frequency: 'q6h PRN', maxDose: 600, minWeight: 6, route: 'PO' },
-  { name: 'Azithromycin', indication: 'Pneumonia', dosePerKg: 10, unit: 'mg', frequency: 'day 1, then 5 mg/kg days 2-5', maxDose: 500, minWeight: 6, route: 'PO' },
-  { name: 'Ceftriaxone', indication: 'Severe infection', dosePerKg: 50, unit: 'mg', frequency: 'q12-24h', maxDose: 2000, minWeight: 3, route: 'IV/IM' },
-  { name: 'Ondansetron', indication: 'Nausea/vomiting', dosePerKg: 0.15, unit: 'mg', frequency: 'q8h PRN', maxDose: 16, minWeight: 6, route: 'PO/IV' },
+  {
+    name: 'Amoxicillin',
+    indication: 'Otitis media',
+    dosePerKg: 40,
+    unit: 'mg',
+    frequency: 'divided q8h',
+    maxDose: 1500,
+    minWeight: 3,
+    route: 'PO',
+  },
+  {
+    name: 'Acetaminophen',
+    indication: 'Fever/Pain',
+    dosePerKg: 15,
+    unit: 'mg',
+    frequency: 'q4-6h PRN',
+    maxDose: 1000,
+    minWeight: 3,
+    route: 'PO',
+  },
+  {
+    name: 'Ibuprofen',
+    indication: 'Fever/Pain',
+    dosePerKg: 10,
+    unit: 'mg',
+    frequency: 'q6h PRN',
+    maxDose: 600,
+    minWeight: 6,
+    route: 'PO',
+  },
+  {
+    name: 'Azithromycin',
+    indication: 'Pneumonia',
+    dosePerKg: 10,
+    unit: 'mg',
+    frequency: 'day 1, then 5 mg/kg days 2-5',
+    maxDose: 500,
+    minWeight: 6,
+    route: 'PO',
+  },
+  {
+    name: 'Ceftriaxone',
+    indication: 'Severe infection',
+    dosePerKg: 50,
+    unit: 'mg',
+    frequency: 'q12-24h',
+    maxDose: 2000,
+    minWeight: 3,
+    route: 'IV/IM',
+  },
+  {
+    name: 'Ondansetron',
+    indication: 'Nausea/vomiting',
+    dosePerKg: 0.15,
+    unit: 'mg',
+    frequency: 'q8h PRN',
+    maxDose: 16,
+    minWeight: 6,
+    route: 'PO/IV',
+  },
 ];
 
 export const PediatricDosingPlaceholder: React.FC<CalculatorProps> = ({ onBack }) => {
@@ -62,20 +116,23 @@ export const PediatricDosingPlaceholder: React.FC<CalculatorProps> = ({ onBack }
       <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 space-y-6">
         {/* Drug Selection */}
         <div>
-          <label htmlFor="drug-select" className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+          <label
+            htmlFor="drug-select"
+            className="block text-sm font-medium text-[var(--color-text-primary)] mb-2"
+          >
             Select Medication
           </label>
           <select
             id="drug-select"
             value={selectedDrug.name}
             onChange={(e) => {
-              const drug = COMMON_PEDS_DRUGS.find(d => d.name === e.target.value);
+              const drug = COMMON_PEDS_DRUGS.find((d) => d.name === e.target.value);
               if (drug) setSelectedDrug(drug);
             }}
             aria-label="Select pediatric medication"
             className="w-full px-4 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
           >
-            {COMMON_PEDS_DRUGS.map(drug => (
+            {COMMON_PEDS_DRUGS.map((drug) => (
               <option key={drug.name} value={drug.name}>
                 {drug.name} - {drug.indication}
               </option>
@@ -104,7 +161,9 @@ export const PediatricDosingPlaceholder: React.FC<CalculatorProps> = ({ onBack }
             </div>
             <div>
               <span className="text-[var(--color-text-muted)]">Frequency:</span>
-              <p className="font-medium text-[var(--color-text-primary)]">{selectedDrug.frequency}</p>
+              <p className="font-medium text-[var(--color-text-primary)]">
+                {selectedDrug.frequency}
+              </p>
             </div>
             <div>
               <span className="text-[var(--color-text-muted)]">Max Single Dose:</span>
@@ -154,7 +213,8 @@ export const PediatricDosingPlaceholder: React.FC<CalculatorProps> = ({ onBack }
                       <div className="text-sm">
                         <p className="font-medium text-blue-300">Maximum Dose Reached</p>
                         <p className="text-blue-200/80">
-                          Calculated dose exceeds max safe dose. Using maximum: {selectedDrug.maxDose} {selectedDrug.unit}
+                          Calculated dose exceeds max safe dose. Using maximum:{' '}
+                          {selectedDrug.maxDose} {selectedDrug.unit}
                         </p>
                       </div>
                     </div>
@@ -166,7 +226,8 @@ export const PediatricDosingPlaceholder: React.FC<CalculatorProps> = ({ onBack }
                   <div className="text-sm">
                     <p className="font-medium text-green-300">Dosing Recommendation</p>
                     <p className="text-green-200/80">
-                      Give {calculation.actualDose.toFixed(1)} {selectedDrug.unit} {selectedDrug.route} {selectedDrug.frequency}
+                      Give {calculation.actualDose.toFixed(1)} {selectedDrug.unit}{' '}
+                      {selectedDrug.route} {selectedDrug.frequency}
                     </p>
                   </div>
                 </div>

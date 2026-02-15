@@ -171,7 +171,8 @@ export async function fetchSessionQuestions(
       analytics: data.analytics,
       poolStatus: data.poolStatus,
     };
-  } catch (error) {    console.error('[SessionService] API fetch failed, using fallback:', error);
+  } catch (error) {
+    console.error('[SessionService] API fetch failed, using fallback:', error);
     return fallbackQuestionFetch(settings, count, token);
   }
 }

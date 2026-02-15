@@ -17,10 +17,20 @@ async function getConditions(): Promise<Record<string, unknown>> {
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       const json = await response.json();
-      const cache = json && typeof json === 'object' && !Array.isArray(json) ? (json as Record<string, unknown>) : {};
-      conditionsCache = cache;
+      const cache =
+        json && typeof json === 'object' && !Array.isArray(json)
+          ? (json as Record<string, unknown>)
+          : {};
+      // Index by condition name so getConditionByIdSync(condition.condition) finds entries when UI only has display name
+      conditionsCache = { ...cache };
+      for (const [id, entry] of Object.entries(cache)) {
+        const name = (entry as Record<string, unknown>)?.condition;
+        if (typeof name === 'string' && name.trim() && name !== id) {
+          (conditionsCache as Record<string, unknown>)[name] = entry;
+        }
+      }
       console.log(`✓ Loaded ${Object.keys(cache).length} conditions from database`);
-      return cache;
+      return conditionsCache;
     }
 
     // Database API returned non-OK response
@@ -214,7 +224,9 @@ export const CONDITIONS: Record<string, ConditionEntry | undefined> = {};
  * Merge multiple ConditionContent values into one (e.g. for consolidated sections).
  * Strings and array items are combined into a single string with paragraph/list separation.
  */
-export function mergeConditionContent(contents: (ConditionContent | undefined)[]): ConditionContent {
+export function mergeConditionContent(
+  contents: (ConditionContent | undefined)[]
+): ConditionContent {
   const parts: string[] = [];
 
   for (const content of contents) {
@@ -231,17 +243,16 @@ export function mergeConditionContent(contents: (ConditionContent | undefined)[]
     } else if (
       typeof content === 'object' &&
       content !== null &&
-      ('type' in content && (content as { type: string }).type === 'steps')
+      'type' in content &&
+      (content as { type: string }).type === 'steps'
     ) {
       const steps = (content as { items: { title: string; content: string }[] }).items;
-      if (steps?.length)
-        parts.push(
-          steps.map((s) => `**${s.title}**\n${s.content}`).join('\n\n')
-        );
+      if (steps?.length) parts.push(steps.map((s) => `**${s.title}**\n${s.content}`).join('\n\n'));
     } else if (
       typeof content === 'object' &&
       content !== null &&
-      ('type' in content && (content as { type: string }).type === 'grid')
+      'type' in content &&
+      (content as { type: string }).type === 'grid'
     ) {
       const grid = (content as { items: Record<string, string> }).items;
       if (grid && typeof grid === 'object')

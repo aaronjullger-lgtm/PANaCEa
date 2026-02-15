@@ -64,21 +64,21 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
               whileTap={{ scale: 0.95 }}
               className="flex items-center gap-2 px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-medium hover:bg-[var(--color-accent-hover)] transition-colors shadow-sm"
             >
-            <RefreshCw className="w-4 h-4" />
-            Try Again
-          </motion.button>
-        )}
-        {secondaryAction && (
-          <motion.button
-            onClick={secondaryAction.onClick}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-6 py-3 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-xl font-medium border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] transition-colors"
-          >
-            <Home className="w-4 h-4" />
-            {secondaryAction.label}
-          </motion.button>
-        )}
+              <RefreshCw className="w-4 h-4" />
+              Try Again
+            </motion.button>
+          )}
+          {secondaryAction && (
+            <motion.button
+              onClick={secondaryAction.onClick}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-6 py-3 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-xl font-medium border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+            >
+              <Home className="w-4 h-4" />
+              {secondaryAction.label}
+            </motion.button>
+          )}
         </div>
       </div>
     </motion.div>
@@ -121,7 +121,7 @@ export const ErrorBoundaryFallback: React.FC<{
 
 /**
  * EmptyState - Re-export from the main EmptyState component
- * 
+ *
  * @deprecated Use the full-featured EmptyState from '@/components/ui/EmptyState' instead.
  * This export is kept for backward compatibility but delegates to the main implementation.
  */

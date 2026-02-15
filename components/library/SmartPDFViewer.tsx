@@ -8,14 +8,7 @@
  * - Ask the Tutor: on text selection, "Ask the Tutor" sends selected text to parent (e.g. Gemini Chat).
  */
 
-import React, {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { MessageCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import type { AdobeDCViewPreviewConfig, AdobeDCViewerAPIs } from '@/types/adobe-pdf-embed';
 import { pdfBoundsToPercent } from '@/lib/utils/pdfCoordinates';
@@ -150,7 +143,10 @@ export function SmartPDFViewer({
     if (typeof document === 'undefined') return;
     const existing = document.querySelector(`script[src="${ADOBE_VIEW_SDK_URL}"]`);
     if (existing) {
-      if ((globalThis as unknown as Window & { adobe_dc_view_sdk_ready?: boolean }).adobe_dc_view_sdk_ready) {
+      if (
+        (globalThis as unknown as Window & { adobe_dc_view_sdk_ready?: boolean })
+          .adobe_dc_view_sdk_ready
+      ) {
         setSdkReady(true);
       } else {
         document.addEventListener(ADOBE_READY_EVENT, () => setSdkReady(true));
@@ -161,7 +157,9 @@ export function SmartPDFViewer({
     script.src = ADOBE_VIEW_SDK_URL;
     script.async = true;
     script.onload = () => {
-      (globalThis as unknown as Window & { adobe_dc_view_sdk_ready?: boolean }).adobe_dc_view_sdk_ready = true;
+      (
+        globalThis as unknown as Window & { adobe_dc_view_sdk_ready?: boolean }
+      ).adobe_dc_view_sdk_ready = true;
       setSdkReady(true);
     };
     script.onerror = () => setError('Failed to load Adobe PDF Embed SDK.');
@@ -291,7 +289,9 @@ export function SmartPDFViewer({
   }, [onAskTutor]);
 
   return (
-    <div className={`flex flex-col rounded-xl overflow-hidden bg-[var(--color-bg-secondary)] ${className}`}>
+    <div
+      className={`flex flex-col rounded-xl overflow-hidden bg-[var(--color-bg-secondary)] ${className}`}
+    >
       {/* Toolbar: Liquid Mode + Ask the Tutor */}
       <div className="flex items-center justify-between gap-3 p-3 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]">
         <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -301,7 +301,9 @@ export function SmartPDFViewer({
             onChange={(e) => setLiquidMode(e.target.checked)}
             className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
           />
-          <span className="text-sm text-[var(--color-text-primary)]">Liquid Mode (mobile-friendly)</span>
+          <span className="text-sm text-[var(--color-text-primary)]">
+            Liquid Mode (mobile-friendly)
+          </span>
         </label>
         {onAskTutor && (
           <div className="relative">
@@ -336,7 +338,8 @@ export function SmartPDFViewer({
         >
           <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden />
           <span>
-            Citation highlights are disabled in Liquid Mode because layout and coordinates differ. Turn off Liquid Mode to see highlights.
+            Citation highlights are disabled in Liquid Mode because layout and coordinates differ.
+            Turn off Liquid Mode to see highlights.
           </span>
         </div>
       )}
@@ -371,10 +374,7 @@ export function SmartPDFViewer({
 
         {/* Highlight overlay: only when not Liquid Mode and we have highlights for current page */}
         {viewerReady && currentPageHighlights.length > 0 && (
-          <div
-            className="absolute inset-0 pointer-events-none"
-            aria-hidden
-          >
+          <div className="absolute inset-0 pointer-events-none" aria-hidden>
             {currentPageHighlights.map((item, idx) => (
               <div
                 key={`${item.page}-${idx}`}

@@ -212,7 +212,12 @@ export const EmptyLineChart: React.FC<{
   height?: number;
   diagnosticCta?: { label?: string; onClick: () => void };
 }> = ({ message = 'Not yet assessed', height, diagnosticCta }) => (
-  <EmptyChartState chartType="line" message={message} height={height} diagnosticCta={diagnosticCta} />
+  <EmptyChartState
+    chartType="line"
+    message={message}
+    height={height}
+    diagnosticCta={diagnosticCta}
+  />
 );
 
 export const EmptyBarChart: React.FC<{
@@ -220,7 +225,12 @@ export const EmptyBarChart: React.FC<{
   height?: number;
   diagnosticCta?: { label?: string; onClick: () => void };
 }> = ({ message = 'Not yet assessed', height, diagnosticCta }) => (
-  <EmptyChartState chartType="bar" message={message} height={height} diagnosticCta={diagnosticCta} />
+  <EmptyChartState
+    chartType="bar"
+    message={message}
+    height={height}
+    diagnosticCta={diagnosticCta}
+  />
 );
 
 export const EmptyRadarChart: React.FC<{
@@ -228,7 +238,12 @@ export const EmptyRadarChart: React.FC<{
   height?: number;
   diagnosticCta?: { label?: string; onClick: () => void };
 }> = ({ message = 'Not yet assessed', height, diagnosticCta }) => (
-  <EmptyChartState chartType="radar" message={message} height={height} diagnosticCta={diagnosticCta} />
+  <EmptyChartState
+    chartType="radar"
+    message={message}
+    height={height}
+    diagnosticCta={diagnosticCta}
+  />
 );
 
 export const EmptyHeatmap: React.FC<{
@@ -236,7 +251,12 @@ export const EmptyHeatmap: React.FC<{
   height?: number;
   diagnosticCta?: { label?: string; onClick: () => void };
 }> = ({ message = 'Not yet assessed', height, diagnosticCta }) => (
-  <EmptyChartState chartType="heatmap" message={message} height={height} diagnosticCta={diagnosticCta} />
+  <EmptyChartState
+    chartType="heatmap"
+    message={message}
+    height={height}
+    diagnosticCta={diagnosticCta}
+  />
 );
 
 export default EmptyChartState;

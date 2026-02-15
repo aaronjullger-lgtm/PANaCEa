@@ -49,7 +49,9 @@ export const ContentFieldRenderer: React.FC<ContentFieldRendererProps> = ({
       return (
         <Suspense
           fallback={
-            <div className={`prose prose-sm dark:prose-invert max-w-none animate-pulse ${className}`}>
+            <div
+              className={`prose prose-sm dark:prose-invert max-w-none animate-pulse ${className}`}
+            >
               <div className="h-4 bg-slate-700/50 rounded w-full mb-2" />
               <div className="h-4 bg-slate-700/50 rounded w-5/6 mb-2" />
               <div className="h-4 bg-slate-700/50 rounded w-4/6" />

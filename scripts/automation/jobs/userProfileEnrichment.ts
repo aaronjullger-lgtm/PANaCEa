@@ -223,9 +223,9 @@ async function enrichUserProfile(prisma: PrismaClient, userId: string): Promise<
 
   // Calculate best/worst study hours
   const sortedHours = [...hourlyAccuracies].sort((a, b) => b.accuracy - a.accuracy);
-  const bestStudyHour = sortedHours.length > 0 ? sortedHours[0]?.hour ?? null : null;
+  const bestStudyHour = sortedHours.length > 0 ? (sortedHours[0]?.hour ?? null) : null;
   const worstStudyHour =
-    sortedHours.length > 0 ? sortedHours[sortedHours.length - 1]?.hour ?? null : null;
+    sortedHours.length > 0 ? (sortedHours[sortedHours.length - 1]?.hour ?? null) : null;
 
   // Update UserLearningProfile with new fields
   await prisma.userLearningProfile.update({

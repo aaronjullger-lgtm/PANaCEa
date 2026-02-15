@@ -49,7 +49,9 @@ export const onRequestGet = authenticatedEndpoint(
     const { env, validated, auth } = context;
     const log = createEndpointLogger('/api/graph/network/[conditionId]', auth.userId);
     const prisma = createEdgePrismaClient(env.DATABASE_URL) as EdgePrismaClient;
-    const conditionId = (validated as { conditionId?: string }).conditionId ?? (context as { params?: { conditionId?: string } }).params?.conditionId;
+    const conditionId =
+      (validated as { conditionId?: string }).conditionId ??
+      (context as { params?: { conditionId?: string } }).params?.conditionId;
 
     if (!conditionId) {
       return { status: 400, error: 'conditionId required' };

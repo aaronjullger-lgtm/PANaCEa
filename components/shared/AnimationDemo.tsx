@@ -6,9 +6,9 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ANIMATION_VARIANTS, 
-  TRANSITIONS, 
+import {
+  ANIMATION_VARIANTS,
+  TRANSITIONS,
   CSS_TRANSITIONS,
   createAnimationProps,
   createHoverAnimation,
@@ -28,7 +28,9 @@ interface AnimationDemoProps {
 }
 
 export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) => {
-  const [activeTab, setActiveTab] = useState<'variants' | 'transitions' | 'examples' | 'utilities'>('variants');
+  const [activeTab, setActiveTab] = useState<'variants' | 'transitions' | 'examples' | 'utilities'>(
+    'variants'
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isToastVisible, setIsToastVisible] = useState(false);
   const [showList, setShowList] = useState(true);
@@ -51,7 +53,7 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
   ];
 
   const triggerAnimation = () => {
-    setTriggerKey(prev => prev + 1);
+    setTriggerKey((prev) => prev + 1);
   };
 
   const showToast = () => {
@@ -60,7 +62,9 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
   };
 
   return (
-    <div className={`bg-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)] p-6 ${className}`}>
+    <div
+      className={`bg-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)] p-6 ${className}`}
+    >
       <div className="flex flex-col gap-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -70,7 +74,7 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
               Standardized animations for consistent, smooth transitions
             </p>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <StandardButton
               variant="outline"
@@ -92,7 +96,11 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-2 border-b border-[var(--color-border)] pb-4" role="tablist" aria-label="Animation demo tabs">
+        <div
+          className="flex flex-wrap gap-2 border-b border-[var(--color-border)] pb-4"
+          role="tablist"
+          aria-label="Animation demo tabs"
+        >
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -125,11 +133,13 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                 transition={TRANSITIONS.normal}
                 className="space-y-6"
               >
-                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Animation Variants</h3>
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  Animation Variants
+                </h3>
                 <p className="text-sm text-[var(--color-text-muted)]">
                   Predefined animation variants for common patterns
                 </p>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Object.entries(ANIMATION_VARIANTS).map(([key, variant]) => (
                     <motion.div
@@ -167,11 +177,13 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                 transition={TRANSITIONS.normal}
                 className="space-y-6"
               >
-                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Transition Presets</h3>
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  Transition Presets
+                </h3>
                 <p className="text-sm text-[var(--color-text-muted)]">
                   Standardized timing and easing functions
                 </p>
-                
+
                 <div className="space-y-4">
                   {Object.entries(TRANSITIONS).map(([key, transition]) => (
                     <motion.div
@@ -189,7 +201,7 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                           {transition.type || 'tween'}
                         </div>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-[var(--color-text-muted)]">Duration:</span>
@@ -197,14 +209,14 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                             {transition.duration ? `${transition.duration}s` : 'spring'}
                           </span>
                         </div>
-                        
+
                         {transition.ease && (
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-[var(--color-text-muted)]">Easing:</span>
                             <span className="font-mono">{transition.ease}</span>
                           </div>
                         )}
-                        
+
                         {transition.type === 'spring' && (
                           <>
                             <div className="flex items-center justify-between text-sm">
@@ -233,8 +245,10 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                 transition={TRANSITIONS.spring}
                 className="space-y-8"
               >
-                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Live Examples</h3>
-                
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  Live Examples
+                </h3>
+
                 {/* Page Transition Example */}
                 <div className="space-y-4">
                   <h4 className="font-medium text-[var(--color-text-primary)]">Page Transition</h4>
@@ -248,11 +262,7 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                         <div className="h-4 w-32 bg-[var(--color-accent)]/30 rounded mb-2"></div>
                         <div className="h-3 w-48 bg-[var(--color-bg-tertiary)] rounded"></div>
                       </div>
-                      <StandardButton
-                        variant="outline"
-                        size="sm"
-                        onClick={triggerAnimation}
-                      >
+                      <StandardButton variant="outline" size="sm" onClick={triggerAnimation}>
                         Replay
                       </StandardButton>
                     </div>
@@ -267,12 +277,18 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowList(!showList)}
-                      icon={showList ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      icon={
+                        showList ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )
+                      }
                     >
                       {showList ? 'Hide' : 'Show'} List
                     </StandardButton>
                   </div>
-                  
+
                   <AnimatePresence>
                     {showList && (
                       <motion.div
@@ -302,7 +318,9 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
 
                 {/* Interactive Cards with Hover */}
                 <div className="space-y-4">
-                  <h4 className="font-medium text-[var(--color-text-primary)]">Interactive Cards</h4>
+                  <h4 className="font-medium text-[var(--color-text-primary)]">
+                    Interactive Cards
+                  </h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {['Primary', 'Secondary', 'Accent'].map((type, index) => (
                       <motion.div
@@ -315,21 +333,25 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                           type === 'Primary'
                             ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5'
                             : type === 'Secondary'
-                            ? 'border-[var(--color-border)] bg-[var(--color-bg-primary)]'
-                            : 'border-[var(--color-data-pass)] bg-[var(--color-data-pass)]/5'
+                              ? 'border-[var(--color-border)] bg-[var(--color-bg-primary)]'
+                              : 'border-[var(--color-data-pass)] bg-[var(--color-data-pass)]/5'
                         } cursor-pointer`}
                       >
                         <div className="flex items-center gap-3 mb-3">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                            type === 'Primary'
-                              ? 'bg-[var(--color-accent)] text-white'
-                              : type === 'Secondary'
-                              ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]'
-                              : 'bg-[var(--color-data-pass)] text-white'
-                          }`}>
+                          <div
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                              type === 'Primary'
+                                ? 'bg-[var(--color-accent)] text-white'
+                                : type === 'Secondary'
+                                  ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]'
+                                  : 'bg-[var(--color-data-pass)] text-white'
+                            }`}
+                          >
                             {type.charAt(0)}
                           </div>
-                          <span className="font-semibold text-[var(--color-text-primary)]">{type} Card</span>
+                          <span className="font-semibold text-[var(--color-text-primary)]">
+                            {type} Card
+                          </span>
                         </div>
                         <p className="text-sm text-[var(--color-text-muted)]">
                           Hover over this card to see the animation. Click to trigger.
@@ -343,10 +365,7 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                 <div className="space-y-4">
                   <h4 className="font-medium text-[var(--color-text-primary)]">Modal Animation</h4>
                   <div className="flex items-center gap-4">
-                    <StandardButton
-                      variant="primary"
-                      onClick={() => setIsModalOpen(true)}
-                    >
+                    <StandardButton variant="primary" onClick={() => setIsModalOpen(true)}>
                       Open Modal
                     </StandardButton>
                     <p className="text-sm text-[var(--color-text-muted)]">
@@ -366,11 +385,13 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                 transition={TRANSITIONS.normal}
                 className="space-y-6"
               >
-                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">CSS Transition Utilities</h3>
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  CSS Transition Utilities
+                </h3>
                 <p className="text-sm text-[var(--color-text-muted)]">
                   Tailwind classes for consistent CSS transitions
                 </p>
-                
+
                 <div className="space-y-4">
                   {Object.entries(CSS_TRANSITIONS).map(([key, value]) => (
                     <div
@@ -383,17 +404,29 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                             {key}
                           </span>
                           <div className="text-xs text-[var(--color-text-muted)] mt-1">
-                            Class: <code className="bg-[var(--color-bg-tertiary)] px-2 py-1 rounded">{value}</code>
+                            Class:{' '}
+                            <code className="bg-[var(--color-bg-tertiary)] px-2 py-1 rounded">
+                              {value}
+                            </code>
                           </div>
                         </div>
-                        <div className={`w-20 h-10 rounded-lg bg-[var(--color-accent)] ${value} hover:bg-[var(--color-accent-hover)] cursor-pointer`}></div>
+                        <div
+                          className={`w-20 h-10 rounded-lg bg-[var(--color-accent)] ${value} hover:bg-[var(--color-accent-hover)] cursor-pointer`}
+                        ></div>
                       </div>
                       <p className="text-sm text-[var(--color-text-muted)]">
-                        Use for: {key === 'colors' ? 'color changes, hover states' : 
-                                 key === 'transforms' ? 'scale, translate, rotate' :
-                                 key === 'opacity' ? 'fade in/out effects' :
-                                 key === 'all' ? 'any property changes' :
-                                 key === 'fast' ? 'quick feedback' : 'smooth, dramatic effects'}
+                        Use for:{' '}
+                        {key === 'colors'
+                          ? 'color changes, hover states'
+                          : key === 'transforms'
+                            ? 'scale, translate, rotate'
+                            : key === 'opacity'
+                              ? 'fade in/out effects'
+                              : key === 'all'
+                                ? 'any property changes'
+                                : key === 'fast'
+                                  ? 'quick feedback'
+                                  : 'smooth, dramatic effects'}
                       </p>
                     </div>
                   ))}
@@ -409,7 +442,9 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                         className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg p-3 text-center"
                       >
                         <div className="text-lg font-bold text-[var(--color-accent)]">{value}s</div>
-                        <div className="text-xs text-[var(--color-text-muted)] capitalize mt-1">{key.replace(/([A-Z])/g, ' $1')}</div>
+                        <div className="text-xs text-[var(--color-text-muted)] capitalize mt-1">
+                          {key.replace(/([A-Z])/g, ' $1')}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -425,9 +460,11 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                         className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg p-4"
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-[var(--color-text-primary)] capitalize">{key}</span>
+                          <span className="font-medium text-[var(--color-text-primary)] capitalize">
+                            {key}
+                          </span>
                           <div className="w-16 h-1 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
-                            <div 
+                            <div
                               className="h-full bg-[var(--color-accent)] rounded-full"
                               style={{
                                 animation: `easeDemo 2s ${value} infinite`,
@@ -435,7 +472,9 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                             ></div>
                           </div>
                         </div>
-                        <code className="text-xs text-[var(--color-text-muted)] font-mono break-all">{value}</code>
+                        <code className="text-xs text-[var(--color-text-muted)] font-mono break-all">
+                          {value}
+                        </code>
                       </div>
                     ))}
                   </div>
@@ -455,7 +494,9 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
               className="bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] shadow-xl max-w-md w-full p-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Modal Example</h3>
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
+                  Modal Example
+                </h3>
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="p-1 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
@@ -465,12 +506,12 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
                   <Square className="w-5 h-5 text-[var(--color-text-muted)]" />
                 </button>
               </div>
-              
+
               <p className="text-[var(--color-text-secondary)] mb-6">
-                This modal demonstrates the standard modal transition with spring physics.
-                Notice the smooth scale and fade animation.
+                This modal demonstrates the standard modal transition with spring physics. Notice
+                the smooth scale and fade animation.
               </p>
-              
+
               <div className="flex gap-3">
                 <StandardButton
                   variant="outline"
@@ -524,8 +565,13 @@ export const AnimationDemo: React.FC<AnimationDemoProps> = ({ className = '' }) 
 
       <style jsx>{`
         @keyframes easeDemo {
-          0%, 100% { width: 0%; }
-          50% { width: 100%; }
+          0%,
+          100% {
+            width: 0%;
+          }
+          50% {
+            width: 100%;
+          }
         }
       `}</style>
     </div>

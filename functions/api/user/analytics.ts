@@ -116,11 +116,19 @@ async function buildUserAnalytics(
   ).length;
   const streaks = await calculateStreaks(prisma, userId);
   const systemPerformance = calculateSystemPerformance(
-    attempts.map((a) => ({ system: a.system ?? undefined, wasCorrect: a.wasCorrect, timeSpentMs: a.timeSpentMs }))
+    attempts.map((a) => ({
+      system: a.system ?? undefined,
+      wasCorrect: a.wasCorrect,
+      timeSpentMs: a.timeSpentMs,
+    }))
   );
   const conditionMastery = await calculateConditionMastery(
     prisma,
-    attempts.map((a) => ({ conditionId: a.conditionId, system: a.system ?? undefined, wasCorrect: a.wasCorrect }))
+    attempts.map((a) => ({
+      conditionId: a.conditionId,
+      system: a.system ?? undefined,
+      wasCorrect: a.wasCorrect,
+    }))
   );
   const weakAreas = identifyWeakAreas(systemPerformance, conditionMastery);
   const recentActivity = calculateRecentActivity(attempts);

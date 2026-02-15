@@ -1,6 +1,6 @@
 /**
  * Real-Time SOAP Note Hook
- * 
+ *
  * Provides real-time SOAP note generation during OSCE sessions.
  * Automatically forwards transcript to SOAP generator and polls for updates.
  */
@@ -26,10 +26,7 @@ export function useRealtimeSOAP({
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Create service instance once
-  const service = useMemo(
-    () => createSOAPNoteService(geminiApiKey),
-    [geminiApiKey]
-  );
+  const service = useMemo(() => createSOAPNoteService(geminiApiKey), [geminiApiKey]);
 
   // Start generation when session begins
   useEffect(() => {
