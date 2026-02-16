@@ -377,6 +377,51 @@ export default defineConfig(({ mode }) => {
         output: {
           // Add interop compatibility mode to handle CJS/ESM mixing gracefully
           interop: 'compat',
+          // Manual chunks for better bundle splitting
+          manualChunks(id) {
+            // Vendor chunks
+            if (id.includes('node_modules')) {
+              // React and related
+              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+                return 'vendor-react';
+              }
+              // UI libraries
+              if (id.includes('framer-motion') || id.includes('recharts') || id.includes('lucide-react')) {
+                return 'vendor-ui';
+              }
+              // State management and utilities
+              if (id.includes('zustand') || id.includes('immer') || id.includes('date-fns')) {
+                return 'vendor-state';
+              }
+              // Clerk authentication
+              if (id.includes('@clerk')) {
+                return 'vendor-auth';
+              }
+              // Zod and validation
+              if (id.includes('zod')) {
+                return 'vendor-validation';
+              }
+              // Default vendor chunk for everything else
+              return 'vendor';
+            }
+            // Split large components into separate chunks
+            if (id.includes('components/') && id.includes('.tsx')) {
+              const componentName = id.split('/').pop()?.replace('.tsx', '');
+              // Large components that should be split
+              const largeComponents = [
+                'CommandCenterHub',
+                'EnhancedSettingsTab',
+                'MenuView',
+                'PatientEncounterMode',
+                'QuizView',
+                'ToolkitHub',
+                'AdminDashboard',
+              ];
+              if (largeComponents.some(name => componentName?.includes(name))) {
+                return `component-${componentName?.toLowerCase()}`;
+              }
+            }
+          },
           // Safety net polyfill for CommonJS remnants and Node.js globals
           intro: `
 var global = global || window;

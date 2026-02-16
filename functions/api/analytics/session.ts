@@ -13,9 +13,22 @@ import { sessionAnalyticsSchema, sessionAnalyticsQuerySchema } from '../_shared/
 import type { AuthenticatedContext, ValidatedContext } from '../_shared/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import type { z } from 'zod';
+import {
+  getFromCache,
+  setInCache,
+  CACHE_CONFIG,
+  isKVAvailable,
+} from '../_shared/cache';
 
 type SessionAnalyticsData = z.infer<typeof sessionAnalyticsSchema>;
 type SessionAnalyticsQuery = z.infer<typeof sessionAnalyticsQuerySchema>;
+
+/**
+ * Generate cache key for session analytics
+ */
+function getSessionAnalyticsCacheKey(userId: string, limit: number, includeProfile: boolean): string {
+  return `${CACHE_CONFIG.PREFIX.USER_STATS}session_analytics:${userId}:${limit}:${includeProfile}`;
+}
 
 /**
  * POST: Record comprehensive session analytics
@@ -166,6 +179,21 @@ export const onRequestGet = authenticatedEndpoint(
 
     try {
       const params = context.validated;
+      const limit = params.limit;
+      const includeProfile = params.includeProfile;
+
+      // Check cache first if KV is available
+      if (isKVAvailable(context.env.CACHE)) {
+        const cacheKey = getSessionAnalyticsCacheKey(context.auth.userId, limit, includeProfile);
+        const cached = await getFromCache(context.env.CACHE, cacheKey);
+        if (cached) {
+          return {
+            status: 200,
+            data: cached,
+            headers: { 'X-Cache': 'HIT' },
+          };
+        }
+      }
 
       // Find user by Clerk ID
       const user = await prisma.user.findUnique({
@@ -179,9 +207,6 @@ export const onRequestGet = authenticatedEndpoint(
           error: 'User not found',
         };
       }
-
-      const limit = params.limit;
-      const includeProfile = params.includeProfile;
 
       // Get recent sessions
       const sessions = await prisma.studySession.findMany({
@@ -235,22 +260,31 @@ export const onRequestGet = authenticatedEndpoint(
         totalSessions: sessions.length,
       };
 
+      const responseData = {
+        sessions: sessions.map((s: (typeof sessions)[0]) => ({
+          ...s,
+          // Convert BigInt to number for JSON serialization
+          lifetimeStudyTimeMs: undefined,
+        })),
+        profile: profile
+          ? {
+              ...profile,
+              lifetimeStudyTimeMs: Number(profile.lifetimeStudyTimeMs),
+            }
+          : null,
+        aggregateStats,
+      };
+
+      // Cache the result if KV is available
+      if (isKVAvailable(context.env.CACHE)) {
+        const cacheKey = getSessionAnalyticsCacheKey(context.auth.userId, limit, includeProfile);
+        await setInCache(context.env.CACHE, cacheKey, responseData, CACHE_CONFIG.TTL.USER_STATS);
+      }
+
       return {
         status: 200,
-        data: {
-          sessions: sessions.map((s: (typeof sessions)[0]) => ({
-            ...s,
-            // Convert BigInt to number for JSON serialization
-            lifetimeStudyTimeMs: undefined,
-          })),
-          profile: profile
-            ? {
-                ...profile,
-                lifetimeStudyTimeMs: Number(profile.lifetimeStudyTimeMs),
-              }
-            : null,
-          aggregateStats,
-        },
+        data: responseData,
+        headers: { 'X-Cache': 'MISS' },
       };
     } catch (error) {
       return {

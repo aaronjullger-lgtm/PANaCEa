@@ -2363,8 +2363,12 @@ model QuestionSeed {
   MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id])
 
   @@index([conditionId])
+  @@index([difficulty])
   @@index([medicalContentId])
   @@index([system])
+  @@index([usageCount])
+  @@index([system, difficulty])
+  @@index([conditionId, difficulty])
 }
 
 model QuestionVariant {
