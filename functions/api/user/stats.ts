@@ -74,47 +74,171 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
     const fourteenDaysAgo = new Date(now.getTime() - 14 * 86400000);
 
-    // Use aggregation and bounded window instead of unbounded findMany
-    const [
-      totalCount,
-      correctCount,
-      aggregates,
-      systemGrouped,
-      conditionGrouped,
-      recentAttempts,
-      questionsSeenCount,
-    ] = await Promise.all([
-      prisma.questionAttempt.count({ where: { userId } }),
-      prisma.questionAttempt.count({ where: { userId, wasCorrect: true } }),
-      prisma.questionAttempt.aggregate({
-        where: { userId },
-        _avg: { timeSpentMs: true, answerChangedCount: true },
-      }),
-      prisma.questionAttempt.groupBy({
-        by: ['system', 'wasCorrect'],
-        where: { userId, system: { not: null } },
-        _count: { id: true },
-      }),
-      prisma.questionAttempt.groupBy({
-        by: ['conditionId', 'wasCorrect'],
-        where: { userId, conditionId: { not: null } },
-        _count: { id: true },
-      }),
-      prisma.questionAttempt.findMany({
-        where: { userId, createdAt: { gte: ninetyDaysAgo } },
-        select: {
+    // Try to fetch data from QuestionAttempt, fall back to ReviewLog if it fails
+    let totalCount = 0;
+    let correctCount = 0;
+    let aggregates: any = { _avg: { timeSpentMs: null, answerChangedCount: null } };
+    let systemGrouped: any[] = [];
+    let conditionGrouped: any[] = [];
+    let recentAttempts: any[] = [];
+    let questionsSeenCount = 0;
+
+    try {
+      // Use aggregation and bounded window instead of unbounded findMany
+      const [
+        totalCountResult,
+        correctCountResult,
+        aggregatesResult,
+        systemGroupedResult,
+        conditionGroupedResult,
+        recentAttemptsResult,
+        questionsSeenCountResult,
+      ] = await Promise.all([
+        prisma.questionAttempt.count({ where: { userId } }),
+        prisma.questionAttempt.count({ where: { userId, wasCorrect: true } }),
+        prisma.questionAttempt.aggregate({
+          where: { userId },
+          _avg: { timeSpentMs: true, answerChangedCount: true },
+        }),
+        prisma.questionAttempt.groupBy({
+          by: ['system', 'wasCorrect'],
+          where: { userId, system: { not: null } },
+          _count: { id: true },
+        }),
+        prisma.questionAttempt.groupBy({
+          by: ['conditionId', 'wasCorrect'],
+          where: { userId, conditionId: { not: null } },
+          _count: { id: true },
+        }),
+        prisma.questionAttempt.findMany({
+          where: { userId, createdAt: { gte: ninetyDaysAgo } },
+          select: {
+            wasCorrect: true,
+            system: true,
+            timeSpentMs: true,
+            durationMs: true,
+            mode: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 5000,
+        }),
+        prisma.userQuestionSeen.count({ where: { userId } }),
+      ]);
+
+      totalCount = totalCountResult;
+      correctCount = correctCountResult;
+      aggregates = aggregatesResult;
+      systemGrouped = systemGroupedResult;
+      conditionGrouped = conditionGroupedResult;
+      recentAttempts = recentAttemptsResult;
+      questionsSeenCount = questionsSeenCountResult;
+    } catch (dbError) {
+      logger.warn('QuestionAttempt queries failed, falling back to ReviewLog', {
+        error: dbError instanceof Error ? dbError.message : String(dbError),
+        userId,
+      });
+
+      // Fallback to ReviewLog data
+      try {
+        const [
+          reviewLogCount,
+          reviewLogCorrect,
+          reviewLogRecent,
+          userQuestionSeenCount,
+        ] = await Promise.all([
+          prisma.reviewLog.count({ where: { userId } }),
+          prisma.reviewLog.count({ where: { userId, wasCorrect: true } }),
+          prisma.reviewLog.findMany({
+            where: { userId, reviewedAt: { gte: ninetyDaysAgo } },
+            select: {
+              wasCorrect: true,
+              system: true,
+              responseTimeMs: true,
+              reviewedAt: true,
+            },
+            orderBy: { reviewedAt: 'desc' },
+            take: 5000,
+          }),
+          prisma.userQuestionSeen.count({ where: { userId } }),
+        ]);
+
+        totalCount = reviewLogCount;
+        correctCount = reviewLogCorrect;
+        recentAttempts = reviewLogRecent.map(r => ({
+          wasCorrect: r.wasCorrect,
+          system: r.system,
+          timeSpentMs: r.responseTimeMs,
+          durationMs: r.responseTimeMs,
+          mode: 'review',
+          createdAt: r.reviewedAt,
+        }));
+        questionsSeenCount = userQuestionSeenCount;
+
+        // Simple system grouping from ReviewLog
+        const systemMap = new Map<string, { total: number; correct: number }>();
+        for (const r of reviewLogRecent) {
+          if (r.system) {
+            const norm = normalizeSystemName(r.system);
+            const cur = systemMap.get(norm) || { total: 0, correct: 0 };
+            cur.total += 1;
+            if (r.wasCorrect) cur.correct += 1;
+            systemMap.set(norm, cur);
+          }
+        }
+
+        systemGrouped = Array.from(systemMap.entries()).map(([system, counts]) => ({
+          system,
           wasCorrect: true,
-          system: true,
-          timeSpentMs: true,
-          durationMs: true,
-          mode: true,
-          createdAt: true,
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 5000,
-      }),
-      prisma.userQuestionSeen.count({ where: { userId } }),
-    ]);
+          _count: { id: counts.correct },
+        })).concat(
+          Array.from(systemMap.entries()).map(([system, counts]) => ({
+            system,
+            wasCorrect: false,
+            _count: { id: counts.total - counts.correct },
+          }))
+        );
+      } catch (fallbackError) {
+        logger.error('Both QuestionAttempt and ReviewLog queries failed', {
+          error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+          userId,
+        });
+        // Return minimal data
+        return {
+          data: {
+            success: true,
+            stats: {
+              overall: {
+                totalAttempts: 0,
+                correctAttempts: 0,
+                accuracy: 0,
+                questionsSeenCount: 0,
+                currentStreak: 0,
+                totalStudyDays: 0,
+                avgTimeMs: null,
+                avgAnswerChanges: null,
+              },
+              bySystems: {},
+              byConditions: [],
+              weakAreas: [],
+              strongAreas: [],
+              weakConditions: [],
+              recentPerformance: {
+                last7Days: { attempts: 0, accuracy: null },
+                previous7Days: { attempts: 0, accuracy: null },
+                trend: 'insufficient_data',
+              },
+              speedByType: {
+                recall: { avgTimeMs: null, count: 0 },
+                clinicalReasoning: { avgTimeMs: null, count: 0 },
+              },
+              recommendations: ['Start studying to see your statistics.'],
+            },
+          },
+          headers: { 'X-Cache': 'MISS' },
+        };
+      }
+    }
 
     const totalAttempts = totalCount;
     const correctAttempts = correctCount;
