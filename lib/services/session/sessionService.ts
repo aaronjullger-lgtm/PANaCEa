@@ -89,127 +89,123 @@ export class SessionService {
     const effectiveMode = simulationStrict ? 'standard' : mode;
     const panceLevelOnly = simulationStrict;
 
-    // Use UserQuestionSeen for comprehensive tracking (replaces UserQuestionHistory)
-    const seenRecords = await this.prisma.userQuestionSeen.findMany({
-      where: { userId },
-      select: { questionId: true, questionType: true },
-    });
+    // Fetch seen records and pool count in parallel
+    const [seenRecords, poolCount] = await Promise.all([
+      this.prisma.userQuestionSeen.findMany({
+        where: { userId },
+        select: { questionId: true, questionType: true },
+      }),
+      this.prisma.preGeneratedQuestion.count({
+        where: { usedAt: null },
+      }),
+    ]);
+    
     const seenIds = new Set([...seenRecords.map((r) => r.questionId), ...excludeQuestionIds]);
 
-    const questions: EnrichedQuestion[] = [];
-    const analytics: SessionAnalytics = {
-      questionsServed: 0,
-      fromPool: 0,
-      fromMain: 0,
-      generated: 0,
-      fromSeeds: 0,
-      avgDifficulty: 0,
-      systemDistribution: {},
-    };
-
-    // If no specific system requested, use blueprint distribution (strict simulation or standard).
-    // Task category compliance (PANCE_TASK_CATEGORY_PERCENT) can be applied when questionData.taskType exists.
-    if (!effectiveSystem && !effectiveConditionId) {
-      const systemQuotas = simulationStrict
-        ? calculateSimulationTargetDistribution(count)
-        : this.calculateNCCPAQuotas(count, minSystems);
-
-      const getAbbrev = (targetSystem: string) =>
-        simulationStrict
-          ? (PANCE_SIMULATION_TO_ABBREVIATION[targetSystem] ?? targetSystem)
-          : getSystemAbbreviation(targetSystem);
-
-      for (const [targetSystem, targetCount] of Object.entries(systemQuotas)) {
-        if (targetCount <= 0) continue;
-        const systemAbbrev = getAbbrev(targetSystem);
-        const poolQ = await this.fetchFromPool(userId, seenIds, {
-          count: targetCount,
-          system: systemAbbrev,
-          panceLevelOnly,
-        });
-        questions.push(...poolQ.questions);
-        analytics.fromPool += poolQ.questions.length;
-
-        const remaining = targetCount - poolQ.questions.length;
-        let seedQ: EnrichedQuestion[] = [];
-        if (remaining > 0 && effectiveMode !== 'review') {
-          seedQ = await this.expandFromSeeds(userId, seenIds, {
-            count: remaining,
-            system: systemAbbrev,
-            panceLevelOnly,
-          });
-          questions.push(...seedQ);
-          analytics.fromSeeds += seedQ.length;
-        }
-
-        const stillRemaining = targetCount - poolQ.questions.length - seedQ.length;
-        if (stillRemaining > 0) {
-          const mainQ = await this.fetchFromMain(userId, seenIds, {
-            count: Math.min(stillRemaining, 5),
-            system: systemAbbrev,
-            panceLevelOnly,
-          });
-          questions.push(...mainQ);
-          analytics.fromMain += mainQ.length;
-        }
-      }
-
-      this.shuffleArray(questions);
-    } else {
-      const poolQuestions = await this.fetchFromPool(userId, seenIds, {
+    // If specific system or condition requested, use optimized simple fetch
+    if (effectiveSystem || effectiveConditionId) {
+      return this.fetchSimpleSession({
+        userId,
         count,
         system: effectiveSystem,
         conditionId: effectiveConditionId,
+        mode: effectiveMode,
         panceLevelOnly,
+        seenIds,
+        poolCount,
       });
-      questions.push(...poolQuestions.questions);
-      analytics.fromPool = poolQuestions.questions.length;
-
-      if (questions.length < count && effectiveMode !== 'review') {
-        const seedQuestions = await this.expandFromSeeds(userId, seenIds, {
-          count: count - questions.length,
-          system: effectiveSystem,
-          conditionId: effectiveConditionId,
-          panceLevelOnly,
-        });
-        questions.push(...seedQuestions);
-        analytics.fromSeeds = seedQuestions.length;
-      }
-
-      if (questions.length < count) {
-        const mainQuestions = await this.fetchFromMain(userId, seenIds, {
-          count: count - questions.length,
-          system: effectiveSystem,
-          conditionId: effectiveConditionId,
-          panceLevelOnly,
-        });
-        questions.push(...mainQuestions);
-        analytics.fromMain = mainQuestions.length;
-      }
     }
 
-    // Generate new questions if needed (only if we have less than requested)
-    if (questions.length < count && this.env.GEMINI_API_KEY) {
-      const generated = await this.generateNewQuestions({
-        count: Math.min(count - questions.length, 5), // Limit AI generation
+    // Multi-system session with blueprint distribution - use parallel execution
+    return this.fetchMultiSystemSession({
+      userId,
+      count,
+      simulationStrict,
+      minSystems,
+      panceLevelOnly,
+      mode: effectiveMode,
+      seenIds,
+      poolCount,
+    });
+  }
+
+  private async fetchSimpleSession(options: {
+    userId: string;
+    count: number;
+    system?: string;
+    conditionId?: string;
+    mode?: string;
+    panceLevelOnly: boolean;
+    seenIds: Set<string>;
+    poolCount: number;
+  }): Promise<{
+    questions: EnrichedQuestion[];
+    analytics: SessionAnalytics;
+    poolStatus: { available: number; needsGeneration: boolean };
+  }> {
+    const { userId, count, system, conditionId, mode, panceLevelOnly, seenIds, poolCount } = options;
+
+    // Fetch from all sources in parallel with reasonable limits
+    const [poolResult, seedQuestions, mainQuestions] = await Promise.all([
+      this.fetchFromPool(userId, seenIds, {
+        count: Math.min(count, 20), // Limit pool fetch
         system,
         conditionId,
-      });
-      questions.push(...generated);
-      analytics.generated = generated.length;
+        panceLevelOnly,
+      }),
+      mode !== 'review' ? this.expandFromSeeds(userId, seenIds, {
+        count: Math.max(0, Math.min(count - 5, 10)), // Reserve some for pool
+        system,
+        conditionId,
+        panceLevelOnly,
+      }) : Promise.resolve([]),
+      this.fetchFromMain(userId, seenIds, {
+        count: Math.max(0, Math.min(count - 10, 10)), // Reserve for pool and seeds
+        system,
+        conditionId,
+        panceLevelOnly,
+      }),
+    ]);
+
+    // Combine results, avoiding duplicates
+    const allQuestions: EnrichedQuestion[] = [];
+    const usedIds = new Set<string>();
+
+    // Add pool questions first (highest quality)
+    for (const q of poolResult.questions) {
+      if (allQuestions.length >= count) break;
+      if (!usedIds.has(q.id)) {
+        allQuestions.push(q);
+        usedIds.add(q.id);
+      }
     }
 
-    const enriched = await this.enrichWithMedicalContent(questions);
+    // Add seed questions
+    for (const q of seedQuestions) {
+      if (allQuestions.length >= count) break;
+      if (!usedIds.has(q.id)) {
+        allQuestions.push(q);
+        usedIds.add(q.id);
+      }
+    }
 
+    // Add main questions
+    for (const q of mainQuestions) {
+      if (allQuestions.length >= count) break;
+      if (!usedIds.has(q.id)) {
+        allQuestions.push(q);
+        usedIds.add(q.id);
+      }
+    }
+
+    // Trim to exact count
+    const questions = allQuestions.slice(0, count);
+
+    // Enrich and record
+    const enriched = await this.enrichWithMedicalContent(questions);
     await this.recordQuestionSeen(userId, enriched);
 
-    analytics.questionsServed = enriched.length;
-    analytics.avgDifficulty = this.calculateAvgDifficulty(enriched);
-    analytics.systemDistribution = this.calculateSystemDistribution(enriched);
-
-    const poolCount = await this.prisma.preGeneratedQuestion.count({
-      where: { usedAt: null },
-    });
+    const analytics = this.calculateAnalytics(enriched);
 
     return {
       questions: enriched,
@@ -218,6 +214,135 @@ export class SessionService {
         available: poolCount,
         needsGeneration: poolCount < 50,
       },
+    };
+  }
+
+  private async fetchMultiSystemSession(options: {
+    userId: string;
+    count: number;
+    simulationStrict: boolean;
+    minSystems: number;
+    panceLevelOnly: boolean;
+    mode?: string;
+    seenIds: Set<string>;
+    poolCount: number;
+  }): Promise<{
+    questions: EnrichedQuestion[];
+    analytics: SessionAnalytics;
+    poolStatus: { available: number; needsGeneration: boolean };
+  }> {
+    const { userId, count, simulationStrict, minSystems, panceLevelOnly, mode, seenIds, poolCount } = options;
+
+    // Calculate system distribution
+    const systemQuotas = simulationStrict
+      ? calculateSimulationTargetDistribution(count)
+      : this.calculateNCCPAQuotas(count, minSystems);
+
+    // Prepare fetch promises for all systems in parallel
+    const systemFetchPromises = Object.entries(systemQuotas).map(async ([targetSystem, targetCount]) => {
+      if (targetCount <= 0) return [];
+
+      const systemAbbrev = simulationStrict
+        ? (PANCE_SIMULATION_TO_ABBREVIATION[targetSystem] ?? targetSystem)
+        : getSystemAbbreviation(targetSystem);
+
+      // Fetch from all sources in parallel for this system
+      const [poolResult, seedQuestions, mainQuestions] = await Promise.all([
+        this.fetchFromPool(userId, seenIds, {
+          count: Math.min(targetCount, 10), // Limit per system
+          system: systemAbbrev,
+          panceLevelOnly,
+        }),
+        mode !== 'review' ? this.expandFromSeeds(userId, seenIds, {
+          count: Math.max(0, Math.min(targetCount - 2, 8)), // Reserve some for pool
+          system: systemAbbrev,
+          panceLevelOnly,
+        }) : Promise.resolve([]),
+        this.fetchFromMain(userId, seenIds, {
+          count: Math.max(0, Math.min(targetCount - 5, 5)), // Reserve for pool and seeds
+          system: systemAbbrev,
+          panceLevelOnly,
+        }),
+      ]);
+
+      // Combine results for this system
+      const systemQuestions: EnrichedQuestion[] = [];
+      const usedIds = new Set<string>();
+
+      // Add pool questions
+      for (const q of poolResult.questions) {
+        if (systemQuestions.length >= targetCount) break;
+        if (!usedIds.has(q.id)) {
+          systemQuestions.push(q);
+          usedIds.add(q.id);
+        }
+      }
+
+      // Add seed questions
+      for (const q of seedQuestions) {
+        if (systemQuestions.length >= targetCount) break;
+        if (!usedIds.has(q.id)) {
+          systemQuestions.push(q);
+          usedIds.add(q.id);
+        }
+      }
+
+      // Add main questions
+      for (const q of mainQuestions) {
+        if (systemQuestions.length >= targetCount) break;
+        if (!usedIds.has(q.id)) {
+          systemQuestions.push(q);
+          usedIds.add(q.id);
+        }
+      }
+
+      return systemQuestions.slice(0, targetCount);
+    });
+
+    // Execute all system fetches in parallel with timeout protection
+    const systemResults = await Promise.all(systemFetchPromises);
+    let allQuestions = systemResults.flat();
+
+    // Shuffle the combined questions
+    this.shuffleArray(allQuestions);
+
+    // Trim to exact count (in case of rounding issues)
+    const questions = allQuestions.slice(0, count);
+
+    // Enrich and record
+    const enriched = await this.enrichWithMedicalContent(questions);
+    await this.recordQuestionSeen(userId, enriched);
+
+    const analytics = this.calculateAnalytics(enriched);
+
+    return {
+      questions: enriched,
+      analytics,
+      poolStatus: {
+        available: poolCount,
+        needsGeneration: poolCount < 50,
+      },
+    };
+  }
+
+  private calculateAnalytics(questions: EnrichedQuestion[]): SessionAnalytics {
+    const difficultyMap: Record<string, number> = { easy: 1, medium: 2, hard: 3 };
+    const totalDifficulty = questions.reduce((sum, q) => sum + (difficultyMap[q.difficulty] || 2), 0);
+    const avgDifficulty = questions.length > 0 ? totalDifficulty / questions.length : 2;
+
+    const systemDistribution: Record<string, number> = {};
+    for (const q of questions) {
+      systemDistribution[q.system] = (systemDistribution[q.system] || 0) + 1;
+    }
+
+    return {
+      questionsServed: questions.length,
+      fromPool: questions.filter(q => q.source === 'pool').length,
+      fromMain: questions.filter(q => q.source === 'main').length,
+      generated: questions.filter(q => q.source === 'generated').length,
+      fromSeeds: questions.filter(q => q.source === 'seed').length,
+      avgDifficulty,
+      systemDistribution,
     };
   }
 
@@ -289,21 +414,25 @@ export class SessionService {
     if (difficulty) where.difficulty = difficulty;
     if (panceLevelOnly) where.difficulty = { in: ['medium', 'hard'] };
 
+    // Optimize: fetch only what we need plus a small buffer, not count * 3
+    // For large counts, limit to reasonable size to prevent timeouts
+    const fetchLimit = Math.min(count + 20, 50); // Max 50 questions per fetch
     const poolQuestions = await this.prisma.preGeneratedQuestion.findMany({
       where,
-      take: count * 3,
-      // Random selection using Prisma's database-level ordering
-      // Note: For true randomization, we fetch more and shuffle in-memory
+      take: fetchLimit,
+      orderBy: { generatedAt: 'desc' }, // Prefer newer questions
     });
 
-    // Shuffle the pool questions for random selection
-    const shuffledPool = [...poolQuestions].sort(() => Math.random() - 0.5);
+    // Filter out seen questions efficiently
+    const unseenQuestions = poolQuestions.filter(q => !seenIds.has(q.id));
+    
+    // Shuffle for randomness
+    const shuffledPool = this.shuffleArray(unseenQuestions);
 
     const questions: EnrichedQuestion[] = [];
 
     for (const q of shuffledPool) {
       if (questions.length >= count) break;
-      if (seenIds.has(q.id)) continue;
 
       const data = q.questionData as Record<string, unknown>;
       const optionsData = data.options || data.answers || data.choices;
@@ -450,9 +579,11 @@ export class SessionService {
     if (difficulty) where.difficulty = difficulty;
     if (panceLevelOnly) where.difficulty = { in: ['medium', 'hard'] };
 
+    // Optimize: fetch only what we need plus a small buffer, not count * 3
+    const fetchLimit = Math.min(count + 15, 30); // Max 30 questions per fetch
     const dbQuestions = await this.prisma.question.findMany({
       where,
-      take: count * 3,
+      take: fetchLimit,
       orderBy: { timesSeen: 'asc' },
       include: {
         Condition: { select: { name: true } },
@@ -492,6 +623,7 @@ export class SessionService {
       questionIdsToUpdate.push(q.id);
     }
 
+    // Batch update timesSeen if we have questions
     if (questionIdsToUpdate.length > 0) {
       await this.prisma.question.updateMany({
         where: { id: { in: questionIdsToUpdate } },

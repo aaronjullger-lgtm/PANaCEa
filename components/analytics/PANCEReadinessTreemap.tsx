@@ -6,6 +6,7 @@
 import React, { useState, useMemo } from 'react';
 import { ResponsiveContainer, Treemap } from 'recharts';
 import { ChevronLeft, Activity } from 'lucide-react';
+import ChartContainer from '../shared/ChartContainer';
 
 export interface SystemNode {
   name: string;
@@ -157,7 +158,7 @@ export const PANCEReadinessTreemap: React.FC<PANCEReadinessTreemapProps> = ({
           {drilled ? drilled.name : 'PANCE readiness by system'}
         </h3>
       </div>
-      <div className="h-[320px] min-h-[200px] w-full min-w-0">
+      <ChartContainer minHeight={320} className="min-h-[200px] w-full">
         <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={0}>
           <Treemap
             data={chartData}
@@ -183,7 +184,7 @@ export const PANCEReadinessTreemap: React.FC<PANCEReadinessTreemapProps> = ({
             onClick={(node) => handleClick(node)}
           />
         </ResponsiveContainer>
-      </div>
+      </ChartContainer>
       <div className="flex flex-wrap gap-4 mt-2 text-xs text-[var(--color-text-muted)]">
         <span className="flex items-center gap-1">
           <span className="w-3 h-3 rounded bg-[var(--color-bg-tertiary)] opacity-80" /> Not Yet

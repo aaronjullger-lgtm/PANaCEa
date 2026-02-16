@@ -177,14 +177,16 @@ export async function fetchPearlsForQuestion(
   token?: string | null
 ): Promise<string[]> {
   try {
-    if (!token) {
-      console.warn('[QuestionService] No auth token for fetching pearls');
-      return [];
+    const headers: HeadersInit = {};
+    
+    // Only add Authorization header if token is provided and valid
+    if (token && token.trim().length > 0) {
+      headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn('[QuestionService] No auth token for fetching pearls - relying on session cookies');
     }
 
-    const response = await fetch(`/api/conditions/${conditionId}/pearls`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await fetch(`/api/conditions/${conditionId}/pearls`, { headers });
 
     if (!response.ok) {
       console.warn(
@@ -213,16 +215,6 @@ async function fetchFromPool(
   difficulty?: string,
   token?: string | null
 ): Promise<{ questions: Question[]; poolStatus: PoolStatus }> {
-  // Validate token is available
-  if (!token) {
-    console.warn('[QuestionService] No auth token provided to fetchFromPool');
-    // Return empty result instead of throwing - allows graceful fallback to Gemini
-    return {
-      questions: [],
-      poolStatus: { available: 0, needsGeneration: false, threshold: 50 },
-    };
-  }
-
   const params = new URLSearchParams();
   params.set('count', count.toString());
   if (system) params.set('system', system);
@@ -230,36 +222,60 @@ async function fetchFromPool(
   if (category) params.set('category', category);
   if (difficulty) params.set('difficulty', difficulty);
 
-  const headers: HeadersInit = {
-    Authorization: `Bearer ${token}`,
-  };
-
-  const response = await fetch(`/api/questions/pool?${params}`, { headers });
-
-  if (!response.ok) {
-    try {
-      const errData = await parseJsonOrThrow<{ error?: string }>(response);
-      throw new Error(errData?.error || `Pool API error: ${response.status}`);
-    } catch (err) {
-      if (err instanceof Error && err.name === 'ServerConfigError') throw err;
-      throw new Error(`Pool API error: ${response.status}`);
-    }
+  const headers: HeadersInit = {};
+  
+  // Only add Authorization header if token is provided and valid
+  if (token && token.trim().length > 0) {
+    headers.Authorization = `Bearer ${token}`;
+  } else {
+    console.warn('[QuestionService] No auth token provided to fetchFromPool - relying on session cookies');
   }
 
-  const data = (await parseJsonOrThrow(response)) as {
-    questions: PoolQuestion[];
-    poolStatus: PoolStatus;
-  };
+  try {
+    const response = await fetch(`/api/questions/pool?${params}`, { headers });
 
-  // Convert questions and filter out any that failed validation
-  const validQuestions = data.questions
-    .map(convertPoolQuestion)
-    .filter((q): q is Question => q !== null);
+    if (!response.ok) {
+      // Handle 401 specifically - authentication failed
+      if (response.status === 401) {
+        console.warn('[QuestionService] Authentication failed (401) for pool request');
+        // Return empty result to trigger fallback
+        return {
+          questions: [],
+          poolStatus: { available: 0, needsGeneration: false, threshold: 50 },
+        };
+      }
+      
+      try {
+        const errData = await parseJsonOrThrow<{ error?: string }>(response);
+        throw new Error(errData?.error || `Pool API error: ${response.status}`);
+      } catch (err) {
+        if (err instanceof Error && err.name === 'ServerConfigError') throw err;
+        throw new Error(`Pool API error: ${response.status}`);
+      }
+    }
 
-  return {
-    questions: validQuestions,
-    poolStatus: data.poolStatus,
-  };
+    const data = (await parseJsonOrThrow(response)) as {
+      questions: PoolQuestion[];
+      poolStatus: PoolStatus;
+    };
+
+    // Convert questions and filter out any that failed validation
+    const validQuestions = data.questions
+      .map(convertPoolQuestion)
+      .filter((q): q is Question => q !== null);
+
+    return {
+      questions: validQuestions,
+      poolStatus: data.poolStatus,
+    };
+  } catch (error) {
+    console.error('[QuestionService] fetchFromPool failed:', error);
+    // Return empty result to trigger fallback
+    return {
+      questions: [],
+      poolStatus: { available: 0, needsGeneration: false, threshold: 50 },
+    };
+  }
 }
 
 /**
