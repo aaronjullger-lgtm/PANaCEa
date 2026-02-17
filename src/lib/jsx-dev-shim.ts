@@ -14,5 +14,7 @@ import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
 
 export { Fragment };
 export const jsxDEV = jsx;
+export const jsxsDEV = jsxs;
 
-export default { jsxDEV: jsx, jsxs, Fragment };
+// Also export as default for compatibility
+export default { jsxDEV: jsx, jsxsDEV: jsxs, Fragment };
