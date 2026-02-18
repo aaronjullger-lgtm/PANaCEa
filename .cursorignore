@@ -1,8 +1,15 @@
+node_modules/
+dist/
+.next/
+.git/
+build/
+data/
+
 # Dependencies & Locks (Massive noise)
 node_modules/
 package-lock.json
 bun.lockb
-yarn.lock
+yarn.lock:
 pnpm-lock.yaml
 
 # Build Artifacts

@@ -430,6 +430,16 @@ const QuizView: React.FC<QuizViewProps> = ({
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const nextButtonRef = useRef<HTMLButtonElement | null>(null);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (noteUpdateTimeout.current) {
+        clearTimeout(noteUpdateTimeout.current);
+        noteUpdateTimeout.current = null;
+      }
+    };
+  }, []);
+
   // Keep CSS variable in sync with fontSizeAdjustment
   useEffect(() => {
     document.documentElement.style.setProperty('--font-size-adj', `${fontSizeAdjustment * 0.1}rem`);
@@ -1039,15 +1049,18 @@ const QuizView: React.FC<QuizViewProps> = ({
               }),
             });
 
+            const contentType = response.headers.get('content-type');
+            if (!contentType?.includes('application/json')) {
+              throw new Error(`Expected JSON but got ${contentType}`);
+            }
+            const data = await response.json();
             if (!response.ok) {
-              const errorData = (await response
-                .json()
-                .catch(() => ({ error: 'Unknown error' }))) as { error?: string };
+              const errorData = data as { error?: string };
               throw new Error(errorData.error || `HTTP ${response.status}`);
             }
 
             // Handler returns { data: result }; middleware sends result.data as body, so payload is submitDrillReview result
-            const payload = (await response.json()) as {
+            const payload = data as {
               quality?: number;
               implicitMetrics?: { latencyRatio?: number; gradeContinuous?: number };
               fsrsSchedule?: {

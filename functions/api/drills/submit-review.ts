@@ -55,8 +55,12 @@ const TelemetrySchema = z
     selection_drift_ms: z.number().int().min(0).optional(),
     /** Ghost Grader: mouse tremor score 0-1 */
     tremor_score: z.number().min(0).max(1).optional(),
+    /** Ghost Grader: cursor entropy (movement randomness) */
+    cursor_entropy: z.number().min(0).optional(),
+    /** Elimination velocity (eliminations per second) */
+    elimination_velocity: z.number().min(0).optional(),
     /** Trajectory metrics from micro-kinetics (distractorHovers, etc.) */
-    trajectory_metrics: z.record(z.unknown()).optional(),
+    trajectory_metrics: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
 
