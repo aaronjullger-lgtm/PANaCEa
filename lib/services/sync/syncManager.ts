@@ -336,6 +336,7 @@ class SyncManager {
       this.setLastSyncTime(Date.now());
       this.clearLastSyncError();
 
+      this.isSyncing = false;
       this.emit('sync-complete', this.getStatus());
 
       return {
@@ -346,6 +347,7 @@ class SyncManager {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
       this.setLastSyncError(errorMessage);
+      this.isSyncing = false;
       this.emit('sync-error', this.getStatus());
 
       // Schedule retry
@@ -401,10 +403,12 @@ class SyncManager {
         } else {
           answer.syncAttempts++;
           answer.lastSyncError = `HTTP ${response.status}`;
+          this.scheduleRetry();
         }
       } catch (error) {
         answer.syncAttempts++;
         answer.lastSyncError = error instanceof Error ? error.message : 'Network error';
+        this.scheduleRetry();
       }
     }
 
@@ -461,9 +465,11 @@ class SyncManager {
           synced++;
         } else {
           action.syncAttempts++;
+          this.scheduleRetry();
         }
       } catch (error) {
         action.syncAttempts++;
+        this.scheduleRetry();
       }
     }
 
@@ -529,12 +535,17 @@ class SyncManager {
           review.syncAttempts++;
           review.lastSyncError = `HTTP ${response.status}`;
         });
+        this.scheduleRetry();
       }
     } catch (error) {
       pending.forEach((review) => {
         review.syncAttempts++;
         review.lastSyncError = error instanceof Error ? error.message : 'Network error';
       });
+      this.scheduleRetry();
+      // Save incremented attempts before rethrowing
+      this.saveOfflineReviews(reviews);
+      throw error;
     }
 
     // Clean up synced items (keep for 24 hours for debugging)
@@ -604,6 +615,8 @@ class SyncManager {
     logger.debug(SCOPE, 'Cleared all pending items');
   }
 }
+
+export { SyncManager };
 
 // ============================================================================
 // SINGLETON EXPORT
