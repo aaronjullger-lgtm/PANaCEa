@@ -164,4 +164,4 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
 
 AnswerChoice.displayName = 'AnswerChoice';
 
-export default AnswerChoice;
+export default React.memo(AnswerChoice);

@@ -7,6 +7,8 @@ import { useCommuter } from '@/contexts/CommuterContext';
 import { announceToScreenReader } from '@/lib/utils/accessibilityUtils';
 import { useSwipeGestures } from '@/hooks/useSwipeGestures';
 import { enhancedHaptics } from '@/lib/enhancedHaptics';
+import { useQuizSessionRecovery } from '@/hooks/useQuizSessionRecovery';
+import { debounce } from '@/lib/utils/debounce';
 
 // Core services - using client-safe API wrappers
 import { getQuestionClient, fetchPearlsClient } from '@/services/client/questionApi';
@@ -158,7 +160,7 @@ interface QuizViewProps {
   onReviewMissed?: () => void;
 }
 
-const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
+const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Text highlighting logic
@@ -283,7 +285,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       <p className="font-semibold mt-4 whitespace-pre-wrap">{lastSentence}</p>
     </div>
   );
-};
+});
 
 const QuizView: React.FC<QuizViewProps> = ({
   initialQueue,
@@ -425,6 +427,74 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [showFullExplanation, setShowFullExplanation] = useState(false);
   // Fix #6c: Notes textarea toggle
   const [showNotes, setShowNotes] = useState(false);
+
+  // ---- SESSION RECOVERY ----
+  const userId = user?.id;
+  const { saveState, clearSavedState, shouldRestore, savedState } = useQuizSessionRecovery({
+    userId,
+    sessionSettings,
+    initialQueue,
+    onRestore: (restored) => {
+      // Restore queue and other state
+      if (restored.queue && restored.queue.length > 0) {
+        setQueue(restored.queue);
+        setParentQueue(restored.queue);
+      }
+      if (restored.currentQuestionIndex !== undefined && restored.queue) {
+        const idx = restored.currentQuestionIndex;
+        if (idx >= 0 && idx < restored.queue.length) {
+          setCurrentQuestion(restored.queue[idx]);
+        }
+      }
+      if (restored.selectedAnswerIndex !== undefined) setSelectedAnswerIndex(restored.selectedAnswerIndex);
+      if (restored.isAnswered !== undefined) setIsAnswered(restored.isAnswered);
+      if (restored.questionNumber !== undefined) setQuestionNumber(restored.questionNumber);
+      if (restored.eliminatedAnswers) setEliminatedAnswers(new Set(restored.eliminatedAnswers));
+      if (restored.localNote !== undefined) setLocalNote(restored.localNote);
+      if (restored.answerChangeCount !== undefined) setAnswerChangeCount(restored.answerChangeCount);
+      if (restored.firstSelectedAnswer !== undefined) setFirstSelectedAnswer(restored.firstSelectedAnswer);
+    },
+  });
+
+  // Debounced save function
+  const debouncedSave = useRef(
+    debounce((state: Parameters<typeof saveState>[0]) => saveState(state), 1000)
+  ).current;
+
+  // Save state whenever essential state changes
+  useEffect(() => {
+    if (!currentQuestion) return;
+    const currentQuestionIndex = queue.findIndex(q => q.id === currentQuestion.id);
+    debouncedSave({
+      queue,
+      currentQuestionIndex,
+      selectedAnswerIndex,
+      isAnswered,
+      questionNumber,
+      eliminatedAnswers: Array.from(eliminatedAnswers),
+      localNote,
+      answerChangeCount,
+      firstSelectedAnswer,
+    });
+  }, [
+    queue,
+    currentQuestion,
+    selectedAnswerIndex,
+    isAnswered,
+    questionNumber,
+    eliminatedAnswers,
+    localNote,
+    answerChangeCount,
+    firstSelectedAnswer,
+    debouncedSave,
+  ]);
+
+  // Clear saved state when session ends
+  useEffect(() => {
+    if (showSessionEndSummary) {
+      clearSavedState();
+    }
+  }, [showSessionEndSummary, clearSavedState]);
 
   const noteUpdateTimeout = useRef<number | null>(null);
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
@@ -1018,84 +1088,28 @@ const QuizView: React.FC<QuizViewProps> = ({
       topic: currentQuestion.topic,
     });
 
-    // Update SRS schedule (if user is authenticated)
+    // Queue review for offline sync (batch submission)
     if (user?.id && currentQuestion.id) {
-      // Submit review to API endpoint (replaces legacy updateReviewOutcome)
-      // This syncs FSRS data to server, creates QuestionAttempt, updates UserProgress
-      getToken()
-        .then(async (token) => {
-          try {
-            const response = await fetch(getApiEndpoint(API_ENDPOINTS.SUBMIT_REVIEW), {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-              },
-              body: JSON.stringify({
-                questionId: currentQuestion.id,
-                selectedAnswer: selectedAnswerIndex,
-                timeSpentMs: timeToAnswer,
-                timeToFirstClick: implicitMetrics.metrics.timeToFirstClick ?? undefined,
-                answerSwitches: answerChangeCount,
-                totalDwellTime: timeToAnswer,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                sessionType:
-                  sessionSettings.mode === 'rapid_recall'
-                    ? 'rapid_recall'
-                    : sessionSettings.mode === 'cram_mode' || sessionSettings.mode === 'cram'
-                      ? 'cram'
-                      : 'main',
-                telemetry: telemetryForApi,
-              }),
-            });
-
-            const contentType = response.headers.get('content-type');
-            if (!contentType?.includes('application/json')) {
-              throw new Error(`Expected JSON but got ${contentType}`);
-            }
-            const data = await response.json();
-            if (!response.ok) {
-              const errorData = data as { error?: string };
-              throw new Error(errorData.error || `HTTP ${response.status}`);
-            }
-
-            // Handler returns { data: result }; middleware sends result.data as body, so payload is submitDrillReview result
-            const payload = data as {
-              quality?: number;
-              implicitMetrics?: { latencyRatio?: number; gradeContinuous?: number };
-              fsrsSchedule?: {
-                intervalDays?: number;
-                nextDueDate?: string;
-                stability?: number;
-                difficulty?: number;
-              };
-            };
-            const schedule = payload.fsrsSchedule;
-
-            const realInterval = schedule?.intervalDays ?? 1;
-            const realDueDate = schedule?.nextDueDate
-              ? new Date(schedule.nextDueDate)
-              : new Date(Date.now() + realInterval * 86400000);
-
-            setSrsResult({
-              interval: realInterval,
-              repetition: 0,
-              easiness: schedule?.stability ?? 2.5,
-              dueDate: realDueDate,
-              difficulty: schedule?.difficulty ?? payload.quality ?? 3,
-              stabilityScore: schedule?.stability ?? payload.implicitMetrics?.latencyRatio ?? 1.0,
-              qualityAdjusted: payload.quality ?? 3,
-              modifiersApplied: schedule ? ['fsrs_v5'] : [],
-            });
-          } catch (err) {
-            logger.error(LOG_SCOPE, 'Failed to submit review to server', err);
-            // Silent failure - don't block the user
-            // Local data is already recorded, server sync can be retried later
-          }
-        })
-        .catch((err) => {
-          logger.error(LOG_SCOPE, 'Failed to get auth token', err);
+      try {
+        syncManager.queueReview({
+          questionId: currentQuestion.id,
+          selectedAnswer: selectedAnswerIndex,
+          timeSpentMs: timeToAnswer,
+          timeToFirstClick: implicitMetrics.metrics.timeToFirstClick ?? undefined,
+          answerSwitches: answerChangeCount,
+          totalDwellTime: timeToAnswer,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          sessionType:
+            sessionSettings.mode === 'rapid_recall'
+              ? 'rapid_recall'
+              : sessionSettings.mode === 'cram_mode' || sessionSettings.mode === 'cram'
+                ? 'cram'
+                : 'main',
+          telemetry: telemetryForApi,
         });
+      } catch (err) {
+        logger.error(LOG_SCOPE, 'Failed to queue review for offline sync', err);
+      }
     }
 
     // Track questions answered and check for wellness triggers
@@ -1228,7 +1242,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     handleSubmitAnswer,
   ]);
 
-  const handleOptionClick = (index: number) => {
+  const handleOptionClick = useCallback((index: number) => {
     // Guard against selecting eliminated answers or already answered questions
     if (isAnswered || !currentQuestion || eliminatedAnswers.has(index)) return;
 
@@ -1247,7 +1261,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     // Just select the option, don't submit yet
     setSelectedAnswerIndex(index);
-  };
+  }, [isAnswered, currentQuestion, eliminatedAnswers, microKinetics, firstSelectedAnswer, selectedAnswerIndex, behavioralTracker, implicitMetrics, setFirstSelectedAnswer, setAnswerChangeCount, setSelectedAnswerIndex]);
 
   const handleExplainDifferently = useCallback(async () => {
     if (!currentQuestion || selectedAnswerIndex === null) return;
@@ -1307,7 +1321,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     }
   }, [currentQuestion, selectedAnswerIndex]);
 
-  const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleNoteChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newNote = e.target.value;
     setLocalNote(newNote);
 
@@ -1320,16 +1334,16 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         updateQuestionNote(currentQuestion, newNote);
       }
     }, 750);
-  };
+  }, [currentQuestion, updateQuestionNote, noteUpdateTimeout, setLocalNote]);
 
-  const toggleFlag = () => {
+  const toggleFlag = useCallback(() => {
     if (!currentQuestion) return;
     if (isFlagged) {
       removeFlaggedQuestion(currentQuestion);
     } else {
       addFlaggedQuestion(currentQuestion);
     }
-  };
+  }, [currentQuestion, isFlagged, removeFlaggedQuestion, addFlaggedQuestion]);
 
   const topicStats = useMemo(() => {
     if (!isAnswered || !currentQuestion) return null;
@@ -1344,6 +1358,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
     return { score, correct, total };
   }, [isAnswered, currentQuestion, performanceData]);
+
+  const parTimeMs = useMemo(() =>
+    currentQuestion ? calculateParTime(currentQuestion) : null,
+    [currentQuestion]
+  );
 
   const getBarColor = (score: number): string => getAccuracyBarClass(score);
 
@@ -1410,7 +1429,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               {currentQuestion && (
                 <QuestionTimer
                   startTime={questionStartTime}
-                  parTimeMs={calculateParTime(currentQuestion)}
+                  parTimeMs={parTimeMs}
                   isAnswered={isAnswered}
                   isVisible={showTimerVisible}
                   compact

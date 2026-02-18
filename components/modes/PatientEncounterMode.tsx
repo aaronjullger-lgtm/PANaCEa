@@ -111,7 +111,8 @@ type ViewState = 'landing' | 'loading_encounter' | 'active' | 'results';
 type EncounterPhase = 'history' | 'physical' | 'diagnostic' | 'diagnosis' | 'treatment';
 
 const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) => {
-  const { getToken } = useAuth();
+  const { getToken, userId } = useAuth();
+  const persistKey = userId ? `user_${userId}` : 'anonymous';
   const [viewState, setViewState] = useState<ViewState>('landing');
   const [phase, setPhase] = useState<EncounterPhase>('history');
   const [isPaused, setIsPaused] = useState(false);
@@ -181,6 +182,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     enablePersonality: true,
     enableRapport: true,
     enableScoring: true,
+    persistKey,
   });
 
   // NEW: Integration hooks

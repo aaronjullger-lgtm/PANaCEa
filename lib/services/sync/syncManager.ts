@@ -51,10 +51,29 @@ export interface OfflinePearlAction {
   scheduledReviewDate?: string;
 }
 
+export interface OfflineReview {
+  id: string;
+  questionId: string;
+  selectedAnswer: number;
+  timeSpentMs: number;
+  timeToFirstClick?: number;
+  answerSwitches?: number;
+  totalDwellTime?: number;
+  timezone?: string;
+  wakeTimeHHMM?: string;
+  telemetry?: Record<string, unknown>;
+  sessionType?: string;
+  timestamp: number;
+  synced: boolean;
+  syncAttempts: number;
+  lastSyncError?: string;
+}
+
 export interface SyncStatus {
   isOnline: boolean;
   pendingAnswers: number;
   pendingPearlActions: number;
+  pendingReviews: number;
   lastSyncTime: number | null;
   lastSyncError: string | null;
   isSyncing: boolean;
@@ -70,6 +89,7 @@ type SyncEventCallback = (status: SyncStatus) => void;
 const STORAGE_KEYS = {
   OFFLINE_ANSWERS: 'panceai_offline_answers',
   OFFLINE_PEARL_ACTIONS: 'panceai_offline_pearl_actions',
+  OFFLINE_REVIEWS: 'panceai_offline_reviews',
   LAST_SYNC_TIME: 'panceai_last_sync_time',
   SYNC_ERROR: 'panceai_sync_error',
 } as const;
@@ -128,6 +148,7 @@ class SyncManager {
   public getStatus(): SyncStatus {
     const answers = this.getOfflineAnswers();
     const pearlActions = this.getOfflinePearlActions();
+    const reviews = this.getOfflineReviews();
     const lastSyncTime = this.getLastSyncTime();
     const lastSyncError = this.getLastSyncError();
 
@@ -135,6 +156,7 @@ class SyncManager {
       isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
       pendingAnswers: answers.filter((a) => !a.synced).length,
       pendingPearlActions: pearlActions.filter((p) => !p.synced).length,
+      pendingReviews: reviews.filter((r) => !r.synced).length,
       lastSyncTime,
       lastSyncError,
       isSyncing: this.isSyncing,
@@ -243,19 +265,65 @@ class SyncManager {
   }
 
   // ===========================================================================
+  // REVIEW MANAGEMENT
+  // ===========================================================================
+
+  public queueReview(
+    review: Omit<OfflineReview, 'id' | 'timestamp' | 'synced' | 'syncAttempts'>
+  ): string {
+    const id = `review-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const offlineReview: OfflineReview = {
+      ...review,
+      id,
+      timestamp: Date.now(),
+      synced: false,
+      syncAttempts: 0,
+    };
+
+    const reviews = this.getOfflineReviews();
+    reviews.push(offlineReview);
+    this.saveOfflineReviews(reviews);
+
+    // Try immediate sync if online
+    if (this.isOnline()) {
+      this.syncReviews().catch((err) =>
+        logger.error(SCOPE, 'Immediate sync failed (reviews)', err)
+      );
+    }
+
+    return id;
+  }
+
+  private getOfflineReviews(): OfflineReview[] {
+    if (typeof localStorage === 'undefined') return [];
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.OFFLINE_REVIEWS);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveOfflineReviews(reviews: OfflineReview[]): void {
+    if (typeof localStorage === 'undefined') return;
+    localStorage.setItem(STORAGE_KEYS.OFFLINE_REVIEWS, JSON.stringify(reviews));
+  }
+
+  // ===========================================================================
   // SYNC OPERATIONS
   // ===========================================================================
 
-  public async syncAll(token?: string | null): Promise<{ answers: number; pearls: number }> {
+  public async syncAll(token?: string | null): Promise<{ answers: number; pearls: number; reviews: number }> {
     if (this.isSyncing) {
       logger.debug(SCOPE, 'Sync already in progress');
-      return { answers: 0, pearls: 0 };
+      return { answers: 0, pearls: 0, reviews: 0 };
     }
 
     if (!this.isOnline()) {
       logger.debug(SCOPE, 'Offline, skipping sync');
-      return { answers: 0, pearls: 0 };
+      return { answers: 0, pearls: 0, reviews: 0 };
     }
+    
 
     this.isSyncing = true;
     this.emit('sync-start', this.getStatus());
@@ -263,6 +331,7 @@ class SyncManager {
     try {
       const answersResult = await this.syncAnswers(token);
       const pearlsResult = await this.syncPearlActions(token);
+      const reviewsResult = await this.syncReviews(token);
 
       this.setLastSyncTime(Date.now());
       this.clearLastSyncError();
@@ -272,6 +341,7 @@ class SyncManager {
       return {
         answers: answersResult,
         pearls: pearlsResult,
+        reviews: reviewsResult,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
@@ -406,6 +476,76 @@ class SyncManager {
     return synced;
   }
 
+  private async syncReviews(token?: string | null): Promise<number> {
+    const reviews = this.getOfflineReviews();
+    const pending = reviews.filter((r) => !r.synced && r.syncAttempts < 5);
+
+    if (pending.length === 0) return 0;
+
+    // Map to batch payload
+    const batch = pending.map((r) => ({
+      questionId: r.questionId,
+      selectedAnswer: r.selectedAnswer,
+      timeSpentMs: r.timeSpentMs,
+      timeToFirstClick: r.timeToFirstClick,
+      answerSwitches: r.answerSwitches,
+      totalDwellTime: r.totalDwellTime,
+      timezone: r.timezone,
+      wakeTimeHHMM: r.wakeTimeHHMM,
+      telemetry: r.telemetry,
+      sessionType: r.sessionType,
+    }));
+
+    let synced = 0;
+    try {
+      const response = await fetch('/api/drills/submit-reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(batch),
+      });
+
+      if (response.ok) {
+        const data = (await response.json().catch(() => ({}))) as {
+          data?: Array<{ questionId: string; success: boolean }>;
+        };
+        const results = data?.data ?? [];
+        // Mark each review as synced based on success
+        pending.forEach((review, index) => {
+          const result = results[index];
+          if (result?.success) {
+            review.synced = true;
+            synced++;
+          } else {
+            review.syncAttempts++;
+            review.lastSyncError = result?.error || 'Batch failure';
+          }
+        });
+      } else {
+        // If batch fails, increment attempts for all pending reviews
+        pending.forEach((review) => {
+          review.syncAttempts++;
+          review.lastSyncError = `HTTP ${response.status}`;
+        });
+      }
+    } catch (error) {
+      pending.forEach((review) => {
+        review.syncAttempts++;
+        review.lastSyncError = error instanceof Error ? error.message : 'Network error';
+      });
+    }
+
+    // Clean up synced items (keep for 24 hours for debugging)
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const filtered = reviews.filter((r) => !r.synced || r.timestamp > cutoff);
+    this.saveOfflineReviews(filtered);
+
+    logger.debug(SCOPE, `Synced ${synced}/${pending.length} reviews`);
+    return synced;
+  }
+
   private scheduleRetry(): void {
     if (this.syncRetryTimeout) {
       clearTimeout(this.syncRetryTimeout);
@@ -513,6 +653,13 @@ export function useSyncManager() {
     []
   );
 
+  const queueReview = useCallback(
+    (review: Omit<OfflineReview, 'id' | 'timestamp' | 'synced' | 'syncAttempts'>) => {
+      return syncManager.queueReview(review);
+    },
+    []
+  );
+
   const syncNow = useCallback((token?: string | null) => {
     return syncManager.syncAll(token);
   }, []);
@@ -520,9 +667,10 @@ export function useSyncManager() {
   return {
     status,
     isOnline: status.isOnline,
-    pendingCount: status.pendingAnswers + status.pendingPearlActions,
+    pendingCount: status.pendingAnswers + status.pendingPearlActions + status.pendingReviews,
     queueAnswer,
     queuePearlAction,
+    queueReview,
     syncNow,
   };
 }

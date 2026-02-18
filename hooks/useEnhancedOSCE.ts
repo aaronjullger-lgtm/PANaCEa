@@ -1,7 +1,7 @@
 // hooks/useEnhancedOSCE.ts
 // Integration hook for Enhanced OSCE features
 
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import type { PatientEncounterCase } from '@/types/drill-modes';
 import type {
   PatientPersonalityMatrix,
@@ -31,6 +31,7 @@ export interface UseEnhancedOSCEOptions {
   enablePersonality?: boolean;
   enableRapport?: boolean;
   enableScoring?: boolean;
+  persistKey?: string;
 }
 
 export interface EnhancedOSCEState {
@@ -88,7 +89,11 @@ export interface UseEnhancedOSCEReturn {
 }
 
 export function useEnhancedOSCE(options: UseEnhancedOSCEOptions = {}): UseEnhancedOSCEReturn {
-  const { enablePersonality = true, enableRapport = true, enableScoring = true } = options;
+  const { enablePersonality = true, enableRapport = true, enableScoring = true, persistKey } = options;
+
+  // Persistence
+  const storageKey = persistKey ? `panacea_osce_${persistKey}` : null;
+  const hasRestoredRef = useRef(false);
 
   // State
   const [state, setState] = useState<EnhancedOSCEState>({
@@ -107,6 +112,47 @@ export function useEnhancedOSCE(options: UseEnhancedOSCEOptions = {}): UseEnhanc
   // Refs
   const scoringEngineRef = useRef<OSCEScoringEngine | null>(null);
   const caseDataRef = useRef<PatientEncounterCase | null>(null);
+
+  // Restore persisted session on mount
+  useEffect(() => {
+    if (!storageKey || hasRestoredRef.current) return;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data.version === 1 && data.caseData && data.state) {
+          caseDataRef.current = data.caseData;
+          setState(data.state);
+          if (enableScoring) {
+            scoringEngineRef.current = createScoringEngine(data.caseData);
+          }
+          hasRestoredRef.current = true;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to restore OSCE session', e);
+    }
+  }, [storageKey, enableScoring]);
+
+  // Persist session state when active
+  useEffect(() => {
+    if (!storageKey || !caseDataRef.current) return;
+    if (state.isSessionActive) {
+      try {
+        const data = {
+          version: 1,
+          caseData: caseDataRef.current,
+          state,
+        };
+        localStorage.setItem(storageKey, JSON.stringify(data));
+      } catch (e) {
+        console.warn('Failed to save OSCE session', e);
+      }
+    } else {
+      // Clear storage when session ends
+      localStorage.removeItem(storageKey);
+    }
+  }, [storageKey, state, state.isSessionActive]);
 
   // Initialize session
   const initializeSession = useCallback(
