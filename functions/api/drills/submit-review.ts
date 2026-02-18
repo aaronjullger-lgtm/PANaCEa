@@ -66,7 +66,7 @@ const TelemetrySchema = z
 
 // Request validation schema
 // questionId must be a PreGeneratedQuestion id (submit-review looks up via prisma.preGeneratedQuestion)
-const DrillSubmitReviewSchema = z.object({
+export const DrillSubmitReviewSchema = z.object({
   questionId: uuidSchema,
   selectedAnswer: z.union([z.string(), z.number()]),
   timeSpentMs: z.number().int().min(0).max(3600000),
