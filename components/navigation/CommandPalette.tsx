@@ -14,6 +14,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
 import { MODE_REGISTRY } from '@/config/training-modes';
+import { safeFetchJson } from '@/lib/utils/safeFetch';
+import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
 const RECENT_MODES_KEY = 'panceai_recent_modes';
 const MAX_RECENT = 8;
@@ -127,16 +129,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
 
       try {
         setSearchError(null);
-        const response = await fetch(
-          `/api/content/search?q=${encodeURIComponent(searchQuery)}&limit=10`
+        const data = await safeFetchJson<{ results?: ApiSearchResult[] }>(
+          getApiEndpoint('/api/content/search') + `?q=${encodeURIComponent(searchQuery)}&limit=10`
         );
-
-        if (!response.ok) {
-          const errorData = (await response.json().catch(() => ({}))) as { message?: string };
-          throw new Error(errorData.message || 'Search failed');
-        }
-
-        const data = (await response.json()) as { results?: ApiSearchResult[] };
         return data.results || [];
       } catch (error) {
         console.error('Search API error:', error);

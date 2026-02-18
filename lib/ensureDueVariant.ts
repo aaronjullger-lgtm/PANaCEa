@@ -55,7 +55,7 @@ export async function ensureDueVariant(
   prisma: PrismaClient,
   question: PreGenQuestionForVariant,
   apiKey: string | undefined,
-  log?: { info: (msg: string, ctx?: object) => void; warn: (msg: string, ctx?: object) => void }
+  log?: { info: (msg: string, ctx?: Record<string, unknown>) => void; warn: (msg: string, ctx?: Record<string, unknown>) => void }
 ): Promise<void> {
   const conditionId = question.conditionId ?? undefined;
   if (!conditionId) return;

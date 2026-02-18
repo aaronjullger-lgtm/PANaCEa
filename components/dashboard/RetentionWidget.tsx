@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Brain, TrendingUp, Calendar, ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { safeFetchJson } from '@/lib/utils/safeFetch';
 import { EmptyState } from '../ui/EmptyState';
 
 interface SRSStats {
@@ -38,15 +39,10 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
         return;
       }
 
-      const response = await fetch(getApiEndpoint('/api/srs/stats'), {
+      const data = await safeFetchJson<any>(getApiEndpoint('/api/srs/stats'), {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!response.ok) {
-        const errBody = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(errBody.error || `HTTP ${response.status}`);
-      }
       // API returns { data: { dueCount, totalCards, retentionRate, matureCards } }; middleware sends result.data as body
-      const data = (await response.json()) as SRSStats | { stats?: SRSStats };
       const statsPayload =
         data && typeof (data as SRSStats).dueCount === 'number'
           ? (data as SRSStats)

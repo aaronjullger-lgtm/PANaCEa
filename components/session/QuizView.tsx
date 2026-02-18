@@ -1657,8 +1657,6 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 type="button"
                 onClick={handleSubmitAnswer}
                 disabled={isSubmitting}
-                aria-busy={isSubmitting}
-                aria-disabled={isSubmitting}
                 className="btn-glass px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto min-h-[44px]"
               >
                 {isSubmitting ? (
