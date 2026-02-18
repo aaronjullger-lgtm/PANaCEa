@@ -75,7 +75,7 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
 
     // Base button classes
     let buttonClasses =
-      'w-full text-left p-4 rounded-xl transition-all duration-200 ease-in-out disabled:cursor-not-allowed active:scale-[0.98] font-medium relative group';
+      'w-full text-left p-4 min-h-[44px] rounded-xl transition-all duration-200 ease-in-out disabled:cursor-not-allowed active:scale-[0.98] font-medium relative group';
     let animationClass = '';
 
     // Eliminated state styling

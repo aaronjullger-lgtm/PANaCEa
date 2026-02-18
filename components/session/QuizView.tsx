@@ -2145,7 +2145,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     setError('Failed to proceed to next question. Please refresh the page.');
                   }
                 }}
-                className="px-8 py-3 btn-glass font-bold rounded-lg"
+                className="px-8 py-3 btn-glass font-bold rounded-lg min-h-[44px]"
               >
                 Next Question
               </button>

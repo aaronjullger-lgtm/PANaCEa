@@ -1587,7 +1587,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <h2 className="text-xl font-bold text-slate-100 truncate">
                         {currentCase.patientName}
                       </h2>
-                      <button className="text-slate-400 p-1">
+                      <button className="text-slate-400 p-1 min-h-[44px] min-w-[44px] flex items-center justify-center">
                         {isPatientInfoExpanded ? (
                           <ChevronUp className="w-5 h-5" />
                         ) : (
@@ -2017,8 +2017,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   <button
                     onClick={handleSubmitDiagnosis}
                     disabled={!userDiagnosis.trim() || isLoading}
-                    className="w-full bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 
-                             disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
+                    className="w-full bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800
+                             disabled:cursor-not-allowed min-h-[44px] py-3 rounded-lg font-semibold text-white
                              transition-colors shadow-sm flex items-center justify-center gap-2"
                   >
                     {isLoading ? (
@@ -2070,8 +2070,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <button
                         onClick={handleTreatmentSubmit}
                         disabled={!treatmentPlan.trim() || isLoading}
-                        className="flex-1 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 
-                                 disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
+                        className="flex-1 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800
+                                 disabled:cursor-not-allowed min-h-[44px] py-3 rounded-lg font-semibold text-white
                                  transition-colors shadow-sm flex items-center justify-center gap-2"
                       >
                         {isLoading ? (
