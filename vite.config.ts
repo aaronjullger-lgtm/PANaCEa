@@ -376,7 +376,8 @@ export default defineConfig(({ mode }) => {
         },
         output: {
           // Add interop compatibility mode to handle CJS/ESM mixing gracefully
-          interop: 'compat',
+          interop: 'auto',
+          externalLiveBindings: false,
           // Manual chunks for better bundle splitting
           manualChunks(id) {
             // Vendor chunks
