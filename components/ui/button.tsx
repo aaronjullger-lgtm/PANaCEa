@@ -23,12 +23,12 @@ export interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'ref' | 'ch
   loading?: boolean;
   /** Alias for loading (compatibility with SemanticButton) */
   isLoading?: boolean;
-  leftIcon?: React.ReactNode;
+  leftIcon?: React.ReactNode | React.ComponentType<any>;
   /** Alias for leftIcon (compatibility with StandardButton) */
-  icon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+  icon?: React.ReactNode | React.ComponentType<any>;
+  rightIcon?: React.ReactNode | React.ComponentType<any>;
   /** Alias for rightIcon (compatibility with PrimaryButton) */
-  iconRight?: React.ReactNode;
+  iconRight?: React.ReactNode | React.ComponentType<any>;
   children?: React.ReactNode;
   /** Trigger selection haptic on press (for important CTAs) */
   hapticOnPress?: boolean;
@@ -239,6 +239,17 @@ export const Button: React.FC<ButtonProps> = ({
     return 'w-5 h-5';
   };
 
+  const renderIcon = (icon: React.ReactNode): React.ReactNode => {
+    if (React.isValidElement(icon)) {
+      return icon;
+    }
+    if (typeof icon === 'function') {
+      const IconComponent = icon as React.ComponentType;
+      return <IconComponent />;
+    }
+    return icon;
+  };
+
   return (
     <motion.button
       className={baseClasses}
@@ -253,9 +264,9 @@ export const Button: React.FC<ButtonProps> = ({
         <Loader2 className={`${getIconSize()} animate-spin`} aria-hidden="true" />
       ) : (
         <>
-          {resolvedLeftIcon && <span className="flex-shrink-0">{resolvedLeftIcon}</span>}
+          {resolvedLeftIcon && <span className="flex-shrink-0">{renderIcon(resolvedLeftIcon)}</span>}
           {children != null && <span className="truncate">{children}</span>}
-          {resolvedRightIcon && <span className="flex-shrink-0">{resolvedRightIcon}</span>}
+          {resolvedRightIcon && <span className="flex-shrink-0">{renderIcon(resolvedRightIcon)}</span>}
         </>
       )}
     </motion.button>
