@@ -37,8 +37,9 @@ import * as core from './core';
 import * as analytics from './analytics';
 import * as ai from './ai';
 import * as domain from './domain';
+import * as orchestration from './orchestration';
 
-export { core, analytics, ai, domain };
+export { core, analytics, ai, domain, orchestration };
 
 // Re-export commonly used items explicitly to avoid conflicts
 // For full access, use the namespaced exports: services.analytics.predictScore()

@@ -96,7 +96,7 @@ function convertPoolQuestion(poolQ: PoolQuestion): Question | null {
  * Extract clinical pearls from a question's rationale using regex patterns
  * Looks for "Key Takeaway:", "Clinical Pearl:", "Remember:", etc.
  */
-function extractPearlsFromRationale(rationale: string): string[] {
+export function extractPearlsFromRationale(rationale: string): string[] {
   const pearls: string[] = [];
 
   // Pattern 1: "Key Takeaway:" or "Clinical Pearl:" followed by content

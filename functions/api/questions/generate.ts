@@ -19,6 +19,157 @@ import { loadConditionData } from '../_shared/condition-loader';
 import { generateSingleQuestion } from '../_shared/question-generator';
 import { validateFunctionEnv, MissingEnvError } from '../_shared/env-validation';
 
+/**
+ * Extract clinical pearls from a question's rationale using regex patterns
+ * Adapted from services/questionService.ts
+ */
+function extractPearlsFromRationale(rationale: string): string[] {
+  const pearls: string[] = [];
+
+  // Pattern 1: "Key Takeaway:" or "Clinical Pearl:" followed by content
+  const keyTakeawayPattern =
+    /(?:Key Takeaway|Clinical Pearl|Remember|Important|High-Yield Fact):\s*(.+?)(?:\n\n|$)/gi;
+  let match;
+  while ((match = keyTakeawayPattern.exec(rationale)) !== null) {
+    const pearl = match[1]?.trim();
+    if (pearl && pearl.length > 10 && pearl.length < 500) {
+      pearls.push(pearl);
+    }
+  }
+
+  // Pattern 2: Bullet points that look like pearls (start with • or - and are concise)
+  const bulletPattern = /^[•-]\s*(.{10,300})$/gm;
+  while ((match = bulletPattern.exec(rationale)) !== null) {
+    const pearl = match[1]?.trim();
+    // Filter for high-quality pearls (avoid generic statements)
+    if (pearl && pearl.length > 20 && !pearl.toLowerCase().startsWith('the correct answer')) {
+      pearls.push(pearl);
+    }
+  }
+
+  // Pattern 3: Sentences with clinical keywords that indicate high-yield info
+  const clinicalKeywords = [
+    'classic presentation',
+    'gold standard',
+    'first-line',
+    'diagnostic criteria',
+    'pathognomonic',
+  ];
+  const sentences = rationale.split(/[.!?]\s+/);
+  for (const sentence of sentences) {
+    const normalized = sentence.toLowerCase();
+    if (clinicalKeywords.some((kw) => normalized.includes(kw))) {
+      const pearl = sentence.trim();
+      if (pearl.length > 20 && pearl.length < 300) {
+        pearls.push(pearl);
+      }
+    }
+  }
+
+  // Deduplicate and limit to top 5 pearls
+  return Array.from(new Set(pearls)).slice(0, 5);
+}
+
+/**
+ * Save extracted pearls to MedicalContent table
+ */
+async function savePearlsToMedicalContent(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  conditionId: string,
+  pearls: string[]
+): Promise<void> {
+  if (pearls.length === 0) return;
+
+  try {
+    // Fetch existing content
+    const medicalContent = await prisma.medicalContent.findUnique({
+      where: { id: conditionId },
+      select: { content: true },
+    });
+
+    if (!medicalContent) {
+      // If medical content not found, we cannot save pearls
+      console.warn(`Medical content not found for conditionId: ${conditionId}`);
+      return;
+    }
+
+    // Merge new pearls with existing ones (deduplicate)
+    const content = medicalContent.content as Record<string, any>;
+    const existingPearls = Array.isArray(content?.pearls) ? content.pearls : [];
+    const allPearls = [...existingPearls, ...pearls];
+
+    // Deduplicate pearls (case-insensitive comparison)
+    const uniquePearls = allPearls.filter(
+      (pearl, index, self) =>
+        index === self.findIndex((p) => p.toLowerCase().trim() === pearl.toLowerCase().trim())
+    );
+
+    // Limit to 50 pearls per condition to prevent bloat
+    const limitedPearls = uniquePearls.slice(0, 50);
+
+    // Update MedicalContent with new pearls
+    await prisma.medicalContent.update({
+      where: { id: conditionId },
+      data: {
+        content: {
+          ...content,
+          pearls: limitedPearls,
+        },
+      },
+    });
+
+    console.log(`[Pearl Harvester] Saved ${pearls.length} pearls for ${conditionId}`);
+  } catch (error) {
+    console.error('[Pearl Harvester] Failed to save pearls:', error);
+  }
+}
+
+/**
+ * Find a suitable staging question that matches the query criteria.
+ * Returns a staging question if found, otherwise null.
+ */
+async function findSuitableStagingQuestion(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  system: string | undefined,
+  difficulty: string | undefined,
+  conditionName?: string
+): Promise<any | null> {
+  try {
+    const where: any = {
+      status: 'graded', // Only consider questions that have passed adequacy check
+    };
+    if (system) {
+      where.system = system;
+    }
+    if (difficulty) {
+      where.difficulty = difficulty;
+    }
+    // Optional: filter by tags containing condition name (if provided)
+    // Since tags is a JSON array, we need to use Prisma's array_contains syntax
+    // For simplicity, we'll ignore tags filter for now.
+
+    const stagingQuestion = await prisma.stagingQuestion.findFirst({
+      where,
+      orderBy: { createdAt: 'asc' }, // Oldest first
+    });
+
+    if (stagingQuestion) {
+      console.log('[Staging Lake] Found suitable staging question', {
+        stagingId: stagingQuestion.id,
+        system: stagingQuestion.system,
+        difficulty: stagingQuestion.difficulty,
+      });
+      return stagingQuestion;
+    }
+  } catch (error) {
+    // Log but don't fail; staging lookup is optional
+    console.warn('[Staging Lake] Failed to query staging lake', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+  return null;
+}
+
 const GenerateQuestionSchema = z.object({
   queryText: z.string().min(1),
   questionType: z.string().min(1),
@@ -101,50 +252,106 @@ export const onRequestPost = authenticatedEndpoint(GenerateQuestionSchema, async
             conditionNotFound: true,
           },
         };
-      } else if (env.GEMINI_API_KEY) {
-        const transformedCondition = {
-          condition: conditionData.name,
-          sections: {
-            overview: conditionData.content.overview || '',
-            etiology: conditionData.content.etiologyPathophysiology || '',
-            clinicalPresentation: conditionData.content.clinicalPresentation || '',
-            diagnostics: conditionData.content.diagnostics?.notes || '',
-            treatment: (
-              conditionData.content.treatment ||
-              conditionData.content.management ||
-              []
-            ).join('\n'),
-          },
-        };
-
-        const textbookContext = await getTextbookContext(prisma, {
-          system: system || conditionData.system,
-          queryText,
-        });
-
-        const generatedQ = await generateSingleQuestion(
-          env.GEMINI_API_KEY,
-          transformedCondition,
-          questionType,
-          textbookContext
+      } else {
+        // Try to find a suitable staging question before generating new one
+        const stagingQuestion = await findSuitableStagingQuestion(
+          prisma,
+          system || conditionData.system,
+          difficulty,
+          conditionData.name
         );
-
-        if (generatedQ) {
-          const hasTextbookContext = Boolean(textbookContext);
+        if (stagingQuestion) {
+          // Convert staging question to the same shape as generated question
           newQuestion = {
-            ...generatedQ,
-            system: system || conditionData.system,
-            difficulty: difficulty || 'medium',
-            generatedAt: new Date().toISOString(),
+            id: stagingQuestion.id,
+            type: questionType,
+            system: stagingQuestion.system,
+            difficulty: stagingQuestion.difficulty,
+            text: stagingQuestion.question,
+            vignette: stagingQuestion.vignette,
+            options: stagingQuestion.options,
+            correctAnswer: stagingQuestion.correctAnswer,
+            explanation: stagingQuestion.explanation,
+            generatedAt: stagingQuestion.createdAt.toISOString(),
             metadata: {
               originalQuery: queryText,
               cached: false,
-              contentSource: hasTextbookContext ? 'openstax' : undefined,
-              contentSourceTitle: hasTextbookContext ? textbookContext?.title : undefined,
+              fromStaging: true,
+              stagingStatus: stagingQuestion.status,
+            },
+          };
+          logger.info('Returning staging question', {
+            stagingId: stagingQuestion.id,
+            userId: auth.userId
+          });
+          // Skip AI generation, proceed to caching
+        } else if (env.GEMINI_API_KEY) {
+          const transformedCondition = {
+            condition: conditionData.name,
+            sections: {
+              overview: conditionData.content.overview || '',
+              etiology: conditionData.content.etiologyPathophysiology || '',
+              clinicalPresentation: conditionData.content.clinicalPresentation || '',
+              diagnostics: conditionData.content.diagnostics?.notes || '',
+              treatment: (
+                conditionData.content.treatment ||
+                conditionData.content.management ||
+                []
+              ).join('\n'),
             },
           };
 
-          logger.info('Question generated successfully', { userId: auth.userId });
+          const textbookContext = await getTextbookContext(prisma, {
+            system: system || conditionData.system,
+            queryText,
+          });
+
+          const generatedQ = await generateSingleQuestion(
+            env.GEMINI_API_KEY,
+            transformedCondition,
+            questionType,
+            textbookContext
+          );
+
+          if (generatedQ) {
+            const hasTextbookContext = Boolean(textbookContext);
+            newQuestion = {
+              ...generatedQ,
+              system: system || conditionData.system,
+              difficulty: difficulty || 'medium',
+              generatedAt: new Date().toISOString(),
+              metadata: {
+                originalQuery: queryText,
+                cached: false,
+                contentSource: hasTextbookContext ? 'openstax' : undefined,
+                contentSourceTitle: hasTextbookContext ? textbookContext?.title : undefined,
+              },
+            };
+
+            // Extract and save clinical pearls from rationale
+            try {
+              if (generatedQ.explanation?.rationale) {
+                const pearls = extractPearlsFromRationale(generatedQ.explanation.rationale);
+                if (pearls.length > 0) {
+                  await savePearlsToMedicalContent(prisma, conditionData.id, pearls);
+                  logger.debug('Clinical pearls extracted and saved', {
+                    pearlCount: pearls.length,
+                    conditionId: conditionData.id,
+                    userId: auth.userId,
+                  });
+                }
+              }
+            } catch (pearlError) {
+              // Log but don't fail question generation
+              logger.warn('Failed to extract/save clinical pearls', {
+                error: pearlError instanceof Error ? pearlError.message : String(pearlError),
+                conditionId: conditionData.id,
+                userId: auth.userId,
+              });
+            }
+
+            logger.info('Question generated successfully', { userId: auth.userId });
+          }
         }
       }
     } catch (generationError) {

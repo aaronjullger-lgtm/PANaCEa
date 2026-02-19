@@ -1,13 +1,17 @@
 /**
- * Adaptive FSRS Service (Stub Implementation)
+ * Adaptive FSRS Service with CMRR Integration
  *
- * This is a stub implementation to satisfy imports from intelligentQuestionService.
- * Provides basic functionality for adaptive study planning based on FSRS principles.
- *
- * TODO: Implement full adaptive FSRS logic when requirements are defined.
+ * Provides adaptive study planning based on FSRS principles and
+ * integrates with CMRR (Compute Minimum Recommended Retention) optimizer.
  */
 
 import type { SystemMasteryProfile } from './advancedUserAnalyticsEngine';
+import {
+  calculateOptimalRetention as calculateCMRRRetention,
+  type ReviewHistoryEntry,
+  type FSRSParams,
+  type CMRROutput,
+} from '@/lib/cmrr-optimizer';
 
 // ============================================================================
 // Types
@@ -166,17 +170,61 @@ export function generateAdaptiveStudyPlan(
 }
 
 /**
- * Calculate optimal retention target based on time constraints
- * (Stub for future CMRR implementation)
+ * Calculate optimal retention target using CMRR (Compute Minimum Recommended Retention)
+ *
+ * This function integrates the CMRR optimizer to provide personalized retention targets
+ * based on user review history, available study time, and learning parameters.
+ *
+ * @param availableStudyTimePerDay - Available study time per day in minutes
+ * @param totalItems - Total number of items (cards) in the user's collection
+ * @param desiredWorkload - Desired maximum workload (unused in CMRR, kept for backward compatibility)
+ * @param options - Additional options for CMRR optimization
+ * @param options.reviewHistory - User's review history (if not provided, returns default retention)
+ * @param options.targetExamDate - Optional target exam date for urgency adjustment
+ * @param options.currentParams - Current FSRS parameters for the user
+ * @returns Optimal retention value (0.80-0.97)
  */
 export function calculateOptimalRetention(
   availableStudyTimePerDay: number,
   totalItems: number,
-  desiredWorkload: number = 100
+  desiredWorkload: number = 100,
+  options?: {
+    reviewHistory?: ReviewHistoryEntry[];
+    targetExamDate?: Date;
+    currentParams?: FSRSParams;
+  }
 ): number {
-  // Stub: Return standard 0.90 retention
-  // TODO: Implement CMRR (Compute Minimum Recommended Retention) algorithm
-  return 0.9;
+  // If no review history is provided, return default retention (0.90)
+  // This maintains backward compatibility with existing callers
+  if (!options?.reviewHistory || options.reviewHistory.length === 0) {
+    return 0.9;
+  }
+
+  // Call the CMRR optimizer with the provided data
+  const cmrrResult: CMRROutput = calculateCMRRRetention({
+    reviewHistory: options.reviewHistory,
+    avgStudyTimeMinutes: availableStudyTimePerDay,
+    targetExamDate: options.targetExamDate,
+    currentParams: options.currentParams,
+  });
+
+  return cmrrResult.optimalRetention;
+}
+
+/**
+ * Helper function to fetch user review history from the database
+ * (To be implemented when database access is available in this context)
+ *
+ * @param userId - User ID to fetch review history for
+ * @returns Promise resolving to review history entries
+ */
+export async function fetchUserReviewHistory(userId: string): Promise<ReviewHistoryEntry[]> {
+  // TODO: Implement database query to fetch ReviewLog entries for the user
+  // and convert them to ReviewHistoryEntry format.
+  // This requires Prisma client and appropriate environment.
+  // For now, return empty array.
+  console.warn('fetchUserReviewHistory is not yet implemented');
+  return [];
 }
 
 // ============================================================================
@@ -187,4 +235,5 @@ export default {
   getAdaptiveFSRS,
   generateAdaptiveStudyPlan,
   calculateOptimalRetention,
+  fetchUserReviewHistory,
 };
