@@ -382,10 +382,7 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             // Vendor chunks
             if (id.includes('node_modules')) {
-              // React and related
-              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
-                return 'vendor-react';
-              }
+              // React and related - skip manual chunking to avoid circular dependency
               // UI libraries
               if (id.includes('framer-motion') || id.includes('recharts') || id.includes('lucide-react')) {
                 return 'vendor-ui';
@@ -424,13 +421,7 @@ export default defineConfig(({ mode }) => {
             }
           },
           // Safety net polyfill for CommonJS remnants and Node.js globals
-          intro: `
-var global = global || window;
-var exports = exports || {};
-if (typeof process === 'undefined') {
-  var process = { env: { NODE_ENV: '${mode}' }, browser: true, version: '', cwd: function() { return '/'; } };
-}
-`,
+          intro: '',
         },
         // Ensure lucide-react is treated as side-effect-free for optimal tree-shaking
         treeshake: {
