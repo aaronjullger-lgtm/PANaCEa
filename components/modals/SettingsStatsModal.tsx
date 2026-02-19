@@ -1404,7 +1404,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 )}
 
                 {/* Decision Time Analysis */}
-                <DecisionTimeAnalysis performanceData={performanceData} theme={theme} />
+                <Suspense fallback={<div className="h-64 animate-pulse bg-[var(--color-bg-tertiary)] rounded-xl" />}>
+                  <DecisionTimeAnalysis performanceData={performanceData} theme={theme} />
+                </Suspense>
 
                 {/* Toggle for Lifetime Stats */}
                 <div className="flex justify-center">
@@ -1429,19 +1431,23 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
             ) : activeTab === 'activity' ? (
               <div className="space-y-4 sm:space-y-6">
                 {/* Longitudinal Progress Dashboard */}
-                <LongitudinalProgressDashboard
-                  performanceData={performanceData}
-                  userYearInProgram={userProfile.yearInProgram}
-                  theme={theme}
-                />
+                <Suspense fallback={<div className="h-64 animate-pulse bg-[var(--color-bg-tertiary)] rounded-xl" />}>
+                  <LongitudinalProgressDashboard
+                    performanceData={performanceData}
+                    userYearInProgram={userProfile.yearInProgram}
+                    theme={theme}
+                  />
+                </Suspense>
 
                 {/* Activity Heatmap */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 sm:p-6">
-                  <ActivityHeatmap
-                    performanceData={performanceData}
-                    weeks={13}
-                    onStartFirstSession={onStartFirstSession}
-                  />
+                  <Suspense fallback={<div className="h-64 animate-pulse bg-[var(--color-bg-tertiary)] rounded-xl" />}>
+                    <ActivityHeatmap
+                      performanceData={performanceData}
+                      weeks={13}
+                      onStartFirstSession={onStartFirstSession}
+                    />
+                  </Suspense>
                 </div>
 
                 {/* Activity Summary */}
@@ -1465,7 +1471,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 />
 
                 {/* Weakness Cheatsheet Export */}
-                <WeaknessCheatsheetExporter performanceData={performanceData} theme={theme} />
+                <Suspense fallback={<div className="h-64 animate-pulse bg-[var(--color-bg-tertiary)] rounded-xl" />}>
+                  <WeaknessCheatsheetExporter performanceData={performanceData} theme={theme} />
+                </Suspense>
 
                 {/* Export Data Section */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
@@ -1527,15 +1535,17 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   Changes save automatically. You'll see a confirmation when you update a setting.
                 </p>
                 {/* Enhanced Settings Tab - Career Stage & Profile */}
-                <EnhancedSettingsTab
-                  theme={theme}
-                  onToggleTheme={onToggleTheme}
-                  analyticsPalette={analyticsPalette}
-                  onSetAnalyticsPalette={handleSetAnalyticsPalette}
-                  isSyncing={isSyncing}
-                  lastSyncTime={lastSyncTime}
-                  syncError={syncError}
-                />
+                <Suspense fallback={<div className="h-64 animate-pulse bg-[var(--color-bg-tertiary)] rounded-xl" />}>
+                  <EnhancedSettingsTab
+                    theme={theme}
+                    onToggleTheme={onToggleTheme}
+                    analyticsPalette={analyticsPalette}
+                    onSetAnalyticsPalette={handleSetAnalyticsPalette}
+                    isSyncing={isSyncing}
+                    lastSyncTime={lastSyncTime}
+                    syncError={syncError}
+                  />
+                </Suspense>
 
                 {/* Divider */}
                 <div className="border-t border-[var(--color-border)] pt-6">
