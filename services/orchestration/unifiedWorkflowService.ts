@@ -12,6 +12,11 @@
 import { calculateOptimalRetention, fetchUserReviewHistory } from '../ai/adaptiveFSRSService';
 import { extractPearlsFromRationale } from '../questionService';
 import { createEdgePrismaClient } from '../../functions/api/_shared/prisma-edge';
+import {
+  fetchCalibrationQuadrantsForUser,
+  adjustRetentionWithCalibration,
+} from './calibrationIntegration';
+import { suggestOSCECase } from './osceSuggestionService';
 
 /**
  * Options for unified workflow orchestration
@@ -24,6 +29,8 @@ export interface UnifiedWorkflowOptions {
   difficulty?: string;
   includePearlExtraction?: boolean;
   includeCMRR?: boolean;
+  includeCalibration?: boolean;
+  includeOSCESuggestion?: boolean;
   includeStagingLookup?: boolean;
 }
 
@@ -35,11 +42,14 @@ export interface UnifiedWorkflowResult {
   question?: any;
   optimalRetention?: number;
   extractedPearls?: string[];
+  osceSuggestion?: any;
   fromStaging?: boolean;
   stagingId?: string;
   metadata: {
     cmrrUsed: boolean;
     pearlHarvestingUsed: boolean;
+    calibrationUsed: boolean;
+    osceSuggestionUsed: boolean;
     stagingLakeUsed: boolean;
     aiGenerationUsed: boolean;
   };
@@ -67,22 +77,30 @@ export async function orchestrateUnifiedWorkflow(
     difficulty = 'medium',
     includePearlExtraction = true,
     includeCMRR = true,
+    includeCalibration = false,
+    includeOSCESuggestion = true,
     includeStagingLookup = true,
   } = options;
 
   const metadata = {
     cmrrUsed: false,
     pearlHarvestingUsed: false,
+    calibrationUsed: false,
+    osceSuggestionUsed: false,
     stagingLakeUsed: false,
     aiGenerationUsed: false,
   };
 
   let optimalRetention: number | undefined;
   let extractedPearls: string[] | undefined;
+  let osceSuggestion: any = undefined;
   let stagingQuestion: any = null;
   let generatedQuestion: any = null;
   let fromStaging = false;
 
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL is required for unified workflow orchestration');
+  }
   const prisma = createEdgePrismaClient(process.env.DATABASE_URL!);
 
   try {
@@ -99,6 +117,19 @@ export async function orchestrateUnifiedWorkflow(
         }
       } catch (error) {
         console.warn('[UnifiedWorkflow] CMRR calculation failed:', error);
+      }
+    }
+
+    // Step 1a: Calibration adjustment (if requested and CMRR produced a retention value)
+    if (includeCalibration && optimalRetention !== undefined) {
+      try {
+        const quadrants = await fetchCalibrationQuadrantsForUser(userId, prisma);
+        const adjusted = adjustRetentionWithCalibration(optimalRetention, quadrants);
+        console.log(`[UnifiedWorkflow] Calibration adjusted retention from ${optimalRetention} to ${adjusted}`);
+        optimalRetention = adjusted;
+        metadata.calibrationUsed = true;
+      } catch (error) {
+        console.warn('[UnifiedWorkflow] Calibration adjustment failed:', error);
       }
     }
 
@@ -170,7 +201,27 @@ export async function orchestrateUnifiedWorkflow(
       };
     }
 
-    // Step 5: Pearl Extraction (if requested and rationale exists)
+    // Step 5: OSCE Suggestion (if requested)
+    if (includeOSCESuggestion && generatedQuestion?.system) {
+      try {
+        osceSuggestion = await suggestOSCECase(prisma, {
+          system: generatedQuestion.system,
+          difficulty: generatedQuestion.difficulty,
+          conditionId: generatedQuestion.conditionId,
+          enableVoiceMode: false, // could be taken from user settings
+          culturalCompetency: false, // could be taken from user settings
+          resourceLimited: false,
+        });
+        if (osceSuggestion) {
+          metadata.osceSuggestionUsed = true;
+          console.log(`[UnifiedWorkflow] OSCE suggestion: ${osceSuggestion.caseId}`);
+        }
+      } catch (error) {
+        console.warn('[UnifiedWorkflow] OSCE suggestion failed:', error);
+      }
+    }
+
+    // Step 6: Pearl Extraction (if requested and rationale exists)
     if (includePearlExtraction && generatedQuestion.explanation?.rationale) {
       try {
         extractedPearls = extractPearlsFromRationale(generatedQuestion.explanation.rationale);
@@ -188,6 +239,7 @@ export async function orchestrateUnifiedWorkflow(
       question: generatedQuestion,
       optimalRetention,
       extractedPearls,
+      osceSuggestion,
       fromStaging,
       stagingId: stagingQuestion?.id,
       metadata,

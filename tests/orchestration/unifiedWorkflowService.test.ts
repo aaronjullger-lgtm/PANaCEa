@@ -24,6 +24,23 @@ vi.mock('../../services/questionService', () => ({
   extractPearlsFromRationale: vi.fn(() => ['Mock pearl 1', 'Mock pearl 2']),
 }));
 
+// Mock calibration integration
+vi.mock('../../services/orchestration/calibrationIntegration', () => ({
+  fetchCalibrationQuadrantsForUser: vi.fn(() => ({
+    mastered: 5,
+    dangerousMisconception: 2,
+    luckyGuess: 3,
+    unconfidentWrong: 1,
+    total: 11,
+  })),
+  adjustRetentionWithCalibration: vi.fn((retention, quadrants) => retention * 0.95),
+}));
+
+// Mock OSCE suggestion service
+vi.mock('../../services/orchestration/osceSuggestionService', () => ({
+  suggestOSCECase: vi.fn(() => null),
+}));
+
 // Import the service after mocks
 import { orchestrateUnifiedWorkflow } from '../../services/orchestration/unifiedWorkflowService';
 
@@ -170,5 +187,81 @@ describe('Unified Workflow Orchestration', () => {
     expect(result.success).toBe(true);
     expect(result.metadata.stagingLakeUsed).toBe(false);
     expect(result.metadata.aiGenerationUsed).toBe(true);
+  });
+
+  it('should apply calibration adjustment when calibration enabled and CMRR retention exists', async () => {
+    const mockPrisma = {
+      stagingQuestion: {
+        findFirst: vi.fn().mockResolvedValue(null),
+      },
+      questionAttempt: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      $disconnect: vi.fn(),
+    };
+    const { createEdgePrismaClient } = await import('../../functions/api/_shared/prisma-edge');
+    (createEdgePrismaClient as any).mockReturnValue(mockPrisma);
+
+    const { fetchUserReviewHistory, calculateOptimalRetention } = await import('../../services/ai/adaptiveFSRSService');
+    (fetchUserReviewHistory as any).mockResolvedValue([
+      { rating: 3, elapsedDays: 1 },
+      { rating: 4, elapsedDays: 2 },
+    ]);
+    (calculateOptimalRetention as any).mockReturnValue(0.85);
+
+    const { adjustRetentionWithCalibration } = await import('../../services/orchestration/calibrationIntegration');
+    (adjustRetentionWithCalibration as any).mockReturnValue(0.80); // adjusted down
+
+    const result = await orchestrateUnifiedWorkflow({
+      userId: 'test-user-123',
+      queryText: 'Heart failure',
+      includeCMRR: true,
+      includeCalibration: true,
+    });
+
+    expect(result.optimalRetention).toBe(0.80);
+    expect(result.metadata.calibrationUsed).toBe(true);
+    expect(adjustRetentionWithCalibration).toHaveBeenCalled();
+  });
+
+  it('should suggest OSCE case when OSCE suggestion enabled and system provided', async () => {
+    const mockPrisma = {
+      stagingQuestion: {
+        findFirst: vi.fn().mockResolvedValue(null),
+      },
+      patientEncounterCase: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: 'osce-case-123',
+            chiefComplaint: 'Chest pain',
+            correctDiagnosis: 'Acute MI',
+            conditionId: null,
+          },
+        ]),
+      },
+      $disconnect: vi.fn(),
+    };
+    const { createEdgePrismaClient } = await import('../../functions/api/_shared/prisma-edge');
+    (createEdgePrismaClient as any).mockReturnValue(mockPrisma);
+
+    const { suggestOSCECase } = await import('../../services/orchestration/osceSuggestionService');
+    (suggestOSCECase as any).mockReturnValue({
+      caseId: 'osce-case-123',
+      chiefComplaint: 'Chest pain',
+      system: 'Cardiovascular',
+      difficulty: 'medium',
+      relevanceScore: 2.5,
+    });
+
+    const result = await orchestrateUnifiedWorkflow({
+      userId: 'test-user-123',
+      queryText: 'Heart failure',
+      system: 'Cardiovascular',
+      includeOSCESuggestion: true,
+    });
+
+    expect(result.osceSuggestion).toBeDefined();
+    expect(result.osceSuggestion.caseId).toBe('osce-case-123');
+    expect(result.metadata.osceSuggestionUsed).toBe(true);
   });
 });

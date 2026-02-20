@@ -147,10 +147,10 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
           reviewLogRecent,
           userQuestionSeenCount,
         ] = await Promise.all([
-          prisma.reviewLog.count({ where: { userId } }),
-          prisma.reviewLog.count({ where: { userId, wasCorrect: true } }),
+          prisma.reviewLog.count({ where: { userId, review_type: 'real', sessionType: 'MAIN' } }),
+          prisma.reviewLog.count({ where: { userId, wasCorrect: true, review_type: 'real', sessionType: 'MAIN' } }),
           prisma.reviewLog.findMany({
-            where: { userId, reviewedAt: { gte: ninetyDaysAgo } },
+            where: { userId, reviewedAt: { gte: ninetyDaysAgo }, review_type: 'real', sessionType: 'MAIN' },
             select: {
               wasCorrect: true,
               system: true,
