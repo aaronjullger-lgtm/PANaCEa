@@ -243,10 +243,12 @@ export const Button: React.FC<ButtonProps> = ({
     if (React.isValidElement(icon)) {
       return icon;
     }
-    if (typeof icon === 'function') {
-      const IconComponent = icon as React.ComponentType;
-      return <IconComponent />;
+    // Check if it's a valid React component type (function, class, memo, forwardRef, lazy)
+    if (typeof icon === 'function' || (icon && (icon as any).$$typeof)) {
+      // React.createElement can handle both function components and object component types
+      return React.createElement(icon as React.ComponentType);
     }
+    // Fallback: string, number, null, undefined, etc.
     return icon;
   };
 
