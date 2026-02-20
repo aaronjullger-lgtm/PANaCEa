@@ -299,9 +299,7 @@ export class InitialLoadOptimizer {
     });
 
     // Preload critical resources
-    const criticalResources = [
-      { href: '/fonts/inter-var.woff2', as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' },
-    ];
+    const criticalResources = [];
 
     criticalResources.forEach((resource) => {
       const link = document.createElement('link');
