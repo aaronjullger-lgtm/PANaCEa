@@ -12,7 +12,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRolling360Stats, Rolling360Stats } from '../../../hooks/useRolling360Stats';
+import { useUnifiedStats } from '../../../hooks/useUnifiedStats';
+import { Rolling360Stats } from '../../../hooks/useRolling360Stats';
 import { useSessionGenerator } from '../../../hooks/useSessionGenerator';
 import { CalibrationProtocolUI } from './CalibrationProtocolUI';
 import { StartSessionButton, SemanticButton } from '../../ui/SemanticButton';
@@ -457,7 +458,8 @@ interface ExamReadinessCardProps {
 }
 
 export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
-  const { stats, isLoading, error } = useRolling360Stats();
+  const { stats: unifiedStats, isLoading, error } = useUnifiedStats({ includeRaw: true });
+  const stats = unifiedStats?._raw?.rolling360 ?? null;
   const { generateSession, isGenerating } = useSessionGenerator();
   const [profile, setProfile] = useState(() => loadUserProfile());
   useEffect(() => {
