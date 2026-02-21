@@ -75,6 +75,7 @@ import {
 import { TO_REVIEW_LABEL } from '@/config/labels';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useRolling360Stats } from '@/hooks/useRolling360Stats';
+import { useUnifiedStats } from '@/hooks/useUnifiedStats';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { calculateDayStreak } from '@/lib/dashboardUtils';
 import { QuickStatsBarSkeleton } from '@/components/loading';
@@ -835,6 +836,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   const { user } = useUser();
   const { showPANREContent, careerStage } = useUserContext();
   const { stats: rolling360Stats } = useRolling360Stats();
+  const { stats: unifiedStats, isLoading: unifiedStatsLoading } = useUnifiedStats();
 
   // Quick Wins: Last session and welcome back state
   const [lastSession] = useState<LastSessionData | null>(() => getLastSession());
@@ -1039,6 +1041,17 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
   // Calculate stats for the dashboard (accuracy null when no data - show "—" instead of 0%)
   const stats = useMemo(() => {
+    // Use unified stats as primary source, fallback to legacy calculations if not available
+    if (unifiedStats && !unifiedStatsLoading) {
+      const globalAccuracy = unifiedStats.accuracy.global;
+      const accuracy = globalAccuracy !== null ? Math.round(globalAccuracy * 100) : null;
+      const streak = unifiedStats.recentActivity.streakDays;
+      const dueCount = unifiedStats.questionCounts.dueForReview;
+      const questionsToday = unifiedStats.questionCounts.today;
+      return { streak, dueCount, accuracy, questionsToday };
+    }
+
+    // Fallback to legacy calculations (keeps existing behavior while unified stats load)
     const recent = performanceData.slice(-100);
     const correct = recent.filter((r) => r.isCorrect).length;
     const accuracy =
@@ -1062,7 +1075,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       propDueCount ?? (flaggedQuestions?.length || 0) + (missedQuestions?.length || 0);
 
     return { streak, dueCount, accuracy, questionsToday: todayRecords.length };
-  }, [performanceData, flaggedQuestions, missedQuestions, propDueCount]);
+  }, [performanceData, flaggedQuestions, missedQuestions, propDueCount, unifiedStats, unifiedStatsLoading]);
 
   // FSRS / spaced repetition schedule blocks for Gantt (today when dueCount > 0)
   const schedulerBlocks: ScheduleBlock[] = useMemo(() => {
