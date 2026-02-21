@@ -1009,7 +1009,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   // Landing Page View - Clinical White/Navy Theme
   if (viewState === 'landing') {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 transition-colors duration-300">
+      <div className="min-h-dvh bg-slate-950 text-slate-100 transition-colors duration-300">
         {/* Header */}
         <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -2126,7 +2126,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-slate-950 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md h-[600px] flex flex-col"
+                className="bg-slate-950 rounded-xl p-4 md:p-6 border border-slate-800 shadow-md h-[600px] flex flex-col min-w-[250px] break-words"
               >
                 <h3 className="text-lg font-semibold mb-4 text-slate-100">Encounter Log</h3>
 

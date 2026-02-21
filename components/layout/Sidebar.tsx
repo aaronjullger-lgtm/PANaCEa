@@ -105,7 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose, className = '
                         {isActive && (
                           <motion.div
                             layoutId="activeNav"
-                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[var(--color-accent)] rounded-r-full"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-8 bg-[var(--color-accent)] rounded-r-full"
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                           />
                         )}

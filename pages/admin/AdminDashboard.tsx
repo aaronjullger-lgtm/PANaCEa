@@ -105,7 +105,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     } finally {
       setStatsLoading(false);
     }
-  }, []);
+  }, [setStats, setStatsError, setStatsLoading]);
 
   useEffect(() => {
     const checkAccess = async () => {
