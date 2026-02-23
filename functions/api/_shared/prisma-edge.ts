@@ -124,28 +124,17 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
 
   const isAccelerateUrl =
     databaseUrl.startsWith('prisma://') || databaseUrl.startsWith('prisma+postgres://');
-  const isPostgresUrl =
-    databaseUrl.startsWith('postgresql://') || databaseUrl.startsWith('postgres://');
 
-  // Warn if using direct PostgreSQL (won't work on Cloudflare Workers in production)
-  if (isPostgresUrl) {
-    console.warn(
-      '[Prisma Edge] WARNING: Using direct PostgreSQL URL.\n' +
-        'This may not work on Cloudflare Workers (no TCP support).\n' +
-        'For production, use Prisma Accelerate: https://www.prisma.io/data-platform/accelerate'
-    );
-  }
-
-  // Validate URL format
-  if (!isAccelerateUrl && !isPostgresUrl) {
-    console.error('[Prisma Edge] Invalid DATABASE_URL format:', databaseUrl.split('://')[0]);
+  // Validate URL format - only Accelerate URLs are supported in edge runtime
+  if (!isAccelerateUrl) {
+    console.error('[Prisma Edge] Invalid DATABASE_URL format for edge runtime:', databaseUrl.split('://')[0]);
     throw new Error(
-      'DATABASE_URL must be either:\n' +
-        '  1. Prisma Accelerate: prisma://... or prisma+postgres://...\n' +
-        '  2. Direct PostgreSQL: postgresql://user:pass@host/db\n' +
-        '  Current format: ' +
+      'DATABASE_URL must be a Prisma Accelerate URL for edge runtime.\n' +
+        'Expected format: prisma://... or prisma+postgres://...\n' +
+        'Current format: ' +
         databaseUrl.split('://')[0] +
-        '://'
+        '://\n' +
+        'Sign up for Prisma Accelerate: https://www.prisma.io/data-platform/accelerate'
     );
   }
 
@@ -157,13 +146,13 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
       return cached;
     }
 
+    console.log('[Prisma Edge] Creating client with URL:', databaseUrl.substring(0, 50) + '...');
+
     // Prisma 7 with Accelerate: Use accelerateUrl in constructor
     // This is the new Prisma 7 approach for edge runtimes
     const PrismaClientAny = PrismaClient as any;
     const client = new PrismaClientAny({
-      // For Accelerate URLs, use accelerateUrl
-      // For direct PostgreSQL URLs, use datasourceUrl (development only)
-      ...(isAccelerateUrl ? { accelerateUrl: databaseUrl } : { datasourceUrl: databaseUrl }),
+      accelerateUrl: databaseUrl,
       log: ['warn', 'error'], // Add logging for debugging
     });
 
