@@ -18,7 +18,7 @@ export interface NavRailContextType {
   clearContext: () => void;
 }
 
-const NavRailContext = createContext<NavRailContextType | undefined>(undefined);
+export const NavRailContext = createContext<NavRailContextType | undefined>(undefined);
 
 export const NavRailProvider = ({ children }: { children: ReactNode }) => {
   const [currentContext, setCurrentContext] = useState<NavRailContextType['currentContext']>(null);
