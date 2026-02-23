@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
+import ChartContainer from '../../shared/ChartContainer';
 interface DecayCurveData {
   day: number;
   retentionProb: number;
@@ -40,61 +41,63 @@ export const DecayCurve: React.FC<DecayCurveProps> = ({ data }) => {
   };
 
   return (
-    <ResponsiveContainer width="100%" height={300} minHeight={200} minWidth={0}>
-      <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-        <defs>
-          <linearGradient id="retentionGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0} />
-          </linearGradient>
-        </defs>
+    <ChartContainer minHeight={300} className="min-h-[200px] w-full">
+      <ResponsiveContainer width="100%" height={300} minHeight={200} minWidth={0}>
+        <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id="retentionGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0} />
+            </linearGradient>
+          </defs>
 
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-stroke)" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-stroke)" vertical={false} />
 
-        <XAxis
-          dataKey="day"
-          stroke="var(--color-border)"
-          tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-          tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
-          ticks={[0, 7, 14, 21, 30]}
-        />
+          <XAxis
+            dataKey="day"
+            stroke="var(--color-border)"
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
+            ticks={[0, 7, 14, 21, 30]}
+          />
 
-        <YAxis
-          stroke="var(--color-border)"
-          tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-          tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
-          domain={[0, 100]}
-        />
+          <YAxis
+            stroke="var(--color-border)"
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
+            domain={[0, 100]}
+          />
 
-        <ReferenceLine
-          y={90}
-          stroke="var(--color-data-fail)"
-          strokeDasharray="3 3"
-          strokeWidth={1.5}
-          label={{
-            value: 'Critical',
-            position: 'right',
-            fill: 'var(--color-data-fail)',
-            fontSize: 10,
-            fontWeight: 600,
-          }}
-        />
+          <ReferenceLine
+            y={90}
+            stroke="var(--color-data-fail)"
+            strokeDasharray="3 3"
+            strokeWidth={1.5}
+            label={{
+              value: 'Critical',
+              position: 'right',
+              fill: 'var(--color-data-fail)',
+              fontSize: 10,
+              fontWeight: 600,
+            }}
+          />
 
-        <Tooltip
-          content={<CustomTooltip />}
-          cursor={{ stroke: 'var(--color-accent)', strokeWidth: 1 }}
-        />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ stroke: 'var(--color-accent)', strokeWidth: 1 }}
+          />
 
-        <Area
-          type="monotone"
-          dataKey="retentionProb"
-          stroke="var(--color-accent)"
-          strokeWidth={2}
-          fill="url(#retentionGradient)"
-          animationDuration={1000}
-        />
-      </AreaChart>
-    </ResponsiveContainer>
+          <Area
+            type="monotone"
+            dataKey="retentionProb"
+            stroke="var(--color-accent)"
+            strokeWidth={2}
+            fill="url(#retentionGradient)"
+            animationDuration={1000}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </ChartContainer>
   );
 };
 

@@ -150,3 +150,8 @@ export const LiveStudySession = lazy(() =>
     default: m.LiveStudySession,
   }))
 );
+export const AnalyticsDashboard = lazy(() => import('../components/analytics/AnalyticsDashboard'));
+export const DatabaseAnalyticsDashboard = lazy(() => import('../components/analytics/DatabaseAnalyticsDashboard'));
+export const LearningProfileDashboard = lazy(() => import('../components/analytics/LearningProfileDashboard'));
+export const AdvancedLearningProfileDashboard = lazy(() => import('../components/analytics/AdvancedLearningProfileDashboard'));
+export const UserFriendlyStatsDisplay = lazy(() => import('../components/analytics/UserFriendlyStatsDisplay'));

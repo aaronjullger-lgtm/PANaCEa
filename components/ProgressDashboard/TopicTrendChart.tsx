@@ -9,6 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import ChartContainer from '../../shared/ChartContainer';
 import { PANCE_TOPICS } from '../../src/constants';
 import chartTheme from '@/lib/chartTheme';
 
@@ -41,38 +42,40 @@ const TopicTrendChart: React.FC<TopicTrendChartProps> = ({ topic }) => {
         Performance Trend: {topic}
       </h3>
       <div className="w-full min-h-[300px] h-[300px]">
-        <ResponsiveContainer width="100%" height={300} minHeight={200} minWidth={0}>
-          <LineChart
-            data={chartData}
-            margin={{
-              top: 5,
-              right: 20,
-              left: -10,
-              bottom: 5,
-            }}
-          >
-            <CartesianGrid {...chartTheme.grid} />
-            <XAxis dataKey="date" tick={chartTheme.axis.tick} />
-            <YAxis domain={[0, 100]} tick={chartTheme.axis.tick} />
-            <Tooltip
-              contentStyle={chartTheme.tooltip.contentStyle}
-              labelStyle={chartTheme.tooltip.labelStyle}
-              formatter={(value) => {
-                const numValue = typeof value === 'number' ? value : 0;
-                return [`${numValue.toFixed(1)}%`, 'Performance'];
+        <ChartContainer minHeight={300} className="w-full h-full">
+          <ResponsiveContainer width="100%" height={300} minHeight={200} minWidth={0}>
+            <LineChart
+              data={chartData}
+              margin={{
+                top: 5,
+                right: 20,
+                left: -10,
+                bottom: 5,
               }}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="performance"
-              stroke="var(--color-accent)"
-              strokeWidth={2}
-              activeDot={{ r: 8 }}
-              dot={{ r: 4 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+            >
+              <CartesianGrid {...chartTheme.grid} />
+              <XAxis dataKey="date" tick={chartTheme.axis.tick} />
+              <YAxis domain={[0, 100]} tick={chartTheme.axis.tick} />
+              <Tooltip
+                contentStyle={chartTheme.tooltip.contentStyle}
+                labelStyle={chartTheme.tooltip.labelStyle}
+                formatter={(value) => {
+                  const numValue = typeof value === 'number' ? value : 0;
+                  return [`${numValue.toFixed(1)}%`, 'Performance'];
+                }}
+              />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="performance"
+                stroke="var(--color-accent)"
+                strokeWidth={2}
+                activeDot={{ r: 8 }}
+                dot={{ r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartContainer>
       </div>
     </div>
   );

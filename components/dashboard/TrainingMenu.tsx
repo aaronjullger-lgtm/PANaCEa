@@ -201,7 +201,15 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   /**
    * Get focus-specific description text
    */
+  const [adaptiveMode, setAdaptiveMode] = useState(false);
+
+  /**
+   * Get focus-specific description text
+   */
   const getFocusDescription = (): string => {
+    if (adaptiveMode) {
+      return 'The session will dynamically adjust question difficulty based on your real-time performance to maximize learning efficiency.';
+    }
     switch (focus) {
       case 'all':
         return 'The gold standard adaptive quiz engine. Practice PANCE-level questions tailored to your knowledge gaps and performance history.';
@@ -641,6 +649,18 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             buttonVariant="secondary"
           />
         )}
+
+        <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={adaptiveMode}
+                onChange={(e) => setAdaptiveMode(e.target.checked)}
+                className="w-4 h-4 rounded text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-600 ring-offset-gray-800 focus:ring-2"
+              />
+              <span className="text-sm font-medium text-[var(--color-text-secondary)]">
+                Adaptive Difficulty
+              </span>
+        </label>
 
         {/* Grand Rounds - Unified Premium Card */}
         {!searchQuery &&

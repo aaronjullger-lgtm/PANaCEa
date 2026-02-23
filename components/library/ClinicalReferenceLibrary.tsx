@@ -42,6 +42,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
 import { useSemanticSearch } from '@/hooks/useSemanticSearch';
+import { useNavRailContext } from '@/hooks/useNavRailContext';
 import { parseListField, parseTextField, normalizeMedicalContent } from '@/lib/utils/normalization';
 import { LIBRARY_SECTION_TITLES } from '@/lib/conditionSections';
 import type { MedicalContentDisplay } from '@/types/medical-content';

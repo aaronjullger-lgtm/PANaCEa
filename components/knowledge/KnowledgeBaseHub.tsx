@@ -11,6 +11,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, BookOpen, Pill, Beaker, Menu, X } from 'lucide-react';
+import { NavRailProvider } from '@/contexts/NavRailContext';
+import { ContextNavRail } from '@/components/layout/ContextNavRail';
 import { ClinicalReferenceLibrary } from '@/components/library/ClinicalReferenceLibrary';
 import { PharmacopeiaView } from './PharmacopeiaView';
 import { LabReferenceView } from './LabReferenceView';
@@ -84,7 +86,7 @@ const SidebarNavButton: React.FC<SidebarNavButtonProps> = ({ tab, isActive, onCl
 
 const VALID_TAB_IDS: TabId[] = ['conditions', 'pharmacopeia', 'labs'];
 
-export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) => {
+const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) => {
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as TabId | null;
   const [activeTab, setActiveTab] = useState<TabId>(
@@ -211,7 +213,7 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0 overflow-y-auto">
+      <div className="flex-1 min-w-0 overflow-y-auto relative">
         <div className="p-6 max-w-7xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
@@ -256,6 +258,13 @@ export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = ({ onClose }) =
           </AnimatePresence>
         </div>
       </div>
+      <ContextNavRail />
     </div>
   );
 };
+
+export const KnowledgeBaseHub: React.FC<KnowledgeBaseHubProps> = (props) => (
+  <NavRailProvider>
+    <KnowledgeBaseHubInternal {...props} />
+  </NavRailProvider>
+);

@@ -9,6 +9,12 @@ import { useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 
+import {
+  getPerformanceMetrics,
+  getNextDifficultyLevel,
+  DifficultyLevel,
+} from '@/lib/services/progressiveDifficultyService';
+
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -17,6 +23,7 @@ export interface GenerateSessionOptions {
   mode: 'mainSession' | 'review' | 'drill';
   size?: number;
   systems?: string[];
+  adaptive?: boolean; // New flag for adaptive sessions
 }
 
 export interface GeneratedSession {
@@ -34,6 +41,7 @@ export interface GeneratedSession {
   }>;
   interleavingEnforced: boolean;
   message: string;
+  initialDifficulty?: DifficultyLevel;
 }
 
 interface UseSessionGeneratorReturn {
@@ -48,7 +56,7 @@ interface UseSessionGeneratorReturn {
 // =============================================================================
 
 export function useSessionGenerator(): UseSessionGeneratorReturn {
-  const { getToken } = useAuth();
+  const { getToken, userId } = useAuth();
   const navigate = useNavigate();
 
   const [isGenerating, setIsGenerating] = useState(false);
@@ -62,6 +70,12 @@ export function useSessionGenerator(): UseSessionGeneratorReturn {
 
       try {
         const token = await getToken();
+        let initialDifficulty: DifficultyLevel | undefined = undefined;
+
+        if (options.adaptive && userId) {
+          const metrics = await getPerformanceMetrics(userId);
+          initialDifficulty = getNextDifficultyLevel(metrics, 'medium'); // Start with medium and adjust
+        }
 
         const response = await fetch('/api/study/session/generate', {
           method: 'POST',
@@ -73,6 +87,7 @@ export function useSessionGenerator(): UseSessionGeneratorReturn {
             mode: options.mode,
             size: options.size || 20,
             systems: options.systems,
+            initialDifficulty,
           }),
         });
 
@@ -89,6 +104,8 @@ export function useSessionGenerator(): UseSessionGeneratorReturn {
             mode: session.mode,
             questionIds: session.questionIds,
             priorityBreakdown: session.priorityBreakdown,
+            adaptive: options.adaptive,
+            initialDifficulty: session.initialDifficulty,
           },
         });
 
@@ -101,7 +118,7 @@ export function useSessionGenerator(): UseSessionGeneratorReturn {
         setIsGenerating(false);
       }
     },
-    [getToken, navigate]
+    [getToken, navigate, userId]
   );
 
   return {

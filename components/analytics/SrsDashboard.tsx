@@ -11,6 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import ChartContainer from '../shared/ChartContainer';
 import { FSRSCard, FSRS, Rating, FSRSState, defaultParameters } from '../../lib/fsrs';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint, API_ENDPOINTS } from '../../lib/utils/apiConfig';
@@ -145,16 +146,18 @@ const SrsDashboard = () => {
         <h2 className="text-xl md:text-2xl font-bold mb-4 text-[var(--color-text-primary)]">
           Memory Stability Distribution
         </h2>
-        <ResponsiveContainer width="100%" height={300} minHeight={200} minWidth={0}>
-          <BarChart data={analytics.stabilityDistribution}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="count" fill="var(--color-accent)" name="Number of Items" />
-          </BarChart>
-        </ResponsiveContainer>
+        <ChartContainer minHeight={300} className="min-h-[200px] w-full">
+          <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={0}>
+            <BarChart data={analytics.stabilityDistribution}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="count" fill="var(--color-accent)" name="Number of Items" />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartContainer>
       </div>
 
       {/* FSRS Insight Card - Per-Topic Drilldown */}

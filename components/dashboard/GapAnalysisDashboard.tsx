@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { TrendingUp, AlertCircle, Trophy, Target, ArrowRight } from 'lucide-react';
+import ChartContainer from '../shared/ChartContainer';
 import { ErrorBoundary } from '../error/ErrorBoundary';
 
 // ============================================================================
@@ -427,69 +428,71 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
               </p>
             </div>
 
-            <ResponsiveContainer width="100%" height={500} minHeight={200} minWidth={0}>
-              <ComposedChart
-                data={chartData}
-                layout="vertical"
-                margin={{ top: 20, right: 30, bottom: 32, left: 100 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--chart-grid-stroke)"
-                  horizontal={false}
-                />
-
-                <XAxis
-                  type="number"
-                  domain={[0, 100]}
-                  stroke="var(--color-border)"
-                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                  label={{
-                    value: 'Accuracy (%)',
-                    position: 'bottom',
-                    fill: 'var(--color-text-muted)',
-                    fontSize: 12,
-                  }}
-                />
-
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  stroke="var(--color-border)"
-                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-                  width={90}
-                />
-
-                <Tooltip content={<CustomTooltip />} />
-
-                {/* The Dumbbell Lines (Ranges) */}
-                {chartData.map((entry) => (
-                  <ReferenceLine
-                    key={`line-${entry.name}`}
-                    segment={[
-                      { x: entry.accuracy, y: entry.name },
-                      { x: entry.cohortP90, y: entry.name },
-                    ]}
-                    stroke={getRangeColor(entry.status)}
-                    strokeWidth={3}
-                    ifOverflow="extendDomain"
+            <ChartContainer minHeight={500} className="min-h-[200px] w-full">
+              <ResponsiveContainer width="100%" height={500} minHeight={200} minWidth={0}>
+                <ComposedChart
+                  data={chartData}
+                  layout="vertical"
+                  margin={{ top: 20, right: 30, bottom: 32, left: 100 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--chart-grid-stroke)"
+                    horizontal={false}
                   />
-                ))}
 
-                {/* Cohort Average Markers (Small Tick) */}
-                <Scatter dataKey="cohortAverage" shape={<TickShape />} fill="#9ca3af" />
+                  <XAxis
+                    type="number"
+                    domain={[0, 100]}
+                    stroke="var(--color-border)"
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                    label={{
+                      value: 'Accuracy (%)',
+                      position: 'bottom',
+                      fill: 'var(--color-text-muted)',
+                      fontSize: 12,
+                    }}
+                  />
 
-                {/* User Accuracy Markers (Large Circle) */}
-                <Scatter dataKey="accuracy" fill="#3b82f6">
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    stroke="var(--color-border)"
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                    width={90}
+                  />
+
+                  <Tooltip content={<CustomTooltip />} />
+
+                  {/* The Dumbbell Lines (Ranges) */}
                   {chartData.map((entry) => (
-                    <Cell key={`cell-user-${entry.name}`} fill="#3b82f6" />
+                    <ReferenceLine
+                      key={`line-${entry.name}`}
+                      segment={[
+                        { x: entry.accuracy, y: entry.name },
+                        { x: entry.cohortP90, y: entry.name },
+                      ]}
+                      stroke={getRangeColor(entry.status)}
+                      strokeWidth={3}
+                      ifOverflow="extendDomain"
+                    />
                   ))}
-                </Scatter>
 
-                {/* Top 10% Markers (Star) */}
-                <Scatter dataKey="cohortP90" shape={<StarShape />} fill="#f59e0b" />
-              </ComposedChart>
-            </ResponsiveContainer>
+                  {/* Cohort Average Markers (Small Tick) */}
+                  <Scatter dataKey="cohortAverage" shape={<TickShape />} fill="#9ca3af" />
+
+                  {/* User Accuracy Markers (Large Circle) */}
+                  <Scatter dataKey="accuracy" fill="#3b82f6">
+                    {chartData.map((entry) => (
+                      <Cell key={`cell-user-${entry.name}`} fill="#3b82f6" />
+                    ))}
+                  </Scatter>
+
+                  {/* Top 10% Markers (Star) */}
+                  <Scatter dataKey="cohortP90" shape={<StarShape />} fill="#f59e0b" />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </ChartContainer>
 
             {/* Legend */}
             <div className="flex items-center justify-center gap-6 mt-4 text-xs text-[var(--color-text-secondary)]">

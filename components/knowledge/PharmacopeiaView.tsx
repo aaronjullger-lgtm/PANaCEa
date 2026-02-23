@@ -13,6 +13,8 @@ import {
   DRUG_REGISTRY_ANALGESICS,
   DRUG_REGISTRY_PSYCHIATRY,
 } from '@/src/registries/drugRegistry';
+import { Card, CardContent } from '@/components/ui/card';
+import { CardGrid } from '@/components/ui/layouts/CardGrid';
 
 const PHARM_CATEGORIES: Array<{
   id: string;
@@ -51,31 +53,25 @@ export const PharmacopeiaView: React.FC = () => {
       </div>
 
       {/* Drug List */}
-      <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4">
-        <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-3">
-          {category?.label ?? 'Pharmacopeia'}
-        </h3>
-        <ul className="space-y-2 max-h-[60vh] overflow-y-auto">
-          {(category?.drugs ?? []).map((drug) => (
-            <li
-              key={drug.genericName}
-              className="flex justify-between items-baseline py-2 border-b border-[var(--color-border)] last:border-0 text-sm"
-            >
-              <span className="font-medium text-[var(--color-text-primary)]">
+      <CardGrid>
+        {(category?.drugs ?? []).map((drug) => (
+          <Card key={drug.genericName}>
+            <CardContent className="flex justify-between items-baseline py-4">
+              <span className="font-medium text-text-primary">
                 {drug.genericName}
                 {drug.brandName && (
-                  <span className="text-[var(--color-text-muted)] font-normal ml-2">
+                  <span className="text-text-muted font-normal ml-2">
                     ({drug.brandName})
                   </span>
                 )}
               </span>
-              <span className="text-xs text-[var(--color-text-muted)]">
+              <span className="text-xs text-text-muted">
                 {drug.drugClass.slice(0, 2).join(', ')}
               </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+            </CardContent>
+          </Card>
+        ))}
+      </CardGrid>
     </div>
   );
 };

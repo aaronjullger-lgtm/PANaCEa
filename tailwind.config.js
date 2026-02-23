@@ -170,6 +170,7 @@ export default {
           secondary: '#1e293b', // Slate 800
           glass: 'rgba(30, 41, 59, 0.5)', // Slate 800 @ 50%
           elevated: 'rgba(51, 65, 85, 0.6)', // Slate 700 @ 60%
+          card: 'var(--color-surface-card)',
         },
         action: {
           primary: '#f8fafc', // Slate 50 (White - high contrast CTA)

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -56,11 +56,13 @@ import type { ClinicalRotation } from '@/types';
 import { loadUserProfile, updateUserProfile } from '@/services/analytics';
 import { getSystemsForRotation, isEorRotation } from '@/config/rotation-systems';
 import { RotationSelector } from '@/components/onboarding/RotationSelector';
-import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
-import { DatabaseAnalyticsDashboard } from '@/components/analytics/DatabaseAnalyticsDashboard';
-import { LearningProfileDashboard } from '@/components/analytics/LearningProfileDashboard';
-import { AdvancedLearningProfileDashboard } from '@/components/analytics/AdvancedLearningProfileDashboard';
-import { UserFriendlyStatsDisplay } from '@/components/analytics/UserFriendlyStatsDisplay';
+import {
+  AnalyticsDashboard,
+  DatabaseAnalyticsDashboard,
+  LearningProfileDashboard,
+  AdvancedLearningProfileDashboard,
+  UserFriendlyStatsDisplay,
+} from '@/config/lazyComponents';
 import {
   VISUAL_DIAGNOSTICS_MODES,
   CLINICAL_SIMULATION_MODES,
@@ -76,9 +78,10 @@ import { TO_REVIEW_LABEL } from '@/config/labels';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useRolling360Stats } from '@/hooks/useRolling360Stats';
 import { useUnifiedStats } from '@/hooks/useUnifiedStats';
+import UnifiedDashboard from '@/components/dashboard/UnifiedDashboard';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { calculateDayStreak } from '@/lib/dashboardUtils';
-import { QuickStatsBarSkeleton } from '@/components/loading';
+import { QuickStatsBarSkeleton, SkeletonLoader } from '@/components/loading';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { CurriculumGrid } from '@/components/dashboard/CurriculumGrid';
 import { BodyMapWidget } from '@/components/dashboard/BodyMapWidget';
@@ -2240,7 +2243,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     </h3>
                     <HighContrastDataToggle compact className="shrink-0" />
                   </div>
-                  <UserFriendlyStatsDisplay />
+                  <Suspense fallback={<SkeletonLoader />}>
+                    <UserFriendlyStatsDisplay />
+                  </Suspense>
                 </section>
 
                 {/* Spaced repetition schedule (Gantt-style) */}
@@ -2267,9 +2272,13 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     </button>
                   </div>
                   {showAdvancedAnalytics ? (
-                    <AdvancedLearningProfileDashboard />
+                    <Suspense fallback={<SkeletonLoader />}>
+                      <AdvancedLearningProfileDashboard />
+                    </Suspense>
                   ) : (
-                    <LearningProfileDashboard />
+                    <Suspense fallback={<SkeletonLoader />}>
+                      <LearningProfileDashboard />
+                    </Suspense>
                   )}
                 </section>
 
@@ -2280,14 +2289,18 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                   </h3>
 
                   {/* Database-backed analytics (authenticated users) */}
-                  <DatabaseAnalyticsDashboard />
+                  <Suspense fallback={<SkeletonLoader />}>
+                    <DatabaseAnalyticsDashboard />
+                  </Suspense>
 
                   {/* Session-based analytics (local data) */}
                   <div className="mt-6">
                     <h4 className="text-sm font-medium text-[var(--color-text-muted)] mb-3">
                       Session Performance
                     </h4>
-                    <AnalyticsDashboard performanceData={performanceData} />
+                    <Suspense fallback={<SkeletonLoader />}>
+                      <AnalyticsDashboard performanceData={performanceData} />
+                    </Suspense>
                   </div>
 
                   {/* Additional navigation to detailed views */}

@@ -184,19 +184,19 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
         {hasQuickInfo && (
           <div className="flex flex-wrap gap-1.5 px-4 pb-4 pt-2 border-t border-[var(--color-border)]/20 mt-auto">
             {goldStandard && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-medium">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-data-provisional/10 border border-data-provisional/20 text-data-provisional text-[11px] font-medium">
                 <Target className="w-3 h-3 flex-shrink-0" />
                 <span className="truncate max-w-[140px]">{goldStandard}</span>
               </span>
             )}
             {firstLineRx && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-medium">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-data-pass/10 border border-data-pass/20 text-data-pass text-[11px] font-medium">
                 <Pill className="w-3 h-3 flex-shrink-0" />
                 <span className="truncate max-w-[140px]">{firstLineRx}</span>
               </span>
             )}
             {bestInitialTest && !goldStandard && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-medium">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-data-neutral/10 border border-data-neutral/20 text-data-neutral text-[11px] font-medium">
                 <FlaskConical className="w-3 h-3 flex-shrink-0" />
                 <span className="truncate max-w-[140px]">{bestInitialTest}</span>
               </span>

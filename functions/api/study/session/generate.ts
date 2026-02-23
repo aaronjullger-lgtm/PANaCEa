@@ -18,6 +18,10 @@
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { authenticatedEndpoint } from '../../_shared/middleware';
+import {
+  getQuestionByDifficulty,
+  DifficultyLevel,
+} from '../../../../lib/services/progressiveDifficultyService';
 import { MainSessionQuestionSelector } from '../../../../lib/services/mainSessionQuestionSelector';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 import { z } from 'zod';
@@ -27,6 +31,7 @@ const SessionGenerationSchema = z.object({
   mode: z.enum(['mainSession', 'review', 'focused']),
   size: z.number().int().min(1).max(50).default(20),
   systemFocus: z.string().optional(),
+  initialDifficulty: z.enum(['easy', 'medium', 'hard']).optional(),
 });
 
 export const onRequestPost = authenticatedEndpoint(SessionGenerationSchema, async (context) => {
@@ -34,15 +39,35 @@ export const onRequestPost = authenticatedEndpoint(SessionGenerationSchema, asyn
   const logger = createEndpointLogger('/api/study/session/generate');
 
   try {
-    const { mode, size, systemFocus } = validated;
+    const { mode, size, systemFocus, initialDifficulty } = validated;
 
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
       // Generate session based on mode
       if (mode === 'mainSession') {
-        const selector = new MainSessionQuestionSelector(prisma);
-        const result = await selector.generateSession(auth.userId, size);
+        let result;
+        if (initialDifficulty) {
+          // Adaptive mode: Fetch questions based on difficulty
+          const questions = [];
+          for (let i = 0; i < size; i++) {
+            const q = await getQuestionByDifficulty(auth.userId, initialDifficulty);
+            if (q) questions.push(q);
+          }
+          result = {
+            questionIds: questions.map((q) => q.id),
+            questions,
+            priorityBreakdown: { A: 0, B: 0, C: size }, // Simplified for adaptive
+            deficitsAddressed: [],
+            interleavingEnforced: true,
+            interleavingViolations: 0,
+            systemDistribution: {},
+          };
+        } else {
+          // Standard mode: Use the existing selector
+          const selector = new MainSessionQuestionSelector(prisma);
+          result = await selector.generateSession(auth.userId, size);
+        }
 
         // Create StudySession record
         const now = new Date();
@@ -54,7 +79,7 @@ export const onRequestPost = authenticatedEndpoint(SessionGenerationSchema, asyn
             updatedAt: now,
             sessionType: 'mixed',
             mode: 'mainSession',
-            difficulty: 'adaptive',
+            difficulty: initialDifficulty || 'adaptive',
             systemsTargeted: Object.keys(
               result.questions.reduce(
                 (acc, q) => {
@@ -75,12 +100,12 @@ export const onRequestPost = authenticatedEndpoint(SessionGenerationSchema, asyn
             questions: result.questions,
             priorityBreakdown: result.priorityBreakdown,
             deficitsAddressed: result.deficitsAddressed,
-            // v2.0 Interleaved Assembler fields
             interleavingEnforced: result.interleavingEnforced,
             interleavingViolations: result.interleavingViolations,
             systemDistribution: result.systemDistribution,
             size: result.questionIds.length,
             message: generateSessionMessage(result),
+            initialDifficulty,
           },
         };
       }

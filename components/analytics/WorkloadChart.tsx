@@ -22,6 +22,7 @@ import {
   ReferenceLine,
   Cell,
 } from 'recharts';
+import ChartContainer from '../shared/ChartContainer';
 import { Bar } from 'recharts/es6/cartesian/Bar';
 import { useWorkloadProjection } from '../../hooks/useWorkloadProjection';
 
@@ -181,115 +182,117 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
       )}
 
       {/* Chart - use fallback height so Recharts never receives -1 when parent has no size yet */}
-      <ResponsiveContainer width="100%" height={height ?? 300} minHeight={200} minWidth={0}>
-        <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-stroke)" />
+      <ChartContainer minHeight={height ?? 300} className="min-h-[200px] w-full">
+        <ResponsiveContainer width="100%" height={height ?? 300} minHeight={200} minWidth={0}>
+          <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid-stroke)" />
 
-          <XAxis
-            dataKey="retention"
-            tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
-            label={{
-              value: 'Retention Target',
-              position: 'insideBottom',
-              offset: -10,
-              style: { fill: 'var(--color-text-secondary)', fontSize: 12 },
-            }}
-            stroke="var(--color-text-secondary)"
-            tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
-          />
-
-          <YAxis
-            yAxisId="left"
-            label={{
-              value: 'Daily Reviews',
-              angle: -90,
-              position: 'insideLeft',
-              style: { fill: 'var(--color-text-secondary)', fontSize: 12 },
-            }}
-            stroke="var(--color-text-secondary)"
-            tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
-          />
-
-          {showTimeAxis && (
-            <YAxis
-              yAxisId="right"
-              orientation="right"
+            <XAxis
+              dataKey="retention"
+              tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
               label={{
-                value: 'Time (minutes)',
-                angle: 90,
-                position: 'insideRight',
+                value: 'Retention Target',
+                position: 'insideBottom',
+                offset: -10,
                 style: { fill: 'var(--color-text-secondary)', fontSize: 12 },
               }}
               stroke="var(--color-text-secondary)"
               tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
             />
-          )}
 
-          <Tooltip content={<CustomTooltip />} />
-
-          <Legend
-            wrapperStyle={{
-              paddingTop: '20px',
-              fontSize: '12px',
-            }}
-          />
-
-          {/* Highlight CMRR point */}
-          {cmrrPoint && (
-            <ReferenceLine
-              x={cmrrPoint.retention}
-              stroke="var(--color-accent)"
-              strokeDasharray="5 5"
-              strokeWidth={2}
+            <YAxis
               yAxisId="left"
               label={{
-                value: 'CMRR',
-                position: 'top',
-                fill: 'var(--color-accent)',
-                fontSize: 11,
-                fontWeight: 'bold',
+                value: 'Daily Reviews',
+                angle: -90,
+                position: 'insideLeft',
+                style: { fill: 'var(--color-text-secondary)', fontSize: 12 },
+              }}
+              stroke="var(--color-text-secondary)"
+              tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
+            />
+
+            {showTimeAxis && (
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                label={{
+                  value: 'Time (minutes)',
+                  angle: 90,
+                  position: 'insideRight',
+                  style: { fill: 'var(--color-text-secondary)', fontSize: 12 },
+                }}
+                stroke="var(--color-text-secondary)"
+                tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
+              />
+            )}
+
+            <Tooltip content={<CustomTooltip />} />
+
+            <Legend
+              wrapperStyle={{
+                paddingTop: '20px',
+                fontSize: '12px',
               }}
             />
-          )}
 
-          {/* Workload bars with color coding */}
-          <Bar yAxisId="left" dataKey="reviews" name="Daily Reviews" radius={[4, 4, 0, 0]}>
-            {chartData.map((entry, index) => {
-              // Derive sustainability from minutes (no sustainability property exists)
-              const sustainability = entry.minutes <= 30 ? 70 : entry.minutes <= 60 ? 40 : 10;
-              return (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={
-                    entry.isCMRR
-                      ? 'var(--color-accent)' // CMRR highlight
-                      : sustainability >= 70
-                        ? 'var(--color-success)' // Sustainable
-                        : sustainability >= 40
-                          ? 'var(--color-warning)' // Moderate
-                          : 'var(--color-error)' // Unsustainable
-                  }
-                  opacity={entry.isCMRR ? 1 : 0.7}
-                />
-              );
-            })}
-          </Bar>
+            {/* Highlight CMRR point */}
+            {cmrrPoint && (
+              <ReferenceLine
+                x={cmrrPoint.retention}
+                stroke="var(--color-accent)"
+                strokeDasharray="5 5"
+                strokeWidth={2}
+                yAxisId="left"
+                label={{
+                  value: 'CMRR',
+                  position: 'top',
+                  fill: 'var(--color-accent)',
+                  fontSize: 11,
+                  fontWeight: 'bold',
+                }}
+              />
+            )}
 
-          {/* Time requirement line */}
-          {showTimeAxis && (
-            <Line
-              yAxisId="right"
-              type="monotone"
-              dataKey="minutes"
-              name="Time Required"
-              stroke="var(--color-text-primary)"
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 6, fill: 'var(--color-text-primary)' }}
-            />
-          )}
-        </ComposedChart>
-      </ResponsiveContainer>
+            {/* Workload bars with color coding */}
+            <Bar yAxisId="left" dataKey="reviews" name="Daily Reviews" radius={[4, 4, 0, 0]}>
+              {chartData.map((entry, index) => {
+                // Derive sustainability from minutes (no sustainability property exists)
+                const sustainability = entry.minutes <= 30 ? 70 : entry.minutes <= 60 ? 40 : 10;
+                return (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={
+                      entry.isCMRR
+                        ? 'var(--color-accent)' // CMRR highlight
+                        : sustainability >= 70
+                          ? 'var(--color-success)' // Sustainable
+                          : sustainability >= 40
+                            ? 'var(--color-warning)' // Moderate
+                            : 'var(--color-error)' // Unsustainable
+                    }
+                    opacity={entry.isCMRR ? 1 : 0.7}
+                  />
+                );
+              })}
+            </Bar>
+
+            {/* Time requirement line */}
+            {showTimeAxis && (
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="minutes"
+                name="Time Required"
+                stroke="var(--color-text-primary)"
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 6, fill: 'var(--color-text-primary)' }}
+              />
+            )}
+          </ComposedChart>
+        </ResponsiveContainer>
+      </ChartContainer>
 
       {/* Legend */}
       <div className="mt-4 flex flex-wrap gap-4 text-xs text-[var(--color-text-secondary)]">

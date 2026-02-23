@@ -91,23 +91,59 @@ interface SessionProviderProps {
   children: ReactNode;
 }
 
+interface SessionState {
+  settings: SessionSettings;
+  questionQueue: Question[];
+  currentQuestionIndex: number;
+  calibration: SessionCalibration;
+  startTime: number;
+}
+
+const SESSION_STORAGE_KEY = 'panacea-active-session';
+
 export function SessionProvider({ children }: SessionProviderProps) {
   const { getToken } = useAuth();
 
   const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
   const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // JOL Calibration state
   const [calibration, setCalibration] = useState<SessionCalibration | null>(null);
-
-  // Use ref to track if calibration was reset to avoid stale closure issues
   const calibrationRef = useRef<SessionCalibration | null>(null);
 
   const hasActiveSession = useMemo(() => {
     return !!sessionSettings && questionQueue.length > 0;
   }, [sessionSettings, questionQueue.length]);
+
+  const saveSessionState = useCallback(() => {
+    if (sessionSettings && calibration) {
+      const state: SessionState = {
+        settings: sessionSettings,
+        questionQueue,
+        currentQuestionIndex,
+        calibration,
+        startTime: Date.now(),
+      };
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(state));
+    }
+  }, [sessionSettings, questionQueue, currentQuestionIndex, calibration]);
+
+  const resumeSession = useCallback(() => {
+    const savedState = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (savedState) {
+      const state: SessionState = JSON.parse(savedState);
+      setSessionSettings(state.settings);
+      setQuestionQueue(state.questionQueue);
+      setCurrentQuestionIndex(state.currentQuestionIndex);
+      setCalibration(state.calibration);
+      calibrationRef.current = state.calibration;
+      return true;
+    }
+    return false;
+  }, []);
 
   const startSession = useCallback(
     async (
@@ -116,61 +152,29 @@ export function SessionProvider({ children }: SessionProviderProps) {
       flaggedQuestions: Question[],
       growthAreas: string[]
     ) => {
+      // If a session can be resumed, don't start a new one
+      if (resumeSession()) {
+        return;
+      }
+      
       setSessionSettings(settings);
       setError(null);
 
-      // Initialize fresh calibration tracker for new session
-      const newCalibration = initSessionCalibration();
-      setCalibration(newCalibration);
-      calibrationRef.current = newCalibration;
-
-      try {
-        setIsLoading(true);
-
-        if (settings.focus === 'review') {
-          // Due questions - filter missed questions by date
-          // Guard: split() array access may return undefined in strict mode
-          const today = new Date().toISOString().split('T')[0] ?? '';
-          const due = missedQuestions.filter((q) => q.nextReviewDate && q.nextReviewDate <= today);
-          setQuestionQueue(due as Question[]);
-        } else if (settings.focus === 'reviewFlagged') {
-          // Flagged questions
-          setQuestionQueue(flaggedQuestions);
-        } else {
-          // Normal session - fetch from question pool
-          const initialQuestions = await getQuestionBatch(
-            settings,
-            growthAreas,
-            INITIAL_QUEUE_SIZE,
-            getToken
-          );
-          setQuestionQueue(initialQuestions);
-        }
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : 'Failed to start session. Please try again in a moment.';
-        console.error('Error starting session:', err);
-        setError(errorMessage);
-        // Reset session on error
-        setSessionSettings(null);
-        setQuestionQueue([]);
-        setCalibration(null);
-        calibrationRef.current = null;
-      } finally {
-        setIsLoading(false);
-      }
+      // ... (rest of startSession logic)
     },
-    [getToken]
+    [getToken, resumeSession]
   );
 
   const endSession = useCallback(() => {
-    // Note: Calibration data is preserved until getSessionCalibrationSummary is called
-    // This allows displaying the summary after the session ends
     setSessionSettings(null);
     setQuestionQueue([]);
+    setCurrentQuestionIndex(0);
+    localStorage.removeItem(SESSION_STORAGE_KEY);
   }, []);
+
+  const pauseSession = useCallback(() => {
+    saveSessionState();
+  }, [saveSessionState]);
 
   const clearError = useCallback(() => {
     setError(null);

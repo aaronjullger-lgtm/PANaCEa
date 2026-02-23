@@ -5,7 +5,7 @@
  */
 
 import { useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useAuth } from './useAuth';
 import { useQuery } from '@tanstack/react-query';
 
 export interface SRSItem {
@@ -33,10 +33,17 @@ interface UseSRSItemsResult {
   isOnline: boolean;
 }
 
-async function fetchDueFromApi(): Promise<{ items: SRSItem[]; totalDue: number }> {
+async function fetchDueFromApi(token: string | null): Promise<{ items: SRSItem[]; totalDue: number }> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetch('/api/srs/due', {
     method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     credentials: 'include',
   });
 
@@ -58,7 +65,7 @@ async function fetchDueFromApi(): Promise<{ items: SRSItem[]; totalDue: number }
 }
 
 export function useSRSItems(): UseSRSItemsResult {
-  const { user, isSignedIn } = useUser();
+  const { isSignedIn, user, getToken } = useAuth();
 
   const {
     data,
@@ -68,7 +75,10 @@ export function useSRSItems(): UseSRSItemsResult {
     isFetched,
   } = useQuery({
     queryKey: ['srs', 'due', isSignedIn ? user?.id : null],
-    queryFn: fetchDueFromApi,
+    queryFn: async () => {
+      const token = await getToken();
+      return fetchDueFromApi(token);
+    },
     enabled: !!isSignedIn && !!user,
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 60 * 24,
@@ -106,9 +116,17 @@ export function useSRSItems(): UseSRSItemsResult {
         const localItems = JSON.parse(localData);
         const itemsArray = Array.from(Object.values(localItems));
 
+        const token = await getToken();
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const response = await fetch('/api/srs/sync', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           credentials: 'include',
           body: JSON.stringify({ items: itemsArray }),
         });

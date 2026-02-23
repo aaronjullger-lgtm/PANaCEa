@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts';
+import ChartContainer from '../../shared/ChartContainer';
 
 interface StabilityData {
   bucket: string;
@@ -61,44 +62,46 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
   };
 
   return (
-    <ResponsiveContainer width="100%" height={300} minHeight={200} minWidth={0}>
-      <BarChart
-        data={sortedData}
-        layout="vertical"
-        margin={{ top: 5, right: 10, left: 60, bottom: 5 }}
-      >
-        <CartesianGrid
-          strokeDasharray="3 3"
-          stroke="var(--chart-grid-stroke)"
-          horizontal={false}
-          vertical={true}
-        />
+    <ChartContainer minHeight={300} className="min-h-[200px] w-full">
+      <ResponsiveContainer width="100%" height={300} minHeight={200} minWidth={0}>
+        <BarChart
+          data={sortedData}
+          layout="vertical"
+          margin={{ top: 5, right: 10, left: 60, bottom: 5 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="var(--chart-grid-stroke)"
+            horizontal={false}
+            vertical={true}
+          />
 
-        <XAxis
-          type="number"
-          stroke="var(--color-border)"
-          tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-          tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
-        />
+          <XAxis
+            type="number"
+            stroke="var(--color-border)"
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
+          />
 
-        <YAxis
-          type="category"
-          dataKey="bucket"
-          stroke="var(--color-border)"
-          tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-          tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
-          width={60}
-        />
+          <YAxis
+            type="category"
+            dataKey="bucket"
+            stroke="var(--color-border)"
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
+            width={60}
+          />
 
-        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-bg-secondary)' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-bg-secondary)' }} />
 
-        <Bar dataKey="count" radius={[0, 8, 8, 0]} animationDuration={1000}>
-          {sortedData.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.color} opacity={0.85} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+          <Bar dataKey="count" radius={[0, 8, 8, 0]} animationDuration={1000}>
+            {sortedData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} opacity={0.85} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
   );
 };
 

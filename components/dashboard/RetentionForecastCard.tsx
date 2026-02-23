@@ -20,6 +20,7 @@ import {
   ReferenceLine,
   Legend,
 } from 'recharts';
+import ChartContainer from '../shared/ChartContainer';
 import { Brain, ArrowRight, Sparkles } from 'lucide-react';
 
 export interface DecayPoint {
@@ -138,70 +139,72 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
 
       {/* Forgetting curve + After-review curve */}
       <div className="h-[200px] min-h-[160px] w-full min-w-0 mt-2 mb-4">
-        <ResponsiveContainer width="100%" height="100%" minHeight={160} minWidth={0}>
-          <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
-            <defs>
-              <linearGradient id="decayGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-data-provisional)" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="var(--color-data-provisional)" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="recoveryGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-data-pass)" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="var(--color-data-pass)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-            <XAxis
-              dataKey="day"
-              stroke="var(--color-text-muted)"
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-              tickLine={{ stroke: 'var(--color-border)' }}
-              ticks={[0, 5, 10, 15, 20, 25, 30]}
-            />
-            <YAxis
-              stroke="var(--color-text-muted)"
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-              tickLine={{ stroke: 'var(--color-border)' }}
-              domain={[0, 100]}
-              width={28}
-            />
-            <ReferenceLine
-              y={90}
-              stroke="var(--color-data-fail)"
-              strokeDasharray="3 3"
-              strokeWidth={1}
-            />
-            <Tooltip
-              content={<CustomTooltip />}
-              cursor={{ stroke: 'var(--color-accent)', strokeWidth: 1 }}
-            />
-            <Legend
-              wrapperStyle={{ fontSize: 11 }}
-              formatter={(value) => (
-                <span className="text-[var(--color-text-secondary)] text-xs">{value}</span>
-              )}
-            />
-            <Area
-              type="monotone"
-              dataKey="withoutReview"
-              name="Without review (decay)"
-              stroke="var(--color-data-provisional)"
-              strokeWidth={2}
-              fill="url(#decayGradient)"
-              animationDuration={800}
-            />
-            <Area
-              type="monotone"
-              dataKey="afterReview"
-              name="After review (saved)"
-              stroke="var(--color-data-pass)"
-              strokeWidth={2}
-              fill="url(#recoveryGradient)"
-              animationDuration={800}
-              animationBegin={200}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        <ChartContainer minHeight={160} className="w-full h-full">
+          <ResponsiveContainer width="100%" height="100%" minHeight={160} minWidth={0}>
+            <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+              <defs>
+                <linearGradient id="decayGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-data-provisional)" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="var(--color-data-provisional)" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="recoveryGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-data-pass)" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="var(--color-data-pass)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+              <XAxis
+                dataKey="day"
+                stroke="var(--color-text-muted)"
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                tickLine={{ stroke: 'var(--color-border)' }}
+                ticks={[0, 5, 10, 15, 20, 25, 30]}
+              />
+              <YAxis
+                stroke="var(--color-text-muted)"
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                tickLine={{ stroke: 'var(--color-border)' }}
+                domain={[0, 100]}
+                width={28}
+              />
+              <ReferenceLine
+                y={90}
+                stroke="var(--color-data-fail)"
+                strokeDasharray="3 3"
+                strokeWidth={1}
+              />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ stroke: 'var(--color-accent)', strokeWidth: 1 }}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 11 }}
+                formatter={(value) => (
+                  <span className="text-[var(--color-text-secondary)] text-xs">{value}</span>
+                )}
+              />
+              <Area
+                type="monotone"
+                dataKey="withoutReview"
+                name="Without review (decay)"
+                stroke="var(--color-data-provisional)"
+                strokeWidth={2}
+                fill="url(#decayGradient)"
+                animationDuration={800}
+              />
+              <Area
+                type="monotone"
+                dataKey="afterReview"
+                name="After review (saved)"
+                stroke="var(--color-data-pass)"
+                strokeWidth={2}
+                fill="url(#recoveryGradient)"
+                animationDuration={800}
+                animationBegin={200}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartContainer>
       </div>
 
       <p className="text-xs text-[var(--color-text-muted)] mb-4">

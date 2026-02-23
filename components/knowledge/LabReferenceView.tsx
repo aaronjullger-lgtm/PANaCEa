@@ -11,6 +11,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { Search, Beaker, AlertTriangle, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import { LoadingOverlay } from '@/components/ui/layouts';
+import { Card } from '@/components/ui/card';
+import { CardGrid } from '@/components/ui/layouts/CardGrid';
 import { ErrorState } from '@/components/ui/ErrorState';
 
 interface LabTest {
@@ -145,18 +147,18 @@ export const LabReferenceView: React.FC = () => {
       </div>
 
       {/* Lab Test Cards */}
-      <div className="space-y-3">
+      <CardGrid columns={{ default: 1, md: 2 }}>
         {filteredLabs.length === 0 ? (
-          <div className="text-center py-12 text-[var(--color-text-muted)]">
+          <div className="text-center py-12 text-[var(--color-text-muted)] col-span-full">
             {searchQuery ? 'No labs found matching your search' : 'No labs available'}
           </div>
         ) : (
           filteredLabs.map((lab) => {
             const isExpanded = expandedLab === lab.id;
             return (
-              <div
+              <Card
                 key={lab.id}
-                className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] overflow-hidden hover:border-[var(--color-accent)]/50 transition-colors"
+                className="overflow-hidden hover:border-accent/50 transition-colors"
               >
                 <button
                   onClick={() => setExpandedLab(isExpanded ? null : lab.id)}
@@ -164,34 +166,34 @@ export const LabReferenceView: React.FC = () => {
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <Beaker className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0" />
-                      <h3 className="font-bold text-[var(--color-text-primary)] truncate">
+                      <Beaker className="w-5 h-5 text-accent flex-shrink-0" />
+                      <h3 className="font-bold text-text-primary truncate">
                         {lab.name}
                       </h3>
                       {lab.isHighYield && (
-                        <span className="px-2 py-0.5 text-xs font-semibold bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] rounded">
+                        <span className="px-2 py-0.5 text-xs font-semibold bg-data-provisional/20 text-data-provisional rounded">
                           High Yield
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-[var(--color-text-secondary)]">
+                    <div className="text-sm text-text-secondary">
                       {lab.conventionalRange || lab.siRange || 'Normal range varies'}
                       {lab.siUnits && ` ${lab.siUnits}`}
                     </div>
                   </div>
-                  <span className="text-xs px-2 py-1 bg-[var(--color-bg-tertiary)] rounded text-[var(--color-text-muted)] flex-shrink-0">
+                  <span className="text-xs px-2 py-1 bg-bg-tertiary rounded text-text-muted flex-shrink-0">
                     {lab.category}
                   </span>
                 </button>
 
                 {isExpanded && (
-                  <div className="px-4 pb-4 pt-0 space-y-4 border-t border-[var(--color-border)] animate-fade-in">
+                  <div className="px-4 pb-4 pt-0 space-y-4 border-t border-border animate-fade-in">
                     {/* Clinical Differentials */}
                     {lab.increaseIndicates.length > 0 && (
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <TrendingUp className="w-4 h-4 text-[var(--color-data-fail)]" />
-                          <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                          <TrendingUp className="w-4 h-4 text-data-fail" />
+                          <h4 className="text-sm font-semibold text-text-primary">
                             Increased In
                           </h4>
                         </div>
@@ -199,7 +201,7 @@ export const LabReferenceView: React.FC = () => {
                           {lab.increaseIndicates.map((cause, idx) => (
                             <li
                               key={idx}
-                              className="text-sm text-[var(--color-text-secondary)] ml-4"
+                              className="text-sm text-text-secondary ml-4"
                             >
                               • {cause}
                             </li>
@@ -211,8 +213,8 @@ export const LabReferenceView: React.FC = () => {
                     {lab.decreaseIndicates.length > 0 && (
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <TrendingDown className="w-4 h-4 text-[var(--color-data-pass)]" />
-                          <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                          <TrendingDown className="w-4 h-4 text-data-pass" />
+                          <h4 className="text-sm font-semibold text-text-primary">
                             Decreased In
                           </h4>
                         </div>
@@ -220,7 +222,7 @@ export const LabReferenceView: React.FC = () => {
                           {lab.decreaseIndicates.map((cause, idx) => (
                             <li
                               key={idx}
-                              className="text-sm text-[var(--color-text-secondary)] ml-4"
+                              className="text-sm text-text-secondary ml-4"
                             >
                               • {cause}
                             </li>
@@ -232,8 +234,8 @@ export const LabReferenceView: React.FC = () => {
                     {lab.commonAbnormalities.length > 0 && (
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <AlertTriangle className="w-4 h-4 text-[var(--color-data-provisional)]" />
-                          <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                          <AlertTriangle className="w-4 h-4 text-data-provisional" />
+                          <h4 className="text-sm font-semibold text-text-primary">
                             Common Findings
                           </h4>
                         </div>
@@ -241,7 +243,7 @@ export const LabReferenceView: React.FC = () => {
                           {lab.commonAbnormalities.map((finding, idx) => (
                             <li
                               key={idx}
-                              className="text-sm text-[var(--color-text-secondary)] ml-4"
+                              className="text-sm text-text-secondary ml-4"
                             >
                               • {finding}
                             </li>
@@ -252,12 +254,12 @@ export const LabReferenceView: React.FC = () => {
 
                     {lab.clinicalPearls.length > 0 && (
                       <div className="bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg p-3">
-                        <h4 className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+                        <h4 className="text-sm font-semibold text-text-primary mb-2">
                           Clinical Pearls
                         </h4>
                         <ul className="space-y-1">
                           {lab.clinicalPearls.map((pearl, idx) => (
-                            <li key={idx} className="text-sm text-[var(--color-text-secondary)]">
+                            <li key={idx} className="text-sm text-text-secondary">
                               • {pearl}
                             </li>
                           ))}
@@ -266,11 +268,11 @@ export const LabReferenceView: React.FC = () => {
                     )}
 
                     {lab.criticalValues && (
-                      <div className="bg-[var(--color-data-fail)]/5 border border-[var(--color-data-fail)]/20 rounded-lg p-3">
-                        <h4 className="text-sm font-semibold text-[var(--color-data-fail)] mb-1">
+                      <div className="bg-data-fail/5 border border-data-fail/20 rounded-lg p-3">
+                        <h4 className="text-sm font-semibold text-data-fail mb-1">
                           Critical Values
                         </h4>
-                        <div className="text-sm text-[var(--color-text-secondary)]">
+                        <div className="text-sm text-text-secondary">
                           {typeof lab.criticalValues === 'string'
                             ? lab.criticalValues
                             : JSON.stringify(lab.criticalValues)}
@@ -279,11 +281,11 @@ export const LabReferenceView: React.FC = () => {
                     )}
                   </div>
                 )}
-              </div>
+              </Card>
             );
           })
         )}
-      </div>
+      </CardGrid>
 
       {/* Refresh Button */}
       {!loading && (

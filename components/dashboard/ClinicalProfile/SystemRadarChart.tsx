@@ -7,6 +7,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
 } from 'recharts';
+import ChartContainer from '../../shared/ChartContainer';
 import type { ClinicalProfileData } from './hooks/useClinicalProfile';
 
 interface Props {
@@ -32,27 +33,29 @@ export const SystemRadarChart: React.FC<Props> = ({ systems }) => {
       className="h-64 min-h-[200px] w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
       style={{ transform: 'translateZ(0)' }}
     >
-      <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={0}>
-        <RadarChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
-          <PolarGrid stroke="var(--chart-grid-stroke)" strokeOpacity={0.4} />
-          <PolarAngleAxis
-            dataKey="system"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-          />
-          <PolarRadiusAxis
-            angle={30}
-            domain={[0, 100]}
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-          />
-          <Radar
-            name="Accuracy"
-            dataKey="accuracy"
-            stroke="var(--color-accent)"
-            fill="var(--color-accent)"
-            fillOpacity={0.25}
-          />
-        </RadarChart>
-      </ResponsiveContainer>
+      <ChartContainer minHeight={200} className="w-full h-full">
+        <ResponsiveContainer width="100%" height="100%" minHeight={200} minWidth={0}>
+          <RadarChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
+            <PolarGrid stroke="var(--chart-grid-stroke)" strokeOpacity={0.4} />
+            <PolarAngleAxis
+              dataKey="system"
+              tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            />
+            <PolarRadiusAxis
+              angle={30}
+              domain={[0, 100]}
+              tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+            />
+            <Radar
+              name="Accuracy"
+              dataKey="accuracy"
+              stroke="var(--color-accent)"
+              fill="var(--color-accent)"
+              fillOpacity={0.25}
+            />
+          </RadarChart>
+        </ResponsiveContainer>
+      </ChartContainer>
     </div>
   );
 };
