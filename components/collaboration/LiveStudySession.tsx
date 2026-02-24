@@ -341,30 +341,30 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
   const currentQuestion = mockQuestions[currentQuestionIndex];
   if (!currentQuestion) {
     return (
-      <div className="flex flex-col h-full bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-6">
-        <p className="text-[var(--color-text-muted)]">No questions available.</p>
+      <div className="flex flex-col h-full bg-surface-primary rounded-xl border border-border-subtle p-6">
+        <p className="text-muted">No questions available.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+    <div className="flex flex-col h-full bg-surface-primary rounded-xl border border-border-subtle overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+      <div className="flex items-center justify-between p-4 border-b border-border-subtle bg-surface-secondary">
         <div className="flex items-center gap-3">
           <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+          <h2 className="text-lg font-semibold text-action-primary">
             Live Study Session
           </h2>
-          <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
+          <span className="px-2 py-1 text-xs font-medium rounded-full bg-action-primary/10 text-action-primary">
             {connectionStatus}
           </span>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-[var(--color-text-muted)]" />
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">
+            <Users className="w-4 h-4 text-muted" />
+            <span className="text-sm font-medium text-action-primary">
               {presenceList.filter((p) => p.status === 'online').length} online
             </span>
           </div>
@@ -385,57 +385,57 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
         <div className="flex-1 flex flex-col p-6 overflow-y-auto">
           {/* Session Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
+            <div className="bg-surface-secondary rounded-lg p-4 border border-border-subtle">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--color-text-muted)]">Score</span>
-                <Trophy className="w-4 h-4 text-[var(--color-accent)]" />
+                <span className="text-sm text-muted">Score</span>
+                <Trophy className="w-4 h-4 text-action-primary" />
               </div>
-              <div className="text-2xl font-bold text-[var(--color-text-primary)] mt-2">
+              <div className="text-2xl font-bold text-action-primary mt-2">
                 {sessionStats.score}
               </div>
             </div>
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
+            <div className="bg-surface-secondary rounded-lg p-4 border border-border-subtle">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--color-text-muted)]">Accuracy</span>
+                <span className="text-sm text-muted">Accuracy</span>
                 <Target className="w-4 h-4 text-green-500" />
               </div>
-              <div className="text-2xl font-bold text-[var(--color-text-primary)] mt-2">
+              <div className="text-2xl font-bold text-action-primary mt-2">
                 {sessionStats.questionsAnswered > 0
                   ? `${Math.round((sessionStats.correctAnswers / sessionStats.questionsAnswered) * 100)}%`
                   : '0%'}
               </div>
             </div>
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
+            <div className="bg-surface-secondary rounded-lg p-4 border border-border-subtle">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--color-text-muted)]">Streak</span>
+                <span className="text-sm text-muted">Streak</span>
                 <Zap className="w-4 h-4 text-yellow-500" />
               </div>
-              <div className="text-2xl font-bold text-[var(--color-text-primary)] mt-2">
+              <div className="text-2xl font-bold text-action-primary mt-2">
                 {sessionStats.currentStreak}
               </div>
             </div>
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
+            <div className="bg-surface-secondary rounded-lg p-4 border border-border-subtle">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--color-text-muted)]">Time</span>
+                <span className="text-sm text-muted">Time</span>
                 <Clock className="w-4 h-4 text-blue-500" />
               </div>
-              <div className="text-2xl font-bold text-[var(--color-text-primary)] mt-2">
+              <div className="text-2xl font-bold text-action-primary mt-2">
                 {timeRemaining}s
               </div>
             </div>
           </div>
 
           {/* Question */}
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)] mb-6">
+          <div className="bg-surface-secondary rounded-xl p-6 border border-border-subtle mb-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <span className="px-3 py-1 text-sm font-medium rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
+                <span className="px-3 py-1 text-sm font-medium rounded-full bg-action-primary/10 text-action-primary">
                   {currentQuestion.system}
                 </span>
-                <span className="text-sm text-[var(--color-text-muted)]">
+                <span className="text-sm text-muted">
                   Question {currentQuestionIndex + 1} of {mockQuestions.length}
                 </span>
               </div>
@@ -443,13 +443,13 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                 {[...Array(3)].map((_, i) => (
                   <div
                     key={i}
-                    className={`w-2 h-2 rounded-full ${i < currentQuestion.difficulty ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]'}`}
+                    className={`w-2 h-2 rounded-full ${i < currentQuestion.difficulty ? 'bg-action-primary' : 'bg-border-subtle'}`}
                   />
                 ))}
               </div>
             </div>
 
-            <h3 className="text-lg font-medium text-[var(--color-text-primary)] mb-6">
+            <h3 className="text-lg font-medium text-action-primary mb-6">
               {currentQuestion.text}
             </h3>
 
@@ -474,8 +474,8 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                         : showIncorrect
                           ? 'border-red-500 bg-red-500/10'
                           : isSelected
-                            ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-                            : 'border-[var(--color-border)] hover:border-[var(--color-accent)]/50'
+                            ? 'border-action-primary bg-action-primary/10'
+                            : 'border-border-subtle hover:border-action-primary/50'
                     } ${isAnswerSubmitted ? 'cursor-default' : 'cursor-pointer'}`}
                   >
                     <div className="flex items-center justify-between">
@@ -487,8 +487,8 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                               : showIncorrect
                                 ? 'bg-red-500 text-white'
                                 : isSelected
-                                  ? 'bg-[var(--color-accent)] text-white'
-                                  : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
+                                  ? 'bg-action-primary text-white'
+                                  : 'bg-surface-tertiary text-muted'
                           }`}
                         >
                           {String.fromCharCode(65 + index)}
@@ -500,8 +500,8 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                               : showIncorrect
                                 ? 'text-red-600'
                                 : isSelected
-                                  ? 'text-[var(--color-accent)]'
-                                  : 'text-[var(--color-text-primary)]'
+                                  ? 'text-action-primary'
+                                  : 'text-action-primary'
                           }`}
                         >
                           {option}
@@ -531,7 +531,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
 
             {/* Action Buttons */}
             <div className="flex items-center justify-between mt-6">
-              <div className="text-sm text-[var(--color-text-muted)]">
+              <div className="text-sm text-muted">
                 {isAnswerSubmitted ? (
                   <span className="flex items-center gap-2">
                     {selectedAnswer === currentQuestion.correctAnswer ? (
@@ -591,14 +591,14 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
           {/* Progress Bar */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-[var(--color-text-muted)]">Session Progress</span>
-              <span className="text-sm font-medium text-[var(--color-text-primary)]">
+              <span className="text-sm text-muted">Session Progress</span>
+              <span className="text-sm font-medium text-action-primary">
                 {currentQuestionIndex + 1} / {mockQuestions.length}
               </span>
             </div>
-            <div className="h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
+            <div className="h-2 bg-border-subtle rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-[var(--color-accent)]"
+                className="h-full bg-action-primary"
                 initial={{ width: 0 }}
                 animate={{ width: `${((currentQuestionIndex + 1) / mockQuestions.length) * 100}%` }}
                 transition={{ duration: 0.5 }}
@@ -608,17 +608,17 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
         </div>
 
         {/* Right Panel - Tabs */}
-        <div className="w-80 border-l border-[var(--color-border)] flex flex-col">
+        <div className="w-80 border-l border-border-subtle flex flex-col">
           {/* Tab Headers */}
-          <div className="flex border-b border-[var(--color-border)]">
+          <div className="flex border-b border-border-subtle">
             {(['session', 'leaderboard', 'chat', 'benchmark'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   activeTab === tab
-                    ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
-                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+                    ? 'text-action-primary border-b-2 border-action-primary'
+                    : 'text-muted hover:text-action-primary'
                 }`}
               >
                 {tab === 'session' && 'Peers'}
@@ -640,28 +640,28 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
                 >
-                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3">
+                  <h3 className="text-sm font-semibold text-action-primary mb-3">
                     Online Peers ({presenceList.filter((p) => p.status === 'online').length})
                   </h3>
                   {presenceList.map((peer) => (
                     <div
                       key={peer.userId}
-                      className="flex items-center justify-between p-3 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg border border-border-subtle hover:bg-surface-secondary transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <div className="w-10 h-10 rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center">
-                            <User className="w-5 h-5 text-[var(--color-text-muted)]" />
+                          <div className="w-10 h-10 rounded-full bg-surface-tertiary flex items-center justify-center">
+                            <User className="w-5 h-5 text-muted" />
                           </div>
                           <div
-                            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--color-bg-primary)] ${getStatusColor(peer.status)}`}
+                            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-surface-primary ${getStatusColor(peer.status)}`}
                           />
                         </div>
                         <div>
-                          <div className="font-medium text-[var(--color-text-primary)]">
+                          <div className="font-medium text-action-primary">
                             {peer.displayName}
                           </div>
-                          <div className="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
+                          <div className="text-xs text-muted flex items-center gap-1">
                             {peer.currentActivity && (
                               <>
                                 {getActivityIcon(peer.currentActivity.type)}
@@ -677,7 +677,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                           </div>
                         </div>
                       </div>
-                      <div className="text-xs text-[var(--color-text-muted)]">
+                      <div className="text-xs text-muted">
                         {peer.status === 'online'
                           ? 'Now'
                           : new Date(peer.lastSeen).getMinutes() < 5
@@ -697,7 +697,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-3"
                 >
-                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3">
+                  <h3 className="text-sm font-semibold text-action-primary mb-3">
                     Live Leaderboard
                   </h3>
                   {liveLeaderboard.map((entry) => (
@@ -705,8 +705,8 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                       key={entry.userId}
                       className={`flex items-center justify-between p-3 rounded-lg border ${
                         entry.userId === userId
-                          ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5'
-                          : 'border-[var(--color-border)]'
+                          ? 'border-action-primary bg-action-primary/5'
+                          : 'border-border-subtle'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -714,23 +714,23 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                           className={`w-8 h-8 rounded-full flex items-center justify-center ${
                             entry.rank <= 3
                               ? 'bg-yellow-500/20 text-yellow-600'
-                              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
+                              : 'bg-surface-tertiary text-muted'
                           }`}
                         >
                           {entry.rank}
                         </div>
                         <div>
-                          <div className="font-medium text-[var(--color-text-primary)]">
+                          <div className="font-medium text-action-primary">
                             {entry.displayName} {entry.userId === userId && '(You)'}
                           </div>
-                          <div className="text-xs text-[var(--color-text-muted)]">
+                          <div className="text-xs text-muted">
                             {entry.questionsAnswered} questions • {Math.round(entry.accuracy * 100)}
                             % accuracy
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-[var(--color-text-primary)]">
+                        <div className="font-bold text-action-primary">
                           {entry.score}
                         </div>
                         <div
@@ -739,7 +739,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                               ? 'text-green-600'
                               : entry.trend === 'down'
                                 ? 'text-red-600'
-                                : 'text-[var(--color-text-muted)]'
+                                : 'text-muted'
                           }`}
                         >
                           {entry.trend === 'up' && <TrendingUp className="w-3 h-3" />}
@@ -761,7 +761,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                   exit={{ opacity: 0, x: -20 }}
                   className="flex flex-col h-full"
                 >
-                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-3">
+                  <h3 className="text-sm font-semibold text-action-primary mb-3">
                     Group Chat
                   </h3>
 
@@ -808,15 +808,15 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                           msg.userId === 'system'
                             ? 'bg-blue-500/10 border border-blue-500/20'
                             : msg.userId === userId
-                              ? 'bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 ml-8'
-                              : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] mr-8'
+                              ? 'bg-action-primary/10 border border-action-primary/20 ml-8'
+                              : 'bg-surface-secondary border border-border-subtle mr-8'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
                             {msg.userId !== 'system' && (
-                              <div className="w-6 h-6 rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center">
-                                <User className="w-3 h-3 text-[var(--color-text-muted)]" />
+                              <div className="w-6 h-6 rounded-full bg-surface-tertiary flex items-center justify-center">
+                                <User className="w-3 h-3 text-muted" />
                               </div>
                             )}
                             <span
@@ -824,21 +824,21 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                                 msg.userId === 'system'
                                   ? 'text-blue-600'
                                   : msg.userId === userId
-                                    ? 'text-[var(--color-accent)]'
-                                    : 'text-[var(--color-text-primary)]'
+                                    ? 'text-action-primary'
+                                    : 'text-action-primary'
                               }`}
                             >
                               {msg.displayName}
                             </span>
                           </div>
-                          <span className="text-xs text-[var(--color-text-muted)]">
+                          <span className="text-xs text-muted">
                             {new Date(msg.timestamp).toLocaleTimeString([], {
                               hour: '2-digit',
                               minute: '2-digit',
                             })}
                           </span>
                         </div>
-                        <p className="text-sm text-[var(--color-text-primary)]">{msg.content}</p>
+                        <p className="text-sm text-action-primary">{msg.content}</p>
                       </div>
                     ))}
                   </div>
@@ -851,7 +851,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                       onChange={(e) => setChatMessage(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage()}
                       placeholder="Type a message..."
-                      className="flex-1 px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
+                      className="flex-1 px-3 py-2 text-sm border border-border-subtle rounded-lg bg-surface-secondary text-action-primary placeholder:text-muted focus:outline-none focus:border-action-primary"
                     />
                     <StandardButton
                       type="button"
@@ -879,26 +879,26 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
                 >
-                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  <h3 className="text-sm font-semibold text-action-primary">
                     Peer Benchmarking
                   </h3>
 
-                  <div className="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                  <div className="p-4 rounded-lg border border-border-subtle bg-surface-secondary">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <div className="text-lg font-bold text-[var(--color-text-primary)]">
+                        <div className="text-lg font-bold text-action-primary">
                           {peerBenchmark.comparison.percentile}th Percentile
                         </div>
-                        <div className="text-sm text-[var(--color-text-muted)]">
+                        <div className="text-sm text-muted">
                           Rank {peerBenchmark.comparison.rank} of{' '}
                           {peerBenchmark.comparison.totalPeers}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+                        <div className="text-2xl font-bold text-action-primary">
                           {Math.round(peerBenchmark.comparison.accuracy * 100)}%
                         </div>
-                        <div className="text-sm text-[var(--color-text-muted)]">
+                        <div className="text-sm text-muted">
                           vs {Math.round(peerBenchmark.comparison.peerAverage * 100)}% average
                         </div>
                       </div>
@@ -907,7 +907,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                     <div className="space-y-3">
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                          <span className="text-sm font-medium text-action-primary">
                             Strengths
                           </span>
                           <Award className="w-4 h-4 text-green-500" />
@@ -926,7 +926,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
 
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                          <span className="text-sm font-medium text-action-primary">
                             Areas for Improvement
                           </span>
                           <Target className="w-4 h-4 text-blue-500" />
@@ -945,18 +945,18 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
 
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                          <span className="text-sm font-medium text-action-primary">
                             Recommendations
                           </span>
-                          <Shield className="w-4 h-4 text-[var(--color-accent)]" />
+                          <Shield className="w-4 h-4 text-action-primary" />
                         </div>
                         <ul className="space-y-2">
                           {peerBenchmark.recommendations.map((rec: string, index: number) => (
                             <li
                               key={index}
-                              className="text-sm text-[var(--color-text-primary)] flex items-start gap-2"
+                              className="text-sm text-action-primary flex items-start gap-2"
                             >
-                              <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)] mt-1.5 flex-shrink-0" />
+                              <div className="w-1.5 h-1.5 rounded-full bg-action-primary mt-1.5 flex-shrink-0" />
                               {rec}
                             </li>
                           ))}

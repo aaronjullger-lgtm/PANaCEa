@@ -361,7 +361,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           <AlertCircle className="w-5 h-5 text-data-provisional" />
           <h3 className="font-bold text-data-provisional">Error Loading Analytics</h3>
         </div>
-        <p className="text-sm text-[var(--color-text-muted)]">
+        <p className="text-sm text-muted">
           {statsError}. Please try refreshing the page.
         </p>
       </div>
@@ -372,11 +372,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     <div className="space-y-6">
       {/* Backup your data - reassure users they own their progress */}
       <div className="flex flex-wrap items-center justify-end gap-2">
-        <span className="text-xs text-[var(--color-text-muted)]">You own your progress.</span>
+        <span className="text-xs text-muted">You own your progress.</span>
         <button
           onClick={() => exportUserAnalytics(performanceData ?? [], 'csv')}
           disabled={!performanceData?.length}
-          className="text-sm text-[var(--color-accent)] hover:underline flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-sm text-action-primary hover:underline flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Backup your data as CSV"
         >
           <Download className="w-4 h-4" />
@@ -386,7 +386,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Context Banner for Students */}
       {hasData && (
-        <div className="p-4 rounded-xl bg-surface-card border border-[var(--color-border)]">
+        <div className="p-4 rounded-xl bg-surface-card border border-border-subtle">
           <div className="flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-action-primary mt-0.5" />
             <div>
@@ -402,7 +402,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Empty State - With CTA to prevent dead ends */}
       {!hasData && (
-        <div className="flex flex-col items-center justify-center py-12 px-6 bg-surface-card rounded-xl border border-[var(--color-border)]">
+        <div className="flex flex-col items-center justify-center py-12 px-6 bg-surface-card rounded-xl border border-border-subtle">
           <div className="mb-4 p-4 rounded-full bg-action-muted">
             <BarChart3 className="w-12 h-12 text-action-muted" />
           </div>
@@ -426,7 +426,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {hasData && userStats && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
+            <div className="p-6 rounded-xl bg-surface-secondary shadow-sm transition-colors">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <Gauge className="w-4 h-4" />
                 <span className="font-medium">Exam Readiness</span>
@@ -443,7 +443,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
+            <div className="p-6 rounded-xl bg-surface-secondary shadow-sm transition-colors">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <TrendingUp className="w-4 h-4" />
                 <span className="font-medium">Recent Performance</span>
@@ -459,7 +459,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
+            <div className="p-6 rounded-xl bg-surface-secondary shadow-sm transition-colors">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <Clock className="w-4 h-4" />
                 <span className="font-medium">Decision Speed</span>
@@ -475,9 +475,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       <div
                         className={`text-4xl font-bold ${
                           status === 'above_target'
-                            ? 'text-[var(--color-data-provisional)]'
+                            ? 'text-data-provisional'
                             : status === 'below_target'
-                              ? 'text-[var(--color-data-pass)]'
+                              ? 'text-data-pass'
                               : 'text-action-primary'
                         }`}
                       >
@@ -495,7 +495,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
           {/* Confidence vs. Accuracy (Calibration) - Illusion of Competence */}
           {calibrationData?.calibration && calibrationData.calibration.total > 0 && (
-            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm">
+            <div className="p-6 rounded-xl bg-surface-secondary shadow-sm">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
                 <Brain className="w-4 h-4" />
                 <span className="font-medium">Confidence vs. Accuracy</span>
@@ -511,14 +511,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     icon: CheckCircle,
                     label: getQuadrantLabel('mastered').short,
                     count: calibrationData.calibration.mastered,
-                    className: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
+                    className: 'bg-data-pass/10 text-data-pass',
                   },
                   {
                     key: 'dangerous_misconception' as const,
                     icon: AlertTriangle,
                     label: getQuadrantLabel('dangerous_misconception').short,
                     count: calibrationData.calibration.dangerousMisconception,
-                    className: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
+                    className: 'bg-data-fail/10 text-data-fail',
                   },
                   {
                     key: 'lucky_guess' as const,
@@ -526,14 +526,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     label: getQuadrantLabel('lucky_guess').short,
                     count: calibrationData.calibration.luckyGuess,
                     className:
-                      'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)]',
+                      'bg-data-provisional/10 text-data-provisional',
                   },
                   {
                     key: 'unconfident_wrong' as const,
                     icon: XCircle,
                     label: getQuadrantLabel('unconfident_wrong').short,
                     count: calibrationData.calibration.unconfidentWrong,
-                    className: 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]',
+                    className: 'bg-surface-tertiary text-muted',
                   },
                 ].map(({ key, icon: Icon, label, count, className }) => (
                   <div
@@ -549,7 +549,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 ))}
               </div>
               {calibrationData.calibration.dangerousMisconception > 0 && (
-                <p className="mt-3 text-xs text-[var(--color-data-fail)]">
+                <p className="mt-3 text-xs text-data-fail">
                   High confidence + wrong = dangerous misconception — prioritize reviewing those
                   topics.
                 </p>
@@ -561,7 +561,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {userStats.stats.speedByType &&
             (userStats.stats.speedByType.recall.count > 0 ||
               userStats.stats.speedByType.clinicalReasoning.count > 0) && (
-              <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm">
+              <div className="p-6 rounded-xl bg-surface-secondary shadow-sm">
                 <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
                   <Clock className="w-4 h-4" />
                   <span className="font-medium">Speed by question type</span>
@@ -572,7 +572,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {userStats.stats.speedByType.recall.count > 0 && (
-                    <div className="rounded-xl p-4 bg-[var(--color-bg-tertiary)]">
+                    <div className="rounded-xl p-4 bg-surface-tertiary">
                       <div className="text-sm font-medium text-action-primary mb-1">
                         Recall speed
                       </div>
@@ -599,7 +599,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     </div>
                   )}
                   {userStats.stats.speedByType.clinicalReasoning.count > 0 && (
-                    <div className="rounded-xl p-4 bg-[var(--color-bg-tertiary)]">
+                    <div className="rounded-xl p-4 bg-surface-tertiary">
                       <div className="text-sm font-medium text-action-primary mb-1">
                         Clinical reasoning speed
                       </div>
@@ -648,7 +648,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             if (focusAreasWithData.length === 0) return null;
 
             return (
-              <div className="p-6 rounded-xl border-2 border-data-provisional/30 bg-[var(--color-bg-secondary)]">
+              <div className="p-6 rounded-xl border-2 border-data-provisional/30 bg-surface-secondary">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="p-2 rounded-lg bg-data-provisional/10">
                     <AlertCircle className="w-5 h-5 text-data-provisional" />
@@ -659,7 +659,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   {focusAreasWithData.slice(0, 3).map((area) => (
                     <div
                       key={area.system}
-                      className="p-4 rounded-lg bg-[var(--color-bg-primary)] border border-data-provisional/30"
+                      className="p-4 rounded-lg bg-surface-primary border border-data-provisional/30"
                     >
                       <div className="text-sm font-semibold text-action-primary mb-1">
                         {area.system}
@@ -688,7 +688,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
           {/* System Performance: horizontal bar (best to worst), bottom 3 = red zone */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="p-6 rounded-xl border border-[var(--color-border)] bg-surface-primary">
+            <div className="p-6 rounded-xl border border-border-subtle bg-surface-primary">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
                 <BarChart3 className="w-4 h-4" /> System Performance (Best → Worst)
               </div>
@@ -702,7 +702,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   <button
                     type="button"
                     onClick={handleStartSession}
-                    className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity"
+                    className="px-4 py-2.5 rounded-xl bg-action-primary text-action-primary text-sm font-medium hover:opacity-90 transition-opacity"
                   >
                     Take a 10-question diagnostic quiz to unlock this graph
                   </button>
@@ -758,7 +758,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               )}
             </div>
 
-            <div className="p-6 rounded-xl border border-[var(--color-border)] bg-surface-primary">
+            <div className="p-6 rounded-xl border border-border-subtle bg-surface-primary">
               <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
                 <TrendingUp className="w-4 h-4" /> Performance Trend
               </div>
@@ -768,7 +768,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   <button
                     type="button"
                     onClick={handleStartSession}
-                    className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity"
+                    className="px-4 py-2.5 rounded-xl bg-action-primary text-action-primary text-sm font-medium hover:opacity-90 transition-opacity"
                   >
                     Take a 10-question diagnostic quiz to unlock this graph
                   </button>
@@ -812,7 +812,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
 
           {/* FSRS Stability Growth Trend */}
-          <div className="p-6 rounded-xl border border-[var(--color-border)] bg-surface-primary">
+          <div className="p-6 rounded-xl border border-border-subtle bg-surface-primary">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2 text-action-muted text-sm">
                 <Brain className="w-4 h-4" /> Memory Stability Growth (Last 30 Days)
@@ -879,7 +879,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartContainer>
-                <div className="mt-3 p-3 bg-surface-card rounded-lg border border-[var(--color-border)]">
+                <div className="mt-3 p-3 bg-surface-card rounded-lg border border-border-subtle">
                   <p className="text-xs text-action-muted">
                     <strong>What is Stability?</strong> Stability measures how long you'll remember
                     information. Higher stability means longer retention and fewer reviews needed.
@@ -907,7 +907,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
 
           {/* Decision Time by System */}
-          <div className="p-6 rounded-xl border border-[var(--color-border)] bg-surface-primary">
+          <div className="p-6 rounded-xl border border-border-subtle bg-surface-primary">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2 text-action-muted text-sm">
                 <Clock className="w-4 h-4" /> Decision Time by System
