@@ -384,6 +384,8 @@ async function getFromPreGeneratedPool(
 }> {
   const { count, system, systems, category, difficulty } = options;
   const hasSystemFilter = system || (systems && systems.length > 0);
+  const logger = createEndpointLogger('pool:getFromMainTable');
+  const logger = createEndpointLogger('pool:getFromPreGeneratedPool');
   let preGenQuestions: PreGeneratedQuestionRecord[];
   let remaining: number;
 
@@ -402,6 +404,7 @@ async function getFromPreGeneratedPool(
     else if (system) where.system = system;
     if (difficulty) where.difficulty = difficulty;
     if (category) where.questionType = category;
+    logger.info('Fetching pre-generated pool', { systems, system, difficulty, category, fetchCount });
 
     const dbResults = await (prisma.preGeneratedQuestion.findMany as any)({
       where,
@@ -410,6 +413,7 @@ async function getFromPreGeneratedPool(
       ...(CACHE_STRATEGY.QUESTIONS as any), // 5min cache for question pool
     });
     preGenQuestions = dbResults.map(mapToPreGeneratedQuestion);
+    logger.info('Pre-generated pool fetched', { dbResultsCount: dbResults.length, preGenQuestionsCount: preGenQuestions.length });
     remaining = await (prisma.preGeneratedQuestion.count as any)({
       where,
       ...(CACHE_STRATEGY.AGGREGATE as any),
@@ -418,6 +422,7 @@ async function getFromPreGeneratedPool(
 
   // Filter out seen questions
   const unseenQuestions = preGenQuestions.filter((q) => !seenIds.has(q.id));
+  logger.info('Pre-generated pool after seen filter', { total: preGenQuestions.length, unseen: unseenQuestions.length, seenIds: seenIds.size });
 
   // Shuffle all questions first
   const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
@@ -431,6 +436,7 @@ async function getFromPreGeneratedPool(
     // PANCE-weighted selection from the shuffled pool
     selectedQuestions = selectByPanceDistribution(shuffledQuestions, count);
   }
+  logger.info('Selected questions', { selectedCount: selectedQuestions.length, count, hasSystemFilter });
 
   const questions: PoolQuestionOutput[] = [];
   const toMarkUsed: string[] = [];
@@ -532,6 +538,7 @@ async function getFromMainTable(
   else if (system) where.system = system;
   if (difficulty) where.difficulty = difficulty;
   if (category) where.tags = { array_contains: category };
+  logger.info('Fetching main table pool', { systems, system, difficulty, category, fetchCount });
 
   const questions = await prisma.question.findMany({
     where,
@@ -549,6 +556,7 @@ async function getFromMainTable(
       tags: true,
     },
   });
+  logger.info('Main table fetched', { totalQuestions: questions.length });
 
   // Filter out seen questions
   const unseenQuestions = questions.filter((q: MainQuestionRecord) => !seenIds.has(q.id));

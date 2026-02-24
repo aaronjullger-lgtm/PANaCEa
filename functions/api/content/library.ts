@@ -57,9 +57,12 @@ export const onRequestGet = authenticatedEndpoint(
             ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', ${search})) DESC
           `;
           searchResults = ftsResults.map((r: { id: string }) => r.id);
+          logger.info('Full-text search results', { count: searchResults.length });
           if (searchResults.length > 0) {
+            delete where.OR; // clear any previous OR
             where.id = { in: searchResults };
           } else {
+            delete where.id; // clear any previous id
             where.OR = [
               { condition: { contains: search, mode: 'insensitive' } },
               { overview: { contains: search, mode: 'insensitive' } },
@@ -68,6 +71,7 @@ export const onRequestGet = authenticatedEndpoint(
           }
         } catch {
           logger.warn('Full-text search failed, falling back to LIKE');
+          delete where.id; // ensure no conflicting id
           where.OR = [
             { condition: { contains: search, mode: 'insensitive' } },
             { overview: { contains: search, mode: 'insensitive' } },
