@@ -39,6 +39,7 @@ export const onRequestGet = authenticatedEndpoint(
   async (context) => {
     const { env, auth, validated } = context;
     const logger = createEndpointLogger('/api/questions/session');
+    logger.info('DATABASE_URL present', { hasUrl: !!env.DATABASE_URL, urlPrefix: env.DATABASE_URL ? env.DATABASE_URL.substring(0, 20) : '' });
     if (!env.DATABASE_URL) {
       logger.error('DATABASE_URL not configured');
       return {
@@ -86,8 +87,10 @@ export const onRequestGet = authenticatedEndpoint(
       return { data: result };
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
       logger.error('Error fetching session questions', {
         error: errMsg,
+        stack,
         userId: auth.userId,
       });
       const isDbUnavailable =
@@ -121,6 +124,7 @@ export const onRequestGet = authenticatedEndpoint(
 export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/session');
+  logger.info('DATABASE_URL present', { hasUrl: !!env.DATABASE_URL, urlPrefix: env.DATABASE_URL ? env.DATABASE_URL.substring(0, 20) : '' });
   if (!env.DATABASE_URL) {
     logger.error('DATABASE_URL not configured');
     return {
@@ -157,8 +161,10 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
     return { data: result };
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
     logger.error('Error fetching session questions', {
       error: errMsg,
+      stack,
       userId: auth.userId,
     });
     const isDbUnavailable =
