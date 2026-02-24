@@ -28,6 +28,7 @@ export type View =
   | 'patient_encounter'
   | 'panre_la'
   | 'pance_simulator'
+  | 'full_sit_down_test'
   | 'code_blue_speed'
   | 'grand_rounds'
   | 'ventilator_hero'
@@ -84,6 +85,7 @@ export const DRILL_MODE_IDS = {
   POLYPHARMACY: 'polypharmacy_puzzle' as TrainingModeId,
   MEDICAL_WORDLE: 'medical_wordle' as TrainingModeId,
   COMMUTER: 'commuter_mode' as TrainingModeId,
+  FULL_SIT_DOWN_TEST: 'full_sit_down_test' as TrainingModeId,
 } as const;
 
 /** Static animation variants for view transitions */

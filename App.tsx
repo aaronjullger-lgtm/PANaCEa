@@ -42,6 +42,7 @@ import {
   PolypharmacyPuzzleMode,
   CommuterMode,
   MedicalWordleMode,
+  FullSitDownTestMode,
   IntegrationsHub,
   SettingsStatsModal,
   KeyboardShortcutsModal,
@@ -1811,6 +1812,19 @@ const App: React.FC = () => {
                                     >
                                       <Suspense fallback={<Loader />}>
                                         <MedicalWordleMode
+                                          onExit={() => setView('command_center')}
+                                        />
+                                      </Suspense>
+                                    </WithGeminiErrorBoundary>
+                                  )}
+
+                                  {view === 'full_sit_down_test' && (
+                                    <WithGeminiErrorBoundary
+                                      viewName="full_sit_down_test"
+                                      onRetry={() => setView('full_sit_down_test')}
+                                    >
+                                      <Suspense fallback={<Loader />}>
+                                        <FullSitDownTestMode
                                           onExit={() => setView('command_center')}
                                         />
                                       </Suspense>

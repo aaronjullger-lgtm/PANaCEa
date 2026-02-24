@@ -29,7 +29,7 @@ import { z } from 'zod';
 // Define Zod schema for request validation
 const SessionGenerationSchema = z.object({
   mode: z.enum(['mainSession', 'review', 'focused']),
-  size: z.number().int().min(1).max(50).default(20),
+  size: z.number().int().min(1).max(300).default(20),
   systemFocus: z.string().optional(),
   initialDifficulty: z.enum(['easy', 'medium', 'hard']).optional(),
 });

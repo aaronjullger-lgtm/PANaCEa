@@ -38,7 +38,9 @@ export const DEFAULT_SESSION_SIZE = 20;
  * Mathematical rationale: For strict interleaving (no adjacent same-system),
  * max per system must be ≤ ceil(n/2). Using 40% provides safety buffer.
  */
-export const MAX_SINGLE_SYSTEM_CAP = 8;
+export const getMaxSingleSystemCap = (sessionSize: number = DEFAULT_SESSION_SIZE) => Math.ceil(sessionSize * 0.4);
+// Deprecated, use getMaxSingleSystemCap
+export const MAX_SINGLE_SYSTEM_CAP = getMaxSingleSystemCap();
 
 /** Deficit threshold (%) before prioritizing a system */
 export const DEFICIT_THRESHOLD = 2.0;
@@ -199,7 +201,7 @@ export class MainSessionQuestionSelector {
       for (const q of priorityBQuestions) {
         const pool = systemPools.get(q.system) || [];
         // Enforce per-system cap
-        if (pool.length < MAX_SINGLE_SYSTEM_CAP) {
+        if (pool.length < getMaxSingleSystemCap(sessionSize)) {
           pool.push(q);
           systemPools.set(q.system, pool);
           selectedIds.add(q.questionId);
@@ -223,7 +225,7 @@ export class MainSessionQuestionSelector {
       for (const q of priorityCQuestions) {
         const pool = systemPools.get(q.system) || [];
         // Enforce per-system cap
-        if (pool.length < MAX_SINGLE_SYSTEM_CAP) {
+        if (pool.length < getMaxSingleSystemCap(sessionSize)) {
           pool.push(q);
           systemPools.set(q.system, pool);
           selectedIds.add(q.questionId);
@@ -348,8 +350,8 @@ export class MainSessionQuestionSelector {
           targetPercent,
           actualPercent,
           deficitPercent: adjustedDeficitPercent,
-          // CONSTRAINT 1: Cap at MAX_SINGLE_SYSTEM_CAP
-          deficitQuestions: Math.min(idealQuestions, MAX_SINGLE_SYSTEM_CAP),
+          // CONSTRAINT 1: Cap at getMaxSingleSystemCap(sessionSize)
+          deficitQuestions: Math.min(idealQuestions, getMaxSingleSystemCap(sessionSize)),
         });
       }
     }

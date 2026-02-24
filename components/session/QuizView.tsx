@@ -71,6 +71,7 @@ import { getAccuracyBarClass } from '@/lib/accuracyColorUtils';
 
 // Sprint 10: Trust badges for question source indication
 import { TrustBadge } from '@/components/ui/TrustBadge';
+import { Progress } from '@/components/ui/progress';
 import { OpenStaxAttributionFooter } from '@/components/ui/OpenStaxAttributionFooter';
 import { SplitPaneDrillLayout } from '@/components/drill/SplitPaneDrillLayout';
 import { DrillLoadingState } from '@/components/drill/DrillLoadingState';
@@ -161,6 +162,10 @@ interface QuizViewProps {
   onReviewMissed?: () => void;
   /** When true, enables exam simulator mode (hide feedback, enforce timer, high-contrast theme) */
   isExamSimulator?: boolean;
+  /** When true, enables full sit-down test mode (locked navigation, 300 questions, progress tracking) */
+  isFullSitDownTest?: boolean;
+  /** Total number of questions in the session (used for progress tracking in full sit-down test) */
+  totalQuestions?: number;
 }
 
 const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
@@ -314,6 +319,8 @@ const QuizView: React.FC<QuizViewProps> = ({
   useSplitPane = false,
   onReviewMissed,
   isExamSimulator = false,
+  isFullSitDownTest = false,
+  totalQuestions,
 }) => {
   // Validate required callback props at runtime
   useEffect(() => {
@@ -1432,13 +1439,15 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         <div className="flex justify-between items-center mb-4 mt-1">
           <div className="flex items-center space-x-3 min-w-0">
             {/* Back to dashboard */}
-            <button
-              onClick={onShowMenu}
-              className="min-h-[44px] min-w-[44px] rounded-full bg-surface-secondary hover:bg-surface-tertiary transition-colors flex-shrink-0 flex items-center justify-center border border-border-subtle"
-              aria-label="Back to Menu"
-            >
-              <ArrowLeftIcon className="w-6 h-6 text-action-secondary" />
-            </button>
+            {!isFullSitDownTest && (
+              <button
+                onClick={onShowMenu}
+                className="min-h-[44px] min-w-[44px] rounded-full bg-surface-secondary hover:bg-surface-tertiary transition-colors flex-shrink-0 flex items-center justify-center border border-border-subtle"
+                aria-label="Back to Menu"
+              >
+                <ArrowLeftIcon className="w-6 h-6 text-action-secondary" />
+              </button>
+            )}
             <div className="flex items-center gap-3">
               <p className="text-sm font-medium text-muted truncate">
                 Question {questionNumber}
@@ -1582,15 +1591,26 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             </div>
 
             {/* End session */}
-            <button
-              onClick={handleEndSession}
-              title="End Session"
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface-card border border-border-subtle text-muted hover:bg-data-fail/10 hover:border-data-fail hover:text-data-fail transition-colors"
-            >
-              <CloseIcon className="w-5 h-5" />
-            </button>
+            {!isFullSitDownTest && (
+              <button
+                onClick={handleEndSession}
+                title="End Session"
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface-card border border-border-subtle text-muted hover:bg-data-fail/10 hover:border-data-fail hover:text-data-fail transition-colors"
+              >
+                <CloseIcon className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
+        {isFullSitDownTest && (
+          <div className="mt-4 mb-4">
+            <Progress value={((questionNumber - 1) / (totalQuestions || 300)) * 100} />
+            <div className="flex justify-between text-sm text-muted mt-1">
+              <span>Question {questionNumber} of {totalQuestions || 300}</span>
+              <span>{Math.round(((questionNumber - 1) / (totalQuestions || 300)) * 100)}%</span>
+            </div>
+          </div>
+        )}
         {replenishmentError && (
           <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-data-provisional/50 bg-data-provisional/10 px-3 py-2 text-sm text-action-secondary">
             <span>{replenishmentError}</span>

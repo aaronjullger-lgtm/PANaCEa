@@ -61,6 +61,9 @@ export const PolypharmacyPuzzleMode = lazy(() =>
 export const MedicalWordleMode = lazy(() =>
   import('../components/modes').then((m) => ({ default: m.MedicalWordleMode }))
 );
+export const FullSitDownTestMode = lazy(() =>
+  import('../components/modes').then((m) => ({ default: m.FullSitDownTestMode }))
+);
 export const IntegrationsHub = lazy(() => import('../components/integrations/IntegrationsHub'));
 export const SettingsStatsModal = lazy(() => import('../components/modals/SettingsStatsModal'));
 export const KeyboardShortcutsModal = lazy(

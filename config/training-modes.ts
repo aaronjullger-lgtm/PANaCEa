@@ -47,6 +47,7 @@ export type TrainingModeId =
   | 'medical_wordle'
   | 'cram_mode'
   | 'pance_simulator'
+  | 'full_sit_down_test'
   | 'radiology_scroll' // Future mode - not yet in MODE_REGISTRY
   | 'commuter_mode';
 
@@ -452,6 +453,16 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     theme: 'slate',
     route: '/modes/pance-simulator',
     estimatedMinutes: 60,
+  },
+  {
+    id: 'full_sit_down_test',
+    label: 'Full Sit-Down Test',
+    description: 'Locked-in 300-question exam simulation to generate true exam-day analytics',
+    category: 'question_practice',
+    iconName: 'BarChart',
+    theme: 'slate',
+    route: '/modes/full-sit-down-test',
+    estimatedMinutes: 300,
   },
 
   // --- ADDITIONAL MODES FOR COVERAGE ---
