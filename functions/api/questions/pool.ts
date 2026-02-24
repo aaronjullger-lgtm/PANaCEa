@@ -384,7 +384,6 @@ async function getFromPreGeneratedPool(
 }> {
   const { count, system, systems, category, difficulty } = options;
   const hasSystemFilter = system || (systems && systems.length > 0);
-  const logger = createEndpointLogger('pool:getFromMainTable');
   const logger = createEndpointLogger('pool:getFromPreGeneratedPool');
   let preGenQuestions: PreGeneratedQuestionRecord[];
   let remaining: number;
@@ -528,6 +527,7 @@ async function getFromMainTable(
 ): Promise<PoolQuestionOutput[]> {
   const { count, system, systems, category, difficulty } = options;
   const hasSystemFilter = system || (systems && systems.length > 0);
+  const logger = createEndpointLogger('pool:getFromMainTable');
 
   // Fetch more questions than needed for PANCE-weighted selection
   const fetchMultiplier = hasSystemFilter ? 5 : 20;
