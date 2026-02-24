@@ -43,6 +43,12 @@ export const MAX_SINGLE_SYSTEM_CAP = 8;
 /** Deficit threshold (%) before prioritizing a system */
 export const DEFICIT_THRESHOLD = 2.0;
 
+/** Accuracy threshold (%) below which deficit is multiplied */
+export const ACCURACY_DEFICIT_THRESHOLD = 75.0;
+
+/** Multiplier for deficit when accuracy is below threshold */
+export const ACCURACY_DEFICIT_MULTIPLIER = 1.5;
+
 /** Legacy constant for backwards compatibility - DEPRECATED */
 export const MAX_CONSECUTIVE_SAME_SYSTEM = 1; // Now strictly 1 (never repeat)
 
@@ -325,13 +331,23 @@ export class MainSessionQuestionSelector {
       const targetPercent = targetWeight * 100;
       const deficitPercent = targetPercent - actualPercent;
 
-      if (deficitPercent > DEFICIT_THRESHOLD) {
-        const idealQuestions = Math.ceil((deficitPercent / 100) * sessionSize);
+      let adjustedDeficitPercent = deficitPercent;
+      const accuracy = systemStats?.accuracy;
+      if (accuracy && accuracy < ACCURACY_DEFICIT_THRESHOLD && accuracy > 0) {
+        const accuracyDeficit = ACCURACY_DEFICIT_THRESHOLD - accuracy;
+        const penaltyFactor = 1 + (accuracyDeficit / ACCURACY_DEFICIT_THRESHOLD) * (ACCURACY_DEFICIT_MULTIPLIER - 1);
+        adjustedDeficitPercent *= penaltyFactor;
+        // Cap adjusted deficit at 100% to avoid extreme values
+        adjustedDeficitPercent = Math.min(adjustedDeficitPercent, 100);
+      }
+
+      if (adjustedDeficitPercent > DEFICIT_THRESHOLD) {
+        const idealQuestions = Math.ceil((adjustedDeficitPercent / 100) * sessionSize);
         deficits.push({
           system,
           targetPercent,
           actualPercent,
-          deficitPercent,
+          deficitPercent: adjustedDeficitPercent,
           // CONSTRAINT 1: Cap at MAX_SINGLE_SYSTEM_CAP
           deficitQuestions: Math.min(idealQuestions, MAX_SINGLE_SYSTEM_CAP),
         });
