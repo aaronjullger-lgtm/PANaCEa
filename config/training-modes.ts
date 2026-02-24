@@ -46,6 +46,7 @@ export type TrainingModeId =
   | 'anatomy_review'
   | 'medical_wordle'
   | 'cram_mode'
+  | 'pance_simulator'
   | 'radiology_scroll'; // Future mode - not yet in MODE_REGISTRY
 
 /**
@@ -430,6 +431,16 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     route: '/modes/panre-la',
     panreOnly: true,
     estimatedMinutes: 25,
+  },
+  {
+    id: 'pance_simulator',
+    label: 'PANCE Simulator',
+    description: 'Strict, high-contrast, timed exam simulation with zero feedback loops and fatigue tracking',
+    category: 'question_practice',
+    iconName: 'Monitor',
+    theme: 'slate',
+    route: '/modes/pance-simulator',
+    estimatedMinutes: 60,
   },
 
   // --- ADDITIONAL MODES FOR COVERAGE ---

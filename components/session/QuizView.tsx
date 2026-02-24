@@ -50,6 +50,7 @@ import {
   behavioralPayloadToTelemetryData,
 } from '@/components/quiz/Tracker';
 import { useMicroKinetics } from '@/hooks/useMicroKinetics';
+import { useFatigueTracking } from '@/hooks/useFatigueTracking';
 import { QuizLabCalcModal } from '@/components/quiz/QuizLabCalcModal';
 import ErrorTagger from '@/components/quiz/ErrorTagger';
 import Loader from '@/components/loading/Loader';
@@ -158,6 +159,8 @@ interface QuizViewProps {
   useSplitPane?: boolean;
   /** Start a review session with missed questions (from SessionEndSummary) */
   onReviewMissed?: () => void;
+  /** When true, enables exam simulator mode (hide feedback, enforce timer, high-contrast theme) */
+  isExamSimulator?: boolean;
 }
 
 const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
@@ -310,6 +313,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   updateQuestionNote,
   useSplitPane = false,
   onReviewMissed,
+  isExamSimulator = false,
 }) => {
   // Validate required callback props at runtime
   useEffect(() => {
@@ -352,6 +356,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   const implicitMetrics = useImplicitMetrics();
   const behavioralTracker = useBehavioralTracker();
   const microKinetics = useMicroKinetics();
+  const fatigueTracking = useFatigueTracking(isExamSimulator);
 
   // ---- QUEUE HANDLING ----
   const [queue, setQueue] = useState<Question[]>(initialQueue);
@@ -1405,7 +1410,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
   // Apply to main quiz container if needed (currently disabled to avoid conflicts with text selection)
 
   return (
-    <div className="flex flex-col">
+    <div className={`flex flex-col ${isExamSimulator ? 'exam-simulator-high-contrast' : ''}`}>
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4 mt-1">
           <div className="flex items-center space-x-3 min-w-0">
@@ -1717,7 +1722,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           )}
 
           {/* FEEDBACK / RATIONALE */}
-          {isAnswered && (
+          {isAnswered && !isExamSimulator && (
             <div className="mt-6 animate-fade-in space-y-4">
               {topicStats && (
                 <div className="p-4 bg-surface-card border border-border-subtle rounded-lg">

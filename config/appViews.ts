@@ -27,6 +27,7 @@ export type View =
   | 'antibiotic_mode'
   | 'patient_encounter'
   | 'panre_la'
+  | 'pance_simulator'
   | 'code_blue_speed'
   | 'grand_rounds'
   | 'ventilator_hero'
