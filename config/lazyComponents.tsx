@@ -51,6 +51,7 @@ export const ContrastiveDrillSession = lazy(() =>
   }))
 );
 export const ReasoningTutorMode = lazy(() => import('../components/modes/ReasoningTutorMode'));
+export const CommuterMode = lazy(() => import('../components/modes/CommuterMode'));
 export const CramMode = lazy(() =>
   import('../components/modes').then((m) => ({ default: m.CramMode }))
 );

@@ -422,6 +422,23 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [timeRemainingMs, setTimeRemainingMs] = useState<number | null>(null);
   const commuter = useCommuter();
   const showTimerVisible = showTimer && !commuter?.isCommuterMode;
+  // Auto‑read question aloud when commuter mode is active
+  useEffect(() => {
+    if (!commuter?.isCommuterMode || !commuter.settings.autoReadQuestions || !currentQuestion) return;
+    // Build readable text from question vignette and stem
+    const vignette = currentQuestion.vignette ? currentQuestion.vignette + ' ' : '';
+    const stem = currentQuestion.stem || '';
+    const text = vignette + stem;
+    if (text.trim()) {
+      commuter.speak(text);
+      // Start listening for voice answers after a short delay
+      setTimeout(() => {
+        if (commuter.settings.voiceEnabled) {
+          commuter.startListening();
+        }
+      }, 2000);
+    }
+  }, [commuter, currentQuestion]);
   const [behavioralRefreshKey, setBehavioralRefreshKey] = useState(0);
   const [replenishmentError, setReplenishmentError] = useState<string | null>(null);
 

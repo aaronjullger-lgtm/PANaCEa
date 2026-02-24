@@ -40,6 +40,7 @@ import {
   ReasoningTutorMode,
   CramMode,
   PolypharmacyPuzzleMode,
+  CommuterMode,
   MedicalWordleMode,
   IntegrationsHub,
   SettingsStatsModal,
@@ -138,6 +139,7 @@ const DRILL_MODE_PHYSIOLOGY = DRILL_MODE_IDS.PHYSIOLOGY;
 const DRILL_MODE_ANATOMY = DRILL_MODE_IDS.ANATOMY;
 const DRILL_MODE_CONTRASTIVE = DRILL_MODE_IDS.CONTRASTIVE;
 const DRILL_MODE_CRAM = DRILL_MODE_IDS.CRAM;
+const DRILL_MODE_COMMUTER = DRILL_MODE_IDS.COMMUTER;
 
 // Batch fetch 10 questions initially to prevent session ending early
 /** Commuter Mode: buffer for trains/buses/basements — prefetch 50 cards on Start Session */
@@ -931,6 +933,7 @@ const App: React.FC = () => {
       [DRILL_MODE_CONTRASTIVE]: 'contrastive_drill',
       reasoning_tutor: 'reasoning_tutor',
       [DRILL_MODE_CRAM]: 'cram_mode',
+      [DRILL_MODE_COMMUTER]: 'commuter_mode',
       polypharmacy_puzzle: 'polypharmacy_puzzle',
       medical_wordle: 'medical_wordle',
       admin_media: 'admin_media',
@@ -1782,6 +1785,19 @@ const App: React.FC = () => {
                                     >
                                       <Suspense fallback={<Loader />}>
                                         <PolypharmacyPuzzleMode
+                                          onExit={() => setView('command_center')}
+                                        />
+                                      </Suspense>
+                                    </WithGeminiErrorBoundary>
+                                  )}
+
+                                  {view === 'commuter_mode' && (
+                                    <WithGeminiErrorBoundary
+                                      viewName="commuter_mode"
+                                      onRetry={() => setView('commuter_mode')}
+                                    >
+                                      <Suspense fallback={<Loader />}>
+                                        <CommuterMode
                                           onExit={() => setView('command_center')}
                                         />
                                       </Suspense>

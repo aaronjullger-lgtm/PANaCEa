@@ -53,6 +53,7 @@ export type View =
   | 'study_companion'
   | 'srs_flashcards'
   | 'medical_database'
+  | 'commuter_mode'
   | 'live_collaboration';
 
 /** Drill mode IDs with dedicated view implementations */
@@ -82,6 +83,7 @@ export const DRILL_MODE_IDS = {
   CRAM: 'cram_mode' as TrainingModeId,
   POLYPHARMACY: 'polypharmacy_puzzle' as TrainingModeId,
   MEDICAL_WORDLE: 'medical_wordle' as TrainingModeId,
+  COMMUTER: 'commuter_mode' as TrainingModeId,
 } as const;
 
 /** Static animation variants for view transitions */

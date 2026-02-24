@@ -47,7 +47,8 @@ export type TrainingModeId =
   | 'medical_wordle'
   | 'cram_mode'
   | 'pance_simulator'
-  | 'radiology_scroll'; // Future mode - not yet in MODE_REGISTRY
+  | 'radiology_scroll' // Future mode - not yet in MODE_REGISTRY
+  | 'commuter_mode';
 
 /**
  * Categories based on learning activity type
@@ -422,6 +423,16 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     estimatedMinutes: 15,
   },
   {
+    id: 'commuter_mode',
+    label: 'Commuter Mode',
+    description: 'Hands‑free voice‑driven question practice for driving, commuting, or low‑visibility contexts',
+    category: 'question_practice',
+    iconName: 'Headphones',
+    theme: 'indigo',
+    route: '/modes/commuter-mode',
+    estimatedMinutes: 10,
+  },
+  {
     id: 'panre_la',
     label: 'PANRE-LA Simulator',
     description: 'Longitudinal assessment format for recertification',
@@ -476,6 +487,7 @@ const STANDALONE_MODE_IDS: readonly string[] = [
   'core_adaptive',
   'patient_encounter',
   'grand_rounds',
+  'commuter_mode',
 ];
 
 // Filter modes by category, EXCLUDING standalone modes that have their own tabs
