@@ -2,13 +2,21 @@
   "mcpServers": {
     "git": {
       "command": "uvx",
-      "args": ["mcp-server-git", "--repository", "/Users/aaronullger/GitHub"],
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "/Users/aaronullger/GitHub"
+      ],
       "disabled": true,
       "alwaysAllow": []
     },
     "sqlite": {
       "command": "uvx",
-      "args": ["mcp-server-sqlite", "--db-path", "/Users/aaronullger/GitHub"],
+      "args": [
+        "mcp-server-sqlite",
+        "--db-path",
+        "/Users/aaronullger/GitHub"
+      ],
       "disabled": true,
       "alwaysAllow": []
     },
@@ -24,12 +32,44 @@
     },
     "gdrive": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-gdrive"],
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-gdrive"
+      ],
       "env": {
         "GDRIVE_CREDENTIALS_PATH": "/Users/aaronullger/GitHub/StudyPANaCEa"
       },
       "disabled": true,
       "alwaysAllow": []
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.38"
+      ]
+    },
+    "augment-context-engine": {
+      "command": "auggie",
+      "args": [
+        "--mcp",
+        "--mcp-auto-workspace"
+      ]
+    },
+    "microsoft-learn": {
+      "type": "streamable-http",
+      "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "google-maps-platform-code-assist": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@googlemaps/code-assist-mcp@0.2.0"
+      ]
+    },
+    "figma-dev-mode": {
+      "type": "sse",
+      "url": "http://127.0.0.1:3845/sse"
     }
   }
 }
