@@ -348,7 +348,7 @@ export async function submitDrillReview(
   }
 
   const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
-  const isRapidGuess = telemetry?.rapid_guess ?? numericTime < 1500;
+  const isRapidGuess = telemetry?.rapid_guess ?? numericTime < 500;
   const attemptId = `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
   try {

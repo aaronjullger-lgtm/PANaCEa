@@ -115,13 +115,13 @@ function ensureDate(value: Date | string | null | undefined): Date {
 }
 
 /**
- * Compute decay and factor from w[20] for retrievability calculation
- * Official ts-fsrs formula
+ * Compute decay and factor from w[19] and w[20] for retrievability calculation
+ * Official ts-fsrs formula: R = (1 + w[19] * t / S) ^ -w[20]
  */
-export function computeDecayFactor(w20: number): { decay: number; factor: number } {
+export function computeDecayFactor(w19: number, w20: number): { decay: number; factor: number } {
   const decay = -w20;
-  const factor = Math.exp(Math.pow(decay, -1) * Math.log(0.9)) - 1.0;
-  return { decay, factor: +factor.toFixed(8) };
+  const factor = w19;
+  return { decay, factor };
 }
 
 export class FSRS {
@@ -133,7 +133,7 @@ export class FSRS {
     // Ensure we have all 21 parameters for v6
     this.p = this.normalizeParameters(parameters);
     // Precompute decay factor for retrievability calculations
-    this.decayFactor = computeDecayFactor(this.p.w[20] ?? 0.1542);
+    this.decayFactor = computeDecayFactor(this.p.w[19] ?? 9.0, this.p.w[20] ?? 0.1542);
   }
 
   /**

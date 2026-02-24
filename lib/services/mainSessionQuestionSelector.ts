@@ -266,22 +266,24 @@ export class MainSessionQuestionSelector {
       console.warn('[MainSessionSelector] Blueprint query failed, using defaults:', error);
     }
 
-    // Fallback to default 2024 PANCE weights (Official NCCPA)
+    // Fallback to default 2025 PANCE weights (Official NCCPA)
     return {
-      Cardiovascular: 0.13,
-      Pulmonary: 0.1,
-      Gastrointestinal: 0.1,
-      Musculoskeletal: 0.1,
-      HEENT: 0.09,
+      Cardiovascular: 0.11,
+      Pulmonary: 0.09,
+      Gastrointestinal: 0.09,
+      Musculoskeletal: 0.09,
+      HEENT: 0.08,
       Reproductive: 0.08,
       Neurological: 0.07,
-      Psychiatry: 0.06,
+      Psychiatry: 0.07,
       Endocrine: 0.06,
       Dermatology: 0.05,
       Genitourinary: 0.05,
-      Hematology: 0.03,
-      'Infectious Disease': 0.03,
-      Renal: 0.05,
+      Hematology: 0.04,
+      'Infectious Disease': 0.04,
+      Nephrology: 0.04,
+      'Emergency Medicine': 0.02,
+      General: 0.02,
     };
   }
 
