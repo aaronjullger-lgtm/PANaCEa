@@ -1744,10 +1744,19 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                           <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                             EMR Monitor
                           </p>
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-500 animate-pulse" />
-                            Live
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-500 animate-pulse" />
+                              Live
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => enhancedOSCE.timeTravel()}
+                              className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-300 border border-slate-700 px-1 py-0.5 rounded"
+                            >
+                              Sim 24h
+                            </button>
+                          </div>
                         </div>
 
                         <div className="grid sm:grid-cols-2 gap-3">

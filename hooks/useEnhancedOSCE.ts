@@ -14,6 +14,7 @@ import type {
   EnhancedChatMessage,
   BodyRegion,
 } from '@/types/osce-enhanced';
+import { type VitalsDisplay, DEFAULT_VITALS } from '@/hooks/usePatientVitals';
 
 import {
   generatePatientPersonality,
@@ -43,6 +44,7 @@ export interface EnhancedOSCEState {
   examFindings: ExamFinding[];
   chatHistory: EnhancedChatMessage[];
   scoreReport: OSCEScoreReport | null;
+  vitals: VitalsDisplay;
   isSessionActive: boolean;
   currentPhase: 'history' | 'physical' | 'diagnostic' | 'diagnosis' | 'treatment';
 }
@@ -86,6 +88,10 @@ export interface UseEnhancedOSCEReturn {
 
   // Scoring
   getIntermediateScore: () => number;
+
+  // Physiological interventions
+  applyIntervention: (order: PlacedOrder) => void;
+  timeTravel: (hours?: number) => void;
 }
 
 export function useEnhancedOSCE(options: UseEnhancedOSCEOptions = {}): UseEnhancedOSCEReturn {
@@ -105,6 +111,7 @@ export function useEnhancedOSCE(options: UseEnhancedOSCEOptions = {}): UseEnhanc
     examFindings: [],
     chatHistory: [],
     scoreReport: null,
+    vitals: DEFAULT_VITALS,
     isSessionActive: false,
     currentPhase: 'history',
   });
@@ -112,6 +119,81 @@ export function useEnhancedOSCE(options: UseEnhancedOSCEOptions = {}): UseEnhanc
   // Refs
   const scoringEngineRef = useRef<OSCEScoringEngine | null>(null);
   const caseDataRef = useRef<PatientEncounterCase | null>(null);
+
+  // Helper to convert case vitalSigns to VitalsDisplay
+  const parseVitalsFromCase = (vitals: PatientEncounterCase['vitalSigns']): VitalsDisplay => {
+    const bpMatch = vitals.bp.match(/^(\d+)\s*\/\s*(\d+)$/);
+    const sbp = bpMatch ? parseInt(bpMatch[1], 10) : 120;
+    const dbp = bpMatch ? parseInt(bpMatch[2], 10) : 80;
+    return {
+      hr: vitals.hr,
+      sbp,
+      dbp,
+      rr: vitals.rr,
+      o2: vitals.o2sat,
+      bp: vitals.bp,
+    };
+  };
+
+  // Mapping of drug class keywords to physiological effects
+  const DRUG_EFFECTS = [
+    {
+      keywords: ['beta blocker', 'metoprolol', 'atenolol', 'propranolol'],
+      effect: { hr: 0.85, sbp: 0.9, dbp: 0.9, rr: 1.0, o2: 1.0 },
+    },
+    {
+      keywords: ['vasodilator', 'nitro', 'hydralazine', 'amlodipine'],
+      effect: { hr: 1.0, sbp: 0.9, dbp: 0.9, rr: 1.0, o2: 1.0 },
+    },
+    {
+      keywords: ['vasopressor', 'norepinephrine', 'epinephrine', 'phenylephrine'],
+      effect: { hr: 1.1, sbp: 1.2, dbp: 1.15, rr: 1.0, o2: 1.0 },
+    },
+    {
+      keywords: ['diuretic', 'furosemide', 'hydrochlorothiazide'],
+      effect: { hr: 1.0, sbp: 0.95, dbp: 0.95, rr: 1.0, o2: 1.0 },
+    },
+  ];
+
+  // Apply intervention (drug order) to vitals
+  const applyIntervention = useCallback((order: PlacedOrder) => {
+    if (order.category !== 'medications') return;
+    const itemName = order.itemName.toLowerCase();
+    const effect = DRUG_EFFECTS.find(e => e.keywords.some(kw => itemName.includes(kw)))?.effect;
+    if (!effect) return;
+    setState(prev => {
+      const vitals = { ...prev.vitals };
+      vitals.hr = Math.max(40, Math.round(vitals.hr * effect.hr));
+      vitals.sbp = Math.max(90, Math.round(vitals.sbp * effect.sbp));
+      vitals.dbp = Math.max(60, Math.round(vitals.dbp * effect.dbp));
+      vitals.rr = Math.max(8, Math.round(vitals.rr * effect.rr));
+      vitals.o2 = Math.max(80, Math.round(vitals.o2 * effect.o2));
+      vitals.bp = `${vitals.sbp}/${vitals.dbp}`;
+      return { ...prev, vitals };
+    });
+  }, []);
+
+  // Simulate time passage (hours) and adjust vitals based on condition/interventions
+  const timeTravel = useCallback((hours: number = 24) => {
+    // Simple simulation: vitals tend to normalize slightly over time
+    setState(prev => {
+      const vitals = { ...prev.vitals };
+      // Apply small random drift towards normal ranges
+      const drift = (current: number, normal: number, maxChange: number) => {
+        const diff = normal - current;
+        const change = diff * 0.1 + (Math.random() * maxChange * 2 - maxChange);
+        return Math.round(current + change);
+      };
+      const normal = DEFAULT_VITALS;
+      vitals.hr = Math.max(40, Math.min(180, drift(vitals.hr, normal.hr, 5)));
+      vitals.sbp = Math.max(90, Math.min(200, drift(vitals.sbp, normal.sbp, 10)));
+      vitals.dbp = Math.max(60, Math.min(120, drift(vitals.dbp, normal.dbp, 8)));
+      vitals.rr = Math.max(8, Math.min(40, drift(vitals.rr, normal.rr, 2)));
+      vitals.o2 = Math.max(80, Math.min(100, drift(vitals.o2, normal.o2, 2)));
+      vitals.bp = `${vitals.sbp}/${vitals.dbp}`;
+      return { ...prev, vitals };
+    });
+  }, []);
 
   // Restore persisted session on mount
   useEffect(() => {
@@ -173,6 +255,7 @@ export function useEnhancedOSCE(options: UseEnhancedOSCEOptions = {}): UseEnhanc
         scoringEngineRef.current = createScoringEngine(caseData);
       }
 
+      const vitals = parseVitalsFromCase(caseData.vitalSigns);
       setState({
         personality,
         rapportMeter: initializeRapportMeter(),
@@ -182,6 +265,7 @@ export function useEnhancedOSCE(options: UseEnhancedOSCEOptions = {}): UseEnhanc
         examFindings: [],
         chatHistory: [],
         scoreReport: null,
+        vitals,
         isSessionActive: true,
         currentPhase: 'history',
       });
@@ -280,11 +364,14 @@ export function useEnhancedOSCE(options: UseEnhancedOSCEOptions = {}): UseEnhanc
       orders: [...prev.orders, order],
     }));
 
+    // Apply intervention if medication
+    applyIntervention(order);
+
     // Track in scoring engine
     if (scoringEngineRef.current) {
       scoringEngineRef.current.trackOrder(order);
     }
-  }, []);
+  }, [applyIntervention]);
 
   // Cancel an order
   const cancelOrder = useCallback((orderId: string) => {
@@ -422,6 +509,8 @@ export function useEnhancedOSCE(options: UseEnhancedOSCEOptions = {}): UseEnhanc
     getRapportScore,
     getEmotionIcon,
     getIntermediateScore,
+    applyIntervention,
+    timeTravel,
   };
 }
 

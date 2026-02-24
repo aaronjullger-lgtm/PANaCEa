@@ -35,10 +35,14 @@ export function LiveInterface({
   sessionId,
   getToken,
   onError,
+  vitals: externalVitals,
+  onTimeTravel,
 }: {
   sessionId?: string;
   getToken: () => Promise<string | null>;
   onError?: (message: string) => void;
+  vitals?: VitalsState;
+  onTimeTravel?: () => void;
 }) {
   const [config, setConfig] = useState<LiveConfig | null>(null);
   const [, setWs] = useState<WebSocket | null>(null);
@@ -46,6 +50,7 @@ export function LiveInterface({
     'disconnected'
   );
   const [vitals, setVitals] = useState<VitalsState>({});
+  const displayVitals = externalVitals ?? vitals;
   // Use a reducer for the transcript to avoid O(n) spread-copy on every incoming message.
   // The reducer pushes to a mutable array and returns a new reference to trigger re-render.
   const [transcript, appendTranscript] = useReducer((prev: string[], line: string) => {
@@ -92,12 +97,15 @@ export function LiveInterface({
       if (!res.ok) throw new Error('Vitals fetch failed');
       const data = (await res.json()) as { data?: VitalsState };
       const v = data.data ?? {};
-      setVitals({ ...v, updatedAt: Date.now() });
+      // Only update internal vitals if external vitals not provided
+      if (!externalVitals) {
+        setVitals({ ...v, updatedAt: Date.now() });
+      }
       return v;
     } catch {
       return { bp: '—', hr: 0, rr: 0, temp: 0, o2: 0, updatedAt: Date.now() };
     }
-  }, [sessionId, getToken]);
+  }, [sessionId, getToken, externalVitals]);
 
   const sendToolResponse = useCallback((id: string, name: string, result: unknown) => {
     const wsSocket = wsRef.current;
@@ -249,16 +257,25 @@ export function LiveInterface({
           </p>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <span className="text-[var(--color-text-muted)]">BP</span>
-            <span className="font-mono">{vitals.bp ?? '—'}</span>
+            <span className="font-mono">{displayVitals.bp ?? '—'}</span>
             <span className="text-[var(--color-text-muted)]">HR</span>
-            <span className="font-mono">{vitals.hr ?? '—'}</span>
+            <span className="font-mono">{displayVitals.hr ?? '—'}</span>
             <span className="text-[var(--color-text-muted)]">RR</span>
-            <span className="font-mono">{vitals.rr ?? '—'}</span>
+            <span className="font-mono">{displayVitals.rr ?? '—'}</span>
             <span className="text-[var(--color-text-muted)]">Temp</span>
-            <span className="font-mono">{vitals.temp ?? '—'}</span>
+            <span className="font-mono">{displayVitals.temp ?? '—'}</span>
             <span className="text-[var(--color-text-muted)]">O2</span>
-            <span className="font-mono">{vitals.o2 ?? '—'}</span>
+            <span className="font-mono">{displayVitals.o2 ?? '—'}</span>
           </div>
+          {onTimeTravel && (
+            <button
+              type="button"
+              onClick={onTimeTravel}
+              className="mt-3 px-3 py-1 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-hover)]"
+            >
+              Simulate 24h
+            </button>
+          )}
         </div>
 
         <div className="p-4 rounded-xl bg-[var(--color-card-bg)] border border-[var(--color-border)]">
