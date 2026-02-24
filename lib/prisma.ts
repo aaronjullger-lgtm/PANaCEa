@@ -87,6 +87,7 @@ NODE_ENV: ${process.env.NODE_ENV || 'undefined'}
 
   // PRODUCTION: Use Accelerate extension with prisma:// URL
   const basePrisma = new PrismaClient({
+    accelerateUrl: process.env.DATABASE_URL,
     log: logLevel as any,
   });
 
