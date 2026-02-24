@@ -18,6 +18,7 @@
  */
 
 import { PrismaClient, Prisma } from '@prisma/client';
+import { defaultParameters } from '../fsrs';
 import {
   Rolling360Service,
   Rolling360Stats,
@@ -410,7 +411,7 @@ export class MainSessionQuestionSelector {
    * CONSTRAINT 2: Select stable (non-overdue) cards sorted by lowest retrievability
    * Uses raw SQL for performance - computes R in database, not TypeScript
    *
-   * FSRS v5 formula: R = (1 + elapsed_days / stability)^-1
+   * FSRS v6 formula: R = (1 + w[19] * elapsed_days / stability) ^ -w[20]
    */
   private async selectStableCardsByLowestRetrievability(
     userId: string,
@@ -436,13 +437,15 @@ export class MainSessionQuestionSelector {
           up.id,
           up."conditionId",
           mc.system,
-          -- FSRS v5: R = (1 + elapsed_days / stability)^-1
+          -- FSRS v6: R = (1 + w[19] * elapsed_days / stability) ^ -w[20]
           POWER(
             1.0 + (
-              EXTRACT(EPOCH FROM (NOW() - (up."fsrsCard"->>'last_review')::timestamp)) 
-              / 86400.0
-            ) / GREATEST(COALESCE((up."fsrsCard"->>'stability')::float, 1.0), 0.1),
-            -1
+              0.0658 * (
+                EXTRACT(EPOCH FROM (NOW() - (up."fsrsCard"->>'last_review')::timestamp))
+                / 86400.0
+              ) / GREATEST(COALESCE((up."fsrsCard"->>'stability')::float, 1.0), 0.1)
+            ),
+            -0.1542
           )::float as current_r
         FROM "UserProgress" up
         JOIN "MedicalContent" mc ON up."conditionId" = mc."conditionId"
@@ -711,7 +714,7 @@ export class MainSessionQuestionSelector {
 
   /**
    * Calculate retrievability from FSRS card state
-   * FSRS v5 formula: R = (1 + t/S)^-1
+   * FSRS v6 formula: R = (1 + w[19] * t / S) ^ -w[20]
    */
   private calculateRetrievability(fsrsCard: any): number {
     if (!fsrsCard || !fsrsCard.stability || !fsrsCard.last_review) {
@@ -723,7 +726,9 @@ export class MainSessionQuestionSelector {
     const elapsedDays = (now - lastReview) / (1000 * 60 * 60 * 24);
 
     const stability = Math.max(fsrsCard.stability || 1, 0.1);
-    const retrievability = Math.pow(1 + elapsedDays / stability, -1);
+    const factor = defaultParameters.w[19];
+    const exponent = -defaultParameters.w[20];
+    const retrievability = Math.pow(1 + factor * elapsedDays / stability, exponent);
 
     return Math.max(0, Math.min(1, retrievability));
   }
