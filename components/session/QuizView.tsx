@@ -134,7 +134,7 @@ import { logger } from '@/src/lib/logger';
 
 const LOG_SCOPE = 'QuizView';
 
-interface QuizViewProps {
+export interface QuizViewProps {
   initialQueue: Question[];
   setParentQueue: React.Dispatch<React.SetStateAction<Question[]>>;
   addPerformanceRecord: (record: PerformanceRecord) => void;
@@ -2320,4 +2320,5 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
   );
 };
 
+export { QuizView };
 export default QuizView;

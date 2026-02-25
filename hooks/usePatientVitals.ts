@@ -30,7 +30,7 @@ export interface VitalsHistory {
 
 const HISTORY_LIMIT = 40;
 
-const DEFAULT_VITALS: VitalsDisplay = {
+export const DEFAULT_VITALS: VitalsDisplay = {
   hr: 82,
   sbp: 122,
   dbp: 76,
