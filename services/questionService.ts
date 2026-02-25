@@ -684,13 +684,21 @@ export async function getQuestionBatch(
     const { fetchVerifiedQuestion } = await import('../lib/verified-question-generator');
     const generatedQuestions: Question[] = [];
 
+    const generationTimeout = 5000; // 5 seconds per question
+
     for (let i = 0; i < needed; i++) {
       try {
-        const verifiedResult = await fetchVerifiedQuestion({
-          settings,
-          growthAreas,
-          verificationMode: 'quick', // Use quick mode for batch performance
-        });
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Generation timeout')), generationTimeout)
+        );
+        const verifiedResult = await Promise.race([
+          fetchVerifiedQuestion({
+            settings,
+            growthAreas,
+            verificationMode: 'quick',
+          }),
+          timeoutPromise,
+        ]);
         const q = verifiedResult.question;
         generatedQuestions.push(q);
 
@@ -728,13 +736,20 @@ export async function getQuestionBatch(
       console.log(
         `[QuestionService] Fallback: generating ${count} questions with CoVe verification`
       );
+      const generationTimeout = 5000; // 5 seconds per question
       for (let i = 0; i < count; i++) {
         try {
-          const verifiedResult = await fetchVerifiedQuestion({
-            settings,
-            growthAreas,
-            verificationMode: 'quick', // Use quick mode for fallback performance
-          });
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Generation timeout')), generationTimeout)
+          );
+          const verifiedResult = await Promise.race([
+            fetchVerifiedQuestion({
+              settings,
+              growthAreas,
+              verificationMode: 'quick',
+            }),
+            timeoutPromise,
+          ]);
           const q = verifiedResult.question;
           generatedQuestions.push(q);
 
@@ -781,11 +796,39 @@ async function seedGeneratedQuestion(
   // Don't block on this - fire and forget
   (async () => {
     try {
-      await fetch('/api/questions/pool', {
+      // Transform Question to match PoolPostSchema
+      const correctAnswerLetter = ['A', 'B', 'C', 'D'][question.correctAnswerIndex] || 'A';
+      const payload = {
+        question: {
+          id: question.id || crypto.randomUUID(),
+          question: question.question,
+          options: question.options,
+          correctAnswer: correctAnswerLetter,
+          explanation: question.rationale,
+          system: question.system || question.topic,
+          conditionId: question.conditionId,
+          medicalContentId: question.medicalContentId || undefined,
+          difficulty: question.difficulty || difficulty || 'medium',
+          vignette: question.vignette,
+          conditionName: question.condition,
+          subcategory: question.subcategory,
+          tags: question.tags || [],
+        },
+      };
+      // Remove undefined fields to avoid validation errors
+      if (payload.question.medicalContentId === undefined) {
+        delete payload.question.medicalContentId;
+      }
+      console.log('[QuestionService] Seeding question', payload.question.id, { token: token ? 'present' : 'missing' });
+      const response = await fetch('/api/questions/pool', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify(payload),
       });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to seed question: ${response.status} ${errorText}`);
+      }
     } catch (error) {
       console.error('[QuestionService] Failed to seed question:', error);
     }

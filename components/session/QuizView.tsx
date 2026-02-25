@@ -395,6 +395,10 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Track if we're actively generating a question in the background
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
 
+  // Track replenishment attempts to prevent infinite loops
+  const [replenishAttempts, setReplenishAttempts] = useState(0);
+  const MAX_REPLENISH_ATTEMPTS = 3;
+
   // Report issue modal state
   const [showReportModal, setShowReportModal] = useState(false);
 
@@ -665,6 +669,14 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     setIsGeneratingQuestion(true);
     setReplenishmentError(null);
+    // If we've already exceeded max attempts, don't try again
+    if (replenishAttempts >= MAX_REPLENISH_ATTEMPTS) {
+      setReplenishmentError('Unable to load questions after several attempts. Please try again later.');
+      setIsGeneratingQuestion(false);
+      return;
+    }
+    // Increment attempt counter
+    setReplenishAttempts(prev => prev + 1);
     try {
       let newQuestions: Question[] = [];
       const token = await getToken();
@@ -695,6 +707,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         setParentQueue((prev) => [...prev, ...newQuestions]);
         setQueue((prev) => [...prev, ...newQuestions]);
         // Replenished questions successfully
+        setReplenishAttempts(0);
       } else {
         logger.warn(LOG_SCOPE, 'No questions returned from batch fetch');
       }
@@ -1400,6 +1413,25 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
   if (!currentQuestion) {
     // In continuous mode, show loading while waiting for questions
     if (shouldEndlesslyReplenish) {
+      // If we've already exceeded max attempts, show error
+      if (replenishAttempts >= MAX_REPLENISH_ATTEMPTS) {
+        return (
+          <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
+            <h2 className="text-2xl font-bold mb-2">Unable to Load Questions</h2>
+            <p className="text-action-secondary">
+              {replenishmentError || 'The question service is currently unavailable. Please try again later.'}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
+              <button type="button" onClick={onShowMenu} className="btn-glass px-6 py-2">
+                Back to Dashboard
+              </button>
+              <button type="button" onClick={() => setReplenishAttempts(0)} className="btn-secondary px-6 py-2">
+                Retry
+              </button>
+            </div>
+          </div>
+        );
+      }
       if (!isGeneratingQuestion) {
         void replenishQueue();
       }

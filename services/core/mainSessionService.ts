@@ -114,8 +114,12 @@ export async function fetchSessionQuestions(
       psychiatry: 'PSYCH',
       infectious: 'ID',
     };
-    const system = systemMap[settings.focus.toLowerCase()] || settings.focus;
-    params.set('system', system);
+    // Only set system parameter if focus is a known system (not a special focus like 'growth', 'review', etc.)
+    const knownNonSystemFocuses = ['growth', 'review', 'reviewFlagged', 'due'];
+    if (!knownNonSystemFocuses.includes(settings.focus)) {
+      const system = systemMap[settings.focus.toLowerCase()] || settings.focus;
+      params.set('system', system);
+    }
   }
 
   if (!settings.simulationStrict) {
@@ -126,55 +130,82 @@ export async function fetchSessionQuestions(
     }
   }
 
-  try {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+  const maxRetries = 2;
+  const retryDelay = 1000; // 1 second
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds
+      let response: Response;
+      try {
+        response = await fetch(`/api/questions/session?${params.toString()}`, {
+          method: 'GET',
+          headers,
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      if (!response.ok) {
+        // If 503 and not last attempt, retry
+        if (response.status === 503 && attempt < maxRetries) {
+          console.warn(`[SessionService] API 503 (attempt ${attempt}), retrying...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+          continue;
+        }
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Update pool status cache
+      lastPoolStatus = data.poolStatus;
+
+      // Transform API response to frontend Question format
+      const questions: Question[] = data.questions.map((q: any) => ({
+        id: q.id,
+        question: q.question || q.vignette,
+        options: q.options,
+        correctAnswerIndex: q.correctAnswerIndex,
+        rationale: q.rationale,
+        topic: q.system,
+        system: q.system,
+        subcategory: q.subcategory,
+        conditionId: q.conditionId,
+        condition: q.condition,
+        pearls: q.pearls || [],
+        source: q.source,
+        fromStaging: q.fromStaging,
+        metadata: q.metadata,
+      }));
+
+      return {
+        questions,
+        analytics: data.analytics,
+        poolStatus: data.poolStatus,
+      };
+    } catch (error) {
+      lastError = error as Error;
+      console.warn(`[SessionService] API fetch attempt ${attempt} failed:`, error);
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+      }
     }
-
-    const response = await fetch(`/api/questions/session?${params.toString()}`, {
-      method: 'GET',
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // Update pool status cache
-    lastPoolStatus = data.poolStatus;
-
-    // Transform API response to frontend Question format
-    const questions: Question[] = data.questions.map((q: any) => ({
-      id: q.id,
-      question: q.question || q.vignette,
-      options: q.options,
-      correctAnswerIndex: q.correctAnswerIndex,
-      rationale: q.rationale,
-      topic: q.system,
-      system: q.system,
-      subcategory: q.subcategory,
-      conditionId: q.conditionId,
-      condition: q.condition,
-      pearls: q.pearls || [],
-      source: q.source,
-      fromStaging: q.fromStaging,
-      metadata: q.metadata,
-    }));
-
-    return {
-      questions,
-      analytics: data.analytics,
-      poolStatus: data.poolStatus,
-    };
-  } catch (error) {
-    console.error('[SessionService] API fetch failed, using fallback:', error);
-    return fallbackQuestionFetch(settings, count, token);
   }
+
+  console.error('[SessionService] All API fetch attempts failed, using fallback:', lastError);
+  return fallbackQuestionFetch(settings, count, token);
 }
 
 /**
