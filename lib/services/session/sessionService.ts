@@ -90,15 +90,22 @@ export class SessionService {
     const panceLevelOnly = simulationStrict;
 
     // Fetch seen records and pool count in parallel
-    const [seenRecords, poolCount] = await Promise.all([
-      this.prisma.userQuestionSeen.findMany({
-        where: { userId },
-        select: { questionId: true, questionType: true },
-      }),
-      this.prisma.preGeneratedQuestion.count({
-        where: { usedAt: null },
-      }),
-    ]);
+    let seenRecords: Array<{ questionId: string; questionType: string }> = [];
+    let poolCount = 0;
+    try {
+      [seenRecords, poolCount] = await Promise.all([
+        this.prisma.userQuestionSeen.findMany({
+          where: { userId },
+          select: { questionId: true, questionType: true },
+        }),
+        this.prisma.preGeneratedQuestion.count({
+          where: { usedAt: null },
+        }),
+      ]);
+    } catch (error) {
+      console.error('[SessionService] Failed to fetch seen records or pool count:', error);
+      // Continue with defaults (empty seen records, zero pool count)
+    }
     
     const seenIds = new Set([...seenRecords.map((r) => r.questionId), ...excludeQuestionIds]);
 
@@ -770,7 +777,14 @@ Return ONLY valid JSON:
 
     if (conditionIds.length === 0) return questions;
 
-    const contentMap = await this.contentService.getConditionsContent(conditionIds);
+    let contentMap: Map<string, any>;
+    try {
+      contentMap = await this.contentService.getConditionsContent(conditionIds);
+    } catch (error) {
+      console.error('[SessionService] Failed to enrich with medical content:', error);
+      // Return original questions without enrichment
+      return questions;
+    }
 
     return questions.map((q) => {
       if (!q.conditionId) return q;
@@ -831,7 +845,13 @@ Return ONLY valid JSON:
       })
     );
 
-    await Promise.all(upsertPromises);
+    try {
+      await Promise.all(upsertPromises);
+    } catch (error) {
+      // Log error but do not fail the session
+      console.error('[SessionService] Failed to record seen questions:', error);
+      // Continue without throwing
+    }
   }
 
   private shuffleArray<T>(array: T[]): T[] {

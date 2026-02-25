@@ -1664,7 +1664,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           vignette={useSplitPane ? currentQuestion.vignette : null}
           className="mb-6"
         >
-          <div ref={(el) => microKinetics.registerMouseTrackingContainer(el)}>
+          <div ref={microKinetics.registerMouseTrackingContainer}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentQuestion.id ?? `${currentQuestion.question}-${questionNumber}`}
@@ -2104,7 +2104,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                             Rationale
                           </h3>
                           <div
-                            ref={(el) => microKinetics.registerScrollContainer(el)}
+                            ref={microKinetics.registerScrollContainer}
                             className="text-action-secondary leading-relaxed bg-surface-secondary border border-border-subtle rounded-lg px-4 py-3 max-h-[40vh] overflow-y-auto prose prose-sm dark:prose-invert max-w-none"
                             dangerouslySetInnerHTML={{
                               __html: sanitizeForRationale(showRest ? restBody : raw),
