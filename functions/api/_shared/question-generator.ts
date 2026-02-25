@@ -36,7 +36,7 @@ export async function generateSingleQuestion(
   textbookContext?: { title: string; excerpts: string[] } | null
 ): Promise<GeneratedQuestion | null> {
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   const textbookBlock =
     textbookContext && textbookContext.excerpts.length > 0

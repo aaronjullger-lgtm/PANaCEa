@@ -21,9 +21,12 @@ import {
   isKVAvailable,
 } from '../_shared/cache';
 import type { KVNamespace } from '@cloudflare/workers-types';
+import { loadConditionData } from '../_shared/condition-loader';
+import { generateSingleQuestion } from '../_shared/question-generator';
 
 // Type definitions for question pool operations
 interface QuestionDataJson {
+  [key: string]: any;
   vignette?: string;
   question?: string;
   imageUrl?: string;
@@ -245,7 +248,7 @@ export const onRequestGet = authenticatedEndpoint(
         cachedPool
       );
       let questions = poolQuestions.questions;
-      const poolAvailable = poolQuestions.remaining;
+      let poolAvailable = poolQuestions.remaining;
 
       // If pool insufficient, supplement from main Question table
       if (questions.length < count) {
@@ -259,6 +262,37 @@ export const onRequestGet = authenticatedEndpoint(
 
       const needsGeneration = poolAvailable < POOL_LOW_THRESHOLD;
 
+      // If pool is low and we have capacity, generate a new question on the fly
+      if (needsGeneration && questions.length < count && env.GEMINI_API_KEY) {
+        const targetSystem = system ?? systems?.[0] ?? null;
+        const generated = await generateAndAddToPool(
+          prisma,
+          env,
+          targetSystem,
+          difficulty,
+          category,
+          userId
+        );
+        if (generated) {
+          questions.push(generated);
+          poolAvailable += 1; // increment since we added to pool
+          // Mark as seen for this user
+          await prisma.userQuestionSeen.create({
+            data: {
+              id: crypto.randomUUID(),
+              userId,
+              questionId: generated.id,
+              questionType: 'pre_generated',
+              firstSeenAt: new Date(),
+              lastSeenAt: new Date(),
+              timesShown: 1,
+              timesCorrect: 0,
+              timesIncorrect: 0,
+              updatedAt: new Date(),
+            },
+          });
+        }
+      }
       // Cache the pool questions if available
       if (
         isKVAvailable((env as { CACHE?: KVNamespace }).CACHE) &&
@@ -613,6 +647,7 @@ async function getFromMainTable(
   if (toRecord.length > 0) {
     await prisma.userQuestionSeen.createMany({
       data: toRecord.map((questionId) => ({
+        id: crypto.randomUUID(),
         userId,
         questionId,
         questionType: 'question',
@@ -621,10 +656,163 @@ async function getFromMainTable(
         timesShown: 1,
         timesCorrect: 0,
         timesIncorrect: 0,
+        updatedAt: new Date(),
       })),
       skipDuplicates: true,
     });
   }
 
   return result;
+}
+
+/**
+ * Generate a new question for a given system and add it to the pre-generated pool.
+ * Returns the generated question or null if generation fails.
+ */
+async function generateAndAddToPool(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  env: any,
+  system: string | null,
+  difficulty: string | null,
+  category: string | null,
+  userId: string
+): Promise<PoolQuestionOutput | null> {
+  const logger = createEndpointLogger('pool:generateAndAddToPool');
+  if (!env.GEMINI_API_KEY) {
+    logger.warn('GEMINI_API_KEY missing, skipping generation');
+    return null;
+  }
+
+  // Determine target system for generation
+  let targetSystem = system;
+  if (!targetSystem) {
+    // If no system specified, pick a random system from NCCPA blueprint weights
+    const systems = ['CV', 'PULM', 'GI', 'MSK', 'HEME', 'RENAL', 'ENDO', 'NEURO', 'PSYCH', 'DERM', 'OTHER'];
+    targetSystem = systems[Math.floor(Math.random() * systems.length)];
+  }
+
+  // Find a random condition for the target system
+  let conditionData = null;
+  try {
+    // Query medicalContent for a random condition matching the system
+    const conditions = await prisma.medicalContent.findMany({
+      where: { system: targetSystem },
+      select: { id: true, condition: true, system: true, subcategory: true, content: true },
+      take: 50, // limit to avoid heavy queries
+    });
+    if (conditions.length === 0) {
+      logger.warn(`No conditions found for system ${targetSystem}`);
+      return null;
+    }
+    const randomIndex = Math.floor(Math.random() * conditions.length);
+    const condition = conditions[randomIndex];
+    conditionData = {
+      id: condition.id,
+      name: condition.condition,
+      system: condition.system,
+      subcategory: condition.subcategory,
+      content: condition.content as any,
+    };
+  } catch (error) {
+    logger.error('Failed to fetch random condition', { error: String(error) });
+    return null;
+  }
+
+  // Transform condition data for generation
+  const transformedCondition = {
+    condition: conditionData.name,
+    sections: {
+      overview: conditionData.content?.overview || '',
+      etiology: conditionData.content?.etiologyPathophysiology || '',
+      clinicalPresentation: conditionData.content?.clinicalPresentation || '',
+      diagnostics: conditionData.content?.diagnostics?.notes || '',
+      treatment: Array.isArray(conditionData.content?.treatment)
+        ? conditionData.content.treatment.join('\n')
+        : conditionData.content?.treatment || '',
+    },
+  };
+
+  // Generate question
+  try {
+    const generatedQ = await generateSingleQuestion(
+      env.GEMINI_API_KEY,
+      transformedCondition,
+      'mcq',
+      null // textbookContext (optional)
+    );
+    if (!generatedQ) {
+      logger.warn('Question generation returned null');
+      return null;
+    }
+
+    // Determine difficulty
+    const difficultyStr = (() => {
+      if (difficulty) return difficulty;
+      if (generatedQ.difficulty !== undefined) {
+        const num = generatedQ.difficulty;
+        if (num < 0.3) return 'easy';
+        if (num > 0.7) return 'hard';
+        return 'medium';
+      }
+      return 'medium';
+    })();
+
+    // Convert generated question to PreGeneratedQuestion format
+    const generatedId = `gen-pool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const options = generatedQ.options || ['A', 'B', 'C', 'D'];
+    const correctAnswer = generatedQ.correctAnswer || 'A';
+    const correctAnswerIndex = ['A', 'B', 'C', 'D'].indexOf(correctAnswer.charAt(0));
+    const questionData: QuestionDataJson = {
+      vignette: generatedQ.question?.includes('Vignette') ? generatedQ.question : undefined,
+      question: generatedQ.question,
+      options: options,
+      correctAnswer: correctAnswer,
+      correctAnswerIndex: correctAnswerIndex >= 0 ? correctAnswerIndex : 0,
+      explanation: generatedQ.explanation?.rationale || '',
+      conditionName: conditionData.name,
+      system: conditionData.system,
+      subcategory: conditionData.subcategory || undefined,
+      tags: category ? [category] : undefined,
+    };
+
+    // Save to pre-generated pool
+    await prisma.preGeneratedQuestion.create({
+      data: {
+        id: generatedId,
+        conditionId: conditionData.id,
+        system: conditionData.system,
+        difficulty: difficultyStr,
+        questionData: questionData as any,
+        generatedAt: new Date(),
+        usedAt: null,
+        questionType: category || 'general',
+      },
+    });
+
+    logger.info('Generated and added question to pool', {
+      questionId: generatedId,
+      system: conditionData.system,
+    });
+
+    // Return as PoolQuestionOutput
+    return {
+      id: generatedId,
+      vignette: questionData.vignette,
+      question: questionData.question,
+      options: options,
+      correctAnswer: correctAnswer,
+      explanation: questionData.explanation,
+      system: conditionData.system,
+      difficulty: difficultyStr,
+      tags: questionData.tags,
+      conditionId: conditionData.id,
+      source: 'pool',
+      fromStaging: false,
+      contentSource: 'dynamic-generation',
+      contentSourceTitle: undefined,
+    };
+  } catch (error) {
+    logger.error('Failed to generate question', { error: String(error) });
+    return null;
+  }
 }
