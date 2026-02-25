@@ -88,8 +88,10 @@ export const onRequestGet = authenticatedEndpoint(
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error);
       const stack = error instanceof Error ? error.stack : undefined;
+      const errCode = (error as any).code;
       logger.error('Error fetching session questions', {
         error: errMsg,
+        code: errCode,
         stack,
         userId: auth.userId,
       });

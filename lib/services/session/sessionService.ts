@@ -238,8 +238,8 @@ export class SessionService {
       ? calculateSimulationTargetDistribution(count)
       : this.calculateNCCPAQuotas(count, minSystems);
 
-    // Prepare fetch promises for all systems in parallel
-    const systemFetchPromises = Object.entries(systemQuotas).map(async ([targetSystem, targetCount]) => {
+    // Prepare fetch tasks for all systems (functions that return promises)
+    const systemFetchTasks = Object.entries(systemQuotas).map(([targetSystem, targetCount]) => async () => {
       if (targetCount <= 0) return [];
 
       const systemAbbrev = simulationStrict
@@ -299,8 +299,14 @@ export class SessionService {
       return systemQuestions.slice(0, targetCount);
     });
 
-    // Execute all system fetches in parallel with timeout protection
-    const systemResults = await Promise.all(systemFetchPromises);
+    // Execute system fetches in batches to avoid overwhelming the database
+    const concurrencyLimit = 3;
+    const systemResults = [];
+    for (let i = 0; i < systemFetchTasks.length; i += concurrencyLimit) {
+      const batch = systemFetchTasks.slice(i, i + concurrencyLimit).map(task => task());
+      const batchResults = await Promise.all(batch);
+      systemResults.push(...batchResults);
+    }
     let allQuestions = systemResults.flat();
 
     // Shuffle the combined questions

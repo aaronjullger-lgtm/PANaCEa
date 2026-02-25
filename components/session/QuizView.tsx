@@ -1157,6 +1157,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     const currentHour = new Date().getHours();
     if (
       (currentHour >= LATE_NIGHT_START_HOUR || currentHour < LATE_NIGHT_END_HOUR) &&
+      questionsAnsweredInSession.current > 0 &&
       questionsAnsweredInSession.current % LATE_NIGHT_CHECK_INTERVAL === 0
     ) {
       setWellnessReason('late_night');
