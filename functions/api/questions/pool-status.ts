@@ -5,6 +5,7 @@
  */
 
 import { z } from 'zod';
+import { getSystemWeight } from '../../../lib/constants/blueprint';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
@@ -13,7 +14,15 @@ const PoolStatusSchema = z.object({
   query: z.object({}),
 });
 
-const POOL_LOW_THRESHOLD = 20;
+const POOL_LOW_THRESHOLD = 20; // fallback global threshold
+const BASE_THRESHOLD_MULTIPLIER = 200;
+
+function getSystemThreshold(system: string): number {
+  const weight = getSystemWeight(system);
+  const threshold = Math.round(weight * BASE_THRESHOLD_MULTIPLIER);
+  return Math.max(10, threshold);
+}
+
 const SYSTEMS = [
   'CV',
   'PULM',
@@ -47,6 +56,7 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
 
     // Get counts by system (total in pool - multi-tenant: all questions are available)
     const systemCounts: Record<string, { total: number; userSeen: number; userFresh: number }> = {};
+    const systemThresholds: Record<string, number> = {};
 
     for (const system of SYSTEMS) {
       const total = await prisma.preGeneratedQuestion.count({ where: { system } });
@@ -73,6 +83,7 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
         userSeen,
         userFresh: total - userSeen,
       };
+      systemThresholds[system] = getSystemThreshold(system);
     }
 
     // Get overall pool count
@@ -98,8 +109,8 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
     // Get main Question table count
     const mainQuestionCount = await prisma.question.count();
 
-    // Identify systems that need more questions in the pool
-    const lowSystems = SYSTEMS.filter((s) => (systemCounts[s]?.total ?? 0) < POOL_LOW_THRESHOLD);
+    // Identify systems that need more questions in the pool (per‑system thresholds)
+    const lowSystems = SYSTEMS.filter((s) => (systemCounts[s]?.total ?? 0) < systemThresholds[s]);
 
     logger.info('Pool status fetched', { userId: auth.userId, totalInPool, lowSystems });
 
@@ -121,9 +132,10 @@ export const onRequestGet = authenticatedEndpoint(PoolStatusSchema, async (conte
         bySystem: systemCounts,
         health: {
           threshold: POOL_LOW_THRESHOLD,
+          systemThresholds,
           lowSystems,
-          overallHealthy: totalInPool >= POOL_LOW_THRESHOLD,
-          needsGeneration: lowSystems.length > 0 || totalInPool < POOL_LOW_THRESHOLD,
+          overallHealthy: lowSystems.length === 0,
+          needsGeneration: lowSystems.length > 0,
         },
       },
     };

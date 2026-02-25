@@ -6,6 +6,7 @@
 
 import { z } from 'zod';
 import { selectByPanceDistribution, fisherYatesShuffle } from '../../../lib/poolSelection';
+import { getSystemWeight } from '../../../lib/constants/blueprint';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
@@ -118,6 +119,26 @@ function mapToPreGeneratedQuestion(r: {
 
 const POOL_LOW_THRESHOLD = 20;
 const DEFAULT_FETCH_COUNT = 10;
+const BASE_THRESHOLD_MULTIPLIER = 200;
+
+function getSystemThreshold(system: string): number {
+  const weight = getSystemWeight(system);
+  const threshold = Math.round(weight * BASE_THRESHOLD_MULTIPLIER);
+  return Math.max(10, threshold);
+}
+
+function computeThreshold(system: string | null, systems: string[] | null): number {
+  if (systems && systems.length > 0) {
+    // Deduplicate systems
+    const unique = Array.from(new Set(systems));
+    return unique.reduce((sum, sys) => sum + getSystemThreshold(sys), 0);
+  }
+  if (system) {
+    return getSystemThreshold(system);
+  }
+  // No system filter – fallback to global threshold
+  return POOL_LOW_THRESHOLD;
+}
 
 // Schema for query params - flat structure since source is 'query'
 // systems: comma-separated list for didactic (e.g. "CV,PULM,GI")
@@ -260,7 +281,8 @@ export const onRequestGet = authenticatedEndpoint(
         questions = [...questions, ...mainQuestions];
       }
 
-      const needsGeneration = poolAvailable < POOL_LOW_THRESHOLD;
+      const threshold = computeThreshold(system, systems);
+      const needsGeneration = poolAvailable < threshold;
 
       // If pool is low and we have capacity, generate a new question on the fly
       if (needsGeneration && questions.length < count && env.GEMINI_API_KEY) {
@@ -316,7 +338,7 @@ export const onRequestGet = authenticatedEndpoint(
       return {
         data: {
           questions,
-          poolStatus: { available: poolAvailable, needsGeneration, threshold: POOL_LOW_THRESHOLD },
+          poolStatus: { available: poolAvailable, needsGeneration, threshold },
         },
         headers: { 'X-Cache': cachedPool ? 'HIT' : 'MISS' },
       };
