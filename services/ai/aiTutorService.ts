@@ -350,7 +350,7 @@ export class AITutorService {
    */
   private async callGroundingAPI(request: AskTheManualRequest): Promise<AskTheManualResponse> {
     const response = await fetch(
-      `${this.config.apiEndpoint}/models/gemini-pro:generateGroundedContent?key=${this.config.geminiApiKey}`,
+      `${this.config.apiEndpoint}/models/gemini-2.5-flash:generateGroundedContent?key=${this.config.geminiApiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

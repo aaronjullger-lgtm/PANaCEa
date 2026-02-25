@@ -33,6 +33,12 @@ export const onRequestGet = async (context: any) => {
       CLERK_SECRET_KEY: !!env.CLERK_SECRET_KEY,
       GEMINI_API_KEY: !!env.GEMINI_API_KEY,
     };
+    // Masked keys for verification (first 8 chars)
+    diagnostics.envMasked = {
+      DATABASE_URL: env.DATABASE_URL ? env.DATABASE_URL.substring(0, 8) + '...' : null,
+      CLERK_SECRET_KEY: env.CLERK_SECRET_KEY ? env.CLERK_SECRET_KEY.substring(0, 8) + '...' : null,
+      GEMINI_API_KEY: env.GEMINI_API_KEY ? env.GEMINI_API_KEY.substring(0, 8) + '...' : null,
+    };
 
     // 2. DATABASE_URL type
     const dbUrl = env.DATABASE_URL as string | undefined;

@@ -436,7 +436,7 @@ Important: Only include information that is explicitly stated or can be confiden
 
     try {
       const response = await fetch(
-        `${this.config.apiEndpoint}/models/gemini-2.0-flash-exp:generateContent?key=${this.config.geminiApiKey}`,
+        `${this.config.apiEndpoint}/models/gemini-2.5-flash:generateContent?key=${this.config.geminiApiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
