@@ -142,6 +142,12 @@
 - **Push Timing:** Push immediately after committing. Do not leave uncommitted or unpushed changes.
 - **Verification:** Run `git status` to confirm working tree is clean before marking task complete.
 
+**Deployment Pipeline Requirement:**
+- **Schema Changes:** After committing, apply database schema changes via `npx prisma db push --accept-data-loss` (if safe) or create a migration (`npx prisma migrate dev`). Handle any errors appropriately.
+- **Unit Tests:** Run unit tests with `npm test` or `npx vitest run` to ensure no regressions. All tests must pass.
+- **Deploy:** Deploy to Cloudflare Pages using `npm run deploy:local`. Confirm deployment success.
+- **Failure Handling:** If any step fails, report the error and do not mark the task as complete.
+
 **Behavioral Note:** You are an expert. Do not ask for permission to fix obvious architectural violations (like hardcoded colors or wrong math). Fix them proactively.
 **Functionality Checks:** When finishing code and ready to move on to next step, ensure that the code works as needed.
 
