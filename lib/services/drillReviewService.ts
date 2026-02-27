@@ -425,6 +425,7 @@ export async function submitDrillReview(
     | undefined;
 
   if (question.conditionId && countForFSRS && !isRapidGuess) {
+    console.log('[DEBUG] Creating ReviewLog', { conditionId: question.conditionId, countForFSRS, isRapidGuess });
     try {
       const fsrs = new FSRS();
       const existingProgress = await prisma.userProgress.findUnique({
@@ -473,6 +474,7 @@ export async function submitDrillReview(
       };
 
       // Write to ReviewLog for FSRS v6 optimizer (MAIN/real sessions only)
+      console.log('[DEBUG] Entering ReviewLog creation inner try block');
       try {
         const reviewDate = new Date();
         const hoverOscillations =
@@ -484,6 +486,7 @@ export async function submitDrillReview(
           timeToFirstClick ??
           undefined;
 
+        console.log('[DEBUG] About to create ReviewLog', { userId, questionId, conditionId: question.conditionId });
         await prisma.reviewLog.create({
           data: {
             userId,
@@ -492,16 +495,18 @@ export async function submitDrillReview(
             questionId,
             questionType: 'pre_generated',
             grade: rating,
+            grade_continuous: gradeContinuous,
             state: currentCard.state,
+            stability: currentCard.stability,
+            difficulty: currentCard.difficulty,
+            retrievability: fsrs.calculateRetrievability(currentCard.elapsed_days, currentCard.stability),
+            implicit_confidence: implicitConfidence,
             scheduledAt: new Date(
               currentCard.last_review.getTime() + currentCard.scheduled_days * 86400000
             ),
             reviewedAt: reviewDate,
             responseTimeMs: effectiveDurationMs,
             review_type: 'real',
-            stability: currentCard.stability,
-            difficulty: currentCard.difficulty,
-            retrievability: null,
             elapsedDays: currentCard.elapsed_days,
             wasCorrect: isCorrect,
             sessionType: 'MAIN',
@@ -527,6 +532,7 @@ export async function submitDrillReview(
           },
         });
       } catch (reviewLogError) {
+        console.error('[DEBUG] ReviewLog creation failed:', reviewLogError);
         logger?.warn?.('Failed to write ReviewLog (non-fatal)', {
           error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
         });
@@ -554,6 +560,7 @@ export async function submitDrillReview(
         });
       }
     } catch (progressError) {
+      console.error('[DEBUG] Failed to update UserProgress', progressError);
       logger?.warn?.('Failed to update UserProgress', {
         error: progressError instanceof Error ? progressError.message : String(progressError),
       });

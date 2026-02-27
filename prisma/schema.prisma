@@ -486,12 +486,12 @@ model ConditionRelation {
 }
 
 model ConfusionPair {
-  id                                                               String          @id
+  id                                                               String          @id @default(cuid())
   userId                                                           String
   realCondition                                                    String
   mistakenFor                                                      String
   count                                                            Int             @default(1)
-  lastOccurrence                                                   DateTime
+  lastOccurrence                                                   DateTime        @default(now())
   createdAt                                                        DateTime        @default(now())
   mistakenForId                                                    String?
   realConditionId                                                  String?
@@ -1767,7 +1767,7 @@ model NormalLabValue {
 }
 
 model NormalPhysicalExamFinding {
-  id                 String   @id
+  id                     String          @id @default(cuid())
   system             String
   examComponent      String
   normalFinding      String
@@ -1784,7 +1784,7 @@ model NormalPhysicalExamFinding {
 }
 
 model NormalVitalSign {
-  id                String   @id
+  id                     String          @id @default(cuid())
   vitalName         String
   normalRangeLow    Float?
   normalRangeHigh   Float?
@@ -2413,17 +2413,19 @@ model QuestionVersion {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model ReviewLog {
-  id                     String          @id
+  id                     String          @id @default(cuid())
   userId                 String
   conditionId            String?
   medicalContentId       String?
   questionId             String?
   questionType           String?
   grade                  Int
+  grade_continuous       Float?
   state                  Int
   stability              Float
   difficulty             Float
   retrievability         Float?
+  implicit_confidence    Float?
   reviewedAt             DateTime        @default(now())
   scheduledAt            DateTime?
   elapsedDays            Float?
