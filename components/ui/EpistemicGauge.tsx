@@ -143,10 +143,10 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
 
   // Color classes for the gauge fill
   const colorClasses = {
-    blue: 'bg-blue-500 dark:bg-blue-400',
-    green: 'bg-emerald-500 dark:bg-emerald-400',
-    amber: 'bg-amber-500 dark:bg-amber-400',
-    slate: 'bg-slate-500 dark:bg-slate-400',
+    blue: 'bg-[var(--color-category-practice)]',
+    green: 'bg-data-pass',
+    amber: 'bg-data-provisional',
+    slate: 'bg-data-neutral',
   };
 
   // Default tooltip based on calibration level
@@ -172,26 +172,26 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
           {showConfidenceIndicator && (
             <div className="flex items-center gap-1.5">
               {calibrationLevel.confidence === 'collecting' && (
-                <AlertTriangle className="w-3.5 h-3.5 text-slate-400" />
+                <AlertTriangle className="w-3.5 h-3.5 text-data-neutral" />
               )}
               {calibrationLevel.confidence === 'emerging' && (
-                <Info className="w-3.5 h-3.5 text-amber-500" />
+                <Info className="w-3.5 h-3.5 text-data-provisional" />
               )}
               {calibrationLevel.confidence === 'provisional' && (
-                <Info className="w-3.5 h-3.5 text-blue-500" />
+                <Info className="w-3.5 h-3.5 text-[var(--color-category-practice)]" />
               )}
               {calibrationLevel.confidence === 'confident' && (
-                <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                <CheckCircle className="w-3.5 h-3.5 text-data-pass" />
               )}
               <span
                 className={`text-[10px] uppercase tracking-wider font-medium ${
                   calibrationLevel.confidence === 'collecting'
-                    ? 'text-slate-400'
+                    ? 'text-data-neutral'
                     : calibrationLevel.confidence === 'emerging'
-                      ? 'text-amber-500'
+                      ? 'text-data-provisional'
                       : calibrationLevel.confidence === 'provisional'
-                        ? 'text-blue-500'
-                        : 'text-emerald-500'
+                        ? 'text-[var(--color-category-practice)]'
+                        : 'text-data-pass'
                 }`}
               >
                 {calibrationLevel.label}
@@ -281,10 +281,10 @@ export const EpistemicRadialGauge: React.FC<
   const progress = (displayValue / 100) * circumference;
 
   const colorMap = {
-    blue: 'stroke-blue-500 dark:stroke-blue-400',
-    green: 'stroke-emerald-500 dark:stroke-emerald-400',
-    amber: 'stroke-amber-500 dark:stroke-amber-400',
-    slate: 'stroke-slate-500 dark:stroke-slate-400',
+    blue: 'stroke-[var(--color-category-practice)]',
+    green: 'stroke-data-pass',
+    amber: 'stroke-data-provisional',
+    slate: 'stroke-data-neutral',
   };
 
   return (
