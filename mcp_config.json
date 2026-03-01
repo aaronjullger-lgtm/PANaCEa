@@ -1,0 +1,78 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/mcp-config.json",
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://panacea:panacea_dev@localhost:5432/panacea_dev"
+      ],
+      "description": "PostgreSQL database access for PANaCEa (local dev)",
+      "env": {
+        "DATABASE_URL": "postgresql://panacea:panacea_dev@localhost:5432/panacea_dev"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "description": "GitHub repository access for PANaCEa",
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/aaronullger/GitHub/StudyPANaCEa"
+      ],
+      "description": "Local filesystem access for PANaCEa repository"
+    },
+    "fetch": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-fetch"
+      ],
+      "description": "HTTP fetch for external APIs (Gemini, Clerk, Supabase)"
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "description": "Persistent memory for AI context across sessions"
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ],
+      "description": "Browser automation for E2E testing and debugging"
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "description": "Enhanced reasoning for complex medical logic and FSRS algorithms"
+    }
+  },
+  "globalShortcut": "Ctrl+Shift+M",
+  "autoStart": true,
+  "logLevel": "info",
+  "notes": {
+    "setup": "Run 'npm run setup:mcp' to install all MCP servers",
+    "postgres": "Requires local PostgreSQL running (docker-compose up -d)",
+    "github": "Set GITHUB_TOKEN environment variable for GitHub access",
+    "production": "For production database, update DATABASE_URL to Prisma Accelerate URL"
+  }
+}

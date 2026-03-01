@@ -68,11 +68,15 @@
 			"args": [
 				"-y",
 				"@googlemaps/code-assist-mcp@0.2.0"
-			]
+			],
+			"disabled": true,
+			"alwaysAllow": []
 		},
 		"figma-dev-mode": {
 			"type": "sse",
-			"url": "http://127.0.0.1:3845/sse"
+			"url": "http://127.0.0.1:3845/sse",
+			"disabled": true,
+			"alwaysAllow": []
 		}
 	}
 }

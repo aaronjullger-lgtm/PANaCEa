@@ -572,13 +572,15 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [currentQuestion, flaggedQuestions]);
 
   // Fetch peer selection stats when feedback is shown (for "X% of students also chose B")
+  // Fetch peer selection stats when feedback is shown (for "X% of students also chose B")
   useEffect(() => {
     if (!isAnswered || !currentQuestion?.id || selectedAnswerIndex === null) {
       setAnswerDistribution(null);
       return;
     }
     let cancelled = false;
-    (async () => {
+    let timeoutId: NodeJS.Timeout | undefined;
+    const fetchDistribution = async () => {
       try {
         const token = await getToken();
         const res = await fetch(
@@ -594,9 +596,13 @@ const QuizView: React.FC<QuizViewProps> = ({
       } catch {
         if (!cancelled) setAnswerDistribution(null);
       }
-    })();
+    };
+    // Debounce to prevent rapid re-fetches when dependencies change quickly
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(fetchDistribution, 500);
     return () => {
       cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, [isAnswered, currentQuestion?.id, selectedAnswerIndex, getToken]);
 
