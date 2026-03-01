@@ -192,4 +192,12 @@ heapdump-*.heapsnapshot
 .cursor/memory/
 .ai/
 
+# Temporary validation and conversion scripts
+*.py
+*.sh
+*.cjs
+*.txt
+*.backup*
+*_backup*
+
 env.example
