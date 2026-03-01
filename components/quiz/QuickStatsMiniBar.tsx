@@ -52,7 +52,7 @@ export const QuickStatsMiniBar: React.FC<QuickStatsMiniBarProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-center gap-4 py-2 px-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 text-xs"
+      className="flex items-center justify-center gap-4 py-2 px-4 bg-data-neutral dark:bg-data-neutral/50 border-t border-data-neutral dark:border-data-neutral text-xs"
     >
       {/* Accuracy */}
       <div className="flex items-center gap-1.5">
@@ -65,8 +65,8 @@ export const QuickStatsMiniBar: React.FC<QuickStatsMiniBarProps> = ({
                 : 'text-[var(--color-data-fail)]'
           }`}
         />
-        <span className="font-medium text-slate-600 dark:text-slate-400">{stats.accuracy}%</span>
-        <span className="text-slate-400 dark:text-slate-500">
+        <span className="font-medium text-data-neutral dark:text-data-neutral">{stats.accuracy}%</span>
+        <span className="text-data-neutral dark:text-data-neutral">
           ({stats.correct}/{stats.total})
         </span>
       </div>
@@ -81,14 +81,14 @@ export const QuickStatsMiniBar: React.FC<QuickStatsMiniBarProps> = ({
 
       {/* Pace */}
       {stats.qpm > 0 && (
-        <div className="flex items-center gap-1.5 text-slate-500">
+        <div className="flex items-center gap-1.5 text-data-neutral">
           <Zap className="w-3.5 h-3.5" />
           <span>{stats.qpm} Q/min</span>
         </div>
       )}
 
       {/* Time */}
-      <div className="flex items-center gap-1.5 text-slate-500">
+      <div className="flex items-center gap-1.5 text-data-neutral">
         <Clock className="w-3.5 h-3.5" />
         <span>{stats.sessionMinutes}m</span>
       </div>

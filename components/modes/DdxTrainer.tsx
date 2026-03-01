@@ -72,10 +72,10 @@ const DdxTrainer = () => {
             variant={selectedAnswer === dx.name ? 'default' : 'outline'}
             onClick={() => handleSelectAnswer(dx.name)}
             className={`h-auto text-wrap justify-start p-4 ${
-              isRevealed && dx.isCorrect ? 'bg-green-500 hover:bg-green-600 text-white' : ''
+              isRevealed && dx.isCorrect ? 'bg-data-pass hover:bg-data-pass text-white' : ''
             } ${
               isRevealed && selectedAnswer === dx.name && !dx.isCorrect
-                ? 'bg-red-500 hover:bg-red-600 text-white'
+                ? 'bg-data-fail hover:bg-data-fail text-white'
                 : ''
             }`}
           >
@@ -96,7 +96,7 @@ const DdxTrainer = () => {
               <Card key={dxName}>
                 <CardHeader>
                   <CardTitle
-                    className={dxName === problem.correctDiagnosis ? 'text-green-600' : ''}
+                    className={dxName === problem.correctDiagnosis ? 'text-data-pass' : ''}
                   >
                     {dxName}
                   </CardTitle>

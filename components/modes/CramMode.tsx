@@ -335,24 +335,24 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
           >
             <Trophy className="w-20 h-20 mx-auto mb-6 text-orange-500" />
             <h2 className="text-3xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center justify-center gap-2">
-              Cram Session Complete! <Trophy className="w-8 h-8 text-amber-500" />
+              Cram Session Complete! <Trophy className="w-8 h-8 text-data-provisional" />
             </h2>
 
             <div className="grid grid-cols-2 gap-4 my-8">
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6">
-                <Target className="w-8 h-8 mx-auto mb-2 text-green-600 dark:text-green-400" />
-                <div className="text-3xl font-bold text-green-700 dark:text-green-400">
+                <Target className="w-8 h-8 mx-auto mb-2 text-data-pass dark:text-data-pass" />
+                <div className="text-3xl font-bold text-data-pass dark:text-data-pass">
                   {accuracy.toFixed(0)}%
                 </div>
-                <div className="text-sm text-green-600 dark:text-green-300">Accuracy</div>
+                <div className="text-sm text-data-pass dark:text-data-pass">Accuracy</div>
               </div>
 
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6">
-                <Clock className="w-8 h-8 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
-                <div className="text-3xl font-bold text-blue-700 dark:text-blue-400">
+                <Clock className="w-8 h-8 mx-auto mb-2 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
+                <div className="text-3xl font-bold text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
                   {formatTime(elapsedTime)}
                 </div>
-                <div className="text-sm text-blue-600 dark:text-blue-300">Total Time</div>
+                <div className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)]">Total Time</div>
               </div>
             </div>
 
@@ -361,7 +361,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                 <span className="font-semibold text-[var(--color-text-secondary)]">
                   Questions Correct:
                 </span>{' '}
-                <span className="text-green-600 dark:text-green-400 font-bold">
+                <span className="text-data-pass dark:text-data-pass font-bold">
                   {correctCount} / {questions.length}
                 </span>
               </div>
@@ -369,7 +369,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                 <span className="font-semibold text-[var(--color-text-secondary)]">
                   Avg Time/Question:
                 </span>{' '}
-                <span className="text-blue-600 dark:text-blue-400 font-bold">
+                <span className="text-[var(--color-category-practice)] text-[var(--color-category-practice)] font-bold">
                   {avgTimePerQuestion.toFixed(1)}s
                 </span>
               </div>
@@ -489,7 +489,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
 
                 if (!showResult) {
                   buttonClass +=
-                    'border-gray-300 dark:border-gray-600 hover:border-orange-500 dark:hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20';
+                    'border-[var(--color-text-muted)] border-[var(--color-text-muted)] hover:border-orange-500 dark:hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20';
                 } else if (isCorrect) {
                   buttonClass += 'border-green-500 bg-green-50 dark:bg-green-900/20';
                 } else if (isSelected && !isCorrect) {
@@ -509,9 +509,9 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                       <span className="text-lg font-medium text-[var(--color-text-primary)]">
                         {option}
                       </span>
-                      {showResult && isCorrect && <Check className="w-6 h-6 text-green-600" />}
+                      {showResult && isCorrect && <Check className="w-6 h-6 text-data-pass" />}
                       {showResult && isSelected && !isCorrect && (
-                        <X className="w-6 h-6 text-red-600" />
+                        <X className="w-6 h-6 text-data-fail" />
                       )}
                     </div>
                   </button>
@@ -528,8 +528,8 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-6 space-y-4"
                 >
-                  <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
-                    <h4 className="font-bold text-blue-900 dark:text-blue-300 mb-2 flex items-center gap-2">
+                  <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-[var(--color-category-practice)] border-[var(--color-category-practice)]">
+                    <h4 className="font-bold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-2 flex items-center gap-2">
                       <BookOpen className="w-5 h-5" />
                       Explanation
                     </h4>
@@ -538,8 +538,8 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                     </p>
                   </div>
 
-                  <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
-                    <h4 className="font-bold text-amber-900 dark:text-amber-300 mb-2 flex items-center gap-2">
+                  <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border border-data-provisional dark:border-data-provisional">
+                    <h4 className="font-bold text-data-provisional dark:text-data-provisional mb-2 flex items-center gap-2">
                       <Target className="w-5 h-5" />
                       High-Yield Pearl
                     </h4>

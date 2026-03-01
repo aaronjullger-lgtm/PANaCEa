@@ -265,8 +265,8 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
   return (
     <div className="space-y-4">
       {/* Safety disclaimer */}
-      <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-        <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+      <div className="flex items-start gap-3 p-3 rounded-lg bg-data-provisional/10 border border-data-provisional/30">
+        <AlertTriangle className="w-5 h-5 text-data-provisional flex-shrink-0 mt-0.5" />
         <p className="text-sm text-[var(--color-text-primary)]">
           AI-generated for education only. Verify with clinical reference. Do not use for diagnostic
           accuracy.
@@ -478,7 +478,7 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
               <div className="rounded-xl border border-[var(--color-border)] overflow-hidden bg-[var(--color-bg-secondary)]">
                 <div className="p-2 text-center text-xs font-medium bg-[var(--color-bg-tertiary)]">
                   {viewMode === 'guess' && showGuessReveal ? (
-                    <span className={guessCorrect ? 'text-emerald-600' : 'text-rose-500'}>
+                    <span className={guessCorrect ? 'text-data-pass' : 'text-rose-500'}>
                       {guessCorrect
                         ? `✓ Correct: ${selectedLabel}`
                         : `Correct: ${selectedLabel} (you chose: ${guessAnswer})`}

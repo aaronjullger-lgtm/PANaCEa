@@ -137,7 +137,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             </div>
           )}
           {error && (
-            <p className="py-4 text-red-500" role="alert">
+            <p className="py-4 text-data-fail" role="alert">
               {error}
             </p>
           )}

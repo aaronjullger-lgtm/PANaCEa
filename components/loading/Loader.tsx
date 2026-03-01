@@ -19,11 +19,11 @@ const Loader: React.FC<LoaderProps> = ({ message = 'Loading...', forceDark = fal
   }, []);
 
   // Use theme colors instead of hardcoded colors for light/dark mode consistency
-  const bgClass = forceDark ? 'bg-slate-950' : 'bg-[var(--color-bg-primary)]/80 backdrop-blur-md';
+  const bgClass = forceDark ? 'bg-data-neutral' : 'bg-[var(--color-bg-primary)]/80 backdrop-blur-md';
 
-  const dotClass = forceDark ? 'bg-slate-100' : 'bg-[var(--color-accent)]';
+  const dotClass = forceDark ? 'bg-data-neutral' : 'bg-[var(--color-accent)]';
 
-  const textClass = forceDark ? 'text-slate-200' : 'text-[var(--color-text-primary)]';
+  const textClass = forceDark ? 'text-data-neutral' : 'text-[var(--color-text-primary)]';
 
   return (
     <motion.div

@@ -61,10 +61,10 @@ const CATEGORY_LABELS: Record<OrderCategory, string> = {
 };
 
 const COST_COLORS: Record<string, string> = {
-  $: 'text-green-600 dark:text-green-400',
+  $: 'text-data-pass dark:text-data-pass',
   $$: 'text-yellow-600 dark:text-yellow-400',
   $$$: 'text-orange-600 dark:text-orange-400',
-  $$$$: 'text-red-600 dark:text-red-400',
+  $$$$: 'text-data-fail dark:text-data-fail',
 };
 
 export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
@@ -323,14 +323,14 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
 
             {/* Alerts Banner */}
             {alerts.length > 0 && (
-              <div className="px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
+              <div className="px-4 py-2 bg-data-provisional dark:bg-data-provisional/20 border-b border-data-provisional dark:border-data-provisional">
                 {alerts.map((alert, idx) => (
                   <div
                     key={idx}
                     className={`flex items-start gap-2 text-sm ${
                       alert.severity === 'critical'
-                        ? 'text-red-700 dark:text-red-300'
-                        : 'text-amber-700 dark:text-amber-300'
+                        ? 'text-data-fail dark:text-data-fail'
+                        : 'text-data-provisional dark:text-data-provisional'
                     }`}
                   >
                     {alert.severity === 'critical' ? (
@@ -356,7 +356,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-amber-500" />
+                      <Zap className="w-4 h-4 text-data-provisional" />
                       Quick Order Sets
                     </h3>
                     <button
@@ -372,7 +372,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                         key={bundle.id}
                         onClick={() => selectBundle(bundle)}
                         className="p-3 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20
-                               border border-amber-200 dark:border-amber-800 rounded-lg text-left
+                               border border-data-provisional dark:border-data-provisional rounded-lg text-left
                                hover:shadow-md transition-all group"
                       >
                         <div className="flex items-center gap-2 mb-1">
@@ -384,7 +384,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                         <p className="text-xs text-[var(--color-text-secondary)] line-clamp-1">
                           {bundle.description}
                         </p>
-                        <div className="mt-2 flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                        <div className="mt-2 flex items-center gap-1 text-xs text-data-provisional dark:text-data-provisional">
                           <span>{bundle.items.length} items</span>
                           <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                         </div>
@@ -445,12 +445,12 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                               {item.name}
                             </span>
                             {item.isHighYield && (
-                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded">
+                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional rounded">
                                 HY
                               </span>
                             )}
                             {isAlreadyOrdered && (
-                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
+                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)] rounded">
                                 ORDERED
                               </span>
                             )}

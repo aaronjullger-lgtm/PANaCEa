@@ -292,25 +292,25 @@ export const UserStatsOverviewSkeleton: React.FC<{
       </div>
       {/* Readiness gauge skeleton */}
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-5">
-        <Skeleton height="1rem" width="40%" className="mb-4 bg-slate-700/50 dark:bg-slate-700/50" />
+        <Skeleton height="1rem" width="40%" className="mb-4 bg-data-neutral/50 dark:bg-data-neutral/50" />
         <div className="flex gap-6">
           <Skeleton
             width={96}
             height={96}
             radius="full"
-            className="bg-slate-700/50 dark:bg-slate-700/50"
+            className="bg-data-neutral/50 dark:bg-data-neutral/50"
           />
           <div className="flex-1 space-y-3">
             <Skeleton
               height="1.5rem"
               width="60%"
-              className="bg-slate-700/50 dark:bg-slate-700/50"
+              className="bg-data-neutral/50 dark:bg-data-neutral/50"
             />
-            <Skeleton height="1rem" width="80%" className="bg-slate-700/50 dark:bg-slate-700/50" />
+            <Skeleton height="1rem" width="80%" className="bg-data-neutral/50 dark:bg-data-neutral/50" />
             <Skeleton
               height="0.5rem"
               width="100%"
-              className="bg-slate-700/50 dark:bg-slate-700/50"
+              className="bg-data-neutral/50 dark:bg-data-neutral/50"
             />
           </div>
         </div>
@@ -331,17 +331,17 @@ export const UserStatsOverviewSkeleton: React.FC<{
             <Skeleton
               height="1.25rem"
               width="2rem"
-              className="mx-auto mb-2 bg-slate-700/50 dark:bg-slate-700/50"
+              className="mx-auto mb-2 bg-data-neutral/50 dark:bg-data-neutral/50"
             />
             <Skeleton
               height="1.5rem"
               width="50%"
-              className="mx-auto mb-2 bg-slate-700/50 dark:bg-slate-700/50"
+              className="mx-auto mb-2 bg-data-neutral/50 dark:bg-data-neutral/50"
             />
             <Skeleton
               height="0.75rem"
               width="70%"
-              className="mx-auto bg-slate-700/50 dark:bg-slate-700/50"
+              className="mx-auto bg-data-neutral/50 dark:bg-data-neutral/50"
             />
           </div>
         ))}
@@ -351,7 +351,7 @@ export const UserStatsOverviewSkeleton: React.FC<{
         <Skeleton
           height="0.875rem"
           width="30%"
-          className="mb-4 bg-slate-700/50 dark:bg-slate-700/50"
+          className="mb-4 bg-data-neutral/50 dark:bg-data-neutral/50"
         />
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -359,7 +359,7 @@ export const UserStatsOverviewSkeleton: React.FC<{
               key={i}
               height="2.5rem"
               width={`${90 - i * 10}%`}
-              className="bg-slate-700/50 dark:bg-slate-700/50"
+              className="bg-data-neutral/50 dark:bg-data-neutral/50"
             />
           ))}
         </div>

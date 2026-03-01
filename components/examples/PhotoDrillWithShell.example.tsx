@@ -96,7 +96,7 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ onExit,
           {/* Category cards would go here */}
           <button
             onClick={() => startSession('ecg')}
-            className="p-6 rounded-xl border border-[var(--color-border)] hover:border-blue-500 transition-all"
+            className="p-6 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-category-practice)] transition-all"
           >
             <h3 className="text-lg font-bold">ECG</h3>
             <p className="text-sm text-[var(--color-text-muted)]">
@@ -119,7 +119,7 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ onExit,
       fullWidth={true} // Immersive full-width experience
       noPadding={true} // Content touches edges
       fullScreen={true} // Fixed positioning
-      backgroundColor="bg-slate-950 dark:bg-slate-950" // Dark mode for imaging
+      backgroundColor="bg-data-neutral dark:bg-data-neutral" // Dark mode for imaging
       onExit={handleExit}
       rightAction={
         <div className="flex items-center gap-3">
@@ -157,13 +157,13 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ onExit,
           >
             {/* Clinical Context (for derm mode) */}
             {currentCase.clinicalContext && !imageRevealed && (
-              <div className="mb-6 p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                <p className="text-lg text-blue-100">
+              <div className="mb-6 p-6 bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-xl">
+                <p className="text-lg text-[var(--color-category-practice)]">
                   {JSON.stringify(currentCase.clinicalContext)}
                 </p>
                 <button
                   onClick={() => setImageRevealed(true)}
-                  className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                  className="mt-4 px-4 py-2 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white rounded-lg transition-colors"
                 >
                   Reveal Image
                 </button>
@@ -199,7 +199,7 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ onExit,
             >
               <button
                 onClick={nextCase}
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors flex items-center gap-2"
+                className="px-8 py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white font-semibold rounded-xl transition-colors flex items-center gap-2"
               >
                 Next Case
                 <Shuffle className="w-5 h-5" />

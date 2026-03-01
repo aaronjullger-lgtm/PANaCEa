@@ -210,8 +210,8 @@ export function UserProfileModal({
                 {!showRotationSelector && (
                   <div className="bg-[var(--color-bg-secondary)] rounded-lg p-6 text-center">
                     <div className="flex justify-center mb-4">
-                      <div className="p-3 bg-green-500/20 rounded-full">
-                        <CheckCircle className="w-8 h-8 text-green-500" />
+                      <div className="p-3 bg-data-pass/20 rounded-full">
+                        <CheckCircle className="w-8 h-8 text-data-pass" />
                       </div>
                     </div>
                     <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-2">

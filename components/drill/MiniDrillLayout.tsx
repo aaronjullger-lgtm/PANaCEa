@@ -54,7 +54,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] dark:bg-slate-950 text-[var(--color-text-primary)] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] dark:bg-data-neutral text-[var(--color-text-primary)] flex flex-col">
       {/* Flash overlay for correct/incorrect feedback */}
       <AnimatePresence>
         {isFeedback && isCorrect !== null && (
@@ -156,13 +156,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     return (
       <div className="bg-[var(--color-bg-secondary)] rounded-xl sm:rounded-2xl border border-[var(--color-border)] p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="flex gap-2 mb-3">
-          <div className="w-16 h-5 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
-          <div className="w-20 h-5 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
+          <div className="w-16 h-5 bg-data-neutral dark:bg-data-neutral animate-pulse rounded" />
+          <div className="w-20 h-5 bg-data-neutral dark:bg-data-neutral animate-pulse rounded" />
         </div>
         <div className="space-y-2">
-          <div className="w-full h-5 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
-          <div className="w-11/12 h-5 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
-          <div className="w-4/5 h-5 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
+          <div className="w-full h-5 bg-data-neutral dark:bg-data-neutral animate-pulse rounded" />
+          <div className="w-11/12 h-5 bg-data-neutral dark:bg-data-neutral animate-pulse rounded" />
+          <div className="w-4/5 h-5 bg-data-neutral dark:bg-data-neutral animate-pulse rounded" />
         </div>
       </div>
     );
@@ -317,7 +317,7 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
             onClick={onNext}
             className={`inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-sm sm:text-base w-full sm:w-auto ${
               isCorrect
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-[var(--color-text-inverse)]'
+                ? 'bg-data-pass hover:bg-data-pass text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
             }`}
           >
@@ -334,7 +334,7 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
 
         {/* Pearl */}
         {pearl && (
-          <div className="text-sm text-amber-900 dark:text-amber-300/90 bg-amber-100 dark:bg-amber-900/20 rounded-lg p-3 mt-2 border border-amber-300 dark:border-amber-700/30 flex items-start gap-2">
+          <div className="text-sm text-data-provisional dark:text-data-provisional/90 bg-data-provisional dark:bg-data-provisional/20 rounded-lg p-3 mt-2 border border-data-provisional dark:border-data-provisional/30 flex items-start gap-2">
             <Award className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>
               <span className="font-medium">Pearl: </span>

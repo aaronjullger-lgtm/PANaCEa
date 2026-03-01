@@ -285,7 +285,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
         <div className="grid grid-cols-1 gap-3">
           <button
             className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] 
-            hover:border-green-400 transition-colors text-left"
+            hover:border-data-pass transition-colors text-left"
           >
             <div className="flex items-center gap-3">
               <Video className="w-5 h-5 text-[var(--color-data-pass)]" />
@@ -299,7 +299,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
           </button>
           <button
             className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] 
-            hover:border-green-400 transition-colors text-left"
+            hover:border-data-pass transition-colors text-left"
           >
             <div className="flex items-center gap-3">
               <FileText className="w-5 h-5 text-[var(--color-data-pass)]" />
@@ -315,7 +315,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
           </button>
           <button
             className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] 
-            hover:border-green-400 transition-colors text-left"
+            hover:border-data-pass transition-colors text-left"
           >
             <div className="flex items-center gap-3">
               <List className="w-5 h-5 text-[var(--color-data-pass)]" />

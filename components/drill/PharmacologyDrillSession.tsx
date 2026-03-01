@@ -300,7 +300,7 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
         {categoryBreakdown.length > 0 && (
           <div className="mt-6 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <BarChart3 className="w-5 h-5 text-data-pass dark:text-data-pass" />
               <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
                 Drug Class Progress
               </h3>
@@ -316,10 +316,10 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
                     <span
                       className={`font-semibold ${
                         cat.accuracy >= 80
-                          ? 'text-emerald-600 dark:text-emerald-400'
+                          ? 'text-data-pass dark:text-data-pass'
                           : cat.accuracy >= 70
-                            ? 'text-amber-600 dark:text-amber-400'
-                            : 'text-red-600 dark:text-red-400'
+                            ? 'text-data-provisional dark:text-data-provisional'
+                            : 'text-data-fail dark:text-data-fail'
                       }`}
                     >
                       {cat.accuracy}%
@@ -350,7 +350,7 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
       return (
         <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
-            <div className="text-red-500 mb-4">⚠️</div>
+            <div className="text-data-fail mb-4">⚠️</div>
             <h2 className="text-xl font-bold mb-2 text-[var(--color-text-primary)]">
               Error Loading Questions
             </h2>
@@ -466,7 +466,7 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
                 </div>
                 <div className="text-left">
                   <h3 className="text-xl font-bold mb-1">All Drug Classes</h3>
-                  <p className="text-sm text-green-100">Practice all pharmacology topics</p>
+                  <p className="text-sm text-data-pass">Practice all pharmacology topics</p>
                 </div>
               </div>
               <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
@@ -485,7 +485,7 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: (index + 1) * 0.05 }}
                 onClick={() => handleDrugClassSelect(drugClass.id)}
-                className="relative p-6 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-green-300 hover:shadow-md transition-all text-left group"
+                className="relative p-6 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-data-pass hover:shadow-md transition-all text-left group"
               >
                 <div className="flex items-start gap-4">
                   <div

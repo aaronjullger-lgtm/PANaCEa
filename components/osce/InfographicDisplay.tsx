@@ -39,7 +39,7 @@ export function InfographicDisplay({ infographics, className = '' }: Infographic
               onClick={() => setSelectedInfographic(infographic)}
             >
               {isPlaceholder && (
-                <div className="mb-2 px-2 py-1 bg-amber-500/10 border border-amber-500/30 rounded text-xs text-amber-600 dark:text-amber-400">
+                <div className="mb-2 px-2 py-1 bg-data-provisional/10 border border-data-provisional/30 rounded text-xs text-data-provisional dark:text-data-provisional">
                   Preview Feature
                 </div>
               )}

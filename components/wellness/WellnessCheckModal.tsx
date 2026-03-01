@@ -191,14 +191,14 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
 
           {/* Wellness Tips */}
           <div className="space-y-4 mb-6">
-            <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <Coffee className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-3 p-3 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg">
+              <Coffee className="w-5 h-5 text-[var(--color-category-practice)] text-[var(--color-category-practice)] mt-0.5 flex-shrink-0" />
               <p className="text-sm text-[var(--color-text-secondary)]">
                 Take a moment to drink water or grab a healthy snack
               </p>
             </div>
-            <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <Wind className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-3 p-3 bg-data-pass dark:bg-data-pass/20 rounded-lg">
+              <Wind className="w-5 h-5 text-data-pass dark:text-data-pass mt-0.5 flex-shrink-0" />
               <p className="text-sm text-[var(--color-text-secondary)]">
                 Try the 4-7-8 breathing technique to reset your focus
               </p>

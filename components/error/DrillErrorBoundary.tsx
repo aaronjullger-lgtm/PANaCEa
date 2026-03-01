@@ -129,9 +129,9 @@ function ApiErrorFallback({ error, errorType, onRetry, onReturnHome }: ErrorFall
         <AlertTriangle className="w-8 h-8 text-data-fail" />
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">{title}</h2>
+      <h2 className="text-xl font-bold text-data-neutral dark:text-data-neutral mb-2">{title}</h2>
 
-      <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md">{message}</p>
+      <p className="text-data-neutral dark:text-data-neutral mb-6 max-w-md">{message}</p>
 
       <div className="flex gap-3">
         <button
@@ -191,9 +191,9 @@ function NetworkErrorFallback({ onRetry, onReturnHome, drillType }: ErrorFallbac
         <WifiOff className="w-8 h-8 text-data-provisional" />
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">You're Offline</h2>
+      <h2 className="text-xl font-bold text-data-neutral dark:text-data-neutral mb-2">You're Offline</h2>
 
-      <p className="text-slate-600 dark:text-slate-400 mb-4 max-w-md">
+      <p className="text-data-neutral dark:text-data-neutral mb-4 max-w-md">
         No internet connection detected. Some features require connectivity.
       </p>
 
@@ -251,11 +251,11 @@ function BudgetExceededFallback({ onReturnHome }: ErrorFallbackProps) {
         <DollarSign className="w-8 h-8 text-deep-plum-500" />
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+      <h2 className="text-xl font-bold text-data-neutral dark:text-data-neutral mb-2">
         Hourly Limit Reached
       </h2>
 
-      <p className="text-slate-600 dark:text-slate-400 mb-4 max-w-md">
+      <p className="text-data-neutral dark:text-data-neutral mb-4 max-w-md">
         You've been studying hard! To ensure fair access for everyone, there's a temporary cooldown
         period.
       </p>
@@ -297,9 +297,9 @@ function UnknownErrorFallback({ error, errorType, onRetry, onReturnHome }: Error
         <AlertTriangle className="w-8 h-8 text-clinical-slate-500" />
       </div>
 
-      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">{title}</h2>
+      <h2 className="text-xl font-bold text-data-neutral dark:text-data-neutral mb-2">{title}</h2>
 
-      <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md">{message}</p>
+      <p className="text-data-neutral dark:text-data-neutral mb-6 max-w-md">{message}</p>
 
       <div className="flex gap-3">
         <button

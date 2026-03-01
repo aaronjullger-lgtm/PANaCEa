@@ -7,22 +7,22 @@ interface Props {
 
 export const DiagnosisBiasCard: React.FC<Props> = ({ biases }) => {
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 p-4">
+    <div className="rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral/80 p-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs uppercase tracking-wide text-slate-400">Diagnosis Bias</p>
-        <span className="text-xs text-slate-500">Most over-selected</span>
+        <p className="text-xs uppercase tracking-wide text-data-neutral">Diagnosis Bias</p>
+        <span className="text-xs text-data-neutral">Most over-selected</span>
       </div>
       {biases.length === 0 ? (
-        <p className="text-sm text-slate-500">No bias detected yet.</p>
+        <p className="text-sm text-data-neutral">No bias detected yet.</p>
       ) : (
         <ul className="space-y-2">
           {biases.slice(0, 5).map((item) => (
             <li
               key={item.condition}
-              className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-200"
+              className="flex items-center justify-between text-sm text-data-neutral dark:text-data-neutral"
             >
               <span>{item.condition}</span>
-              <span className="text-slate-500">{item.count}×</span>
+              <span className="text-data-neutral">{item.count}×</span>
             </li>
           ))}
         </ul>

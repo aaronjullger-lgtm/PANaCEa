@@ -268,7 +268,7 @@ const AccessibilitySettings: React.FC = () => {
           type="checkbox"
           checked={isCommuterMode}
           onChange={toggleCommuterMode}
-          className="w-5 h-5 rounded border-gray-300 text-sage-600 focus:ring-sage-500"
+          className="w-5 h-5 rounded border-[var(--color-text-muted)] text-sage-600 focus:ring-sage-500"
         />
       </label>
 
@@ -285,7 +285,7 @@ const AccessibilitySettings: React.FC = () => {
               type="checkbox"
               checked={settings.autoReadQuestions}
               onChange={() => updateSettings({ autoReadQuestions: !settings.autoReadQuestions })}
-              className="w-4 h-4 rounded border-gray-300 text-sage-600 focus:ring-sage-500"
+              className="w-4 h-4 rounded border-[var(--color-text-muted)] text-sage-600 focus:ring-sage-500"
             />
           </label>
 
@@ -299,7 +299,7 @@ const AccessibilitySettings: React.FC = () => {
               type="checkbox"
               checked={settings.voiceEnabled}
               onChange={() => updateSettings({ voiceEnabled: !settings.voiceEnabled })}
-              className="w-4 h-4 rounded border-gray-300 text-sage-600 focus:ring-sage-500"
+              className="w-4 h-4 rounded border-[var(--color-text-muted)] text-sage-600 focus:ring-sage-500"
             />
           </label>
 
@@ -313,7 +313,7 @@ const AccessibilitySettings: React.FC = () => {
               type="checkbox"
               checked={settings.highContrastMode}
               onChange={() => updateSettings({ highContrastMode: !settings.highContrastMode })}
-              className="w-4 h-4 rounded border-gray-300 text-sage-600 focus:ring-sage-500"
+              className="w-4 h-4 rounded border-[var(--color-text-muted)] text-sage-600 focus:ring-sage-500"
             />
           </label>
 
@@ -1062,7 +1062,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               </div>
               <h2
                 id="settings-modal-title"
-                className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] dark:text-slate-100 truncate"
+                className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] dark:text-data-neutral truncate"
               >
                 {activeTab === 'stats'
                   ? 'Statistics'
@@ -1078,7 +1078,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               onClick={onClose}
               aria-label="Close modal and return to dashboard"
               title="Close"
-              className="flex-shrink-0 ml-3 flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-[var(--color-text-muted)] hover:bg-slate-100 hover:text-[var(--color-text-primary)] dark:hover:bg-slate-700 dark:hover:text-slate-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
+              className="flex-shrink-0 ml-3 flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-[var(--color-text-muted)] hover:bg-data-neutral hover:text-[var(--color-text-primary)] dark:hover:bg-data-neutral dark:hover:text-data-neutral transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
             >
               <X className="w-5 h-5" aria-hidden />
             </button>
@@ -1156,8 +1156,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               <div className="space-y-4 sm:space-y-6">
                 {/* Motivational Message - Low Stakes Approach */}
                 <div className="card-premium-glass p-4 rounded-xl">
-                  <p className="text-sm text-[var(--color-text-secondary)] dark:text-slate-100 leading-relaxed">
-                    <strong className="text-[var(--color-text-primary)] dark:text-slate-100">
+                  <p className="text-sm text-[var(--color-text-secondary)] dark:text-data-neutral leading-relaxed">
+                    <strong className="text-[var(--color-text-primary)] dark:text-data-neutral">
                       Focus on your current form.
                     </strong>{' '}
                     Your recent effort matters more than past mistakes—every session is a fresh
@@ -1306,8 +1306,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-3 sm:p-4 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <Award className="w-4 h-4 text-slate-500" />
-                        <span className="text-xl sm:text-2xl font-bold text-slate-500">
+                        <Award className="w-4 h-4 text-data-neutral" />
+                        <span className="text-xl sm:text-2xl font-bold text-data-neutral">
                           {stats.bestStreak}
                         </span>
                       </div>
@@ -1376,7 +1376,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* System Breakdown */}
                 {stats.systemBreakdown.length > 0 && (
                   <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
-                    <h3 className="font-medium text-[var(--color-text-primary)] dark:text-slate-100 mb-3">
+                    <h3 className="font-medium text-[var(--color-text-primary)] dark:text-data-neutral mb-3">
                       Performance by System
                     </h3>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -1579,7 +1579,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.contentDifficulty.coreOnly}
                         onChange={() => handleToggleContentDifficulty('coreOnly')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1596,7 +1596,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.contentDifficulty.advancedContent}
                         onChange={() => handleToggleContentDifficulty('advancedContent')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1613,7 +1613,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.contentDifficulty.highYieldOnly}
                         onChange={() => handleToggleContentDifficulty('highYieldOnly')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1630,7 +1630,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.contentDifficulty.firstLineOnly}
                         onChange={() => handleToggleContentDifficulty('firstLineOnly')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
                   </div>
@@ -1703,7 +1703,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.questionFormat.imageIntegration}
                         onChange={() => handleToggleQuestionFormat('imageIntegration')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1764,7 +1764,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.questionFormat.showVitals}
                         onChange={() => handleToggleQuestionFormat('showVitals')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1781,7 +1781,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.questionFormat.multimediaEnabled}
                         onChange={() => handleToggleQuestionFormat('multimediaEnabled')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
                   </div>
@@ -1812,7 +1812,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.feedback.immediateFeedback}
                         onChange={() => handleToggleFeedback('immediateFeedback')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1873,7 +1873,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.feedback.spacedRepetition}
                         onChange={() => handleToggleFeedback('spacedRepetition')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1890,7 +1890,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.feedback.autoAdvance}
                         onChange={() => handleToggleFeedback('autoAdvance')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1907,7 +1907,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.feedback.showPearls}
                         onChange={() => handleToggleFeedback('showPearls')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1924,7 +1924,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.feedback.showRelatedConcepts}
                         onChange={() => handleToggleFeedback('showRelatedConcepts')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
                   </div>
@@ -1955,7 +1955,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.performanceTracking.streakTracking}
                         onChange={() => handleTogglePerformanceTracking('streakTracking')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1972,7 +1972,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.performanceTracking.detailedAnalytics}
                         onChange={() => handleTogglePerformanceTracking('detailedAnalytics')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1989,7 +1989,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.performanceTracking.progressNotifications}
                         onChange={() => handleTogglePerformanceTracking('progressNotifications')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -2006,7 +2006,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.performanceTracking.realtimeTrends}
                         onChange={() => handleTogglePerformanceTracking('realtimeTrends')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -2023,7 +2023,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.performanceTracking.systemBreakdown}
                         onChange={() => handleTogglePerformanceTracking('systemBreakdown')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -2040,7 +2040,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.performanceTracking.longitudinalView}
                         onChange={() => handleTogglePerformanceTracking('longitudinalView')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
                   </div>
@@ -2071,13 +2071,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <div className="flex gap-2 mb-3">
                     <button
                       onClick={handleEnableAllSystems}
-                      className="px-4 py-2 text-sm font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--color-text-primary)] rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
+                      className="px-4 py-2 text-sm font-medium bg-data-neutral dark:bg-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral text-[var(--color-text-primary)] rounded-lg transition-colors border border-data-neutral dark:border-data-neutral"
                     >
                       Enable All
                     </button>
                     <button
                       onClick={handleDisableAllSystems}
-                      className="px-4 py-2 text-sm font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--color-text-primary)] rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
+                      className="px-4 py-2 text-sm font-medium bg-data-neutral dark:bg-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral text-[var(--color-text-primary)] rounded-lg transition-colors border border-data-neutral dark:border-data-neutral"
                     >
                       Disable All
                     </button>
@@ -2093,7 +2093,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           title={fullName}
                           className={`min-w-0 p-2.5 rounded-lg text-sm font-medium transition-all text-left ${
                             enabledSystems.has(system)
-                              ? 'bg-blue-100 dark:bg-[var(--color-accent)]/30 text-blue-800 dark:text-[var(--color-btn-primary-text)] border-2 border-blue-400 dark:border-[var(--color-accent)]'
+                              ? 'bg-[var(--color-category-practice)] dark:bg-[var(--color-accent)]/30 text-[var(--color-category-practice)] dark:text-[var(--color-btn-primary-text)] border-2 border-[var(--color-category-practice)] dark:border-[var(--color-accent)]'
                               : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border-2 border-transparent'
                           }`}
                         >
@@ -2109,8 +2109,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   </div>
 
                   {enabledSystems.size === 0 && (
-                    <div className="mt-3 p-3 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg">
-                      <p className="text-xs text-amber-900 dark:text-amber-300">
+                    <div className="mt-3 p-3 bg-data-provisional dark:bg-data-provisional/30 border border-data-provisional dark:border-data-provisional rounded-lg">
+                      <p className="text-xs text-data-provisional dark:text-data-provisional">
                         <strong>Warning:</strong> No systems enabled. Please enable at least one
                         system to generate questions.
                       </p>
@@ -2171,7 +2171,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         })}
                       </div>
                       {enabledSystems.size > 0 && activeUnitSystems.size === 0 && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                        <p className="text-xs text-data-provisional dark:text-data-provisional mt-2">
                           Tip: Mark at least one system as Active to use 80/20 mix. Otherwise all
                           enabled systems are treated equally.
                         </p>
@@ -2195,13 +2195,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <div className="flex gap-2 mb-3">
                     <button
                       onClick={handleEnableAllMiniModes}
-                      className="px-4 py-2 text-sm font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--color-text-primary)] rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
+                      className="px-4 py-2 text-sm font-medium bg-data-neutral dark:bg-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral text-[var(--color-text-primary)] rounded-lg transition-colors border border-data-neutral dark:border-data-neutral"
                     >
                       Enable All
                     </button>
                     <button
                       onClick={handleDisableAllMiniModes}
-                      className="px-4 py-2 text-sm font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[var(--color-text-primary)] rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
+                      className="px-4 py-2 text-sm font-medium bg-data-neutral dark:bg-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral text-[var(--color-text-primary)] rounded-lg transition-colors border border-data-neutral dark:border-data-neutral"
                     >
                       Disable All
                     </button>
@@ -2295,7 +2295,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                                     onClick={() => handleToggleMiniMode(mode.id)}
                                     className={`p-3 rounded-lg text-left text-xs transition-all ${
                                       enabledMiniModes.has(mode.id)
-                                        ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
+                                        ? 'bg-[var(--color-category-practice)] dark:bg-[var(--color-accent)]/20 text-[var(--color-category-practice)] dark:text-[var(--color-text-primary)] border border-[var(--color-category-practice)] dark:border-[var(--color-accent)]/30'
                                         : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
                                     }`}
                                   >
@@ -2320,7 +2320,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                                     onClick={() => handleToggleMiniMode(mode.id)}
                                     className={`p-3 rounded-lg text-left text-xs transition-all ${
                                       enabledMiniModes.has(mode.id)
-                                        ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
+                                        ? 'bg-[var(--color-category-practice)] dark:bg-[var(--color-accent)]/20 text-[var(--color-category-practice)] dark:text-[var(--color-text-primary)] border border-[var(--color-category-practice)] dark:border-[var(--color-accent)]/30'
                                         : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
                                     }`}
                                   >
@@ -2345,7 +2345,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                                     onClick={() => handleToggleMiniMode(mode.id)}
                                     className={`p-3 rounded-lg text-left text-xs transition-all ${
                                       enabledMiniModes.has(mode.id)
-                                        ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
+                                        ? 'bg-[var(--color-category-practice)] dark:bg-[var(--color-accent)]/20 text-[var(--color-category-practice)] dark:text-[var(--color-text-primary)] border border-[var(--color-category-practice)] dark:border-[var(--color-accent)]/30'
                                         : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
                                     }`}
                                   >
@@ -2370,7 +2370,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                                     onClick={() => handleToggleMiniMode(mode.id)}
                                     className={`p-3 rounded-lg text-left text-xs transition-all ${
                                       enabledMiniModes.has(mode.id)
-                                        ? 'bg-blue-100 dark:bg-[var(--color-accent)]/20 text-blue-800 dark:text-[var(--color-text-primary)] border border-blue-300 dark:border-[var(--color-accent)]/30'
+                                        ? 'bg-[var(--color-category-practice)] dark:bg-[var(--color-accent)]/20 text-[var(--color-category-practice)] dark:text-[var(--color-text-primary)] border border-[var(--color-category-practice)] dark:border-[var(--color-accent)]/30'
                                         : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)] border border-transparent'
                                     }`}
                                   >
@@ -2542,7 +2542,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={clinicalFidelitySettings.emrInterface}
                         onChange={() => handleToggleClinicalFidelity('emrInterface' as const)}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -2561,7 +2561,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={clinicalFidelitySettings.writeOrders}
                         onChange={() => handleToggleClinicalFidelity('writeOrders')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -2580,7 +2580,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={clinicalFidelitySettings.rawLabValues}
                         onChange={() => handleToggleClinicalFidelity('rawLabValues')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -2599,13 +2599,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={clinicalFidelitySettings.multimediaAuscultation}
                         onChange={() => handleToggleClinicalFidelity('multimediaAuscultation')}
-                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
                   </div>
 
-                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <p className="text-xs text-blue-900 dark:text-blue-300">
+                  <div className="mt-3 p-3 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] rounded-lg">
+                    <p className="text-xs text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
                       [i] <strong>Note:</strong> Clinical Fidelity features are optional
                       enhancements designed for advanced learners who want more realistic practice.
                     </p>
@@ -2645,8 +2645,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     {/* Assignment System */}
                     <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
                       <div className="flex items-start gap-2">
-                        <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded">
-                          <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <div className="p-1.5 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded">
+                          <Calendar className="w-4 h-4 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
                         </div>
                         <div className="flex-1">
                           <div className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -2662,8 +2662,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     {/* Curriculum Mapping */}
                     <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
                       <div className="flex items-start gap-2">
-                        <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded">
-                          <Target className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        <div className="p-1.5 bg-data-pass dark:bg-data-pass/30 rounded">
+                          <Target className="w-4 h-4 text-data-pass dark:text-data-pass" />
                         </div>
                         <div className="flex-1">
                           <div className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -2745,10 +2745,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           disabled={confirmClear === 'performance' && clearConfirmText !== 'DELETE'}
                           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                             confirmClear === 'performance' && clearConfirmText === 'DELETE'
-                              ? 'bg-red-600 text-white'
+                              ? 'bg-data-fail text-white'
                               : confirmClear === 'performance'
                                 ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                                : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                                : 'bg-data-fail text-data-fail dark:bg-data-fail/30 dark:text-data-fail'
                           }`}
                           aria-label={
                             confirmClear === 'performance' && clearConfirmText === 'DELETE'
@@ -2780,8 +2780,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           missedQuestionsCount === 0
                             ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                             : confirmClear === 'missed'
-                              ? 'bg-red-600 text-white'
-                              : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                              ? 'bg-data-fail text-white'
+                              : 'bg-data-fail text-data-fail dark:bg-data-fail/30 dark:text-data-fail'
                         }`}
                         aria-label={
                           confirmClear === 'missed'
@@ -2810,8 +2810,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           flaggedQuestionsCount === 0
                             ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                             : confirmClear === 'flagged'
-                              ? 'bg-red-600 text-white'
-                              : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                              ? 'bg-data-fail text-white'
+                              : 'bg-data-fail text-data-fail dark:bg-data-fail/30 dark:text-data-fail'
                         }`}
                         aria-label={
                           confirmClear === 'flagged'

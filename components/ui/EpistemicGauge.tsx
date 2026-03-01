@@ -223,15 +223,15 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
           >
             {showPercentage ? `${displayValue}%` : displayValue}
           </span>
-          <span className="text-xs text-slate-500 dark:text-slate-400">n={dataPoints}</span>
+          <span className="text-xs text-data-neutral dark:text-data-neutral">n={dataPoints}</span>
         </div>
 
         {/* Tooltip on hover for low confidence */}
         {confidence < 1 && (
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs rounded-lg whitespace-nowrap shadow-lg">
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-data-neutral dark:bg-data-neutral text-white dark:text-data-neutral text-xs rounded-lg whitespace-nowrap shadow-lg">
               {tooltipText}
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 dark:bg-slate-100 rotate-45" />
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-data-neutral dark:bg-data-neutral rotate-45" />
             </div>
           </div>
         )}
@@ -305,7 +305,7 @@ export const EpistemicRadialGauge: React.FC<
           r={radius}
           fill="none"
           strokeWidth={strokeWidth}
-          className="stroke-slate-200 dark:stroke-slate-700"
+          className="stroke-data-neutral dark:stroke-data-neutral"
         />
         {/* Progress circle */}
         <motion.circle
@@ -324,11 +324,11 @@ export const EpistemicRadialGauge: React.FC<
 
       {/* Center value */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-bold text-slate-900 dark:text-slate-100">
+        <span className="text-xl font-bold text-data-neutral dark:text-data-neutral">
           {showPercentage ? `${displayValue}%` : displayValue}
         </span>
         {label && (
-          <span className="text-xs text-slate-500 dark:text-slate-400 text-center max-w-[80%]">
+          <span className="text-xs text-data-neutral dark:text-data-neutral text-center max-w-[80%]">
             {label}
           </span>
         )}
@@ -338,12 +338,12 @@ export const EpistemicRadialGauge: React.FC<
       <div
         className={`mt-2 px-2 py-0.5 rounded-full text-[10px] font-medium ${
           calibrationLevel.confidence === 'collecting'
-            ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+            ? 'bg-data-neutral text-data-neutral dark:bg-data-neutral dark:text-data-neutral'
             : calibrationLevel.confidence === 'emerging'
-              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+              ? 'bg-data-provisional text-data-provisional dark:bg-data-provisional/30 dark:text-data-provisional'
               : calibrationLevel.confidence === 'provisional'
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                ? 'bg-[var(--color-category-practice)] text-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)]'
+                : 'bg-data-pass text-data-pass dark:bg-data-pass/30 dark:text-data-pass'
         }`}
       >
         n={dataPoints}
@@ -410,33 +410,33 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700"
+      className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 border border-data-neutral dark:border-data-neutral"
     >
       <div className="flex items-start gap-4">
-        <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-          <Info className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        <div className="p-3 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-xl">
+          <Info className="w-6 h-6 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-1">
+          <h3 className="text-lg font-semibold text-data-neutral dark:text-data-neutral mb-1">
             Calibration in Progress
           </h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          <p className="text-sm text-data-neutral dark:text-data-neutral mb-4">
             Complete{' '}
-            <span className="font-semibold text-blue-600 dark:text-blue-400">{remaining}</span> more
+            <span className="font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)]">{remaining}</span> more
             questions to unlock your personalized analytics dashboard.
           </p>
 
           {/* Progress bar */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              <span className="text-xs font-medium text-data-neutral dark:text-data-neutral">
                 Calibration Progress
               </span>
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <span className="text-xs font-semibold text-data-neutral dark:text-data-neutral">
                 {currentCount}/{targetCount}
               </span>
             </div>
-            <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div className="h-2 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progress * 100}%` }}
@@ -449,7 +449,7 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
           {onStartCalibration && (
             <button
               onClick={onStartCalibration}
-              className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors"
+              className="w-full px-4 py-2.5 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white font-medium rounded-xl transition-colors"
             >
               Continue Calibration
             </button>

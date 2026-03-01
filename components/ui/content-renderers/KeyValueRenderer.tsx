@@ -116,7 +116,7 @@ function renderValue(value: unknown): React.ReactNode {
   // Boolean
   if (typeof value === 'boolean') {
     return (
-      <span className={value ? 'text-emerald-500' : 'text-red-500'}>
+      <span className={value ? 'text-data-pass' : 'text-data-fail'}>
         {value ? '✓ Yes' : '✗ No'}
       </span>
     );
@@ -136,7 +136,7 @@ export const DiagnosticCriteriaRenderer: React.FC<{
   <KeyValueRenderer
     data={criteria}
     className={`bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4 ${className}`}
-    keyClassName="text-blue-400"
+    keyClassName="text-[var(--color-category-practice)]"
   />
 );
 
@@ -150,7 +150,7 @@ export const TreatmentProtocolRenderer: React.FC<{
   <KeyValueRenderer
     data={protocol}
     className={`bg-emerald-950/20 border border-emerald-800/30 rounded-xl p-4 ${className}`}
-    keyClassName="text-emerald-400"
+    keyClassName="text-data-pass"
   />
 );
 

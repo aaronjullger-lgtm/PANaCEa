@@ -31,10 +31,10 @@ const CHART_WIDTH = 400;
 const PADDING = { top: 20, right: 20, bottom: 40, left: 50 };
 
 const URGENCY_COLORS = {
-  critical: { bg: 'bg-red-500/10', border: 'border-red-500', text: 'text-red-500' },
+  critical: { bg: 'bg-data-fail/10', border: 'border-data-fail', text: 'text-data-fail' },
   high: { bg: 'bg-orange-500/10', border: 'border-orange-500', text: 'text-orange-500' },
-  medium: { bg: 'bg-amber-500/10', border: 'border-amber-500', text: 'text-amber-500' },
-  low: { bg: 'bg-green-500/10', border: 'border-green-500', text: 'text-green-500' },
+  medium: { bg: 'bg-data-provisional/10', border: 'border-data-provisional', text: 'text-data-provisional' },
+  low: { bg: 'bg-data-pass/10', border: 'border-data-pass', text: 'text-data-pass' },
 };
 
 // =============================================================================
@@ -98,7 +98,7 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
 
   if (projections.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[200px] text-slate-500">
+      <div className="flex items-center justify-center h-[200px] text-data-neutral">
         No data available
       </div>
     );
@@ -115,7 +115,7 @@ function DriftLineChart({ projections }: { projections: DriftProjection[] }) {
       preserveAspectRatio="xMidYMid meet"
     >
       {/* Grid Lines */}
-      <g className="text-slate-200 dark:text-slate-700">
+      <g className="text-data-neutral dark:text-data-neutral">
         {[0, 7, 14].map((day) => (
           <line
             key={`grid-${day}`}
@@ -287,7 +287,7 @@ export function DriftVectorChart({ drift, className, showDetails = true }: Drift
     <div className={cn('rounded-xl border p-4', urgencyColors.bg, urgencyColors.border, className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+        <h3 className="text-sm font-semibold text-data-neutral dark:text-data-neutral">
           Score Trajectory
         </h3>
         <span className={cn('text-xs font-medium px-2 py-1 rounded', urgencyColors.text)}>
@@ -302,36 +302,36 @@ export function DriftVectorChart({ drift, className, showDetails = true }: Drift
 
       {/* Stats Row */}
       {showDetails && (
-        <div className="grid grid-cols-3 gap-3 mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
+        <div className="grid grid-cols-3 gap-3 mt-4 pt-3 border-t border-data-neutral dark:border-data-neutral">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-500">{drift.currentScore}</div>
-            <div className="text-xs text-slate-500">Current</div>
+            <div className="text-2xl font-bold text-[var(--color-category-practice)]">{drift.currentScore}</div>
+            <div className="text-xs text-data-neutral">Current</div>
           </div>
           <div className="text-center">
             <div
               className={cn(
                 'text-2xl font-bold',
-                scoreDrop > 0 ? 'text-red-500' : 'text-green-500'
+                scoreDrop > 0 ? 'text-data-fail' : 'text-data-pass'
               )}
             >
               {scoreDrop > 0 ? `-${scoreDrop}` : '+0'}
             </div>
-            <div className="text-xs text-slate-500">7-Day Δ</div>
+            <div className="text-xs text-data-neutral">7-Day Δ</div>
           </div>
           <div className="text-center">
             <div
               className={cn(
                 'text-2xl font-bold',
                 drift.daysUntilDanger <= 7
-                  ? 'text-red-500'
+                  ? 'text-data-fail'
                   : drift.daysUntilDanger <= 14
-                    ? 'text-amber-500'
-                    : 'text-green-500'
+                    ? 'text-data-provisional'
+                    : 'text-data-pass'
               )}
             >
               {drift.daysUntilDanger >= 999 ? '∞' : `${drift.daysUntilDanger}d`}
             </div>
-            <div className="text-xs text-slate-500">Buffer</div>
+            <div className="text-xs text-data-neutral">Buffer</div>
           </div>
         </div>
       )}
@@ -343,10 +343,10 @@ export function DriftVectorChart({ drift, className, showDetails = true }: Drift
         className={cn(
           'mt-3 p-2 rounded-lg text-sm',
           drift.urgency === 'critical'
-            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+            ? 'bg-data-fail dark:bg-data-fail/30 text-data-fail dark:text-data-fail'
             : drift.urgency === 'high'
               ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+              : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral'
         )}
       >
         {message}

@@ -230,12 +230,12 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   const getThemeBackground = (theme: string): string => {
     const themeMap: Record<string, string> = {
       stone: 'bg-[var(--color-bg-secondary)]',
-      slate: 'bg-slate-100',
-      amber: 'bg-amber-100',
-      blue: 'bg-blue-100',
+      slate: 'bg-data-neutral',
+      amber: 'bg-data-provisional',
+      blue: 'bg-[var(--color-category-practice)]',
       teal: 'bg-teal-100',
-      red: 'bg-red-100',
-      emerald: 'bg-emerald-100',
+      red: 'bg-data-fail',
+      emerald: 'bg-data-pass',
     };
     return themeMap[theme] || 'bg-[var(--color-bg-secondary)]';
   };
@@ -655,7 +655,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
                 type="checkbox"
                 checked={adaptiveMode}
                 onChange={(e) => setAdaptiveMode(e.target.checked)}
-                className="w-4 h-4 rounded text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-600 ring-offset-gray-800 focus:ring-2"
+                className="w-4 h-4 rounded text-[var(--color-category-practice)] bg-[var(--color-text-muted)] border-[var(--color-text-muted)] focus:ring-[var(--color-category-practice)] ring-offset-gray-800 focus:ring-2"
               />
               <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                 Adaptive Difficulty

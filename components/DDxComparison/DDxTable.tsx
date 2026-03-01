@@ -47,16 +47,16 @@ const ComparisonSection: React.FC<ComparisonSectionProps> = ({
 }) => {
   const colorClasses = {
     blue: {
-      bg: 'bg-blue-50 dark:bg-blue-950/30',
-      border: 'border-blue-200 dark:border-blue-800',
-      text: 'text-blue-700 dark:text-blue-300',
-      bullet: 'text-blue-500',
+      bg: 'bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]',
+      border: 'border-[var(--color-category-practice)] border-[var(--color-category-practice)]',
+      text: 'text-[var(--color-category-practice)] text-[var(--color-category-practice)]',
+      bullet: 'text-[var(--color-category-practice)]',
     },
     emerald: {
-      bg: 'bg-emerald-50 dark:bg-emerald-950/30',
-      border: 'border-emerald-200 dark:border-emerald-800',
-      text: 'text-emerald-700 dark:text-emerald-300',
-      bullet: 'text-emerald-500',
+      bg: 'bg-data-pass dark:bg-data-pass/30',
+      border: 'border-data-pass dark:border-data-pass',
+      text: 'text-data-pass dark:text-data-pass',
+      bullet: 'text-data-pass',
     },
   };
 
@@ -65,7 +65,7 @@ const ComparisonSection: React.FC<ComparisonSectionProps> = ({
 
   return (
     <div className="mb-6">
-      <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
+      <h3 className="text-sm font-semibold text-data-neutral dark:text-data-neutral uppercase tracking-wide mb-3">
         {title}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -76,7 +76,7 @@ const ComparisonSection: React.FC<ComparisonSectionProps> = ({
             {itemsA.map((item, idx) => (
               <li
                 key={idx}
-                className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+                className="flex items-start gap-2 text-sm text-data-neutral dark:text-data-neutral"
               >
                 <span className={`${colorsA.bullet} mt-1`}>•</span>
                 <span>{item}</span>
@@ -92,7 +92,7 @@ const ComparisonSection: React.FC<ComparisonSectionProps> = ({
             {itemsB.map((item, idx) => (
               <li
                 key={idx}
-                className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+                className="flex items-start gap-2 text-sm text-data-neutral dark:text-data-neutral"
               >
                 <span className={`${colorsB.bullet} mt-1`}>•</span>
                 <span>{item}</span>
@@ -110,17 +110,17 @@ const ComparisonSection: React.FC<ComparisonSectionProps> = ({
  */
 const SimilaritiesSection: React.FC<{ items: string[] }> = ({ items }) => (
   <div className="mb-6">
-    <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
+    <h3 className="text-sm font-semibold text-data-neutral dark:text-data-neutral uppercase tracking-wide mb-3">
       Shared Features
     </h3>
-    <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+    <div className="p-4 rounded-xl bg-data-provisional dark:bg-data-provisional/30 border border-data-provisional dark:border-data-provisional">
       <ul className="space-y-1.5">
         {items.map((item, idx) => (
           <li
             key={idx}
-            className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+            className="flex items-start gap-2 text-sm text-data-neutral dark:text-data-neutral"
           >
-            <span className="text-amber-500 mt-1">•</span>
+            <span className="text-data-provisional mt-1">•</span>
             <span>{item}</span>
           </li>
         ))}
@@ -198,7 +198,7 @@ const DDxTable: React.FC<DDxTableProps> = ({ comparison }) => {
       {/* Classic Triad (optional) */}
       {triadItems.length > 0 && (
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
+          <h3 className="text-sm font-semibold text-data-neutral dark:text-data-neutral uppercase tracking-wide mb-3">
             Classic Triad
           </h3>
           <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800">
@@ -206,7 +206,7 @@ const DDxTable: React.FC<DDxTableProps> = ({ comparison }) => {
               {triadItems.map((item, idx) => (
                 <li
                   key={idx}
-                  className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+                  className="flex items-start gap-2 text-sm text-data-neutral dark:text-data-neutral"
                 >
                   <span className="text-rose-500 mt-1">•</span>
                   <span>{item}</span>

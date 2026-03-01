@@ -163,15 +163,15 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
           <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
             Custom Study Session
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-1">
+          <p className="text-data-neutral dark:text-data-neutral mt-1">
             Create a focused practice session with your chosen topics
           </p>
         </div>
         <button
           onClick={onCancel}
-          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="p-2 rounded-lg hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
         >
-          <X className="w-5 h-5 text-slate-500" />
+          <X className="w-5 h-5 text-data-neutral" />
         </button>
       </div>
 
@@ -183,10 +183,10 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
               onClick={() => setCurrentStep(step.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                 currentStep === step.id
-                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                  ? 'bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)]'
                   : index < stepIndex
-                    ? 'text-green-600 dark:text-green-400'
-                    : 'text-slate-400'
+                    ? 'text-data-pass dark:text-data-pass'
+                    : 'text-data-neutral'
               }`}
             >
               {index < stepIndex ? <Check className="w-4 h-4" /> : step.icon}
@@ -195,7 +195,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
             {index < STEPS.length - 1 && (
               <div
                 className={`flex-1 h-0.5 mx-2 ${
-                  index < stepIndex ? 'bg-green-400' : 'bg-slate-200 dark:bg-slate-700'
+                  index < stepIndex ? 'bg-data-pass' : 'bg-data-neutral dark:bg-data-neutral'
                 }`}
               />
             )}
@@ -211,7 +211,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
-          className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6"
+          className="bg-white dark:bg-data-neutral rounded-2xl shadow-lg p-6"
         >
           {currentStep === 'content' && (
             <ContentStep
@@ -241,7 +241,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
             stepIndex === 0
               ? 'opacity-50 cursor-not-allowed'
-              : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+              : 'hover:bg-data-neutral dark:hover:bg-data-neutral'
           }`}
         >
           <ChevronLeft className="w-5 h-5" />
@@ -254,8 +254,8 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
             disabled={!validation.valid}
             className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors ${
               validation.valid
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                ? 'bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white'
+                : 'bg-data-neutral text-data-neutral cursor-not-allowed'
             }`}
           >
             <Play className="w-5 h-5" />
@@ -264,7 +264,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
         ) : (
           <button
             onClick={goNext}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white transition-colors"
           >
             Next
             <ChevronRight className="w-5 h-5" />
@@ -301,21 +301,21 @@ function ContentStep({
           <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
             Select Organ Systems
           </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-data-neutral dark:text-data-neutral">
             Choose the systems you want to study ({config.systems.length} selected)
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={onSelectAll}
-            className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            className="text-sm text-[var(--color-category-practice)] hover:text-[var(--color-category-practice)] text-[var(--color-category-practice)]"
           >
             Select All
           </button>
-          <span className="text-slate-300">|</span>
+          <span className="text-data-neutral">|</span>
           <button
             onClick={onDeselectAll}
-            className="text-sm text-slate-600 hover:text-slate-700 dark:text-slate-400"
+            className="text-sm text-data-neutral hover:text-data-neutral dark:text-data-neutral"
           >
             Clear
           </button>
@@ -333,7 +333,7 @@ function ContentStep({
               className={`min-w-0 p-3 rounded-xl border-2 transition-all text-left ${
                 config.systems.includes(system.code)
                   ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-                  : 'border-slate-200 dark:border-slate-700 hover:border-[var(--color-accent)]/50'
+                  : 'border-data-neutral dark:border-data-neutral hover:border-[var(--color-accent)]/50'
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
@@ -341,7 +341,7 @@ function ContentStep({
                   className={`shrink-0 w-5 h-5 rounded flex items-center justify-center ${
                     config.systems.includes(system.code)
                       ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
-                      : 'bg-slate-200 dark:bg-slate-700'
+                      : 'bg-data-neutral dark:bg-data-neutral'
                   }`}
                 >
                   {config.systems.includes(system.code) && <Check className="w-3 h-3" />}
@@ -354,7 +354,7 @@ function ContentStep({
                     {system.code}
                   </div>
                   <div
-                    className="text-xs text-slate-600 dark:text-slate-400 truncate"
+                    className="text-xs text-data-neutral dark:text-data-neutral truncate"
                     title={fullName}
                   >
                     {fullName}
@@ -367,7 +367,7 @@ function ContentStep({
       </div>
 
       {config.systems.length === 0 && (
-        <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center gap-2 text-amber-700 dark:text-amber-300">
+        <div className="mt-4 p-3 bg-data-provisional dark:bg-data-provisional/20 rounded-lg flex items-center gap-2 text-data-provisional dark:text-data-provisional">
           <AlertCircle className="w-5 h-5" />
           <span className="text-sm">Please select at least one organ system</span>
         </div>
@@ -392,7 +392,7 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
       <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
         Choose Focus Areas
       </h2>
-      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+      <p className="text-sm text-data-neutral dark:text-data-neutral mb-4">
         What aspects do you want to be tested on? ({config.focusAreas.length} selected)
       </p>
 
@@ -404,14 +404,14 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               config.focusAreas.includes(area)
                 ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                : 'border-slate-200 dark:border-slate-700 hover:border-purple-300'
+                : 'border-data-neutral dark:border-data-neutral hover:border-purple-300'
             }`}
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl">{meta.icon}</span>
               <div>
                 <div className="font-medium text-[var(--color-text-primary)]">{meta.label}</div>
-                <div className="text-sm text-slate-600 dark:text-slate-400">{meta.description}</div>
+                <div className="text-sm text-data-neutral dark:text-data-neutral">{meta.description}</div>
               </div>
               {config.focusAreas.includes(area) && (
                 <Check className="w-5 h-5 text-purple-500 ml-auto" />
@@ -422,7 +422,7 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
       </div>
 
       {config.focusAreas.length === 0 && (
-        <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center gap-2 text-amber-700 dark:text-amber-300">
+        <div className="mt-4 p-3 bg-data-provisional dark:bg-data-provisional/20 rounded-lg flex items-center gap-2 text-data-provisional dark:text-data-provisional">
           <AlertCircle className="w-5 h-5" />
           <span className="text-sm">Please select at least one focus area</span>
         </div>
@@ -446,7 +446,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
       <div className="space-y-6">
         {/* Questions per increment */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
             Questions per round
           </label>
           <div className="flex gap-2">
@@ -456,8 +456,8 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
                 onClick={() => onChange({ ...config, questionsPerIncrement: num })}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   config.questionsPerIncrement === num
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                    ? 'bg-[var(--color-category-practice)] text-white'
+                    : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
                 }`}
               >
                 {num}
@@ -468,14 +468,14 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
 
         {/* Difficulty - Fixed at PANCE-Level for standardized practice */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-2">
             Difficulty
           </label>
           <div className="flex gap-2">
-            <div className="px-4 py-2 rounded-lg font-medium bg-blue-600 text-white">
+            <div className="px-4 py-2 rounded-lg font-medium bg-[var(--color-category-practice)] text-white">
               PANCE-Level
             </div>
-            <span className="text-sm text-slate-500 dark:text-slate-400 self-center ml-2">
+            <span className="text-sm text-data-neutral dark:text-data-neutral self-center ml-2">
               (Standardized difficulty for accurate practice)
             </span>
           </div>
@@ -487,7 +487,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
             <div className="font-medium text-[var(--color-text-primary)]">
               Retry questions to review
             </div>
-            <div className="text-sm text-slate-600 dark:text-slate-400">
+            <div className="text-sm text-data-neutral dark:text-data-neutral">
               Review questions you got wrong at the end of each round
             </div>
           </div>
@@ -496,7 +496,7 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
               onChange({ ...config, retryMissedQuestions: !config.retryMissedQuestions })
             }
             className={`relative w-12 h-6 rounded-full transition-colors ${
-              config.retryMissedQuestions ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'
+              config.retryMissedQuestions ? 'bg-[var(--color-category-practice)]' : 'bg-data-neutral dark:bg-data-neutral'
             }`}
           >
             <div
@@ -525,8 +525,8 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
 
       <div className="space-y-4">
         {/* Systems */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
-          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 mb-2">
+        <div className="p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl">
+          <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral mb-2">
             <Layers className="w-4 h-4" />
             <span className="font-medium">Systems ({config.systems.length})</span>
           </div>
@@ -534,7 +534,7 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
             {config.systems.map((code) => (
               <span
                 key={code}
-                className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm"
+                className="px-2 py-1 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)] rounded-full text-sm"
               >
                 {ABBREVIATION_TO_TOPIC_MAP[code] || code}
               </span>
@@ -543,8 +543,8 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
         </div>
 
         {/* Focus Areas */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
-          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 mb-2">
+        <div className="p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl">
+          <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral mb-2">
             <Target className="w-4 h-4" />
             <span className="font-medium">Focus Areas ({config.focusAreas.length})</span>
           </div>
@@ -561,21 +561,21 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
         </div>
 
         {/* Settings Summary */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
-          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 mb-2">
+        <div className="p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl">
+          <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral mb-2">
             <Settings className="w-4 h-4" />
             <span className="font-medium">Settings</span>
           </div>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="text-slate-600 dark:text-slate-400">Questions per round:</div>
+            <div className="text-data-neutral dark:text-data-neutral">Questions per round:</div>
             <div className="font-medium text-[var(--color-text-primary)]">
               {config.questionsPerIncrement}
             </div>
-            <div className="text-slate-600 dark:text-slate-400">Difficulty:</div>
+            <div className="text-data-neutral dark:text-data-neutral">Difficulty:</div>
             <div className="font-medium text-[var(--color-text-primary)] capitalize">
               {config.difficulty}
             </div>
-            <div className="text-slate-600 dark:text-slate-400">Retry missed:</div>
+            <div className="text-data-neutral dark:text-data-neutral">Retry missed:</div>
             <div className="font-medium text-[var(--color-text-primary)]">
               {config.retryMissedQuestions ? 'Yes' : 'No'}
             </div>
@@ -602,7 +602,7 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
         )}
 
         {/* Info Banner */}
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-700 dark:text-blue-300 text-sm">
+        <div className="p-4 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-xl text-[var(--color-category-practice)] text-[var(--color-category-practice)] text-sm">
           <p>
             <strong>Note:</strong> This is a practice session. Progress is not saved to your spaced
             repetition schedule. Questions you miss will be repeated at the end of each round.

@@ -24,7 +24,7 @@ export const MasteryHeatmapToggle: React.FC<MasteryHeatmapToggleProps> = ({
       className={`
         inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border)]
         bg-[var(--color-bg-secondary)] px-3 py-2 text-sm font-medium
-        text-slate-700 dark:text-[var(--color-text-primary)] transition-colors
+        text-data-neutral dark:text-[var(--color-text-primary)] transition-colors
         hover:bg-[var(--color-bg-tertiary)] min-w-[44px] min-h-[44px]
         focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
         ${compact ? 'p-2.5' : ''}

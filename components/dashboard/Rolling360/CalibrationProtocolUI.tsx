@@ -223,8 +223,8 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
         isUnlocked
           ? 'bg-teal-500/10 border-teal-500/30'
           : isActive
-            ? 'bg-slate-700/50 border-amber-500/30'
-            : 'bg-slate-800/30 border-slate-700/30 opacity-60'
+            ? 'bg-data-neutral/50 border-data-provisional/30'
+            : 'bg-data-neutral/30 border-data-neutral/30 opacity-60'
       }`}
     >
       {/* Lock/Unlock indicator */}
@@ -232,7 +232,7 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
         {isUnlocked ? (
           <LockOpenIcon className="w-4 h-4 text-teal-400" />
         ) : (
-          <LockClosedIcon className="w-4 h-4 text-slate-500" />
+          <LockClosedIcon className="w-4 h-4 text-data-neutral" />
         )}
       </div>
 
@@ -245,14 +245,14 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
           <h4 className={`text-sm font-medium ${isUnlocked ? 'text-teal-300' : 'text-slate-300'}`}>
             {step.name}
           </h4>
-          <p className="text-xs text-slate-500">{step.description}</p>
+          <p className="text-xs text-data-neutral">{step.description}</p>
         </div>
       </div>
 
       {/* Progress bar (only for active/locked steps) */}
       {!isUnlocked && (
         <div className="mt-3">
-          <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-data-neutral rounded-full overflow-hidden">
             <motion.div
               className={`h-full ${isActive ? 'bg-amber-500' : 'bg-slate-600'}`}
               initial={{ width: 0 }}
@@ -260,7 +260,7 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
               transition={{ duration: 0.8 }}
             />
           </div>
-          <p className="text-xs text-slate-500 mt-1 text-center">
+          <p className="text-xs text-data-neutral mt-1 text-center">
             {step.threshold - currentQuestions} more to unlock
           </p>
         </div>

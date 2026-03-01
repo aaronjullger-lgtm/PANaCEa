@@ -51,9 +51,9 @@ const TASK_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }
 };
 
 const DEFAULT_MASTERY_COLORS = {
-  bg: 'bg-slate-100 dark:bg-slate-800',
-  text: 'text-slate-500',
-  bar: 'bg-slate-300 dark:bg-slate-600',
+  bg: 'bg-data-neutral dark:bg-data-neutral',
+  text: 'text-data-neutral',
+  bar: 'bg-data-neutral dark:bg-data-neutral',
 } as const;
 
 const MASTERY_COLORS: Record<string, { bg: string; text: string; bar: string }> = {
@@ -64,14 +64,14 @@ const MASTERY_COLORS: Record<string, { bg: string; text: string; bar: string }> 
     bar: 'bg-rose-500',
   },
   medium: {
-    bg: 'bg-amber-50 dark:bg-amber-900/20',
-    text: 'text-amber-600 dark:text-amber-400',
-    bar: 'bg-amber-500',
+    bg: 'bg-data-provisional dark:bg-data-provisional/20',
+    text: 'text-data-provisional dark:text-data-provisional',
+    bar: 'bg-data-provisional',
   },
   high: {
-    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
-    text: 'text-emerald-600 dark:text-emerald-400',
-    bar: 'bg-emerald-500',
+    bg: 'bg-data-pass dark:bg-data-pass/20',
+    text: 'text-data-pass dark:text-data-pass',
+    bar: 'bg-data-pass',
   },
 };
 
@@ -104,7 +104,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-48 text-slate-500">
+      <div className="flex items-center justify-center h-48 text-data-neutral">
         <Loader2 className="w-5 h-5 animate-spin mr-2" />
         Loading topic progress...
       </div>
@@ -137,7 +137,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
             {data.conditionName || conditionName}
           </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-data-neutral dark:text-data-neutral">
             Topic-level mastery breakdown
           </p>
         </div>
@@ -158,12 +158,12 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
 
       {/* Attention Banner */}
       {(weakTopics.length > 0 || untestedTopics.length > 0) && (
-        <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3">
+        <div className="rounded-lg border border-data-provisional dark:border-data-provisional bg-data-provisional dark:bg-data-provisional/20 p-3">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-data-provisional dark:text-data-provisional mt-0.5 flex-shrink-0" />
             <div className="text-sm">
               {weakTopics.length > 0 && (
-                <p className="text-amber-800 dark:text-amber-200">
+                <p className="text-data-provisional dark:text-data-provisional">
                   <strong>
                     {weakTopics.length} topic{weakTopics.length > 1 ? 's' : ''}
                   </strong>{' '}
@@ -171,7 +171,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
                 </p>
               )}
               {untestedTopics.length > 0 && (
-                <p className="text-amber-700 dark:text-amber-300 mt-1">
+                <p className="text-data-provisional dark:text-data-provisional mt-1">
                   {untestedTopics.length} topic{untestedTopics.length > 1 ? 's' : ''} not yet tested
                 </p>
               )}
@@ -207,7 +207,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
               </div>
 
               {/* Progress Bar */}
-              <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-2 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
                 <div
                   className={`h-full ${colors.bar} transition-all duration-300`}
                   style={{ width: `${stabilityPercent}%` }}
@@ -215,7 +215,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
               </div>
 
               {/* Stats Row */}
-              <div className="flex items-center gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-4 mt-2 text-xs text-data-neutral dark:text-data-neutral">
                 <span>{topic.reps} reviews</span>
                 {topic.lapses > 0 && <span>{topic.lapses} lapses</span>}
                 {topic.variantsUsed !== undefined && topic.variantsUsed > 0 && (

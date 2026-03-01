@@ -188,13 +188,13 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
               className="max-w-3xl mx-auto space-y-6"
             >
               {/* Vignette Card */}
-              <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+              <div className="bg-data-neutral rounded-xl p-6 border border-data-neutral">
                 <div className="flex items-start gap-3 mb-4">
                   <AlertCircle className="w-5 h-5 text-sky-400 mt-0.5 flex-shrink-0" />
-                  <h2 className="text-lg font-semibold text-slate-100">Clinical Vignette</h2>
+                  <h2 className="text-lg font-semibold text-data-neutral">Clinical Vignette</h2>
                 </div>
                 <div className="prose prose-invert prose-sm max-w-none">
-                  <p className="text-slate-300 whitespace-pre-line leading-relaxed">
+                  <p className="text-data-neutral whitespace-pre-line leading-relaxed">
                     {currentVignette?.story}
                   </p>
                 </div>
@@ -202,7 +202,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
 
               {/* Score Input Section */}
               {status === 'answering' && (
-                <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+                <div className="bg-data-neutral rounded-xl p-6 border border-data-neutral">
                   <h3 className="text-lg font-semibold mb-4">
                     Calculate the {guideline.name} Score
                   </h3>
@@ -216,7 +216,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                         className={`w-12 h-12 rounded-lg font-bold text-lg transition-all ${
                           userScoreInput === i
                             ? 'bg-sky-600 text-white ring-2 ring-sky-400'
-                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                            : 'bg-data-neutral text-data-neutral hover:bg-data-neutral'
                         }`}
                       >
                         {i}
@@ -228,7 +228,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                   <button
                     onClick={handleSubmit}
                     disabled={userScoreInput === null}
-                    className="w-full py-3 bg-sky-600 hover:bg-sky-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg transition-colors"
+                    className="w-full py-3 bg-sky-600 hover:bg-sky-500 disabled:bg-data-neutral disabled:text-data-neutral text-white font-medium rounded-lg transition-colors"
                   >
                     Submit Score
                   </button>
@@ -246,15 +246,15 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                   <div
                     className={`rounded-xl p-4 border-2 ${
                       isCorrect
-                        ? 'bg-emerald-950/50 border-emerald-500'
-                        : 'bg-red-950/50 border-red-500'
+                        ? 'bg-data-pass/50 border-data-pass'
+                        : 'bg-data-fail/50 border-data-fail'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       {isCorrect ? (
-                        <CheckCircle className="w-8 h-8 text-emerald-400" />
+                        <CheckCircle className="w-8 h-8 text-data-pass" />
                       ) : (
-                        <XCircle className="w-8 h-8 text-red-400" />
+                        <XCircle className="w-8 h-8 text-data-fail" />
                       )}
                       <div>
                         <div
@@ -262,7 +262,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                         >
                           {isCorrect ? 'Correct!' : 'Incorrect'}
                         </div>
-                        <div className="text-sm text-slate-300">
+                        <div className="text-sm text-data-neutral">
                           {isCorrect
                             ? `Score: ${currentVignette.correctScore}`
                             : `Your answer: ${userScoreInput} | Correct: ${currentVignette.correctScore}`}
@@ -273,21 +273,21 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
 
                   {/* Risk Tier */}
                   {guideline.scoringMap && (
-                    <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
-                      <h4 className="text-sm font-medium text-slate-400 mb-2">
+                    <div className="bg-data-neutral rounded-xl p-4 border border-data-neutral">
+                      <h4 className="text-sm font-medium text-data-neutral mb-2">
                         Risk Stratification
                       </h4>
-                      <div className="text-lg font-semibold text-slate-100">
+                      <div className="text-lg font-semibold text-data-neutral">
                         {getRiskTier(currentVignette.correctScore)?.tier || 'Unknown'}
                       </div>
-                      <p className="text-sm text-slate-400 mt-1">
+                      <p className="text-sm text-data-neutral mt-1">
                         {getRiskTier(currentVignette.correctScore)?.recommendation}
                       </p>
                     </div>
                   )}
 
                   {/* Criteria Breakdown - The Visual Diff */}
-                  <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+                  <div className="bg-data-neutral rounded-xl p-6 border border-data-neutral">
                     <h4 className="text-lg font-semibold mb-4">Criteria Breakdown</h4>
                     <ul className="space-y-3">
                       {guideline.components.map((component) => {
@@ -296,20 +296,20 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                           <li
                             key={component.id}
                             className={`flex items-start gap-3 p-3 rounded-lg ${
-                              isMet ? 'bg-emerald-950/30' : 'bg-slate-800/50'
+                              isMet ? 'bg-data-pass/30' : 'bg-data-neutral/50'
                             }`}
                           >
                             <div className="flex-shrink-0 mt-0.5">
                               {isMet ? (
-                                <CheckCircle className="w-5 h-5 text-emerald-400" />
+                                <CheckCircle className="w-5 h-5 text-data-pass" />
                               ) : (
-                                <XCircle className="w-5 h-5 text-slate-500" />
+                                <XCircle className="w-5 h-5 text-data-neutral" />
                               )}
                             </div>
                             <div className="flex-1">
                               <div
                                 className={`font-medium ${
-                                  isMet ? 'text-emerald-300' : 'text-slate-500'
+                                  isMet ? 'text-data-pass' : 'text-data-neutral'
                                 }`}
                               >
                                 {component.label}
@@ -331,19 +331,19 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                     </ul>
 
                     {/* Total Score */}
-                    <div className="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
-                      <span className="text-slate-400 font-medium">Total Score</span>
-                      <span className="text-2xl font-bold text-slate-100">
+                    <div className="mt-4 pt-4 border-t border-data-neutral flex justify-between items-center">
+                      <span className="text-data-neutral font-medium">Total Score</span>
+                      <span className="text-2xl font-bold text-data-neutral">
                         {currentVignette.correctScore} / {guideline.maxScore}
                       </span>
                     </div>
                   </div>
 
                   {/* Explanation */}
-                  <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
+                  <div className="bg-data-neutral rounded-xl p-6 border border-data-neutral">
                     <h4 className="text-lg font-semibold mb-3">Clinical Reasoning</h4>
                     <div className="prose prose-invert prose-sm max-w-none">
-                      <p className="text-slate-300 whitespace-pre-line leading-relaxed">
+                      <p className="text-data-neutral whitespace-pre-line leading-relaxed">
                         {currentVignette.explanation}
                       </p>
                     </div>
@@ -352,7 +352,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                   {/* Next Button */}
                   <button
                     onClick={handleNextCase}
-                    className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-100 font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-data-neutral hover:bg-data-neutral text-data-neutral font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
                     {currentVignetteIndex >= totalVignettes - 1 ? 'View Results' : 'Next Case'}
                     <ArrowRight className="w-5 h-5" />

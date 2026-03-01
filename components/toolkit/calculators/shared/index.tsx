@@ -169,24 +169,24 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
     switch (result.riskLevel) {
       case 'low':
         return {
-          bg: 'bg-emerald-950/40',
-          border: 'border-emerald-700',
-          text: 'text-emerald-300',
-          icon: 'text-emerald-400',
+          bg: 'bg-data-pass/40',
+          border: 'border-data-pass',
+          text: 'text-data-pass',
+          icon: 'text-data-pass',
         };
       case 'moderate':
         return {
-          bg: 'bg-amber-950/40',
-          border: 'border-amber-700',
-          text: 'text-amber-300',
-          icon: 'text-amber-400',
+          bg: 'bg-data-provisional/40',
+          border: 'border-data-provisional',
+          text: 'text-data-provisional',
+          icon: 'text-data-provisional',
         };
       case 'high':
         return {
-          bg: 'bg-red-950/40',
-          border: 'border-red-700',
-          text: 'text-red-300',
-          icon: 'text-red-400',
+          bg: 'bg-data-fail/40',
+          border: 'border-data-fail',
+          text: 'text-data-fail',
+          icon: 'text-data-fail',
         };
     }
   };
@@ -244,10 +244,10 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
                   transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
                   className={`h-full ${
                     result.riskLevel === 'low'
-                      ? 'bg-emerald-500'
+                      ? 'bg-data-pass'
                       : result.riskLevel === 'moderate'
-                        ? 'bg-amber-500'
-                        : 'bg-red-500'
+                        ? 'bg-data-provisional'
+                        : 'bg-data-fail'
                   }`}
                 />
               </div>

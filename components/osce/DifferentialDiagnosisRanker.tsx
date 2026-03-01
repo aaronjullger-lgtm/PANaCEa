@@ -96,10 +96,10 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
   };
 
   const getScoreColor = (score: number): string => {
-    if (score >= 90) return 'text-green-600 dark:text-green-400';
-    if (score >= 75) return 'text-blue-600 dark:text-blue-400';
+    if (score >= 90) return 'text-data-pass dark:text-data-pass';
+    if (score >= 75) return 'text-[var(--color-category-practice)] text-[var(--color-category-practice)]';
     if (score >= 60) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-red-600 dark:text-red-400';
+    return 'text-data-fail dark:text-data-fail';
   };
 
   return (
@@ -140,9 +140,9 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
           </div>
 
           {/* Instructions */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">Instructions</h4>
-            <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-2">
+          <div className="bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] rounded-lg p-4">
+            <h4 className="font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-2">Instructions</h4>
+            <ul className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)] space-y-2">
               <li>• Drag diagnoses to reorder them</li>
               <li>• Place most likely diagnosis at the top</li>
               <li>• Consider vitals and clinical presentation</li>
@@ -208,13 +208,13 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                     transition={{ delay: result.userRank * 0.1 }}
                     className={`p-4 rounded-lg border-2 ${
                       result.isCorrectPosition
-                        ? 'bg-green-50 dark:bg-green-900/20 border-green-500'
+                        ? 'bg-data-pass dark:bg-data-pass/20 border-data-pass'
                         : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       {result.isCorrectPosition ? (
-                        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-1 flex-shrink-0" />
+                        <CheckCircle className="w-5 h-5 text-data-pass dark:text-data-pass mt-1 flex-shrink-0" />
                       ) : (
                         <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-1 flex-shrink-0" />
                       )}
@@ -228,7 +228,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                             <span
                               className={`text-xs font-semibold px-2 py-1 rounded ${
                                 result.isCorrectPosition
-                                  ? 'bg-green-600 text-white'
+                                  ? 'bg-data-pass text-white'
                                   : 'bg-yellow-600 text-white'
                               }`}
                             >
@@ -327,7 +327,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
           className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg"
         >
           <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-            <Lightbulb className="w-5 h-5 text-amber-500" />
+            <Lightbulb className="w-5 h-5 text-data-provisional" />
             Teaching Points
           </h3>
           <div className="space-y-3 text-[var(--color-text-secondary)]">

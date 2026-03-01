@@ -84,10 +84,10 @@ export const CDNOptimizationDemo: React.FC<CDNOptimizationDemoProps> = ({
   ];
 
   const networkTypes = [
-    { id: 'slow-2g', label: 'Slow 2G', speed: '50-100 Kbps', icon: WifiOff, color: 'text-red-500' },
+    { id: 'slow-2g', label: 'Slow 2G', speed: '50-100 Kbps', icon: WifiOff, color: 'text-data-fail' },
     { id: '2g', label: '2G', speed: '100-300 Kbps', icon: Wifi, color: 'text-orange-500' },
     { id: '3g', label: '3G', speed: '700 Kbps - 1.5 Mbps', icon: Wifi, color: 'text-yellow-500' },
-    { id: '4g', label: '4G', speed: '5-50 Mbps', icon: Wifi, color: 'text-green-500' },
+    { id: '4g', label: '4G', speed: '5-50 Mbps', icon: Wifi, color: 'text-data-pass' },
     { id: '5g', label: '5G', speed: '100+ Mbps', icon: Zap, color: 'text-blue-500' },
   ];
 
@@ -573,9 +573,9 @@ export const CDNOptimizationDemo: React.FC<CDNOptimizationDemoProps> = ({
 
                 {/* Cloudflare CDN Details */}
                 {activeTab === 'cloudflare' && cloudflareCDN.isConfigured && (
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 border border-blue-500/20">
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/5 to-purple-500/5 border border-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]">
                     <div className="flex items-center gap-3 mb-3">
-                      <Globe className="w-5 h-5 text-blue-500" />
+                      <Globe className="w-5 h-5 text-[var(--color-category-practice)]" />
                       <h3 className="text-sm font-medium text-[var(--color-text-primary)]">
                         Cloudflare CDN Integration
                       </h3>
@@ -593,7 +593,7 @@ export const CDNOptimizationDemo: React.FC<CDNOptimizationDemoProps> = ({
                         <span className="text-[var(--color-text-secondary)]">R2 Storage</span>
                         <span className="text-[var(--color-success)] font-medium">Connected</span>
                       </div>
-                      <div className="mt-3 pt-3 border-t border-blue-500/20">
+                      <div className="mt-3 pt-3 border-t border-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]">
                         <p className="text-xs text-[var(--color-text-secondary)]">
                           Cloudflare CDN provides global edge caching, automatic image optimization,
                           and video streaming with analytics.

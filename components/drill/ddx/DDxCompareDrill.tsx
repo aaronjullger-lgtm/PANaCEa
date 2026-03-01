@@ -559,11 +559,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectPair, onExit }) => {
   const getDifficultyColor = (difficulty: DDxPair['difficulty']) => {
     switch (difficulty) {
       case 'beginner':
-        return 'text-emerald-400 bg-emerald-500/20';
+        return 'text-data-pass bg-data-pass/20';
       case 'intermediate':
-        return 'text-amber-400 bg-amber-500/20';
+        return 'text-data-provisional bg-data-provisional/20';
       case 'advanced':
-        return 'text-red-400 bg-red-500/20';
+        return 'text-data-fail bg-data-fail/20';
     }
   };
 
@@ -580,7 +580,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectPair, onExit }) => {
             <span className="text-sm font-medium">Exit</span>
           </button>
           <div className="flex items-center gap-2">
-            <GitCompare className="w-6 h-6 text-blue-500" />
+            <GitCompare className="w-6 h-6 text-[var(--color-category-practice)]" />
             <h1 className="text-xl font-bold text-[var(--color-text-primary)]">DDx Compare</h1>
           </div>
           <div className="w-16" />
@@ -590,9 +590,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectPair, onExit }) => {
       {/* Hero Section */}
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-6">
-            <Brain className="w-4 h-4 text-blue-400" />
-            <span className="text-sm font-medium text-blue-400">Pattern Recognition Training</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] mb-6">
+            <Brain className="w-4 h-4 text-[var(--color-category-practice)]" />
+            <span className="text-sm font-medium text-[var(--color-category-practice)]">Pattern Recognition Training</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-text-primary)] mb-4">
             Master Differential Diagnosis
@@ -606,8 +606,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectPair, onExit }) => {
         {/* How It Works */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="p-6 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
-            <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
-              <Target className="w-6 h-6 text-blue-400" />
+            <div className="w-12 h-12 rounded-xl bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] flex items-center justify-center mb-4">
+              <Target className="w-6 h-6 text-[var(--color-category-practice)]" />
             </div>
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
               Choose a DDx Pair
@@ -617,8 +617,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectPair, onExit }) => {
             </p>
           </div>
           <div className="p-6 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-4">
-              <Zap className="w-6 h-6 text-emerald-400" />
+            <div className="w-12 h-12 rounded-xl bg-data-pass/20 flex items-center justify-center mb-4">
+              <Zap className="w-6 h-6 text-data-pass" />
             </div>
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
               Sort Symptoms
@@ -629,8 +629,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectPair, onExit }) => {
             </p>
           </div>
           <div className="p-6 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center mb-4">
-              <Sparkles className="w-6 h-6 text-amber-400" />
+            <div className="w-12 h-12 rounded-xl bg-data-provisional/20 flex items-center justify-center mb-4">
+              <Sparkles className="w-6 h-6 text-data-provisional" />
             </div>
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
               Learn from Feedback
@@ -655,10 +655,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectPair, onExit }) => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => onSelectPair(pair)}
-                    className="text-left p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-blue-500/50 transition-all group"
+                    className="text-left p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)] transition-all group"
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <GitCompare className="w-5 h-5 text-blue-400" />
+                      <GitCompare className="w-5 h-5 text-[var(--color-category-practice)]" />
                       <span
                         className={`text-xs font-medium px-2 py-0.5 rounded-full ${getDifficultyColor(pair.difficulty)}`}
                       >
@@ -678,7 +678,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectPair, onExit }) => {
                       <span className="text-sm text-[var(--color-text-muted)]">
                         {pair.cards.length} symptoms
                       </span>
-                      <ArrowRight className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-blue-400 transition-colors" />
+                      <ArrowRight className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-[var(--color-category-practice)] transition-colors" />
                     </div>
                   </motion.button>
                 ))}
@@ -803,7 +803,7 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
           <div className="space-y-3">
             <button
               onClick={handleReset}
-              className="w-full py-3 px-6 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 px-6 rounded-xl bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white font-semibold transition-colors flex items-center justify-center gap-2"
             >
               <RotateCcw className="w-5 h-5" />
               Try Again
@@ -848,8 +848,8 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
           </p>
         </div>
         <div className="flex items-center gap-1.5">
-          <Trophy className="w-4 h-4 text-amber-500" />
-          <span className="text-sm font-bold text-amber-500">
+          <Trophy className="w-4 h-4 text-data-provisional" />
+          <span className="text-sm font-bold text-data-provisional">
             {score}/{totalAttempts}
           </span>
         </div>
@@ -857,7 +857,7 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
 
       <div className="w-full h-1 bg-[var(--color-bg-tertiary)]">
         <motion.div
-          className="h-full bg-blue-500"
+          className="h-full bg-[var(--color-category-practice)]"
           initial={{ width: 0 }}
           animate={{ width: `${((currentCardIndex + 1) / shuffledCards.length) * 100}%` }}
           transition={{ duration: 0.3 }}
@@ -866,8 +866,8 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
 
       <div className="flex-1 flex flex-col">
         <div className="grid grid-cols-2 border-b border-[var(--color-border)]">
-          <div className="p-4 text-center bg-blue-500/5 border-r border-[var(--color-border)]">
-            <h2 className="text-lg font-bold text-blue-400">{pair.conditionA}</h2>
+          <div className="p-4 text-center bg-[color-mix(in_srgb,var(--color-category-practice)_5%,transparent)] border-r border-[var(--color-border)]">
+            <h2 className="text-lg font-bold text-[var(--color-category-practice)]">{pair.conditionA}</h2>
             <p className="text-xs text-[var(--color-text-muted)] mt-1 hidden sm:block">← or A</p>
           </div>
           <div className="p-4 text-center bg-rose-500/5">
@@ -905,9 +905,9 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
                     >
                       <div className="flex items-center justify-center gap-2 mb-3">
                         {isCorrect ? (
-                          <CheckCircle className="w-6 h-6 text-emerald-500" />
+                          <CheckCircle className="w-6 h-6 text-data-pass" />
                         ) : (
-                          <XCircle className="w-6 h-6 text-red-500" />
+                          <XCircle className="w-6 h-6 text-data-fail" />
                         )}
                         <span
                           className={`font-bold ${isCorrect ? 'text-emerald-500' : 'text-red-500'}`}
@@ -922,7 +922,7 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
                       </p>
                       <button
                         onClick={handleNext}
-                        className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-colors"
+                        className="w-full py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white rounded-xl font-semibold transition-colors"
                       >
                         {currentCardIndex < shuffledCards.length - 1 ? 'Next' : 'See Results'}
                       </button>
@@ -939,7 +939,7 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleChoice('A')}
-                className="py-4 px-6 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border-2 border-blue-500/30 hover:border-blue-500 text-blue-400 font-semibold transition-all flex items-center justify-center gap-2"
+                className="py-4 px-6 rounded-xl bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] hover:bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border-2 border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] hover:border-[var(--color-category-practice)] text-[var(--color-category-practice)] font-semibold transition-all flex items-center justify-center gap-2"
               >
                 <ChevronLeft className="w-5 h-5" />
                 {pair.conditionA.split(' ')[0]}

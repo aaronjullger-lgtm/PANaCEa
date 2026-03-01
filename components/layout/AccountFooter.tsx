@@ -40,21 +40,21 @@ export function AccountFooter({
       return {
         icon: <Cloud className="w-4 h-4 animate-pulse" />,
         text: 'Syncing...',
-        color: 'text-blue-600 dark:text-blue-400',
+        color: 'text-[var(--color-category-practice)] text-[var(--color-category-practice)]',
       };
     }
     if (syncError) {
       return {
         icon: <XCircle className="w-4 h-4" />,
         text: 'Sync Error',
-        color: 'text-red-600 dark:text-red-400',
+        color: 'text-data-fail dark:text-data-fail',
       };
     }
     if (lastSyncTime) {
       return {
         icon: <CheckCircle className="w-4 h-4" />,
         text: 'Synced',
-        color: 'text-green-600 dark:text-green-400',
+        color: 'text-data-pass dark:text-data-pass',
       };
     }
     return {
@@ -170,7 +170,7 @@ export function AccountFooter({
                     setIsMenuOpen(false);
                     signOut();
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm text-data-fail dark:text-data-fail hover:bg-data-fail dark:hover:bg-data-fail/20 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sign Out</span>

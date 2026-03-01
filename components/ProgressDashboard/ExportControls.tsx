@@ -131,10 +131,10 @@ const ExportControls: React.FC<ExportControlsProps> = ({
         disabled={data.length === 0}
         className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
           data.length === 0
-            ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+            ? 'bg-data-neutral dark:bg-data-neutral text-data-neutral cursor-not-allowed'
             : lastExported === 'csv'
-              ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400'
-              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+              ? 'bg-data-pass dark:bg-data-pass text-data-pass dark:text-data-pass'
+              : 'bg-white dark:bg-data-neutral text-data-neutral dark:text-data-neutral border border-data-neutral dark:border-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
         }`}
       >
         {lastExported === 'csv' ? (
@@ -150,10 +150,10 @@ const ExportControls: React.FC<ExportControlsProps> = ({
         disabled={data.length === 0}
         className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
           data.length === 0
-            ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+            ? 'bg-data-neutral dark:bg-data-neutral text-data-neutral cursor-not-allowed'
             : lastExported === 'json'
-              ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400'
-              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+              ? 'bg-data-pass dark:bg-data-pass text-data-pass dark:text-data-pass'
+              : 'bg-white dark:bg-data-neutral text-data-neutral dark:text-data-neutral border border-data-neutral dark:border-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
         }`}
       >
         {lastExported === 'json' ? <Check className="w-4 h-4" /> : <FileJson className="w-4 h-4" />}

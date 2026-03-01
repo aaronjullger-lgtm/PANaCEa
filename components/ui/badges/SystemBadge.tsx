@@ -69,9 +69,9 @@ function getSystemConfig(system: string) {
     CV: {
       label: 'Cardiovascular',
       icon: Heart,
-      bgClass: 'bg-red-950/40',
-      textClass: 'text-red-300',
-      borderClass: 'border-red-800/50',
+      bgClass: 'bg-data-fail/40',
+      textClass: 'text-data-fail',
+      borderClass: 'border-data-fail/50',
     },
     PULM: {
       label: 'Pulmonary',
@@ -83,9 +83,9 @@ function getSystemConfig(system: string) {
     GI: {
       label: 'Gastroenterology',
       icon: Activity,
-      bgClass: 'bg-amber-950/40',
-      textClass: 'text-amber-300',
-      borderClass: 'border-amber-800/50',
+      bgClass: 'bg-data-provisional/40',
+      textClass: 'text-data-provisional',
+      borderClass: 'border-data-provisional/50',
     },
     NEURO: {
       label: 'Neurology',
@@ -97,9 +97,9 @@ function getSystemConfig(system: string) {
     RENAL: {
       label: 'Renal',
       icon: Droplet,
-      bgClass: 'bg-blue-950/40',
-      textClass: 'text-blue-300',
-      borderClass: 'border-blue-800/50',
+      bgClass: 'bg-[color-mix(in_srgb,var(--color-category-practice)_40%,transparent)]',
+      textClass: 'text-[var(--color-category-practice)]',
+      borderClass: 'border-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)]',
     },
     ENDO: {
       label: 'Endocrine',
@@ -118,9 +118,9 @@ function getSystemConfig(system: string) {
     MSK: {
       label: 'Musculoskeletal',
       icon: Bone,
-      bgClass: 'bg-slate-800/40',
-      textClass: 'text-slate-300',
-      borderClass: 'border-slate-600/50',
+      bgClass: 'bg-data-neutral/40',
+      textClass: 'text-data-neutral',
+      borderClass: 'border-data-neutral/50',
     },
     REPRO: {
       label: 'Reproductive',
@@ -132,9 +132,9 @@ function getSystemConfig(system: string) {
     PEDS: {
       label: 'Pediatrics',
       icon: Baby,
-      bgClass: 'bg-green-950/40',
-      textClass: 'text-green-300',
-      borderClass: 'border-green-800/50',
+      bgClass: 'bg-data-pass/40',
+      textClass: 'text-data-pass',
+      borderClass: 'border-data-pass/50',
     },
     PSYCH: {
       label: 'Psychiatry',
@@ -156,9 +156,9 @@ function getSystemConfig(system: string) {
     configs[systemUpper] || {
       label: system,
       icon: Activity,
-      bgClass: 'bg-slate-800/40',
-      textClass: 'text-slate-300',
-      borderClass: 'border-slate-600/50',
+      bgClass: 'bg-data-neutral/40',
+      textClass: 'text-data-neutral',
+      borderClass: 'border-data-neutral/50',
     }
   );
 }

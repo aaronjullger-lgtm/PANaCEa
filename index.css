@@ -381,15 +381,15 @@ a,
   --color-border: #e2e8f0;
   --color-border-light: #f1f5f9;
   --chart-grid-stroke: rgba(15, 23, 42, 0.08);
-  --color-accent: #7a6f52; /* Darker gold for better contrast — 4.8:1 with bg-primary (WCAG AA) */
-  --color-accent-hover: #6a5f42;
-  --color-accent-button: #7b6c4f; /* Darker gold for buttons — 4.6:1 contrast with white (WCAG AA) */
+  --color-accent: #64748b; /* Slate-500 for Stormy Slate aesthetic — 4.5:1 with bg-primary (WCAG AA) */
+  --color-accent-hover: #475569; /* Slate-600 */
+  --color-accent-button: #475569; /* Slate-600 for buttons — 4.8:1 contrast with white (WCAG AA) */
   --color-accent-border: #9a8f72; /* Lighter gold for borders to improve contrast */
   --color-accent-secondary: #728ba6; /* Steel blue - charts, secondary CTAs */
   --color-accent-light: #f5f2ec;
   --color-overlay: rgba(15, 23, 42, 0.5);
   --color-shadow-soft: rgba(15, 23, 42, 0.06);
-  --color-focus-ring: #9a8f72;
+  --color-focus-ring: #64748b; /* Slate-500 for focus indicators */
 
   /* Text on accent - off-white in both modes for continuity */
   --color-text-inverse: #f8fafc;
@@ -402,10 +402,10 @@ a,
   /* Card background for table content */
   --color-card-bg: #ffffff;
 
-  /* Semantic data colors - same hue family as dark, darker for light bg contrast */
-  --color-data-pass: #0a766c; /* teal-700 - improved contrast 5.1:1 (WCAG AA) */
-  --color-data-fail: #b91c1c; /* red-700 */
-  --color-data-provisional: #b45309; /* amber-700 */
+  /* Semantic data colors - slate gray variants for Stormy Slate aesthetic */
+  --color-data-pass: #475569; /* slate-600 */
+  --color-data-fail: #1e293b; /* slate-800 */
+  --color-data-provisional: #94a3b8; /* slate-400 */
 
   /* Semantic aliases for design system docs */
   --surface-canvas: var(--color-bg-primary);
@@ -545,16 +545,16 @@ a,
   --color-border: #475569;
   --color-border-light: #334155;
   --chart-grid-stroke: rgba(71, 85, 105, 0.2);
-  --color-accent: #a89b7a; /* Same gold family */
-  --color-accent-hover: #b8ab8a;
-  --color-accent-button: #7a6f52; /* Darker gold for better text contrast (WCAG AA) */
+  --color-accent: #94a3b8; /* Slate-400 for dark mode Stormy Slate */
+  --color-accent-hover: #cbd5e1; /* Slate-300 */
+  --color-accent-button: #64748b; /* Slate-500 for better text contrast (WCAG AA) */
   --color-accent-border: #c4b78a; /* Lighter gold for borders to improve visibility */
   --color-accent-secondary: #91a6bd; /* Steel blue (lighter) - charts, secondary CTAs */
   --color-accent-light: #1e293b;
   --color-text-inverse: #f8fafc;
   --color-overlay: rgba(15, 23, 42, 0.85);
   --color-shadow-soft: rgba(15, 23, 42, 0.4);
-  --color-focus-ring: #a89b7a;
+  --color-focus-ring: #94a3b8; /* Slate-400 for dark mode focus */
 
   --color-modal-bg: #475569;
   --color-glass-bg: rgba(30, 41, 59, 0.7);
@@ -562,10 +562,10 @@ a,
   --color-glass-shadow: rgba(0, 0, 0, 0.3);
   --color-card-bg: #1e293b;
 
-  /* Semantic data - muted for dark bg to avoid neon glare (teal/red/amber) */
-  --color-data-pass: #14b8a6; /* teal-500 — toned down from teal-400 */
-  --color-data-fail: #ef4444; /* red-500 — slightly deeper */
-  --color-data-provisional: #d97706; /* amber-600 — replaced neon amber-400 (#fbbf24) */
+  /* Semantic data - slate gray variants for Stormy Slate aesthetic */
+  --color-data-pass: #94a3b8; /* slate-400 */
+  --color-data-fail: #cbd5e1; /* slate-300 */
+  --color-data-provisional: #64748b; /* slate-500 */
 
   /* ===== MUTED SEMANTIC CATEGORY ACCENTS (Dark Mode) ===== */
   --color-category-visual: #c09e9e; /* Dusty Rose (lighter) */

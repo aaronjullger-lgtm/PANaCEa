@@ -144,7 +144,7 @@ export function LectureConverter({ onClose }: LectureConverterProps) {
         <p className="mt-1 text-xs text-[var(--color-text-muted)]">
           {text.length} / {MAX_CHARS} characters
           {text.length > 0 && text.length < MIN_CHARS && (
-            <span className="text-amber-500 ml-2">
+            <span className="text-data-provisional ml-2">
               – add at least {MIN_CHARS - text.length} more
             </span>
           )}
@@ -232,7 +232,7 @@ export function LectureConverter({ onClose }: LectureConverterProps) {
                     key={i}
                     className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
                   >
-                    <span className="text-emerald-500 mt-0.5">✓</span>
+                    <span className="text-data-pass mt-0.5">✓</span>
                     {point}
                   </li>
                 ))}
@@ -250,7 +250,7 @@ export function LectureConverter({ onClose }: LectureConverterProps) {
               >
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4 text-emerald-500" />
+                    <Check className="w-4 h-4 text-data-pass" />
                     Copied
                   </>
                 ) : (

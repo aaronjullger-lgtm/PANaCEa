@@ -34,7 +34,7 @@ const COLOR_SCHEMES = {
   success: {
     line: '#10b981',
     gradient: 'rgba(16, 185, 129, 0.2)',
-    text: 'text-emerald-500',
+    text: 'text-data-pass',
   },
   /** Clinical: teal/green for success; avoids red/yellow (medical alarm semantics) */
   clinical: {
@@ -50,7 +50,7 @@ const COLOR_SCHEMES = {
   danger: {
     line: '#ef4444',
     gradient: 'rgba(239, 68, 68, 0.2)',
-    text: 'text-red-500',
+    text: 'text-data-fail',
   },
   neutral: {
     line: '#6b7280',
@@ -266,7 +266,7 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
                   trend === 'up'
                     ? 'text-teal-500'
                     : trend === 'down'
-                      ? 'text-slate-500'
+                      ? 'text-data-neutral'
                       : 'text-[var(--color-text-muted)]'
                 }`}
               />

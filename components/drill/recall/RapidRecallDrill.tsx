@@ -336,7 +336,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] dark:bg-slate-950 text-[var(--color-text-primary)] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] dark:bg-data-neutral text-[var(--color-text-primary)] flex flex-col">
       {/* Flash overlay for correct/incorrect feedback */}
       <AnimatePresence>
         {status === 'feedback' && (
@@ -347,14 +347,14 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
             exit="exit"
             transition={{ duration: 0.15 }}
             className={`absolute inset-0 z-0 pointer-events-none ${
-              isCorrect ? 'bg-emerald-500/20' : 'bg-red-500/20'
+              isCorrect ? 'bg-data-pass/20' : 'bg-data-fail/20'
             }`}
           />
         )}
       </AnimatePresence>
 
       {/* Header */}
-      <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)]/80 dark:bg-slate-950/80 backdrop-blur-sm border-b border-[var(--color-border)]">
+      <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)]/80 dark:bg-data-neutral/80 backdrop-blur-sm border-b border-[var(--color-border)]">
         <button
           onClick={handleExit}
           className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
@@ -411,7 +411,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
               {currentQuestion}
             </h2>
             {questionSource === 'pearl' && (
-              <span className="inline-block mt-3 px-3 py-1 text-xs font-medium bg-blue-500/10 text-blue-400 rounded-full">
+              <span className="inline-block mt-3 px-3 py-1 text-xs font-medium bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] text-[var(--color-category-practice)] rounded-full">
                 Clinical Pearl
               </span>
             )}
@@ -459,8 +459,8 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
               transition={{ duration: 0.2 }}
               className={`p-4 ${
                 isCorrect
-                  ? 'bg-emerald-950/50 border-t-2 border-emerald-500'
-                  : 'bg-red-950/50 border-t-2 border-red-500'
+                  ? 'bg-data-pass/50 border-t-2 border-data-pass'
+                  : 'bg-data-fail/50 border-t-2 border-data-fail'
               }`}
             >
               <div className="max-w-2xl mx-auto">
@@ -468,13 +468,13 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
                   <div>
                     <div
                       className={`text-lg font-bold ${
-                        isCorrect ? 'text-emerald-400' : 'text-red-400'
+                        isCorrect ? 'text-data-pass' : 'text-data-fail'
                       }`}
                     >
                       {isCorrect ? 'Correct' : 'Incorrect'}
                     </div>
                     {isCorrect && acceptedSynonym && (
-                      <div className="inline-flex items-center gap-2 mt-1 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-200 text-xs font-semibold">
+                      <div className="inline-flex items-center gap-2 mt-1 px-3 py-1 rounded-full bg-data-pass/15 text-data-pass text-xs font-semibold">
                         <BadgeCheck className="w-4 h-4" /> Close enough! Accepted synonym
                       </div>
                     )}
@@ -496,7 +496,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
                     onClick={handleNext}
                     className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${
                       isCorrect
-                        ? 'bg-emerald-600 hover:bg-emerald-500 text-[var(--color-text-inverse)]'
+                        ? 'bg-data-pass hover:bg-data-pass text-[var(--color-text-inverse)]'
                         : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
                     }`}
                   >

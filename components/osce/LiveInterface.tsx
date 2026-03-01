@@ -249,7 +249,7 @@ export function LiveInterface({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 rounded-xl bg-[var(--color-card-bg)] border border-[var(--color-border)]">
           <h3 className="flex items-center gap-2 font-semibold text-[var(--color-text-primary)] mb-2">
-            <Heart className="w-4 h-4 text-red-500" />
+            <Heart className="w-4 h-4 text-data-fail" />
             Vitals Monitor
           </h3>
           <p className="text-xs text-[var(--color-text-muted)] mb-2">

@@ -170,10 +170,10 @@ const SubcategoryDrillSession: React.FC<SubcategoryDrillSessionProps> = ({ onExi
                     <span
                       className={`font-semibold ${
                         cat.accuracy >= 80
-                          ? 'text-emerald-600 dark:text-emerald-400'
+                          ? 'text-data-pass dark:text-data-pass'
                           : cat.accuracy >= 70
-                            ? 'text-amber-600 dark:text-amber-400'
-                            : 'text-red-600 dark:text-red-400'
+                            ? 'text-data-provisional dark:text-data-provisional'
+                            : 'text-data-fail dark:text-data-fail'
                       }`}
                     >
                       {cat.accuracy}%

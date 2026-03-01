@@ -352,7 +352,7 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
                 Voice patient
               </span>
             </div>
-            <p className="text-base text-slate-600 dark:text-[var(--color-text-secondary)] mb-3">
+            <p className="text-base text-data-neutral dark:text-[var(--color-text-secondary)] mb-3">
               Practice with a live voice simulated patient; rubric-based SOAP note grading and
               real-time feedback.
             </p>
@@ -428,7 +428,7 @@ const HeroTriple: React.FC<{
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-[var(--color-text-primary)]">Build Session</h3>
-              <p className="text-sm text-slate-600 dark:text-[var(--color-text-muted)] mt-0.5">
+              <p className="text-sm text-data-neutral dark:text-[var(--color-text-muted)] mt-0.5">
                 {dueCount > 0 ? 'Review due questions' : 'Start adaptive questions'}
               </p>
             </div>
@@ -452,7 +452,7 @@ const HeroTriple: React.FC<{
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-[var(--color-text-primary)]">Live OSCE</h3>
-              <p className="text-sm text-slate-600 dark:text-[var(--color-text-muted)] mt-0.5">
+              <p className="text-sm text-data-neutral dark:text-[var(--color-text-muted)] mt-0.5">
                 Voice patient, SOAP grading
               </p>
             </div>
@@ -476,7 +476,7 @@ const HeroTriple: React.FC<{
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-[var(--color-text-primary)]">Progress & Analytics</h3>
-              <p className="text-sm text-slate-600 dark:text-[var(--color-text-muted)] mt-0.5">
+              <p className="text-sm text-data-neutral dark:text-[var(--color-text-muted)] mt-0.5">
                 Streak {streak} · {dueLabel} {dueCount} · {accuracy !== null ? `${accuracy}%` : '—'}{' '}
                 {accuracyLabel}
               </p>

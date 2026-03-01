@@ -145,9 +145,9 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                   <button
                     key={option}
                     onClick={() => submitAction(option)}
-                    className="group p-4 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all text-left"
+                    className="group p-4 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] hover:border-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] transition-all text-left"
                   >
-                    <div className="font-semibold text-[var(--color-text-primary)] group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    <div className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-category-practice)] group-hovertext-[var(--color-category-practice)]">
                       {option}
                     </div>
                   </button>
@@ -164,8 +164,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
             animate={{ opacity: 1, y: 0 }}
             className={`p-6 ${
               isCorrect
-                ? 'bg-emerald-100 dark:bg-emerald-950/50 border-t-2 border-emerald-500'
-                : 'bg-red-100 dark:bg-red-950/50 border-t-2 border-red-500'
+                ? 'bg-data-pass dark:bg-data-pass/50 border-t-2 border-data-pass'
+                : 'bg-data-fail dark:bg-data-fail/50 border-t-2 border-data-fail'
             }`}
           >
             <div className="max-w-4xl mx-auto">
@@ -174,8 +174,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                   <div
                     className={`text-lg font-bold ${
                       isCorrect
-                        ? 'text-emerald-700 dark:text-emerald-400'
-                        : 'text-red-700 dark:text-red-400'
+                        ? 'text-data-pass dark:text-data-pass'
+                        : 'text-data-fail dark:text-data-fail'
                     }`}
                   >
                     {isCorrect ? '✓ Correct!' : '✗ Incorrect'}
@@ -193,7 +193,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                   onClick={nextCase}
                   className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${
                     isCorrect
-                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                      ? 'bg-data-pass hover:bg-data-pass text-white'
                       : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
                   }`}
                 >
@@ -231,7 +231,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
           >
             {/* Patient Info */}
             <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
-              <h3 className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-2 flex items-center gap-2">
                 <Activity className="w-4 h-4" />
                 Patient Information
               </h3>
@@ -244,7 +244,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Current Ventilator Settings */}
               <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
-                <h3 className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-3 flex items-center gap-2">
                   <Wind className="w-4 h-4" />
                   Current Ventilator Settings
                 </h3>
@@ -298,7 +298,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
 
               {/* ABG Results */}
               <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
-                <h3 className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-3 flex items-center gap-2">
                   <Droplets className="w-4 h-4" />
                   Arterial Blood Gas
                 </h3>
@@ -308,10 +308,10 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                     <span
                       className={`text-sm font-semibold ${
                         currentCase.abg.pH < 7.35
-                          ? 'text-red-600 dark:text-red-400'
+                          ? 'text-data-fail dark:text-data-fail'
                           : currentCase.abg.pH > 7.45
                             ? 'text-orange-600 dark:text-orange-400'
-                            : 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-data-pass dark:text-data-pass'
                       }`}
                     >
                       {currentCase.abg.pH.toFixed(2)}
@@ -324,8 +324,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                         currentCase.abg.paCO2 < 35
                           ? 'text-orange-600 dark:text-orange-400'
                           : currentCase.abg.paCO2 > 45
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-emerald-600 dark:text-emerald-400'
+                            ? 'text-data-fail dark:text-data-fail'
+                            : 'text-data-pass dark:text-data-pass'
                       }`}
                     >
                       {currentCase.abg.paCO2} mmHg
@@ -336,10 +336,10 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                     <span
                       className={`text-sm font-semibold ${
                         currentCase.abg.paO2 < 60
-                          ? 'text-red-600 dark:text-red-400'
+                          ? 'text-data-fail dark:text-data-fail'
                           : currentCase.abg.paO2 < 80
                             ? 'text-orange-600 dark:text-orange-400'
-                            : 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-data-pass dark:text-data-pass'
                       }`}
                     >
                       {currentCase.abg.paO2} mmHg
@@ -356,10 +356,10 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                     <span
                       className={`text-sm font-semibold ${
                         currentCase.abg.sao2 < 90
-                          ? 'text-red-600 dark:text-red-400'
+                          ? 'text-data-fail dark:text-data-fail'
                           : currentCase.abg.sao2 < 95
                             ? 'text-orange-600 dark:text-orange-400'
-                            : 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-data-pass dark:text-data-pass'
                       }`}
                     >
                       {currentCase.abg.sao2}%
@@ -371,7 +371,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
 
             {/* Physical Exam */}
             <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
-              <h3 className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-2 flex items-center gap-2">
                 <Gauge className="w-4 h-4" />
                 Physical Examination
               </h3>
@@ -392,7 +392,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
         >
-          <Wind className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+          <Wind className="w-16 h-16 text-[var(--color-category-practice)] mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
           <p className="text-[var(--color-text-secondary)] mb-6">
             Excellent work managing ventilators!
@@ -400,7 +400,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
 
           <div className="flex justify-center gap-8 mb-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-emerald-400">{score}</div>
+              <div className="text-4xl font-bold text-data-pass">{score}</div>
               <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
             </div>
           </div>
@@ -408,7 +408,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
           <div className="flex flex-col gap-3">
             <button
               onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white rounded-lg font-medium transition-colors"
             >
               <RotateCcw className="w-4 h-4" /> Start New Session
             </button>

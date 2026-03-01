@@ -67,7 +67,7 @@ export const RecentConditionsPanel: React.FC<RecentConditionsPanelProps> = ({
         </span>
         <button
           onClick={onClearAll}
-          className="text-xs text-[var(--color-text-muted)] hover:text-red-400 transition-colors flex items-center gap-1"
+          className="text-xs text-[var(--color-text-muted)] hover:text-data-fail transition-colors flex items-center gap-1"
           title="Clear all recent"
         >
           <Trash2 className="w-3 h-3" />
@@ -107,10 +107,10 @@ export const RecentConditionsPanel: React.FC<RecentConditionsPanelProps> = ({
                   e.stopPropagation();
                   onRemove(condition.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-all"
+                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-data-fail/20 rounded transition-all"
                 title="Remove from recent"
               >
-                <X className="w-3 h-3 text-[var(--color-text-muted)] hover:text-red-400" />
+                <X className="w-3 h-3 text-[var(--color-text-muted)] hover:text-data-fail" />
               </button>
             </button>
           </motion.div>

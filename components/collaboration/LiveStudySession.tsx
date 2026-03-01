@@ -313,15 +313,15 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
   const getStatusColor = (status: PeerPresence['status']) => {
     switch (status) {
       case 'online':
-        return 'bg-green-500';
+        return 'bg-data-pass';
       case 'away':
         return 'bg-yellow-500';
       case 'busy':
-        return 'bg-red-500';
+        return 'bg-data-fail';
       case 'offline':
-        return 'bg-slate-400';
+        return 'bg-data-neutral';
       default:
-        return 'bg-slate-400';
+        return 'bg-data-neutral';
     }
   };
 
@@ -398,7 +398,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
             <div className="bg-surface-secondary rounded-lg p-4 border border-border-subtle">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted">Accuracy</span>
-                <Target className="w-4 h-4 text-green-500" />
+                <Target className="w-4 h-4 text-data-pass" />
               </div>
               <div className="text-2xl font-bold text-action-primary mt-2">
                 {sessionStats.questionsAnswered > 0
@@ -420,7 +420,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
             <div className="bg-surface-secondary rounded-lg p-4 border border-border-subtle">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted">Time</span>
-                <Clock className="w-4 h-4 text-blue-500" />
+                <Clock className="w-4 h-4 text-[var(--color-category-practice)]" />
               </div>
               <div className="text-2xl font-bold text-action-primary mt-2">
                 {timeRemaining}s
@@ -470,9 +470,9 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                     disabled={isAnswerSubmitted}
                     className={`w-full p-4 text-left rounded-lg border transition-all duration-200 ${
                       showCorrect
-                        ? 'border-green-500 bg-green-500/10'
+                        ? 'border-data-pass bg-data-pass/10'
                         : showIncorrect
-                          ? 'border-red-500 bg-red-500/10'
+                          ? 'border-data-fail bg-data-fail/10'
                           : isSelected
                             ? 'border-action-primary bg-action-primary/10'
                             : 'border-border-subtle hover:border-action-primary/50'
@@ -483,9 +483,9 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center ${
                             showCorrect
-                              ? 'bg-green-500 text-white'
+                              ? 'bg-data-pass text-white'
                               : showIncorrect
-                                ? 'bg-red-500 text-white'
+                                ? 'bg-data-fail text-white'
                                 : isSelected
                                   ? 'bg-action-primary text-white'
                                   : 'bg-surface-tertiary text-muted'
@@ -496,9 +496,9 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                         <span
                           className={`font-medium ${
                             showCorrect
-                              ? 'text-green-600'
+                              ? 'text-data-pass'
                               : showIncorrect
-                                ? 'text-red-600'
+                                ? 'text-data-fail'
                                 : isSelected
                                   ? 'text-action-primary'
                                   : 'text-action-primary'
@@ -507,7 +507,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                           {option}
                         </span>
                       </div>
-                      {showCorrect && <CheckCircle className="w-5 h-5 text-green-500" />}
+                      {showCorrect && <CheckCircle className="w-5 h-5 text-data-pass" />}
                     </div>
                   </motion.button>
                 );
@@ -519,13 +519,13 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg"
+                className="p-4 bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <HelpCircle className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm font-medium text-blue-600">Explanation</span>
+                  <HelpCircle className="w-4 h-4 text-[var(--color-category-practice)]" />
+                  <span className="text-sm font-medium text-[var(--color-category-practice)]">Explanation</span>
                 </div>
-                <p className="text-sm text-blue-700/80">{currentQuestion.explanation}</p>
+                <p className="text-sm text-[color-mix(in_srgb,var(--color-category-practice)_80%,transparent)]">{currentQuestion.explanation}</p>
               </motion.div>
             )}
 
@@ -536,13 +536,13 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                   <span className="flex items-center gap-2">
                     {selectedAnswer === currentQuestion.correctAnswer ? (
                       <>
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span className="text-green-600">Correct! Well done.</span>
+                        <CheckCircle className="w-4 h-4 text-data-pass" />
+                        <span className="text-data-pass">Correct! Well done.</span>
                       </>
                     ) : (
                       <>
-                        <X className="w-4 h-4 text-red-500" />
-                        <span className="text-red-600">
+                        <X className="w-4 h-4 text-data-fail" />
+                        <span className="text-data-fail">
                           Incorrect. The right answer is{' '}
                           {String.fromCharCode(65 + currentQuestion.correctAnswer)}.
                         </span>
@@ -736,9 +736,9 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                         <div
                           className={`text-xs flex items-center justify-end gap-1 ${
                             entry.trend === 'up'
-                              ? 'text-green-600'
+                              ? 'text-data-pass'
                               : entry.trend === 'down'
-                                ? 'text-red-600'
+                                ? 'text-data-fail'
                                 : 'text-muted'
                           }`}
                         >
@@ -806,7 +806,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                         key={msg.id}
                         className={`p-3 rounded-lg ${
                           msg.userId === 'system'
-                            ? 'bg-blue-500/10 border border-blue-500/20'
+                            ? 'bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]'
                             : msg.userId === userId
                               ? 'bg-action-primary/10 border border-action-primary/20 ml-8'
                               : 'bg-surface-secondary border border-border-subtle mr-8'
@@ -822,7 +822,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                             <span
                               className={`text-xs font-medium ${
                                 msg.userId === 'system'
-                                  ? 'text-blue-600'
+                                  ? 'text-[var(--color-category-practice)]'
                                   : msg.userId === userId
                                     ? 'text-action-primary'
                                     : 'text-action-primary'
@@ -910,13 +910,13 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                           <span className="text-sm font-medium text-action-primary">
                             Strengths
                           </span>
-                          <Award className="w-4 h-4 text-green-500" />
+                          <Award className="w-4 h-4 text-data-pass" />
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {peerBenchmark.strengths.map((strength: string, index: number) => (
                             <span
                               key={index}
-                              className="px-2 py-1 text-xs rounded-full bg-green-500/10 text-green-600"
+                              className="px-2 py-1 text-xs rounded-full bg-data-pass/10 text-data-pass"
                             >
                               {strength}
                             </span>
@@ -929,13 +929,13 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                           <span className="text-sm font-medium text-action-primary">
                             Areas for Improvement
                           </span>
-                          <Target className="w-4 h-4 text-blue-500" />
+                          <Target className="w-4 h-4 text-[var(--color-category-practice)]" />
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {peerBenchmark.weaknesses.map((weakness: string, index: number) => (
                             <span
                               key={index}
-                              className="px-2 py-1 text-xs rounded-full bg-blue-500/10 text-blue-600"
+                              className="px-2 py-1 text-xs rounded-full bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] text-[var(--color-category-practice)]"
                             >
                               {weakness}
                             </span>

@@ -87,7 +87,7 @@ function TypeBadge({ type }: { type: RefineryItemType }) {
     media: {
       label: 'Media',
       icon: Image,
-      className: 'bg-amber-500/20 text-amber-500 border-amber-500/40',
+      className: 'bg-data-provisional/20 text-data-provisional border-data-provisional/40',
     },
     question: {
       label: 'Question',

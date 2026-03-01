@@ -95,7 +95,7 @@ export function ModuleTransition({
 
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs">
+                  <div className="w-6 h-6 rounded-full bg-data-pass flex items-center justify-center text-white text-xs">
                     ✓
                   </div>
                   <span className="text-[var(--color-text-secondary)]">Context preserved</span>

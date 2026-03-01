@@ -87,7 +87,7 @@ export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type 
           <Icon className={`w-5 h-5 text-${color}-600`} />
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h3>
         </div>
-        <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+        <div className="flex items-center gap-2 text-data-fail dark:text-data-fail">
           <AlertCircle className="w-5 h-5" />
           <span className="text-sm">{error}</span>
         </div>

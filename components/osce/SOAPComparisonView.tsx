@@ -34,20 +34,20 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
       case 'critical':
         return 'text-rose-500';
       case 'important':
-        return 'text-amber-500';
+        return 'text-data-provisional';
       case 'minor':
-        return 'text-slate-400';
+        return 'text-data-neutral';
     }
   };
 
   const getStatusIcon = (status: 'present' | 'missing' | 'incomplete' | 'incorrect') => {
     switch (status) {
       case 'present':
-        return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+        return <CheckCircle className="w-4 h-4 text-data-pass" />;
       case 'missing':
         return <XCircle className="w-4 h-4 text-rose-500" />;
       case 'incomplete':
-        return <AlertCircle className="w-4 h-4 text-amber-500" />;
+        return <AlertCircle className="w-4 h-4 text-data-provisional" />;
       case 'incorrect':
         return <XCircle className="w-4 h-4 text-rose-500" />;
     }
@@ -110,7 +110,7 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
         {/* Gold Standard */}
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+            <span className="w-8 h-8 rounded-lg bg-data-pass/20 flex items-center justify-center">
               ✨
             </span>
             Gold Standard
@@ -156,8 +156,8 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
                           element.severity === 'critical'
                             ? 'bg-rose-500/20 text-rose-500'
                             : element.severity === 'important'
-                              ? 'bg-amber-500/20 text-amber-500'
-                              : 'bg-slate-500/20 text-slate-400'
+                              ? 'bg-data-provisional/20 text-data-provisional'
+                              : 'bg-data-neutral/20 text-data-neutral'
                         }`}
                       >
                         {element.severity}
@@ -186,15 +186,15 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
 
       {/* Strengths */}
       {comparison.strengths.length > 0 && (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6">
-          <h3 className="text-lg font-semibold text-emerald-500 mb-3">✓ Strengths</h3>
+        <div className="rounded-xl border border-data-pass/30 bg-data-pass/5 p-6">
+          <h3 className="text-lg font-semibold text-data-pass mb-3">✓ Strengths</h3>
           <ul className="space-y-2">
             {comparison.strengths.map((strength, i) => (
               <li
                 key={i}
                 className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2"
               >
-                <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-4 h-4 text-data-pass flex-shrink-0 mt-0.5" />
                 <span>{strength}</span>
               </li>
             ))}
@@ -204,15 +204,15 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
 
       {/* Areas for Improvement */}
       {comparison.areasForImprovement.length > 0 && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6">
-          <h3 className="text-lg font-semibold text-amber-500 mb-3">⚠ Areas for Improvement</h3>
+        <div className="rounded-xl border border-data-provisional/30 bg-data-provisional/5 p-6">
+          <h3 className="text-lg font-semibold text-data-provisional mb-3">⚠ Areas for Improvement</h3>
           <ul className="space-y-2">
             {comparison.areasForImprovement.map((area, i) => (
               <li
                 key={i}
                 className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2"
               >
-                <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 text-data-provisional flex-shrink-0 mt-0.5" />
                 <span>{area}</span>
               </li>
             ))}

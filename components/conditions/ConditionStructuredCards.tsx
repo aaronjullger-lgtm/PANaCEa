@@ -145,7 +145,7 @@ export function ConditionStructuredCards({
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="h-32 rounded-xl bg-slate-700/30 animate-pulse border border-[var(--color-border)]"
+            className="h-32 rounded-xl bg-data-neutral/30 animate-pulse border border-[var(--color-border)]"
           />
         ))}
       </div>

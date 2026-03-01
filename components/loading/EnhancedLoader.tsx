@@ -69,15 +69,15 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
   }, [elapsedTime, isLoading, isAuthLoading]);
 
   // Use theme colors instead of hardcoded colors
-  const bgClass = forceDark ? 'bg-slate-950' : 'bg-[var(--color-bg-primary)]/95 backdrop-blur-lg';
-  const textClass = forceDark ? 'text-slate-200' : 'text-[var(--color-text-primary)]';
-  const accentClass = forceDark ? 'text-slate-100' : 'text-[var(--color-accent)]';
-  const borderClass = forceDark ? 'border-slate-700' : 'border-[var(--color-border)]';
-  const errorBgClass = forceDark ? 'bg-red-900/20' : 'bg-[var(--color-error-bg)]';
-  const warningBgClass = forceDark ? 'bg-amber-900/20' : 'bg-[var(--color-warning-bg)]';
-  const successColor = forceDark ? 'text-green-400' : 'text-[var(--color-success)]';
-  const errorColor = forceDark ? 'text-red-400' : 'text-[var(--color-error)]';
-  const warningColor = forceDark ? 'text-amber-400' : 'text-[var(--color-warning)]';
+  const bgClass = forceDark ? 'bg-data-neutral' : 'bg-[var(--color-bg-primary)]/95 backdrop-blur-lg';
+  const textClass = forceDark ? 'text-data-neutral' : 'text-[var(--color-text-primary)]';
+  const accentClass = forceDark ? 'text-data-neutral' : 'text-[var(--color-accent)]';
+  const borderClass = forceDark ? 'border-data-neutral' : 'border-[var(--color-border)]';
+  const errorBgClass = forceDark ? 'bg-data-fail/20' : 'bg-[var(--color-error-bg)]';
+  const warningBgClass = forceDark ? 'bg-data-provisional/20' : 'bg-[var(--color-warning-bg)]';
+  const successColor = forceDark ? 'text-data-pass' : 'text-[var(--color-success)]';
+  const errorColor = forceDark ? 'text-data-fail' : 'text-[var(--color-error)]';
+  const warningColor = forceDark ? 'text-data-provisional' : 'text-[var(--color-warning)]';
 
   const offerGuestMode = shouldOfferGuestMode() || hasTimedOut;
 
@@ -225,7 +225,7 @@ const EnhancedLoader: React.FC<EnhancedLoaderProps> = ({
             className={`p-3 rounded-lg ${warningBgClass} ${borderClass} border`}
           >
             <div className="flex items-center space-x-2">
-              <User className="w-4 h-4 text-amber-500" />
+              <User className="w-4 h-4 text-data-provisional" />
               <p className={`text-sm ${textClass}/80`}>
                 Having trouble signing in?{' '}
                 <button

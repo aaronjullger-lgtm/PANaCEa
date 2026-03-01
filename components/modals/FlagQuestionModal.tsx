@@ -133,7 +133,7 @@ export function FlagQuestionModal({
         {submitted ? (
           /* Success State */
           <div className="flex flex-col items-center justify-center p-12 text-center">
-            <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
+            <CheckCircle className="w-16 h-16 text-data-pass mb-4" />
             <h3 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-2">
               Thank You!
             </h3>
@@ -153,7 +153,7 @@ export function FlagQuestionModal({
               </p>
               {correctAnswer && (
                 <p className="text-sm text-[var(--color-text-muted)] mt-2">
-                  Correct Answer: <span className="text-green-400">{correctAnswer}</span>
+                  Correct Answer: <span className="text-data-pass">{correctAnswer}</span>
                 </p>
               )}
             </div>

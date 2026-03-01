@@ -274,9 +274,9 @@ export const EKGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
   const hasInput = rhythm || rate || pr || qrs || qt || st !== 'normal' || tWave !== 'normal';
 
   const urgencyColors = {
-    routine: 'border-slate-600 bg-slate-950/40',
-    urgent: 'border-amber-600 bg-amber-950/40',
-    emergent: 'border-red-700 bg-red-950/40',
+    routine: 'border-data-neutral bg-data-neutral/40',
+    urgent: 'border-data-provisional bg-data-provisional/40',
+    emergent: 'border-data-fail bg-data-fail/40',
   };
 
   return (
@@ -381,10 +381,10 @@ export const EKGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
                 <Activity
                   className={`w-10 h-10 flex-shrink-0 ${
                     interpretation.urgency === 'emergent'
-                      ? 'text-red-400'
+                      ? 'text-data-fail'
                       : interpretation.urgency === 'urgent'
-                        ? 'text-amber-400'
-                        : 'text-slate-400'
+                        ? 'text-data-provisional'
+                        : 'text-data-neutral'
                   }`}
                 />
                 <div className="flex-1">
@@ -395,10 +395,10 @@ export const EKGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
                     <span
                       className={`px-2 py-0.5 rounded text-xs font-medium uppercase ${
                         interpretation.urgency === 'emergent'
-                          ? 'bg-red-500/20 text-red-300'
+                          ? 'bg-data-fail/20 text-data-fail'
                           : interpretation.urgency === 'urgent'
-                            ? 'bg-amber-500/20 text-amber-300'
-                            : 'bg-slate-500/20 text-slate-300'
+                            ? 'bg-data-provisional/20 text-data-provisional'
+                            : 'bg-data-neutral/20 text-data-neutral'
                       }`}
                     >
                       {interpretation.urgency}

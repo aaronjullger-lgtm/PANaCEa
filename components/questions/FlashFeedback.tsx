@@ -27,9 +27,9 @@ export const FlashFeedback: React.FC<FlashFeedbackProps> = ({
     >
       <div className="flex items-center gap-4 mb-4">
         {isCorrect ? (
-          <CheckCircle className="w-8 h-8 text-green-400" />
+          <CheckCircle className="w-8 h-8 text-data-pass" />
         ) : (
-          <XCircle className="w-8 h-8 text-red-400" />
+          <XCircle className="w-8 h-8 text-data-fail" />
         )}
         <h2 className="text-2xl font-bold">
           {isCorrect ? 'Correct!' : 'Incorrect'}

@@ -170,10 +170,10 @@ export const DisasterRecoveryDashboard: React.FC<DisasterRecoveryDashboardProps>
               )}
 
               {error && (
-                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <div className="mb-6 p-4 bg-data-fail/10 border border-data-fail/20 rounded-lg">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="h-5 w-5 text-data-fail" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
                           d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -182,18 +182,18 @@ export const DisasterRecoveryDashboard: React.FC<DisasterRecoveryDashboardProps>
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm text-red-700">{error}</p>
+                      <p className="text-sm text-data-fail">{error}</p>
                     </div>
                   </div>
                 </div>
               )}
 
               {success && (
-                <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="mb-6 p-4 bg-data-pass/10 border border-data-pass/20 rounded-lg">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
                       <svg
-                        className="h-5 w-5 text-green-400"
+                        className="h-5 w-5 text-data-pass"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -205,7 +205,7 @@ export const DisasterRecoveryDashboard: React.FC<DisasterRecoveryDashboardProps>
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm text-green-700">{success}</p>
+                      <p className="text-sm text-data-pass">{success}</p>
                     </div>
                   </div>
                 </div>
@@ -291,7 +291,7 @@ export const DisasterRecoveryDashboard: React.FC<DisasterRecoveryDashboardProps>
                                 <span
                                   className={`px-2 py-1 text-xs rounded-full ${
                                     scenario.severity === 'critical'
-                                      ? 'bg-red-500/20 text-red-600'
+                                      ? 'bg-data-fail/20 text-data-fail'
                                       : scenario.severity === 'high'
                                         ? 'bg-orange-500/20 text-orange-600'
                                         : 'bg-yellow-500/20 text-yellow-600'
@@ -474,7 +474,7 @@ export const DisasterRecoveryDashboard: React.FC<DisasterRecoveryDashboardProps>
                                 <span
                                   className={`px-2 py-1 text-xs rounded-full ${
                                     backup.type === 'full'
-                                      ? 'bg-blue-500/20 text-blue-600'
+                                      ? 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)]'
                                       : 'bg-purple-500/20 text-purple-600'
                                   }`}
                                 >
@@ -490,8 +490,8 @@ export const DisasterRecoveryDashboard: React.FC<DisasterRecoveryDashboardProps>
                                 <span
                                   className={`px-2 py-1 text-xs rounded-full ${
                                     backup.status === 'valid'
-                                      ? 'bg-green-500/20 text-green-600'
-                                      : 'bg-red-500/20 text-red-600'
+                                      ? 'bg-data-pass/20 text-data-pass'
+                                      : 'bg-data-fail/20 text-data-fail'
                                   }`}
                                 >
                                   {backup.status}
@@ -583,7 +583,7 @@ export const DisasterRecoveryDashboard: React.FC<DisasterRecoveryDashboardProps>
                               <span
                                 className={`px-2 py-1 text-xs rounded-full ${
                                   scenario.severity === 'critical'
-                                    ? 'bg-red-500/20 text-red-600'
+                                    ? 'bg-data-fail/20 text-data-fail'
                                     : scenario.severity === 'high'
                                       ? 'bg-orange-500/20 text-orange-600'
                                       : 'bg-yellow-500/20 text-yellow-600'

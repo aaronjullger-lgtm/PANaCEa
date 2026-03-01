@@ -44,7 +44,7 @@ const SYSTEM_COLORS: Record<string, string> = {
   PSYCH: 'bg-slate-violet-600', // Psychiatry
   ID: 'bg-data-pass', // Infectious Disease - mastered indicator
   GU: 'bg-slate-cyan-500', // Genitourinary
-  PRO: 'bg-slate-500', // Professional Practice
+  PRO: 'bg-data-neutral', // Professional Practice
 };
 
 const SYSTEM_NAMES: Record<string, string> = {
@@ -88,7 +88,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
     <div className="card-premium-glass card-noise-texture p-5 rounded-2xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        <h3 className="text-sm font-bold tracking-tight text-data-neutral dark:text-data-neutral">
           Performance by System
         </h3>
         <div className="flex items-center gap-1">
@@ -96,8 +96,8 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
             onClick={() => setViewMode('bar')}
             className={`p-1.5 rounded-lg transition-colors ${
               viewMode === 'bar'
-                ? 'bg-slate-900/10 dark:bg-slate-100/20 text-slate-900 dark:text-slate-100'
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'
+                ? 'bg-data-neutral/10 dark:bg-data-neutral/20 text-data-neutral dark:text-data-neutral'
+                : 'text-data-neutral hover:text-data-neutral dark:hover:text-data-neutral'
             }`}
             title="Bar chart view"
           >
@@ -107,8 +107,8 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
             onClick={() => setViewMode('radar')}
             className={`p-1.5 rounded-lg transition-colors ${
               viewMode === 'radar'
-                ? 'bg-slate-900/10 dark:bg-slate-100/20 text-slate-900 dark:text-slate-100'
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'
+                ? 'bg-data-neutral/10 dark:bg-data-neutral/20 text-data-neutral dark:text-data-neutral'
+                : 'text-data-neutral hover:text-data-neutral dark:hover:text-data-neutral'
             }`}
             title="Radar chart view"
           >
@@ -119,10 +119,10 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
 
       {/* Lowest performer callout */}
       {lowestSystem && lowestSystem.questionsAnswered > 0 && (
-        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg">
+        <div className="mb-4 p-3 bg-data-provisional dark:bg-data-provisional/10 border border-data-provisional dark:border-data-provisional/30 rounded-lg">
           <div className="flex items-center gap-2">
-            <TrendingDown className="w-4 h-4 text-amber-600 dark:text-amber-500" />
-            <span className="text-sm text-slate-900 dark:text-slate-100">
+            <TrendingDown className="w-4 h-4 text-data-provisional dark:text-data-provisional" />
+            <span className="text-sm text-data-neutral dark:text-data-neutral">
               <strong>{SYSTEM_NAMES[lowestSystem.system] || lowestSystem.system}</strong> needs the
               most work ({(lowestSystem.masteryScore * 100).toFixed(0)}%)
             </span>
@@ -149,7 +149,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
       {viewMode === 'bar' && (
         <div className="space-y-4">
           {sortedSummary.map((item) => {
-            const colorClass = SYSTEM_COLORS[item.system] || 'bg-slate-500';
+            const colorClass = SYSTEM_COLORS[item.system] || 'bg-data-neutral';
             const systemName = SYSTEM_NAMES[item.system] || item.system;
             const percentage = item.masteryScore * 100;
 
@@ -161,7 +161,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
               >
                 {/* Label above bar */}
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+                  <span className="text-xs font-medium text-data-neutral dark:text-data-neutral group-hover:text-data-neutral dark:group-hover:text-data-neutral transition-colors">
                     {systemName}
                   </span>
                   <div className="flex items-center gap-2">
@@ -172,7 +172,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
                             ? 'text-data-pass'
                             : item.changeFromLastPeriod < 0
                               ? 'text-data-fail'
-                              : 'text-slate-500'
+                              : 'text-data-neutral'
                         }`}
                       >
                         {item.changeFromLastPeriod > 0 ? (
@@ -184,13 +184,13 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
                         {item.changeFromLastPeriod.toFixed(0)}%
                       </span>
                     )}
-                    <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                    <span className="text-xs font-semibold text-data-neutral dark:text-data-neutral">
                       {percentage.toFixed(0)}%
                     </span>
                   </div>
                 </div>
                 {/* Slim bar (h-2) */}
-                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-2 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
                   <div
                     className={`h-full ${colorClass} transition-all duration-300 group-hover:opacity-80`}
                     style={{ width: `${percentage}%` }}
@@ -249,7 +249,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({ summary, onSystemCl
               const radius = 100 * item.masteryScore;
               const x = Math.cos(angle) * radius;
               const y = Math.sin(angle) * radius;
-              const colorClass = SYSTEM_COLORS[item.system] || 'bg-slate-500';
+              const colorClass = SYSTEM_COLORS[item.system] || 'bg-data-neutral';
 
               return (
                 <div

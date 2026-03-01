@@ -84,30 +84,30 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return 'bg-red-500/20 text-red-600 border-red-500/30';
+        return 'bg-data-fail/20 text-data-fail border-data-fail/30';
       case 'high':
         return 'bg-orange-500/20 text-orange-600 border-orange-500/30';
       case 'medium':
         return 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30';
       case 'low':
-        return 'bg-blue-500/20 text-blue-600 border-blue-500/30';
+        return 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)] border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]';
       default:
-        return 'bg-slate-500/20 text-slate-600 dark:text-slate-400 border-slate-500/30 dark:border-slate-600/30';
+        return 'bg-data-neutral/20 text-data-neutral dark:text-data-neutral border-data-neutral/30 dark:border-data-neutral/30';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'compliant':
-        return 'bg-green-500/20 text-green-600 border-green-500/30';
+        return 'bg-data-pass/20 text-data-pass border-data-pass/30';
       case 'non_compliant':
-        return 'bg-red-500/20 text-red-600 border-red-500/30';
+        return 'bg-data-fail/20 text-data-fail border-data-fail/30';
       case 'partial':
         return 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30';
       case 'pending':
-        return 'bg-blue-500/20 text-blue-600 border-blue-500/30';
+        return 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)] border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]';
       default:
-        return 'bg-slate-500/20 text-slate-600 dark:text-slate-400 border-slate-500/30 dark:border-slate-600/30';
+        return 'bg-data-neutral/20 text-data-neutral dark:text-data-neutral border-data-neutral/30 dark:border-data-neutral/30';
     }
   };
 
@@ -115,7 +115,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-category-practice)] mx-auto mb-4"></div>
           <p className="text-[var(--color-text-muted)]">Loading compliance dashboard...</p>
         </div>
       </div>
@@ -139,7 +139,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
             {/* Header */}
             <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]">
               <div className="flex items-center gap-3">
-                <Shield className="w-8 h-8 text-blue-500" />
+                <Shield className="w-8 h-8 text-[var(--color-category-practice)]" />
                 <div>
                   <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
                     Medical Education Compliance Dashboard
@@ -182,7 +182,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                       onClick={() => setActiveTab(tab)}
                       className={`px-4 py-3 font-medium text-sm transition-colors relative ${
                         activeTab === tab
-                          ? 'text-blue-600'
+                          ? 'text-[var(--color-category-practice)]'
                           : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
                       }`}
                     >
@@ -190,7 +190,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                       {activeTab === tab && (
                         <motion.div
                           layoutId="activeTab"
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-category-practice)]"
                         />
                       )}
                     </button>
@@ -207,10 +207,10 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-5 border border-[var(--color-border)]">
                       <div className="flex items-center justify-between mb-3">
-                        <div className="p-2 bg-green-500/10 rounded-lg">
-                          <CheckCircle className="w-6 h-6 text-green-500" />
+                        <div className="p-2 bg-data-pass/10 rounded-lg">
+                          <CheckCircle className="w-6 h-6 text-data-pass" />
                         </div>
-                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-500/20 text-green-600">
+                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-data-pass/20 text-data-pass">
                           {dashboardData.complianceScore.toFixed(1)}%
                         </span>
                       </div>
@@ -224,10 +224,10 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
 
                     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-5 border border-[var(--color-border)]">
                       <div className="flex items-center justify-between mb-3">
-                        <div className="p-2 bg-red-500/10 rounded-lg">
-                          <AlertTriangle className="w-6 h-6 text-red-500" />
+                        <div className="p-2 bg-data-fail/10 rounded-lg">
+                          <AlertTriangle className="w-6 h-6 text-data-fail" />
                         </div>
-                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-red-500/20 text-red-600">
+                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-data-fail/20 text-data-fail">
                           {
                             complianceIssues.filter(
                               (i) => i.severity === 'critical' || i.severity === 'high'
@@ -245,10 +245,10 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
 
                     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-5 border border-[var(--color-border)]">
                       <div className="flex items-center justify-between mb-3">
-                        <div className="p-2 bg-blue-500/10 rounded-lg">
-                          <Target className="w-6 h-6 text-blue-500" />
+                        <div className="p-2 bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] rounded-lg">
+                          <Target className="w-6 h-6 text-[var(--color-category-practice)]" />
                         </div>
-                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-blue-500/20 text-blue-600">
+                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)]">
                           {(dashboardData.blueprintAdherence * 100).toFixed(1)}%
                         </span>
                       </div>
@@ -339,14 +339,14 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                             <div
                               className={`p-2 rounded-lg ${
                                 standard.status === 'compliant'
-                                  ? 'bg-green-500/10'
+                                  ? 'bg-data-pass/10'
                                   : standard.status === 'partial'
                                     ? 'bg-yellow-500/10'
-                                    : 'bg-red-500/10'
+                                    : 'bg-data-fail/10'
                               }`}
                             >
                               {standard.status === 'compliant' ? (
-                                <CheckCircle className="w-5 h-5 text-green-500" />
+                                <CheckCircle className="w-5 h-5 text-data-pass" />
                               ) : (
                                 <AlertTriangle className="w-5 h-5 text-yellow-500" />
                               )}
@@ -398,13 +398,13 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                           placeholder="Search issues..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-10 pr-4 py-2 text-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="pl-10 pr-4 py-2 text-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-category-practice)] focus:border-transparent"
                         />
                       </div>
                       <select
                         value={filterSeverity}
                         onChange={(e) => setFilterSeverity(e.target.value)}
-                        className="px-3 py-2 text-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="px-3 py-2 text-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-category-practice)] focus:border-transparent"
                         title="Filter issues by severity"
                         aria-label="Filter issues by severity"
                       >
@@ -420,7 +420,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                   <div className="space-y-4">
                     {filteredIssues.length === 0 ? (
                       <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 text-center border border-[var(--color-border)]">
-                        <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                        <CheckCircle className="w-12 h-12 text-data-pass mx-auto mb-4" />
                         <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">
                           No Compliance Issues Found
                         </h4>
@@ -528,7 +528,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                                   </span>
                                   <span
                                     className={`text-sm font-medium ${
-                                      isWithinTolerance ? 'text-green-600' : 'text-red-600'
+                                      isWithinTolerance ? 'text-data-pass' : 'text-data-fail'
                                     }`}
                                   >
                                     {difference > 0 ? '+' : ''}
@@ -541,7 +541,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                                   initial={{ width: 0 }}
                                   animate={{ width: `${actual}%` }}
                                   className={`h-full ${
-                                    isWithinTolerance ? 'bg-green-500' : 'bg-red-500'
+                                    isWithinTolerance ? 'bg-data-pass' : 'bg-data-fail'
                                   }`}
                                 />
                               </div>
@@ -600,7 +600,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                       <div className="space-y-3">
                         <div className="p-3 rounded-lg border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-colors cursor-pointer">
                           <div className="flex items-center gap-3">
-                            <FileText className="w-5 h-5 text-blue-500" />
+                            <FileText className="w-5 h-5 text-[var(--color-category-practice)]" />
                             <div>
                               <h5 className="font-medium text-[var(--color-text-primary)]">
                                 Summary Report
@@ -613,7 +613,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                         </div>
                         <div className="p-3 rounded-lg border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-colors cursor-pointer">
                           <div className="flex items-center gap-3">
-                            <BarChart3 className="w-5 h-5 text-green-500" />
+                            <BarChart3 className="w-5 h-5 text-data-pass" />
                             <div>
                               <h5 className="font-medium text-[var(--color-text-primary)]">
                                 Detailed Analysis
@@ -626,7 +626,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                         </div>
                         <div className="p-3 rounded-lg border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-colors cursor-pointer">
                           <div className="flex items-center gap-3">
-                            <AlertTriangle className="w-5 h-5 text-red-500" />
+                            <AlertTriangle className="w-5 h-5 text-data-fail" />
                             <div>
                               <h5 className="font-medium text-[var(--color-text-primary)]">
                                 Issues Report

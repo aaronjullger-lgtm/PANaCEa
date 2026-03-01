@@ -147,7 +147,7 @@ export const ClinicalNetwork: React.FC<ClinicalNetworkProps> = ({
   if (loading) {
     return (
       <div
-        className="rounded-xl border border-slate-700 bg-slate-800/50 flex items-center justify-center text-slate-400"
+        className="rounded-xl border border-data-neutral bg-data-neutral/50 flex items-center justify-center text-data-neutral"
         style={{ width, height }}
       >
         Loading graph…
@@ -158,7 +158,7 @@ export const ClinicalNetwork: React.FC<ClinicalNetworkProps> = ({
   if (error || !data) {
     return (
       <div
-        className="rounded-xl border border-slate-700 bg-slate-800/50 flex items-center justify-center text-red-400"
+        className="rounded-xl border border-data-neutral bg-data-neutral/50 flex items-center justify-center text-data-fail"
         style={{ width, height }}
       >
         {error ?? 'No graph data'}
@@ -169,7 +169,7 @@ export const ClinicalNetwork: React.FC<ClinicalNetworkProps> = ({
   if (nodes.length === 0) {
     return (
       <div
-        className="rounded-xl border border-slate-700 bg-slate-800/50 flex items-center justify-center text-slate-400"
+        className="rounded-xl border border-data-neutral bg-data-neutral/50 flex items-center justify-center text-data-neutral"
         style={{ width, height }}
       >
         No related entities for this condition.
@@ -179,7 +179,7 @@ export const ClinicalNetwork: React.FC<ClinicalNetworkProps> = ({
 
   return (
     <div
-      className="rounded-xl border border-slate-700 bg-slate-900 overflow-hidden"
+      className="rounded-xl border border-data-neutral bg-data-neutral overflow-hidden"
       style={{ width, height }}
     >
       <ForceGraph2D
@@ -207,25 +207,25 @@ export const ClinicalNetwork: React.FC<ClinicalNetworkProps> = ({
           ctx.fillText(label.slice(0, 20), node.x ?? 0, (node.y ?? 0) + 10);
         }}
       />
-      <div className="flex flex-wrap gap-3 p-2 border-t border-slate-700 bg-slate-800/80 text-xs text-slate-300">
+      <div className="flex flex-wrap gap-3 p-2 border-t border-data-neutral bg-data-neutral/80 text-xs text-data-neutral">
         <span>
-          <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1" />
+          <span className="inline-block w-2 h-2 rounded-full bg-data-fail mr-1" />
           Condition
         </span>
         <span>
-          <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1" />
+          <span className="inline-block w-2 h-2 rounded-full bg-[var(--color-category-practice)] mr-1" />
           Drug
         </span>
         <span>
-          <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1" />
+          <span className="inline-block w-2 h-2 rounded-full bg-data-pass mr-1" />
           Anatomy
         </span>
         <span>
-          <span className="inline-block w-2 h-2 rounded-full bg-slate-500 mr-1" />
+          <span className="inline-block w-2 h-2 rounded-full bg-data-neutral mr-1" />
           Lab
         </span>
         <span>
-          <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1" />
+          <span className="inline-block w-2 h-2 rounded-full bg-data-provisional mr-1" />
           Differential
         </span>
       </div>

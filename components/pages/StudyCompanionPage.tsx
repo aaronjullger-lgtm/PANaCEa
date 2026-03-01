@@ -208,7 +208,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
       </div>
 
       {!adobeClientId && (
-        <div className="mb-4 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2">
+        <div className="mb-4 p-3 rounded-xl border border-data-provisional/30 bg-data-provisional/10 text-sm text-data-provisional dark:text-data-provisional flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
           <div>
             <p className="font-semibold">Missing Adobe PDF Embed client ID</p>
@@ -316,7 +316,7 @@ export function StudyCompanionPage({ onExit }: Readonly<StudyCompanionPageProps>
               )}
 
               {citationsFallback && (
-                <div className="p-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                <div className="p-2 rounded-lg border border-data-provisional/30 bg-data-provisional/10 text-xs text-data-provisional dark:text-data-provisional flex items-start gap-2">
                   <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                   <div>
                     Citation boxes are approximate (fallback). Adobe Extract data may be missing or

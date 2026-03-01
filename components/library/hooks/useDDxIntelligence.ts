@@ -275,13 +275,13 @@ export function useDDxIntelligence(
   const getPriorityColor = useCallback((priority: SmartSuggestion['priority']) => {
     switch (priority) {
       case 'critical':
-        return 'text-red-500 bg-red-500/10';
+        return 'text-data-fail bg-data-fail/10';
       case 'high':
-        return 'text-amber-500 bg-amber-500/10';
+        return 'text-data-provisional bg-data-provisional/10';
       case 'medium':
-        return 'text-blue-500 bg-blue-500/10';
+        return 'text-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)]';
       case 'low':
-        return 'text-gray-500 bg-gray-500/10';
+        return 'text-[var(--color-text-muted)] bg-[color-mix(in_srgb,var(--color-text-muted)_10%,transparent)]';
     }
   }, []);
 

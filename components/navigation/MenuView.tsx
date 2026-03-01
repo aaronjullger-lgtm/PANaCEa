@@ -739,11 +739,11 @@ const MenuView: React.FC<MenuViewProps> = ({
                     >
                       <div className="absolute top-0 right-0 p-1.5 opacity-50 group-hover:opacity-100 transition-opacity">
                         <span className="flex h-2 w-2 relative">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-data-pass opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-data-pass"></span>
                         </span>
                       </div>
-                      <BarChart3 className="w-8 h-8 mb-2 text-emerald-500" />
+                      <BarChart3 className="w-8 h-8 mb-2 text-data-pass" />
                       <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                         Gap Analysis
                       </div>
@@ -757,7 +757,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <RotateCcw className="w-8 h-8 mb-2 text-blue-500" />
+                    <RotateCcw className="w-8 h-8 mb-2 text-[var(--color-category-practice)]" />
                     <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                       Quick Review
                     </div>
@@ -770,7 +770,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Bookmark className="w-8 h-8 mb-2 text-slate-400" />
+                    <Bookmark className="w-8 h-8 mb-2 text-data-neutral" />
                     <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                       Bookmarks
                     </div>
@@ -783,7 +783,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <FileText className="w-8 h-8 mb-2 text-slate-500" />
+                    <FileText className="w-8 h-8 mb-2 text-data-neutral" />
                     <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                       Study Guide
                     </div>
@@ -796,7 +796,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Award className="w-8 h-8 mb-2 text-slate-400" />
+                    <Award className="w-8 h-8 mb-2 text-data-neutral" />
                     <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                       Leaderboard
                     </div>
@@ -844,7 +844,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <GraduationCap className="w-8 h-8 mb-2 text-emerald-500" />
+                      <GraduationCap className="w-8 h-8 mb-2 text-data-pass" />
                       <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                         Toolkit Hub
                       </div>
@@ -972,26 +972,26 @@ const MenuView: React.FC<MenuViewProps> = ({
                 Settings & Profile
               </h2>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl">
                   <div className="flex items-center gap-3">
-                    <User className="w-5 h-5 text-slate-500" />
+                    <User className="w-5 h-5 text-data-neutral" />
                     <span className="font-medium text-[var(--color-text-primary)]">Account</span>
                   </div>
-                  <span className="text-sm text-slate-500">
+                  <span className="text-sm text-data-neutral">
                     {user?.primaryEmailAddress?.emailAddress}
                   </span>
                 </div>
                 <button
                   onClick={() => onNavigateToIntegrations?.()}
-                  className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                  className="w-full flex items-center justify-between p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <Settings className="w-5 h-5 text-slate-500" />
+                    <Settings className="w-5 h-5 text-data-neutral" />
                     <span className="font-medium text-[var(--color-text-primary)]">
                       Preferences
                     </span>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-400" />
+                  <ChevronRight className="w-5 h-5 text-data-neutral" />
                 </button>
                 <div className="pt-4">
                   <SignOutButton>
@@ -1072,12 +1072,12 @@ const MenuView: React.FC<MenuViewProps> = ({
               </div>
               <button
                 onClick={() => setShowLeaderboard(false)}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                className="p-2 hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <p className="text-slate-600 dark:text-slate-300 mb-6">
+            <p className="text-data-neutral dark:text-data-neutral mb-6">
               The daily competitive leaderboard has moved to Grand Rounds mode. Compete against
               other students with speed-weighted scoring!
             </p>

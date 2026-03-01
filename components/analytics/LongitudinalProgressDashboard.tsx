@@ -390,11 +390,11 @@ export default function LongitudinalProgressDashboard({
                 );
               })()}
           </svg>
-          <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 mt-2 text-xs text-slate-600 dark:text-slate-400">
+          <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 mt-2 text-xs text-data-neutral dark:text-data-neutral">
             {phases.map((phase) => (
               <span key={phase.phase}>
                 {phase.phase}:{' '}
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                <span className="font-semibold text-data-neutral dark:text-data-neutral">
                   {phase.masteryScore}
                 </span>
               </span>

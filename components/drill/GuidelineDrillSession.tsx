@@ -351,7 +351,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                   </div>
                   <span
                     className={`text-sm font-bold flex-shrink-0 ${
-                      criterion.pointValue >= 0 ? 'text-teal-400' : 'text-red-400'
+                      criterion.pointValue >= 0 ? 'text-teal-400' : 'text-data-fail'
                     }`}
                   >
                     {criterion.pointValue >= 0 ? '+' : ''}
@@ -378,8 +378,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         transition={{ duration: 0.2 }}
         className={`p-3 sm:p-4 ${
           isCorrect
-            ? 'bg-emerald-100 dark:bg-emerald-950/50 border-t-2 border-emerald-500'
-            : 'bg-red-100 dark:bg-red-950/50 border-t-2 border-red-500'
+            ? 'bg-data-pass dark:bg-data-pass/50 border-t-2 border-data-pass'
+            : 'bg-data-fail dark:bg-data-fail/50 border-t-2 border-data-fail'
         }`}
       >
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -397,7 +397,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             onClick={handleNextVignette}
             className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-colors ${
               isCorrect
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                ? 'bg-data-pass hover:bg-data-pass text-white'
                 : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
             }`}
           >
@@ -432,15 +432,15 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             animate={{ opacity: 1, scale: 1 }}
             className={`p-6 rounded-xl border mb-4 ${
               isCorrect
-                ? 'bg-emerald-100 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-600'
-                : 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-600'
+                ? 'bg-data-pass dark:bg-data-pass/30 border-data-pass dark:border-data-pass'
+                : 'bg-data-fail dark:bg-data-fail/30 border-data-fail dark:border-data-fail'
             }`}
           >
             <div className="flex items-center gap-3 mb-4">
               {isCorrect ? (
-                <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                <CheckCircle className="w-8 h-8 text-data-pass dark:text-data-pass" />
               ) : (
-                <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+                <XCircle className="w-8 h-8 text-data-fail dark:text-data-fail" />
               )}
               <div>
                 <h2
@@ -491,7 +491,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                 className="w-full flex items-center justify-between p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors text-sm"
               >
                 <span className="flex items-center gap-2 text-[var(--color-text-primary)] font-medium">
-                  <BookOpen className="w-4 h-4 text-blue-500" />
+                  <BookOpen className="w-4 h-4 text-[var(--color-category-practice)]" />
                   Deep Dive - Related Reference Material
                 </span>
                 {showDeepDive ? (
@@ -517,7 +517,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                       </p>
                       <button
                         onClick={() => handleDeepDive(currentGuideline.name)}
-                        className="mt-2 text-blue-500 hover:text-blue-400 underline"
+                        className="mt-2 text-[var(--color-category-practice)] hover:text-[var(--color-category-practice)] underline"
                       >
                         View {currentGuideline.name} in Reference Library →
                       </button>

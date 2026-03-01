@@ -716,12 +716,12 @@ export const PerformanceDashboard: React.FC = () => {
                 key={index}
                 className={`p-3 rounded-lg border ${
                   opt.severity === 'critical'
-                    ? 'border-red-500/20 bg-red-500/5'
+                    ? 'border-data-fail/20 bg-data-fail/5'
                     : opt.severity === 'high'
                       ? 'border-orange-500/20 bg-orange-500/5'
                       : opt.severity === 'medium'
                         ? 'border-yellow-500/20 bg-yellow-500/5'
-                        : 'border-green-500/20 bg-green-500/5'
+                        : 'border-data-pass/20 bg-data-pass/5'
                 }`}
               >
                 <div className="flex items-start justify-between">

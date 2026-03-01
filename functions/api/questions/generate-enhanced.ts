@@ -61,25 +61,25 @@ function parseConditionContext(contextString: string): ParsedConditionContent {
     clinicalPearls: /(?:pearls?|tips?|remember):\s*(.+?)(?=\n\n|\n[A-Z]|$)/is,
   };
 
+  const arrayFields = new Set([
+    'symptoms',
+    'signs',
+    'diagnostics',
+    'treatment',
+    'differentialDiagnosis',
+    'complications',
+    'riskFactors',
+    'buzzwords',
+    'clinicalPearls',
+  ]);
+
   // Extract each section
   for (const [key, pattern] of Object.entries(sectionPatterns)) {
     const match = contextString.match(pattern);
-    if (match && match[1]) {
+    if (match?.[1]) {
       const content = match[1].trim();
       // For array fields, split by common delimiters
-      if (
-        [
-          'symptoms',
-          'signs',
-          'diagnostics',
-          'treatment',
-          'differentialDiagnosis',
-          'complications',
-          'riskFactors',
-          'buzzwords',
-          'clinicalPearls',
-        ].includes(key)
-      ) {
+      if (arrayFields.has(key)) {
         // Split by newlines, bullets, semicolons, or numbered lists
         const items = content
           .split(/\n|[•-]\s*|;\s*|\d+\.\s*/)
@@ -291,7 +291,14 @@ CRITICAL RULES:
     // ========================================================================
     // GENERATION + VERIFICATION LOOP (CoVe Pipeline)
     // ========================================================================
-    let questionData;
+    let questionData: {
+      vignette: string;
+      question: string;
+      options: string[];
+      correctAnswerIndex: number;
+      rationale: unknown;
+      pearls?: unknown[];
+    } | undefined;
     let verificationResult: CoVeResult | null = null;
     let quickVerifyResult: {
       passed: boolean;
@@ -321,7 +328,7 @@ CRITICAL RULES:
           .replace(/```\n?/g, '')
           .trim();
 
-        questionData = JSON.parse(cleanedResponse);
+        questionData = JSON.parse(cleanedResponse) as typeof questionData;
       } catch (parseError) {
         logger.warn(`[CoVe] Attempt ${attempt}: Failed to parse JSON`, {
           error: parseError instanceof Error ? parseError.message : String(parseError),
@@ -335,11 +342,11 @@ CRITICAL RULES:
 
       // Validate required fields
       if (
-        !questionData.vignette ||
-        !questionData.question ||
-        !questionData.options ||
-        questionData.correctAnswerIndex === undefined ||
-        !questionData.rationale
+        !questionData?.vignette ||
+        !questionData?.question ||
+        !questionData?.options ||
+        questionData?.correctAnswerIndex === undefined ||
+        !questionData?.rationale
       ) {
         logger.warn(`[CoVe] Attempt ${attempt}: Missing required fields`, {
           fields: Object.keys(questionData),
@@ -445,6 +452,11 @@ CRITICAL RULES:
       }
     }
 
+    // Ensure questionData exists before proceeding
+    if (!questionData) {
+      throw new Error('Failed to generate valid question after maximum retries');
+    }
+
     // Final check - if we exhausted retries without passing
     const verificationPassed = verificationResult?.passed ?? quickVerifyResult?.passed ?? false;
     const verificationConfidence =
@@ -458,11 +470,56 @@ CRITICAL RULES:
       });
     }
 
-    // Generate unique ID
+    // Generate unique IDs
     const questionId = `enh-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-    // Store in database with verification metadata
+    const stagingId = `stg-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const now = new Date();
+
+    // 1. Save to StagingQuestion (Staging Lake)
+    try {
+      await prisma.stagingQuestion.create({
+        data: {
+          id: stagingId,
+          vignette: questionData.vignette,
+          question: questionData.question,
+          options: questionData.options as object,
+          correctAnswer: ['A', 'B', 'C', 'D'][questionData.correctAnswerIndex] ?? 'A',
+          explanation: typeof questionData.rationale === 'string'
+            ? questionData.rationale
+            : JSON.stringify(questionData.rationale),
+          system,
+          difficulty,
+          status: 'pending',
+          aiGrade: {
+            verificationPassed,
+            verificationConfidence,
+            coveAttempts: attempt,
+            flags: (verificationResult?.flags ?? quickVerifyResult?.criticalIssues ?? []).map((f) =>
+              typeof f === 'string' ? f : JSON.stringify(f)
+            ),
+            recommendation:
+            verificationResult?.recommendation ??
+            (quickVerifyResult?.passed ? 'accept' : 'review'),
+          },
+          tags: {
+            conditionId,
+            conditionName,
+            task,
+            coveVerified: verificationPassed,
+            coveConfidence: verificationConfidence,
+            coveAttempts: attempt,
+          },
+        },
+      });
+    } catch (stagingError) {
+      // Non-critical - log but don't fail
+      logger.warn('Failed to store staging question', {
+        error: stagingError instanceof Error ? stagingError.message : String(stagingError),
+        userId: auth.userId,
+      });
+    }
+
+    // 2. Promote to Question table (live)
     try {
       await prisma.question.create({
         data: {
@@ -471,7 +528,9 @@ CRITICAL RULES:
           question: `${questionData.vignette}\n\n${questionData.question}`,
           options: questionData.options as object,
           correctAnswer: ['A', 'B', 'C', 'D'][questionData.correctAnswerIndex] ?? 'A',
-          explanation: questionData.rationale ?? '',
+          explanation: typeof questionData.rationale === 'string'
+            ? questionData.rationale
+            : JSON.stringify(questionData.rationale),
           system,
           difficulty,
           source: 'enhanced-generation',
@@ -486,6 +545,19 @@ CRITICAL RULES:
           } as object,
         },
       });
+
+      // 3. Update staging record status to 'approved'
+      try {
+        await prisma.stagingQuestion.update({
+          where: { id: stagingId },
+          data: { status: 'approved' },
+        });
+      } catch (updateError) {
+        logger.warn('Failed to update staging question status', {
+          error: updateError instanceof Error ? updateError.message : String(updateError),
+          userId: auth.userId,
+        });
+      }
     } catch (dbError) {
       // Non-critical - log but don't fail
       logger.warn('Failed to store question', {

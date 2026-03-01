@@ -132,14 +132,14 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
   };
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-[var(--color-bg-primary)] overflow-hidden">
-      <div className="p-4 border-b border-slate-700 flex flex-wrap items-center gap-3">
+    <div className="rounded-xl border border-data-neutral bg-[var(--color-bg-primary)] overflow-hidden">
+      <div className="p-4 border-b border-data-neutral flex flex-wrap items-center gap-3">
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Staging Lake</h2>
         <select
           aria-label="Filter by status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border border-slate-600 bg-slate-800 text-[var(--color-text-primary)] px-3 py-1.5 text-sm"
+          className="rounded-lg border border-data-neutral bg-data-neutral text-[var(--color-text-primary)] px-3 py-1.5 text-sm"
         >
           <option value="pending">Pending</option>
           <option value="graded">Graded</option>
@@ -150,7 +150,7 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
           type="button"
           onClick={() => fetchList()}
           disabled={loading}
-          className="flex items-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm text-[var(--color-text-primary)] hover:bg-slate-700 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg border border-data-neutral bg-data-neutral px-3 py-1.5 text-sm text-[var(--color-text-primary)] hover:bg-data-neutral disabled:opacity-50"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           Refresh
@@ -164,21 +164,21 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
         </div>
       )}
       {!loading && items.length > 0 && (
-        <ul className="divide-y divide-slate-700">
+        <ul className="divide-y divide-data-neutral">
           {items.map((item) => (
             <li key={item.id} className="p-4">
               <div className="flex flex-wrap gap-4">
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-medium text-slate-400">
+                    <span className="text-xs font-medium text-data-neutral">
                       {item.system} · {item.difficulty}
                     </span>
                     {item.aiGrade != null &&
                       (() => {
                         const score = aiScore(item) ?? 0;
-                        let badgeClass = 'bg-red-500/20 text-red-400';
-                        if (score >= 70) badgeClass = 'bg-emerald-500/20 text-emerald-400';
-                        else if (score >= 40) badgeClass = 'bg-amber-500/20 text-amber-400';
+                        let badgeClass = 'bg-data-fail/20 text-data-fail';
+                        if (score >= 70) badgeClass = 'bg-data-pass/20 text-data-pass';
+                        else if (score >= 40) badgeClass = 'bg-data-provisional/20 text-data-provisional';
                         return (
                           <span
                             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${badgeClass}`}
@@ -202,14 +202,14 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
                         onChange={(e) => setEditExplanation(e.target.value)}
                         rows={4}
                         placeholder="Explanation"
-                        className="w-full rounded-lg border border-slate-600 bg-slate-800 p-2 text-sm text-[var(--color-text-primary)]"
+                        className="w-full rounded-lg border border-data-neutral bg-data-neutral p-2 text-sm text-[var(--color-text-primary)]"
                       />
                       <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={() => handleSaveEdit(item.id)}
                           disabled={actionLoading === item.id}
-                          className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm text-white hover:bg-emerald-500 disabled:opacity-50"
+                          className="flex items-center gap-1 rounded-lg bg-data-pass px-3 py-1.5 text-sm text-white hover:bg-data-pass disabled:opacity-50"
                         >
                           <Check size={14} />
                           Save
@@ -220,7 +220,7 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
                             setEditingId(null);
                             setEditExplanation('');
                           }}
-                          className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-[var(--color-text-primary)]"
+                          className="rounded-lg border border-data-neutral px-3 py-1.5 text-sm text-[var(--color-text-primary)]"
                         >
                           Cancel
                         </button>
@@ -242,7 +242,7 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
                           setEditExplanation(item.explanation);
                         }}
                         disabled={actionLoading != null}
-                        className="rounded-lg border border-slate-600 p-2 text-slate-400 hover:bg-slate-700 hover:text-[var(--color-text-primary)] disabled:opacity-50"
+                        className="rounded-lg border border-data-neutral p-2 text-data-neutral hover:bg-data-neutral hover:text-[var(--color-text-primary)] disabled:opacity-50"
                         title="Edit explanation"
                       >
                         <Pencil size={16} />
@@ -251,7 +251,7 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
                         type="button"
                         onClick={() => handleApprove(item.id)}
                         disabled={actionLoading != null}
-                        className="rounded-lg border border-emerald-600 bg-emerald-600/20 p-2 text-emerald-400 hover:bg-emerald-600/30 disabled:opacity-50"
+                        className="rounded-lg border border-data-pass bg-data-pass/20 p-2 text-data-pass hover:bg-data-pass/30 disabled:opacity-50"
                         title="Approve (move to live pool)"
                       >
                         <Check size={16} />
@@ -260,7 +260,7 @@ export function StagingLake({ baseUrl = '', onError }: StagingLakeProps) {
                         type="button"
                         onClick={() => handleReject(item.id)}
                         disabled={actionLoading != null}
-                        className="rounded-lg border border-slate-600 p-2 text-slate-400 hover:bg-red-500/20 hover:text-red-400 disabled:opacity-50"
+                        className="rounded-lg border border-data-neutral p-2 text-data-neutral hover:bg-data-fail/20 hover:text-data-fail disabled:opacity-50"
                         title="Reject"
                       >
                         <X size={16} />

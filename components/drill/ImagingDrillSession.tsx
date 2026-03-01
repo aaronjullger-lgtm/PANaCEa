@@ -189,19 +189,19 @@ const ImagingDrillSession: React.FC<ImagingDrillSessionProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
         >
-          <Image className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+          <Image className="w-16 h-16 text-data-neutral mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
           <p className="text-[var(--color-text-secondary)] mb-6">Great work on radiology!</p>
           <div className="flex justify-center gap-8 mb-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-emerald-400">{score}</div>
+              <div className="text-4xl font-bold text-data-pass">{score}</div>
               <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
             </div>
           </div>
           <div className="flex flex-col gap-3">
             <button
               onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg font-medium transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-data-neutral hover:bg-data-neutral text-white rounded-lg font-medium transition-colors"
             >
               <RotateCcw className="w-4 h-4" /> Start New Session
             </button>

@@ -62,9 +62,9 @@ export const TrustBadge: React.FC<TrustBadgeProps> = ({
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className={`
           inline-flex items-center ${sizes.gap} ${sizes.padding}
-          bg-amber-500/10
-          text-amber-600 dark:text-amber-400
-          border border-amber-500/30
+          bg-data-provisional/10
+          text-data-provisional dark:text-data-provisional
+          border border-data-provisional/30
           rounded-full font-medium
           ${className}
         `}

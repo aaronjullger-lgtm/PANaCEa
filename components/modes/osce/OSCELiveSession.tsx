@@ -236,7 +236,7 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
       )}
       {status === 'error' && (
         <div>
-          <p className="text-sm text-red-500 mb-2">{errorMessage}</p>
+          <p className="text-sm text-data-fail mb-2">{errorMessage}</p>
           <button
             type="button"
             onClick={connect}

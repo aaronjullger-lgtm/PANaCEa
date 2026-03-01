@@ -97,31 +97,31 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-800 p-6 shadow-xl border border-slate-200 dark:border-slate-700"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-800 p-6 shadow-xl border border-data-neutral dark:border-data-neutral"
       >
         <div className="absolute inset-0 noise-texture opacity-[0.03]" />
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
-            <Zap className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <Zap className="w-5 h-5 text-data-provisional dark:text-data-provisional" />
+            <span className="text-xs font-bold uppercase tracking-wider text-data-neutral dark:text-data-neutral">
               Daily Prescription
             </span>
           </div>
           <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
             Build Your Profile
           </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          <p className="text-sm text-data-neutral dark:text-data-neutral mb-4">
             Complete at least 5 questions across multiple systems to unlock personalized
             recommendations.
           </p>
           <button
             disabled
-            className="flex items-center gap-2 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-400 rounded-lg text-sm font-medium cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 bg-data-neutral dark:bg-data-neutral text-data-neutral rounded-lg text-sm font-medium cursor-not-allowed"
           >
             <Target className="w-4 h-4" />
             Start Any Session to Begin
           </button>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
+          <p className="text-xs text-data-neutral dark:text-data-neutral mt-2">
             Complete 5+ questions to unlock.
           </p>
         </div>
@@ -135,7 +135,7 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-800 p-6 shadow-xl cursor-pointer group border border-slate-200 dark:border-slate-700"
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-800 p-6 shadow-xl cursor-pointer group border border-data-neutral dark:border-data-neutral"
       onClick={() => onStartFocusSession(focusSystem.system)}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
@@ -150,22 +150,22 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <Zap className="w-5 h-5 text-data-provisional dark:text-data-provisional" />
+            <span className="text-xs font-bold uppercase tracking-wider text-data-neutral dark:text-data-neutral">
               Daily Prescription
             </span>
           </div>
-          <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors" />
+          <ChevronRight className="w-5 h-5 text-data-neutral dark:text-data-neutral group-hover:text-data-provisional dark:group-hover:text-data-provisional transition-colors" />
         </div>
 
         {/* Main Focus */}
         <h3 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)] mb-1">
-          Focus: <span className="text-amber-600 dark:text-amber-400">{focusSystem.label}</span>
+          Focus: <span className="text-data-provisional dark:text-data-provisional">{focusSystem.label}</span>
         </h3>
 
         {/* Stats */}
         <div className="flex items-center gap-4 mb-4 text-sm">
-          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-1.5 text-data-neutral dark:text-data-neutral">
             <Target className="w-4 h-4" />
             <span>
               <span className="font-light text-2xl text-[var(--color-text-primary)]">
@@ -175,10 +175,10 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
             </span>
           </div>
           {oldestTopic && daysSinceOldest && daysSinceOldest > 3 && (
-            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-1.5 text-data-neutral dark:text-data-neutral">
               <Calendar className="w-4 h-4" />
               <span className="text-xs">
-                <span className="text-slate-700 dark:text-slate-300">{oldestTopic.label}</span> (
+                <span className="text-data-neutral dark:text-data-neutral">{oldestTopic.label}</span> (
                 {daysSinceOldest}d ago)
               </span>
             </div>
@@ -186,7 +186,7 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
         </div>
 
         {/* Insight */}
-        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex items-start gap-1">
+        <p className="text-xs text-data-neutral dark:text-data-neutral mb-4 flex items-start gap-1">
           <Award className="w-3 h-3 flex-shrink-0 mt-0.5" />
           <span>
             {focusSystem.accuracy < 60
@@ -198,7 +198,7 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
         </p>
 
         {/* CTA */}
-        <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-semibold text-sm group-hover:gap-3 transition-all">
+        <div className="flex items-center gap-2 text-data-provisional dark:text-data-provisional font-semibold text-sm group-hover:gap-3 transition-all">
           <span>Start Focused Session</span>
           <ChevronRight className="w-4 h-4" />
         </div>

@@ -105,7 +105,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
               </div>
               <div>
                 <h2 className="text-2xl font-bold">Your Bookmarks</h2>
-                <p className="text-amber-100 text-sm">
+                <p className="text-data-provisional text-sm">
                   {bookmarkedQuestions.length} question{bookmarkedQuestions.length !== 1 ? 's' : ''}{' '}
                   saved
                 </p>
@@ -122,10 +122,10 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
         </div>
 
         {/* Search and Filters */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-700 space-y-3">
+        <div className="p-4 border-b border-data-neutral dark:border-data-neutral space-y-3">
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-data-neutral" />
             <input
               type="text"
               placeholder="Search bookmarks..."
@@ -138,13 +138,13 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
           {/* Tag Filters */}
           {allTags.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
-              <Tag className="w-4 h-4 text-slate-500" />
+              <Tag className="w-4 h-4 text-data-neutral" />
               <button
                 onClick={() => setSelectedTag(null)}
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   selectedTag === null
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                    ? 'bg-data-provisional text-white'
+                    : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
                 }`}
               >
                 All
@@ -155,8 +155,8 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                   onClick={() => setSelectedTag(tag)}
                   className={`px-3 py-1 rounded-full text-sm transition-colors ${
                     selectedTag === tag
-                      ? 'bg-amber-500 text-white'
-                      : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                      ? 'bg-data-provisional text-white'
+                      : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
                   }`}
                 >
                   {tag}
@@ -205,15 +205,15 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -100 }}
                     transition={{ delay: index * 0.05 }}
-                    className="bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 p-4 hover:shadow-md transition-shadow"
+                    className="bg-white dark:bg-data-neutral rounded-lg border border-data-neutral dark:border-data-neutral p-4 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start gap-3">
-                      <BookmarkCheck className="w-5 h-5 text-amber-500 flex-shrink-0 mt-1" />
+                      <BookmarkCheck className="w-5 h-5 text-data-provisional flex-shrink-0 mt-1" />
 
                       <div className="flex-1 min-w-0">
                         {/* Condition and Topic */}
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-medium rounded">
+                          <span className="inline-block px-2 py-1 bg-[var(--color-category-practice)] bg-[var(--color-category-practice)] text-[var(--color-category-practice)] text-[var(--color-category-practice)] text-xs font-medium rounded">
                             {question.system || question.topic}
                           </span>
                           <span className="text-sm font-semibold text-[var(--color-text-primary)]">
@@ -223,7 +223,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
 
                         {/* Question Preview */}
                         <p
-                          className="text-sm text-slate-600 dark:text-slate-400 mb-2 overflow-hidden"
+                          className="text-sm text-data-neutral dark:text-data-neutral mb-2 overflow-hidden"
                           style={{
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
@@ -239,7 +239,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                             {question.tags.map((tag) => (
                               <span
                                 key={tag}
-                                className="inline-block px-2 py-0.5 bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 text-xs rounded"
+                                className="inline-block px-2 py-0.5 bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral text-xs rounded"
                               >
                                 {tag}
                               </span>
@@ -248,7 +248,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                         )}
 
                         {/* Metadata */}
-                        <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="flex items-center gap-4 text-xs text-data-neutral dark:text-data-neutral">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {formatDate(question.bookmarkedAt)}
@@ -260,13 +260,13 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                       <div className="flex flex-col gap-2">
                         <button
                           onClick={() => onViewQuestion(question)}
-                          className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors"
+                          className="px-3 py-1.5 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] text-white text-sm rounded-lg transition-colors"
                         >
                           Review
                         </button>
                         <button
                           onClick={() => onRemoveBookmark(question)}
-                          className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          className="p-1.5 text-data-fail hover:bg-data-fail dark:hover:bg-data-fail/20 rounded-lg transition-colors"
                           aria-label="Remove bookmark"
                         >
                           <Trash2 className="w-4 h-4" />

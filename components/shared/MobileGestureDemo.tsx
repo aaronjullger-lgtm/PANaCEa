@@ -321,11 +321,11 @@ export const MobileGestureDemo: React.FC<MobileGestureDemoProps> = ({
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center ${
                               log.type === 'swipe'
-                                ? 'bg-blue-500/10 text-blue-500'
+                                ? 'bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] text-[var(--color-category-practice)]'
                                 : log.type === 'longpress'
-                                  ? 'bg-amber-500/10 text-amber-500'
+                                  ? 'bg-data-provisional/10 text-data-provisional'
                                   : log.type === 'doubletap'
-                                    ? 'bg-green-500/10 text-green-500'
+                                    ? 'bg-data-pass/10 text-data-pass'
                                     : 'bg-purple-500/10 text-purple-500'
                             }`}
                           >
@@ -365,8 +365,8 @@ export const MobileGestureDemo: React.FC<MobileGestureDemoProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded bg-blue-500/10 flex items-center justify-center">
-                    <span className="text-blue-500">←→</span>
+                  <div className="w-6 h-6 rounded bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] flex items-center justify-center">
+                    <span className="text-[var(--color-category-practice)]">←→</span>
                   </div>
                   <span className="text-sm font-medium text-[var(--color-text-primary)]">
                     Swipe
@@ -377,8 +377,8 @@ export const MobileGestureDemo: React.FC<MobileGestureDemoProps> = ({
 
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded bg-amber-500/10 flex items-center justify-center">
-                    <span className="text-amber-500">⏱️</span>
+                  <div className="w-6 h-6 rounded bg-data-provisional/10 flex items-center justify-center">
+                    <span className="text-data-provisional">⏱️</span>
                   </div>
                   <span className="text-sm font-medium text-[var(--color-text-primary)]">
                     Long Press
@@ -389,8 +389,8 @@ export const MobileGestureDemo: React.FC<MobileGestureDemoProps> = ({
 
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded bg-green-500/10 flex items-center justify-center">
-                    <span className="text-green-500">✌️</span>
+                  <div className="w-6 h-6 rounded bg-data-pass/10 flex items-center justify-center">
+                    <span className="text-data-pass">✌️</span>
                   </div>
                   <span className="text-sm font-medium text-[var(--color-text-primary)]">
                     Double Tap

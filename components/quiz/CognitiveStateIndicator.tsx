@@ -64,8 +64,8 @@ export const CognitiveStateIndicator: React.FC<CognitiveStateIndicatorProps> = (
     }
     return {
       label: 'Studying',
-      color: 'text-slate-500',
-      bg: 'bg-slate-500/10 border-slate-500/30',
+      color: 'text-data-neutral',
+      bg: 'bg-data-neutral/10 border-data-neutral/30',
       icon: <Brain className="w-4 h-4" />,
     };
   };

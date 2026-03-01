@@ -40,24 +40,24 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 // Color scales for different metrics - using consistent UI theme colors
 const COLOR_SCALES = {
   attempts: [
-    'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600', // 0 - empty
-    'bg-slate-200 dark:bg-slate-700', // 1-5
-    'bg-slate-300 dark:bg-slate-600', // 6-10
-    'bg-slate-400 dark:bg-slate-500', // 11-20
+    'bg-data-neutral dark:bg-data-neutral border border-data-neutral dark:border-data-neutral', // 0 - empty
+    'bg-data-neutral dark:bg-data-neutral', // 1-5
+    'bg-data-neutral dark:bg-data-neutral', // 6-10
+    'bg-data-neutral dark:bg-data-neutral', // 11-20
     'bg-slate-500 dark:bg-slate-400', // 21+
   ],
   accuracy: [
-    'bg-slate-100 dark:bg-slate-800', // no data
-    'bg-slate-200 dark:bg-slate-700', // <50%
-    'bg-slate-300 dark:bg-slate-600', // 50-69%
-    'bg-slate-400 dark:bg-slate-500', // 70-84%
+    'bg-data-neutral dark:bg-data-neutral', // no data
+    'bg-data-neutral dark:bg-data-neutral', // <50%
+    'bg-data-neutral dark:bg-data-neutral', // 50-69%
+    'bg-data-neutral dark:bg-data-neutral', // 70-84%
     'bg-slate-500 dark:bg-slate-400', // 85%+
   ],
   streak: [
-    'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600', // 0 - empty
-    'bg-slate-200 dark:bg-slate-700', // 1-2
-    'bg-slate-300 dark:bg-slate-600', // 3-5
-    'bg-slate-400 dark:bg-slate-500', // 6-10
+    'bg-data-neutral dark:bg-data-neutral border border-data-neutral dark:border-data-neutral', // 0 - empty
+    'bg-data-neutral dark:bg-data-neutral', // 1-2
+    'bg-data-neutral dark:bg-data-neutral', // 3-5
+    'bg-data-neutral dark:bg-data-neutral', // 6-10
     'bg-slate-500 dark:bg-slate-400', // 11+
   ],
 };
@@ -260,10 +260,10 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   return (
     <div className="card-premium-glass card-noise-texture p-5 rounded-2xl w-full">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        <h3 className="text-sm font-bold tracking-tight text-data-neutral dark:text-data-neutral">
           Study Activity
         </h3>
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-2 text-xs text-data-neutral dark:text-data-neutral">
           <span>Less</span>
           {COLOR_SCALES[metric].map((color, idx) => (
             <div key={idx} className={`w-3 h-3 rounded-sm ${color}`} />
@@ -283,7 +283,7 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           return (
             <div
               key={idx}
-              className="absolute text-xs text-slate-600 dark:text-slate-400 font-medium"
+              className="absolute text-xs text-data-neutral dark:text-data-neutral font-medium"
               style={{
                 left: `${left}%`,
                 width: `${width}%`,
@@ -329,7 +329,7 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
                   <div
                     key={rowIdx}
                     className={`w-3 h-3 rounded-sm transition-all duration-200 ${
-                      isFuture ? 'bg-slate-100 dark:bg-slate-800' : colorClass
+                      isFuture ? 'bg-data-neutral dark:bg-data-neutral' : colorClass
                     } ${date ? 'cursor-pointer hover:ring-2 hover:ring-slate-900 dark:hover:ring-slate-300 hover:scale-110' : ''}`}
                     title={tooltip}
                   />
@@ -341,21 +341,21 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       </div>
 
       {/* Summary stats */}
-      <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 grid grid-cols-3 gap-4">
+      <div className="mt-4 pt-3 border-t border-data-neutral/60 dark:border-data-neutral/60 grid grid-cols-3 gap-4">
         <div className="text-center">
-          <div className="text-3xl font-light text-slate-900 dark:text-slate-100">
+          <div className="text-3xl font-light text-data-neutral dark:text-data-neutral">
             {records.reduce((sum, r) => sum + r.attempts, 0)}
           </div>
           <div className="stat-label-sm mt-1">Total Questions</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-light text-slate-900 dark:text-slate-100">
+          <div className="text-3xl font-light text-data-neutral dark:text-data-neutral">
             {records.length}
           </div>
           <div className="stat-label-sm mt-1">Active Days</div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-light text-slate-900 dark:text-slate-100">
+          <div className="text-3xl font-light text-data-neutral dark:text-data-neutral">
             {records.length > 0
               ? (records.reduce((sum, r) => sum + r.accuracy, 0) / records.length).toFixed(0)
               : 0}

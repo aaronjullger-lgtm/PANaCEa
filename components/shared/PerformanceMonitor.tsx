@@ -45,9 +45,9 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   }, [report.score, onScoreChange]);
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-500';
+    if (score >= 90) return 'text-data-pass';
     if (score >= 70) return 'text-yellow-500';
-    return 'text-red-500';
+    return 'text-data-fail';
   };
 
   const getScoreLabel = (score: number) => {
@@ -79,10 +79,10 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
       animate={{ opacity: 1, y: 0 }}
       className={`p-4 rounded-xl border ${
         status === 'good'
-          ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20'
+          ? 'border-data-pass bg-data-pass dark:border-data-pass dark:bg-data-pass/20'
           : status === 'warning'
             ? 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20'
-            : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
+            : 'border-data-fail bg-data-fail dark:border-data-fail dark:bg-data-fail/20'
       }`}
     >
       <div className="flex items-center justify-between mb-2">
@@ -93,10 +93,10 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
         <span
           className={`text-sm font-semibold ${
             status === 'good'
-              ? 'text-green-600 dark:text-green-400'
+              ? 'text-data-pass dark:text-data-pass'
               : status === 'warning'
                 ? 'text-yellow-600 dark:text-yellow-400'
-                : 'text-red-600 dark:text-red-400'
+                : 'text-data-fail dark:text-data-fail'
           }`}
         >
           {value}
@@ -130,10 +130,10 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed bottom-6 right-6 z-50 flex items-center justify-center w-12 h-12 rounded-full shadow-lg ${
           report.score >= 70
-            ? 'bg-green-500 hover:bg-green-600'
+            ? 'bg-data-pass hover:bg-data-pass'
             : report.score >= 50
               ? 'bg-yellow-500 hover:bg-yellow-600'
-              : 'bg-red-500 hover:bg-red-600'
+              : 'bg-data-fail hover:bg-data-fail'
         } text-white transition-colors`}
         aria-label="Performance Monitor"
       >
@@ -222,10 +222,10 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                   transition={{ duration: 0.5, ease: 'easeOut' }}
                   className={`h-full ${
                     report.score >= 70
-                      ? 'bg-green-500'
+                      ? 'bg-data-pass'
                       : report.score >= 50
                         ? 'bg-yellow-500'
-                        : 'bg-red-500'
+                        : 'bg-data-fail'
                   }`}
                 />
               </div>
@@ -410,10 +410,10 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                   <div
                     className={`w-2 h-2 rounded-full ${
                       report.score >= 70
-                        ? 'bg-green-500'
+                        ? 'bg-data-pass'
                         : report.score >= 50
                           ? 'bg-yellow-500'
-                          : 'bg-red-500'
+                          : 'bg-data-fail'
                     }`}
                   />
                   <span className="text-[var(--color-text-muted)]">

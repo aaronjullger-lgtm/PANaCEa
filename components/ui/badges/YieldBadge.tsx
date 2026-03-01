@@ -106,21 +106,21 @@ function parseYieldValue(yieldValue: number | string | null | undefined) {
   const configs = {
     high: {
       icon: Flame, // 🔥 for HIGH YIELD
-      bgClass: 'bg-red-950/50',
-      textClass: 'text-red-200',
-      borderClass: 'border-red-700/60',
+      bgClass: 'bg-data-fail/50',
+      textClass: 'text-data-fail',
+      borderClass: 'border-data-fail/60',
     },
     medium: {
       icon: TrendingUp,
-      bgClass: 'bg-amber-950/50',
-      textClass: 'text-amber-200',
-      borderClass: 'border-amber-700/60',
+      bgClass: 'bg-data-provisional/50',
+      textClass: 'text-data-provisional',
+      borderClass: 'border-data-provisional/60',
     },
     low: {
       icon: Minus,
-      bgClass: 'bg-slate-800/50',
-      textClass: 'text-slate-400',
-      borderClass: 'border-slate-600/60',
+      bgClass: 'bg-data-neutral/50',
+      textClass: 'text-data-neutral',
+      borderClass: 'border-data-neutral/60',
     },
   };
 
@@ -149,7 +149,7 @@ export const YieldStars: React.FC<{
         : 1;
 
   const colorClass =
-    level === 'high' ? 'text-red-400' : level === 'medium' ? 'text-amber-400' : 'text-slate-500';
+    level === 'high' ? 'text-data-fail' : level === 'medium' ? 'text-data-provisional' : 'text-data-neutral';
 
   return (
     <div className={`flex items-center gap-0.5 ${className}`}>

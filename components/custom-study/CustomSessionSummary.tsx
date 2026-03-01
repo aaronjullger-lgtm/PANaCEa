@@ -51,13 +51,13 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg overflow-hidden"
+        className="bg-white dark:bg-data-neutral rounded-2xl shadow-lg overflow-hidden"
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center text-white">
           <div className="text-6xl mb-2">{getGradeEmoji(summary.firstAttemptAccuracy)}</div>
           <h1 className="text-2xl font-bold mb-1">Session Complete!</h1>
-          <p className="text-blue-100">Great work on your custom study session</p>
+          <p className="text-[var(--color-category-practice)]">Great work on your custom study session</p>
         </div>
 
         {/* Main Stats */}
@@ -93,8 +93,8 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           <div className="grid sm:grid-cols-2 gap-4 mb-6">
             {/* Strong Areas */}
             {summary.strongAreas.length > 0 && (
-              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
-                <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-2">
+              <div className="p-4 bg-data-pass dark:bg-data-pass/20 rounded-xl">
+                <div className="flex items-center gap-2 text-data-pass dark:text-data-pass mb-2">
                   <TrendingUp className="w-4 h-4" />
                   <span className="font-medium">Strong Areas</span>
                 </div>
@@ -102,7 +102,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                   {summary.strongAreas.map((area) => (
                     <span
                       key={area}
-                      className="px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-full text-sm"
+                      className="px-2 py-1 bg-data-pass dark:bg-data-pass/40 text-data-pass dark:text-data-pass rounded-full text-sm"
                     >
                       {area}
                     </span>
@@ -113,8 +113,8 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
 
             {/* Weak Areas */}
             {summary.weakAreas.length > 0 && (
-              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 mb-2">
+              <div className="p-4 bg-data-provisional dark:bg-data-provisional/20 rounded-xl">
+                <div className="flex items-center gap-2 text-data-provisional dark:text-data-provisional mb-2">
                   <AlertTriangle className="w-4 h-4" />
                   <span className="font-medium">Needs Review</span>
                 </div>
@@ -122,7 +122,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
                   {summary.weakAreas.map((area) => (
                     <span
                       key={area}
-                      className="px-2 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-full text-sm"
+                      className="px-2 py-1 bg-data-provisional dark:bg-data-provisional/40 text-data-provisional dark:text-data-provisional rounded-full text-sm"
                     >
                       {area}
                     </span>
@@ -135,26 +135,26 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           {/* System Breakdown */}
           {summary.systemBreakdown.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+              <h3 className="text-sm font-medium text-data-neutral dark:text-data-neutral mb-3">
                 Performance by System
               </h3>
               <div className="space-y-2">
                 {summary.systemBreakdown.map((system) => (
                   <div key={system.system} className="flex items-center gap-3">
-                    <div className="w-32 text-sm text-slate-600 dark:text-slate-400 truncate">
+                    <div className="w-32 text-sm text-data-neutral dark:text-data-neutral truncate">
                       {system.systemName}
                     </div>
-                    <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${system.accuracy}%` }}
                         transition={{ duration: 0.5, delay: 0.2 }}
                         className={`h-full rounded-full ${
                           system.accuracy >= 80
-                            ? 'bg-green-500'
+                            ? 'bg-data-pass'
                             : system.accuracy >= 60
-                              ? 'bg-amber-500'
-                              : 'bg-red-500'
+                              ? 'bg-data-provisional'
+                              : 'bg-data-fail'
                         }`}
                       />
                     </div>
@@ -170,28 +170,28 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           {/* Focus Area Breakdown */}
           {summary.focusAreaBreakdown.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+              <h3 className="text-sm font-medium text-data-neutral dark:text-data-neutral mb-3">
                 Performance by Focus Area
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {summary.focusAreaBreakdown.map((fa) => (
                   <div
                     key={fa.focusArea}
-                    className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl"
+                    className="p-3 bg-data-neutral dark:bg-data-neutral/50 rounded-xl"
                   >
                     <div className="text-2xl mb-1">
                       {FOCUS_AREA_META[fa.focusArea]?.icon || '📋'}
                     </div>
-                    <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                    <div className="text-xs text-data-neutral dark:text-data-neutral truncate">
                       {FOCUS_AREA_META[fa.focusArea]?.label || fa.focusArea}
                     </div>
                     <div
                       className={`text-lg font-bold ${
                         fa.accuracy >= 80
-                          ? 'text-green-600 dark:text-green-400'
+                          ? 'text-data-pass dark:text-data-pass'
                           : fa.accuracy >= 60
-                            ? 'text-amber-600 dark:text-amber-400'
-                            : 'text-red-600 dark:text-red-400'
+                            ? 'text-data-provisional dark:text-data-provisional'
+                            : 'text-data-fail dark:text-data-fail'
                       }`}
                     >
                       {fa.accuracy.toFixed(0)}%
@@ -203,7 +203,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           )}
 
           {/* Info Banner */}
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-700 dark:text-blue-300 text-sm mb-6">
+          <div className="p-4 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-xl text-[var(--color-category-practice)] text-[var(--color-category-practice)] text-sm mb-6">
             <div className="flex items-center gap-2 mb-1">
               <Zap className="w-4 h-4" />
               <span className="font-medium">Practice Session</span>
@@ -218,14 +218,14 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           <div className="flex gap-3">
             <button
               onClick={onGoHome}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-data-neutral dark:border-data-neutral rounded-xl text-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
             >
               <Home className="w-5 h-5" />
               Back to Menu
             </button>
             <button
               onClick={onStartNew}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-category-practice)] text-white rounded-xl hover:bg-[var(--color-category-practice)] transition-colors"
             >
               <RotateCcw className="w-5 h-5" />
               New Session
@@ -250,11 +250,11 @@ interface StatCardProps {
 
 function StatCard({ icon, label, value, color }: StatCardProps) {
   const colorClasses = {
-    green: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20',
-    amber: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20',
-    blue: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20',
+    green: 'text-data-pass dark:text-data-pass bg-data-pass dark:bg-data-pass/20',
+    amber: 'text-data-provisional dark:text-data-provisional bg-data-provisional dark:bg-data-provisional/20',
+    blue: 'text-[var(--color-category-practice)] text-[var(--color-category-practice)] bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]',
     purple: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20',
-    red: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20',
+    red: 'text-data-fail dark:text-data-fail bg-data-fail dark:bg-data-fail/20',
   };
 
   return (

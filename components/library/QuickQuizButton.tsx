@@ -112,7 +112,7 @@ export const QuickQuizButton: React.FC<QuickQuizButtonProps> = ({
               }}
               className="w-full px-3 py-2 text-left hover:bg-[var(--color-bg-secondary)]/80 flex items-center gap-2 transition-colors"
             >
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <Zap className="w-3.5 h-3.5 text-data-provisional" />
               <div>
                 <p className="text-xs font-medium text-[var(--color-text-primary)]">Rapid Recall</p>
                 <p className="text-[10px] text-[var(--color-text-muted)]">Quick buzzword drill</p>
@@ -142,7 +142,7 @@ export const QuickQuizButton: React.FC<QuickQuizButtonProps> = ({
               }}
               className="w-full px-3 py-2 text-left hover:bg-[var(--color-bg-secondary)]/80 flex items-center gap-2 transition-colors"
             >
-              <PlayCircle className="w-3.5 h-3.5 text-green-400" />
+              <PlayCircle className="w-3.5 h-3.5 text-data-pass" />
               <div>
                 <p className="text-xs font-medium text-[var(--color-text-primary)]">
                   Mixed Practice

@@ -40,7 +40,7 @@ interface DailyStats {
  */
 function getIntensityColor(count: number): string {
   if (count === 0) {
-    return 'bg-slate-100 dark:bg-[var(--color-bg-tertiary)] border-slate-200 dark:border-[var(--color-border)]';
+    return 'bg-data-neutral dark:bg-[var(--color-bg-tertiary)] border-data-neutral dark:border-[var(--color-border)]';
   } else if (count <= 5) {
     return 'bg-[var(--color-accent)]/20 border-[var(--color-accent)]/30';
   } else if (count <= 15) {
@@ -500,7 +500,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
                           className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm border transition-all ${
                             date
                               ? `${getIntensityColor(count)} cursor-pointer hover:ring-2 hover:ring-[var(--color-accent)]/50`
-                              : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 cursor-default'
+                              : 'bg-data-neutral dark:bg-data-neutral border border-data-neutral dark:border-data-neutral cursor-default'
                           }`}
                           title={
                             date && stats

@@ -322,7 +322,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
                   {clicks.map((click, i) => (
                     <div
                       key={i}
-                      className="absolute w-4 h-4 bg-red-500 rounded-full border-2 border-white transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                      className="absolute w-4 h-4 bg-data-fail rounded-full border-2 border-white transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                       style={{
                         left: `${click.x * 100}%`,
                         top: `${click.y * 100}%`,
@@ -335,7 +335,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
                   <div
                     className={`mt-4 p-4 rounded-lg border ${
                       feedback.correct
-                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                        ? 'bg-data-pass/10 border-data-pass/30 text-data-pass'
                         : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
                     }`}
                   >
@@ -352,7 +352,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
               </div>
 
               {heatmapVisible && (
-                <div className="text-sm text-amber-500 flex items-center gap-2">
+                <div className="text-sm text-data-provisional flex items-center gap-2">
                   <HelpCircle className="w-4 h-4" />
                   <span>Heatmap revealed (-20 points)</span>
                 </div>
@@ -388,8 +388,8 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
               )}
 
               {diagnostic.currentHintLevel !== 'none' && (
-                <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-4">
-                  <h3 className="font-semibold text-amber-500 mb-2">Hint</h3>
+                <div className="rounded-xl bg-data-provisional/10 border border-data-provisional/30 p-4">
+                  <h3 className="font-semibold text-data-provisional mb-2">Hint</h3>
                   <p className="text-sm text-[var(--color-text-secondary)]">
                     {diagnostic.hints.subtle}
                   </p>

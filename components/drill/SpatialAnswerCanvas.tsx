@@ -166,7 +166,7 @@ export function SpatialAnswerCanvas({
         )}
         {correctBox && (
           <div
-            className="absolute border-2 border-red-500 bg-red-500/20 pointer-events-none"
+            className="absolute border-2 border-data-fail bg-data-fail/20 pointer-events-none"
             style={{
               left: (correctBox[1] / 1000) * 100 + '%',
               top: (correctBox[0] / 1000) * 100 + '%',

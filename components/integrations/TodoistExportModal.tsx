@@ -206,7 +206,7 @@ export default function TodoistExportModal({
                   onChange={(e) =>
                     setOptions((prev) => ({ ...prev, exportMethod: e.target.value as 'csv' }))
                   }
-                  className="border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
+                  className="border-[var(--color-border)] text-[var(--color-category-practice)] focus:ring-[var(--color-category-practice)]"
                 />
                 <span className="ml-2 text-[var(--color-text-secondary)]">
                   Download CSV (Manual Import)
@@ -222,7 +222,7 @@ export default function TodoistExportModal({
                   onChange={(e) =>
                     setOptions((prev) => ({ ...prev, exportMethod: e.target.value as 'oauth' }))
                   }
-                  className="border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
+                  className="border-[var(--color-border)] text-[var(--color-category-practice)] focus:ring-[var(--color-category-practice)]"
                 />
                 <span className="ml-2 text-[var(--color-text-secondary)]">
                   Direct Export (OAuth)
@@ -238,8 +238,8 @@ export default function TodoistExportModal({
                 <div className="flex items-center">
                   {isConnected ? (
                     <>
-                      <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-                      <span className="text-green-700 dark:text-green-300">
+                      <CheckCircle className="w-5 h-5 text-data-pass mr-2" />
+                      <span className="text-data-pass dark:text-data-pass">
                         Connected to Todoist
                       </span>
                     </>
@@ -256,14 +256,14 @@ export default function TodoistExportModal({
                 {isConnected ? (
                   <button
                     onClick={handleDisconnect}
-                    className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                    className="text-sm text-data-fail hover:text-data-fail dark:text-data-fail"
                   >
                     Disconnect
                   </button>
                 ) : (
                   <button
                     onClick={handleOAuthConnect}
-                    className="flex items-center text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                    className="flex items-center text-sm bg-[var(--color-category-practice)] text-white px-3 py-1 rounded hover:bg-[var(--color-category-practice)]"
                   >
                     <ExternalLink className="w-4 h-4 mr-1" />
                     Connect
@@ -307,10 +307,10 @@ export default function TodoistExportModal({
 
           {/* Status Messages */}
           {exportStatus === 'success' && (
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <div className="bg-data-pass dark:bg-data-pass/20 border border-data-pass dark:border-data-pass rounded-lg p-4">
               <div className="flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-                <span className="text-green-700 dark:text-green-300">
+                <CheckCircle className="w-5 h-5 text-data-pass mr-2" />
+                <span className="text-data-pass dark:text-data-pass">
                   {options.exportMethod === 'csv'
                     ? 'CSV file downloaded successfully!'
                     : 'Tasks exported to Todoist successfully!'}
@@ -330,11 +330,11 @@ export default function TodoistExportModal({
 
           {/* Instructions for CSV */}
           {options.exportMethod === 'csv' && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">
+            <div className="bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] rounded-lg p-4">
+              <h4 className="font-medium text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-2">
                 Import Instructions
               </h4>
-              <div className="text-sm text-blue-700 dark:text-blue-300 whitespace-pre-line">
+              <div className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)] whitespace-pre-line">
                 {TODOIST_IMPORT_INSTRUCTIONS}
               </div>
             </div>
@@ -357,7 +357,7 @@ export default function TodoistExportModal({
               generatedTasks.length === 0 ||
               (options.exportMethod === 'oauth' && !isConnected)
             }
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center px-4 py-2 bg-[var(--color-category-practice)] text-white rounded-lg hover:bg-[var(--color-category-practice)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

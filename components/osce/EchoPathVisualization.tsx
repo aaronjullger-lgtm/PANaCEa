@@ -66,7 +66,7 @@ export function EchoPathVisualization({ echoPath, className = '' }: EchoPathVisu
                 key={node.id}
                 className={`p-3 rounded-lg border ${
                   isOptimal
-                    ? 'border-emerald-500/30 bg-emerald-500/5'
+                    ? 'border-data-pass/30 bg-data-pass/5'
                     : isRabbitHole
                       ? 'border-rose-500/30 bg-rose-500/5'
                       : 'border-[var(--color-border)] bg-[var(--color-bg-tertiary)]'
@@ -75,7 +75,7 @@ export function EchoPathVisualization({ echoPath, className = '' }: EchoPathVisu
               >
                 <div className="flex items-start gap-3">
                   {isOptimal ? (
-                    <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-4 h-4 text-data-pass flex-shrink-0 mt-0.5" />
                   ) : isRabbitHole ? (
                     <AlertTriangle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
                   ) : (
@@ -92,7 +92,7 @@ export function EchoPathVisualization({ echoPath, className = '' }: EchoPathVisu
                         <span className="text-rose-500 font-medium">Rabbit hole</span>
                       )}
                       {isOptimal && (
-                        <span className="text-emerald-500 font-medium">Optimal path</span>
+                        <span className="text-data-pass font-medium">Optimal path</span>
                       )}
                     </div>
                   </div>
@@ -130,8 +130,8 @@ export function EchoPathVisualization({ echoPath, className = '' }: EchoPathVisu
       <div className="grid md:grid-cols-2 gap-4">
         {/* Covered */}
         {echoPath.criticalPathsCovered.length > 0 && (
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
-            <h4 className="text-sm font-semibold text-emerald-500 mb-2">
+          <div className="rounded-xl border border-data-pass/30 bg-data-pass/5 p-4">
+            <h4 className="text-sm font-semibold text-data-pass mb-2">
               ✓ Critical Paths Covered
             </h4>
             <ul className="space-y-1">

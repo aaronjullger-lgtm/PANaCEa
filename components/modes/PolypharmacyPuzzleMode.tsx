@@ -353,9 +353,9 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
   const getSeverityColor = (severity: 'major' | 'moderate' | 'minor') => {
     switch (severity) {
       case 'major':
-        return 'text-red-500';
+        return 'text-data-fail';
       case 'moderate':
-        return 'text-amber-500';
+        return 'text-data-provisional';
       case 'minor':
         return 'text-yellow-500';
     }
@@ -408,7 +408,7 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
 
         <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
           <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2 flex items-center gap-2">
-            <Pill className="w-6 h-6 text-emerald-500" />
+            <Pill className="w-6 h-6 text-data-pass" />
             Polypharmacy Puzzle
           </h1>
           <p className="text-[var(--color-text-secondary)]">
@@ -443,7 +443,7 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
                   {currentCase.medicationList.conditions.map((condition) => (
                     <span
                       key={condition}
-                      className="px-2 py-1 rounded bg-blue-500/20 text-blue-300 text-xs"
+                      className="px-2 py-1 rounded bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)] text-xs"
                     >
                       {condition}
                     </span>
@@ -472,7 +472,7 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
                     ? 'Select exactly 2 medications to check for interactions'
                     : 'Check for drug-drug interaction'
                 }
-                className="w-full px-4 py-3 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 disabled:opacity-50 disabled:cursor-not-allowed border border-amber-500/50 text-amber-200 font-medium transition-all"
+                className="w-full px-4 py-3 rounded-lg bg-data-provisional/20 hover:bg-data-provisional/30 disabled:opacity-50 disabled:cursor-not-allowed border border-data-provisional/50 text-data-provisional font-medium transition-all"
               >
                 <AlertTriangle className="w-5 h-5 inline mr-2" />
                 Check Interaction ({selectedDrugs.size}/2 selected)
@@ -566,9 +566,9 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
                     {currentCase.medicationList.interactions.map((interaction, idx) => (
                       <div
                         key={idx}
-                        className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg mb-2"
+                        className="p-3 bg-data-fail/10 border border-data-fail/30 rounded-lg mb-2"
                       >
-                        <p className="text-sm font-medium text-red-300">
+                        <p className="text-sm font-medium text-data-fail">
                           {interaction.drug1} + {interaction.drug2}
                         </p>
                         <p className="text-xs text-[var(--color-text-secondary)] mt-1">
@@ -589,9 +589,9 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
                       {currentCase.medicationList.contraindications.map((contra, idx) => (
                         <div
                           key={idx}
-                          className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg mb-2"
+                          className="p-3 bg-data-provisional/10 border border-data-provisional/30 rounded-lg mb-2"
                         >
-                          <p className="text-sm text-amber-300">{contra}</p>
+                          <p className="text-sm text-data-provisional">{contra}</p>
                         </div>
                       ))}
                     </div>

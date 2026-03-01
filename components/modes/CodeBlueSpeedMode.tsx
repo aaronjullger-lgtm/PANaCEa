@@ -175,7 +175,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Siren className="w-12 h-12 text-red-500 mx-auto animate-pulse" />
+          <Siren className="w-12 h-12 text-data-fail mx-auto animate-pulse" />
           <p className="text-[var(--color-text-muted)]">Loading question...</p>
         </div>
       </div>
@@ -208,12 +208,12 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                   duration: 2,
                   ease: 'easeInOut',
                 }}
-                className="inline-flex items-center justify-center w-24 h-24 bg-red-500/10 rounded-full"
+                className="inline-flex items-center justify-center w-24 h-24 bg-data-fail/10 rounded-full"
               >
-                <Siren className="w-12 h-12 text-red-500" />
+                <Siren className="w-12 h-12 text-data-fail" />
               </motion.div>
 
-              <h1 className="text-4xl font-bold text-red-500">Code Blue Speed Mode</h1>
+              <h1 className="text-4xl font-bold text-data-fail">Code Blue Speed Mode</h1>
 
               <p className="text-xl text-[var(--color-text-muted)]">
                 ACLS/PALS Rapid-Fire Challenge
@@ -223,7 +223,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6">
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <Timer className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                  <Timer className="w-5 h-5 text-data-fail mt-0.5 flex-shrink-0" />
                   <div>
                     <h3 className="font-semibold">5 Seconds Per Question</h3>
                     <p className="text-sm text-[var(--color-text-muted)]">
@@ -233,7 +233,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <Zap className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                  <Zap className="w-5 h-5 text-data-fail mt-0.5 flex-shrink-0" />
                   <div>
                     <h3 className="font-semibold">ACLS & PALS Focus</h3>
                     <p className="text-sm text-[var(--color-text-muted)]">
@@ -243,7 +243,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                  <AlertTriangle className="w-5 h-5 text-data-fail mt-0.5 flex-shrink-0" />
                   <div>
                     <h3 className="font-semibold">High-Pressure Training</h3>
                     <p className="text-sm text-[var(--color-text-muted)]">
@@ -257,7 +257,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleStart}
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                className="w-full bg-data-fail hover:bg-data-fail text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
               >
                 <Play className="w-5 h-5" />
                 Start Code Blue Drill
@@ -288,9 +288,9 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-            className="inline-flex items-center justify-center w-16 h-16 bg-red-500/10 rounded-full"
+            className="inline-flex items-center justify-center w-16 h-16 bg-data-fail/10 rounded-full"
           >
-            <Siren className="w-8 h-8 text-red-500" />
+            <Siren className="w-8 h-8 text-data-fail" />
           </motion.div>
           <p className="text-[var(--color-text-muted)]">Loading questions...</p>
         </motion.div>
@@ -308,7 +308,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
           className="max-w-md w-full space-y-6"
         >
           <div className="text-center space-y-4">
-            <XCircle className="w-16 h-16 text-red-500 mx-auto" />
+            <XCircle className="w-16 h-16 text-data-fail mx-auto" />
             <h2 className="text-2xl font-bold">Unable to Load Questions</h2>
             <p className="text-[var(--color-text-muted)]">{errorMessage}</p>
           </div>
@@ -327,7 +327,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleStart}
-              className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+              className="flex-1 bg-data-fail hover:bg-data-fail text-white font-semibold py-3 px-6 rounded-lg transition-colors"
             >
               Try Again
             </motion.button>
@@ -358,7 +358,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
         >
           <div className="max-w-2xl w-full space-y-8">
             <div className="text-center space-y-4">
-              <Trophy className="w-20 h-20 text-red-500 mx-auto" />
+              <Trophy className="w-20 h-20 text-data-fail mx-auto" />
 
               <h1 className="text-4xl font-bold">Code Blue Complete!</h1>
 
@@ -367,7 +367,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
 
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6">
               <div className="text-center space-y-2">
-                <div className="text-6xl font-bold text-red-500">{accuracy}%</div>
+                <div className="text-6xl font-bold text-data-fail">{accuracy}%</div>
                 <div className="text-lg text-[var(--color-text-muted)]">
                   {score.correct} correct out of {score.total}
                 </div>
@@ -375,12 +375,12 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                  <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                  <CheckCircle className="w-8 h-8 text-data-pass mx-auto mb-2" />
                   <div className="text-2xl font-bold">{score.correct}</div>
                   <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
                 </div>
                 <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                  <XCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+                  <XCircle className="w-8 h-8 text-data-fail mx-auto mb-2" />
                   <div className="text-2xl font-bold">{score.total - score.correct}</div>
                   <div className="text-sm text-[var(--color-text-muted)]">Missed</div>
                 </div>
@@ -391,7 +391,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleRestart}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 bg-data-fail hover:bg-data-fail text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
                 >
                   <RotateCcw className="w-5 h-5" />
                   Try Again
@@ -426,7 +426,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
         <div className="max-w-4xl mx-auto space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Siren className="w-6 h-6 text-red-500" />
+              <Siren className="w-6 h-6 text-data-fail" />
               <div>
                 <div className="font-semibold">Code Blue Speed</div>
                 <div className="text-sm text-[var(--color-text-muted)]">
@@ -437,7 +437,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
 
             <div className="text-right">
               <div className="text-sm text-[var(--color-text-muted)]">Score</div>
-              <div className="text-xl font-bold text-red-500">
+              <div className="text-xl font-bold text-data-fail">
                 {score.correct}/{score.total}
               </div>
             </div>
@@ -448,7 +448,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              className="bg-red-500 h-2 rounded-full"
+              className="bg-data-fail h-2 rounded-full"
               transition={{ duration: 0.3 }}
             />
           </div>
@@ -483,7 +483,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
             className="max-w-4xl mx-auto space-y-6"
           >
             {/* Category badge */}
-            <div className="inline-flex items-center px-3 py-1 bg-red-500/10 text-red-500 text-sm font-medium rounded-full">
+            <div className="inline-flex items-center px-3 py-1 bg-data-fail/10 text-data-fail text-sm font-medium rounded-full">
               {currentQuestion.category}
             </div>
 
@@ -509,13 +509,13 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                     className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
                       showResult
                         ? isThisCorrect
-                          ? 'bg-green-500/10 border-green-500 text-green-500'
+                          ? 'bg-data-pass/10 border-data-pass text-data-pass'
                           : isSelected
-                            ? 'bg-red-500/10 border-red-500 text-red-500'
+                            ? 'bg-data-fail/10 border-data-fail text-data-fail'
                             : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] opacity-50'
                         : isSelected
-                          ? 'bg-red-500/10 border-red-500'
-                          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-red-500/50'
+                          ? 'bg-data-fail/10 border-data-fail'
+                          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-data-fail/50'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -539,15 +539,15 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                 animate={{ opacity: 1, y: 0 }}
                 className={`p-4 rounded-lg ${
                   isCorrect
-                    ? 'bg-green-500/10 border-2 border-green-500/50'
-                    : 'bg-red-500/10 border-2 border-red-500/50'
+                    ? 'bg-data-pass/10 border-2 border-data-pass/50'
+                    : 'bg-data-fail/10 border-2 border-data-fail/50'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   {isCorrect ? (
-                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-data-pass mt-0.5 flex-shrink-0" />
                   ) : (
-                    <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                    <XCircle className="w-5 h-5 text-data-fail mt-0.5 flex-shrink-0" />
                   )}
                   <div className="flex-1">
                     <div
@@ -574,7 +574,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                   className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-colors ${
                     selectedAnswer === null
                       ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
-                      : 'bg-red-500 hover:bg-red-600 text-white'
+                      : 'bg-data-fail hover:bg-data-fail text-white'
                   }`}
                 >
                   Submit Answer
@@ -584,7 +584,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleNext}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                  className="flex-1 bg-data-fail hover:bg-data-fail text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                 >
                   {currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'View Results'}
                 </motion.button>

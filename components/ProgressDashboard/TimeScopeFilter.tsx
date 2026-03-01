@@ -21,7 +21,7 @@ const TIME_SCOPE_OPTIONS: { value: TimeScope; label: string }[] = [
 
 const TimeScopeFilter: React.FC<TimeScopeFilterProps> = ({ value, onChange }) => {
   return (
-    <div className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700">
+    <div className="inline-flex items-center rounded-lg bg-data-neutral dark:bg-data-neutral p-1 border border-data-neutral dark:border-data-neutral">
       {TIME_SCOPE_OPTIONS.map((option) => (
         <button
           key={option.value}
@@ -29,13 +29,13 @@ const TimeScopeFilter: React.FC<TimeScopeFilterProps> = ({ value, onChange }) =>
           className={`relative px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
             value === option.value
               ? 'text-white'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+              : 'text-data-neutral dark:text-data-neutral hover:text-data-neutral dark:hover:text-data-neutral'
           }`}
         >
           {value === option.value && (
             <motion.div
               layoutId="timeScopeIndicator"
-              className="absolute inset-0 bg-slate-900 dark:bg-slate-100 rounded-md"
+              className="absolute inset-0 bg-data-neutral dark:bg-data-neutral rounded-md"
               transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
             />
           )}

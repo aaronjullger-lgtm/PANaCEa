@@ -60,9 +60,9 @@ export const ConfidenceBadge: React.FC<{
     low: {
       label: 'Hesitant',
       icon: Clock,
-      bg: 'bg-slate-100 dark:bg-slate-800',
-      text: 'text-slate-600 dark:text-slate-400',
-      border: 'border-slate-200 dark:border-slate-700',
+      bg: 'bg-data-neutral dark:bg-data-neutral',
+      text: 'text-data-neutral dark:text-data-neutral',
+      border: 'border-data-neutral dark:border-data-neutral',
     },
   }[confidence];
 
@@ -96,23 +96,23 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
 
   if (stats.total < 5) {
     return (
-      <div className="text-xs text-slate-500 italic">
+      <div className="text-xs text-data-neutral italic">
         Answer {5 - stats.total} more questions to see behavioral patterns
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div className="bg-white dark:bg-data-neutral rounded-lg border border-data-neutral dark:border-data-neutral overflow-hidden">
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-data-neutral dark:hover:bg-data-neutral/50 transition-colors"
       >
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <Brain className="w-4 h-4 text-slate-500" />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <Brain className="w-4 h-4 text-data-neutral" />
+            <span className="text-sm font-medium text-data-neutral dark:text-data-neutral">
               Behavioral Patterns
             </span>
           </div>
@@ -131,9 +131,9 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
           )}
         </div>
         {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-slate-400" />
+          <ChevronUp className="w-4 h-4 text-data-neutral" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-slate-400" />
+          <ChevronDown className="w-4 h-4 text-data-neutral" />
         )}
       </button>
 
@@ -147,7 +147,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 space-y-3 border-t border-slate-100 dark:border-slate-700 pt-3">
+            <div className="px-4 pb-4 space-y-3 border-t border-data-neutral dark:border-data-neutral pt-3">
               {/* High Confidence (fast, no changes) */}
               <BehaviorRow
                 label="Quick & Confident"
@@ -187,7 +187,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
                   {stats.insights.map((insight, i) => (
                     <div
                       key={i}
-                      className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400"
+                      className="flex items-start gap-2 text-xs text-data-neutral dark:text-data-neutral"
                     >
                       <span className="text-[var(--color-accent)] mt-0.5">💡</span>
                       <span>{insight}</span>
@@ -197,7 +197,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
               )}
 
               {/* Footer explanation */}
-              <div className="pt-2 text-xs text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-700">
+              <div className="pt-2 text-xs text-data-neutral leading-relaxed border-t border-data-neutral dark:border-data-neutral">
                 Based on your response time, answer changes, and elimination usage
               </div>
             </div>
@@ -242,8 +242,8 @@ const BehaviorRow: React.FC<{
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Icon className={`w-4 h-4 ${iconColors[color]}`} />
-          <span className="text-sm text-slate-600 dark:text-slate-400">{label}</span>
-          <span className="text-xs text-slate-400">({count})</span>
+          <span className="text-sm text-data-neutral dark:text-data-neutral">{label}</span>
+          <span className="text-xs text-data-neutral">({count})</span>
         </div>
         <div className="flex items-center gap-2">
           {accuracy !== null ? (
@@ -261,7 +261,7 @@ const BehaviorRow: React.FC<{
               {accuracy}% correct
             </span>
           ) : (
-            <span className="text-xs text-slate-400">Need more data</span>
+            <span className="text-xs text-data-neutral">Need more data</span>
           )}
         </div>
       </div>
@@ -269,7 +269,7 @@ const BehaviorRow: React.FC<{
       {/* Progress bar */}
       {accuracy !== null && (
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+          <div className="flex-1 h-1.5 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${accuracy}%` }}
@@ -280,7 +280,7 @@ const BehaviorRow: React.FC<{
         </div>
       )}
 
-      <div className="text-xs text-slate-400">{description}</div>
+      <div className="text-xs text-data-neutral">{description}</div>
     </div>
   );
 };

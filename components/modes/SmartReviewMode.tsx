@@ -181,11 +181,11 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   const getBadgeConfig = (reason: string) => {
     switch (reason) {
       case 'OVERDUE':
-        return { Icon: AlertCircle, label: 'Memory Critical', color: 'bg-red-500 text-white' };
+        return { Icon: AlertCircle, label: 'Memory Critical', color: 'bg-data-fail text-white' };
       case 'WEAK_SPOT':
         return { Icon: AlertTriangle, label: 'Weak Area', color: 'bg-orange-500 text-white' };
       case 'NEW':
-        return { Icon: Sparkles, label: 'New Concept', color: 'bg-blue-500 text-white' };
+        return { Icon: Sparkles, label: 'New Concept', color: 'bg-[var(--color-category-practice)] text-white' };
       default:
         return {
           Icon: FileText,
@@ -382,15 +382,15 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
                 animate={{ opacity: 1, y: 0 }}
                 className={`border-2 rounded-2xl p-6 ${
                   isCorrect
-                    ? 'bg-green-50 dark:bg-green-950/20 border-green-500'
-                    : 'bg-red-50 dark:bg-red-950/20 border-red-500'
+                    ? 'bg-data-pass dark:bg-data-pass/20 border-data-pass'
+                    : 'bg-data-fail dark:bg-data-fail/20 border-data-fail'
                 }`}
               >
                 <div className="flex items-start gap-3 mb-4">
                   {isCorrect ? (
-                    <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+                    <CheckCircle className="w-6 h-6 text-data-pass dark:text-data-pass" />
                   ) : (
-                    <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                    <AlertCircle className="w-6 h-6 text-data-fail dark:text-data-fail" />
                   )}
                   <div>
                     <div className="font-semibold text-lg mb-2">

@@ -97,23 +97,23 @@ const CognitiveLoadGauge: React.FC<{ load: CognitiveLoadProfile }> = ({ load }) 
   };
 
   const getBatteryIcon = () => {
-    if (load.availableCapacity < 20) return <BatteryLow className="w-5 h-5 text-red-500" />;
-    if (load.availableCapacity < 50) return <BatteryMedium className="w-5 h-5 text-amber-500" />;
-    return <BatteryFull className="w-5 h-5 text-emerald-500" />;
+    if (load.availableCapacity < 20) return <BatteryLow className="w-5 h-5 text-data-fail" />;
+    if (load.availableCapacity < 50) return <BatteryMedium className="w-5 h-5 text-data-provisional" />;
+    return <BatteryFull className="w-5 h-5 text-data-pass" />;
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
+    <div className="bg-white dark:bg-data-neutral rounded-2xl p-5 border border-data-neutral dark:border-data-neutral">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-purple-500" />
-          <h3 className="font-semibold text-slate-800 dark:text-slate-100">Cognitive Load</h3>
+          <h3 className="font-semibold text-data-neutral dark:text-data-neutral">Cognitive Load</h3>
         </div>
         {getBatteryIcon()}
       </div>
 
       {/* Load meter */}
-      <div className="relative h-4 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden mb-4">
+      <div className="relative h-4 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden mb-4">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${Math.min(100, load.totalLoad)}%` }}
@@ -121,26 +121,26 @@ const CognitiveLoadGauge: React.FC<{ load: CognitiveLoadProfile }> = ({ load }) 
           className={`h-full bg-gradient-to-r ${getLoadColor()} rounded-full`}
         />
         {/* Optimal zone indicator */}
-        <div className="absolute top-0 bottom-0 left-[60%] right-[30%] bg-emerald-300/20 dark:bg-emerald-500/10" />
+        <div className="absolute top-0 bottom-0 left-[60%] right-[30%] bg-data-pass/20 dark:bg-data-pass/10" />
       </div>
 
       {/* Load breakdown */}
       <div className="grid grid-cols-3 gap-2 text-center text-xs">
-        <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <div className="text-blue-600 dark:text-blue-400 font-medium">Intrinsic</div>
-          <div className="text-lg font-bold text-slate-800 dark:text-slate-100">
+        <div className="p-2 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg">
+          <div className="text-[var(--color-category-practice)] text-[var(--color-category-practice)] font-medium">Intrinsic</div>
+          <div className="text-lg font-bold text-data-neutral dark:text-data-neutral">
             {Math.round(load.intrinsicLoad)}%
           </div>
         </div>
-        <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-          <div className="text-red-600 dark:text-red-400 font-medium">Extraneous</div>
-          <div className="text-lg font-bold text-slate-800 dark:text-slate-100">
+        <div className="p-2 bg-data-fail dark:bg-data-fail/20 rounded-lg">
+          <div className="text-data-fail dark:text-data-fail font-medium">Extraneous</div>
+          <div className="text-lg font-bold text-data-neutral dark:text-data-neutral">
             {Math.round(load.extraneousLoad)}%
           </div>
         </div>
-        <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-          <div className="text-emerald-600 dark:text-emerald-400 font-medium">Germane</div>
-          <div className="text-lg font-bold text-slate-800 dark:text-slate-100">
+        <div className="p-2 bg-data-pass dark:bg-data-pass/20 rounded-lg">
+          <div className="text-data-pass dark:text-data-pass font-medium">Germane</div>
+          <div className="text-lg font-bold text-data-neutral dark:text-data-neutral">
             {Math.round(load.germaneLoad)}%
           </div>
         </div>
@@ -150,10 +150,10 @@ const CognitiveLoadGauge: React.FC<{ load: CognitiveLoadProfile }> = ({ load }) 
       <div
         className={`mt-4 p-3 rounded-lg text-sm ${
           load.isOverloaded
-            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+            ? 'bg-data-fail dark:bg-data-fail/30 text-data-fail dark:text-data-fail'
             : load.optimalBreakTime
-              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-              : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+              ? 'bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional'
+              : 'bg-data-pass dark:bg-data-pass/30 text-data-pass dark:text-data-pass'
         }`}
       >
         {load.isOverloaded
@@ -168,7 +168,7 @@ const CognitiveLoadGauge: React.FC<{ load: CognitiveLoadProfile }> = ({ load }) 
 
 const ChronotypeCard: React.FC<{ chronotype: ChronotypeProfile }> = ({ chronotype }) => {
   const getIcon = () => {
-    if (chronotype.type.includes('morning')) return <Sun className="w-6 h-6 text-amber-500" />;
+    if (chronotype.type.includes('morning')) return <Sun className="w-6 h-6 text-data-provisional" />;
     if (chronotype.type.includes('evening')) return <Moon className="w-6 h-6 text-indigo-500" />;
     return <Coffee className="w-6 h-6 text-brown-500" />;
   };
@@ -223,42 +223,42 @@ const SleepImpactCard: React.FC<{ assessment: SleepImpactAssessment }> = ({ asse
   const impactPercent = Math.round(assessment.cognitiveImpact * 100);
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
+    <div className="bg-white dark:bg-data-neutral rounded-2xl p-5 border border-data-neutral dark:border-data-neutral">
       <div className="flex items-center gap-2 mb-4">
         <Moon className="w-5 h-5 text-indigo-500" />
-        <h3 className="font-semibold text-slate-800 dark:text-slate-100">Sleep Impact</h3>
+        <h3 className="font-semibold text-data-neutral dark:text-data-neutral">Sleep Impact</h3>
       </div>
 
       <div className="flex items-center gap-4 mb-4">
-        <div className="text-4xl font-bold text-slate-800 dark:text-slate-100">
+        <div className="text-4xl font-bold text-data-neutral dark:text-data-neutral">
           {assessment.hoursSlept}h
         </div>
         <div className="flex-1">
-          <div className="text-sm text-slate-500 dark:text-slate-400">Sleep Quality</div>
-          <div className="font-medium capitalize text-slate-700 dark:text-slate-200">
+          <div className="text-sm text-data-neutral dark:text-data-neutral">Sleep Quality</div>
+          <div className="font-medium capitalize text-data-neutral dark:text-data-neutral">
             {assessment.sleepQuality}
           </div>
         </div>
         <div
           className={`text-2xl font-bold ${
             impactPercent >= 90
-              ? 'text-emerald-500'
+              ? 'text-data-pass'
               : impactPercent >= 70
-                ? 'text-amber-500'
-                : 'text-red-500'
+                ? 'text-data-provisional'
+                : 'text-data-fail'
           }`}
         >
           {impactPercent}%
         </div>
       </div>
 
-      <div className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+      <div className="text-sm text-data-neutral dark:text-data-neutral mb-3">
         Today's Study Capacity:{' '}
         <span className="font-medium">{assessment.adjustedStudyCapacity} min</span>
       </div>
 
       {assessment.recommendations.length > 0 && (
-        <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/50 p-3 rounded-lg">
+        <div className="text-xs text-data-neutral dark:text-data-neutral bg-data-neutral dark:bg-data-neutral/50 p-3 rounded-lg">
           {assessment.recommendations[0]}
         </div>
       )}
@@ -326,38 +326,38 @@ const DifficultyOptimizer: React.FC<{
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
+    <div className="bg-white dark:bg-data-neutral rounded-2xl p-5 border border-data-neutral dark:border-data-neutral">
       <div className="flex items-center gap-2 mb-4">
         <Target className="w-5 h-5 text-rose-500" />
-        <h3 className="font-semibold text-slate-800 dark:text-slate-100">Optimal Difficulty</h3>
+        <h3 className="font-semibold text-data-neutral dark:text-data-neutral">Optimal Difficulty</h3>
       </div>
 
       {/* Goldilocks zone visualization */}
       <div className="relative h-8 bg-gradient-to-r from-green-400 via-amber-400 to-red-400 rounded-full mb-4 overflow-hidden">
         {/* Optimal zone highlight */}
-        <div className="absolute inset-y-0 left-[30%] right-[30%] bg-emerald-400/50 border-x-2 border-emerald-600" />
+        <div className="absolute inset-y-0 left-[30%] right-[30%] bg-data-pass/50 border-x-2 border-data-pass" />
         {/* Current position marker */}
         <motion.div
           initial={{ left: '50%' }}
           animate={{ left: `${getZonePosition()}%` }}
           transition={{ duration: 0.5 }}
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-slate-700"
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-data-neutral"
         />
       </div>
 
-      <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-4">
+      <div className="flex justify-between text-xs text-data-neutral dark:text-data-neutral mb-4">
         <span>Too Easy</span>
-        <span className="text-emerald-600 dark:text-emerald-400 font-medium">Optimal (85%)</span>
+        <span className="text-data-pass dark:text-data-pass font-medium">Optimal (85%)</span>
         <span>Too Hard</span>
       </div>
 
       <div
         className={`p-3 rounded-lg text-sm ${
           difficulty.recommendedAdjustment === 'increase'
-            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+            ? 'bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional'
             : difficulty.recommendedAdjustment === 'decrease'
-              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-              : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+              ? 'bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)]'
+              : 'bg-data-pass dark:bg-data-pass/30 text-data-pass dark:text-data-pass'
         }`}
       >
         {difficulty.explanation}
@@ -379,7 +379,7 @@ const TipsCarousel: React.FC<{ tips: string[] }> = ({ tips }) => {
   return (
     <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-5 text-white">
       <div className="flex items-center gap-2 mb-4">
-        <Lightbulb className="w-5 h-5 text-amber-400" />
+        <Lightbulb className="w-5 h-5 text-data-provisional" />
         <h3 className="font-semibold">Science-Backed Tips</h3>
       </div>
 
@@ -389,7 +389,7 @@ const TipsCarousel: React.FC<{ tips: string[] }> = ({ tips }) => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="text-sm text-slate-300 leading-relaxed min-h-[60px]"
+          className="text-sm text-data-neutral leading-relaxed min-h-[60px]"
         >
           {tips[currentTip]}
         </motion.p>
@@ -401,7 +401,7 @@ const TipsCarousel: React.FC<{ tips: string[] }> = ({ tips }) => {
             key={i}
             onClick={() => setCurrentTip(i)}
             className={`h-1.5 rounded-full transition-all ${
-              i === currentTip ? 'w-6 bg-amber-400' : 'w-1.5 bg-slate-600'
+              i === currentTip ? 'w-6 bg-data-provisional' : 'w-1.5 bg-data-neutral'
             }`}
           />
         ))}
@@ -419,7 +419,7 @@ const StartSessionButton: React.FC<{
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-2xl p-5 shadow-lg shadow-blue-500/25"
+      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-2xl p-5 shadow-lg shadow-[color-mix(in_srgb,var(--color-category-practice)_25%,transparent)]"
     >
       <div className="flex items-center justify-between">
         <div className="text-left">
@@ -503,11 +503,11 @@ export const SmartStudyDashboard: React.FC<SmartStudyDashboardProps> = ({
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2"
+          className="text-3xl font-bold text-data-neutral dark:text-data-neutral mb-2"
         >
           Smart Study Dashboard
         </motion.h1>
-        <p className="text-slate-600 dark:text-slate-400">
+        <p className="text-data-neutral dark:text-data-neutral">
           AI-powered study optimization based on cognitive science research
         </p>
       </div>
@@ -576,25 +576,25 @@ export const SmartStudyDashboard: React.FC<SmartStudyDashboardProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
-        className="mb-8 p-4 bg-slate-100 dark:bg-slate-800/50 rounded-xl"
+        className="mb-8 p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl"
       >
         <div className="flex items-center gap-2 mb-3">
-          <BookOpen className="w-4 h-4 text-slate-500" />
-          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+          <BookOpen className="w-4 h-4 text-data-neutral" />
+          <span className="text-sm font-medium text-data-neutral dark:text-data-neutral">
             Powered by Research
           </span>
         </div>
-        <div className="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-500">
-          <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded">
+        <div className="flex flex-wrap gap-2 text-xs text-data-neutral dark:text-data-neutral">
+          <span className="px-2 py-1 bg-white dark:bg-data-neutral rounded">
             Bjork (2011) - Desirable Difficulties
           </span>
-          <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded">
+          <span className="px-2 py-1 bg-white dark:bg-data-neutral rounded">
             Sweller (1988) - Cognitive Load Theory
           </span>
-          <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded">
+          <span className="px-2 py-1 bg-white dark:bg-data-neutral rounded">
             Walker (2008) - Sleep & Memory
           </span>
-          <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded">
+          <span className="px-2 py-1 bg-white dark:bg-data-neutral rounded">
             Roediger & Karpicke (2006) - Testing Effect
           </span>
         </div>

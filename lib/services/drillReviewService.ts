@@ -416,16 +416,17 @@ export async function submitDrillReview(
   }
 
   // Only update FSRS (UserProgress.reviewHistory) for main study sessions; exclude cram/rapid_recall
-  // Also skip FSRS when rapid guess is detected — accidental taps must not pollute SRS scheduling
+  // Rapid guesses are logged to ReviewLog but do NOT update FSRS state (accidental taps must not pollute SRS scheduling)
   const countForFSRS = sessionType !== 'cram' && sessionType !== 'rapid_recall';
+  const shouldLogReview = countForFSRS || isRapidGuess; // Log all main-session reviews, including rapid guesses
 
   // Capture FSRS schedule for the return value so the frontend can display real data
   let fsrsSchedule:
     | { intervalDays: number; nextDueDate: string; stability: number; difficulty: number }
     | undefined;
 
-  if (question.conditionId && countForFSRS && !isRapidGuess) {
-    console.log('[DEBUG] Creating ReviewLog', { conditionId: question.conditionId, countForFSRS, isRapidGuess });
+  if (question.conditionId && shouldLogReview) {
+    console.log('[DEBUG] Processing review', { conditionId: question.conditionId, countForFSRS, isRapidGuess });
     try {
       const fsrs = new FSRS();
       const existingProgress = await prisma.userProgress.findUnique({
@@ -475,6 +476,7 @@ export async function submitDrillReview(
 
       // Write to ReviewLog for FSRS v6 optimizer (MAIN/real sessions only)
       console.log('[DEBUG] Entering ReviewLog creation inner try block');
+      const logSessionType = (sessionType ? sessionType.toUpperCase() : 'MAIN') as 'MAIN' | 'CRAM' | 'RAPID_RECALL';
       try {
         const reviewDate = new Date();
         const hoverOscillations =
@@ -486,7 +488,7 @@ export async function submitDrillReview(
           timeToFirstClick ??
           undefined;
 
-        console.log('[DEBUG] About to create ReviewLog', { userId, questionId, conditionId: question.conditionId });
+        console.log('[DEBUG] About to create ReviewLog', { userId, questionId, conditionId: question.conditionId, isRapidGuess });
         await prisma.reviewLog.create({
           data: {
             userId,
@@ -506,10 +508,10 @@ export async function submitDrillReview(
             ),
             reviewedAt: reviewDate,
             responseTimeMs: effectiveDurationMs,
-            review_type: 'real',
+            review_type: isRapidGuess ? 'rapid_guess' : 'real',
             elapsedDays: currentCard.elapsed_days,
             wasCorrect: isCorrect,
-            sessionType: 'MAIN',
+            sessionType: logSessionType,
             attemptId,
             system: question.system ?? undefined,
             hover_oscillations: hoverOscillations,
@@ -521,13 +523,12 @@ export async function submitDrillReview(
               latency_ratio: effectiveDurationMs / parTimeMs,
               implicit_confidence: implicitConfidence,
               grade_continuous: gradeContinuous,
-              // Prefer tracker-reported answer_changes (telemetry) over request body (switches)
-              // to avoid dual-source divergence between QuestionAttempt and ReviewLog
               answer_changes: (telemetry?.answer_changes as number | undefined) ?? switches,
               circadian_phase: circadianContext.circadianPhase,
               selection_drift_ms: telemetry?.selection_drift_ms as number | undefined,
               cursor_entropy: telemetry?.cursor_entropy as number | undefined,
               tremor_score: telemetry?.tremor_score as number | undefined,
+              rapid_guess: isRapidGuess,
             },
           },
         });
@@ -538,26 +539,29 @@ export async function submitDrillReview(
         });
       }
 
-      await updateUserProgressWithHistory(prisma, {
-        userId,
-        conditionId: question.conditionId,
-        fsrsCard: updatedCard,
-        rating,
-        accuracy: isCorrect ? 1.0 : 0.0,
-      });
-
-      try {
-        const siblingBoosts = await propagateRecallToSiblings(question.conditionId, rating);
-        if (siblingBoosts.length > 0) {
-          logger?.info?.(
-            `KAR3L: Propagated ${rating === Rating.Again ? 'penalty' : 'boost'} to ${siblingBoosts.length} siblings`,
-            { conditionId: question.conditionId }
-          );
-        }
-      } catch (siblingError) {
-        logger?.warn?.('KAR3L propagation error', {
-          error: siblingError instanceof Error ? siblingError.message : String(siblingError),
+      // Only update FSRS state for non-rapid-guess reviews
+      if (!isRapidGuess) {
+        await updateUserProgressWithHistory(prisma, {
+          userId,
+          conditionId: question.conditionId,
+          fsrsCard: updatedCard,
+          rating,
+          accuracy: isCorrect ? 1.0 : 0.0,
         });
+
+        try {
+          const siblingBoosts = await propagateRecallToSiblings(question.conditionId, rating);
+          if (siblingBoosts.length > 0) {
+            logger?.info?.(
+              `KAR3L: Propagated ${rating === Rating.Again ? 'penalty' : 'boost'} to ${siblingBoosts.length} siblings`,
+              { conditionId: question.conditionId }
+            );
+          }
+        } catch (siblingError) {
+          logger?.warn?.('KAR3L propagation error', {
+            error: siblingError instanceof Error ? siblingError.message : String(siblingError),
+          });
+        }
       }
     } catch (progressError) {
       console.error('[DEBUG] Failed to update UserProgress', progressError);

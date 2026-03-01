@@ -222,16 +222,16 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
           const isRevealing = revealRow === rowIndex;
           const revealDelay = i * 150;
 
-          let bgClass = 'bg-slate-800 border-slate-700';
+          let bgClass = 'bg-data-neutral border-data-neutral';
           if (result) {
             bgClass =
               result.status === 'correct'
-                ? 'bg-emerald-600 border-emerald-500'
+                ? 'bg-data-pass border-data-pass'
                 : result.status === 'present'
-                  ? 'bg-amber-600 border-amber-500'
-                  : 'bg-slate-700 border-slate-600';
+                  ? 'bg-data-provisional border-data-provisional'
+                  : 'bg-data-neutral border-data-neutral';
           } else if (letter) {
-            bgClass = 'bg-slate-700 border-slate-500';
+            bgClass = 'bg-data-neutral border-data-neutral';
           }
 
           return (
@@ -262,10 +262,10 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
         <div key={rowIndex} className="flex gap-1 justify-center">
           {row.map((key) => {
             const keyStatus = keyboardStatus[key];
-            let bgClass = 'bg-slate-700 hover:bg-slate-600';
-            if (keyStatus === 'correct') bgClass = 'bg-emerald-600';
-            else if (keyStatus === 'present') bgClass = 'bg-amber-600';
-            else if (keyStatus === 'absent') bgClass = 'bg-slate-800';
+            let bgClass = 'bg-data-neutral hover:bg-data-neutral';
+            if (keyStatus === 'correct') bgClass = 'bg-data-pass';
+            else if (keyStatus === 'present') bgClass = 'bg-data-provisional';
+            else if (keyStatus === 'absent') bgClass = 'bg-data-neutral';
 
             const isWide = key === 'ENTER' || key === '⌫';
 
@@ -293,32 +293,32 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
 
   if (!game) {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 dark:bg-slate-950 flex items-center justify-center">
+      <div className="fixed inset-0 z-50 bg-data-neutral dark:bg-data-neutral flex items-center justify-center">
         {error ? (
           <div className="text-center space-y-3">
-            <p className="text-lg font-semibold text-slate-100">Daily challenge unavailable</p>
-            <p className="text-sm text-slate-400">{error}</p>
+            <p className="text-lg font-semibold text-data-neutral">Daily challenge unavailable</p>
+            <p className="text-sm text-data-neutral">{error}</p>
             <button
               onClick={refetch}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold"
+              className="px-4 py-2 bg-data-pass hover:bg-data-pass text-white rounded-lg font-semibold"
             >
               Retry
             </button>
           </div>
         ) : (
-          <div className="animate-pulse text-slate-400">Loading today's challenge...</div>
+          <div className="animate-pulse text-data-neutral">Loading today's challenge...</div>
         )}
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 dark:bg-slate-950 text-slate-100 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-data-neutral dark:bg-data-neutral text-data-neutral flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-slate-800/50">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-data-neutral/50">
         <button
           onClick={onExit}
-          className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+          className="flex items-center gap-2 text-data-neutral hover:text-data-neutral transition-colors"
           aria-label="Exit"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -326,8 +326,8 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
         </button>
 
         <div className="text-center">
-          <h1 className="text-lg font-semibold text-slate-200">Daily Term Challenge</h1>
-          <div className="flex items-center justify-center gap-1 text-xs text-slate-400">
+          <h1 className="text-lg font-semibold text-data-neutral">Daily Term Challenge</h1>
+          <div className="flex items-center justify-center gap-1 text-xs text-data-neutral">
             <Calendar className="w-3 h-3" />
             {new Date(game.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </div>
@@ -335,7 +335,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
 
         <button
           onClick={() => setShowHint(!showHint)}
-          className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+          className="flex items-center gap-2 text-data-neutral hover:text-data-neutral transition-colors"
           aria-label="Toggle hint"
         >
           <HelpCircle className="w-5 h-5" />
@@ -349,23 +349,23 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="bg-slate-900 border-b border-slate-800 overflow-hidden"
+            className="bg-data-neutral border-b border-data-neutral overflow-hidden"
           >
             <div className="p-4 text-center">
-              <p className="text-sm text-slate-300">
-                <span className="text-slate-500">Category:</span>{' '}
-                <span className="font-medium capitalize text-amber-400">{game.category}</span>
+              <p className="text-sm text-data-neutral">
+                <span className="text-data-neutral">Category:</span>{' '}
+                <span className="font-medium capitalize text-data-provisional">{game.category}</span>
               </p>
               {game.hints.class && (
-                <p className="text-sm text-slate-300 mt-1">
-                  <span className="text-slate-500">Type:</span>{' '}
+                <p className="text-sm text-data-neutral mt-1">
+                  <span className="text-data-neutral">Type:</span>{' '}
                   <span className="font-medium text-cyan-400">{game.hints.class}</span>
                 </p>
               )}
               {game.hints.system && (
-                <p className="text-sm text-slate-300 mt-1">
-                  <span className="text-slate-500">System:</span>{' '}
-                  <span className="font-medium text-emerald-400">{game.hints.system}</span>
+                <p className="text-sm text-data-neutral mt-1">
+                  <span className="text-data-neutral">System:</span>{' '}
+                  <span className="font-medium text-data-pass">{game.hints.system}</span>
                 </p>
               )}
             </div>
@@ -390,19 +390,19 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
             <div className="text-center space-y-4">
               {status === 'won' ? (
                 <>
-                  <Trophy className="w-12 h-12 text-amber-500 mx-auto" />
-                  <h2 className="text-2xl font-bold text-emerald-400">Excellent!</h2>
-                  <p className="text-slate-300">
+                  <Trophy className="w-12 h-12 text-data-provisional mx-auto" />
+                  <h2 className="text-2xl font-bold text-data-pass">Excellent!</h2>
+                  <p className="text-data-neutral">
                     You got it in {guesses.length}/{MAX_ATTEMPTS} tries
                   </p>
                 </>
               ) : (
                 <>
-                  <X className="w-12 h-12 text-red-500 mx-auto" />
-                  <h2 className="text-2xl font-bold text-red-400">Better luck tomorrow</h2>
-                  <p className="text-slate-300">
+                  <X className="w-12 h-12 text-data-fail mx-auto" />
+                  <h2 className="text-2xl font-bold text-data-fail">Better luck tomorrow</h2>
+                  <p className="text-data-neutral">
                     The word was:{' '}
-                    <span className="font-bold text-amber-400">{game.targetWord}</span>
+                    <span className="font-bold text-data-provisional">{game.targetWord}</span>
                   </p>
                 </>
               )}
@@ -410,14 +410,14 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleShare}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-data-pass hover:bg-data-pass text-white rounded-lg font-semibold transition-colors"
                 >
                   <Share2 className="w-4 h-4" />
                   Share
                 </button>
                 <button
                   onClick={onExit}
-                  className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold transition-colors"
+                  className="flex-1 px-4 py-3 bg-data-neutral hover:bg-data-neutral text-white rounded-lg font-semibold transition-colors"
                 >
                   Exit
                 </button>

@@ -56,7 +56,7 @@ export const BulletListRenderer: React.FC<BulletListRendererProps> = ({
       {filteredItems.map((item, index) => (
         <li key={index} className={`${itemVariantClasses[variant]} leading-relaxed`}>
           {variant === 'checklist' && (
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-4 h-4 text-data-pass flex-shrink-0 mt-0.5" />
           )}
           {showNumbers && (
             <span className="font-semibold text-[var(--color-accent)] mr-2">{index + 1}.</span>

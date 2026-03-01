@@ -332,7 +332,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               }}
               className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full"
             >
-              <Stethoscope className="w-12 h-12 text-amber-500" />
+              <Stethoscope className="w-12 h-12 text-data-provisional" />
             </motion.div>
 
             <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
@@ -358,9 +358,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleSystemSelect(systemCode as SystemCode)}
-                      className="bg-[var(--color-bg-primary)] hover:bg-amber-500/10 border-2 border-[var(--color-border)] hover:border-amber-500 rounded-xl p-4 transition-all text-center group"
+                      className="bg-[var(--color-bg-primary)] hover:bg-data-provisional/10 border-2 border-[var(--color-border)] hover:border-data-provisional rounded-xl p-4 transition-all text-center group"
                     >
-                      <div className="text-2xl font-bold text-amber-500 mb-1">{systemCode}</div>
+                      <div className="text-2xl font-bold text-data-provisional mb-1">{systemCode}</div>
                       <div className="text-xs text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] line-clamp-2">
                         {systemName}
                       </div>
@@ -371,7 +371,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             </div>
 
             <div className="pt-4 border-t border-[var(--color-border)] text-center space-y-2">
-              <div className="flex items-center justify-center gap-2 text-amber-500 text-sm">
+              <div className="flex items-center justify-center gap-2 text-data-provisional text-sm">
                 <Trophy className="w-4 h-4" />
                 <span>Each system: {QUESTIONS_PER_SESSION} high-yield questions in 20 minutes</span>
               </div>
@@ -393,7 +393,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 text-center space-y-4">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
+          <AlertCircle className="w-16 h-16 text-data-fail mx-auto" />
           <h2 className="text-2xl font-bold">Error</h2>
           <p className="text-[var(--color-text-muted)]">
             {error || 'Something went wrong loading Grand Rounds.'}
@@ -414,7 +414,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="w-12 h-12 animate-spin text-amber-500 mx-auto" />
+          <Loader2 className="w-12 h-12 animate-spin text-data-provisional mx-auto" />
           <p className="text-xl text-[var(--color-text-muted)]">Loading Grand Rounds...</p>
         </div>
       </div>
@@ -445,7 +445,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               }}
               className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full"
             >
-              <Trophy className="w-12 h-12 text-amber-500" />
+              <Trophy className="w-12 h-12 text-data-provisional" />
             </motion.div>
 
             <h1 className="text-4xl font-bold">Challenge Complete!</h1>
@@ -457,21 +457,21 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-amber-500">{completedStats.score}</div>
+                <div className="text-3xl font-bold text-data-provisional">{completedStats.score}</div>
                 <div className="text-sm text-[var(--color-text-muted)]">Points</div>
               </div>
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-amber-500">
+                <div className="text-3xl font-bold text-data-provisional">
                   {completedStats.correctCount}/{completedStats.totalQuestions}
                 </div>
                 <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
               </div>
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-amber-500">#{completedStats.ranking}</div>
+                <div className="text-3xl font-bold text-data-provisional">#{completedStats.ranking}</div>
                 <div className="text-sm text-[var(--color-text-muted)]">Global Rank</div>
               </div>
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-amber-500">
+                <div className="text-3xl font-bold text-data-provisional">
                   {Math.round(completedStats.percentile)}%
                 </div>
                 <div className="text-sm text-[var(--color-text-muted)]">Percentile</div>
@@ -486,7 +486,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             </div>
 
             <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg p-4 text-center">
-              <div className="flex items-center justify-center gap-2 text-amber-500 mb-2">
+              <div className="flex items-center justify-center gap-2 text-data-provisional mb-2">
                 <Timer className="w-5 h-5" />
                 <span className="font-semibold">Next Challenge In</span>
               </div>
@@ -530,7 +530,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 }}
                 className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full"
               >
-                <Trophy className="w-12 h-12 text-amber-500" />
+                <Trophy className="w-12 h-12 text-data-provisional" />
               </motion.div>
 
               <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
@@ -545,17 +545,17 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="space-y-2">
-                  <Trophy className="w-8 h-8 text-amber-500 mx-auto" />
+                  <Trophy className="w-8 h-8 text-data-provisional mx-auto" />
                   <div className="text-2xl font-bold">{challengeData.questions.length}</div>
                   <div className="text-xs text-[var(--color-text-muted)]">Questions</div>
                 </div>
                 <div className="space-y-2">
-                  <Clock className="w-8 h-8 text-amber-500 mx-auto" />
+                  <Clock className="w-8 h-8 text-data-provisional mx-auto" />
                   <div className="text-2xl font-bold">20</div>
                   <div className="text-xs text-[var(--color-text-muted)]">Minutes</div>
                 </div>
                 <div className="space-y-2">
-                  <Crown className="w-8 h-8 text-amber-500 mx-auto" />
+                  <Crown className="w-8 h-8 text-data-provisional mx-auto" />
                   <div className="text-2xl font-bold">1</div>
                   <div className="text-xs text-[var(--color-text-muted)]">Attempt</div>
                 </div>
@@ -563,7 +563,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <Zap className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <Zap className="w-5 h-5 text-data-provisional mt-0.5 flex-shrink-0" />
                   <div>
                     <h3 className="font-semibold">Speed Matters</h3>
                     <p className="text-sm text-[var(--color-text-muted)]">
@@ -573,7 +573,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <Users className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <Users className="w-5 h-5 text-data-provisional mt-0.5 flex-shrink-0" />
                   <div>
                     <h3 className="font-semibold">Global Competition</h3>
                     <p className="text-sm text-[var(--color-text-muted)]">
@@ -583,7 +583,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <Calendar className="w-5 h-5 text-data-provisional mt-0.5 flex-shrink-0" />
                   <div>
                     <h3 className="font-semibold">Daily Reset</h3>
                     <p className="text-sm text-[var(--color-text-muted)]">
@@ -632,7 +632,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               transition={{ type: 'spring', duration: 0.6 }}
               className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full"
             >
-              <Trophy className="w-12 h-12 text-amber-500" />
+              <Trophy className="w-12 h-12 text-data-provisional" />
             </motion.div>
 
             <h1 className="text-4xl font-bold">Challenge Complete!</h1>
@@ -643,9 +643,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
           <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6">
             {/* Score highlight */}
-            <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-xl p-6 text-center border-2 border-amber-500/50">
+            <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-xl p-6 text-center border-2 border-data-provisional/50">
               <div className="text-sm text-[var(--color-text-muted)] mb-2">Final Score</div>
-              <div className="text-6xl font-bold text-amber-500 mb-2">{completedStats.score}</div>
+              <div className="text-6xl font-bold text-data-provisional mb-2">{completedStats.score}</div>
               <div className="text-sm text-[var(--color-text-muted)]">
                 {completedStats.correctCount}/{completedStats.totalQuestions} correct
               </div>
@@ -654,11 +654,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             {/* Stats grid */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-amber-500">#{completedStats.ranking}</div>
+                <div className="text-3xl font-bold text-data-provisional">#{completedStats.ranking}</div>
                 <div className="text-sm text-[var(--color-text-muted)]">Global Rank</div>
               </div>
               <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-amber-500">
+                <div className="text-3xl font-bold text-data-provisional">
                   {Math.round(completedStats.percentile)}%
                 </div>
                 <div className="text-sm text-[var(--color-text-muted)]">Percentile</div>
@@ -714,7 +714,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           <div className="max-w-4xl mx-auto space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Trophy className="w-6 h-6 text-amber-500" />
+                <Trophy className="w-6 h-6 text-data-provisional" />
                 <div>
                   <div className="font-semibold">Grand Rounds Challenge</div>
                   <div className="text-sm text-[var(--color-text-muted)]">
@@ -776,14 +776,14 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                       onClick={() => handleAnswerSelect(index)}
                       className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
                         isSelected
-                          ? 'bg-amber-500/10 border-amber-500'
-                          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-amber-500/50'
+                          ? 'bg-data-provisional/10 border-data-provisional'
+                          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-data-provisional/50'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <span className="flex-1">{option}</span>
                         {isSelected && (
-                          <CheckCircle className="w-5 h-5 ml-2 flex-shrink-0 text-amber-500" />
+                          <CheckCircle className="w-5 h-5 ml-2 flex-shrink-0 text-data-provisional" />
                         )}
                       </div>
                     </motion.button>

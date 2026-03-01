@@ -275,14 +275,14 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                     onClick={() => handleEquipmentSelect(item.id)}
                     className={`p-4 rounded-xl border-2 transition-all ${
                       selectedEquipment.includes(item.id)
-                        ? 'border-emerald-500 bg-emerald-500/10'
+                        ? 'border-data-pass bg-data-pass/10'
                         : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:border-[var(--color-accent)]'
                     }`}
                   >
                     <div className="text-sm font-medium mb-1">{item.name}</div>
                     <div className="text-xs text-[var(--color-text-muted)]">{item.category}</div>
                     {selectedEquipment.includes(item.id) && (
-                      <CheckCircle className="w-4 h-4 text-emerald-500 mt-2" />
+                      <CheckCircle className="w-4 h-4 text-data-pass mt-2" />
                     )}
                   </button>
                 ))}
@@ -307,7 +307,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                           className="flex items-center justify-between p-3 rounded-lg bg-[var(--color-bg-tertiary)]"
                         >
                           <span className="text-sm">{item?.name}</span>
-                          <CheckCircle className="w-4 h-4 text-emerald-500" />
+                          <CheckCircle className="w-4 h-4 text-data-pass" />
                         </div>
                       );
                     })}
@@ -380,7 +380,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                 {/* Sterile field indicator */}
                 {currentStep === 2 && (
                   <div
-                    className="absolute inset-0 m-12 border-2 border-emerald-500/30 rounded-lg pointer-events-none"
+                    className="absolute inset-0 m-12 border-2 border-data-pass/30 rounded-lg pointer-events-none"
                     style={{
                       boxShadow: isInSterileZone
                         ? '0 0 20px rgba(16, 185, 129, 0.3)'
@@ -389,7 +389,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                   >
                     <div className="absolute top-2 left-2 text-xs font-semibold">
                       {isInSterileZone ? (
-                        <span className="text-emerald-500">✓ Sterile Zone</span>
+                        <span className="text-data-pass">✓ Sterile Zone</span>
                       ) : (
                         <span className="text-rose-500">✗ Outside Sterile Field</span>
                       )}
@@ -400,7 +400,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                 <div className="text-center py-20">
                   <p className="text-[var(--color-text-muted)] mb-4">{step.instructions}</p>
                   {currentStep === 2 && (
-                    <p className="text-sm text-amber-500">Keep your cursor within the green zone</p>
+                    <p className="text-sm text-data-provisional">Keep your cursor within the green zone</p>
                   )}
                 </div>
               </div>
@@ -447,7 +447,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                     </ul>
                   </div>
                   <div>
-                    <strong className="text-amber-500">Common Mistakes:</strong>
+                    <strong className="text-data-provisional">Common Mistakes:</strong>
                     <ul className="mt-1 space-y-1">
                       {step.commonMistakes.map((mistake, i) => (
                         <li key={i} className="text-[var(--color-text-muted)]">
@@ -470,7 +470,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                         i === currentStep
                           ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] font-medium'
                           : i < currentStep
-                            ? 'bg-emerald-500/10 text-emerald-500'
+                            ? 'bg-data-pass/10 text-data-pass'
                             : 'text-[var(--color-text-muted)]'
                       }`}
                     >
@@ -502,8 +502,8 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
 
           <div className="space-y-4">
             {sterileBreaches === 0 ? (
-              <div className="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-                <div className="flex items-center gap-2 text-emerald-500 mb-2">
+              <div className="p-6 rounded-xl bg-data-pass/10 border border-data-pass/30">
+                <div className="flex items-center gap-2 text-data-pass mb-2">
                   <CheckCircle className="w-6 h-6" />
                   <h3 className="text-lg font-semibold">Perfect Sterile Technique!</h3>
                 </div>

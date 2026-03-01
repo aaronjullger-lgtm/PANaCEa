@@ -388,9 +388,12 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<number>>(new Set());
   const eliminationTimestampsRef = useRef<number[]>([]);
 
-  // Track answer changes for analytics
-  const [answerChangeCount, setAnswerChangeCount] = useState<number>(0);
-  const [firstSelectedAnswer, setFirstSelectedAnswer] = useState<number | null>(null);
+  // Track answer changes for analytics (using refs to avoid re-renders)
+  const answerChangeCountRef = useRef<number>(0);
+  const firstSelectedAnswerRef = useRef<number | null>(null);
+  // Setters for session recovery (update refs without causing re-renders)
+  const setAnswerChangeCount = (value: number) => { answerChangeCountRef.current = value; };
+  const setFirstSelectedAnswer = (value: number | null) => { firstSelectedAnswerRef.current = value; };
 
   // Track if we're actively generating a question in the background
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
@@ -506,8 +509,8 @@ const QuizView: React.FC<QuizViewProps> = ({
       questionNumber,
       eliminatedAnswers: Array.from(eliminatedAnswers),
       localNote,
-      answerChangeCount,
-      firstSelectedAnswer,
+      answerChangeCount: answerChangeCountRef.current,
+      firstSelectedAnswer: firstSelectedAnswerRef.current,
     });
   }, [
     queue,
@@ -517,8 +520,8 @@ const QuizView: React.FC<QuizViewProps> = ({
     questionNumber,
     eliminatedAnswers,
     localNote,
-    answerChangeCount,
-    firstSelectedAnswer,
+    answerChangeCountRef.current,
+    firstSelectedAnswerRef.current,
     debouncedSave,
   ]);
 
@@ -760,8 +763,8 @@ const QuizView: React.FC<QuizViewProps> = ({
       eliminationTimestampsRef.current = [];
       setSrsResult(null); // Reset SRS result for new question
       setQuestionStartTime(Date.now()); // Track time for new question
-      setAnswerChangeCount(0); // Reset answer change tracking
-      setFirstSelectedAnswer(null); // Reset first selected answer
+      answerChangeCountRef.current = 0; // Reset answer change tracking
+      firstSelectedAnswerRef.current = null; // Reset first selected answer
 
       // Reset implicit metrics, behavioral tracker, and micro-kinetics for new question
       implicitMetrics.reset();
@@ -927,7 +930,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       system: currentQuestion.system ?? undefined,
       conditionId: currentQuestion.conditionId ?? undefined,
       telemetryJson: (telemetryForApi ?? undefined) as Record<string, unknown> | undefined,
-      answerChangedCount: behavioralPayload?.answer_change_count ?? answerChangeCount,
+      answerChangedCount: behavioralPayload?.answer_change_count ?? answerChangeCountRef.current,
       durationMs: behavioralPayload?.duration_ms ?? timeToAnswer,
     });
     // Fire-and-forget: metrics and review sync in background (or when back online).
@@ -959,10 +962,10 @@ const QuizView: React.FC<QuizViewProps> = ({
     const behaviorSignals: BehaviorSignals = {
       timeSpentMs: timeToAnswer,
       parTimeMs: parTime,
-      answerChangeCount,
+      answerChangeCount: answerChangeCountRef.current,
       eliminatedCount: eliminatedAnswers.size,
       quickInitialSelection:
-        firstSelectedAnswer !== null && Date.now() - questionStartTime < parTime * 0.5,
+        firstSelectedAnswerRef.current !== null && Date.now() - questionStartTime < parTime * 0.5,
     };
 
     // Defensive calls - wrap analytics functions to prevent crashes
@@ -988,13 +991,13 @@ const QuizView: React.FC<QuizViewProps> = ({
       if (typeof recordAnswerPattern === 'function') {
         recordAnswerPattern({
           questionId: currentQuestion.id || `temp-${questionNumber}`,
-          firstAnswer: firstSelectedAnswer ?? selectedAnswerIndex,
+          firstAnswer: firstSelectedAnswerRef.current ?? selectedAnswerIndex,
           finalAnswer: selectedAnswerIndex,
           correctAnswer: currentQuestion.correctAnswerIndex,
           timeSpentMs: timeToAnswer,
           parTimeMs: parTime,
           eliminatedCount: eliminatedAnswers.size,
-          answerChangeCount,
+          answerChangeCount: answerChangeCountRef.current,
           wasCorrect: isCorrect,
         });
       }
@@ -1144,7 +1147,7 @@ const QuizView: React.FC<QuizViewProps> = ({
           selectedAnswer: selectedAnswerIndex,
           timeSpentMs: timeToAnswer,
           timeToFirstClick: implicitMetrics.metrics.timeToFirstClick ?? undefined,
-          answerSwitches: answerChangeCount,
+          answerSwitches: answerChangeCountRef.current,
           totalDwellTime: timeToAnswer,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           sessionType:
@@ -1200,10 +1203,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     performanceData,
     getToken,
     currentStreak,
-    answerChangeCount,
     eliminatedAnswers,
-    firstSelectedAnswer,
-    setCurrentQuestion,
     questionNumber,
     implicitMetrics,
   ]);
@@ -1298,11 +1298,11 @@ const QuizView: React.FC<QuizViewProps> = ({
     microKinetics.recordSelection();
 
     // Track answer changes
-    if (firstSelectedAnswer === null) {
-      setFirstSelectedAnswer(index);
+    if (firstSelectedAnswerRef.current === null) {
+      firstSelectedAnswerRef.current = index;
       behavioralTracker.recordFirstInteraction();
     } else if (selectedAnswerIndex !== null && selectedAnswerIndex !== index) {
-      setAnswerChangeCount((prev) => prev + 1);
+      answerChangeCountRef.current += 1;
       behavioralTracker.recordAnswerChange();
     }
 
@@ -1310,7 +1310,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     // Just select the option, don't submit yet
     setSelectedAnswerIndex(index);
-  }, [isAnswered, currentQuestion, eliminatedAnswers, microKinetics, firstSelectedAnswer, selectedAnswerIndex, behavioralTracker, implicitMetrics, setFirstSelectedAnswer, setAnswerChangeCount, setSelectedAnswerIndex]);
+  }, [isAnswered, currentQuestion, eliminatedAnswers, microKinetics, selectedAnswerIndex, behavioralTracker, implicitMetrics]);
 
   const handleExplainDifferently = useCallback(async () => {
     if (!currentQuestion || selectedAnswerIndex === null) return;

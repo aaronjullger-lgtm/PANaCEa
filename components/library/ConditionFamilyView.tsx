@@ -85,9 +85,9 @@ export function ConditionFamilyView({
   );
 
   const getMasteryColor = (mastery: string | undefined) => {
-    if (mastery === 'high') return 'bg-green-500';
+    if (mastery === 'high') return 'bg-data-pass';
     if (mastery === 'medium') return 'bg-yellow-500';
-    return 'bg-red-500';
+    return 'bg-data-fail';
   };
 
   return (
@@ -141,10 +141,10 @@ export function ConditionFamilyView({
           )}
           {complications.length > 0 && (
             <section>
-              <h4 className="text-xs uppercase font-bold text-red-500 mb-2 flex items-center gap-1">
+              <h4 className="text-xs uppercase font-bold text-data-fail mb-2 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" /> Complications
               </h4>
-              <div className="space-y-1 pl-2 border-l-2 border-red-100 ml-1">
+              <div className="space-y-1 pl-2 border-l-2 border-data-fail ml-1">
                 {complications.map((m) => (
                   <MemberRow key={m.id} member={m} onNavigate={onNavigate} />
                 ))}
@@ -153,10 +153,10 @@ export function ConditionFamilyView({
           )}
           {manifestations.length > 0 && (
             <section>
-              <h4 className="text-xs uppercase font-bold text-blue-500 mb-2 flex items-center gap-1">
+              <h4 className="text-xs uppercase font-bold text-[var(--color-category-practice)] mb-2 flex items-center gap-1">
                 <Activity className="w-3 h-3" /> Manifestations
               </h4>
-              <div className="space-y-1 pl-2 border-l-2 border-blue-100 ml-1">
+              <div className="space-y-1 pl-2 border-l-2 border-[var(--color-category-practice)] ml-1">
                 {manifestations.map((m) => (
                   <MemberRow key={m.id} member={m} onNavigate={onNavigate} />
                 ))}
@@ -197,9 +197,9 @@ function MemberRow({
         <div className="w-16 h-1.5 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <div
             className={cn('h-full rounded-full', {
-              'bg-red-500': member.mastery < 50,
+              'bg-data-fail': member.mastery < 50,
               'bg-yellow-500': member.mastery >= 50 && member.mastery < 80,
-              'bg-green-500': member.mastery >= 80,
+              'bg-data-pass': member.mastery >= 80,
             })}
             style={{ width: `${member.mastery}%` }}
           />

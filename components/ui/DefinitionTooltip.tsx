@@ -67,11 +67,11 @@ const DefinitionTooltip: React.FC = () => {
               <Info className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-semibold text-cyan-300 mb-1">{tooltipState.term}</h4>
-                <p className="text-sm text-slate-300 leading-relaxed">{tooltipState.definition}</p>
+                <p className="text-sm text-data-neutral leading-relaxed">{tooltipState.definition}</p>
               </div>
             </div>
             {/* Pointer arrow */}
-            <div className="absolute -top-2 left-4 w-4 h-4 bg-slate-800 border-l border-t border-cyan-500/30 transform rotate-45" />
+            <div className="absolute -top-2 left-4 w-4 h-4 bg-data-neutral border-l border-t border-cyan-500/30 transform rotate-45" />
           </div>
         </motion.div>
       )}

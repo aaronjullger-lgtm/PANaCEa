@@ -138,13 +138,13 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
   const getHealthStatusIcon = (status: string) => {
     switch (status) {
       case 'healthy':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-data-pass" />;
       case 'degraded':
         return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
       case 'unavailable':
-        return <X className="w-4 h-4 text-red-500" />;
+        return <X className="w-4 h-4 text-data-fail" />;
       default:
-        return <AlertTriangle className="w-4 h-4 text-gray-500" />;
+        return <AlertTriangle className="w-4 h-4 text-[var(--color-text-muted)]" />;
     }
   };
 
@@ -154,7 +154,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
       <div className="sticky top-0 z-10 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Database className="w-6 h-6 text-blue-500" />
+            <Database className="w-6 h-6 text-[var(--color-category-practice)]" />
             <div>
               <h2 className="font-semibold text-[var(--color-text-primary)]">
                 Medical Database Search
@@ -182,7 +182,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2 font-medium text-sm transition-colors relative capitalize ${
                 activeTab === tab
-                  ? 'text-blue-600'
+                  ? 'text-[var(--color-category-practice)]'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
               }`}
             >
@@ -190,7 +190,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
               {activeTab === tab && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-category-practice)]"
                 />
               )}
             </button>
@@ -211,7 +211,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Search medical databases (e.g., 'hypertension treatment guidelines')"
-                className="w-full pl-10 pr-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-category-practice)] focus:border-transparent"
                 aria-label="Search medical databases"
               />
             </div>
@@ -223,7 +223,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                   onClick={() => setSelectedDatabase(db)}
                   className={`p-3 rounded-lg border transition-colors flex items-center gap-3 ${
                     selectedDatabase === db
-                      ? 'border-blue-500 bg-blue-500/10'
+                      ? 'border-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)]'
                       : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)]'
                   }`}
                 >
@@ -292,7 +292,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                         <select
                           value={resultLimit}
                           onChange={(e) => setResultLimit(parseInt(e.target.value))}
-                          className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-category-practice)] focus:border-transparent"
                           title="Number of results to display"
                           aria-label="Number of results to display"
                         >
@@ -336,19 +336,19 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
             </div>
 
             {error && (
-              <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <div className="flex items-center gap-2 text-red-600">
+              <div className="p-4 bg-data-fail/10 border border-data-fail/30 rounded-lg">
+                <div className="flex items-center gap-2 text-data-fail">
                   <AlertTriangle className="w-5 h-5" />
                   <span className="font-medium">Search Error</span>
                 </div>
-                <p className="text-sm text-red-600 mt-1">{error}</p>
+                <p className="text-sm text-data-fail mt-1">{error}</p>
               </div>
             )}
 
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-category-practice)] mx-auto mb-2"></div>
                   <p className="text-sm text-[var(--color-text-muted)]">
                     Searching {getDatabaseName(selectedDatabase)}...
                   </p>
@@ -382,7 +382,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                         <h4 className="font-semibold text-[var(--color-text-primary)] line-clamp-2">
                           {result.title}
                         </h4>
-                        <span className="text-xs px-2 py-1 bg-blue-500/10 text-blue-600 rounded-full whitespace-nowrap">
+                        <span className="text-xs px-2 py-1 bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] text-[var(--color-category-practice)] rounded-full whitespace-nowrap">
                           {result.source}
                         </span>
                       </div>
@@ -407,7 +407,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                           href={result.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                          className="text-sm text-[var(--color-category-practice)] hover:text-[var(--color-category-practice)] flex items-center gap-1"
                         >
                           <ExternalLink className="w-4 h-4" />
                           View Source
@@ -472,10 +472,10 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                     <span
                       className={`px-2 py-1 text-xs rounded-full ${
                         db.status === 'healthy'
-                          ? 'bg-green-500/20 text-green-600'
+                          ? 'bg-data-pass/20 text-data-pass'
                           : db.status === 'degraded'
                             ? 'bg-yellow-500/20 text-yellow-600'
-                            : 'bg-red-500/20 text-red-600'
+                            : 'bg-data-fail/20 text-data-fail'
                       }`}
                     >
                       {db.status.toUpperCase()}
@@ -488,7 +488,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                     </div>
                   )}
 
-                  {db.error && <div className="mt-2 text-sm text-red-600">Error: {db.error}</div>}
+                  {db.error && <div className="mt-2 text-sm text-data-fail">Error: {db.error}</div>}
                 </div>
               ))}
             </div>
@@ -496,13 +496,13 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
             <div
               className={`p-4 rounded-lg border ${
                 areDatabasesHealthy()
-                  ? 'bg-green-500/10 border-green-500/30'
+                  ? 'bg-data-pass/10 border-data-pass/30'
                   : 'bg-yellow-500/10 border-yellow-500/30'
               }`}
             >
               <div className="flex items-center gap-2 mb-1">
                 {areDatabasesHealthy() ? (
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-data-pass" />
                 ) : (
                   <AlertTriangle className="w-5 h-5 text-yellow-500" />
                 )}

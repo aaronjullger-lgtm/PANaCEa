@@ -48,13 +48,13 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
   const getTriggerIcon = () => {
     switch (prompt.triggerReason) {
       case 'consecutive_misses':
-        return <AlertTriangle className="w-6 h-6 text-amber-500" />;
+        return <AlertTriangle className="w-6 h-6 text-data-provisional" />;
       case 'confusion_pair':
         return <Brain className="w-6 h-6 text-purple-500" />;
       case 'high_yield_miss':
-        return <Target className="w-6 h-6 text-red-500" />;
+        return <Target className="w-6 h-6 text-data-fail" />;
       default:
-        return <Lightbulb className="w-6 h-6 text-blue-500" />;
+        return <Lightbulb className="w-6 h-6 text-[var(--color-category-practice)]" />;
     }
   };
 
@@ -160,7 +160,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
               value={currentResponse}
               onChange={(e) => setCurrentResponse(e.target.value)}
               placeholder="Type your thoughts here (optional)..."
-              className="w-full h-24 p-3 text-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="w-full h-24 p-3 text-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)]"
             />
 
             {/* Progress dots */}
@@ -170,9 +170,9 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
                   key={idx}
                   className={`w-2 h-2 rounded-full transition-colors ${
                     idx === currentQuestionIndex
-                      ? 'bg-blue-500'
+                      ? 'bg-[var(--color-category-practice)]'
                       : idx < currentQuestionIndex
-                        ? 'bg-emerald-500'
+                        ? 'bg-data-pass'
                         : 'bg-[var(--color-bg-tertiary)]'
                   }`}
                 />

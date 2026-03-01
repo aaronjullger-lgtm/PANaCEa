@@ -132,7 +132,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
           </h2>
           <button
             onClick={onExit}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600"
+            className="px-6 py-3 bg-[var(--color-category-practice)] text-white rounded-lg font-semibold hover:bg-[var(--color-category-practice)]"
           >
             Exit
           </button>
@@ -192,9 +192,9 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
   };
 
   const getTimeColor = (): string => {
-    if (timeRemaining > 180) return 'text-green-600 dark:text-green-400';
+    if (timeRemaining > 180) return 'text-data-pass dark:text-data-pass';
     if (timeRemaining > 60) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-red-600 dark:text-red-400';
+    return 'text-data-fail dark:text-data-fail';
   };
 
   if (showIntro) {
@@ -221,12 +221,12 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
           </div>
 
           <div className="space-y-6 mb-8">
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
-              <h3 className="font-bold text-blue-900 dark:text-blue-200 mb-4 flex items-center gap-2">
+            <div className="bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg p-6">
+              <h3 className="font-bold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-4 flex items-center gap-2">
                 <BookOpen className="w-5 h-5" />
                 About PANRE-LA
               </h3>
-              <ul className="space-y-3 text-sm text-blue-800 dark:text-blue-300">
+              <ul className="space-y-3 text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <span>
@@ -288,7 +288,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                 </div>
                 <div>
                   <div className="text-sm text-[var(--color-text-muted)]">Score</div>
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  <div className="text-2xl font-bold text-data-pass dark:text-data-pass">
                     {quarterlyProgress.questionsCompleted > 0
                       ? Math.round(
                           (quarterlyProgress.score / quarterlyProgress.questionsCompleted) * 100
@@ -348,7 +348,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                 </span>
                 <button
                   onClick={() => setIsResourcesOpen(!isResourcesOpen)}
-                  className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-sm font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] hover:underline"
                 >
                   {isResourcesOpen ? 'Hide' : 'Show'} References
                 </button>
@@ -368,23 +368,23 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                   className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
                     showFeedback
                       ? index === currentQuestionData.correctAnswerIndex
-                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                        ? 'border-data-pass bg-data-pass dark:bg-data-pass/20'
                         : index === selectedAnswer
-                          ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                          : 'border-gray-300 dark:border-gray-600 opacity-50'
+                          ? 'border-data-fail bg-data-fail dark:bg-data-fail/20'
+                          : 'border-[var(--color-text-muted)] border-[var(--color-text-muted)] opacity-50'
                       : selectedAnswer === index
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
+                        ? 'border-[var(--color-category-practice)] bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]'
+                        : 'border-[var(--color-text-muted)] border-[var(--color-text-muted)] hover:border-[var(--color-category-practice)]'
                   } disabled:cursor-not-allowed`}
                 >
                   <div className="flex items-start gap-3">
                     <div
                       className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 ${
                         showFeedback && index === currentQuestionData.correctAnswerIndex
-                          ? 'border-green-500 bg-green-500'
+                          ? 'border-data-pass bg-data-pass'
                           : selectedAnswer === index
                             ? 'border-current'
-                            : 'border-gray-400'
+                            : 'border-[var(--color-text-muted)]'
                       }`}
                     >
                       {selectedAnswer === index && !showFeedback && (
@@ -434,15 +434,15 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                 exit={{ opacity: 0, y: -20 }}
                 className={`rounded-xl p-6 ${
                   selectedAnswer === currentQuestionData.correctAnswerIndex
-                    ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500'
-                    : 'bg-red-50 dark:bg-red-900/20 border-2 border-red-500'
+                    ? 'bg-data-pass dark:bg-data-pass/20 border-2 border-data-pass'
+                    : 'bg-data-fail dark:bg-data-fail/20 border-2 border-data-fail'
                 }`}
               >
                 <h4
                   className={`text-xl font-bold mb-3 ${
                     selectedAnswer === currentQuestionData.correctAnswerIndex
-                      ? 'text-green-800 dark:text-green-200'
-                      : 'text-red-800 dark:text-red-200'
+                      ? 'text-data-pass dark:text-data-pass'
+                      : 'text-data-fail dark:text-data-fail'
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -486,25 +486,25 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
               <div className="space-y-3">
                 <a
                   href="#"
-                  className="block p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg 
-                  hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                  className="block p-3 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg 
+                  hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] transition-colors"
                 >
-                  <div className="font-semibold text-blue-900 dark:text-blue-200 text-sm">
+                  <div className="font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] text-sm">
                     UpToDate
                   </div>
-                  <div className="text-xs text-blue-700 dark:text-blue-300">
+                  <div className="text-xs text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
                     Evidence-based clinical resource
                   </div>
                 </a>
                 <a
                   href="#"
-                  className="block p-3 bg-green-50 dark:bg-green-900/20 rounded-lg 
-                  hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                  className="block p-3 bg-data-pass dark:bg-data-pass/20 rounded-lg 
+                  hover:bg-data-pass dark:hover:bg-data-pass/30 transition-colors"
                 >
-                  <div className="font-semibold text-green-900 dark:text-green-200 text-sm">
+                  <div className="font-semibold text-data-pass dark:text-data-pass text-sm">
                     Clinical Guidelines
                   </div>
-                  <div className="text-xs text-green-700 dark:text-green-300">
+                  <div className="text-xs text-data-pass dark:text-data-pass">
                     ACC/AHA, ADA, IDSA guidelines
                   </div>
                 </a>

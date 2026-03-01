@@ -276,13 +276,13 @@ const ConditionPage: React.FC = () => {
       {/* Loading State - skeleton aligned with design system (slate-700/800) */}
       {loading && (
         <div className="condition-page-loading space-y-6 py-8">
-          <div className="h-8 w-48 rounded-lg bg-slate-700/50 dark:bg-slate-800 animate-pulse" />
-          <div className="h-12 w-full max-w-2xl rounded-lg bg-slate-700/50 dark:bg-slate-800 animate-pulse" />
+          <div className="h-8 w-48 rounded-lg bg-data-neutral/50 dark:bg-data-neutral animate-pulse" />
+          <div className="h-12 w-full max-w-2xl rounded-lg bg-data-neutral/50 dark:bg-data-neutral animate-pulse" />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-24 rounded-xl bg-slate-700/50 dark:bg-slate-800 animate-pulse"
+                className="h-24 rounded-xl bg-data-neutral/50 dark:bg-data-neutral animate-pulse"
               />
             ))}
           </div>
@@ -290,7 +290,7 @@ const ConditionPage: React.FC = () => {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="h-20 rounded-lg bg-slate-700/50 dark:bg-slate-800 animate-pulse border border-[var(--color-border)]"
+                className="h-20 rounded-lg bg-data-neutral/50 dark:bg-data-neutral animate-pulse border border-[var(--color-border)]"
               />
             ))}
           </div>
@@ -379,10 +379,10 @@ const ConditionPage: React.FC = () => {
             <div className="mb-8 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {heroValues.goldStandard && (
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30">
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-data-provisional/30">
                     <div className="flex items-center gap-2 mb-2">
-                      <Target className="w-4 h-4 text-amber-400" />
-                      <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">
+                      <Target className="w-4 h-4 text-data-provisional" />
+                      <span className="text-xs font-semibold text-data-provisional uppercase tracking-wide">
                         Gold Standard Dx
                       </span>
                     </div>
@@ -392,10 +392,10 @@ const ConditionPage: React.FC = () => {
                   </div>
                 )}
                 {heroValues.firstLineRx && (
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30">
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-data-pass/30">
                     <div className="flex items-center gap-2 mb-2">
-                      <Pill className="w-4 h-4 text-emerald-400" />
-                      <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">
+                      <Pill className="w-4 h-4 text-data-pass" />
+                      <span className="text-xs font-semibold text-data-pass uppercase tracking-wide">
                         First-Line Rx
                       </span>
                     </div>

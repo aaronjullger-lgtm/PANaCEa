@@ -83,8 +83,8 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
 
   if (!prediction) {
     return (
-      <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-center">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+      <div className="p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl text-center">
+        <p className="text-sm text-data-neutral dark:text-data-neutral">
           Answer at least 10 questions to see score prediction
         </p>
       </div>
@@ -104,13 +104,13 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
         : 'text-[var(--color-data-fail)] dark:text-[var(--color-data-fail)]/90';
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div className="bg-white dark:bg-data-neutral rounded-xl border border-data-neutral dark:border-data-neutral overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+      <div className="px-4 py-3 border-b border-data-neutral dark:border-data-neutral">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-[var(--color-accent)]" />
-            <span className="font-medium text-slate-700 dark:text-slate-300">Score Prediction</span>
+            <span className="font-medium text-data-neutral dark:text-data-neutral">Score Prediction</span>
           </div>
           <span
             className={`text-xs px-2 py-0.5 rounded-full ${
@@ -118,7 +118,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
                 ? 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)] dark:bg-[var(--color-data-pass)]/20 dark:text-[var(--color-data-pass)]/90'
                 : prediction.confidence === 'medium'
                   ? 'bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/20 dark:text-[var(--color-data-provisional)]/90'
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'
+                  : 'bg-data-neutral text-data-neutral dark:bg-data-neutral dark:text-data-neutral'
             }`}
           >
             {prediction.confidence} confidence
@@ -137,7 +137,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
               fill="none"
               stroke="currentColor"
               strokeWidth="8"
-              className="text-slate-200 dark:text-slate-700"
+              className="text-data-neutral dark:text-data-neutral"
             />
             {/* Passing threshold marker */}
             <line
@@ -176,7 +176,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
             >
               {prediction.predictedScore}
             </motion.span>
-            <span className="text-xs text-slate-500">/ 800</span>
+            <span className="text-xs text-data-neutral">/ 800</span>
           </div>
         </div>
 
@@ -210,7 +210,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
               </div>
               <ul className="space-y-0.5">
                 {prediction.strengths?.map((s, i) => (
-                  <li key={i} className="text-xs text-slate-600 dark:text-slate-400 pl-4">
+                  <li key={i} className="text-xs text-data-neutral dark:text-data-neutral pl-4">
                     • {s}
                   </li>
                 ))}
@@ -226,7 +226,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
               </div>
               <ul className="space-y-0.5">
                 {prediction.riskFactors?.map((r, i) => (
-                  <li key={i} className="text-xs text-slate-600 dark:text-slate-400 pl-4">
+                  <li key={i} className="text-xs text-data-neutral dark:text-data-neutral pl-4">
                     • {r}
                   </li>
                 ))}
@@ -235,14 +235,14 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
           )}
 
           {prediction.recommendations && prediction.recommendations.length > 0 && (
-            <div className="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-700">
+            <div className="space-y-1 pt-2 border-t border-data-neutral dark:border-data-neutral">
               <div className="flex items-center gap-1 text-xs font-medium text-[var(--color-accent)]">
                 <Lightbulb className="w-3.5 h-3.5" />
                 Recommendations
               </div>
               <ul className="space-y-0.5">
                 {prediction.recommendations?.map((r, i) => (
-                  <li key={i} className="text-xs text-slate-600 dark:text-slate-400 pl-4">
+                  <li key={i} className="text-xs text-data-neutral dark:text-data-neutral pl-4">
                     • {r}
                   </li>
                 ))}

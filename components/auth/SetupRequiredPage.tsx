@@ -36,8 +36,8 @@ export function SetupRequiredPage({ message = DEFAULT_MESSAGE }: SetupRequiredPa
     <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
       <div className="max-w-lg w-full bg-[var(--color-bg-secondary)] rounded-2xl shadow-xl border border-[var(--color-border)] overflow-hidden">
         <div className="p-8">
-          <div className="inline-flex p-4 bg-amber-500/20 rounded-full mb-6">
-            <Settings className="w-12 h-12 text-amber-500" />
+          <div className="inline-flex p-4 bg-data-provisional/20 rounded-full mb-6">
+            <Settings className="w-12 h-12 text-data-provisional" />
           </div>
           <h1 className="text-xl font-bold text-[var(--color-text-primary)] mb-3">
             Setup Required
@@ -59,7 +59,7 @@ export function SetupRequiredPage({ message = DEFAULT_MESSAGE }: SetupRequiredPa
               onClick={copyCommand}
               className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--color-border)] hover:bg-[var(--color-bg-primary)] rounded-lg font-mono text-sm w-fit transition-colors"
             >
-              {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-4 h-4 text-data-pass" /> : <Copy className="w-4 h-4" />}
               {copied ? 'Copied!' : 'Copy: cp env.example .env'}
             </button>
           </div>

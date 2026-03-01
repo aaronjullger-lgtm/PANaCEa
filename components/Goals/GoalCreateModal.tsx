@@ -179,17 +179,17 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
           className="bg-[var(--color-bg-primary)] rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-between p-6 border-b border-data-neutral dark:border-data-neutral">
             <h2
               id="goal-create-title"
-              className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2"
+              className="text-2xl font-bold text-data-neutral dark:text-data-neutral flex items-center gap-2"
             >
-              <Target className="w-6 h-6 text-blue-600" />
+              <Target className="w-6 h-6 text-[var(--color-category-practice)]" />
               Create New Goal
             </h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors"
               aria-label="Close modal"
               title="Close modal"
             >
@@ -206,7 +206,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
             <div>
               <label
                 htmlFor="goal-title"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1"
               >
                 Goal Title *
               </label>
@@ -218,7 +218,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 ${
                   messages.some((m) => m.fieldId === 'goal-title' && m.severity === 'error')
                     ? 'border-[var(--color-data-fail)] focus:border-[var(--color-data-fail)] focus:ring-[var(--color-data-fail)]'
-                    : 'border-slate-300 dark:border-slate-600 focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
+                    : 'border-data-neutral dark:border-data-neutral focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
                 }`}
                 placeholder="e.g., Complete 40 questions daily"
                 aria-invalid={messages.some(
@@ -237,7 +237,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
             <div>
               <label
                 htmlFor="goal-description"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1"
               >
                 Description
               </label>
@@ -245,7 +245,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 id="goal-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
+                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-white dark:bg-data-neutral"
                 rows={2}
                 placeholder="Optional details about this goal"
               />
@@ -255,7 +255,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
             <div>
               <label
                 htmlFor="goal-type"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1"
               >
                 Goal Type *
               </label>
@@ -263,7 +263,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 id="goal-type"
                 value={formData.goalType}
                 onChange={(e) => setFormData({ ...formData, goalType: e.target.value as any })}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-white dark:bg-data-neutral focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                 title="Select goal type"
               >
                 <option value="daily">Daily - Recurring daily target</option>
@@ -279,7 +279,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 <div>
                   <label
                     htmlFor="goal-target-value"
-                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                    className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1"
                   >
                     Target Value
                   </label>
@@ -295,7 +295,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                         (m) => m.fieldId === 'goal-target-value' && m.severity === 'error'
                       )
                         ? 'border-[var(--color-data-fail)] focus:border-[var(--color-data-fail)] focus:ring-[var(--color-data-fail)]'
-                        : 'border-slate-300 dark:border-slate-600 focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
+                        : 'border-data-neutral dark:border-data-neutral focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
                     }`}
                     min="1"
                     aria-invalid={
@@ -316,7 +316,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 <div>
                   <label
                     htmlFor="goal-target-unit"
-                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                    className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1"
                   >
                     Unit
                   </label>
@@ -326,7 +326,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                     onChange={(e) =>
                       setFormData({ ...formData, targetUnit: e.target.value as any })
                     }
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                    className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-white dark:bg-data-neutral focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                     title="Select target unit"
                   >
                     <option value="questions">Questions</option>
@@ -343,7 +343,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
               <div>
                 <label
                   htmlFor="goal-target-date"
-                  className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                  className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1"
                 >
                   Target Date *
                 </label>
@@ -355,7 +355,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                   className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 ${
                     messages.some((m) => m.fieldId === 'goal-target-date' && m.severity === 'error')
                       ? 'border-[var(--color-data-fail)] focus:border-[var(--color-data-fail)] focus:ring-[var(--color-data-fail)]'
-                      : 'border-slate-300 dark:border-slate-600 focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
+                      : 'border-data-neutral dark:border-data-neutral focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
                   }`}
                   required={formData.goalType === 'exam_date'}
                   aria-invalid={
@@ -378,7 +378,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 <div>
                   <label
                     htmlFor="goal-target-system"
-                    className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                    className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1"
                   >
                     System *
                   </label>
@@ -392,7 +392,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                         (m) => m.fieldId === 'goal-target-system' && m.severity === 'error'
                       )
                         ? 'border-[var(--color-data-fail)] focus:border-[var(--color-data-fail)] focus:ring-[var(--color-data-fail)]'
-                        : 'border-slate-300 dark:border-slate-600 focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
+                        : 'border-data-neutral dark:border-data-neutral focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
                     }`}
                     placeholder="e.g., CV, PULM"
                     required={formData.goalType === 'mastery'}
@@ -412,7 +412,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1">
                     Target Stability
                   </label>
                   <input
@@ -421,7 +421,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                     onChange={(e) =>
                       setFormData({ ...formData, targetStability: parseFloat(e.target.value) })
                     }
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
+                    className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-white dark:bg-data-neutral"
                     min="0"
                     max="1"
                     step="0.1"
@@ -440,7 +440,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                   onChange={(e) => setFormData({ ...formData, isRecurring: e.target.checked })}
                   className="rounded"
                 />
-                <label htmlFor="recurring" className="text-sm text-slate-700 dark:text-slate-300">
+                <label htmlFor="recurring" className="text-sm text-data-neutral dark:text-data-neutral">
                   Recurring goal (resets after completion)
                 </label>
               </div>
@@ -448,28 +448,28 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
 
             {/* Motivation */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1">
                 Motivation Notes
               </label>
               <input
                 type="text"
                 value={formData.motivationNotes}
                 onChange={(e) => setFormData({ ...formData, motivationNotes: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
+                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-white dark:bg-data-neutral"
                 placeholder="Why is this goal important to you?"
               />
             </div>
 
             {/* Reward Message */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-data-neutral dark:text-data-neutral mb-1">
                 Reward Message
               </label>
               <input
                 type="text"
                 value={formData.rewardMessage}
                 onChange={(e) => setFormData({ ...formData, rewardMessage: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700"
+                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-white dark:bg-data-neutral"
                 placeholder="Message to show when goal is completed"
               />
             </div>

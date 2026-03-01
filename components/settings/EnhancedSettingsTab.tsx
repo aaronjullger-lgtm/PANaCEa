@@ -359,8 +359,8 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
           className="w-full p-4 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
-              <Flame className="w-5 h-5 text-amber-500" />
+            <div className="w-10 h-10 rounded-xl bg-data-provisional/20 flex items-center justify-center">
+              <Flame className="w-5 h-5 text-data-provisional" />
             </div>
             <div className="text-left">
               <h3 className="font-bold text-[var(--color-text-primary)]">Streak & Rest</h3>

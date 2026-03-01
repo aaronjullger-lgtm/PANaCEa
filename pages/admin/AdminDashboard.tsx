@@ -435,9 +435,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                   <button
                     type="button"
                     onClick={() => navigate(ROUTES.ADMIN_REFINERY)}
-                    className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors text-left"
+                    className="flex items-center gap-3 p-4 bg-data-provisional/10 border border-data-provisional/30 rounded-lg hover:bg-data-provisional/20 transition-colors text-left"
                   >
-                    <BookOpen className="w-5 h-5 text-amber-500" />
+                    <BookOpen className="w-5 h-5 text-data-provisional" />
                     <div>
                       <div className="font-medium text-[var(--color-text-primary)]">
                         Content Refinery

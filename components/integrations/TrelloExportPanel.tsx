@@ -221,19 +221,19 @@ export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({ userExamDa
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Zap className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+            <Zap className="w-3.5 h-3.5 text-data-provisional flex-shrink-0" />
             <span>
               <span className="font-semibold">In Progress:</span> Current week&apos;s focus
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Circle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
+            <Circle className="w-3.5 h-3.5 text-data-fail flex-shrink-0" />
             <span>
               <span className="font-semibold">Weak Areas:</span> Topics needing more attention
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <CheckCircle className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+            <CheckCircle className="w-3.5 h-3.5 text-data-pass flex-shrink-0" />
             <span>
               <span className="font-semibold">Completed:</span> Finished modules
             </span>

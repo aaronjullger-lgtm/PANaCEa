@@ -107,10 +107,10 @@ function getStateColors(state: string): {
       };
     default:
       return {
-        bg: 'bg-slate-50 dark:bg-slate-800/50',
-        border: 'border-slate-200 dark:border-slate-700',
-        text: 'text-slate-600 dark:text-slate-400',
-        badge: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
+        bg: 'bg-data-neutral dark:bg-data-neutral/50',
+        border: 'border-data-neutral dark:border-data-neutral',
+        text: 'text-data-neutral dark:text-data-neutral',
+        badge: 'bg-data-neutral text-data-neutral dark:bg-data-neutral dark:text-data-neutral',
       };
   }
 }
@@ -135,7 +135,7 @@ function BrierScoreGauge({ score }: { score: number }) {
             cy="18"
             r="16"
             fill="none"
-            className="stroke-slate-200 dark:stroke-slate-700"
+            className="stroke-data-neutral dark:stroke-data-neutral"
             strokeWidth="3"
           />
           {/* Progress circle */}
@@ -163,7 +163,7 @@ function BrierScoreGauge({ score }: { score: number }) {
           </span>
         </div>
       </div>
-      <span className="mt-1 text-xs text-slate-500 dark:text-slate-400">{qualityLabel}</span>
+      <span className="mt-1 text-xs text-data-neutral dark:text-data-neutral">{qualityLabel}</span>
     </div>
   );
 }
@@ -176,7 +176,7 @@ function CalibrationCurve({ curve }: { curve: CalibrationSummary['calibrationCur
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
+      <div className="flex items-center gap-1 text-xs text-data-neutral dark:text-data-neutral mb-2">
         <BarChart3 className="w-3 h-3" />
         <span>Confidence vs Accuracy</span>
       </div>
@@ -196,7 +196,7 @@ function CalibrationCurve({ curve }: { curve: CalibrationSummary['calibrationCur
                   <>
                     {/* Expected (confidence) bar */}
                     <div
-                      className="w-2 bg-slate-300 dark:bg-slate-600 rounded-t transition-all"
+                      className="w-2 bg-data-neutral dark:bg-data-neutral rounded-t transition-all"
                       style={{ height: `${expectedHeight}%` }}
                       title={`Expected: ${Math.round(bin.avgConfidence * 100)}%`}
                     />
@@ -214,16 +214,16 @@ function CalibrationCurve({ curve }: { curve: CalibrationSummary['calibrationCur
                     />
                   </>
                 )}
-                {!hasData && <div className="w-4 h-2 bg-slate-200 dark:bg-slate-700 rounded" />}
+                {!hasData && <div className="w-4 h-2 bg-data-neutral dark:bg-data-neutral rounded" />}
               </div>
-              <span className="text-[10px] text-slate-400">{bin.label.split('-')[0]}</span>
+              <span className="text-[10px] text-data-neutral">{bin.label.split('-')[0]}</span>
             </div>
           );
         })}
       </div>
-      <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+      <div className="flex justify-between text-[10px] text-data-neutral mt-1">
         <span className="flex items-center gap-1">
-          <div className="w-2 h-2 bg-slate-300 dark:bg-slate-600 rounded" />
+          <div className="w-2 h-2 bg-data-neutral dark:bg-data-neutral rounded" />
           Expected
         </span>
         <span className="flex items-center gap-1">
@@ -245,16 +245,16 @@ function InsufficientDataState({
 }) {
   return (
     <div className="text-center py-4">
-      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 mb-3">
-        <Brain className="w-6 h-6 text-slate-400" />
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-data-neutral dark:bg-data-neutral mb-3">
+        <Brain className="w-6 h-6 text-data-neutral" />
       </div>
-      <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+      <h4 className="text-sm font-medium text-data-neutral dark:text-data-neutral mb-1">
         Building Your Profile
       </h4>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+      <p className="text-xs text-data-neutral dark:text-data-neutral mb-3">
         {progress.required - progress.current} more questions needed for calibration insights
       </p>
-      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+      <div className="w-full bg-data-neutral dark:bg-data-neutral rounded-full h-2">
         <motion.div
           className="bg-deep-plum-500 h-2 rounded-full"
           initial={{ width: 0 }}
@@ -262,7 +262,7 @@ function InsufficientDataState({
           transition={{ duration: 0.5, ease: 'easeOut' }}
         />
       </div>
-      <span className="text-xs text-slate-400 mt-1 block">
+      <span className="text-xs text-data-neutral mt-1 block">
         {progress.current}/{progress.required} observations
       </span>
     </div>
@@ -286,7 +286,7 @@ export function CalibrationPanel({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4"
+          className="rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral p-4"
         >
           <InsufficientDataState progress={progress} />
         </motion.div>
@@ -310,12 +310,12 @@ export function CalibrationPanel({
           <CalibrationIcon state={summary.state} />
           <div className="flex-1">
             <span className={`text-sm font-medium ${colors.text}`}>{label}</span>
-            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+            <p className="text-xs text-data-neutral dark:text-data-neutral line-clamp-1">
               {summary.recommendation}
             </p>
           </div>
           <div className="text-right">
-            <div className="text-xs text-slate-500">Brier</div>
+            <div className="text-xs text-data-neutral">Brier</div>
             <div className="text-sm font-mono font-medium">{summary.brierScore.toFixed(2)}</div>
           </div>
         </div>
@@ -329,7 +329,7 @@ export function CalibrationPanel({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden"
+      className="rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral overflow-hidden"
     >
       {/* Header */}
       <div className={`px-4 py-3 border-b ${colors.border} ${colors.bg}`}>
@@ -342,10 +342,10 @@ export function CalibrationPanel({
           {onDismiss && (
             <button
               onClick={onDismiss}
-              className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="p-1 rounded-lg hover:bg-data-neutral dark:hover:bg-data-neutral transition-colors"
               aria-label="Dismiss"
             >
-              <span className="text-slate-400">×</span>
+              <span className="text-data-neutral">×</span>
             </button>
           )}
         </div>
@@ -378,13 +378,13 @@ export function CalibrationPanel({
         {/* Metrics Grid */}
         <div className="grid grid-cols-3 gap-4">
           {/* Brier Score */}
-          <div className="flex flex-col items-center p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+          <div className="flex flex-col items-center p-3 rounded-lg bg-data-neutral dark:bg-data-neutral/50">
             <BrierScoreGauge score={summary.brierScore} />
-            <span className="text-xs text-slate-500 dark:text-slate-400 mt-2">Brier Score</span>
+            <span className="text-xs text-data-neutral dark:text-data-neutral mt-2">Brier Score</span>
           </div>
 
           {/* Overconfidence Bias */}
-          <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+          <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-data-neutral dark:bg-data-neutral/50">
             <div className="flex items-center gap-1">
               {summary.overconfidenceBias > 0 ? (
                 <TrendingUp className="w-4 h-4 text-muted-amber-500" />
@@ -398,7 +398,7 @@ export function CalibrationPanel({
                 {Math.round(summary.overconfidenceBias * 100)}%
               </span>
             </div>
-            <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <span className="text-xs text-data-neutral dark:text-data-neutral mt-1">
               {summary.overconfidenceBias > 0.05
                 ? 'Overconfident'
                 : summary.overconfidenceBias < -0.05
@@ -408,17 +408,17 @@ export function CalibrationPanel({
           </div>
 
           {/* Sample Size */}
-          <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+          <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-data-neutral dark:bg-data-neutral/50">
             <span className="text-2xl font-bold text-[var(--color-text-primary)]">
               {summary.sampleSize}
             </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">Questions</span>
+            <span className="text-xs text-data-neutral dark:text-data-neutral mt-1">Questions</span>
           </div>
         </div>
 
         {/* Calibration Curve */}
         {summary.calibrationCurve.length > 0 && (
-          <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+          <div className="p-3 rounded-lg bg-data-neutral dark:bg-data-neutral/50">
             <CalibrationCurve curve={summary.calibrationCurve} />
           </div>
         )}
@@ -432,8 +432,8 @@ export function CalibrationPanel({
         </div>
 
         {/* Explainer */}
-        <details className="text-xs text-slate-500 dark:text-slate-400">
-          <summary className="cursor-pointer hover:text-slate-700 dark:hover:text-slate-300">
+        <details className="text-xs text-data-neutral dark:text-data-neutral">
+          <summary className="cursor-pointer hover:text-data-neutral dark:hover:text-data-neutral">
             What does this mean?
           </summary>
           <div className="mt-2 space-y-1 pl-4">

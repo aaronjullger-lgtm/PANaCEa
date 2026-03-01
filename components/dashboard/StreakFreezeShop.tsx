@@ -30,8 +30,8 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-slate-700 rounded-lg">
-            <Shield className="w-5 h-5 text-slate-200" />
+          <div className="p-2 bg-data-neutral rounded-lg">
+            <Shield className="w-5 h-5 text-data-neutral" />
           </div>
           <div>
             <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
@@ -58,7 +58,7 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
                 key={i}
                 className={`w-5 h-5 ${
                   i < streakFreezes
-                    ? 'text-slate-600 fill-slate-600 dark:text-slate-400 dark:fill-slate-400'
+                    ? 'text-data-neutral fill-data-neutral dark:text-data-neutral dark:fill-data-neutral'
                     : 'text-[var(--color-text-muted)]'
                 }`}
               />
@@ -74,7 +74,7 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
       <div className="space-y-3">
         <div className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)] rounded-lg border-2 border-[var(--color-border)]">
           <div className="flex items-center gap-3">
-            <Shield className="w-8 h-8 text-slate-600 dark:text-slate-400" />
+            <Shield className="w-8 h-8 text-data-neutral dark:text-data-neutral" />
             <div>
               <p className="font-semibold text-[var(--color-text-primary)]">1 Streak Freeze</p>
               <p className="text-xs text-[var(--color-text-muted)]">Protects one missed day</p>
@@ -95,7 +95,7 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
             w-full py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2
             ${
               canPurchase
-                ? 'bg-slate-700 hover:bg-slate-800 text-white'
+                ? 'bg-data-neutral hover:bg-data-neutral text-white'
                 : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
             }
           `}
@@ -125,9 +125,9 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="p-3 bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-600 rounded-lg"
+            className="p-3 bg-data-pass dark:bg-data-pass/30 border border-data-pass dark:border-data-pass rounded-lg"
           >
-            <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
+            <div className="flex items-center gap-2 text-data-pass dark:text-data-pass">
               <CheckCircle className="w-5 h-5" />
               <span className="font-semibold">Streak Freeze Purchased!</span>
             </div>
@@ -136,11 +136,11 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
       </div>
 
       {/* Info */}
-      <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+      <div className="mt-4 p-4 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg">
+        <h4 className="text-sm font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-2">
           How it works:
         </h4>
-        <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+        <ul className="text-xs text-[var(--color-category-practice)] text-[var(--color-category-practice)] space-y-1">
           <li>• If you miss a day, a freeze is automatically used</li>
           <li>• Your streak stays intact!</li>
           <li>• Earn coins by answering questions correctly</li>

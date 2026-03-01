@@ -90,9 +90,9 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
                 <span
                   className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 ${
                     Number(content.pance_yield) >= 8
-                      ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                      ? 'bg-data-fail text-data-fail dark:bg-data-fail/30 dark:text-data-fail'
                       : Number(content.pance_yield) >= 5
-                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                        ? 'bg-data-provisional text-data-provisional dark:bg-data-provisional/30 dark:text-data-provisional'
                         : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]'
                   }`}
                 >
@@ -115,7 +115,7 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
         {content.classic_patient && (
           <div className="mt-4 p-4 bg-white/50 dark:bg-[var(--color-bg-tertiary)]/60 rounded-lg border border-[var(--color-border)]">
             <div className="flex items-center gap-2 mb-2">
-              <AlertCircle className="w-4 h-4 text-blue-500" />
+              <AlertCircle className="w-4 h-4 text-[var(--color-category-practice)]" />
               <div className="text-xs font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">
                 Classic Patient
               </div>
@@ -175,16 +175,16 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
           <CollapsibleSection title="Diagnostics">
             <ContentFieldRenderer value={handleFakeNull(content.diagnostics, null)} />
             {handleFakeNull(content.gold_standard_dx, null) && (
-              <div className="mt-3 p-3 bg-emerald-950/20 border border-emerald-800/30 rounded-lg">
-                <div className="text-xs font-semibold text-emerald-400 mb-1">Gold Standard</div>
+              <div className="mt-3 p-3 bg-data-pass/20 border border-data-pass/30 rounded-lg">
+                <div className="text-xs font-semibold text-data-pass mb-1">Gold Standard</div>
                 <div className="text-sm text-[var(--color-text-primary)]">
                   {handleFakeNull(content.gold_standard_dx, null)}
                 </div>
               </div>
             )}
             {handleFakeNull(content.best_initial_test, null) && (
-              <div className="mt-2 p-3 bg-blue-950/20 border border-blue-800/30 rounded-lg">
-                <div className="text-xs font-semibold text-blue-400 mb-1">Best Initial Test</div>
+              <div className="mt-2 p-3 bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg">
+                <div className="text-xs font-semibold text-[var(--color-category-practice)] mb-1">Best Initial Test</div>
                 <div className="text-sm text-[var(--color-text-primary)]">
                   {handleFakeNull(content.best_initial_test, null)}
                 </div>

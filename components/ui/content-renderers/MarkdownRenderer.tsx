@@ -49,7 +49,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
           ),
           // Style code blocks
           code: ({ children }) => (
-            <code className="px-1.5 py-0.5 bg-slate-700/50 rounded text-sm font-mono text-emerald-400">
+            <code className="px-1.5 py-0.5 bg-data-neutral/50 rounded text-sm font-mono text-data-pass">
               {children}
             </code>
           ),

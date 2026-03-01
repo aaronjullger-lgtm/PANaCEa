@@ -60,7 +60,7 @@ const ErrorState: React.FC<{ title: string; message: string; onRetry?: () => voi
   onRetry,
 }) => (
   <div className="flex flex-col items-center justify-center h-full text-center p-6">
-    <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
+    <AlertCircle className="w-12 h-12 text-data-fail mb-4" />
     <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{title}</h3>
     <p className="text-sm text-[var(--color-text-muted)] max-w-md mb-4">{message}</p>
     {onRetry && (
@@ -109,7 +109,7 @@ const DrugCard: React.FC<{
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           {drug.isFirstLine && (
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-semibold">
+            <span className="px-2 py-0.5 rounded-full bg-data-pass/20 text-data-pass text-xs font-semibold">
               1st
             </span>
           )}
@@ -122,7 +122,7 @@ const DrugCard: React.FC<{
         {drug.drugClass.slice(0, 2).map((cls, idx) => (
           <span
             key={idx}
-            className="px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-300 text-xs border border-blue-500/30"
+            className="px-2 py-0.5 rounded-md bg-[color-mix(in_srgb,var(--color-category-practice)_15%,transparent)] text-[var(--color-category-practice)] text-xs border border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]"
           >
             {cls}
           </span>
@@ -223,12 +223,12 @@ const DrugClassSidebar: React.FC<{
           </h3>
 
           {classesError ? (
-            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-center">
-              <AlertCircle className="w-6 h-6 text-red-400 mx-auto mb-2" />
-              <p className="text-xs text-red-300 mb-2">{classesError}</p>
+            <div className="p-4 rounded-lg bg-data-fail/10 border border-data-fail/30 text-center">
+              <AlertCircle className="w-6 h-6 text-data-fail mx-auto mb-2" />
+              <p className="text-xs text-data-fail mb-2">{classesError}</p>
               <button
                 onClick={onRetryClasses}
-                className="text-xs text-red-400 hover:text-red-300 underline"
+                className="text-xs text-data-fail hover:text-data-fail underline"
               >
                 Retry
               </button>
@@ -598,7 +598,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
             // Drug Class Selection Prompt
             <div className="flex flex-col items-center justify-center h-full text-center">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-6">
-                <Pill className="w-10 h-10 text-blue-400" />
+                <Pill className="w-10 h-10 text-[var(--color-category-practice)]" />
               </div>
               <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
                 Select a Drug Class

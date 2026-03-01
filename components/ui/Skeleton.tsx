@@ -15,7 +15,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({ className = '', shimmer = fa
   return (
     <div
       className={`
-        bg-slate-200 dark:bg-slate-700
+        bg-data-neutral dark:bg-data-neutral
         animate-pulse
         relative
         overflow-hidden

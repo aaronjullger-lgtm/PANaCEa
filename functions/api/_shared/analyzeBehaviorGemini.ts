@@ -3,6 +3,9 @@
  * from behavioral telemetry. Used by /api/srs/analyze-behavior and /api/srs/submit.
  */
 
+import { fetchWithTimeout } from './timeout';
+import { deriveContinuousRating } from '../../../lib/implicit-metrics';
+
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const BEHAVIOR_MODEL = 'gemini-2.0-flash-exp';
 
@@ -62,48 +65,83 @@ Respond with a JSON object only, no markdown:
 {"confidence": <number 0-1, 1=high confidence in recall>, "impliedRating": <1-4 FSRS rating>}`;
 
   const url = `${GEMINI_BASE}/models/${BEHAVIOR_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 256,
-        responseMimeType: 'application/json',
-      },
-    }),
-  });
-
-  if (!res.ok) {
-    return { confidence: 0.5, impliedRating: rating };
-  }
-
-  const data = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const text =
-    data.candidates?.[0]?.content?.parts
-      ?.map((p) => p.text)
-      .filter(Boolean)
-      .join('')
-      ?.trim() ?? '';
-
-  let confidence = 0.5;
-  let impliedRating = rating;
+  
   try {
-    const parsed = JSON.parse(text) as { confidence?: number; impliedRating?: number };
-    if (typeof parsed.confidence === 'number')
-      confidence = Math.max(0, Math.min(1, parsed.confidence));
-    if (
-      typeof parsed.impliedRating === 'number' &&
-      parsed.impliedRating >= 1 &&
-      parsed.impliedRating <= 4
-    )
-      impliedRating = Math.round(parsed.impliedRating);
-  } catch {
-    // keep defaults
-  }
+    const res = await fetchWithTimeout(
+      url,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 256,
+            responseMimeType: 'application/json',
+          },
+        }),
+      },
+      30000
+    );
 
-  return { confidence, impliedRating, rawText: text };
+    if (!res.ok) {
+      throw new Error(`Gemini API responded with status: ${res.status}`);
+    }
+
+    const data = (await res.json()) as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    const text =
+      data.candidates?.[0]?.content?.parts
+        ?.map((p) => p.text)
+        .filter(Boolean)
+        .join('')
+        ?.trim() ?? '';
+
+    let confidence = 0.5;
+    let impliedRating = rating;
+    try {
+      const parsed = JSON.parse(text) as { confidence?: number; impliedRating?: number };
+      if (typeof parsed.confidence === 'number')
+        confidence = Math.max(0, Math.min(1, parsed.confidence));
+      if (
+        typeof parsed.impliedRating === 'number' &&
+        parsed.impliedRating >= 1 &&
+        parsed.impliedRating <= 4
+      )
+        impliedRating = Math.round(parsed.impliedRating);
+    } catch {
+      // keep defaults
+    }
+
+    return { confidence, impliedRating, rawText: text };
+  } catch (error) {
+    console.warn('[AI_SAFETY] Gemini API failed or timed out. Attempting local fallback.', error);
+    
+    try {
+      const fallbackMetrics = deriveContinuousRating({
+        timeToFirstClick: tti ?? duration,
+        answerSwitches: changes,
+        totalDwellTime: duration,
+        isCorrect: wasCorrect ?? false,
+        parTimeMs: 30000,
+        commitmentGapMs: undefined,
+        cursorEntropy: Object.keys(hovers).length > 2 ? 1.5 : 1.0,
+        hoverOscillationCount: changes,
+      });
+      
+      return {
+        confidence: fallbackMetrics.confidence,
+        impliedRating: fallbackMetrics.discreteRating,
+        rawText: 'fallback',
+      };
+    } catch (fallbackError) {
+      console.error('[AI_SAFETY] Local fallback also failed. Using default confidence.', fallbackError);
+      return {
+        confidence: 0.5,
+        impliedRating: rating,
+        rawText: 'fallback_failed',
+      };
+    }
+  }
 }

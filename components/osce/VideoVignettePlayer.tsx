@@ -127,15 +127,15 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
 
     const getAnswerClass = (index: number): string => {
       if (selectedAnswer === null) {
-        return 'border-gray-300 dark:border-gray-600 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20';
+        return 'border-[var(--color-text-muted)] border-[var(--color-text-muted)] hover:border-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]';
       }
       if (index === correctAnswerIndex) {
-        return 'border-green-500 bg-green-50 dark:bg-green-900/20';
+        return 'border-data-pass bg-data-pass dark:bg-data-pass/20';
       }
       if (index === selectedAnswer) {
-        return 'border-red-500 bg-red-50 dark:bg-red-900/20';
+        return 'border-data-fail bg-data-fail dark:bg-data-fail/20';
       }
-      return 'border-gray-300 dark:border-gray-600 opacity-50';
+      return 'border-[var(--color-text-muted)] border-[var(--color-text-muted)] opacity-50';
     };
 
     return (
@@ -229,10 +229,10 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4"
+                className="bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] rounded-lg p-4"
               >
-                <p className="text-sm text-blue-800 dark:text-blue-200 flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                <p className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)] flex items-center gap-2">
+                  <Lightbulb className="w-4 h-4 text-data-provisional flex-shrink-0" />
                   <span>Watch the full video at least once before answering</span>
                 </p>
               </motion.div>
@@ -283,15 +283,15 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
               exit={{ opacity: 0, y: -20 }}
               className={`rounded-xl p-6 ${
                 selectedAnswer === correctAnswerIndex
-                  ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500'
-                  : 'bg-red-50 dark:bg-red-900/20 border-2 border-red-500'
+                  ? 'bg-data-pass dark:bg-data-pass/20 border-2 border-data-pass'
+                  : 'bg-data-fail dark:bg-data-fail/20 border-2 border-data-fail'
               }`}
             >
               <h4
                 className={`text-xl font-bold mb-3 flex items-center gap-2 ${
                   selectedAnswer === correctAnswerIndex
-                    ? 'text-green-800 dark:text-green-200'
-                    : 'text-red-800 dark:text-red-200'
+                    ? 'text-data-pass dark:text-data-pass'
+                    : 'text-data-fail dark:text-data-fail'
                 }`}
               >
                 {selectedAnswer === correctAnswerIndex ? (

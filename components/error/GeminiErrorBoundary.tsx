@@ -195,11 +195,11 @@ function ErrorIcon({ type }: { type: GeminiErrorInfo['type'] }) {
     case 'network':
       return <Wifi className="w-12 h-12 text-orange-500" />;
     case 'server_error':
-      return <Server className="w-12 h-12 text-red-500" />;
+      return <Server className="w-12 h-12 text-data-fail" />;
     case 'timeout':
       return <Clock className="w-12 h-12 text-orange-500" />;
     default:
-      return <AlertTriangle className="w-12 h-12 text-red-500" />;
+      return <AlertTriangle className="w-12 h-12 text-data-fail" />;
   }
 }
 
@@ -323,7 +323,7 @@ export class GeminiErrorBoundary extends Component<
           {errorInfo?.type === 'network' &&
             typeof window !== 'undefined' &&
             (import.meta.env?.DEV || window.location.hostname === 'localhost') && (
-              <span className="mt-2 block text-xs text-amber-600 dark:text-amber-400">
+              <span className="mt-2 block text-xs text-data-provisional dark:text-data-provisional">
                 Dev tip: Ensure the API backend is running (npm run dev:all).
               </span>
             )}

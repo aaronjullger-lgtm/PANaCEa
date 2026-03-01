@@ -50,11 +50,11 @@ export function ContextBanner({
 
     if (vital === 'o2') {
       if (value < 88) return 'text-rose-500 font-semibold';
-      if (value < 92) return 'text-amber-500';
+      if (value < 92) return 'text-data-provisional';
     }
     if (vital === 'hr') {
       if (value < 50 || value > 120) return 'text-rose-500 font-semibold';
-      if (value < 60 || value > 100) return 'text-amber-500';
+      if (value < 60 || value > 100) return 'text-data-provisional';
     }
 
     return '';

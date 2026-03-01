@@ -121,17 +121,17 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
     };
 
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="bg-white dark:bg-data-neutral rounded-xl border border-data-neutral dark:border-data-neutral overflow-hidden">
         {/* Header */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+        <div className="p-4 border-b border-data-neutral dark:border-data-neutral flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Stethoscope className="w-5 h-5 text-blue-500" />
+            <Stethoscope className="w-5 h-5 text-[var(--color-category-practice)]" />
             <h3 className="font-semibold text-[var(--color-text-primary)]">Physical Examination</h3>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setBodyView((v) => (v === 'anterior' ? 'posterior' : 'anterior'))}
-              className="flex items-center gap-1 px-2 py-1 text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition"
+              className="flex items-center gap-1 px-2 py-1 text-sm bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral rounded-lg hover:bg-data-neutral dark:hover:bg-data-neutral transition"
             >
               <RotateCcw className="w-4 h-4" />
               {bodyView === 'anterior' ? 'Posterior' : 'Anterior'}
@@ -139,7 +139,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
             {onClose && (
               <button
                 onClick={onClose}
-                className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="p-1 text-data-neutral hover:text-data-neutral dark:hover:text-data-neutral"
               >
                 ×
               </button>
@@ -149,7 +149,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
 
         <div className="flex">
           {/* Body Map */}
-          <div className="p-4 border-r border-slate-200 dark:border-slate-700">
+          <div className="p-4 border-r border-data-neutral dark:border-data-neutral">
             <BodyMap
               onRegionClick={handleRegionClick}
               highlightedRegions={suggestedRegions}
@@ -162,20 +162,20 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
             {/* Legend */}
             <div className="mt-4 space-y-1 text-xs">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-slate-300" />
-                <span className="text-slate-500">Not examined</span>
+                <div className="w-3 h-3 rounded bg-data-neutral" />
+                <span className="text-data-neutral">Not examined</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-amber-400" />
-                <span className="text-slate-500">Suggested</span>
+                <div className="w-3 h-3 rounded bg-data-provisional" />
+                <span className="text-data-neutral">Suggested</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-emerald-500" />
-                <span className="text-slate-500">Normal</span>
+                <div className="w-3 h-3 rounded bg-data-pass" />
+                <span className="text-data-neutral">Normal</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded bg-orange-500" />
-                <span className="text-slate-500">Abnormal</span>
+                <span className="text-data-neutral">Abnormal</span>
               </div>
             </div>
           </div>
@@ -185,12 +185,12 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
             {selectedRegion ? (
               <>
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-slate-700 dark:text-slate-200 capitalize">
+                  <h4 className="font-medium text-data-neutral dark:text-data-neutral capitalize">
                     {selectedRegion.replace(/_/g, ' ')}
                   </h4>
                   <button
                     onClick={() => setSelectedRegion(null)}
-                    className="text-xs text-slate-400 hover:text-slate-600"
+                    className="text-xs text-data-neutral hover:text-data-neutral"
                   >
                     Clear
                   </button>
@@ -210,8 +210,8 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                           isCompleted
                             ? finding?.isAbnormal
                               ? 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800'
-                              : 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
-                            : 'bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600'
+                              : 'bg-data-pass dark:bg-data-pass/20 border border-data-pass dark:border-data-pass'
+                            : 'bg-data-neutral dark:bg-data-neutral/50 hover:bg-data-neutral dark:hover:bg-data-neutral border border-data-neutral dark:border-data-neutral'
                         }`}
                       >
                         <span
@@ -219,8 +219,8 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                             isCompleted
                               ? finding?.isAbnormal
                                 ? 'text-orange-500'
-                                : 'text-emerald-500'
-                              : 'text-slate-400'
+                                : 'text-data-pass'
+                              : 'text-data-neutral'
                           }`}
                         >
                           {getCategoryIcon(maneuver.category)}
@@ -231,8 +231,8 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                               isCompleted
                                 ? finding?.isAbnormal
                                   ? 'text-orange-700 dark:text-orange-300'
-                                  : 'text-emerald-700 dark:text-emerald-300'
-                                : 'text-slate-700 dark:text-slate-200'
+                                  : 'text-data-pass dark:text-data-pass'
+                                : 'text-data-neutral dark:text-data-neutral'
                             }`}
                           >
                             {maneuver.name}
@@ -242,7 +242,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                               className={`text-xs mt-0.5 truncate ${
                                 finding.isAbnormal
                                   ? 'text-orange-600 dark:text-orange-400'
-                                  : 'text-emerald-600 dark:text-emerald-400'
+                                  : 'text-data-pass dark:text-data-pass'
                               }`}
                             >
                               {finding.finding}
@@ -252,11 +252,11 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                         {isCompleted ? (
                           <Check
                             className={`w-4 h-4 ${
-                              finding?.isAbnormal ? 'text-orange-500' : 'text-emerald-500'
+                              finding?.isAbnormal ? 'text-orange-500' : 'text-data-pass'
                             }`}
                           />
                         ) : (
-                          <ChevronRight className="w-4 h-4 text-slate-400" />
+                          <ChevronRight className="w-4 h-4 text-data-neutral" />
                         )}
                       </button>
                     );
@@ -265,8 +265,8 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-[300px] text-center">
-                <Stethoscope className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-3" />
-                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                <Stethoscope className="w-12 h-12 text-data-neutral dark:text-data-neutral mb-3" />
+                <p className="text-data-neutral dark:text-data-neutral text-sm">
                   Select a body region to examine
                 </p>
               </div>
@@ -282,7 +282,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               className={`absolute bottom-4 left-4 right-4 p-3 rounded-lg shadow-lg ${
-                recentFinding.isAbnormal ? 'bg-orange-500 text-white' : 'bg-emerald-500 text-white'
+                recentFinding.isAbnormal ? 'bg-orange-500 text-white' : 'bg-data-pass text-white'
               }`}
             >
               <div className="flex items-start gap-2">
@@ -303,8 +303,8 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
         {/* Loading Overlay */}
         {isPerformingExam && (
           <div className="absolute inset-0 bg-[var(--color-overlay)] flex items-center justify-center">
-            <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-xl">
-              <div className="animate-pulse flex items-center gap-2 text-slate-600 dark:text-slate-300">
+            <div className="bg-white dark:bg-data-neutral rounded-lg p-4 shadow-xl">
+              <div className="animate-pulse flex items-center gap-2 text-data-neutral dark:text-data-neutral">
                 <Stethoscope className="w-5 h-5 animate-bounce" />
                 <span>Performing exam...</span>
               </div>
@@ -313,13 +313,13 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
         )}
 
         {/* Exam Summary Footer */}
-        <div className="p-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+        <div className="p-3 border-t border-data-neutral dark:border-data-neutral bg-data-neutral dark:bg-data-neutral/50">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-500 dark:text-slate-400">
+            <span className="text-data-neutral dark:text-data-neutral">
               {completedExams.length} exams performed
             </span>
             <div className="flex items-center gap-3">
-              <span className="text-emerald-500">
+              <span className="text-data-pass">
                 {completedExams.filter((e) => !e.isAbnormal).length} normal
               </span>
               <span className="text-orange-500">

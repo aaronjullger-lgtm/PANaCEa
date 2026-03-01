@@ -4,7 +4,7 @@
  * Implements skeleton loaders that exactly match the dimensions of loaded content
  * to achieve Cumulative Layout Shift (CLS) of 0.0 during data fetching.
  *
- * All skeletons use consistent styling: bg-slate-200 dark:bg-slate-700 animate-pulse rounded-xl
+ * All skeletons use consistent styling: bg-data-neutral dark:bg-data-neutral animate-pulse rounded-xl
  */
 
 import React from 'react';
@@ -58,14 +58,14 @@ export const QuestionCardSkeleton: React.FC<SkeletonProps> = ({ className = '' }
     </div>
 
     {/* Divider */}
-    <div className="h-px bg-slate-700 my-4" />
+    <div className="h-px bg-data-neutral my-4" />
 
     {/* Answer choices */}
     <div className="space-y-3">
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="flex items-center gap-3 p-4 border border-slate-700 rounded-lg bg-slate-800/30"
+          className="flex items-center gap-3 p-4 border border-data-neutral rounded-lg bg-data-neutral/30"
         >
           <SkeletonBase className="w-8 h-8 rounded-full flex-shrink-0" />
           <SkeletonBase className="h-4 flex-1" style={{ width: `${60 + (i % 3) * 10}%` }} />
@@ -90,7 +90,7 @@ export const ConditionCardSkeleton: React.FC<SkeletonProps> = ({ className = '' 
     <SkeletonBase className="h-3 w-1/3 mb-3" />
 
     {/* Divider */}
-    <div className="h-px bg-slate-700 my-3" />
+    <div className="h-px bg-data-neutral my-3" />
 
     {/* Classic patient snippet */}
     <div className="flex items-start gap-2 mb-3">
@@ -138,7 +138,7 @@ export const DetailPanelSkeleton: React.FC<SkeletonProps> = ({ className = '' })
         </div>
 
         {/* Section content */}
-        <div className="p-4 border border-slate-700 rounded-xl bg-slate-800/30">
+        <div className="p-4 border border-data-neutral rounded-xl bg-data-neutral/30">
           <SkeletonText lines={4} widths={['100%', '90%', '95%', '70%']} />
         </div>
       </div>
@@ -215,7 +215,7 @@ export const AnalyticsSkeleton: React.FC<SkeletonProps> = ({ className = '' }) =
     {/* Stats row */}
     <div className="grid grid-cols-4 gap-4 mb-6">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="p-4 border border-slate-700 rounded-xl bg-slate-900/50">
+        <div key={i} className="p-4 border border-data-neutral rounded-xl bg-data-neutral/50">
           <SkeletonBase className="h-4 w-20 mb-2" />
           <SkeletonBase className="h-8 w-16" />
         </div>
@@ -223,18 +223,18 @@ export const AnalyticsSkeleton: React.FC<SkeletonProps> = ({ className = '' }) =
     </div>
 
     {/* Chart area */}
-    <div className="p-4 border border-slate-700 rounded-xl bg-slate-900/50 mb-6">
+    <div className="p-4 border border-data-neutral rounded-xl bg-data-neutral/50 mb-6">
       <SkeletonBase className="h-4 w-32 mb-4" />
       <SkeletonBase className="h-64 w-full" />
     </div>
 
     {/* Performance grid */}
     <div className="grid grid-cols-2 gap-4">
-      <div className="p-4 border border-slate-700 rounded-xl bg-slate-900/50">
+      <div className="p-4 border border-data-neutral rounded-xl bg-data-neutral/50">
         <SkeletonBase className="h-4 w-32 mb-4" />
         <SkeletonText lines={6} />
       </div>
-      <div className="p-4 border border-slate-700 rounded-xl bg-slate-900/50">
+      <div className="p-4 border border-data-neutral rounded-xl bg-data-neutral/50">
         <SkeletonBase className="h-4 w-32 mb-4" />
         <SkeletonText lines={6} />
       </div>
@@ -252,7 +252,7 @@ export const SessionSetupSkeleton: React.FC<SkeletonProps> = ({ className = '' }
     {/* Options grid */}
     <div className="grid grid-cols-3 gap-4 mb-6">
       {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="p-4 border border-slate-700 rounded-xl bg-slate-900/50">
+        <div key={i} className="p-4 border border-data-neutral rounded-xl bg-data-neutral/50">
           <SkeletonBase className="w-8 h-8 rounded-lg mb-2" />
           <SkeletonBase className="h-4 w-20 mb-1" />
           <SkeletonBase className="h-3 w-full" />

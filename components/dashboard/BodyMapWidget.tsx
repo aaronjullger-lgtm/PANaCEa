@@ -181,7 +181,7 @@ export function BodyMapWidget({
         {/* Hover tooltip (accessibility + mobile) */}
         {hoveredSystem && systemStats[hoveredSystem] && (
           <div
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1.5 rounded-lg bg-slate-800 text-slate-100 text-xs shadow-lg z-10 max-w-[200px] text-center"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1.5 rounded-lg bg-data-neutral text-data-neutral text-xs shadow-lg z-10 max-w-[200px] text-center"
             role="tooltip"
           >
             {(() => {
@@ -191,7 +191,7 @@ export function BodyMapWidget({
                 <>
                   <strong>{hoveredSystem}</strong>: {s.accuracy.toFixed(0)}% ({s.correct}/{s.total})
                   {toMaster > 0 ? (
-                    <span className="block text-slate-300 mt-0.5">~{toMaster} more to master</span>
+                    <span className="block text-data-neutral mt-0.5">~{toMaster} more to master</span>
                   ) : null}
                 </>
               );
@@ -201,10 +201,10 @@ export function BodyMapWidget({
 
         <div className="flex flex-wrap justify-center gap-3 mt-2 text-xs text-[var(--color-text-muted)]">
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" /> Mastery
+            <span className="w-2 h-2 rounded-full bg-data-pass" /> Mastery
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-amber-400" /> Passing
+            <span className="w-2 h-2 rounded-full bg-data-provisional" /> Passing
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-rose-500" /> Weak

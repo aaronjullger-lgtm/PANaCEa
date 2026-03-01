@@ -54,19 +54,19 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-emerald-500/15 rounded-lg">
-            <Stethoscope className="w-5 h-5 text-emerald-500" />
+          <div className="p-2 bg-data-pass/15 rounded-lg">
+            <Stethoscope className="w-5 h-5 text-data-pass" />
           </div>
           <h3 className="font-bold text-[var(--color-text-primary)]">EOR Countdown</h3>
         </div>
         <div className="text-right">
-          <div className="text-3xl font-bold text-emerald-500 leading-none">{daysRemaining}</div>
+          <div className="text-3xl font-bold text-data-pass leading-none">{daysRemaining}</div>
           <div className="text-xs text-[var(--color-text-muted)] mt-1">{daysLabel}</div>
         </div>
       </div>
 
       <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-        <Calendar className="w-4 h-4 text-emerald-500/80" />
+        <Calendar className="w-4 h-4 text-data-pass/80" />
         <span className="font-medium text-[var(--color-text-secondary)]">{rotation}</span>
       </div>
 
@@ -84,7 +84,7 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mt-4 p-3 bg-emerald-500/10 rounded-lg"
+          className="mt-4 p-3 bg-data-pass/10 rounded-lg"
         >
           <p className="text-xs text-[var(--color-text-secondary)]">
             <span className="font-semibold">Final stretch:</span> Focus on rotation-relevant content

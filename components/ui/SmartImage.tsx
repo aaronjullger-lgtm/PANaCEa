@@ -155,7 +155,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
 
             {/* Loading spinner */}
             {showLoader && loadState === 'loading' && (
-              <Loader2 className="w-8 h-8 text-slate-400 dark:text-slate-500 animate-spin z-10" />
+              <Loader2 className="w-8 h-8 text-data-neutral dark:text-data-neutral animate-spin z-10" />
             )}
           </motion.div>
         )}
@@ -182,7 +182,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
             key="error"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-slate-500"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-data-neutral dark:text-data-neutral"
           >
             {fallback || (
               <>
@@ -214,7 +214,7 @@ export const ZoomableImage: React.FC<SmartImageProps & { enableZoom?: boolean }>
     <>
       <button
         onClick={() => setIsZoomed(true)}
-        className="w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg overflow-hidden"
+        className="w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-[var(--color-category-practice)] rounded-lg overflow-hidden"
         aria-label={`View ${props.alt} in full screen`}
       >
         <SmartImage {...props} />

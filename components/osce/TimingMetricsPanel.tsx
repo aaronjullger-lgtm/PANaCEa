@@ -83,7 +83,7 @@ export function TimingMetricsPanel({
                   {metric.name}
                 </span>
                 {metric.status === 'completed' ? (
-                  <span className="text-xs font-semibold text-emerald-500">
+                  <span className="text-xs font-semibold text-data-pass">
                     {metric.duration}s ✓
                   </span>
                 ) : (

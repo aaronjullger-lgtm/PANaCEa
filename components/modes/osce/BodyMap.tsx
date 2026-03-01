@@ -501,7 +501,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 5 }}
-            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full mb-2 px-3 py-1.5 bg-slate-800 text-white text-sm rounded-lg shadow-lg whitespace-nowrap"
+            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full mb-2 px-3 py-1.5 bg-data-neutral text-white text-sm rounded-lg shadow-lg whitespace-nowrap"
           >
             {REGION_PATHS[hoveredRegion]?.label || hoveredRegion}
             {findingsMap[hoveredRegion] && <span className="ml-2 text-orange-300">• Finding</span>}

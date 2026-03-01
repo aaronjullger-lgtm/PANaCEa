@@ -298,7 +298,7 @@ export const SkeletonTable: React.FC<{ rows?: number; columns?: number; classNam
     aria-label={`Loading table with ${rows} rows`}
   >
     {/* Header */}
-    <div className="flex gap-4 p-4 border-b border-[var(--color-border)] bg-slate-50 dark:bg-slate-800">
+    <div className="flex gap-4 p-4 border-b border-[var(--color-border)] bg-data-neutral dark:bg-data-neutral">
       {Array.from({ length: columns }).map((_, i) => (
         <SkeletonLoader key={i} variant="text" width={`${100 / columns - 2}%`} />
       ))}

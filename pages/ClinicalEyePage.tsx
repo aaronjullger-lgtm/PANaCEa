@@ -185,7 +185,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
               )}
             </button>
             {error && (
-              <p className="mt-3 text-sm text-red-500" role="alert">
+              <p className="mt-3 text-sm text-data-fail" role="alert">
                 {error}
               </p>
             )}

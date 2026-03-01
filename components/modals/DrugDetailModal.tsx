@@ -142,7 +142,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({ drug, onClose, onDril
             {/* Adverse Drug Events */}
             {drug.ADEs && drug.ADEs.length > 0 && (
               <section className="card-glass p-4 rounded-xl">
-                <h3 className="text-sm font-semibold text-red-500 uppercase tracking-wide mb-3">
+                <h3 className="text-sm font-semibold text-data-fail uppercase tracking-wide mb-3">
                   Adverse Drug Events (ADEs)
                 </h3>
                 <ul className="list-disc list-inside space-y-2">
@@ -199,7 +199,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({ drug, onClose, onDril
             {/* Antidote */}
             {drug.antidote && drug.antidote !== 'N/A' && (
               <section className="card-glass p-4 rounded-xl">
-                <h3 className="text-sm font-semibold text-green-600 uppercase tracking-wide mb-3">
+                <h3 className="text-sm font-semibold text-data-pass uppercase tracking-wide mb-3">
                   Antidote
                 </h3>
                 <p className="text-[var(--color-text-primary)] text-sm leading-loose">

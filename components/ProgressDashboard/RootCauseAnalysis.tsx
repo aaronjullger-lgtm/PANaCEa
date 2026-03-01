@@ -33,13 +33,13 @@ const ERROR_TAG_CONFIG: Record<
   misread_question: {
     label: 'Misread Question',
     color: '#2563eb', // blue-600
-    bgColor: 'bg-blue-500',
+    bgColor: 'bg-[var(--color-category-practice)]',
     icon: <Eye className="w-4 h-4" />,
   },
   guessing: {
     label: 'Guessing',
     color: '#d97706', // amber-600
-    bgColor: 'bg-amber-500',
+    bgColor: 'bg-data-provisional',
     icon: <HelpCircle className="w-4 h-4" />,
   },
 };
@@ -66,9 +66,9 @@ const DonutChart: React.FC<{
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-slate-200 dark:text-slate-700"
+          className="text-data-neutral dark:text-data-neutral"
         />
-        <text x="50" y="55" textAnchor="middle" className="fill-slate-400 text-xs" fontSize="12">
+        <text x="50" y="55" textAnchor="middle" className="fill-data-neutral text-xs" fontSize="12">
           No data
         </text>
       </svg>
@@ -155,7 +155,7 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ errorCounts, tota
 
       {totalIncorrect === 0 ? (
         <div className="text-center py-6">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-data-neutral dark:text-data-neutral">
             No incorrect answers to analyze yet.
           </p>
         </div>
@@ -172,26 +172,26 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ errorCounts, tota
               <div key={item.tag} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <span className={`w-3 h-3 rounded-full ${ERROR_TAG_CONFIG[item.tag].bgColor}`} />
-                  <span className="text-slate-700 dark:text-slate-300 text-xs">
+                  <span className="text-data-neutral dark:text-data-neutral text-xs">
                     {ERROR_TAG_CONFIG[item.tag].label}
                   </span>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-light text-slate-900 dark:text-slate-100">
+                  <span className="text-lg font-light text-data-neutral dark:text-data-neutral">
                     {item.count}
                   </span>
-                  <span className="text-xs text-slate-500">({item.percentage}%)</span>
+                  <span className="text-xs text-data-neutral">({item.percentage}%)</span>
                 </div>
               </div>
             ))}
 
             {untaggedCount > 0 && (
-              <div className="flex items-center justify-between text-sm pt-1 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between text-sm pt-1 border-t border-data-neutral dark:border-data-neutral">
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600" />
-                  <span className="text-slate-500 dark:text-slate-400 text-xs">Untagged</span>
+                  <span className="w-3 h-3 rounded-full bg-data-neutral dark:bg-data-neutral" />
+                  <span className="text-data-neutral dark:text-data-neutral text-xs">Untagged</span>
                 </div>
-                <span className="text-sm text-slate-400">{untaggedCount}</span>
+                <span className="text-sm text-data-neutral">{untaggedCount}</span>
               </div>
             )}
           </div>
@@ -200,7 +200,7 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ errorCounts, tota
 
       {/* Insight */}
       {totalIncorrect > 0 && (
-        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-start gap-1">
+        <p className="text-[10px] text-data-neutral dark:text-data-neutral mt-4 pt-3 border-t border-data-neutral dark:border-data-neutral flex items-start gap-1">
           <Award className="w-3 h-3 flex-shrink-0 mt-0.5" />
           <span>{getInsight()}</span>
         </p>

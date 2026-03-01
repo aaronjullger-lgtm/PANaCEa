@@ -29,13 +29,13 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
 }) => {
   const getRapportColor = (score: number) => {
     if (score >= 80)
-      return { bg: 'bg-emerald-500', text: 'text-emerald-500', ring: 'ring-emerald-500/30' };
-    if (score >= 65) return { bg: 'bg-blue-500', text: 'text-blue-500', ring: 'ring-blue-500/30' };
+      return { bg: 'bg-data-pass', text: 'text-data-pass', ring: 'ring-data-pass/30' };
+    if (score >= 65) return { bg: 'bg-[var(--color-category-practice)]', text: 'text-[var(--color-category-practice)]', ring: 'ring-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]' };
     if (score >= 50)
-      return { bg: 'bg-amber-500', text: 'text-amber-500', ring: 'ring-amber-500/30' };
+      return { bg: 'bg-data-provisional', text: 'text-data-provisional', ring: 'ring-data-provisional/30' };
     if (score >= 30)
       return { bg: 'bg-orange-500', text: 'text-orange-500', ring: 'ring-orange-500/30' };
-    return { bg: 'bg-red-500', text: 'text-red-500', ring: 'ring-red-500/30' };
+    return { bg: 'bg-data-fail', text: 'text-data-fail', ring: 'ring-data-fail/30' };
   };
 
   const getRapportLabel = (score: number) => {
@@ -69,7 +69,7 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
     return (
       <div className={`flex items-center gap-2 ${className}`}>
         <div className={`w-2 h-2 rounded-full ${colors.bg} animate-pulse`} />
-        <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+        <div className="flex-1 h-1.5 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
           <motion.div
             className={`h-full ${colors.bg}`}
             initial={{ width: 0 }}
@@ -93,12 +93,12 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Heart className={`w-5 h-5 ${colors.text}`} />
-          <h3 className="font-semibold text-slate-700 dark:text-slate-200">Patient Rapport</h3>
+          <h3 className="font-semibold text-data-neutral dark:text-data-neutral">Patient Rapport</h3>
         </div>
         {emotionalState && (
-          <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-data-neutral dark:bg-data-neutral rounded-lg">
             <span className="text-lg">{getEmotionIcon(emotionalState.current)}</span>
-            <span className="text-xs text-slate-600 dark:text-slate-300 capitalize">
+            <span className="text-xs text-data-neutral dark:text-data-neutral capitalize">
               {emotionalState.current}
             </span>
           </div>
@@ -114,7 +114,7 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
               fill="none"
               stroke="currentColor"
               strokeWidth="3"
-              className="text-slate-200 dark:text-slate-700"
+              className="text-data-neutral dark:text-data-neutral"
             />
             <motion.path
               d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -135,7 +135,7 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
           <div className={`text-lg font-semibold ${colors.text}`}>
             {getRapportLabel(meter.score)}
           </div>
-          <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-3 mt-1 text-xs text-data-neutral dark:text-data-neutral">
             <span className="flex items-center gap-1">
               <Heart className="w-3 h-3" /> {meter.empathyPoints} empathy
             </span>
@@ -152,7 +152,7 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
       {/* Milestones */}
       {showMilestones && (
         <div className="space-y-2">
-          <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+          <div className="text-xs font-medium text-data-neutral dark:text-data-neutral mb-2">
             Milestones
           </div>
           {meter.milestones.map((milestone, i) => (
@@ -160,27 +160,27 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
               key={i}
               className={`flex items-center gap-2 p-2 rounded-lg transition-all ${
                 milestone.achieved
-                  ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
+                  ? 'bg-data-pass dark:bg-data-pass/20 border border-data-pass dark:border-data-pass'
                   : meter.score >= milestone.threshold - 10
-                    ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
-                    : 'bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700'
+                    ? 'bg-data-provisional dark:bg-data-provisional/20 border border-data-provisional dark:border-data-provisional'
+                    : 'bg-data-neutral dark:bg-data-neutral/50 border border-data-neutral dark:border-data-neutral'
               }`}
             >
               {milestone.achieved ? (
-                <Unlock className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <Unlock className="w-4 h-4 text-data-pass flex-shrink-0" />
               ) : meter.score >= milestone.threshold - 10 ? (
-                <Sparkles className="w-4 h-4 text-amber-500 flex-shrink-0 animate-pulse" />
+                <Sparkles className="w-4 h-4 text-data-provisional flex-shrink-0 animate-pulse" />
               ) : (
-                <Lock className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <Lock className="w-4 h-4 text-data-neutral flex-shrink-0" />
               )}
               <div className="flex-1 min-w-0">
                 <div
                   className={`text-xs font-medium truncate ${
                     milestone.achieved
-                      ? 'text-emerald-700 dark:text-emerald-300'
+                      ? 'text-data-pass dark:text-data-pass'
                       : meter.score >= milestone.threshold - 10
-                        ? 'text-amber-700 dark:text-amber-300'
-                        : 'text-slate-500 dark:text-slate-400'
+                        ? 'text-data-provisional dark:text-data-provisional'
+                        : 'text-data-neutral dark:text-data-neutral'
                   }`}
                 >
                   {milestone.unlocks}
@@ -189,10 +189,10 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
               <div
                 className={`text-xs font-mono ${
                   milestone.achieved
-                    ? 'text-emerald-500'
+                    ? 'text-data-pass'
                     : meter.score >= milestone.threshold - 10
-                      ? 'text-amber-500'
-                      : 'text-slate-400'
+                      ? 'text-data-provisional'
+                      : 'text-data-neutral'
                 }`}
               >
                 {milestone.threshold}+
@@ -204,10 +204,10 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
 
       {/* Personality Info (optional) */}
       {personality && (
-        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="mt-4 pt-4 border-t border-data-neutral dark:border-data-neutral">
           <div className="flex items-center gap-2 mb-2">
-            <User className="w-4 h-4 text-slate-400" />
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            <User className="w-4 h-4 text-data-neutral" />
+            <span className="text-xs font-medium text-data-neutral dark:text-data-neutral">
               Patient Personality
             </span>
           </div>
@@ -215,14 +215,14 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
             <span className="px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
               {personality.communicationStyle}
             </span>
-            <span className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+            <span className="px-2 py-0.5 text-xs bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)] rounded-full">
               {personality.healthLiteracy} literacy
             </span>
-            <span className="px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full">
+            <span className="px-2 py-0.5 text-xs bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional rounded-full">
               {personality.painBehavior} pain
             </span>
             {personality.hiddenAgenda !== 'none' && (
-              <span className="px-2 py-0.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full">
+              <span className="px-2 py-0.5 text-xs bg-data-fail dark:bg-data-fail/30 text-data-fail dark:text-data-fail rounded-full">
                 hidden agenda
               </span>
             )}
@@ -247,7 +247,7 @@ export const RapportChangeNotification: React.FC<{
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20, scale: 0.9 }}
         className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg ${
-          isPositive ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
+          isPositive ? 'bg-data-pass text-white' : 'bg-data-fail text-white'
         }`}
       >
         <div className="flex items-center gap-2">

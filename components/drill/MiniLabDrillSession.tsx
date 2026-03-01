@@ -94,26 +94,26 @@ const CATEGORY_CARDS: Array<{
 const LabValueRow: React.FC<{ value: LabValue }> = ({ value }) => {
   const getValueColor = () => {
     if (value.isCritical) {
-      return 'text-red-500 font-bold';
+      return 'text-data-fail font-bold';
     }
     if (value.isAbnormal) {
       return value.abnormalDirection === 'high'
         ? 'text-orange-500 font-semibold'
-        : 'text-blue-500 font-semibold';
+        : 'text-[var(--color-category-practice)] font-semibold';
     }
-    return 'text-slate-300';
+    return 'text-data-neutral';
   };
 
   const getValueBg = () => {
     if (value.isCritical) {
-      return 'bg-red-900/30 border-red-700';
+      return 'bg-data-fail/30 border-data-fail';
     }
     if (value.isAbnormal) {
       return value.abnormalDirection === 'high'
         ? 'bg-orange-900/20 border-orange-700/50'
-        : 'bg-blue-900/20 border-blue-700/50';
+        : 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)]';
     }
-    return 'bg-slate-800/50 border-slate-700/50';
+    return 'bg-data-neutral/50 border-data-neutral/50';
   };
 
   return (
@@ -121,14 +121,14 @@ const LabValueRow: React.FC<{ value: LabValue }> = ({ value }) => {
       className={`flex items-center justify-between px-4 py-2.5 border-b ${getValueBg()} last:border-b-0`}
     >
       <div className="flex items-center gap-2">
-        {value.isCritical && <AlertTriangle className="w-4 h-4 text-red-500" />}
-        <span className="text-slate-300 font-medium">{value.name}</span>
+        {value.isCritical && <AlertTriangle className="w-4 h-4 text-data-fail" />}
+        <span className="text-data-neutral font-medium">{value.name}</span>
       </div>
       <div className="flex items-center gap-4">
         <span className={`${getValueColor()} tabular-nums`}>
           {value.value} {value.unit}
         </span>
-        <span className="text-slate-500 text-sm tabular-nums min-w-[80px] text-right">
+        <span className="text-data-neutral text-sm tabular-nums min-w-[80px] text-right">
           ({value.referenceRange})
         </span>
       </div>
@@ -141,8 +141,8 @@ const LabValueRow: React.FC<{ value: LabValue }> = ({ value }) => {
  */
 const LabPanelCard: React.FC<{ panel: LabPanel }> = ({ panel }) => {
   return (
-    <div className="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
-      <div className="px-4 py-3 bg-slate-800 border-b border-slate-700">
+    <div className="bg-data-neutral rounded-xl border border-data-neutral overflow-hidden">
+      <div className="px-4 py-3 bg-data-neutral border-b border-data-neutral">
         <h3 className="text-white font-semibold">{panel.name}</h3>
       </div>
       <div>
@@ -255,7 +255,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
       return (
         <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-6">
           <div className="text-center max-w-md">
-            <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <AlertTriangle className="w-16 h-16 text-data-fail mx-auto mb-4" />
             <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
               Database Error
             </h2>
@@ -491,7 +491,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                               handleOrderTest(testName);
                             }
                           }}
-                          className="px-4 py-2 text-left bg-[var(--color-bg-secondary)] hover:bg-[var(--color-border)] focus:bg-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg text-[var(--color-text-primary)] transition-colors"
+                          className="px-4 py-2 text-left bg-[var(--color-bg-secondary)] hover:bg-[var(--color-border)] focus:bg-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-category-practice)] rounded-lg text-[var(--color-text-primary)] transition-colors"
                           role="menuitem"
                           tabIndex={0}
                           aria-label={`Order ${testName}`}
@@ -531,7 +531,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
 
           <div className="flex justify-center gap-8 mb-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-emerald-400">{score}</div>
+              <div className="text-4xl font-bold text-data-pass">{score}</div>
               <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
             </div>
           </div>
@@ -539,7 +539,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
           <div className="flex flex-col gap-3">
             <button
               onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-data-pass hover:bg-data-pass text-white rounded-lg font-medium transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
               Start New Session

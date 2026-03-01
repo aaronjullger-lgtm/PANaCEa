@@ -27,13 +27,13 @@ const PresetCard = ({ preset, onClick }: { preset: StudyPreset; onClick: () => v
   return (
     <button
       onClick={onClick}
-      className="w-full text-left p-4 rounded-lg border bg-surface-card hover:bg-action-muted dark:border-slate-600 transition-colors"
+      className="w-full text-left p-4 rounded-lg border bg-surface-card hover:bg-action-muted dark:border-data-neutral transition-colors"
     >
       <div className="flex items-center gap-4">
         <Icon className="w-6 h-6 text-action-primary" />
         <div>
           <h4 className="font-bold text-action-primary">{preset.label}</h4>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{preset.description}</p>
+          <p className="text-sm text-data-neutral dark:text-data-neutral">{preset.description}</p>
         </div>
       </div>
     </button>
@@ -97,7 +97,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
 
         {!isCustomizing ? (
           <>
-            <p className="text-slate-500 dark:text-slate-400 mb-6">
+            <p className="text-data-neutral dark:text-data-neutral mb-6">
               Choose a preset or create a custom session.
             </p>
             <div className="space-y-3">
@@ -120,7 +120,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
           </>
         ) : (
           <>
-            <p className="text-slate-500 dark:text-slate-400 mb-6">Customize your practice quiz.</p>
+            <p className="text-data-neutral dark:text-data-neutral mb-6">Customize your practice quiz.</p>
 
             {/* System Selection */}
             <div className="mb-6">
@@ -131,7 +131,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
               <select
                 value={selectedSystem}
                 onChange={(e) => setSelectedSystem(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border bg-surface-card text-action-primary dark:border-slate-600 focus:ring-2 focus:ring-action-primary focus:border-transparent transition-all"
+                className="w-full px-4 py-2 rounded-lg border bg-surface-card text-action-primary dark:border-data-neutral focus:ring-2 focus:ring-action-primary focus:border-transparent transition-all"
               >
                 <option value="">All Systems (NCCPA Blueprint Weights)</option>
                 {organSystems.map((system) => (
@@ -140,7 +140,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-xs text-data-neutral dark:text-data-neutral mt-1">
                 {selectedSystem
                   ? `Practice questions exclusively from ${selectedSystem}`
                   : 'Questions will follow official NCCPA 2025 Blueprint distribution'}
@@ -148,8 +148,8 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
             </div>
 
             {/* PANCE-Level Notice */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800 mb-6">
-              <p className="text-sm text-blue-700 dark:text-blue-300">
+            <div className="bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg p-3 border border-[var(--color-category-practice)] border-[var(--color-category-practice)] mb-6">
+              <p className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
                 <strong>PANCE-Level Questions:</strong> All questions are calibrated to match real
                 PANCE exam difficulty for optimal preparation.
               </p>
@@ -162,14 +162,14 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
                   setIsCustomizing(false);
                   setSelectedSystem(''); // Reset selection
                 }}
-                className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:underline"
+                className="text-sm font-semibold text-data-neutral dark:text-data-neutral hover:underline"
               >
                 Back to presets
               </button>
               <div className="flex space-x-3">
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 rounded-md font-semibold text-sm bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                  className="px-4 py-2 rounded-md font-semibold text-sm bg-data-neutral text-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:text-data-neutral dark:hover:bg-data-neutral"
                 >
                   Cancel
                 </button>

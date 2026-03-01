@@ -127,8 +127,8 @@ const PillListField: React.FC<{ label: string; value: unknown; color?: string }>
     accent:
       'bg-[var(--color-accent)]/15 text-[var(--color-accent)] border-[var(--color-accent)]/30',
     rose: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
-    blue: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-    amber: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+    blue: 'bg-[color-mix(in_srgb,var(--color-category-practice)_15%,transparent)] text-[var(--color-category-practice)] border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]',
+    amber: 'bg-data-provisional/15 text-data-provisional border-data-provisional/30',
   };
 
   return (
@@ -250,10 +250,10 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
             {/* Quick Facts Hero Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {goldStandard && (
-                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-data-provisional/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <Target className="w-4 h-4 text-amber-400" />
-                    <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">
+                    <Target className="w-4 h-4 text-data-provisional" />
+                    <span className="text-xs font-semibold text-data-provisional uppercase tracking-wide">
                       Gold Standard Dx
                     </span>
                   </div>
@@ -263,10 +263,10 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
                 </div>
               )}
               {firstLineRx && (
-                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-data-pass/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <Pill className="w-4 h-4 text-emerald-400" />
-                    <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">
+                    <Pill className="w-4 h-4 text-data-pass" />
+                    <span className="text-xs font-semibold text-data-pass uppercase tracking-wide">
                       First-Line Rx
                     </span>
                   </div>
@@ -392,7 +392,7 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
             {/* Expandable Sections - Properly organized */}
             <div className="space-y-4 pt-2">
               {/* Section 1: Clinical Presentation */}
-              <Section title="Clinical Presentation" icon={Stethoscope} accentColor="text-blue-400">
+              <Section title="Clinical Presentation" icon={Stethoscope} accentColor="text-[var(--color-category-practice)]">
                 <TextField label="Symptoms" value={normalized.symptoms} />
                 <TextField
                   label="Physical Exam"
@@ -404,7 +404,7 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
               <Section
                 title="Workup & Diagnostics"
                 icon={FlaskConical}
-                accentColor="text-amber-400"
+                accentColor="text-data-provisional"
               >
                 <TextField label="Diagnostics" value={getValue(normalized, ['diagnostics'])} />
                 <TextField label="Labs" value={getValue(normalized, ['labs'])} />
@@ -412,7 +412,7 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
               </Section>
 
               {/* Section 3: Treatment */}
-              <Section title="Treatment" icon={Pill} accentColor="text-emerald-400">
+              <Section title="Treatment" icon={Pill} accentColor="text-data-pass">
                 <MarkdownField label="Treatment Approach" value={normalized.treatment} />
                 <TextField
                   label="Patient Education"

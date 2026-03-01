@@ -61,13 +61,13 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'excellent':
-        return 'text-green-600 dark:text-green-400';
+        return 'text-data-pass dark:text-data-pass';
       case 'good':
-        return 'text-blue-600 dark:text-blue-400';
+        return 'text-[var(--color-category-practice)] text-[var(--color-category-practice)]';
       case 'declining':
         return 'text-yellow-600 dark:text-yellow-400';
       case 'critical':
-        return 'text-red-600 dark:text-red-400';
+        return 'text-data-fail dark:text-data-fail';
       default:
         return 'text-[var(--color-text-muted)]';
     }
@@ -120,7 +120,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
             <div className="text-sm text-[var(--color-text-secondary)] mb-1">Peak Proficiency</div>
-            <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+            <div className="text-3xl font-bold text-data-pass dark:text-data-pass">
               {proficiencyData.peakProficiency}%
             </div>
           </div>
@@ -128,7 +128,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
             <div className="text-sm text-[var(--color-text-secondary)] mb-1">
               Current Proficiency
             </div>
-            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-3xl font-bold text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
               {proficiencyData.currentProficiency}%
             </div>
           </div>

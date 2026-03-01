@@ -67,55 +67,55 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4">
       <div className="bg-[var(--color-bg-secondary)] rounded-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden shadow-[0_18px_42px_var(--color-shadow-soft)] flex flex-col border border-[var(--color-border)]">
         {/* Header */}
-        <div className="bg-slate-800 border-b border-slate-700 p-4 flex items-center justify-between">
+        <div className="bg-data-neutral border-b border-data-neutral p-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-white flex items-center gap-3">
-              <span className="px-3 py-1 rounded-lg bg-blue-600 text-sm">
+              <span className="px-3 py-1 rounded-lg bg-[var(--color-category-practice)] text-sm">
                 {getModalityLabel(image.type)}
               </span>
               {image.bodyPart}
             </h2>
-            <p className="text-sm text-slate-400 mt-1">{image.clinicalContext}</p>
+            <p className="text-sm text-data-neutral mt-1">{image.clinicalContext}</p>
           </div>
 
           {/* Controls */}
           <div className="flex items-center gap-2">
             <button
               onClick={handleZoomOut}
-              className="p-2 hover:bg-slate-700 rounded-lg transition-colors text-white"
+              className="p-2 hover:bg-data-neutral rounded-lg transition-colors text-white"
               title="Zoom Out"
             >
               <ZoomOut className="w-5 h-5" />
             </button>
-            <span className="text-sm text-slate-400 w-16 text-center">
+            <span className="text-sm text-data-neutral w-16 text-center">
               {Math.round(zoom * 100)}%
             </span>
             <button
               onClick={handleZoomIn}
-              className="p-2 hover:bg-slate-700 rounded-lg transition-colors text-white"
+              className="p-2 hover:bg-data-neutral rounded-lg transition-colors text-white"
               title="Zoom In"
             >
               <ZoomIn className="w-5 h-5" />
             </button>
-            <div className="w-px h-6 bg-slate-700 mx-2" />
+            <div className="w-px h-6 bg-data-neutral mx-2" />
             <button
               onClick={handleRotate}
-              className="p-2 hover:bg-slate-700 rounded-lg transition-colors text-white"
+              className="p-2 hover:bg-data-neutral rounded-lg transition-colors text-white"
               title="Rotate"
             >
               <RotateCw className="w-5 h-5" />
             </button>
             <button
               onClick={handleReset}
-              className="p-2 hover:bg-slate-700 rounded-lg transition-colors text-white text-sm"
+              className="p-2 hover:bg-data-neutral rounded-lg transition-colors text-white text-sm"
               title="Reset View"
             >
               Reset
             </button>
-            <div className="w-px h-6 bg-slate-700 mx-2" />
+            <div className="w-px h-6 bg-data-neutral mx-2" />
             <button
               onClick={onClose}
-              className="p-2 hover:bg-slate-700 rounded-lg transition-colors text-white"
+              className="p-2 hover:bg-data-neutral rounded-lg transition-colors text-white"
             >
               <X className="w-5 h-5" />
             </button>
@@ -141,35 +141,35 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
           </div>
 
           {/* Interpretation Panel */}
-          <div className="w-96 bg-slate-800 border-l border-slate-700 overflow-y-auto">
+          <div className="w-96 bg-data-neutral border-l border-data-neutral overflow-y-auto">
             <div className="p-6 space-y-6">
               {requireInterpretation && !showAnswer ? (
                 <>
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-2">Your Interpretation</h3>
-                    <p className="text-sm text-slate-400 mb-4">
+                    <p className="text-sm text-data-neutral mb-4">
                       Describe the key findings you observe in this {image.type}.
                     </p>
                     <textarea
                       value={userInterpretation}
                       onChange={(e) => setUserInterpretation(e.target.value)}
                       placeholder="Describe findings, abnormalities, and your interpretation..."
-                      className="w-full h-48 px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      className="w-full h-48 px-4 py-3 bg-data-neutral border border-data-neutral rounded-lg text-white placeholder-data-neutral focus:ring-2 focus:ring-[var(--color-category-practice)] focus:border-transparent resize-none"
                     />
                   </div>
 
                   <button
                     onClick={handleSubmitInterpretation}
                     disabled={!userInterpretation.trim()}
-                    className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
+                    className="w-full px-6 py-3 bg-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] disabled:bg-data-neutral disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
                   >
                     Submit Interpretation
                   </button>
 
-                  <div className="pt-4 border-t border-slate-700">
+                  <div className="pt-4 border-t border-data-neutral">
                     <button
                       onClick={() => setShowAnswer(true)}
-                      className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                      className="text-sm text-[var(--color-category-practice)] hover:text-[var(--color-category-practice)] transition-colors"
                     >
                       Skip to answer →
                     </button>
@@ -178,8 +178,8 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
               ) : (
                 <>
                   {userInterpretation && (
-                    <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
-                      <h4 className="text-sm font-semibold text-slate-400 mb-2">
+                    <div className="bg-data-neutral rounded-lg p-4 border border-data-neutral">
+                      <h4 className="text-sm font-semibold text-data-neutral mb-2">
                         Your Interpretation:
                       </h4>
                       <p className="text-white text-sm">{userInterpretation}</p>
@@ -190,8 +190,8 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
                     <h3 className="text-lg font-semibold text-white mb-3">Key Findings</h3>
                     <ul className="space-y-2">
                       {image.findings.map((finding, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
-                          <span className="text-red-400 mt-0.5">•</span>
+                        <li key={idx} className="flex items-start gap-2 text-sm text-data-neutral">
+                          <span className="text-data-fail mt-0.5">•</span>
                           <span>{finding}</span>
                         </li>
                       ))}
@@ -200,11 +200,11 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
 
                   {image.normalFindings && image.normalFindings.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-semibold text-slate-400 mb-2">Normal Findings</h3>
+                      <h3 className="text-sm font-semibold text-data-neutral mb-2">Normal Findings</h3>
                       <ul className="space-y-1">
                         {image.normalFindings.map((finding, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-sm text-slate-400">
-                            <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                          <li key={idx} className="flex items-start gap-2 text-sm text-data-neutral">
+                            <Check className="w-4 h-4 text-data-pass mt-0.5 flex-shrink-0" />
                             <span>{finding}</span>
                           </li>
                         ))}
@@ -212,17 +212,17 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
                     </div>
                   )}
 
-                  <div className="bg-blue-950/50 border border-blue-900 rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-blue-300 mb-2">
+                  <div className="bg-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)] border border-[var(--color-category-practice)] rounded-lg p-4">
+                    <h3 className="text-sm font-semibold text-[var(--color-category-practice)] mb-2">
                       Clinical Interpretation
                     </h3>
-                    <p className="text-sm text-blue-100 leading-relaxed">{image.interpretation}</p>
+                    <p className="text-sm text-[var(--color-category-practice)] leading-relaxed">{image.interpretation}</p>
                   </div>
 
                   {!requireInterpretation && (
                     <button
                       onClick={onClose}
-                      className="w-full px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors"
+                      className="w-full px-6 py-3 bg-data-neutral hover:bg-data-neutral text-white font-semibold rounded-lg transition-colors"
                     >
                       Continue Encounter
                     </button>

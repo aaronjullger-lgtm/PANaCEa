@@ -13,7 +13,7 @@ const ClinicalProfileDashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64 text-slate-500">
+      <div className="flex items-center justify-center h-64 text-data-neutral">
         <Loader2 className="w-6 h-6 animate-spin mr-2" />
         Loading clinical profile...
       </div>
@@ -38,7 +38,7 @@ const ClinicalProfileDashboard: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-400">
+          <p className="text-xs uppercase tracking-wide text-data-neutral">
             Personal Clinical Profile
           </p>
           <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
@@ -47,7 +47,7 @@ const ClinicalProfileDashboard: React.FC = () => {
         </div>
         <button
           onClick={refetch}
-          className="px-3 py-1.5 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-blue-400 text-slate-700 dark:text-slate-200"
+          className="px-3 py-1.5 text-sm font-medium rounded-lg border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral hover:border-[var(--color-category-practice)] text-data-neutral dark:text-data-neutral"
         >
           Refresh
         </button>

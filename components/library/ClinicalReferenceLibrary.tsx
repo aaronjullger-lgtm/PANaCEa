@@ -936,10 +936,10 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
       {/* Quick Facts Hero Card - Semantic colors for critical clinical info */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {goldStandard && (
-          <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-data-provisional/30">
             <div className="flex items-center gap-2 mb-2">
-              <Target className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">
+              <Target className="w-4 h-4 text-data-provisional" />
+              <span className="text-xs font-semibold text-data-provisional uppercase tracking-wide">
                 Gold Standard Dx
               </span>
             </div>
@@ -947,10 +947,10 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
           </div>
         )}
         {firstLineRx && (
-          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-data-pass/30">
             <div className="flex items-center gap-2 mb-2">
-              <Pill className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">
+              <Pill className="w-4 h-4 text-data-pass" />
+              <span className="text-xs font-semibold text-data-pass uppercase tracking-wide">
                 First-Line Rx
               </span>
             </div>
@@ -1088,14 +1088,14 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
       {differentialDx.length > 0 && (
         <div>
           <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2 flex items-center gap-2">
-            <ClipboardList className="w-4 h-4 text-blue-400" />
+            <ClipboardList className="w-4 h-4 text-[var(--color-category-practice)]" />
             Differential Diagnosis
           </h4>
           <div className="flex flex-wrap gap-2">
             {differentialDx.slice(0, 8).map((dx, idx) => (
               <span
                 key={idx}
-                className="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-300 border border-blue-500/20 text-xs font-medium"
+                className="px-2.5 py-1 rounded-lg bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] text-[var(--color-category-practice)] border border-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-xs font-medium"
               >
                 {dx}
               </span>
@@ -1116,7 +1116,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
           id="clinical"
           title={LIBRARY_SECTION_TITLES.clinical ?? 'Clinical Presentation'}
           icon={Stethoscope}
-          accentColor="text-blue-400"
+          accentColor="text-[var(--color-category-practice)]"
           expandedSections={expandedSections}
           toggleSection={toggleSection}
         >
@@ -1132,7 +1132,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
           id="workup"
           title={LIBRARY_SECTION_TITLES.workup ?? 'Workup'}
           icon={FlaskConical}
-          accentColor="text-amber-400"
+          accentColor="text-data-provisional"
           expandedSections={expandedSections}
           toggleSection={toggleSection}
         >
@@ -1144,7 +1144,7 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
           id="treatment"
           title={LIBRARY_SECTION_TITLES.treatment ?? 'Treatment'}
           icon={Pill}
-          accentColor="text-emerald-400"
+          accentColor="text-data-pass"
           expandedSections={expandedSections}
           toggleSection={toggleSection}
         >

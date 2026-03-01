@@ -108,7 +108,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
         border border-[var(--color-glass-border)]
         rounded-2xl overflow-hidden
         shadow-lg shadow-[var(--color-glass-shadow)]
-        hover:shadow-xl hover:shadow-blue-900/20 hover:border-[var(--color-accent)]
+        hover:shadow-xl hover:shadow-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] hover:border-[var(--color-accent)]
         transition-all duration-200
         dark:bg-[var(--card)] dark:border-[var(--border)]
         ${compact ? 'max-w-md' : 'max-w-4xl'}
@@ -157,8 +157,8 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
                   p-2 rounded-lg transition-colors
                   ${
                     isBookmarked
-                      ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
-                      : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700'
+                      ? 'bg-data-provisional/20 text-data-provisional hover:bg-data-provisional/30'
+                      : 'bg-data-neutral/50 text-data-neutral hover:bg-data-neutral'
                   }
                 `}
                 aria-label="Bookmark"
@@ -170,7 +170,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
             {onAddToDrill && (
               <button
                 onClick={onAddToDrill}
-                className="p-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors"
+                className="p-2 bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)] rounded-lg hover:bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] transition-colors"
                 aria-label="Add to drill"
               >
                 <Plus className="w-5 h-5" />
@@ -185,15 +185,15 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mt-4 p-4 bg-blue-950/30 border border-blue-800/40 rounded-xl"
+            className="mt-4 p-4 bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_40%,transparent)] rounded-xl"
           >
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-[var(--color-category-practice)] flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <div className="text-xs font-bold text-blue-300 uppercase tracking-wider mb-1">
+                <div className="text-xs font-bold text-[var(--color-category-practice)] uppercase tracking-wider mb-1">
                   Classic Presentation
                 </div>
-                <p className="text-sm text-slate-200 leading-relaxed">{content.classic_patient}</p>
+                <p className="text-sm text-data-neutral leading-relaxed">{content.classic_patient}</p>
               </div>
             </div>
           </motion.div>
@@ -252,15 +252,15 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
             <ContentFieldRenderer value={content.diagnostics} />
             <div className="mt-4 space-y-2">
               {content.gold_standard_dx && (
-                <div className="p-3 bg-emerald-950/30 border border-emerald-800/40 rounded-lg">
-                  <div className="text-xs font-semibold text-emerald-300 mb-1">Gold Standard</div>
-                  <div className="text-sm text-slate-200">{content.gold_standard_dx}</div>
+                <div className="p-3 bg-data-pass/30 border border-data-pass/40 rounded-lg">
+                  <div className="text-xs font-semibold text-data-pass mb-1">Gold Standard</div>
+                  <div className="text-sm text-data-neutral">{content.gold_standard_dx}</div>
                 </div>
               )}
               {content.best_initial_test && (
-                <div className="p-3 bg-blue-950/30 border border-blue-800/40 rounded-lg">
-                  <div className="text-xs font-semibold text-blue-300 mb-1">Best Initial Test</div>
-                  <div className="text-sm text-slate-200">{content.best_initial_test}</div>
+                <div className="p-3 bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_40%,transparent)] rounded-lg">
+                  <div className="text-xs font-semibold text-[var(--color-category-practice)] mb-1">Best Initial Test</div>
+                  <div className="text-sm text-data-neutral">{content.best_initial_test}</div>
                 </div>
               )}
             </div>
@@ -275,9 +275,9 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
                 <div className="text-xs font-semibold text-purple-300 mb-1">
                   First Line Treatment
                 </div>
-                <div className="text-sm text-slate-200 mb-2">{content.first_line_rx}</div>
+                <div className="text-sm text-data-neutral mb-2">{content.first_line_rx}</div>
                 {content.rx_mechanism && (
-                  <div className="text-xs text-slate-400 border-t border-purple-800/30 pt-2">
+                  <div className="text-xs text-data-neutral border-t border-purple-800/30 pt-2">
                     <span className="font-medium">Mechanism:</span> {content.rx_mechanism}
                   </div>
                 )}

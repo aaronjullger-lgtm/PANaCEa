@@ -1629,6 +1629,7 @@ model MedicalContent {
   @@index([relatedSystems])
   @@index([status, conditionId])
   @@index([status])
+  @@index([status, system])
   @@index([system])
   @@index([system, pance_yield])
   @@index([system, parent_category])

@@ -181,7 +181,7 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
               }
               className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] transition-colors ${
                 enableGoogleSearch
-                  ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                  ? 'border-data-pass/50 bg-data-pass/10 text-data-pass dark:text-data-pass'
                   : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/50 hover:text-[var(--color-text-primary)]'
               }`}
             >
@@ -189,7 +189,7 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
               <span>{enableGoogleSearch ? 'Search on' : 'Search off'}</span>
             </button>
             <div className="hidden items-center gap-1 rounded-full border border-[var(--color-border)] px-3 py-1 text-[10px] text-[var(--color-text-muted)] md:flex">
-              <ShieldCheck className="h-3 w-3 text-emerald-500" />
+              <ShieldCheck className="h-3 w-3 text-data-pass" />
               <span>Context-aware • Weak-spot guided</span>
             </div>
             <button
@@ -269,7 +269,7 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
           </div>
 
           {error && (
-            <div className="rounded-lg border border-red-500/40 bg-red-500/5 px-3 py-2 text-xs text-red-400">
+            <div className="rounded-lg border border-data-fail/40 bg-data-fail/5 px-3 py-2 text-xs text-data-fail">
               {error}
             </div>
           )}

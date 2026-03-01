@@ -328,8 +328,8 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
             className="flex justify-center mb-6"
           >
-            <div className="p-4 bg-green-500/20 rounded-full">
-              <ClipboardCheck className="w-12 h-12 text-green-500" />
+            <div className="p-4 bg-data-pass/20 rounded-full">
+              <ClipboardCheck className="w-12 h-12 text-data-pass" />
             </div>
           </motion.div>
           <h2 className="text-3xl font-bold text-[var(--color-text-primary)] text-center mb-2">

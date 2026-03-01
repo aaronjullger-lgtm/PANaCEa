@@ -114,16 +114,16 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
         onBack={() => setShowSetPicker(false)}
       >
         <div className="max-w-2xl mx-auto space-y-4 p-4">
-          <p className="text-slate-600 dark:text-slate-300">
+          <p className="text-data-neutral dark:text-data-neutral">
             Choose a symptom to practice distinguishing between similar conditions.
           </p>
 
           {isLoadingSets ? (
             <div className="flex items-center justify-center h-48">
-              <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+              <Loader2 className="w-6 h-6 animate-spin text-data-neutral" />
             </div>
           ) : availableSets.length === 0 ? (
-            <div className="text-center text-slate-500 py-8">
+            <div className="text-center text-data-neutral py-8">
               No contrastive sets available. Run the seed script to populate sets.
             </div>
           ) : (
@@ -132,23 +132,23 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
                 <button
                   key={set.id}
                   onClick={() => handleSelectSet(set)}
-                  className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-violet-400 dark:hover:border-violet-500 transition-all group text-left"
+                  className="flex items-center justify-between p-4 rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral hover:border-violet-400 dark:hover:border-violet-500 transition-all group text-left"
                 >
                   <div>
                     <h3 className="font-semibold text-[var(--color-text-primary)] group-hover:text-violet-600 dark:group-hover:text-violet-400">
                       {set.symptom}
                     </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                    <p className="text-sm text-data-neutral dark:text-data-neutral">
                       {Object.keys(set.distinguishers).length} conditions ·{' '}
                       {set.system || 'Multi-system'}
                       {set.highYield && (
-                        <span className="ml-2 px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full">
+                        <span className="ml-2 px-2 py-0.5 text-xs bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional rounded-full">
                           High Yield
                         </span>
                       )}
                     </p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-violet-500 transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-data-neutral group-hover:text-violet-500 transition-colors" />
                 </button>
               ))}
             </div>

@@ -33,17 +33,17 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
   const [expandedSection, setExpandedSection] = React.useState<string | null>('overview');
 
   const getGradeColor = (score: number) => {
-    if (score >= 90) return 'text-emerald-500';
-    if (score >= 75) return 'text-blue-500';
-    if (score >= 60) return 'text-amber-500';
-    return 'text-red-500';
+    if (score >= 90) return 'text-data-pass';
+    if (score >= 75) return 'text-[var(--color-category-practice)]';
+    if (score >= 60) return 'text-data-provisional';
+    return 'text-data-fail';
   };
 
   const getGradeBg = (score: number) => {
-    if (score >= 90) return 'bg-emerald-500/10 border-emerald-500/30';
-    if (score >= 75) return 'bg-blue-500/10 border-blue-500/30';
-    if (score >= 60) return 'bg-amber-500/10 border-amber-500/30';
-    return 'bg-red-500/10 border-red-500/30';
+    if (score >= 90) return 'bg-data-pass/10 border-data-pass/30';
+    if (score >= 75) return 'bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]';
+    if (score >= 60) return 'bg-data-provisional/10 border-data-provisional/30';
+    return 'bg-data-fail/10 border-data-fail/30';
   };
 
   const getMilestoneLabel = (level: number) => {
@@ -56,7 +56,7 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden">
+    <div className="max-w-4xl mx-auto bg-white dark:bg-data-neutral rounded-2xl shadow-xl overflow-hidden">
       {/* Header */}
       <div className={`p-6 ${getGradeBg(report.overallScore)} border-b`}>
         <div className="flex items-center justify-between">
@@ -64,21 +64,21 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
             <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
               Performance Report
             </h2>
-            <p className="text-slate-600 dark:text-slate-300 mt-1">Patient Encounter Assessment</p>
+            <p className="text-data-neutral dark:text-data-neutral mt-1">Patient Encounter Assessment</p>
           </div>
           <div className="text-center">
             <div className={`text-5xl font-bold ${getGradeColor(report.overallScore)}`}>
               {report.overallScore}%
             </div>
-            <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">Overall Score</div>
+            <div className="text-sm text-data-neutral dark:text-data-neutral mt-1">Overall Score</div>
           </div>
         </div>
 
         {/* ACGME Milestone */}
         {report.acgmeMilestoneLevel && (
           <div className="mt-4 flex items-center gap-2">
-            <Award className="w-5 h-5 text-amber-500" />
-            <span className="text-slate-700 dark:text-slate-200">
+            <Award className="w-5 h-5 text-data-provisional" />
+            <span className="text-data-neutral dark:text-data-neutral">
               ACGME Milestone Level: <strong>{report.acgmeMilestoneLevel}</strong> -{' '}
               {getMilestoneLabel(report.acgmeMilestoneLevel)}
             </span>
@@ -134,15 +134,15 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
         {/* Strengths & Improvements */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {report.strengths.length > 0 && (
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4">
-              <h4 className="font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-2 mb-3">
+            <div className="bg-data-pass dark:bg-data-pass/20 rounded-xl p-4">
+              <h4 className="font-semibold text-data-pass dark:text-data-pass flex items-center gap-2 mb-3">
                 <CheckCircle className="w-4 h-4" /> Strengths
               </h4>
               <ul className="space-y-2">
                 {report.strengths.map((s, i) => (
                   <li
                     key={i}
-                    className="text-sm text-emerald-600 dark:text-emerald-300 flex items-start gap-2"
+                    className="text-sm text-data-pass dark:text-data-pass flex items-start gap-2"
                   >
                     <span className="mt-1">•</span> {s}
                   </li>
@@ -152,15 +152,15 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
           )}
 
           {report.areasForImprovement.length > 0 && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4">
-              <h4 className="font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-2 mb-3">
+            <div className="bg-data-provisional dark:bg-data-provisional/20 rounded-xl p-4">
+              <h4 className="font-semibold text-data-provisional dark:text-data-provisional flex items-center gap-2 mb-3">
                 <AlertTriangle className="w-4 h-4" /> Areas for Improvement
               </h4>
               <ul className="space-y-2">
                 {report.areasForImprovement.map((a, i) => (
                   <li
                     key={i}
-                    className="text-sm text-amber-600 dark:text-amber-300 flex items-start gap-2"
+                    className="text-sm text-data-provisional dark:text-data-provisional flex items-start gap-2"
                   >
                     <span className="mt-1">•</span> {a}
                   </li>
@@ -172,11 +172,11 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3">
+      <div className="p-4 border-t border-data-neutral dark:border-data-neutral flex justify-end gap-3">
         {onRetry && (
           <button
             onClick={onRetry}
-            className="px-4 py-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+            className="px-4 py-2 text-[var(--color-category-practice)] text-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg transition"
           >
             Try Another Case
           </button>
@@ -184,7 +184,7 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
         {onClose && (
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="px-4 py-2 bg-[var(--color-category-practice)] text-white rounded-lg hover:bg-[var(--color-category-practice)] transition"
           >
             Done
           </button>
@@ -203,24 +203,24 @@ const CollapsibleSection: React.FC<{
   badge?: string;
   children: React.ReactNode;
 }> = ({ title, icon, isExpanded, onToggle, badge, children }) => (
-  <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+  <div className="border border-data-neutral dark:border-data-neutral rounded-xl overflow-hidden">
     <button
       onClick={onToggle}
-      className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition"
+      className="w-full flex items-center justify-between p-4 hover:bg-data-neutral dark:hover:bg-data-neutral/50 transition"
     >
       <div className="flex items-center gap-3">
-        <span className="text-slate-500">{icon}</span>
-        <span className="font-medium text-slate-700 dark:text-slate-200">{title}</span>
+        <span className="text-data-neutral">{icon}</span>
+        <span className="font-medium text-data-neutral dark:text-data-neutral">{title}</span>
         {badge && (
-          <span className="px-2 py-0.5 text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full">
+          <span className="px-2 py-0.5 text-xs bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral rounded-full">
             {badge}
           </span>
         )}
       </div>
       {isExpanded ? (
-        <ChevronUp className="w-5 h-5 text-slate-400" />
+        <ChevronUp className="w-5 h-5 text-data-neutral" />
       ) : (
-        <ChevronDown className="w-5 h-5 text-slate-400" />
+        <ChevronDown className="w-5 h-5 text-data-neutral" />
       )}
     </button>
     {isExpanded && (
@@ -228,7 +228,7 @@ const CollapsibleSection: React.FC<{
         initial={{ height: 0, opacity: 0 }}
         animate={{ height: 'auto', opacity: 1 }}
         exit={{ height: 0, opacity: 0 }}
-        className="border-t border-slate-200 dark:border-slate-700 p-4"
+        className="border-t border-data-neutral dark:border-data-neutral p-4"
       >
         {children}
       </motion.div>
@@ -255,24 +255,24 @@ const CompetencyRadar: React.FC<{ scores: CompetencyScore }> = ({ scores }) => {
     <div className="space-y-3">
       {categories.map(({ key, label, score }) => (
         <div key={key} className="flex items-center gap-3">
-          <span className="w-36 text-sm text-slate-600 dark:text-slate-300">{label}</span>
-          <div className="flex-1 h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+          <span className="w-36 text-sm text-data-neutral dark:text-data-neutral">{label}</span>
+          <div className="flex-1 h-3 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${score}%` }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className={`h-full rounded-full ${
                 score >= 80
-                  ? 'bg-emerald-500'
+                  ? 'bg-data-pass'
                   : score >= 60
-                    ? 'bg-blue-500'
+                    ? 'bg-[var(--color-category-practice)]'
                     : score >= 40
-                      ? 'bg-amber-500'
-                      : 'bg-red-500'
+                      ? 'bg-data-provisional'
+                      : 'bg-data-fail'
               }`}
             />
           </div>
-          <span className="w-12 text-right text-sm font-medium text-slate-700 dark:text-slate-200">
+          <span className="w-12 text-right text-sm font-medium text-data-neutral dark:text-data-neutral">
             {Math.round(score)}%
           </span>
         </div>
@@ -288,19 +288,19 @@ const CriticalActionsList: React.FC<{ actions: CriticalAction[] }> = ({ actions 
       <div
         key={action.id}
         className={`flex items-center gap-3 p-2 rounded-lg ${
-          action.triggered ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-red-50 dark:bg-red-900/20'
+          action.triggered ? 'bg-data-pass dark:bg-data-pass/20' : 'bg-data-fail dark:bg-data-fail/20'
         }`}
       >
         {action.triggered ? (
-          <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+          <CheckCircle className="w-5 h-5 text-data-pass flex-shrink-0" />
         ) : (
-          <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+          <XCircle className="w-5 h-5 text-data-fail flex-shrink-0" />
         )}
         <span
           className={`text-sm ${
             action.triggered
-              ? 'text-emerald-700 dark:text-emerald-300'
-              : 'text-red-700 dark:text-red-300'
+              ? 'text-data-pass dark:text-data-pass'
+              : 'text-data-fail dark:text-data-fail'
           }`}
         >
           {action.description}
@@ -308,12 +308,12 @@ const CriticalActionsList: React.FC<{ actions: CriticalAction[] }> = ({ actions 
         <span
           className={`ml-auto text-xs px-2 py-0.5 rounded ${
             action.category === 'safety'
-              ? 'bg-red-100 text-red-700'
+              ? 'bg-data-fail text-data-fail'
               : action.category === 'diagnosis'
-                ? 'bg-blue-100 text-blue-700'
+                ? 'bg-[var(--color-category-practice)] text-[var(--color-category-practice)]'
                 : action.category === 'communication'
                   ? 'bg-purple-100 text-purple-700'
-                  : 'bg-slate-100 text-slate-700'
+                  : 'bg-data-neutral text-data-neutral'
           }`}
         >
           {action.category}
@@ -325,28 +325,28 @@ const CriticalActionsList: React.FC<{ actions: CriticalAction[] }> = ({ actions 
 
 // Timeline View
 const TimelineView: React.FC<{ entries: TimelineEntry[] }> = ({ entries }) => (
-  <div className="relative space-y-2 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
+  <div className="relative space-y-2 pl-4 border-l-2 border-data-neutral dark:border-data-neutral">
     {entries.map((entry, i) => (
       <div key={i} className="relative pl-4">
         <div
           className={`absolute -left-[9px] w-4 h-4 rounded-full border-2 ${
             entry.evaluation === 'excellent'
-              ? 'bg-emerald-500 border-emerald-500'
+              ? 'bg-data-pass border-data-pass'
               : entry.evaluation === 'good'
-                ? 'bg-blue-500 border-blue-500'
+                ? 'bg-[var(--color-category-practice)] border-[var(--color-category-practice)]'
                 : entry.evaluation === 'fair'
-                  ? 'bg-amber-500 border-amber-500'
+                  ? 'bg-data-provisional border-data-provisional'
                   : entry.evaluation === 'poor'
-                    ? 'bg-red-500 border-red-500'
-                    : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600'
+                    ? 'bg-data-fail border-data-fail'
+                    : 'bg-white dark:bg-data-neutral border-data-neutral dark:border-data-neutral'
           }`}
         />
-        <div className="text-xs text-slate-400 mb-0.5">
+        <div className="text-xs text-data-neutral mb-0.5">
           {new Date(entry.timestamp).toLocaleTimeString()} • {entry.phase}
         </div>
-        <div className="text-sm text-slate-700 dark:text-slate-200">{entry.action}</div>
+        <div className="text-sm text-data-neutral dark:text-data-neutral">{entry.action}</div>
         {entry.feedback && (
-          <div className="text-xs text-slate-500 mt-1 italic">{entry.feedback}</div>
+          <div className="text-xs text-data-neutral mt-1 italic">{entry.feedback}</div>
         )}
       </div>
     ))}
@@ -361,38 +361,38 @@ const LearningGapsList: React.FC<{ gaps: LearningGap[] }> = ({ gaps }) => (
         key={i}
         className={`p-3 rounded-lg border ${
           gap.severity === 'significant'
-            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+            ? 'bg-data-fail dark:bg-data-fail/20 border-data-fail dark:border-data-fail'
             : gap.severity === 'moderate'
-              ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-              : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+              ? 'bg-data-provisional dark:bg-data-provisional/20 border-data-provisional dark:border-data-provisional'
+              : 'bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border-[var(--color-category-practice)] border-[var(--color-category-practice)]'
         }`}
       >
         <div className="flex items-center gap-2 mb-1">
           <BookOpen
             className={`w-4 h-4 ${
               gap.severity === 'significant'
-                ? 'text-red-500'
+                ? 'text-data-fail'
                 : gap.severity === 'moderate'
-                  ? 'text-amber-500'
-                  : 'text-blue-500'
+                  ? 'text-data-provisional'
+                  : 'text-[var(--color-category-practice)]'
             }`}
           />
-          <span className="font-medium text-sm text-slate-700 dark:text-slate-200">
+          <span className="font-medium text-sm text-data-neutral dark:text-data-neutral">
             {gap.category.charAt(0).toUpperCase() + gap.category.slice(1)}
           </span>
           <span
             className={`text-xs px-1.5 py-0.5 rounded ${
               gap.severity === 'significant'
-                ? 'bg-red-200 text-red-700'
+                ? 'bg-data-fail text-data-fail'
                 : gap.severity === 'moderate'
-                  ? 'bg-amber-200 text-amber-700'
-                  : 'bg-blue-200 text-blue-700'
+                  ? 'bg-data-provisional text-data-provisional'
+                  : 'bg-[var(--color-category-practice)] text-[var(--color-category-practice)]'
             }`}
           >
             {gap.severity}
           </span>
         </div>
-        <p className="text-sm text-slate-600 dark:text-slate-300">{gap.recommendation}</p>
+        <p className="text-sm text-data-neutral dark:text-data-neutral">{gap.recommendation}</p>
       </div>
     ))}
   </div>

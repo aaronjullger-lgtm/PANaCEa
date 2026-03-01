@@ -365,7 +365,7 @@ function HighYieldTab({ data }: Readonly<{ data: MedicalContent }>) {
         <CollapsibleSection
           title="Clinical Pearls"
           icon={Lightbulb}
-          iconColor="text-amber-400"
+          iconColor="text-data-provisional"
           defaultOpen={sectionIndex++ === 0}
         >
           <div className="space-y-3">
@@ -386,7 +386,7 @@ function HighYieldTab({ data }: Readonly<{ data: MedicalContent }>) {
                     key={pearl}
                     className="flex items-start gap-3 p-3 rounded-lg bg-[var(--color-bg-secondary)]/50"
                   >
-                    <span className="text-amber-400 shrink-0">•</span>
+                    <span className="text-data-provisional shrink-0">•</span>
                     <span className="text-[var(--color-text-primary)] text-base leading-relaxed">
                       {pearl}
                     </span>
@@ -606,13 +606,13 @@ function DiagnosticsTab({ data }: Readonly<{ data: MedicalContent }>) {
         <CollapsibleSection title="Diagnostic Criteria" defaultOpen={sectionIndex++ === 0}>
           <div className="space-y-3">
             {bestInitial && (
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+              <div className="p-4 rounded-xl bg-data-pass/10 border border-data-pass/30">
                 <div className="flex items-start gap-3">
-                  <div className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/30 text-emerald-200 shrink-0">
+                  <div className="px-2 py-0.5 rounded text-xs font-bold bg-data-pass/30 text-data-pass shrink-0">
                     SCREENING
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-emerald-300 mb-1 uppercase tracking-wide">
+                    <h4 className="text-sm font-semibold text-data-pass mb-1 uppercase tracking-wide">
                       Best Initial Test
                     </h4>
                     <p className="text-[var(--color-text-primary)] text-base leading-relaxed">
@@ -623,13 +623,13 @@ function DiagnosticsTab({ data }: Readonly<{ data: MedicalContent }>) {
               </div>
             )}
             {goldStandard && (
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+              <div className="p-4 rounded-xl bg-data-provisional/10 border border-data-provisional/30">
                 <div className="flex items-start gap-3">
-                  <div className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/30 text-amber-200 shrink-0">
+                  <div className="px-2 py-0.5 rounded text-xs font-bold bg-data-provisional/30 text-data-provisional shrink-0">
                     CONFIRMATORY
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-amber-300 mb-1 uppercase tracking-wide">
+                    <h4 className="text-sm font-semibold text-data-provisional mb-1 uppercase tracking-wide">
                       Gold Standard
                     </h4>
                     <p className="text-[var(--color-text-primary)] text-base leading-relaxed">
@@ -864,12 +864,12 @@ function ManagementTab({ data }: Readonly<{ data: MedicalContent }>) {
         <CollapsibleSection
           title="Pharmacotherapy"
           icon={Pill}
-          iconColor="text-emerald-400"
+          iconColor="text-data-pass"
           defaultOpen={sectionIndex++ === 0}
         >
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+          <div className="p-4 rounded-xl bg-data-pass/10 border border-data-pass/30">
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/30 text-emerald-200">
+              <span className="px-2 py-0.5 rounded text-xs font-bold bg-data-pass/30 text-data-pass">
                 FIRST-LINE
               </span>
             </div>
@@ -937,11 +937,11 @@ function ManagementTab({ data }: Readonly<{ data: MedicalContent }>) {
         <CollapsibleSection
           title="Clinical Safety"
           icon={AlertTriangle}
-          iconColor="text-amber-400"
+          iconColor="text-data-provisional"
           defaultOpen={sectionIndex++ === 0}
         >
-          <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
-            <h4 className="text-sm font-semibold text-amber-300 mb-2 uppercase tracking-wide">
+          <div className="p-4 rounded-xl bg-data-provisional/5 border border-data-provisional/20">
+            <h4 className="text-sm font-semibold text-data-provisional mb-2 uppercase tracking-wide">
               Complications
             </h4>
             <ContentFieldRenderer

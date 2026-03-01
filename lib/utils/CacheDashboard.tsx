@@ -49,7 +49,7 @@ export const CacheDashboard: React.FC = () => {
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Cache Dashboard</h3>
         <button
           onClick={handleClearAll}
-          className="px-3 py-1 text-sm bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
+          className="px-3 py-1 text-sm bg-data-fail/10 text-data-fail rounded-lg hover:bg-data-fail/20 transition-colors"
         >
           Clear All Caches
         </button>
@@ -123,7 +123,7 @@ export const CacheDashboard: React.FC = () => {
           <div className="flex justify-end">
             <button
               onClick={() => handleClearCache(selectedCache)}
-              className="px-3 py-1 text-sm bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
+              className="px-3 py-1 text-sm bg-data-fail/10 text-data-fail rounded-lg hover:bg-data-fail/20 transition-colors"
             >
               Clear {selectedCache} Cache
             </button>
@@ -132,7 +132,7 @@ export const CacheDashboard: React.FC = () => {
       )}
 
       {/* Cache Tips */}
-      <div className="bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/20 rounded-lg p-3">
+      <div className="bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg p-3">
         <h4 className="font-medium text-[var(--color-text-primary)] mb-1">
           Cache Optimization Tips
         </h4>

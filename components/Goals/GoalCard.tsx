@@ -34,15 +34,15 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'text-blue-600 bg-blue-100 dark:bg-blue-900/30';
+        return 'text-[var(--color-category-practice)] bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]';
       case 'completed':
-        return 'text-green-600 bg-green-100 dark:bg-green-900/30';
+        return 'text-data-pass bg-data-pass dark:bg-data-pass/30';
       case 'paused':
         return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30';
       case 'failed':
-        return 'text-red-600 bg-red-100 dark:bg-red-900/30';
+        return 'text-data-fail bg-data-fail dark:bg-data-fail/30';
       default:
-        return 'text-slate-600 bg-slate-100 dark:bg-slate-800';
+        return 'text-data-neutral bg-data-neutral dark:bg-data-neutral';
     }
   };
 
@@ -98,13 +98,13 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 hover:shadow-lg transition-shadow"
+      className="bg-white dark:bg-data-neutral rounded-xl border border-data-neutral dark:border-data-neutral p-5 hover:shadow-lg transition-shadow"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <h3 className="text-lg font-semibold text-data-neutral dark:text-data-neutral">
               {goal.title}
             </h3>
             <span
@@ -113,17 +113,17 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
               {getStatusIcon(goal.status)}
               {goal.status}
             </span>
-            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400">
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral">
               {getTypeLabel(goal.goalType)}
             </span>
           </div>
 
           {goal.description && (
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{goal.description}</p>
+            <p className="text-sm text-data-neutral dark:text-data-neutral mb-2">{goal.description}</p>
           )}
 
           {goal.motivationNotes && (
-            <p className="text-sm text-blue-600 dark:text-blue-400 italic">
+            <p className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)] italic">
               💭 {goal.motivationNotes}
             </p>
           )}
@@ -132,17 +132,17 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
         <div className="flex gap-2 ml-4">
           <button
             onClick={onEdit}
-            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-data-neutral dark:hover:bg-data-neutral rounded-lg transition-colors"
             title="Edit goal"
           >
-            <Edit2 className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+            <Edit2 className="w-4 h-4 text-data-neutral dark:text-data-neutral" />
           </button>
           <button
             onClick={onDelete}
-            className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+            className="p-2 hover:bg-data-fail dark:hover:bg-data-fail/30 rounded-lg transition-colors"
             title="Delete goal"
           >
-            <Trash2 className="w-4 h-4 text-red-600" />
+            <Trash2 className="w-4 h-4 text-data-fail" />
           </button>
         </div>
       </div>
@@ -150,15 +150,15 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
       {/* Progress */}
       <div className="mb-4">
         <div className="flex items-center justify-between text-sm mb-2">
-          <span className="text-slate-600 dark:text-slate-400">
+          <span className="text-data-neutral dark:text-data-neutral">
             Progress: {goal.currentValue} / {goal.targetValue || '∞'} {goal.targetUnit || 'units'}
           </span>
-          <span className="font-semibold text-slate-900 dark:text-slate-100">
+          <span className="font-semibold text-data-neutral dark:text-data-neutral">
             {goal.progressPercentage.toFixed(0)}%
           </span>
         </div>
 
-        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+        <div className="w-full bg-data-neutral dark:bg-data-neutral rounded-full h-3 overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(goal.progressPercentage, 100)}%` }}
@@ -176,7 +176,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
             <Flame className="w-4 h-4" />
             <span>{goal.currentStreak} day streak</span>
             {goal.bestStreak > goal.currentStreak && (
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-data-neutral dark:text-data-neutral">
                 (best: {goal.bestStreak})
               </span>
             )}
@@ -185,7 +185,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
 
         {/* Target Date */}
         {goal.targetDate && (
-          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+          <div className="flex items-center gap-1.5 text-data-neutral dark:text-data-neutral">
             <Calendar className="w-4 h-4" />
             <span>
               {formatDate(goal.targetDate)}
@@ -193,7 +193,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
                 <span className="ml-1 text-xs">({daysRemaining} days left)</span>
               )}
               {daysRemaining !== null && daysRemaining < 0 && (
-                <span className="ml-1 text-xs text-red-600">(overdue)</span>
+                <span className="ml-1 text-xs text-data-fail">(overdue)</span>
               )}
             </span>
           </div>
@@ -201,7 +201,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
 
         {/* Target System */}
         {goal.targetSystem && (
-          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
+          <div className="flex items-center gap-1.5 text-data-neutral dark:text-data-neutral">
             <Target className="w-4 h-4" />
             <span>{goal.targetSystem}</span>
           </div>
@@ -217,16 +217,16 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
 
       {/* Milestones */}
       {goal.milestones && Array.isArray(goal.milestones) && goal.milestones.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-          <div className="text-xs text-slate-600 dark:text-slate-400 mb-2">Milestones:</div>
+        <div className="mt-4 pt-4 border-t border-data-neutral dark:border-data-neutral">
+          <div className="text-xs text-data-neutral dark:text-data-neutral mb-2">Milestones:</div>
           <div className="flex gap-2 flex-wrap">
             {(goal.milestones as any[]).map((milestone, idx) => (
               <div
                 key={idx}
                 className={`px-2 py-1 rounded text-xs ${
                   milestone.reached
-                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                    ? 'bg-data-pass dark:bg-data-pass/30 text-data-pass dark:text-data-pass'
+                    : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral'
                 }`}
               >
                 {milestone.reached && '✓ '}
@@ -239,8 +239,8 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
 
       {/* Reward Message */}
       {goal.status === 'completed' && goal.rewardMessage && (
-        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-          <div className="text-sm text-green-600 dark:text-green-400 font-medium">
+        <div className="mt-4 pt-4 border-t border-data-neutral dark:border-data-neutral">
+          <div className="text-sm text-data-pass dark:text-data-pass font-medium">
             🎉 {goal.rewardMessage}
           </div>
         </div>

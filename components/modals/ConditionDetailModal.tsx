@@ -332,7 +332,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             <div className="condition-scrollable condition-scrollable-padded" ref={contentRef}>
               {isLoading && sections.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                  <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                  <div className="w-12 h-12 border-4 border-[var(--color-category-practice)] border-t-blue-600 rounded-full animate-spin"></div>
                   <p className="text-[var(--color-text-muted)] font-medium">
                     Loading condition details...
                   </p>
@@ -450,12 +450,12 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                                     </h4>
                                     <div className="flex gap-4 text-sm text-[var(--color-text-muted)] mt-1 mb-2">
                                       {test.sensitivity && (
-                                        <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">
+                                        <span className="bg-data-pass text-data-pass px-2 py-0.5 rounded text-xs">
                                           Sensitivity: {test.sensitivity}%
                                         </span>
                                       )}
                                       {test.specificity && (
-                                        <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">
+                                        <span className="bg-[var(--color-category-practice)] text-[var(--color-category-practice)] px-2 py-0.5 rounded text-xs">
                                           Specificity: {test.specificity}%
                                         </span>
                                       )}

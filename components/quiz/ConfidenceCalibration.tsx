@@ -56,13 +56,13 @@ export const ConfidenceSelector: React.FC<ConfidenceSelectorProps> = ({
       value: 'guessing',
       label: 'Guessing',
       shortLabel: 'Guess',
-      color: 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200',
+      color: 'bg-data-neutral border-data-neutral text-data-neutral hover:bg-data-neutral',
     },
   ];
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-slate-500 mr-1">Confidence:</span>
+      <span className="text-xs text-data-neutral mr-1">Confidence:</span>
       {options.map((opt) => (
         <button
           key={opt.value}
@@ -149,7 +149,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
 
   if (!stats || stats.total < 5) {
     return (
-      <div className="text-xs text-slate-500 italic">
+      <div className="text-xs text-data-neutral italic">
         Answer {5 - (stats?.total || 0)} more questions with confidence ratings to see calibration
       </div>
     );
@@ -159,7 +159,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
     accuracy: number | null,
     expected: { min: number; max: number }
   ) => {
-    if (accuracy === null) return { icon: Minus, color: 'text-slate-400', label: 'N/A' };
+    if (accuracy === null) return { icon: Minus, color: 'text-data-neutral', label: 'N/A' };
     if (accuracy >= expected.min && accuracy <= expected.max) {
       return { icon: TrendingUp, color: 'text-[var(--color-data-pass)]', label: 'Well calibrated' };
     }
@@ -174,16 +174,16 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div className="bg-white dark:bg-data-neutral rounded-lg border border-data-neutral dark:border-data-neutral overflow-hidden">
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-data-neutral dark:hover:bg-data-neutral/50 transition-colors"
       >
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <Info className="w-4 h-4 text-slate-500" />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <Info className="w-4 h-4 text-data-neutral" />
+            <span className="text-sm font-medium text-data-neutral dark:text-data-neutral">
               Confidence Calibration
             </span>
           </div>
@@ -202,9 +202,9 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
           )}
         </div>
         {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-slate-400" />
+          <ChevronUp className="w-4 h-4 text-data-neutral" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-slate-400" />
+          <ChevronDown className="w-4 h-4 text-data-neutral" />
         )}
       </button>
 
@@ -218,7 +218,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 space-y-3 border-t border-slate-100 dark:border-slate-700 pt-3">
+            <div className="px-4 pb-4 space-y-3 border-t border-data-neutral dark:border-data-neutral pt-3">
               {/* Very Sure */}
               <ConfidenceRow
                 label="Very Sure"
@@ -247,7 +247,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
               />
 
               {/* Interpretation */}
-              <div className="pt-2 text-xs text-slate-500 leading-relaxed">
+              <div className="pt-2 text-xs text-data-neutral leading-relaxed">
                 {stats.calibrationScore !== null && stats.calibrationScore >= 75 ? (
                   <span className="text-[var(--color-data-pass)]">
                     ✓ Your confidence aligns well with performance - you know what you know!
@@ -283,7 +283,7 @@ const ConfidenceRow: React.FC<{
   const colorClasses = {
     emerald: 'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]/20',
     amber: 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/20',
-    slate: 'bg-slate-100 border-slate-200',
+    slate: 'bg-data-neutral border-data-neutral',
   };
 
   const status = (() => {
@@ -297,8 +297,8 @@ const ConfidenceRow: React.FC<{
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
         <div className={`w-2 h-2 rounded-full ${colorClasses[color].split(' ')[0]}`} />
-        <span className="text-sm text-slate-600 dark:text-slate-400">{label}</span>
-        <span className="text-xs text-slate-400">({count})</span>
+        <span className="text-sm text-data-neutral dark:text-data-neutral">{label}</span>
+        <span className="text-xs text-data-neutral">({count})</span>
       </div>
       <div className="flex items-center gap-2">
         {accuracy !== null ? (
@@ -311,17 +311,17 @@ const ConfidenceRow: React.FC<{
                     ? 'text-[var(--color-accent)]'
                     : status === 'overconfident'
                       ? 'text-[var(--color-data-provisional)]'
-                      : 'text-slate-600'
+                      : 'text-data-neutral'
               }`}
             >
               {accuracy}%
             </span>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-data-neutral">
               (expect {expected.min}-{expected.max}%)
             </span>
           </>
         ) : (
-          <span className="text-xs text-slate-400">Need more data</span>
+          <span className="text-xs text-data-neutral">Need more data</span>
         )}
       </div>
     </div>

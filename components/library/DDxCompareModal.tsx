@@ -128,7 +128,7 @@ const ConditionSelector: React.FC<{
                     <p className="text-xs text-[var(--color-text-muted)]">{condition.system}</p>
                   </div>
                   {selected?.id === condition.id && (
-                    <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <Check className="w-4 h-4 text-data-pass flex-shrink-0" />
                   )}
                 </button>
               ))}
@@ -181,7 +181,7 @@ const ComparisonRow: React.FC<{
           {field.label}
         </span>
         {isDifferent && (
-          <span className="mt-1 px-1.5 py-0.5 rounded text-[8px] bg-amber-500/20 text-amber-400 font-semibold">
+          <span className="mt-1 px-1.5 py-0.5 rounded text-[8px] bg-data-provisional/20 text-data-provisional font-semibold">
             DIFFERS
           </span>
         )}

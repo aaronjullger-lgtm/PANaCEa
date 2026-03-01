@@ -88,9 +88,9 @@ const quadrants: Array<{
   {
     key: 'unconfidentWrong',
     icon: XCircle,
-    bgClass: 'bg-slate-100 dark:bg-slate-800',
-    borderClass: 'border-slate-200 dark:border-slate-600',
-    textClass: 'text-slate-600 dark:text-slate-400',
+    bgClass: 'bg-data-neutral dark:bg-data-neutral',
+    borderClass: 'border-data-neutral dark:border-data-neutral',
+    textClass: 'text-data-neutral dark:text-data-neutral',
   },
 ];
 

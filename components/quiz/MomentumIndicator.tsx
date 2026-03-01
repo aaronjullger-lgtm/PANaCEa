@@ -50,9 +50,9 @@ const levelConfig: Record<
   },
   steady: {
     icon: Equal,
-    color: 'text-slate-500',
-    bgColor: 'bg-slate-100 dark:bg-slate-800',
-    borderColor: 'border-slate-200 dark:border-slate-700',
+    color: 'text-data-neutral',
+    bgColor: 'bg-data-neutral dark:bg-data-neutral',
+    borderColor: 'border-data-neutral dark:border-data-neutral',
     label: 'Steady',
   },
   cooling: {
@@ -123,7 +123,7 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <span className={`text-sm font-semibold ${config.color}`}>{config.label}</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">{momentum.score}%</span>
+            <span className="text-xs text-data-neutral dark:text-data-neutral">{momentum.score}%</span>
           </div>
 
           {/* Progress bar */}
@@ -141,13 +141,13 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
                       ? 'bg-[var(--color-data-provisional)]'
                       : momentum.level === 'cold'
                         ? 'bg-[var(--color-accent)]'
-                        : 'bg-slate-400'
+                        : 'bg-data-neutral'
               }`}
             />
           </div>
 
           {/* Stats row */}
-          <div className="mt-2 flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
+          <div className="mt-2 flex items-center gap-3 text-xs text-data-neutral dark:text-data-neutral">
             {momentum.streak > 0 && (
               <span className="flex items-center gap-1">
                 <Zap className="w-3 h-3 text-[var(--color-data-provisional)]" />

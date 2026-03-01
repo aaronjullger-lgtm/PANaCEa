@@ -61,10 +61,10 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<any>> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  presentation: 'border-blue-500/30 bg-blue-500/5',
+  presentation: 'border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-category-practice)_5%,transparent)]',
   demographics: 'border-purple-500/30 bg-purple-500/5',
-  pathophysiology: 'border-amber-500/30 bg-amber-500/5',
-  diagnosis: 'border-green-500/30 bg-green-500/5',
+  pathophysiology: 'border-data-provisional/30 bg-data-provisional/5',
+  diagnosis: 'border-data-pass/30 bg-data-pass/5',
   treatment: 'border-rose-500/30 bg-rose-500/5',
   prognosis: 'border-cyan-500/30 bg-cyan-500/5',
 };
@@ -206,7 +206,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
               onClick={() => setHighlightDifferences(!highlightDifferences)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 highlightDifferences
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  ? 'bg-data-provisional/20 text-data-provisional border border-data-provisional/30'
                   : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]'
               }`}
             >
@@ -219,7 +219,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
               onClick={() => setShowLinkedEntities(!showLinkedEntities)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 showLinkedEntities
-                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                  ? 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)] border border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]'
                   : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]'
               }`}
             >
@@ -253,9 +253,9 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                   </span>
                   <button
                     onClick={() => toggleCondition(id)}
-                    className="p-0.5 rounded-full hover:bg-red-500/20 transition-colors"
+                    className="p-0.5 rounded-full hover:bg-data-fail/20 transition-colors"
                   >
-                    <X className="w-3 h-3 text-red-400" />
+                    <X className="w-3 h-3 text-data-fail" />
                   </button>
                 </div>
               );
@@ -280,7 +280,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
               </div>
             </div>
           ) : error ? (
-            <div className="flex items-center justify-center h-64 text-red-400">
+            <div className="flex items-center justify-center h-64 text-data-fail">
               <AlertTriangle className="w-5 h-5 mr-2" />
               {error}
             </div>
@@ -295,8 +295,8 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
             <div className="p-4 sm:p-6">
               {/* Discriminating Features Banner */}
               {comparisonData.discriminatingFeatures.length > 0 && (
-                <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wide mb-2">
+                <div className="mb-4 p-3 rounded-xl bg-data-provisional/10 border border-data-provisional/30">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-data-provisional uppercase tracking-wide mb-2">
                     <Lightbulb className="w-4 h-4" />
                     Key Discriminating Features
                   </div>
@@ -304,7 +304,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                     {comparisonData.discriminatingFeatures.map((feature) => (
                       <span
                         key={feature}
-                        className="px-2 py-1 rounded bg-amber-500/20 text-xs text-amber-300"
+                        className="px-2 py-1 rounded bg-data-provisional/20 text-xs text-data-provisional"
                       >
                         {feature.replace(/_/g, ' ')}
                       </span>
@@ -397,7 +397,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                                           <div className="flex items-center gap-1">
                                             {field.label}
                                             {differs && highlightDifferences && (
-                                              <Star className="w-3 h-3 text-amber-400" />
+                                              <Star className="w-3 h-3 text-data-provisional" />
                                             )}
                                           </div>
                                         </td>
@@ -420,7 +420,7 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
                                               key={cond.id}
                                               className={`px-4 py-2 text-[var(--color-text-secondary)] ${
                                                 differs && highlightDifferences
-                                                  ? 'bg-amber-500/5'
+                                                  ? 'bg-data-provisional/5'
                                                   : ''
                                               }`}
                                             >

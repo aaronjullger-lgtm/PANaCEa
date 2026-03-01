@@ -237,18 +237,18 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <Target className="w-8 h-8 text-blue-600" />
+          <h1 className="text-3xl font-bold text-data-neutral dark:text-data-neutral flex items-center gap-2">
+            <Target className="w-8 h-8 text-[var(--color-category-practice)]" />
             Your Goals
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-1">
+          <p className="text-data-neutral dark:text-data-neutral mt-1">
             Track your progress and stay motivated
           </p>
         </div>
 
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
+          className="px-4 py-2 bg-[var(--color-category-practice)] text-white rounded-lg hover:bg-[var(--color-category-practice)] transition-colors flex items-center gap-2 font-medium"
         >
           <Plus className="w-5 h-5" />
           New Goal
@@ -257,34 +257,34 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm mb-1">
+        <div className="bg-white dark:bg-data-neutral p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
+          <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral text-sm mb-1">
             <Target className="w-4 h-4" />
             Active Goals
           </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+          <div className="text-2xl font-bold text-data-neutral dark:text-data-neutral">
             {stats.active}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm mb-1">
+        <div className="bg-white dark:bg-data-neutral p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
+          <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral text-sm mb-1">
             <CheckCircle className="w-4 h-4" />
             Completed
           </div>
-          <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+          <div className="text-2xl font-bold text-data-pass">{stats.completed}</div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm mb-1">
+        <div className="bg-white dark:bg-data-neutral p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
+          <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral text-sm mb-1">
             <Flame className="w-4 h-4" />
             Total Streak
           </div>
           <div className="text-2xl font-bold text-orange-600">{stats.totalStreak}</div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-sm mb-1">
+        <div className="bg-white dark:bg-data-neutral p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
+          <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral text-sm mb-1">
             <Trophy className="w-4 h-4" />
             Best Streak
           </div>
@@ -295,12 +295,12 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
       {/* Filters */}
       <div className="flex gap-3 mb-6 flex-wrap">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-          <span className="text-sm text-slate-600 dark:text-slate-400">Status:</span>
+          <Filter className="w-4 h-4 text-data-neutral dark:text-data-neutral" />
+          <span className="text-sm text-data-neutral dark:text-data-neutral">Status:</span>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"
+            className="px-3 py-1 rounded-lg border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral text-sm"
           >
             <option value="all">All</option>
             <option value="active">Active</option>
@@ -311,11 +311,11 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-600 dark:text-slate-400">Type:</span>
+          <span className="text-sm text-data-neutral dark:text-data-neutral">Type:</span>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"
+            className="px-3 py-1 rounded-lg border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral text-sm"
           >
             <option value="all">All</option>
             <option value="daily">Daily</option>
@@ -328,26 +328,26 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
 
       {/* Goals List */}
       {isLoading ? (
-        <div className="text-center py-12 text-slate-600 dark:text-slate-400">Loading goals...</div>
+        <div className="text-center py-12 text-data-neutral dark:text-data-neutral">Loading goals...</div>
       ) : error ? (
         <div className="text-center py-12">
-          <p className="text-red-600 mb-4">{error}</p>
+          <p className="text-data-fail mb-4">{error}</p>
           <button
             onClick={fetchGoals}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-[var(--color-category-practice)] text-white rounded-lg hover:bg-[var(--color-category-practice)] transition-colors"
           >
             Retry
           </button>
         </div>
       ) : goals.length === 0 ? (
         <div className="text-center py-12">
-          <Target className="w-16 h-16 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-          <p className="text-slate-600 dark:text-slate-400 mb-4">
+          <Target className="w-16 h-16 mx-auto text-data-neutral dark:text-data-neutral mb-4" />
+          <p className="text-data-neutral dark:text-data-neutral mb-4">
             No goals yet. Create your first goal to get started!
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-[var(--color-category-practice)] text-white rounded-lg hover:bg-[var(--color-category-practice)] transition-colors"
           >
             Create Goal
           </button>

@@ -52,9 +52,9 @@ export const ContentFieldRenderer: React.FC<ContentFieldRendererProps> = ({
             <div
               className={`prose prose-sm dark:prose-invert max-w-none animate-pulse ${className}`}
             >
-              <div className="h-4 bg-slate-700/50 rounded w-full mb-2" />
-              <div className="h-4 bg-slate-700/50 rounded w-5/6 mb-2" />
-              <div className="h-4 bg-slate-700/50 rounded w-4/6" />
+              <div className="h-4 bg-data-neutral/50 rounded w-full mb-2" />
+              <div className="h-4 bg-data-neutral/50 rounded w-5/6 mb-2" />
+              <div className="h-4 bg-data-neutral/50 rounded w-4/6" />
             </div>
           }
         >
@@ -154,8 +154,8 @@ export const ClassicTriadRenderer: React.FC<{
   return (
     <div className={`bg-amber-950/20 border border-amber-800/30 rounded-xl p-4 ${className}`}>
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-amber-400 font-semibold">Classic Triad</span>
-        <span className="text-xs text-amber-500/70">({items.length} features)</span>
+        <span className="text-data-provisional font-semibold">Classic Triad</span>
+        <span className="text-xs text-data-provisional/70">({items.length} features)</span>
       </div>
       <BulletListRenderer items={items} variant="checklist" />
     </div>

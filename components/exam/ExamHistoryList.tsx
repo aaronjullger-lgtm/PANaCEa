@@ -70,15 +70,15 @@ function formatTime(date: Date | string): string {
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 450) return 'text-emerald-600 dark:text-emerald-400';
-  if (score >= 400) return 'text-amber-600 dark:text-amber-400';
-  return 'text-red-600 dark:text-red-400';
+  if (score >= 450) return 'text-data-pass dark:text-data-pass';
+  if (score >= 400) return 'text-data-provisional dark:text-data-provisional';
+  return 'text-data-fail dark:text-data-fail';
 }
 
 function getScoreBgColor(score: number): string {
-  if (score >= 450) return 'bg-emerald-100 dark:bg-emerald-900/30';
-  if (score >= 400) return 'bg-amber-100 dark:bg-amber-900/30';
-  return 'bg-red-100 dark:bg-red-900/30';
+  if (score >= 450) return 'bg-data-pass dark:bg-data-pass/30';
+  if (score >= 400) return 'bg-data-provisional dark:bg-data-provisional/30';
+  return 'bg-data-fail dark:bg-data-fail/30';
 }
 
 // Suppress unused variable warnings for helper functions used conditionally
@@ -140,13 +140,13 @@ export function ExamHistoryList({
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse">
+          <div key={i} className="p-4 rounded-xl bg-data-neutral dark:bg-data-neutral animate-pulse">
             <div className="flex justify-between items-start">
               <div className="space-y-2">
-                <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded" />
-                <div className="h-3 w-32 bg-slate-200 dark:bg-slate-700 rounded" />
+                <div className="h-4 w-24 bg-data-neutral dark:bg-data-neutral rounded" />
+                <div className="h-3 w-32 bg-data-neutral dark:bg-data-neutral rounded" />
               </div>
-              <div className="h-12 w-16 bg-slate-200 dark:bg-slate-700 rounded-lg" />
+              <div className="h-12 w-16 bg-data-neutral dark:bg-data-neutral rounded-lg" />
             </div>
           </div>
         ))}
@@ -157,11 +157,11 @@ export function ExamHistoryList({
   if (attempts.length === 0) {
     return (
       <div className="text-center py-12">
-        <Target className="h-12 w-12 mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-        <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-2">
+        <Target className="h-12 w-12 mx-auto text-data-neutral dark:text-data-neutral mb-4" />
+        <h3 className="text-lg font-medium text-data-neutral dark:text-data-neutral mb-2">
           No Exam History
         </h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-data-neutral dark:text-data-neutral">
           Start your first practice exam to track your progress.
         </p>
       </div>
@@ -173,31 +173,31 @@ export function ExamHistoryList({
       {/* Summary Stats */}
       {showTrends && (
         <div className="grid grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Total Exams</p>
+          <div className="p-4 rounded-xl bg-data-neutral dark:bg-data-neutral/50">
+            <p className="text-xs text-data-neutral dark:text-data-neutral mb-1">Total Exams</p>
             <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.total}</p>
           </div>
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Completed</p>
+          <div className="p-4 rounded-xl bg-data-neutral dark:bg-data-neutral/50">
+            <p className="text-xs text-data-neutral dark:text-data-neutral mb-1">Completed</p>
             <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.completed}</p>
           </div>
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Pass Rate</p>
+          <div className="p-4 rounded-xl bg-data-neutral dark:bg-data-neutral/50">
+            <p className="text-xs text-data-neutral dark:text-data-neutral mb-1">Pass Rate</p>
             <p
               className={`text-2xl font-bold ${stats.passRate >= 70 ? 'text-emerald-600' : 'text-amber-600'}`}
             >
               {stats.passRate}%
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 relative">
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Avg Score</p>
+          <div className="p-4 rounded-xl bg-data-neutral dark:bg-data-neutral/50 relative">
+            <p className="text-xs text-data-neutral dark:text-data-neutral mb-1">Avg Score</p>
             <p className={`text-2xl font-bold ${getScoreColor(stats.avgScore)}`}>
               {stats.avgScore}
             </p>
             {trend && (
               <div
                 className={`absolute top-2 right-2 flex items-center gap-0.5 text-xs ${
-                  trend.direction === 'up' ? 'text-emerald-500' : 'text-red-500'
+                  trend.direction === 'up' ? 'text-data-pass' : 'text-data-fail'
                 }`}
               >
                 {trend.direction === 'up' ? (
@@ -225,8 +225,8 @@ export function ExamHistoryList({
               p-4 rounded-xl border-2 transition-all
               ${
                 attempt.status === 'completed'
-                  ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
-                  : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+                  ? 'bg-white dark:bg-data-neutral border-data-neutral dark:border-data-neutral'
+                  : 'bg-data-provisional dark:bg-data-provisional/20 border-data-provisional dark:border-data-provisional'
               }
               ${onSelectAttempt ? 'cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-600' : ''}
             `}
@@ -240,24 +240,24 @@ export function ExamHistoryList({
                   </span>
                   {attempt.status === 'completed' &&
                     (attempt.passStatus === 'passed' ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-data-pass dark:bg-data-pass/50 text-data-pass dark:text-data-pass">
                         <CheckCircle className="h-3 w-3" />
                         Passed
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-data-fail dark:bg-data-fail/50 text-data-fail dark:text-data-fail">
                         <XCircle className="h-3 w-3" />
                         Failed
                       </span>
                     ))}
                   {attempt.status === 'in_progress' && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-data-provisional dark:bg-data-provisional/50 text-data-provisional dark:text-data-provisional">
                       In Progress
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+                <div className="flex items-center gap-4 text-sm text-data-neutral dark:text-data-neutral">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
                     <span>{formatDate(attempt.startedAt)}</span>
@@ -286,7 +286,7 @@ export function ExamHistoryList({
                   <span className={`text-2xl font-bold ${getScoreColor(attempt.score)}`}>
                     {attempt.score}
                   </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                  <span className="text-xs text-data-neutral dark:text-data-neutral">
                     {attempt.percentCorrect}%
                   </span>
                 </div>
@@ -302,7 +302,7 @@ export function ExamHistoryList({
                   Resume
                 </button>
               ) : (
-                <ChevronRight className="h-5 w-5 text-slate-400" />
+                <ChevronRight className="h-5 w-5 text-data-neutral" />
               )}
             </div>
 
@@ -310,7 +310,7 @@ export function ExamHistoryList({
             {attempt.status === 'completed' &&
               attempt.systemScores &&
               Object.keys(attempt.systemScores).length > 0 && (
-                <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                <div className="mt-3 pt-3 border-t border-data-neutral dark:border-data-neutral">
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {Object.entries(attempt.systemScores)
                       .sort((a, b) => b[1] - a[1])
@@ -322,10 +322,10 @@ export function ExamHistoryList({
                           flex-shrink-0 px-2 py-1 rounded text-xs font-medium
                           ${
                             score >= 75
-                              ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                              ? 'bg-data-pass dark:bg-data-pass/30 text-data-pass dark:text-data-pass'
                               : score >= 60
-                                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                                : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                ? 'bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional'
+                                : 'bg-data-fail dark:bg-data-fail/30 text-data-fail dark:text-data-fail'
                           }
                         `}
                         >

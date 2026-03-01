@@ -578,7 +578,7 @@ export const MyPearlsPanel: React.FC<MyPearlsPanelProps> = ({ onClose, initialFi
               }}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
                 rapidReviewMode
-                  ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                  ? 'bg-data-provisional/20 text-data-provisional dark:text-data-provisional'
                   : 'bg-[var(--color-bg-primary)]/20 hover:bg-[var(--color-bg-primary)]/30'
               }`}
               title="Rapid Review: Space=flip, Arrows=navigate"

@@ -205,8 +205,8 @@ const StatCard: React.FC<StatCardProps> = ({
 }) => {
   const isHighlight = isGoldAchievement || isClinicalAchievement;
   const highlightClass = isClinicalAchievement ? 'clinical-achievement' : 'gold-achievement';
-  const highlightTextClass = isClinicalAchievement ? 'text-teal-700' : 'text-amber-900';
-  const highlightIconClass = isClinicalAchievement ? 'text-teal-500' : 'text-amber-500';
+  const highlightTextClass = isClinicalAchievement ? 'text-teal-700' : 'text-data-provisional';
+  const highlightIconClass = isClinicalAchievement ? 'text-teal-500' : 'text-data-provisional';
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -236,7 +236,7 @@ const StatCard: React.FC<StatCardProps> = ({
         {trend !== undefined && (
           <span
             className={`flex items-center gap-0.5 text-xs font-medium ${
-              trend > 0 ? 'text-teal-500' : trend < 0 ? 'text-slate-500' : 'text-slate-500'
+              trend > 0 ? 'text-teal-500' : trend < 0 ? 'text-data-neutral' : 'text-data-neutral'
             }`}
           >
             {trend > 0 ? (
@@ -404,7 +404,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
             label="Recent Form"
             value={`${data.recentTrend >= 0 ? '+' : ''}${data.recentTrend}%`}
             subtext="Last 50 questions"
-            colorClass={data.recentTrend >= 0 ? 'text-teal-500' : 'text-slate-500'}
+            colorClass={data.recentTrend >= 0 ? 'text-teal-500' : 'text-data-neutral'}
             delay={delay}
           />
         );
@@ -504,7 +504,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
             className="widget-premium-glass widget-noise-texture p-4 col-span-2"
           >
             <div className="flex items-center gap-2 mb-3">
-              <Clock className="w-5 h-5 text-blue-500" />
+              <Clock className="w-5 h-5 text-[var(--color-category-practice)]" />
               <span className="stat-label-sm">Speed vs Accuracy</span>
             </div>
             <div className="flex items-center gap-4">
@@ -512,7 +512,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
                 <div className="stat-label-sm mb-1">{'Fast (<30s)'}</div>
                 <div className="h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-blue-500 rounded-full"
+                    className="h-full bg-[var(--color-category-practice)] rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${data.fastCorrectRate ?? 0}%` }}
                     transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -526,7 +526,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
                 <div className="stat-label-sm mb-1">{'Slow (>60s)'}</div>
                 <div className="h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-emerald-500 rounded-full"
+                    className="h-full bg-data-pass rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${data.slowCorrectRate ?? 0}%` }}
                     transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
@@ -557,7 +557,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
             value={`${data.secondGuessAccuracy ?? 0}%`}
             subtext="Accuracy when changing answers"
             colorClass={
-              (data.secondGuessAccuracy ?? 50) >= 50 ? 'text-emerald-500' : 'text-amber-500'
+              (data.secondGuessAccuracy ?? 50) >= 50 ? 'text-data-pass' : 'text-data-provisional'
             }
             delay={delay}
           />

@@ -90,7 +90,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
     >
       {/* Classic Portrayal Badge */}
       {isClassic && (
-        <div className="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg bg-amber-500/90 text-amber-50 text-xs font-bold backdrop-blur-sm">
+        <div className="absolute top-2 left-2 z-10 px-2 py-1 rounded-lg bg-data-provisional/90 text-data-provisional text-xs font-bold backdrop-blur-sm">
           CLASSIC
         </div>
       )}
@@ -121,7 +121,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
             title={title}
             onLoad={handleImageLoad}
             onError={handleImageError}
-            className="w-full h-full object-contain bg-slate-900/50 transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-contain bg-data-neutral/50 transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />
 
@@ -148,7 +148,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
             title={title}
             onLoad={handleImageLoad}
             onError={handleImageError}
-            className="w-full h-full object-contain bg-slate-900/50"
+            className="w-full h-full object-contain bg-data-neutral/50"
             loading="lazy"
           />
         </div>
@@ -177,13 +177,13 @@ export const SmartImage: React.FC<SmartImageProps> = ({
           )}
 
           {license && (
-            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-medium">
+            <span className="px-2 py-0.5 rounded bg-data-pass/10 text-data-pass border border-data-pass/30 text-xs font-medium">
               {license}
             </span>
           )}
 
           {!isHunterGatherer && (source || attribution) && (
-            <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-medium">
+            <span className="px-2 py-0.5 rounded bg-data-provisional/10 text-data-provisional border border-data-provisional/30 text-xs font-medium">
               ⚠ Non-standard source
             </span>
           )}

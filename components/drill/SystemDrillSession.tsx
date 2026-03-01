@@ -330,10 +330,10 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
                     <span
                       className={`font-semibold ${
                         cat.accuracy >= 80
-                          ? 'text-emerald-600 dark:text-emerald-400'
+                          ? 'text-data-pass dark:text-data-pass'
                           : cat.accuracy >= 70
-                            ? 'text-amber-600 dark:text-amber-400'
-                            : 'text-red-600 dark:text-red-400'
+                            ? 'text-data-provisional dark:text-data-provisional'
+                            : 'text-data-fail dark:text-data-fail'
                       }`}
                     >
                       {cat.accuracy}%
@@ -364,7 +364,7 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
       return (
         <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
-            <div className="text-red-500 mb-4">⚠️</div>
+            <div className="text-data-fail mb-4">⚠️</div>
             <h2 className="text-xl font-bold mb-2 text-[var(--color-text-primary)]">
               Error Loading Questions
             </h2>
@@ -478,17 +478,17 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
                 className="relative p-8 rounded-xl bg-[var(--color-bg-secondary)]/50 backdrop-blur-sm border-2 border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-[0_18px_42px_var(--color-shadow-soft)] hover:bg-[var(--color-bg-secondary)]/80 transition-all text-left group hover:scale-[1.03]"
               >
                 <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-lg bg-slate-700/40 group-hover:bg-slate-600/60 transition-colors">
-                    <Icon className="w-7 h-7 text-slate-300 group-hover:text-white transition-colors" />
+                  <div className="p-3 rounded-lg bg-data-neutral/40 group-hover:bg-data-neutral/60 transition-colors">
+                    <Icon className="w-7 h-7 text-data-neutral group-hover:text-white transition-colors" />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                       <Layers className="w-5 h-5 text-action-blue-600" />
                       {system.name}
                     </h3>
-                    <p className="text-sm text-slate-300 leading-relaxed">{system.description}</p>
+                    <p className="text-sm text-data-neutral leading-relaxed">{system.description}</p>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 group-hover:text-white transition-all" />
+                  <ArrowRight className="w-5 h-5 text-data-neutral group-hover:translate-x-1 group-hover:text-white transition-all" />
                 </div>
               </motion.button>
             );

@@ -300,9 +300,9 @@ export const ABGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
             <div
               className={`rounded-2xl p-6 border-2 ${
                 interpretation.acidBaseStatus === 'normal'
-                  ? 'bg-emerald-950/40 border-emerald-700'
+                  ? 'bg-data-pass/40 border-data-pass'
                   : interpretation.acidBaseStatus === 'acidosis'
-                    ? 'bg-red-950/40 border-red-700'
+                    ? 'bg-data-fail/40 border-data-fail'
                     : 'bg-cyan-950/40 border-cyan-700'
               }`}
             >
@@ -310,9 +310,9 @@ export const ABGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
                 <Activity
                   className={`w-10 h-10 flex-shrink-0 ${
                     interpretation.acidBaseStatus === 'normal'
-                      ? 'text-emerald-400'
+                      ? 'text-data-pass'
                       : interpretation.acidBaseStatus === 'acidosis'
-                        ? 'text-red-400'
+                        ? 'text-data-fail'
                         : 'text-cyan-400'
                   }`}
                 />
@@ -329,7 +329,7 @@ export const ABGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
                     </p>
                   )}
                   {interpretation.oxygenStatus && (
-                    <p className="text-sm text-amber-400 font-medium">
+                    <p className="text-sm text-data-provisional font-medium">
                       {interpretation.oxygenStatus}
                     </p>
                   )}

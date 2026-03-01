@@ -113,7 +113,7 @@ function createInitialMetrics(): QuestionImplicitMetrics {
  * ```
  */
 export function useImplicitMetrics(): UseImplicitMetricsReturn {
-  const [metrics, setMetrics] = useState<QuestionImplicitMetrics>(createInitialMetrics);
+  const metricsRef = useRef<QuestionImplicitMetrics>(createInitialMetrics());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<Error | null>(null);
   const startTimeRef = useRef<number>(Date.now());
@@ -127,20 +127,17 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
     const now = Date.now();
     startTimeRef.current = now;
 
-    setMetrics({
+    metricsRef.current = {
       ...createInitialMetrics(),
       questionStartTime: new Date(now).toISOString(),
-    });
+    };
 
-    // Update dwell time every second
+    // Update dwell time every second (silent - no re-render)
     if (dwellIntervalRef.current) {
       clearInterval(dwellIntervalRef.current);
     }
     dwellIntervalRef.current = setInterval(() => {
-      setMetrics((prev) => ({
-        ...prev,
-        totalDwellTime: Date.now() - startTimeRef.current,
-      }));
+      metricsRef.current.totalDwellTime = Date.now() - startTimeRef.current;
     }, 1000);
   }, []);
 
@@ -148,24 +145,19 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
    * Record when user selects or changes their answer
    */
   const recordAnswerSelection = useCallback((answer: string | number) => {
-    setMetrics((prev) => {
-      const now = Date.now();
-      const isFirstSelection = prev.timeToFirstClick === null;
-      const isSwitch = prev.selectedAnswer !== null && prev.selectedAnswer !== answer;
+    const now = Date.now();
+    const prev = metricsRef.current;
+    const isFirstSelection = prev.timeToFirstClick === null;
+    const isSwitch = prev.selectedAnswer !== null && prev.selectedAnswer !== answer;
 
-      return {
-        ...prev,
-        // Record time to first click only on first selection
-        timeToFirstClick: isFirstSelection ? now - startTimeRef.current : prev.timeToFirstClick,
-        // Increment switch count if changing from a previous answer
-        answerSwitches: isSwitch ? prev.answerSwitches + 1 : prev.answerSwitches,
-        // Track previous and current answer
-        previousAnswer: prev.selectedAnswer,
-        selectedAnswer: answer,
-        // Update dwell time
-        totalDwellTime: now - startTimeRef.current,
-      };
-    });
+    metricsRef.current = {
+      ...prev,
+      timeToFirstClick: isFirstSelection ? now - startTimeRef.current : prev.timeToFirstClick,
+      answerSwitches: isSwitch ? prev.answerSwitches + 1 : prev.answerSwitches,
+      previousAnswer: prev.selectedAnswer,
+      selectedAnswer: answer,
+      totalDwellTime: now - startTimeRef.current,
+    };
   }, []);
 
   /**
@@ -187,12 +179,12 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
       }
 
       const finalMetrics: QuestionImplicitMetrics = {
-        ...metrics,
+        ...metricsRef.current,
         totalDwellTime: now - startTimeRef.current,
         submitTime: new Date(now).toISOString(),
       };
 
-      setMetrics(finalMetrics);
+      metricsRef.current = finalMetrics;
 
       // POST metrics to API asynchronously (don't block UI)
       setIsSubmitting(true);
@@ -245,7 +237,7 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
 
       return finalMetrics;
     },
-    [metrics, getToken]
+    [getToken]
   );
 
   /**
@@ -256,7 +248,7 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
       clearInterval(dwellIntervalRef.current);
       dwellIntervalRef.current = null;
     }
-    setMetrics(createInitialMetrics());
+    metricsRef.current = createInitialMetrics();
     startTimeRef.current = Date.now();
   }, []);
 
@@ -265,12 +257,12 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
    */
   const getApiPayload = useCallback(() => {
     return {
-      timeToFirstClick: metrics.timeToFirstClick ?? undefined,
-      answerSwitches: metrics.answerSwitches,
-      totalDwellTime: metrics.totalDwellTime,
-      timezone: metrics.timezone,
+      timeToFirstClick: metricsRef.current.timeToFirstClick ?? undefined,
+      answerSwitches: metricsRef.current.answerSwitches,
+      totalDwellTime: metricsRef.current.totalDwellTime,
+      timezone: metricsRef.current.timezone,
     };
-  }, [metrics]);
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -282,7 +274,7 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
   }, []);
 
   return {
-    metrics,
+    metrics: metricsRef.current,
     startQuestion,
     recordAnswerSelection,
     submitAnswer,

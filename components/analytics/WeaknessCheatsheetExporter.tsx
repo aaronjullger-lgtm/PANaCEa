@@ -59,20 +59,20 @@ export default function WeaknessCheatsheetExporter({
   };
 
   return (
-    <div className="rounded-xl p-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600">
+    <div className="rounded-xl p-4 bg-data-neutral dark:bg-data-neutral border border-data-neutral dark:border-data-neutral">
       <div className="flex items-center gap-2 mb-3">
         <FileText className="w-5 h-5 text-[var(--color-accent)]" />
-        <h3 className="font-medium text-slate-800 dark:text-slate-200">Yield Optimization</h3>
+        <h3 className="font-medium text-data-neutral dark:text-data-neutral">Yield Optimization</h3>
       </div>
 
-      <p className="text-xs mb-4 text-slate-600 dark:text-slate-400">
+      <p className="text-xs mb-4 text-data-neutral dark:text-data-neutral">
         Generate a study guide focused on high-yield areas to reinforce. Perfect for focused review
         and exam prep.
       </p>
 
       {/* Time Period Selector */}
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2 text-slate-800 dark:text-slate-200">
+        <label className="block text-sm font-medium mb-2 text-data-neutral dark:text-data-neutral">
           Time Period
         </label>
         <div className="flex gap-2">
@@ -124,9 +124,9 @@ export default function WeaknessCheatsheetExporter({
           </div>
         </div>
       ) : (
-        <div className="p-3 rounded-lg mb-4 text-center bg-slate-100 dark:bg-[var(--color-success)]/10 border border-slate-200 dark:border-[var(--color-success)]/30">
-          <Check className="w-6 h-6 mx-auto mb-2 text-slate-600 dark:text-[var(--color-success)]" />
-          <p className="text-sm text-slate-800 dark:text-[var(--color-text-primary)]">
+        <div className="p-3 rounded-lg mb-4 text-center bg-data-neutral dark:bg-[var(--color-success)]/10 border border-data-neutral dark:border-[var(--color-success)]/30">
+          <Check className="w-6 h-6 mx-auto mb-2 text-data-neutral dark:text-[var(--color-success)]" />
+          <p className="text-sm text-data-neutral dark:text-[var(--color-text-primary)]">
             No yield gaps in the last {days} days—keep it up!
           </p>
         </div>

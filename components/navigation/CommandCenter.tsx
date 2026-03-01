@@ -386,7 +386,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-[var(--color-text-muted)]">SRS Reviews</span>
-              <Clock className="w-5 h-5 text-blue-500" />
+              <Clock className="w-5 h-5 text-[var(--color-category-practice)]" />
             </div>
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
               {srsDueCount}
@@ -424,7 +424,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
               <span className="text-sm text-[var(--color-text-muted)] truncate">
                 Today's Questions
               </span>
-              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-data-pass flex-shrink-0" />
             </div>
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
               {todayQuestionCount}
@@ -443,7 +443,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-[var(--color-text-muted)]">Flagged</span>
-              <AlertCircle className="w-5 h-5 text-slate-500" />
+              <AlertCircle className="w-5 h-5 text-data-neutral" />
             </div>
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
               {flaggedCount}
@@ -505,10 +505,10 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
                     <div
                       className={`p-2 rounded-lg ${
                         rec.priority === 'high'
-                          ? 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                          ? 'bg-data-fail dark:bg-data-fail/20 text-data-fail dark:text-data-fail'
                           : rec.priority === 'medium'
                             ? 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400'
-                            : 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                            : 'bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)]'
                       }`}
                     >
                       <rec.icon className="w-5 h-5" />
@@ -554,9 +554,9 @@ const CommandCenter: React.FC<CommandCenterProps> = ({ performanceData, onNaviga
                     <div
                       className={`flex items-center gap-1 text-sm font-medium ${
                         delta.trend === 'up'
-                          ? 'text-green-600 dark:text-green-400'
+                          ? 'text-data-pass dark:text-data-pass'
                           : delta.trend === 'down'
-                            ? 'text-red-600 dark:text-red-400'
+                            ? 'text-data-fail dark:text-data-fail'
                             : 'text-[var(--color-text-muted)]'
                       }`}
                     >

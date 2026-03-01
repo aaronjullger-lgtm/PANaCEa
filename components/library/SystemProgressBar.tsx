@@ -58,11 +58,11 @@ function calculateMasteryScore(stats: MasteryStats): number {
  * Get color for score
  */
 function getScoreColor(score: number): string {
-  if (score >= 80) return 'text-blue-400';
-  if (score >= 60) return 'text-green-400';
-  if (score >= 40) return 'text-amber-400';
+  if (score >= 80) return 'text-[var(--color-category-practice)]';
+  if (score >= 60) return 'text-data-pass';
+  if (score >= 40) return 'text-data-provisional';
   if (score >= 20) return 'text-orange-400';
-  return 'text-red-400';
+  return 'text-data-fail';
 }
 
 export const SystemProgressBar: React.FC<SystemProgressBarProps> = ({
@@ -77,11 +77,11 @@ export const SystemProgressBar: React.FC<SystemProgressBarProps> = ({
 
   // Calculate segment widths
   const segments = [
-    { key: 'mastered', color: 'bg-blue-500', count: stats.mastered },
-    { key: 'competent', color: 'bg-green-500', count: stats.competent },
-    { key: 'developing', color: 'bg-amber-500', count: stats.developing },
-    { key: 'learning', color: 'bg-red-500', count: stats.learning },
-    { key: 'new', color: 'bg-slate-600', count: stats.new },
+    { key: 'mastered', color: 'bg-[var(--color-category-practice)]', count: stats.mastered },
+    { key: 'competent', color: 'bg-data-pass', count: stats.competent },
+    { key: 'developing', color: 'bg-data-provisional', count: stats.developing },
+    { key: 'learning', color: 'bg-data-fail', count: stats.learning },
+    { key: 'new', color: 'bg-data-neutral', count: stats.new },
   ];
 
   if (compact) {
@@ -143,7 +143,7 @@ export const SystemProgressBar: React.FC<SystemProgressBarProps> = ({
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <Award className="w-3 h-3 text-blue-400" />
+          <Award className="w-3 h-3 text-[var(--color-category-practice)]" />
           <span>{stats.mastered + stats.competent} mastered</span>
         </div>
       </div>
@@ -152,11 +152,11 @@ export const SystemProgressBar: React.FC<SystemProgressBarProps> = ({
       {showBreakdown && (
         <div className="mt-4 pt-4 border-t border-[var(--color-border)] grid grid-cols-5 gap-2">
           {[
-            { label: 'New', count: stats.new, color: 'bg-slate-500' },
-            { label: 'Learning', count: stats.learning, color: 'bg-red-500' },
-            { label: 'Developing', count: stats.developing, color: 'bg-amber-500' },
-            { label: 'Competent', count: stats.competent, color: 'bg-green-500' },
-            { label: 'Mastered', count: stats.mastered, color: 'bg-blue-500' },
+            { label: 'New', count: stats.new, color: 'bg-data-neutral' },
+            { label: 'Learning', count: stats.learning, color: 'bg-data-fail' },
+            { label: 'Developing', count: stats.developing, color: 'bg-data-provisional' },
+            { label: 'Competent', count: stats.competent, color: 'bg-data-pass' },
+            { label: 'Mastered', count: stats.mastered, color: 'bg-[var(--color-category-practice)]' },
           ].map((item) => (
             <div key={item.label} className="text-center">
               <div className={`w-2 h-2 ${item.color} rounded-full mx-auto mb-1`} />
@@ -184,7 +184,7 @@ export const MiniProgressIndicator: React.FC<{
       <div className="w-8 h-1.5 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all ${
-            score >= 60 ? 'bg-green-500' : score >= 30 ? 'bg-amber-500' : 'bg-red-500'
+            score >= 60 ? 'bg-data-pass' : score >= 30 ? 'bg-data-provisional' : 'bg-data-fail'
           }`}
           style={{ width: `${score}%` }}
         />

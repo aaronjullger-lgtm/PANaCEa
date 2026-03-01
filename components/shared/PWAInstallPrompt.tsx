@@ -146,8 +146,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             <div className="p-6 border-b border-[var(--color-border)]">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                    <Download className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <div className="p-2 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg">
+                    <Download className="w-6 h-6 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
                   </div>
                   <div>
                     <h3 className="font-bold text-lg">Install PANaCEa App</h3>
@@ -199,8 +199,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
 
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg mt-0.5">
-                        <WifiOff className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      <div className="p-2 bg-data-pass dark:bg-data-pass/30 rounded-lg mt-0.5">
+                        <WifiOff className="w-4 h-4 text-data-pass dark:text-data-pass" />
                       </div>
                       <div>
                         <h5 className="font-medium text-sm">Offline Study Mode</h5>
@@ -225,8 +225,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg mt-0.5">
-                        <HardDrive className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <div className="p-2 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg mt-0.5">
+                        <HardDrive className="w-4 h-4 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
                       </div>
                       <div>
                         <h5 className="font-medium text-sm">Fast Performance</h5>
