@@ -199,5 +199,5 @@ heapdump-*.heapsnapshot
 *.txt
 *.backup*
 *_backup*
+.roomodes.*
 
-env.example.roomodes.*
