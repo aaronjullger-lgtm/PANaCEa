@@ -177,4 +177,19 @@ debug*.log
 *.debug.log
 heapdump-*.heapsnapshot
 
+# Temporary backup files from mode conversions
+*.backup
+*.bak
+*.literal
+*.fixed
+*.converted
+*.corrected
+*.single
+*.double
+*.quoted
+*.new
+*_backup
+.cursor/memory/
+.ai/
+
 env.example
