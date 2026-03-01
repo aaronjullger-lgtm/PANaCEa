@@ -200,4 +200,4 @@ heapdump-*.heapsnapshot
 *.backup*
 *_backup*
 
-env.example
+env.example.roomodes.*
