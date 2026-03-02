@@ -84,6 +84,9 @@ Never commit .env with production secrets. Use Cloudflare Dashboard or wrangler.
  * Provides authentication context to the entire app
  */
 export function AuthProvider({ children }: AuthProviderProps) {
+  // CRITICAL: Call all hooks BEFORE any conditional returns
+  const themeContext = useThemeContext();
+  
   // @ts-ignore - import.meta.env is set at build time by Vite (from .env, wrangler inject script, or Cloudflare build env)
   const isDevelopment = import.meta.env?.DEV;
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
@@ -127,9 +130,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     console.log('[Clerk] Client time:', new Date().toISOString());
     console.log('[Clerk] Client timezone offset:', new Date().getTimezoneOffset());
   }
-
-  // Get theme context - must be called unconditionally
-  const themeContext = useThemeContext();
 
   return (
     <ClerkProvider

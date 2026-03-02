@@ -134,6 +134,15 @@ export const ClinicalProfileDashboard = lazy(
 export const AdminDashboard = lazy(() =>
   import('../pages/admin/AdminDashboard').then((m) => ({ default: m.AdminDashboard }))
 );
+export const TaxonomiesPage = lazy(() =>
+  import('../pages/admin/TaxonomiesPage').then((m) => ({ default: m.TaxonomiesPage }))
+);
+export const SystemMappingsPage = lazy(() =>
+  import('../pages/admin/SystemMappingsPage').then((m) => ({ default: m.SystemMappingsPage }))
+);
+export const QuestionGeneratorPage = lazy(() =>
+  import('../pages/admin/QuestionGeneratorPage').then((m) => ({ default: m.QuestionGeneratorPage }))
+);
 export const RefineryPage = lazy(() =>
   import('../pages/admin/RefineryPage').then((m) => ({ default: m.RefineryPage }))
 );

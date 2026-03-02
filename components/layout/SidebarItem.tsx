@@ -19,7 +19,7 @@ const ACTIVE_CLASS =
   'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20';
 
 const INACTIVE_CLASS =
-  'border border-transparent text-data-neutral dark:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/80 hover:text-[var(--color-text-primary)]';
+  'border border-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]/80 hover:text-[var(--color-text-primary)]';
 
 const COMPACT_CLASS = 'min-h-0 py-2 text-xs';
 

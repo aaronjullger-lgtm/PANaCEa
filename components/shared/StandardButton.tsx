@@ -10,6 +10,7 @@ export {
   type ButtonVariant,
   type ButtonSize,
   PrimaryButton,
+  SecondaryButton,
   OutlineButton,
   SuccessButton,
   DangerButton,

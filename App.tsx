@@ -66,6 +66,9 @@ import {
   CustomStudyMode,
   ClinicalProfileDashboard,
   AdminDashboard,
+  TaxonomiesPage,
+  SystemMappingsPage,
+  QuestionGeneratorPage,
   RefineryPage,
   MyPearlsPanel,
   ClinicalEyePage,
@@ -1075,6 +1078,30 @@ const App: React.FC = () => {
                 element={
                   <Suspense fallback={<Loader message="Loading refinery…" />}>
                     <RefineryPage onClose={() => navigate('/')} />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/admin/taxonomies"
+                element={
+                  <Suspense fallback={<Loader message="Loading taxonomies…" />}>
+                    <TaxonomiesPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/admin/system-mappings"
+                element={
+                  <Suspense fallback={<Loader message="Loading system mappings…" />}>
+                    <SystemMappingsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/admin/question-generator"
+                element={
+                  <Suspense fallback={<Loader message="Loading question generator…" />}>
+                    <QuestionGeneratorPage />
                   </Suspense>
                 }
               />

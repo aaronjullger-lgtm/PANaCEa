@@ -1542,6 +1542,7 @@ model MedicalContent {
   condition                                                       String
   status                                                          String                       @default("draft")
   version                                                         Int                          @default(1)
+  normalization_version                                           String?
   createdAt                                                       DateTime                     @default(now())
   createdBy                                                       String
   updatedAt                                                       DateTime
@@ -3495,6 +3496,39 @@ model WeaknessPattern {
   @@index([medicalContentId])
   @@index([userId, conditionId])
   @@index([userId])
+}
+
+model MedicalTaxonomy {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  weight      Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+
+  systemMappings SystemMapping[]
+
+  @@index([code])
+}
+
+model SystemMapping {
+  id             String   @id @default(cuid())
+  taxonomyCode   String
+  subcategory    String
+  canonicalName  String
+  aliases        String[]
+  searchKeywords String[]
+  parentCategory String?
+  blueprintTags  String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+
+  taxonomy MedicalTaxonomy @relation(fields: [taxonomyCode], references: [code], onDelete: Cascade)
+
+  @@index([taxonomyCode, subcategory])
+  @@index([canonicalName])
 }
 
 enum CircadianPhase {
