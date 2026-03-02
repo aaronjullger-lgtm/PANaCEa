@@ -6,7 +6,7 @@
 
 import type { PagesFunction } from '@cloudflare/workers-types';
 import { PrismaClient } from '@prisma/client';
-import { verifyAuth } from '../_shared/auth';
+import { authenticateRequest } from '../_shared/auth';
 
 interface Env {
   DATABASE_URL: string;
@@ -14,8 +14,8 @@ interface Env {
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
-    const authResult = await verifyAuth(context);
-    if (!authResult.authenticated) {
+    const authContext = await authenticateRequest(context.request, context.env);
+    if (!authContext) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
