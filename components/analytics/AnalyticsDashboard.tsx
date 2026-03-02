@@ -39,6 +39,7 @@ import {
   PANCEReadinessTreemap,
   type SystemNode,
 } from '@/components/analytics/PANCEReadinessTreemap';
+import { LearningCurveChart } from '@/components/analytics/LearningCurveChart';
 import { ChartContainer } from '@/components/shared/ChartContainer';
 import chartTheme from '@/lib/chartTheme';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
@@ -841,7 +842,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <ChartContainer minHeight={320} className="min-h-[320px] w-full" aria-hidden>
                   <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
                     <LineChart
-                      data={stabilityTrendData}
+                      data={stabilityTrendData.filter(d => !isNaN(d.avgStability) && isFinite(d.avgStability))}
                       margin={{ top: 4, right: 24, left: 0, bottom: 28 }}
                     >
                       <CartesianGrid {...chartTheme.grid} />
@@ -859,7 +860,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                         contentStyle={chartTheme.tooltip.contentStyle}
                         labelStyle={chartTheme.tooltip.labelStyle}
                         formatter={(value: number | string | undefined, name?: string) => {
-                          if (value === undefined) return ['—', name ?? ''];
+                          if (value === undefined || (typeof value === 'number' && (isNaN(value) || !isFinite(value)))) return ['—', name ?? ''];
                           if (name === 'avgStability')
                             return [
                               typeof value === 'number' ? value.toFixed(1) : value,
@@ -906,6 +907,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             )}
           </div>
 
+          {/* Learning Curve */}
+          <div className="p-6 rounded-xl border border-border-subtle bg-surface-primary">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2 text-action-muted text-sm">
+                <TrendingUp className="w-4 h-4" /> Learning Curve
+              </div>
+            </div>
+            <LearningCurveChart />
+          </div>
+
           {/* Decision Time by System */}
           <div className="p-6 rounded-xl border border-border-subtle bg-surface-primary">
             <div className="flex items-center justify-between mb-3">
@@ -926,7 +937,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             ) : (
               <ChartContainer minHeight={320} className="min-h-[320px] w-full" aria-hidden>
                 <ResponsiveContainer width="100%" height={320} minHeight={200} minWidth={0}>
-                  <BarChart data={timeData} margin={{ bottom: 28 }}>
+                  <BarChart data={timeData.filter(d => !isNaN(d.seconds) && isFinite(d.seconds))} margin={{ bottom: 28 }}>
                     <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
                     <XAxis
                       dataKey="system"
@@ -942,7 +953,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                         name?: string,
                         props?: { payload?: TimeDatum }
                       ) => {
-                        if (value === undefined) return ['—', 'Avg time'];
+                        if (value === undefined || (typeof value === 'number' && (isNaN(value) || !isFinite(value)))) return ['—', 'Avg time'];
                         const entry = props?.payload;
                         return [
                           `${value}s (${entry?.count ?? 0} review${entry?.count !== 1 ? 's' : ''})`,
@@ -956,7 +967,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       radius={[6, 6, 0, 0]}
                       name="Avg seconds"
                     >
-                      {timeData.map((entry, index) => (
+                      {timeData.filter(d => !isNaN(d.seconds) && isFinite(d.seconds)).map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
                           fill="var(--color-accent)"

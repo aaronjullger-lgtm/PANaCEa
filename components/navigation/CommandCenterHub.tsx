@@ -352,7 +352,7 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
                 Voice patient
               </span>
             </div>
-            <p className="text-base text-data-neutral dark:text-[var(--color-text-secondary)] mb-3">
+            <p className="text-base text-[var(--color-text-secondary)] mb-3">
               Practice with a live voice simulated patient; rubric-based SOAP note grading and
               real-time feedback.
             </p>
@@ -428,7 +428,7 @@ const HeroTriple: React.FC<{
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-[var(--color-text-primary)]">Build Session</h3>
-              <p className="text-sm text-data-neutral dark:text-[var(--color-text-muted)] mt-0.5">
+              <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
                 {dueCount > 0 ? 'Review due questions' : 'Start adaptive questions'}
               </p>
             </div>
@@ -452,7 +452,7 @@ const HeroTriple: React.FC<{
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-[var(--color-text-primary)]">Live OSCE</h3>
-              <p className="text-sm text-data-neutral dark:text-[var(--color-text-muted)] mt-0.5">
+              <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
                 Voice patient, SOAP grading
               </p>
             </div>
@@ -476,7 +476,7 @@ const HeroTriple: React.FC<{
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-[var(--color-text-primary)]">Progress & Analytics</h3>
-              <p className="text-sm text-data-neutral dark:text-[var(--color-text-muted)] mt-0.5">
+              <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
                 Streak {streak} · {dueLabel} {dueCount} · {accuracy !== null ? `${accuracy}%` : '—'}{' '}
                 {accuracyLabel}
               </p>
@@ -1013,34 +1013,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     setUserProfile((prev) => ({ ...prev, eorTestDate: date || undefined }));
   }, []);
 
-  const [activeTab, setActiveTab] = useState<'training' | 'resources' | 'analytics'>(
-    initialStudyToolsTab ?? 'analytics'
-  );
-  const studyToolsSectionRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (
-      initialStudyToolsTab &&
-      (initialStudyToolsTab === 'resources' ||
-        initialStudyToolsTab === 'analytics' ||
-        initialStudyToolsTab === 'training')
-    ) {
-      setActiveTab(initialStudyToolsTab);
-    }
-  }, [initialStudyToolsTab]);
-  const handleOpenFullAnalytics = useCallback(() => {
-    setActiveTab('analytics');
-    navigate('/study?tab=analytics', { replace: true });
-    // Defer scroll so React can commit the tab switch and the analytics panel is in the DOM
-    const scrollToStudyTools = () => {
-      studyToolsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-    requestAnimationFrame(() => {
-      requestAnimationFrame(scrollToStudyTools);
-    });
-  }, [navigate]);
-  const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
-  const [studyFocusStep, setStudyFocusStep] = useState<'idle' | 'choose_focus'>('idle');
-  const [showAllTools, setShowAllTools] = useState(false);
+
 
   // Calculate stats for the dashboard (accuracy null when no data - show "—" instead of 0%)
   const stats = useMemo(() => {
@@ -1315,31 +1288,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           </motion.div>
         )}
 
-        {/* Hero Triple: Main Session | OSCE | Analytics — above the fold */}
-        <motion.div
-          initial={sectionEnter}
-          animate={sectionAnimate}
-          transition={sectionTransition(0.05)}
-        >
-          <HeroTriple
-            onStartSession={onStartSession}
-            onNavigateToSimulation={onNavigateToSimulation}
-            onNavigateToDrillMode={onNavigateToDrillMode}
-            streak={stats.streak}
-            dueCount={stats.dueCount}
-            accuracy={stats.accuracy}
-            questionsToday={stats.questionsToday}
-            dueLabel={careerStage === 'practicing' ? 'Maintenance Due' : TO_REVIEW_LABEL}
-            accuracyLabel={
-              careerStage === 'student' &&
-              enabledSystems.size > 0 &&
-              enabledSystems.size < Object.keys(ABBREVIATION_TO_TOPIC_MAP).length
-                ? 'Module Accuracy'
-                : 'Global Accuracy'
-            }
-            onOpenFullAnalytics={handleOpenFullAnalytics}
-          />
-        </motion.div>
+
 
         {/* Quick Stats - Section 1 (delay 0) */}
         <motion.div
@@ -1407,14 +1356,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           />
         </motion.div>
 
-        {/* OSCE Section - above the fold */}
-        <motion.div
-          initial={sectionEnter}
-          animate={sectionAnimate}
-          transition={sectionTransition(0.1)}
-        >
-          <OSCESection onStart={() => onNavigateToDrillMode('patient_encounter')} />
-        </motion.div>
+
 
         {/* Recommended for you - Section 2 */}
         <motion.div
@@ -1428,10 +1370,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           <RecommendationFeed onNavigateToDrill={handleNavigateToDrillModeWithSettings} />
         </motion.div>
 
-        {/* Residency Cockpit: Study by System (body map / system grid from Rolling 360) */}
-        {onNavigateToDrillWithSystem && (
-          <ResidencyCockpitSection onNavigateToDrillWithSystem={onNavigateToDrillWithSystem} />
-        )}
+
 
         {/* Grand Rounds / Daily Question - Section 2 (delay 100ms) */}
         <motion.div
@@ -1559,52 +1498,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             </motion.div>
           )}
 
-        {/* Custom Study Mode - System Chooser (Targeted Practice) */}
-        {onNavigateToCustomStudy && (
-          <GlassCard variant="primary" hoverable className="mb-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-start gap-4 flex-1">
-                <div className="p-3 rounded-xl bg-action-blue/20 backdrop-blur-sm">
-                  <Layers className="w-6 h-6 text-action-blue" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
-                      Custom Study Builder
-                    </h3>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-action-blue/10 text-action-blue border border-action-blue/20">
-                      System Chooser
-                    </span>
-                  </div>
-                  <p className="text-base text-[var(--color-text-secondary)] mb-3">
-                    Build targeted sessions: choose specific organ systems, focus areas, and
-                    customize difficulty
-                  </p>
-                  <div className="flex items-center gap-4">
-                    <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-                      <Target className="w-3.5 h-3.5" />
-                      <span className="font-medium">Multi-System Selection</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span className="font-medium">Custom Focus</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
 
-              <PrimaryButton
-                variant="secondary"
-                size="md"
-                icon={Play}
-                iconRight={ChevronRight}
-                onClick={onNavigateToCustomStudy}
-              >
-                Build Session
-              </PrimaryButton>
-            </div>
-          </GlassCard>
-        )}
 
         {/* PANRE-LA (Only for practicing PAs) */}
         {showPANREContent && (
@@ -1641,91 +1535,20 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           </motion.div>
         )}
 
-        {/* Study Tools / Maintenance Section Header - Sticky below app header so it never overlaps sidebar */}
-        <div
-          ref={studyToolsSectionRef}
-          id="study-tools-section"
-          className="sticky z-20 bg-[var(--color-bg-primary)]/95 backdrop-blur border-b border-[var(--color-border)] -mx-4 px-4 pb-4 mb-6"
-          style={{ top: 'var(--header-height, 4rem)' }}
-        >
-          <div className="mb-3 max-w-[1200px] mx-auto">
-            <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
-              {careerStage === 'practicing' ? 'Maintenance & Reference' : 'Study Tools'}
-            </h2>
-            <p className="text-sm text-[var(--color-text-muted)]">
-              {careerStage === 'practicing'
-                ? 'Training modes, clinical resources, and progress'
-                : 'Switch view: choose training modes, clinical resources, or progress &amp; analytics'}
-            </p>
-          </div>
 
-          {/* Tab Navigation - switches content below (not scroll anchors) */}
-          <div
-            className="flex gap-4 overflow-x-auto -mx-1 px-1 border-b border-[var(--color-border)] w-full"
-            role="tablist"
-            aria-label="Study tools view"
-          >
-            {[
-              { id: 'analytics' as const, label: 'Progress & Analytics', icon: BarChart3 },
-              { id: 'training' as const, label: 'Training Modes', icon: Zap },
-              { id: 'resources' as const, label: 'Clinical Resources', icon: BookOpen },
-            ].map((tab) => {
-              const isSelected = activeTab === tab.id;
-              const className = `flex items-center gap-2 px-1 py-2 font-medium transition-all whitespace-nowrap border-b-2 bg-transparent ${
-                isSelected
-                  ? 'text-muted-amber-500 border-muted-amber-500'
-                  : 'text-[var(--color-text-muted)] border-transparent hover:text-[var(--color-text-secondary)]'
-              }`;
 
-              const handleTabClick = () => {
-                setActiveTab(tab.id);
-                const search = tab.id === 'training' ? '' : `?tab=${tab.id}`;
-                navigate(`/study${search}`, { replace: true });
-              };
-              return isSelected ? (
-                <button
-                  key={tab.id}
-                  role="tab"
-                  aria-selected="true"
-                  aria-controls={`study-tools-panel-${tab.id}`}
-                  id={`study-tools-tab-${tab.id}`}
-                  onClick={handleTabClick}
-                  className={className}
-                >
-                  <tab.icon className="w-4 h-4" strokeWidth={1.5} />
-                  {tab.label}
-                </button>
-              ) : (
-                <button
-                  key={tab.id}
-                  role="tab"
-                  aria-selected="false"
-                  aria-controls={`study-tools-panel-${tab.id}`}
-                  id={`study-tools-tab-${tab.id}`}
-                  onClick={handleTabClick}
-                  className={className}
-                >
-                  <tab.icon className="w-4 h-4" strokeWidth={1.5} />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
 
-        {/* Tab panels: aligned to same grid as header/tabs (max-w 1200px) */}
-        <div className="max-w-[1200px] mx-auto">
-          <AnimatePresence mode="wait">
-            {activeTab === 'training' && (
-              <motion.div
-                key="training"
-                id="study-tools-panel-training"
-                role="tabpanel"
-                aria-labelledby="study-tools-tab-training"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-              >
+        <AnimatePresence>
+          {activeTab === 'training' && (
+            <motion.div
+              key="training"
+              id="study-tools-panel-training"
+              role="tabpanel"
+              aria-labelledby="study-tools-tab-training"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+            >
                 {/* Progressive disclosure: default = one CTA; "Study Now" opens outcome choice */}
                 {studyFocusStep === 'idle' && !showAllTools && (
                   <div className="space-y-6">
@@ -2385,7 +2208,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
       </div>
     </>
   );

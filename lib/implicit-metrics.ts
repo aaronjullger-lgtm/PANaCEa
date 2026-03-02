@@ -64,6 +64,8 @@ export interface SessionLatencyStats {
 export interface ImplicitReviewData {
   /** Derived FSRS rating (1-4) */
   rating: Rating;
+  /** Continuous floating-point rating (1.0-4.0) derived from telemetry */
+  continuousRating?: number;
   /** Raw metrics that led to this rating */
   metrics: ImplicitBehaviorMetrics;
   /** Confidence score in the derived rating (0-1) */
@@ -176,14 +178,18 @@ export function calculateLatencyPercentile(latency: number, stats: SessionLatenc
  * called in production (drillReviewService uses deriveContinuousRating since the
  * continuous FSRS ratings migration). Kept for backward compatibility only.
  *
- * Derive FSRS rating from implicit behavioral metrics
+ * Derive FSRS rating from implicit behavioral metrics, returning both a discrete
+ * rating (1-4) and a continuous floating‑point rating (1.0‑4.0) based on millisecond‑level
+ * telemetry and answer‑switch logic.
  *
  * Core algorithm:
- * 1. If incorrect → Rating.Again (no exceptions)
- * 2. Calculate effective latency (base + switch penalty)
- * 3. Compare to par time to get latency ratio
- * 4. Map ratio to rating using thresholds
- * 5. Apply variance modifier for consistency bonus/penalty
+ * 1. If incorrect → Rating.Again (continuousRating = 1.0)
+ * 2. Calculate effective latency with switch penalty
+ * 3. Compute latency ratio relative to par time
+ * 4. Apply penalties (switches, latency excess, commitment gap, entropy, oscillation)
+ *    and bonus (fast response) to baseline grade 3.0
+ * 5. Adjust based on session variance and trajectory if available
+ * 6. Clamp to [1.0, 4.0] and map to discrete rating
  */
 export function deriveImplicitRating(
   metrics: ImplicitBehaviorMetrics,
@@ -194,6 +200,7 @@ export function deriveImplicitRating(
   if (!metrics.isCorrect) {
     return {
       rating: Rating.Again,
+      continuousRating: 1.0,
       metrics,
       confidence: 0.95, // High confidence for incorrect
       latencyPercentile: sessionStats
@@ -225,59 +232,53 @@ export function deriveImplicitRating(
     flagReason = 'Response time exceeded maximum';
   }
 
-  // Derive base rating from latency ratio
-  let rating: Rating;
-  if (latencyRatio < config.ratingThresholds.easy) {
-    rating = Rating.Easy;
-  } else if (latencyRatio < config.ratingThresholds.good) {
-    rating = Rating.Good;
-  } else if (latencyRatio < config.ratingThresholds.hard) {
-    rating = Rating.Hard;
-  } else {
-    // Very slow but correct - treat as Hard, not Again
-    rating = Rating.Hard;
-  }
+  // Compute continuous rating (grade) using telemetry-based formula
+  // Base grade for correct answers is 3.0 (standard correct baseline)
+  let grade = 3.0;
+
+  // Penalties for answer switches
+  const penaltySwitch = metrics.answerSwitches * 0.15;
+  // Penalty for latency excess beyond "good" threshold (0.85)
+  const latencyExcess = Math.max(0, Math.min(2, latencyRatio - 0.85));
+  const penaltyLatency = latencyExcess * 0.3;
+  // Penalty for commitment gap (hesitation after selection)
+  const commitmentGapSec = (metrics.commitmentGapMs ?? 0) / 1000;
+  const penaltyCommitment = commitmentGapSec * 0.02;
+  // Penalty for cursor entropy (meandering)
+  const entropy = metrics.cursorEntropy ?? 0;
+  const penaltyEntropy = entropy > 1 ? (entropy - 1) * 0.2 : 0;
+  // Penalty for hover oscillation
+  const penaltyOscillation = (metrics.hoverOscillationCount ?? 0) * 0.1;
+
+  // Bonus for fast, clean response (< 50% par time)
+  const bonusFast = latencyRatio < 0.5 ? 0.3 : latencyRatio < 0.7 ? 0.15 : 0;
+
+  grade = grade - penaltySwitch - penaltyLatency - penaltyCommitment - penaltyEntropy - penaltyOscillation + bonusFast;
 
   // Apply variance-based adjustment if session stats available
   if (sessionStats && sessionStats.count >= 5) {
     const percentile = calculateLatencyPercentile(metrics.timeToFirstClick, sessionStats);
-
-    // High variance (inconsistent) responses get slight downgrade
-    // Low variance (consistent) responses get slight upgrade
-    if (percentile > 0.85 && rating > Rating.Again) {
-      // Slower than 85th percentile for this session - consider downgrade
-      if (rating === Rating.Easy) {
-        rating = Rating.Good;
-      }
-    } else if (percentile < 0.15 && rating < Rating.Easy) {
-      // Faster than 15th percentile - consider upgrade
-      if (rating === Rating.Good) {
-        rating = Rating.Easy;
-      }
-    }
+    // High percentile (slower than peers) → downgrade by up to 0.2
+    // Low percentile (faster than peers) → upgrade by up to 0.2
+    const adjustment = percentile > 0.85 ? -0.2 : percentile < 0.15 ? 0.2 : 0;
+    grade += adjustment;
   }
 
   // Apply trajectory-based adjustment if available (Phase 3A)
   if (metrics.trajectory) {
     const trajectoryAnalysis = interpretTrajectoryForRating(metrics.trajectory, metrics.isCorrect);
-
-    // Apply trajectory adjustment
-    if (trajectoryAnalysis.suggestedAdjustment === 'upgrade' && rating < Rating.Easy) {
-      // High confidence trajectory + correct = upgrade one level
-      if (rating === Rating.Hard) {
-        rating = Rating.Good;
-      } else if (rating === Rating.Good) {
-        rating = Rating.Easy;
-      }
-    } else if (trajectoryAnalysis.suggestedAdjustment === 'downgrade' && rating > Rating.Hard) {
-      // Low confidence trajectory + correct = downgrade one level (possible lucky guess)
-      if (rating === Rating.Easy) {
-        rating = Rating.Good;
-      } else if (rating === Rating.Good) {
-        rating = Rating.Hard;
-      }
+    if (trajectoryAnalysis.suggestedAdjustment === 'upgrade') {
+      grade += 0.2;
+    } else if (trajectoryAnalysis.suggestedAdjustment === 'downgrade') {
+      grade -= 0.2;
     }
   }
+
+  // Clamp grade to valid FSRS range [1.0, 4.0]
+  grade = Math.max(1.0, Math.min(4.0, grade));
+
+  // Derive discrete rating from continuous grade
+  const discreteRating = gradeToRating(grade);
 
   // Calculate confidence in derived rating
   let confidence = 0.7; // Base confidence
@@ -293,8 +294,14 @@ export function deriveImplicitRating(
   confidence -= metrics.answerSwitches * 0.1;
   confidence = Math.max(0.5, confidence);
 
+  // Additional confidence adjustments based on micro‑kinetics
+  if ((metrics.commitmentGapMs ?? 0) > 3000) confidence -= 0.1;
+  if ((metrics.cursorEntropy ?? 0) > 1.5) confidence -= 0.1;
+  confidence = Math.max(0.5, Math.min(0.95, confidence));
+
   return {
-    rating,
+    rating: discreteRating,
+    continuousRating: grade,
     metrics,
     confidence,
     latencyPercentile: sessionStats

@@ -9,7 +9,10 @@
 import type { Rolling360Stats } from '@/hooks/useRolling360Stats';
 import type { DatabaseStats } from '@/hooks/useDatabaseStats';
 // LearningProfile is not currently available; placeholder for future integration
-export interface LearningProfile {}
+export interface LearningProfile {
+  // Placeholder for future learning profile data
+  userId?: string;
+}
 
 /**
  * Combined statistics from all sources

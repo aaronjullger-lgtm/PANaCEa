@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, X, Smartphone, WifiOff, Bell, HardDrive, RefreshCw } from 'lucide-react';
-import { StandardButton, PrimaryButton, SecondaryButton } from './StandardButton';
+import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
 import { usePWAEnhancer } from '@/services/pwaEnhancer';
 
 export interface PWAInstallPromptProps {
@@ -243,20 +243,20 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                     <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
                       <h5 className="font-medium text-sm mb-3">Advanced Controls</h5>
                       <div className="flex flex-wrap gap-2">
-                        <SecondaryButton
+                        <OutlineButton
                           size="xs"
                           onClick={handleTestNotification}
                           icon={<Bell className="w-3 h-3" />}
                         >
                           Test Notifications
-                        </SecondaryButton>
-                        <SecondaryButton
+                        </OutlineButton>
+                        <OutlineButton
                           size="xs"
                           onClick={handleCheckUpdates}
                           icon={<RefreshCw className="w-3 h-3" />}
                         >
                           Check Updates
-                        </SecondaryButton>
+                        </OutlineButton>
                         <StandardButton variant="ghost" size="xs" onClick={handleClearCache}>
                           Clear Cache
                         </StandardButton>
@@ -279,9 +279,9 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                 </PrimaryButton>
 
                 <div className="flex gap-2">
-                  <SecondaryButton fullWidth onClick={handleLearnMore}>
+                  <OutlineButton fullWidth onClick={handleLearnMore}>
                     {showDetails ? 'Show Less' : 'Learn More'}
-                  </SecondaryButton>
+                  </OutlineButton>
                   <StandardButton variant="ghost" fullWidth onClick={handleDismiss}>
                     Not Now
                   </StandardButton>

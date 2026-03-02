@@ -16,7 +16,7 @@ import {
   Download,
   Cpu,
 } from 'lucide-react';
-import { StandardButton, PrimaryButton, SecondaryButton } from './StandardButton';
+import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
 import { useInitialLoadOptimization, type LoadTimeMetrics } from '@/services/initialLoadOptimizer';
 
 export interface PerformanceMonitorProps {
@@ -197,13 +197,13 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                   <div className="text-sm font-medium">{getScoreLabel(report.score)}</div>
                 </div>
                 <div className="flex gap-2">
-                  <SecondaryButton
+                  <OutlineButton
                     size="sm"
                     onClick={() => optimize()}
                     icon={<Zap className="w-4 h-4" />}
                   >
                     Optimize
-                  </SecondaryButton>
+                  </OutlineButton>
                   <StandardButton
                     variant="ghost"
                     size="sm"
@@ -381,7 +381,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                   Run Optimization Now
                 </PrimaryButton>
                 <div className="flex gap-2">
-                  <SecondaryButton
+                  <OutlineButton
                     fullWidth
                     onClick={() => {
                       console.log('Performance Report:', report);
@@ -389,7 +389,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                     }}
                   >
                     Export Report
-                  </SecondaryButton>
+                  </OutlineButton>
                   <StandardButton
                     variant="ghost"
                     fullWidth

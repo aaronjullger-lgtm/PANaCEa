@@ -11,6 +11,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
+import { getCircadianPhase, CircadianPhase } from '@/lib/utils/timeUtils';
 
 export interface CRPLTelemetryOptions {
   questionDisplayTime: number; // performance.now() timestamp when question first displayed
@@ -31,6 +32,7 @@ export interface CRPLTelemetry {
   hover_entropy: number; // Shannon entropy of hover time distribution
   total_mouse_distance: number; // pixels traveled
   answer_changes: number; // number of times user changed selection
+  circadian_phase: CircadianPhase;
 }
 
 interface InteractionEvent {
@@ -284,6 +286,7 @@ export function useResponseTelemetry(options: CRPLTelemetryOptions): CRPLTelemet
       hover_entropy: hoverEntropy,
       total_mouse_distance: Math.round(mouseMetrics.totalDistance),
       answer_changes: answerChanges.current,
+      circadian_phase: getCircadianPhase(),
     };
   }, [
     questionDisplayTime,

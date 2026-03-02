@@ -7,7 +7,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, AlertCircle, CheckCircle, Clock, Zap, Brain } from 'lucide-react';
 import { formatLoadingTime, getLoadingSeverity } from '@/hooks/useLoadingState';
-import { StandardButton, PrimaryButton, SecondaryButton } from './StandardButton';
+import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
 
 export interface LoadingSystemProps {
   /** Whether loading is active */
@@ -172,9 +172,9 @@ export const LoadingSystem: React.FC<LoadingSystemProps> = ({
           {/* Cancel button */}
           {onCancel && (
             <div className="pt-2">
-              <SecondaryButton size="xs" onClick={onCancel} className="text-xs">
+              <OutlineButton size="xs" onClick={onCancel} className="text-xs">
                 Cancel
-              </SecondaryButton>
+              </OutlineButton>
             </div>
           )}
         </div>
@@ -199,9 +199,9 @@ export const LoadingSystem: React.FC<LoadingSystemProps> = ({
               </PrimaryButton>
             )}
             {onCancel && (
-              <SecondaryButton size="sm" onClick={onCancel}>
+              <OutlineButton size="sm" onClick={onCancel}>
                 Cancel
-              </SecondaryButton>
+              </OutlineButton>
             )}
           </div>
         </div>
@@ -312,7 +312,7 @@ export const LoadingButton: React.FC<{
 }) => {
   const ButtonComponent = {
     primary: PrimaryButton,
-    secondary: SecondaryButton,
+    secondary: OutlineButton,
     outline: StandardButton,
     ghost: StandardButton,
     danger: StandardButton,

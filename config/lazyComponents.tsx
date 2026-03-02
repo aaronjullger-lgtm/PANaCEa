@@ -159,3 +159,5 @@ export const DatabaseAnalyticsDashboard = lazy(() => import('../components/analy
 export const LearningProfileDashboard = lazy(() => import('../components/analytics/LearningProfileDashboard'));
 export const AdvancedLearningProfileDashboard = lazy(() => import('../components/analytics/AdvancedLearningProfileDashboard'));
 export const UserFriendlyStatsDisplay = lazy(() => import('../components/analytics/UserFriendlyStatsDisplay'));
+export const PracticePage = lazy(() => import('../pages/PracticePage').then((m) => ({ default: m.PracticePage })));
+export const ProgressPage = lazy(() => import('../pages/ProgressPage').then((m) => ({ default: m.ProgressPage })));

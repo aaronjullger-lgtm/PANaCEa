@@ -43,6 +43,8 @@ export const API_ENDPOINTS = {
   // Analytics (use getApiEndpoint for base URL consistency)
   ANALYTICS_CALIBRATION: '/api/analytics/calibration',
   ANALYTICS_PERFORMANCE_DELTAS: '/api/analytics/performance-deltas',
+  ANALYTICS_PEER_STATS: (questionId: string) => `/api/analytics/peer-stats?questionId=${questionId}`,
+  QUESTION_STATISTICS: (questionId: string) => `/api/question-statistics/${questionId}`,
   USER_STABILITY_TREND: '/api/user/stability-trend',
 } as const;
 

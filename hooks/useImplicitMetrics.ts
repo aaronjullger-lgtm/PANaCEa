@@ -13,7 +13,7 @@
  * after submitAnswer is called, enabling backend persistence for personalization.
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getBrowserTimezone } from '../lib/circadian';
 
@@ -114,8 +114,8 @@ function createInitialMetrics(): QuestionImplicitMetrics {
  */
 export function useImplicitMetrics(): UseImplicitMetricsReturn {
   const metricsRef = useRef<QuestionImplicitMetrics>(createInitialMetrics());
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionError, setSubmissionError] = useState<Error | null>(null);
+  const isSubmittingRef = useRef(false);
+  const submissionErrorRef = useRef<Error | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   const dwellIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { getToken } = useAuth();
@@ -187,8 +187,8 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
       metricsRef.current = finalMetrics;
 
       // POST metrics to API asynchronously (don't block UI)
-      setIsSubmitting(true);
-      setSubmissionError(null);
+      isSubmittingRef.current = true;
+      submissionErrorRef.current = null;
 
       try {
         const token = await getToken();
@@ -230,9 +230,9 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
       } catch (error) {
         // Log error but don't block the user experience
         console.error('[useImplicitMetrics] Failed to post metrics:', error);
-        setSubmissionError(error instanceof Error ? error : new Error('Failed to submit metrics'));
+        submissionErrorRef.current = error instanceof Error ? error : new Error('Failed to submit metrics');
       } finally {
-        setIsSubmitting(false);
+        isSubmittingRef.current = false;
       }
 
       return finalMetrics;
@@ -280,8 +280,8 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
     submitAnswer,
     reset,
     getApiPayload,
-    isSubmitting,
-    submissionError,
+    isSubmitting: isSubmittingRef.current,
+    submissionError: submissionErrorRef.current,
   };
 }
 

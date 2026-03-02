@@ -11,7 +11,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { FlaskConical, Pill, Lightbulb, Target } from 'lucide-react';
-import { YieldBadge } from '@/components/ui/badges';
+import { RetrievabilityBadge, YieldBadge } from '@/components/ui/badges';
 import { MarkdownRenderer } from '@/components/ui/content-renderers/MarkdownRenderer';
 import { parseTextField, parseListField } from '@/lib/utils/normalization';
 import type { MedicalContentDisplay } from '@/types/medical-content';
@@ -23,6 +23,8 @@ interface EnhancedConditionCardProps {
   className?: string;
   /** Optional badge (e.g. "85% match" for semantic search results) */
   badge?: string;
+  /** Retrievability percentage (0‑100) computed from FSRS v6 stability and elapsed days */
+  retrievability?: number | null;
 }
 
 /**
@@ -90,6 +92,7 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
   isSelected = false,
   className = '',
   badge,
+  retrievability = null,
 }) => {
   // Extract data
   const keyFeatures = useMemo(() => extractKeyFeatures(condition), [condition]);
@@ -143,6 +146,9 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
               <span className="px-2 py-0.5 rounded-md bg-[var(--color-accent)]/15 text-[var(--color-accent)] text-xs font-medium">
                 {badge}
               </span>
+            )}
+            {retrievability !== null && retrievability !== undefined && (
+              <RetrievabilityBadge retrievability={retrievability} size="sm" showIcon={true} />
             )}
             <YieldBadge yield={condition.pance_yield ?? null} size="sm" />
           </div>

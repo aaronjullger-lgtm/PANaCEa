@@ -12,7 +12,7 @@ import {
   RotateCw, AlertCircle, CheckCircle, X, Grid, 
   Smartphone as PhoneIcon, Tablet as TabletIcon, Monitor as DesktopIcon
 } from 'lucide-react';
-import { StandardButton, PrimaryButton, SecondaryButton } from './StandardButton';
+import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
 
 export interface ScreenSizeIssue {
   id: string;
@@ -783,12 +783,12 @@ export const MobileScreenSizeTester: React.FC<MobileScreenSizeTesterProps> = ({
                 )}
               </div>
               <div className="flex items-center gap-3">
-                <SecondaryButton
+                <OutlineButton
                   size="sm"
                   onClick={() => setActiveTab('issues')}
                 >
                   View Issues
-                </SecondaryButton>
+                </OutlineButton>
                 <PrimaryButton
                   size="sm"
                   onClick={scanForIssues}
@@ -810,12 +810,12 @@ export const MobileScreenSizeTester: React.FC<MobileScreenSizeTesterProps> = ({
             {selectedDevice.name} • {viewportWidth}×{viewportHeight}px • {isRotated ? 'Landscape' : 'Portrait'} • {issues.length} issues
           </div>
           <div className="flex items-center gap-3">
-            <SecondaryButton
+            <OutlineButton
               size="sm"
               onClick={() => setIsOpen(false)}
             >
               Close
-            </SecondaryButton>
+            </OutlineButton>
             <PrimaryButton
               size="sm"
               onClick={toggleFullscreen}

@@ -13,7 +13,7 @@ import {
   validateRequired,
   validateDateFuture,
 } from '@/components/shared/FormValidation';
-import { PrimaryButton, SecondaryButton } from '@/components/shared/StandardButton';
+import { PrimaryButton, OutlineButton } from '@/components/shared/StandardButton';
 import type { UserGoal } from './GoalsDashboard';
 
 interface GoalCreateModalProps {
@@ -476,14 +476,14 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
 
             {/* Actions */}
             <div className="flex gap-3 pt-4">
-              <SecondaryButton
+              <OutlineButton
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
                 className="flex-1"
               >
                 Cancel
-              </SecondaryButton>
+              </OutlineButton>
               <PrimaryButton
                 type="submit"
                 disabled={isSubmitting}

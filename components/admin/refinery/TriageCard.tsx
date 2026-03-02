@@ -172,10 +172,11 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({
           `/api/admin/refinery/media-signed-url?path=${encodeURIComponent(rawPath)}`,
           { headers: token ? { Authorization: `Bearer ${token}` } : {} }
         );
-        const json = await res.json();
+        const json: unknown = await res.json();
         if (cancelled) return;
-        if (res.ok && json?.data?.url) {
-          setSignedImageUrl(json.data.url);
+        const data = json as { data?: { url?: string } };
+        if (res.ok && data?.data?.url) {
+          setSignedImageUrl(data.data.url);
           setImageLoadError(false);
         } else {
           setImageLoadError(true);
@@ -197,8 +198,9 @@ export const TriageCard: React.FC<Readonly<TriageCardProps>> = ({
     }
     try {
       const res = await fetch(`/api/conditions/search?q=${encodeURIComponent(trimmed)}&limit=10`);
-      const json = await res.json();
-      const list = Array.isArray(json?.data) ? json.data : [];
+      const json: unknown = await res.json();
+      const data = json as { data?: Array<{ id: string; condition: string }> };
+      const list = Array.isArray(data?.data) ? data.data : [];
       setConditionSearchResults(
         list.map((r: { id: string; condition: string }) => ({ id: r.id, condition: r.condition }))
       );

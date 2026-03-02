@@ -66,6 +66,7 @@ describe('TrainingMenu Component Logic', () => {
       'PillBottle',
       'Target',
       'Grid3x3',
+      'Monitor',
     ];
 
     it('should have valid icon names for all modes', () => {

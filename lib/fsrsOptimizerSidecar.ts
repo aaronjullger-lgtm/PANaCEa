@@ -8,6 +8,8 @@
  * @module fsrsOptimizerSidecar
  */
 
+import { deriveDiscreteFSRSGrade } from './fsrs-optimizer-bridge';
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -102,7 +104,7 @@ function toOptimizerPayload(rows: ReviewLogRow[]): FSRSOptimizerPayload {
     reviews: rows.map((r) => ({
       card_id: r.questionFkId ?? r.id,
       review_time: r.reviewedAt.getTime(),
-      review_rating: r.grade,
+      review_rating: deriveDiscreteFSRSGrade(r.grade),
       review_state: r.state,
       review_duration: r.responseTimeMs ?? 0,
     })),
@@ -143,14 +145,14 @@ export async function triggerFSRSOptimization(
           review_type: 'real',
           sessionType: 'MAIN',
         },
-        orderBy: { review_date: 'asc' },
+        orderBy: { reviewedAt: 'asc' },
         select: {
           id: true,
           questionFkId: true,
-          review_date: true,
-          rating: true,
+          reviewedAt: true,
+          grade: true,
           state: true,
-          duration: true,
+          responseTimeMs: true,
         },
       });
 

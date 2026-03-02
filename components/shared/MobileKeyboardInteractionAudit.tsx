@@ -24,7 +24,7 @@ import {
   Hash,
   Phone,
 } from 'lucide-react';
-import { StandardButton, PrimaryButton, SecondaryButton } from './StandardButton';
+import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
 
 export interface KeyboardInteractionIssue {
   id: string;
@@ -533,12 +533,12 @@ export const MobileKeyboardInteractionAudit: React.FC<MobileKeyboardInteractionA
                                 {issue.recommendation}
                               </p>
                               <div className="flex items-center gap-3">
-                                <SecondaryButton
+                                <OutlineButton
                                   size="sm"
                                   onClick={() => highlightElement(issue.selector)}
                                 >
                                   Highlight Element
-                                </SecondaryButton>
+                                </OutlineButton>
                                 <button
                                   className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
                                   onClick={() => navigator.clipboard.writeText(issue.selector)}
@@ -632,7 +632,7 @@ export const MobileKeyboardInteractionAudit: React.FC<MobileKeyboardInteractionA
                     />
                     <div className="flex gap-3">
                       <PrimaryButton type="submit">Submit Form</PrimaryButton>
-                      <SecondaryButton type="button">Cancel</SecondaryButton>
+                      <OutlineButton type="button">Cancel</OutlineButton>
                     </div>
                   </form>
                 </div>
@@ -808,7 +808,7 @@ export const MobileKeyboardInteractionAudit: React.FC<MobileKeyboardInteractionA
               )}
             </div>
             <div className="flex items-center gap-3">
-              <SecondaryButton
+              <OutlineButton
                 size="sm"
                 onClick={() => {
                   document.querySelectorAll('.keyboard-audit-highlight').forEach((el) => {
@@ -817,7 +817,7 @@ export const MobileKeyboardInteractionAudit: React.FC<MobileKeyboardInteractionA
                 }}
               >
                 Clear Highlights
-              </SecondaryButton>
+              </OutlineButton>
               <PrimaryButton size="sm" onClick={scanForKeyboardIssues} loading={isScanning}>
                 {isScanning ? 'Scanning...' : 'Scan Again'}
               </PrimaryButton>

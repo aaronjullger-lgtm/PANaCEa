@@ -19,7 +19,7 @@ import {
   WifiOff,
   BatteryCharging,
 } from 'lucide-react';
-import { StandardButton, PrimaryButton, SecondaryButton } from './StandardButton';
+import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
 import {
   useMobilePerformance,
   useMobileImageOptimization,
@@ -599,7 +599,7 @@ export const MobilePerformanceDemo: React.FC<MobilePerformanceDemoProps> = ({
                     >
                       Apply All Optimizations
                     </PrimaryButton>
-                    <SecondaryButton
+                    <OutlineButton
                       onClick={() => {
                         // Apply only image optimizations
                         document.querySelectorAll('img').forEach((img) => {
@@ -611,7 +611,7 @@ export const MobilePerformanceDemo: React.FC<MobilePerformanceDemoProps> = ({
                       }}
                     >
                       Optimize Images Only
-                    </SecondaryButton>
+                    </OutlineButton>
                   </div>
                 </div>
               </motion.div>
@@ -752,9 +752,9 @@ export const MobilePerformanceDemo: React.FC<MobilePerformanceDemoProps> = ({
               {hasLowMemory ? 'High' : 'Normal'}
             </div>
             <div className="flex items-center gap-3">
-              <SecondaryButton size="sm" onClick={() => setIsOpen(false)}>
+              <OutlineButton size="sm" onClick={() => setIsOpen(false)}>
                 Close
-              </SecondaryButton>
+              </OutlineButton>
               <PrimaryButton size="sm" onClick={applyOptimizations}>
                 Apply Optimizations
               </PrimaryButton>

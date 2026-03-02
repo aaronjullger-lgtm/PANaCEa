@@ -142,7 +142,7 @@ export const srsSubmitSchema = z.object({
   selectedAnswer: z.number().int().min(0).max(10, 'selectedAnswer must be 0-10'),
   correctAnswer: z.number().int().min(0).max(10, 'correctAnswer must be 0-10'),
   responseTimeMs: z.number().int().min(0).max(600000, 'responseTimeMs must be 0-600000').optional(),
-  confidenceLevel: z.enum(['low', 'medium', 'high']).optional(),
+  confidenceLevel: z.number().min(0).max(1).optional(),
 });
 
 /**

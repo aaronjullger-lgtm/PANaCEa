@@ -20,6 +20,7 @@ vi.mock('@prisma/client', () => ({
       userProgress: { findUnique: vi.fn(), update: vi.fn() },
       medicalContent: { findFirst: vi.fn() },
       confusionPair: { upsert: vi.fn() },
+      preGeneratedQuestion: { update: vi.fn() },
       $disconnect: vi.fn(),
     };
   }),
@@ -186,6 +187,121 @@ describe('submitDrillReview', () => {
 
       // Verify QuestionAttempt creation
       expect(prisma.questionAttempt.create).toHaveBeenCalled();
+    });
+  
+    describe('Peer validation statistics', () => {
+      it('should increment timesServed and timesCorrect when answer is correct', async () => {
+        // Arrange
+        const input: SubmitDrillReviewInput = {
+          questionId,
+          selectedAnswer: 'Correct Answer',
+          timeSpentMs: 25000,
+          timeToFirstClick: 5000,
+          answerSwitches: 0,
+          sessionType: 'main',
+          telemetry: {
+            duration_ms: 25000,
+            time_to_first_interaction_ms: 5000,
+            rapid_guess: false,
+          },
+        };
+  
+        const question = {
+          id: questionId,
+          conditionId,
+          medicalContentId,
+          system: 'CV',
+          questionData: {
+            options: [
+              { value: 'Correct Answer', text: 'Correct' },
+              { value: 'Wrong Answer', text: 'Wrong' },
+            ],
+            correctAnswer: 'Correct Answer',
+          },
+        };
+  
+        // Mock dependencies
+        (prisma.userProgress.findUnique as Mock).mockResolvedValue({ fsrsCard: null });
+        (prisma.medicalContent.findFirst as Mock).mockResolvedValue({ conditionId, system: 'CV' });
+        (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_123' });
+        (prisma.reviewLog.create as Mock).mockResolvedValue({});
+        vi.mocked(FSRS).mockImplementation(() => ({
+          next: vi.fn().mockReturnValue({ card: {} }),
+          calculateRetrievability: vi.fn().mockReturnValue(0.85),
+        }));
+        vi.mocked(deriveContinuousRating).mockReturnValue({
+          grade: 3.42,
+          confidence: 0.78,
+          discreteRating: Rating.Good,
+        });
+  
+        // Act
+        await submitDrillReview(prisma, userId, input, question);
+  
+        // Assert
+        expect(prisma.preGeneratedQuestion.update).toHaveBeenCalledWith({
+          where: { id: questionId },
+          data: {
+            timesServed: { increment: 1 },
+            timesCorrect: { increment: 1 },
+          },
+        });
+      });
+  
+      it('should increment timesServed and timesIncorrect when answer is incorrect', async () => {
+        const input: SubmitDrillReviewInput = {
+          questionId,
+          selectedAnswer: 'Wrong Answer',
+          timeSpentMs: 25000,
+          timeToFirstClick: 5000,
+          answerSwitches: 0,
+          sessionType: 'main',
+          telemetry: {
+            duration_ms: 25000,
+            time_to_first_interaction_ms: 5000,
+            rapid_guess: false,
+          },
+        };
+  
+        const question = {
+          id: questionId,
+          conditionId,
+          medicalContentId,
+          system: 'CV',
+          questionData: {
+            options: [
+              { value: 'Correct Answer', text: 'Correct' },
+              { value: 'Wrong Answer', text: 'Wrong' },
+            ],
+            correctAnswer: 'Correct Answer',
+          },
+        };
+  
+        // Mock dependencies (same as above)
+        (prisma.userProgress.findUnique as Mock).mockResolvedValue({ fsrsCard: null });
+        (prisma.medicalContent.findFirst as Mock).mockResolvedValue({ conditionId, system: 'CV' });
+        (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_123' });
+        (prisma.reviewLog.create as Mock).mockResolvedValue({});
+        vi.mocked(FSRS).mockImplementation(() => ({
+          next: vi.fn().mockReturnValue({ card: {} }),
+          calculateRetrievability: vi.fn().mockReturnValue(0.85),
+        }));
+        vi.mocked(deriveContinuousRating).mockReturnValue({
+          grade: 1.5,
+          confidence: 0.5,
+          discreteRating: Rating.Again,
+        });
+  
+        await submitDrillReview(prisma, userId, input, question);
+  
+        expect(prisma.preGeneratedQuestion.update).toHaveBeenCalledWith({
+          where: { id: questionId },
+          data: {
+            timesServed: { increment: 1 },
+            timesIncorrect: { increment: 1 },
+          },
+        });
+      });
     });
   });
 

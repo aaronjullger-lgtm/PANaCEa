@@ -5,7 +5,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { StandardButton, PrimaryButton, SecondaryButton } from './StandardButton';
+import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
 import { MobileGestureHandler, SwipeNavigation, PullToRefresh } from './MobileGestureHandler';
 import { useBreakpoint } from '@/lib/utils/mobileOptimization';
 
@@ -181,9 +181,9 @@ export const MobileGestureDemo: React.FC<MobileGestureDemoProps> = ({
               </p>
             </div>
           </div>
-          <SecondaryButton onClick={handleClose} size="sm" variant="ghost">
+          <OutlineButton onClick={handleClose} size="sm" variant="ghost">
             ✕
-          </SecondaryButton>
+          </OutlineButton>
         </div>
 
         {/* Content */}
@@ -301,9 +301,9 @@ export const MobileGestureDemo: React.FC<MobileGestureDemoProps> = ({
               <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-[var(--color-text-primary)]">Gesture History</h4>
-                  <SecondaryButton onClick={() => setGestureLog([])} size="xs" variant="ghost">
+                  <OutlineButton onClick={() => setGestureLog([])} size="xs" variant="ghost">
                     Clear
-                  </SecondaryButton>
+                  </OutlineButton>
                 </div>
 
                 <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -444,7 +444,7 @@ const MyComponent = () => {
               {isMobile ? 'Try gestures on this demo' : 'Use touch screen or mouse gestures'}
             </div>
             <div className="flex gap-2">
-              <SecondaryButton onClick={handleClose}>Close</SecondaryButton>
+              <OutlineButton onClick={handleClose}>Close</OutlineButton>
               <PrimaryButton
                 onClick={() => {
                   setGestureLog([]);

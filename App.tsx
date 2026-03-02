@@ -72,6 +72,8 @@ import {
   VisualizerPage,
   MedicalDatabaseSearch,
   LiveStudySession,
+  PracticePage,
+  ProgressPage,
 } from './config/lazyComponents';
 import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { useUser, useAuth } from '@clerk/clerk-react';
@@ -667,7 +669,8 @@ const App: React.FC = () => {
                   body: JSON.stringify({ dueItems }),
                 })
               : null;
-            const data = res?.ok ? await res.json().catch(() => null) : null;
+            const json: unknown = res?.ok ? await res.json().catch(() => null) : null;
+            const data = json as { data?: { results?: unknown } } | null;
             const results = data?.data?.results as
               | Array<{
                   question: {
@@ -1037,6 +1040,28 @@ const App: React.FC = () => {
             <LoadingProgress isLoading={isLoading} />
 
             <Routes>
+              <Route
+                path="/practice"
+                element={
+                  <Suspense fallback={<Loader message="Loading practice modes..." />}>
+                    <PracticePage
+                      onNavigateToDrillMode={handleNavigateToDrillMode}
+                      onNavigateToDrillWithSystem={_handleNavigateToDrillWithSystem}
+                    />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/progress"
+                element={
+                  <Suspense fallback={<Loader message="Loading analytics..." />}>
+                    <ProgressPage
+                      performanceData={heatmapPerformance}
+                      dueCount={dueQuestionsCount}
+                    />
+                  </Suspense>
+                }
+              />
               <Route
                 path="/admin"
                 element={

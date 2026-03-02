@@ -7,3 +7,4 @@
 
 export { SystemBadge } from './SystemBadge';
 export { YieldBadge, YieldStars } from './YieldBadge';
+export { RetrievabilityBadge } from './RetrievabilityBadge';

@@ -5,6 +5,12 @@
 
 import { fetchWithTimeout } from './timeout';
 import { deriveContinuousRating } from '../../../lib/implicit-metrics';
+import { z } from 'zod';
+
+const geminiBehaviorOutputSchema = z.object({
+  confidence: z.number().min(0).max(1),
+  impliedRating: z.number().int().min(1).max(4),
+});
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const BEHAVIOR_MODEL = 'gemini-2.0-flash-exp';
@@ -101,15 +107,22 @@ Respond with a JSON object only, no markdown:
     let confidence = 0.5;
     let impliedRating = rating;
     try {
-      const parsed = JSON.parse(text) as { confidence?: number; impliedRating?: number };
-      if (typeof parsed.confidence === 'number')
-        confidence = Math.max(0, Math.min(1, parsed.confidence));
-      if (
-        typeof parsed.impliedRating === 'number' &&
-        parsed.impliedRating >= 1 &&
-        parsed.impliedRating <= 4
-      )
-        impliedRating = Math.round(parsed.impliedRating);
+      const parsed = JSON.parse(text);
+      const result = geminiBehaviorOutputSchema.safeParse(parsed);
+      if (result.success) {
+        confidence = Math.max(0, Math.min(1, result.data.confidence));
+        impliedRating = Math.round(result.data.impliedRating);
+      } else {
+        // fallback to old logic for backward compatibility
+        if (typeof parsed.confidence === 'number')
+          confidence = Math.max(0, Math.min(1, parsed.confidence));
+        if (
+          typeof parsed.impliedRating === 'number' &&
+          parsed.impliedRating >= 1 &&
+          parsed.impliedRating <= 4
+        )
+          impliedRating = Math.round(parsed.impliedRating);
+      }
     } catch {
       // keep defaults
     }

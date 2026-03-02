@@ -19,6 +19,7 @@ interface CommuterModeProps {
 const CommuterMode: React.FC<CommuterModeProps> = ({ onExit }) => {
   const commuter = useCommuter();
   const { careerStage } = useUserContext();
+  const sessionGenerator = useSessionGenerator();
   const [queue, setQueue] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,11 +36,9 @@ const CommuterMode: React.FC<CommuterModeProps> = ({ onExit }) => {
 
   // Generate a session queue
   useEffect(() => {
-    const generate = async () => {
+    const generateSession = async () => {
       setIsLoading(true);
       try {
-        // Use session generator with default settings (all topics, no focus)
-        const sessionGenerator = useSessionGenerator();
         const session = await sessionGenerator.generateSession({
           count: 10,
           focus: 'all',
@@ -53,8 +52,8 @@ const CommuterMode: React.FC<CommuterModeProps> = ({ onExit }) => {
         setIsLoading(false);
       }
     };
-    generate();
-  }, []);
+    generateSession();
+  }, [sessionGenerator]);
 
   if (isLoading) {
     return (

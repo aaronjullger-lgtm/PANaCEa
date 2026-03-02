@@ -353,6 +353,58 @@ export const ButtonGroup: React.FC<ButtonGroupProps> = ({
  * Utility hook for consistent spacing values
  */
 export function useSpacing() {
+  const getClass = (type: 'space-y' | 'space-x' | 'gap' | 'p' | 'm', size: SpacingSize): string => {
+    const map = {
+      'space-y': {
+        xs: 'space-y-2',
+        sm: 'space-y-3',
+        md: 'space-y-4',
+        lg: 'space-y-6',
+        xl: 'space-y-8',
+        '2xl': 'space-y-10',
+        '3xl': 'space-y-12',
+      },
+      'space-x': {
+        xs: 'space-x-2',
+        sm: 'space-x-3',
+        md: 'space-x-4',
+        lg: 'space-x-6',
+        xl: 'space-x-8',
+        '2xl': 'space-x-10',
+        '3xl': 'space-x-12',
+      },
+      gap: {
+        xs: 'gap-2',
+        sm: 'gap-3',
+        md: 'gap-4',
+        lg: 'gap-6',
+        xl: 'gap-8',
+        '2xl': 'gap-10',
+        '3xl': 'gap-12',
+      },
+      p: {
+        xs: 'p-2',
+        sm: 'p-3',
+        md: 'p-4',
+        lg: 'p-6',
+        xl: 'p-8',
+        '2xl': 'p-10',
+        '3xl': 'p-12',
+      },
+      m: {
+        xs: 'm-2',
+        sm: 'm-3',
+        md: 'm-4',
+        lg: 'm-6',
+        xl: 'm-8',
+        '2xl': 'm-10',
+        '3xl': 'm-12',
+      },
+    };
+
+    return map[type][size];
+  };
+
   return {
     // Get spacing value in pixels
     getPixels: (size: SpacingSize): number => {
@@ -361,57 +413,7 @@ export function useSpacing() {
     },
 
     // Get Tailwind class for spacing
-    getClass: (type: 'space-y' | 'space-x' | 'gap' | 'p' | 'm', size: SpacingSize): string => {
-      const map = {
-        'space-y': {
-          xs: 'space-y-2',
-          sm: 'space-y-3',
-          md: 'space-y-4',
-          lg: 'space-y-6',
-          xl: 'space-y-8',
-          '2xl': 'space-y-10',
-          '3xl': 'space-y-12',
-        },
-        'space-x': {
-          xs: 'space-x-2',
-          sm: 'space-x-3',
-          md: 'space-x-4',
-          lg: 'space-x-6',
-          xl: 'space-x-8',
-          '2xl': 'space-x-10',
-          '3xl': 'space-x-12',
-        },
-        gap: {
-          xs: 'gap-2',
-          sm: 'gap-3',
-          md: 'gap-4',
-          lg: 'gap-6',
-          xl: 'gap-8',
-          '2xl': 'gap-10',
-          '3xl': 'gap-12',
-        },
-        p: {
-          xs: 'p-2',
-          sm: 'p-3',
-          md: 'p-4',
-          lg: 'p-6',
-          xl: 'p-8',
-          '2xl': 'p-10',
-          '3xl': 'p-12',
-        },
-        m: {
-          xs: 'm-2',
-          sm: 'm-3',
-          md: 'm-4',
-          lg: 'm-6',
-          xl: 'm-8',
-          '2xl': 'm-10',
-          '3xl': 'm-12',
-        },
-      };
-
-      return map[type][size];
-    },
+    getClass,
 
     // Check if element has consistent spacing
     checkConsistency: (element: HTMLElement): boolean => {
@@ -429,7 +431,7 @@ export function useSpacing() {
 
     // Apply consistent spacing to element
     applyConsistentSpacing: (element: HTMLElement, size: SpacingSize = 'md'): void => {
-      const paddingClass = useSpacing().getClass('p', size);
+      const paddingClass = getClass('p', size);
       element.classList.add(paddingClass);
 
       // Remove any existing padding/margin classes

@@ -35,6 +35,7 @@ import {
   updateConfusionGraph,
 } from '@/lib/services/explanationCompressionService';
 import { OpenStaxAttributionFooter } from '@/components/ui/OpenStaxAttributionFooter';
+import { usePeerValidation, PeerValidationBadge } from '@/hooks/usePeerValidation';
 
 /**
  * Calculate estimated reading time based on text length
@@ -196,6 +197,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
     () => getAdaptiveHint(isCorrect, userAnswer, correctAnswer),
     [isCorrect, userAnswer, correctAnswer]
   );
+
+  // Peer validation statistics for incorrect answers
+  const { data: peerData, loading: peerLoading } = usePeerValidation(questionId, isCorrect);
 
   // Compute compressed content (only used for legacy string rationale)
   const coreRationale = useMemo(
@@ -568,6 +572,9 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             </AnimatePresence>
           </motion.section>
         )}
+
+        {/* Peer Validation Badge */}
+        {!isCorrect && questionId && <PeerValidationBadge peerData={peerData} />}
 
         {/* Action Buttons */}
         <motion.div

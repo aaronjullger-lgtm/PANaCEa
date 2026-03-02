@@ -125,8 +125,8 @@ export default function WeaknessCheatsheetExporter({
         </div>
       ) : (
         <div className="p-3 rounded-lg mb-4 text-center bg-data-neutral dark:bg-[var(--color-success)]/10 border border-data-neutral dark:border-[var(--color-success)]/30">
-          <Check className="w-6 h-6 mx-auto mb-2 text-data-neutral dark:text-[var(--color-success)]" />
-          <p className="text-sm text-data-neutral dark:text-[var(--color-text-primary)]">
+          <Check className="w-6 h-6 mx-auto mb-2 text-[var(--color-success)]" />
+          <p className="text-sm text-[var(--color-text-primary)]">
             No yield gaps in the last {days} days—keep it up!
           </p>
         </div>

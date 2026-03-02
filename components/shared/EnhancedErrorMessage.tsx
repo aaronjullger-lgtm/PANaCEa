@@ -16,7 +16,7 @@ import {
   ExternalLink,
   HelpCircle,
 } from 'lucide-react';
-import { StandardButton, PrimaryButton, SecondaryButton, OutlineButton } from './StandardButton';
+import { StandardButton, PrimaryButton, OutlineButton, OutlineButton } from './StandardButton';
 
 export type ErrorSeverity = 'error' | 'warning' | 'info' | 'success';
 export type ErrorCategory =
@@ -398,7 +398,7 @@ export const EnhancedErrorMessage: React.FC<EnhancedErrorMessageProps> = ({
                     action.variant === 'primary'
                       ? PrimaryButton
                       : action.variant === 'secondary'
-                        ? SecondaryButton
+                        ? OutlineButton
                         : action.variant === 'outline'
                           ? OutlineButton
                           : StandardButton;

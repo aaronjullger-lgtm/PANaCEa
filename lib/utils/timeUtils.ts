@@ -8,6 +8,8 @@
  */
 export const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
+export type CircadianPhase = 'morning' | 'afternoon' | 'evening' | 'night';
+
 /**
  * Get current UTC date normalized to midnight
  * This ensures consistent date calculations regardless of client timezone
@@ -37,6 +39,34 @@ export function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' {
   const hour = new Date().getHours();
   if (hour < 12) return 'morning';
   if (hour < 17) return 'afternoon';
+  return 'evening';
+}
+
+/**
+ * Get circadian phase based on standard time-of-day definitions
+ * @param date Optional date (defaults to current local time)
+ * @returns CircadianPhase
+ *   morning: 5:00 - 11:59 (5 AM to 11:59 AM)
+ *   afternoon: 12:00 - 16:59 (12 PM to 4:59 PM)
+ *   evening: 17:00 - 20:59 (5 PM to 8:59 PM)
+ *   night: 21:00 - 4:59 (9 PM to 4:59 AM)
+ */
+export function getCircadianPhase(date: Date = new Date()): CircadianPhase {
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+  const totalMinutes = hour * 60 + minute;
+
+  // Night spans across midnight: 21:00 to 4:59
+  if (totalMinutes >= 21 * 60 || totalMinutes < 5 * 60) {
+    return 'night';
+  }
+  if (totalMinutes >= 5 * 60 && totalMinutes < 12 * 60) {
+    return 'morning';
+  }
+  if (totalMinutes >= 12 * 60 && totalMinutes < 17 * 60) {
+    return 'afternoon';
+  }
+  // Remaining: 17:00 to 20:59
   return 'evening';
 }
 

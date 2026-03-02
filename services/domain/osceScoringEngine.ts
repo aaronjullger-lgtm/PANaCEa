@@ -372,7 +372,7 @@ export class OSCEScoringEngine {
     let event: ScoringEvent | null = null;
 
     // Check for critical action triggers
-    if (/\b(allerg|medication.?allerg)\b/.test(lowerQ)) {
+    if (/\b(medication.?allerg(?:y|ies)?)\b/.test(lowerQ)) {
       event = this.triggerCriticalAction('medication_allergies', phase);
     }
 

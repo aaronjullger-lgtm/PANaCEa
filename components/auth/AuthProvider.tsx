@@ -128,7 +128,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     console.log('[Clerk] Client timezone offset:', new Date().getTimezoneOffset());
   }
 
-  useThemeContext(); // Ensures Clerk appearance variables resolve from our theme (light/dark)
+  // Get theme context - must be called unconditionally
+  const themeContext = useThemeContext();
 
   return (
     <ClerkProvider

@@ -402,6 +402,22 @@ export async function submitDrillReview(
             },
       },
     });
+    // Update peer validation statistics
+    try {
+      await prisma.preGeneratedQuestion.update({
+        where: { id: questionId },
+        data: {
+          timesServed: { increment: 1 },
+          ...(isCorrect
+            ? { timesCorrect: { increment: 1 } }
+            : { timesIncorrect: { increment: 1 } }),
+        },
+      });
+    } catch (statsError) {
+      logger?.warn?.('Failed to update PreGeneratedQuestion statistics', {
+        error: statsError instanceof Error ? statsError.message : String(statsError),
+      });
+    }
     if (isRapidGuess) {
       logger?.info?.('Rapid guess detected', {
         questionId,
@@ -525,6 +541,7 @@ export async function submitDrillReview(
               grade_continuous: gradeContinuous,
               answer_changes: (telemetry?.answer_changes as number | undefined) ?? switches,
               circadian_phase: circadianContext.circadianPhase,
+              time_of_day: (telemetry?.circadian_phase as string) ?? undefined,
               selection_drift_ms: telemetry?.selection_drift_ms as number | undefined,
               cursor_entropy: telemetry?.cursor_entropy as number | undefined,
               tremor_score: telemetry?.tremor_score as number | undefined,

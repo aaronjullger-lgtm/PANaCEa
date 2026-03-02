@@ -19,7 +19,7 @@ import {
   Search,
   Zap,
 } from 'lucide-react';
-import { StandardButton, PrimaryButton, SecondaryButton } from './StandardButton';
+import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
 import {
   useMobileKeyboardFix,
   useKeyboardDismissal,
@@ -275,9 +275,9 @@ export const MobileKeyboardFixDemo: React.FC<MobileKeyboardFixDemoProps> = ({
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <SecondaryButton leftIcon={<Zap className="w-4 h-4" />} onClick={applyFixes}>
+                    <OutlineButton leftIcon={<Zap className="w-4 h-4" />} onClick={applyFixes}>
                       Apply Fixes
-                    </SecondaryButton>
+                    </OutlineButton>
                     <PrimaryButton
                       leftIcon={<Smartphone className="w-4 h-4" />}
                       onClick={runTests}
@@ -368,7 +368,7 @@ export const MobileKeyboardFixDemo: React.FC<MobileKeyboardFixDemoProps> = ({
                     </div>
                     <div className="flex items-center gap-3 pt-4">
                       <PrimaryButton type="submit">Submit Form</PrimaryButton>
-                      <SecondaryButton type="button">Clear</SecondaryButton>
+                      <OutlineButton type="button">Clear</OutlineButton>
                     </div>
                   </form>
                 </div>
@@ -511,7 +511,7 @@ export const MobileKeyboardFixDemo: React.FC<MobileKeyboardFixDemoProps> = ({
                     >
                       Apply All Fixes Now
                     </PrimaryButton>
-                    <SecondaryButton
+                    <OutlineButton
                       onClick={() => {
                         const inputs = document.querySelectorAll('input');
                         inputs.forEach((input) => {
@@ -523,7 +523,7 @@ export const MobileKeyboardFixDemo: React.FC<MobileKeyboardFixDemoProps> = ({
                       }}
                     >
                       Fix Input Types Only
-                    </SecondaryButton>
+                    </OutlineButton>
                   </div>
                 </div>
               </motion.div>
@@ -658,9 +658,9 @@ function MedicalForm() {
               Viewport: {viewportHeight}px • Keyboard: {isKeyboardVisible ? 'Visible' : 'Hidden'}
             </div>
             <div className="flex items-center gap-3">
-              <SecondaryButton size="sm" onClick={() => setIsOpen(false)}>
+              <OutlineButton size="sm" onClick={() => setIsOpen(false)}>
                 Close
-              </SecondaryButton>
+              </OutlineButton>
               <PrimaryButton size="sm" onClick={applyGlobalFixes}>
                 Apply & Test
               </PrimaryButton>

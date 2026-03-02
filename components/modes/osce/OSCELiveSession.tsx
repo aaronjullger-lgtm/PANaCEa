@@ -8,6 +8,7 @@ import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion';
 import { Mic, MicOff, Loader2, Phone, PhoneOff } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { useOSCEMetrics } from '@/hooks/useOSCEMetrics';
 
 const DEFAULT_SYSTEM_INSTRUCTION =
   'You are Marcus, a 55-year-old male with crushing chest pain. You are anxious and short of breath. If the student interrupts you, stop talking immediately. When asked about your vitals, use the get_current_vitals tool to look them up.';
@@ -45,6 +46,7 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
   const systemInstruction = useMemo(() => buildSystemInstruction(patientContext), [patientContext]);
   const patientLabel = patientContext?.patientName ?? 'Marcus';
   const { getToken } = useAuth();
+  const { logAction, calculateMetrics } = useOSCEMetrics();
   const [status, setStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [micMuted, setMicMuted] = useState(false);
@@ -107,6 +109,7 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
             };
             const calls = m?.toolCall?.functionCalls;
             if (calls?.length && sessionRef.current?.sendToolResponse) {
+              logAction('exam', 'vitals_requested');
               Promise.all(
                 calls.map((fc) =>
                   fetch(`/api/osce/session/${sessionId}/vitals`, {
@@ -215,23 +218,31 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
         </div>
       )}
       {status === 'connected' && (
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setMicMuted((m) => !m)}
-            className={`p-3 rounded-full ${micMuted ? 'bg-red-500/20' : 'bg-[var(--color-accent)]/20'}`}
-          >
-            {micMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-          </button>
-          <span className="text-sm text-[var(--color-text-muted)]">Connected</span>
-          <button
-            type="button"
-            onClick={disconnect}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-primary)]"
-          >
-            <PhoneOff className="w-4 h-4" />
-            Disconnect
-          </button>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setMicMuted((m) => !m)}
+              className={`p-3 rounded-full ${micMuted ? 'bg-red-500/20' : 'bg-[var(--color-accent)]/20'}`}
+            >
+              {micMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            </button>
+            <span className="text-sm text-[var(--color-text-muted)]">Connected</span>
+            <button
+              type="button"
+              onClick={disconnect}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-primary)]"
+            >
+              <PhoneOff className="w-4 h-4" />
+              Disconnect
+            </button>
+          </div>
+          <div className="p-3 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)]">
+            <div className="text-xs text-[var(--color-text-muted)] mb-1">Clinical Confidence</div>
+            <div className="text-2xl font-bold text-[var(--color-accent)]">
+              {calculateMetrics().clinicalConfidenceIndex.toFixed(1)}/4.0
+            </div>
+          </div>
         </div>
       )}
       {status === 'error' && (

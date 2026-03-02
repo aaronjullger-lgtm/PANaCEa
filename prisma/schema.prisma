@@ -1807,6 +1807,7 @@ model OsceResult {
   checklist               Json
   redFlagsMissed          String[]
   clinicalReasoningScore  Float
+  implicitRating          Float?
   billingCodeSuggestion   String?
   createdAt               DateTime                @default(now())
   PatientEncounterSession PatientEncounterSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
@@ -1847,6 +1848,11 @@ model PatientEncounterSession {
   diagnosticOrders     Json?
   diagnosis            String?
   treatmentPlan        String?
+  voiceRecordingUrl    String?
+  speechTranscript     Json?
+  interactionLog       Json?
+  telemetry            Json?
+  osceTelemetry        Json?
   OsceResult           OsceResult?
   PatientEncounterCase PatientEncounterCase @relation(fields: [caseId], references: [id])
   User                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2411,7 +2417,7 @@ model ReviewLog {
   medicalContentId          String?
   questionId                String?
   questionType              String?
-  grade                     Int
+  grade                     Float
   state                     Int
   stability                 Float
   difficulty                Float

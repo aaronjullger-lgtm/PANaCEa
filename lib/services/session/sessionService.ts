@@ -314,7 +314,7 @@ export class SessionService {
       const batchResults = await Promise.all(batch);
       systemResults.push(...batchResults);
     }
-    let allQuestions = systemResults.flat();
+    const allQuestions = systemResults.flat();
 
     // Shuffle the combined questions
     this.shuffleArray(allQuestions);

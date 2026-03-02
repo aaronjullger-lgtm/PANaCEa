@@ -36,6 +36,8 @@ import { LibrarySidebar } from './LibrarySidebar';
 import { LibraryBreadcrumb } from './LibraryBreadcrumb';
 import { EnhancedConditionCard } from './EnhancedConditionCard';
 import { SmartConditionView } from '@/config/lazyComponents';
+import { computeConditionRetrievability } from '@/lib/fsrs/retrievability';
+import { defaultParameters } from '@/lib/fsrs';
 import { LoadingOverlay } from '@/components/ui/layouts';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -76,6 +78,11 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   const [content, setContent] = useState<Partial<MedicalContentDisplay>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [progressMap, setProgressMap] = useState<Record<string, {
+    stability: number | null;
+    lastReviewAt: string | null;
+    fsrsParams: number[] | null;
+  }>>({});
 
   // Detail panel state
   const [selected, setSelected] = useState<Partial<MedicalContentDisplay> | null>(null);
@@ -190,6 +197,34 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     }
   }, [activeSystem, activeSubcategory, highYieldOnly, getToken, isSignedIn]);
 
+  // Fetch user progress map (stability & last review) for retrievability computation
+  const fetchProgressMap = useCallback(async () => {
+    if (!isSignedIn) {
+      setProgressMap({});
+      return;
+    }
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/user/progress-map', {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!res.ok) {
+        if (res.status === 401) return;
+        throw new Error(`Failed to fetch progress map: ${res.status}`);
+      }
+      const data = await res.json();
+      if (data && typeof data === 'object') {
+        setProgressMap(data);
+      }
+    } catch (err) {
+      console.error('[ClinicalReferenceLibrary] progress map fetch failed', err);
+      // Silent fail - retrievability badges will just not appear
+    }
+  }, [getToken, isSignedIn]);
+
   // Initial load
   useEffect(() => {
     fetchSystems();
@@ -200,6 +235,11 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     setSelected(null);
     setSelectedIndex(-1);
   }, [fetchContent]);
+
+  // Fetch progress map for retrievability badges
+  useEffect(() => {
+    fetchProgressMap();
+  }, [fetchProgressMap]);
 
   // Compute subcategories map
   const subcategoriesMap = useMemo(() => {
@@ -226,6 +266,19 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
     return map;
   }, [content]);
+
+  // Compute retrievability percentage for each condition
+  const retrievabilityMap = useMemo(() => {
+    const map: Record<string, number | null> = {};
+    Object.entries(progressMap).forEach(([conditionId, data]) => {
+      const { stability, lastReviewAt, fsrsParams } = data;
+      const w19 = fsrsParams?.[19] ?? defaultParameters.w[19];
+      const w20 = fsrsParams?.[20] ?? defaultParameters.w[20];
+      const retrievability = computeConditionRetrievability(stability, lastReviewAt, w19, w20);
+      map[conditionId] = retrievability;
+    });
+    return map;
+  }, [progressMap]);
 
   // Filter content for display
   const filteredContent = useMemo(() => {
@@ -497,6 +550,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                       condition={item}
                       isSelected={selected?.id === item.id}
                       onClick={() => handleConditionSelect(item, idx)}
+                      retrievability={retrievabilityMap[item.id] ?? null}
                       badge={
                         'similarity' in item && typeof item.similarity === 'number'
                           ? `${Math.round(item.similarity * 100)}% match`
@@ -575,6 +629,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                             condition={item}
                             isSelected={selected?.id === item.id}
                             onClick={() => handleConditionSelect(item, globalIndex)}
+                            retrievability={retrievabilityMap[item.id] ?? null}
                           />
                         );
                       })}
