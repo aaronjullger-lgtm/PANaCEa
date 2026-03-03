@@ -160,3 +160,37 @@ grep -r "text-steel-blue" components/ --include="*.tsx" | # review and add bg cl
 - No style guide for color usage
 - Missing component API documentation
 - No testing guidelines for theme switching
+
+
+## Update: Automated Fix Attempt
+
+**Date**: Current session
+
+### Approach
+Created shell script to batch-replace problematic text color patterns:
+- `text-data-neutral dark:text-[var(--color-*)]` → `text-[var(--color-*)]`
+- Similar patterns for hover and group-hover states
+
+### Result
+Script caused syntax error in CommandCenterHub.tsx (extra closing tag). Reverted changes.
+
+### Recommendation
+Manual fixes required for remaining 742 instances. Automated sed replacements are too risky for JSX files with complex nesting.
+
+### Safe Manual Fix Process
+1. Search for: `text-data-neutral dark:text-[var(`
+2. Replace with: `text-[var(`
+3. Test build after each file
+4. Prioritize high-traffic components first
+
+### Already Fixed (Previous Session)
+- ✅ ThemeToggleButton.tsx
+- ✅ MasteryHeatmapToggle.tsx  
+- ✅ SidebarItem.tsx
+- ✅ WeaknessCheatsheetExporter.tsx
+
+### High Priority Files (Most Instances)
+1. PatientEncounterMode.tsx (151 instances)
+2. FluidElectrolyteMode.tsx (61 instances)
+3. AntibioticMode.tsx (29 instances)
+4. CustomSessionBuilder.tsx (21 instances)
