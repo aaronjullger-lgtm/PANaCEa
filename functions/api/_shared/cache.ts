@@ -2,6 +2,7 @@
 // KV Cache utilities for CloudFlare Pages Functions
 
 import type { KVNamespace } from '@cloudflare/workers-types';
+import type { StudyPathConstraints } from '@/types';
 
 /**
  * Cache configuration
@@ -15,6 +16,7 @@ export const CACHE_CONFIG = {
     DRUG_DETAIL: 3600, // 1 hour - drug info is stable
     GUIDELINE_DETAIL: 7200, // 2 hours - guidelines are very stable
     SYSTEM_METADATA: 1800, // 30 minutes - system lists, categories
+    STUDY_PATH: 3600, // 1 hour - study path recommendations
   },
   // Key prefixes for organization
   PREFIX: {
@@ -25,6 +27,7 @@ export const CACHE_CONFIG = {
     GUIDELINE: 'guideline:',
     SYSTEM: 'system:',
     METRICS: 'metrics:',
+    STUDY_PATH: 'study_path:',
   },
 } as const;
 
@@ -233,6 +236,46 @@ export function getDrugCacheKey(drugId: string): string {
  */
 export function getGuidelineCacheKey(guidelineId: string): string {
   return `${CACHE_CONFIG.PREFIX.GUIDELINE}${guidelineId.toLowerCase()}`;
+}
+
+/**
+ * Generate a stable JSON string representation of an object.
+ * Sorts keys and removes undefined values.
+ */
+function stableStringify(obj: unknown): string {
+  const replacer = (key: string, value: unknown) => {
+    // Remove undefined values
+    if (value === undefined) return undefined;
+    // Sort object keys
+    if (typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Date)) {
+      const sorted: Record<string, unknown> = {};
+      Object.keys(value).sort().forEach(k => {
+        sorted[k] = (value as Record<string, unknown>)[k];
+      });
+      return sorted;
+    }
+    return value;
+  };
+  return JSON.stringify(obj, replacer);
+}
+
+/**
+ * Generate cache key for study‑path recommendations.
+ * Incorporates user ID and constraints (if any).
+ */
+export function getStudyPathCacheKey(userId: string, constraints?: StudyPathConstraints): string {
+  const base = `${CACHE_CONFIG.PREFIX.STUDY_PATH}${userId}`;
+  if (!constraints) return base;
+  // Create a deterministic hash of constraints
+  const constraintsHash = stableStringify(constraints);
+  // Simple numeric hash (djb2)
+  let hash = 5381;
+  for (let i = 0; i < constraintsHash.length; i++) {
+    hash = (hash * 33) ^ constraintsHash.charCodeAt(i);
+  }
+  // Ensure positive integer and convert to hex
+  const hexHash = (hash >>> 0).toString(16).padStart(8, '0');
+  return `${base}:${hexHash}`;
 }
 
 /**

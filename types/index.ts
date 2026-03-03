@@ -5,3 +5,4 @@
 
 export * from '../src/types';
 export * from './preferences';
+export * from './study-path';
