@@ -32,6 +32,7 @@ import {
   Loader2,
   RefreshCw,
   BookOpen,
+  Map,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { canManageRoles, getRoleDisplayName, type UserRole } from '../../lib/auth/rbac';
@@ -39,6 +40,7 @@ import { ROUTES } from '../../config/routes';
 import { FlaggedQuestionsDashboard } from '../../components/admin/FlaggedQuestionsDashboard';
 import { QuestionPerformanceDashboard } from '../../components/admin/QuestionPerformanceDashboard';
 import QuestionCurationPanel from '../../components/admin/QuestionCurationPanel';
+import { MappingEnrichmentDashboard } from '../../components/admin/MappingEnrichmentDashboard';
 
 interface AdminStats {
   totalUsers: number;
@@ -59,7 +61,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const [userRole, setUserRole] = useState<UserRole>('user');
   const [hasAccess, setHasAccess] = useState(false);
   const [activePanel, setActivePanel] = useState<
-    'dashboard' | 'flags' | 'performance' | 'curation'
+    'dashboard' | 'flags' | 'performance' | 'curation' | 'mappingEnrichment'
   >('dashboard');
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -235,6 +237,11 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                       <Sparkles className="w-7 h-7 text-data-provisional" />
                       Question Curation
                     </>
+                  ) : activePanel === 'mappingEnrichment' ? (
+                    <>
+                      <Map className="w-7 h-7 text-data-provisional" />
+                      System Mapping Enrichment
+                    </>
                   ) : (
                     <>
                       <Shield className="w-7 h-7 text-[var(--color-accent)]" />
@@ -249,7 +256,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                       ? 'Identify and improve low-performing questions'
                       : activePanel === 'curation'
                         ? 'Review and approve AI-generated questions'
-                        : 'Platform management and analytics'}
+                        : activePanel === 'mappingEnrichment'
+                          ? 'Enrich taxonomy-system mappings with AI suggestions'
+                          : 'Platform management and analytics'}
                   <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
                     {getRoleDisplayName(userRole)}
                   </span>
@@ -294,6 +303,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         ) : activePanel === 'curation' ? (
           <div className="p-6">
             <QuestionCurationPanel />
+          </div>
+        ) : activePanel === 'mappingEnrichment' ? (
+          <div className="p-6">
+            <MappingEnrichmentDashboard />
           </div>
         ) : (
           <>
@@ -500,6 +513,21 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)]">
                         Review AI-generated questions
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActivePanel('mappingEnrichment')}
+                    className="flex items-center gap-3 p-4 bg-data-provisional/10 border border-data-provisional/30 rounded-lg hover:bg-data-provisional/20 transition-colors text-left"
+                  >
+                    <Map className="w-5 h-5 text-data-provisional" />
+                    <div>
+                      <div className="font-medium text-[var(--color-text-primary)]">
+                        System Mapping Enrichment
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)]">
+                        Review AI‑suggested system mappings
                       </div>
                     </div>
                   </button>

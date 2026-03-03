@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { clearContentCache } from '../../../services/conditionContentService';
 
 const SystemMappingSchema = z.object({
   taxonomyCode: z.string().min(2).max(10),
@@ -181,6 +182,10 @@ export const onRequestPost = authenticatedEndpoint(
         subcategory: mapping.subcategory,
         userId: auth.userId,
       });
+
+      // Invalidate content cache to reflect mapping changes
+      clearContentCache();
+
       return {
         data: mapping,
         status: 201,
@@ -262,6 +267,10 @@ export const onRequestPut = authenticatedEndpoint(
         subcategory: updated.subcategory,
         userId: auth.userId,
       });
+
+      // Invalidate content cache to reflect mapping changes
+      clearContentCache();
+
       return {
         data: updated,
         status: 200,
@@ -341,6 +350,10 @@ export const onRequestDelete = authenticatedEndpoint(
         subcategory: params.subcategory,
         userId: auth.userId,
       });
+
+      // Invalidate content cache to reflect mapping changes
+      clearContentCache();
+
       return {
         data: { success: true },
         status: 200,

@@ -2977,6 +2977,8 @@ model User {
   UserWordleState         UserWordleState[]
   VisualizerGeneration    VisualizerGeneration[]
   WeaknessPattern         WeaknessPattern[]
+  mappingSuggestions      MappingSuggestion[]
+  mappingAuditLogs        MappingAuditLog[]
 
   @@index([clerkId])
   @@index([email])
@@ -3509,6 +3511,8 @@ model MedicalTaxonomy {
   updatedAt   DateTime
 
   systemMappings SystemMapping[]
+  mappingSuggestions MappingSuggestion[]
+  mappingAuditLogs MappingAuditLog[]
 
   @@index([code])
 }
@@ -3529,6 +3533,64 @@ model SystemMapping {
 
   @@index([taxonomyCode, subcategory])
   @@index([canonicalName])
+}
+
+enum MappingSuggestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IGNORED
+}
+
+enum MappingAuditAction {
+  APPROVE
+  REJECT
+  IGNORE
+  MANUAL_ADD
+  MANUAL_REMOVE
+  PREVIEW
+}
+
+model MappingSuggestion {
+  id                  String                    @id @default(cuid())
+  taxonomyCode        String
+  taxonomyName        String
+  suggestedSystemCode String
+  confidence          Float
+  reason              String
+  alternativeSystems  Json
+  status              MappingSuggestionStatus   @default(PENDING)
+  reviewedBy          String?
+  reviewedAt          DateTime?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime
+
+  taxonomy            MedicalTaxonomy           @relation(fields: [taxonomyCode], references: [code], onDelete: Cascade)
+  reviewedByUser      User?                     @relation(fields: [reviewedBy], references: [id], onDelete: NoAction)
+
+  @@index([taxonomyCode])
+  @@index([status])
+  @@index([confidence])
+  @@index([reviewedBy])
+}
+
+model MappingAuditLog {
+  id                  String              @id @default(cuid())
+  taxonomyCode        String
+  systemCode          String
+  action              MappingAuditAction
+  userId              String?
+  timestamp           DateTime            @default(now())
+  rationale           String?
+  previousSystemCode  String?
+
+  taxonomy            MedicalTaxonomy?    @relation(fields: [taxonomyCode], references: [code], onDelete: Cascade)
+  user                User?               @relation(fields: [userId], references: [id], onDelete: NoAction)
+
+  @@index([taxonomyCode])
+  @@index([action])
+  @@index([userId])
+  @@index([timestamp])
 }
 
 enum CircadianPhase {

@@ -48,9 +48,37 @@ export const onRequestPost = async (context: any) => {
     // Apply limit
     const limited = suggestions.slice(0, limit);
 
+    // Store suggestions in database
+    const storedSuggestions = [];
+    for (const suggestion of limited) {
+      const stored = await prisma.mappingSuggestion.create({
+        data: {
+          taxonomyCode: suggestion.taxonomyCode,
+          taxonomyName: suggestion.taxonomyName,
+          suggestedSystemCode: suggestion.suggestedSystemCode,
+          confidence: suggestion.confidence,
+          reason: suggestion.reason,
+          alternativeSystems: suggestion.alternativeSystems,
+          // status defaults to PENDING
+        },
+      });
+      storedSuggestions.push(stored);
+    }
+
     return new Response(
       JSON.stringify({
-        suggestions: limited,
+        suggestions: storedSuggestions.map(s => ({
+          id: s.id,
+          taxonomyCode: s.taxonomyCode,
+          taxonomyName: s.taxonomyName,
+          suggestedSystemCode: s.suggestedSystemCode,
+          confidence: s.confidence,
+          reason: s.reason,
+          alternativeSystems: s.alternativeSystems,
+          status: s.status,
+          createdAt: s.createdAt,
+          updatedAt: s.updatedAt,
+        })),
         total: suggestions.length,
         limitApplied: limit,
         note: 'Suggestions are based on semantic similarity and keyword matching. Confidence scores range 0-1.',

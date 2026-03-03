@@ -51,6 +51,14 @@ export const API_ENDPOINTS = {
   STUDY_PATH_PROGRESS: '/api/study-path/progress',
   STUDY_PATH_ACCEPT: '/api/study-path/accept',
   STUDY_PATH_REGENERATE: '/api/study-path/regenerate',
+  // System Mapping Enrichment Assistant (Phase 6.2)
+  MAPPING_ENRICHMENT_SUGGESTIONS: '/api/mapping-enrichment/suggestions',
+  MAPPING_ENRICHMENT_SUGGESTION: (id: string) => `/api/mapping-enrichment/suggestions/${id}`,
+  MAPPING_ENRICHMENT_BULK_APPROVE: '/api/mapping-enrichment/bulk-approve',
+  MAPPING_ENRICHMENT_GAPS: '/api/mapping-enrichment/gaps',
+  MAPPING_ENRICHMENT_SUGGEST: '/api/mapping-enrichment/suggest',
+  MAPPING_ENRICHMENT_PREVIEW: '/api/mapping-enrichment/preview',
+  MAPPING_ENRICHMENT_AUDIT_LOGS: '/api/mapping-enrichment/audit-logs',
 } as const;
 
 export type ApiEndpoint = keyof typeof API_ENDPOINTS;
