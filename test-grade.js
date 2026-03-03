@@ -31,7 +31,7 @@ const metric = {
   timeToFirstClick: 45000,
   answerSwitches: 5,
   commitmentGapMs: 5000,
-  cursorEntropy: 2.0,
+  cursorEntropy: 2,
   hoverOscillationCount: 3,
   totalDwellTime: 20000,
   isCorrect: true,

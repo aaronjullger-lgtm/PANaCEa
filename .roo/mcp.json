@@ -1,82 +1,86 @@
 {
-	"mcpServers": {
-		"git": {
-			"command": "uvx",
-			"args": [
-				"mcp-server-git",
-				"--repository",
-				"/Users/aaronullger/GitHub"
-			],
-			"disabled": true,
-			"alwaysAllow": []
-		},
-		"sqlite": {
-			"command": "uvx",
-			"args": [
-				"mcp-server-sqlite",
-				"--db-path",
-				"/Users/aaronullger/GitHub"
-			],
-			"disabled": true,
-			"alwaysAllow": []
-		},
-		"postgres": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"@modelcontextprotocol/server-postgres",
-				"postgresql://postgres:!(PANCE123)!@db.lzfescdrpezzjhgveotz.supabase.co:5432/postgres"
-			],
-			"disabled": true,
-			"alwaysAllow": []
-		},
-		"gdrive": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"@modelcontextprotocol/server-gdrive"
-			],
-			"env": {
-				"GDRIVE_CREDENTIALS_PATH": "/Users/aaronullger/GitHub/StudyPANaCEa"
-			},
-			"disabled": true,
-			"alwaysAllow": []
-		},
-		"playwright": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"@playwright/mcp@0.0.38"
-			]
-		},
-		"augment-context-engine": {
-			"command": "auggie",
-			"args": [
-				"--mcp",
-				"--mcp-auto-workspace"
-			]
-		},
-		"microsoft-learn": {
-			"type": "streamable-http",
-			"url": "https://learn.microsoft.com/api/mcp",
-			"alwaysAllow": [
-				"microsoft_docs_search"
-			]
-		},
-		"google-maps-platform-code-assist": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"@googlemaps/code-assist-mcp@0.2.0"
-			],
-			"disabled": true,
-			"alwaysAllow": []
-		},
-		"figma-dev-mode": {
-			"type": "sse",
-			"url": "http://127.0.0.1:3845/sse",
-			"disabled": true,
-			"alwaysAllow": []
-		}
-	}
+  "mcpServers": {
+    "git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "/Users/aaronullger/GitHub"
+      ],
+      "disabled": true,
+      "alwaysAllow": []
+    },
+    "sqlite": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-sqlite",
+        "--db-path",
+        "/Users/aaronullger/GitHub"
+      ],
+      "disabled": true,
+      "alwaysAllow": []
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:!(PANCE123)!@db.lzfescdrpezzjhgveotz.supabase.co:5432/postgres"
+      ],
+      "disabled": true,
+      "alwaysAllow": []
+    },
+    "gdrive": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-gdrive"
+      ],
+      "env": {
+        "GDRIVE_CREDENTIALS_PATH": "/Users/aaronullger/GitHub/StudyPANaCEa"
+      },
+      "disabled": true,
+      "alwaysAllow": []
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.38"
+      ]
+    },
+    "augment-context-engine": {
+      "command": "auggie",
+      "args": [
+        "--mcp",
+        "--mcp-auto-workspace"
+      ]
+    },
+    "microsoft-learn": {
+      "type": "streamable-http",
+      "url": "https://learn.microsoft.com/api/mcp",
+      "alwaysAllow": [
+        "microsoft_docs_search"
+      ]
+    },
+    "google-maps-platform-code-assist": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@googlemaps/code-assist-mcp@0.2.0"
+      ],
+      "disabled": true,
+      "alwaysAllow": []
+    },
+    "azure-devops": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@azure-devops/mcp@1.0.0",
+        "--hash",
+        "sha1:742d3aa74ec8a13283a62c77c9fc5c2a0d276624",
+        "ullgeraj25"
+      ]
+    }
+  }
 }

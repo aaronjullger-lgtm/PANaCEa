@@ -8,7 +8,7 @@ function calculateGrade(metric) {
   const parTime = metric.parTimeMs ?? 30000;
   const effectiveLatency = metric.timeToFirstClick * (1 + metric.answerSwitches * config.switchPenalty);
   const latencyRatio = effectiveLatency / parTime;
-  const base = metric.isCorrect ? 3.0 : 1.0;
+  const base = metric.isCorrect ? 3 : 1;
   let grade = base;
   if (metric.isCorrect) {
     const penaltySwitch = metric.answerSwitches * 0.15;
@@ -22,7 +22,7 @@ function calculateGrade(metric) {
     const bonusFast = latencyRatio < 0.5 ? 0.3 : latencyRatio < 0.7 ? 0.15 : 0;
     grade = base - penaltySwitch - penaltyLatency - penaltyCommitment - penaltyEntropy - penaltyOscillation + bonusFast;
   }
-  grade = Math.max(1.0, Math.min(4.0, grade));
+  grade = Math.max(1.0, Math.min(4, grade));
   return grade;
 }
 

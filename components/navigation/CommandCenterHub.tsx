@@ -1542,6 +1542,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             </div>
           </motion.div>
         )}
+      </div>
     </>
   );
 };
