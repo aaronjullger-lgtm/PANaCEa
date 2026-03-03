@@ -6,6 +6,7 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getEmbedding } from '../../lib/gemini';
 
 // Initialize Gemini client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -143,4 +144,19 @@ export async function callGeminiJSON<T = any>(
       `Failed to parse JSON response: ${error instanceof Error ? error.message : 'Unknown error'}`
     );
   }
+}
+
+/**
+ * Generate embedding for a given text using Google AI Embedding API.
+ * Uses text-embedding-005 model (768 dimensions).
+ *
+ * @param text - The text to embed
+ * @returns Array of 768 floating-point numbers (embedding vector)
+ */
+export async function generateEmbedding(text: string): Promise<number[]> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY environment variable is not set');
+  }
+  return getEmbedding(text, apiKey);
 }
