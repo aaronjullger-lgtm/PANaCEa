@@ -132,10 +132,10 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
               {systems.map((sys: any) => (
                 <tr key={sys.system} className="border-b border-border-subtle last:border-0">
                   <td className="py-2 font-medium text-text-primary">{sys.system}</td>
-                  <td className="py-2 text-text-secondary">{sys.targetPercent.toFixed(1)}%</td>
-                  <td className="py-2 text-text-secondary">{sys.actualPercent.toFixed(1)}%</td>
-                  <td className={`py-2 ${sys.deviation >= 0 ? 'text-data-positive' : 'text-data-negative'}`}>
-                    {sys.deviation >= 0 ? '+' : ''}{sys.deviation.toFixed(1)}%
+                  <td className="py-2 text-text-secondary">{sys.targetPercent?.toFixed(1) ?? '0.0'}%</td>
+                  <td className="py-2 text-text-secondary">{sys.actualPercent?.toFixed(1) ?? '0.0'}%</td>
+                  <td className={`py-2 ${(sys.deviation ?? 0) >= 0 ? 'text-data-positive' : 'text-data-negative'}`}>
+                    {(sys.deviation ?? 0) >= 0 ? '+' : ''}{sys.deviation?.toFixed(1) ?? '0.0'}%
                   </td>
                   <td className="py-2">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -157,9 +157,9 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
           </table>
         </div>
         <div className="mt-4 text-sm text-text-secondary">
-          <p><strong>Compliance Score:</strong> {summary?.complianceScore.toFixed(1)}%</p>
-          <p><strong>Mapped Taxonomies:</strong> {summary?.totalMappedTaxonomies}</p>
-          <p><strong>Systems Met:</strong> {summary?.systemsMet} | <strong>Under:</strong> {summary?.systemsUnder} | <strong>Over:</strong> {summary?.systemsOver}</p>
+          <p><strong>Compliance Score:</strong> {summary?.complianceScore?.toFixed(1) ?? '0.0'}%</p>
+          <p><strong>Mapped Taxonomies:</strong> {summary?.totalMappedTaxonomies ?? 0}</p>
+          <p><strong>Systems Met:</strong> {summary?.systemsMet ?? 0} | <strong>Under:</strong> {summary?.systemsUnder ?? 0} | <strong>Over:</strong> {summary?.systemsOver ?? 0}</p>
         </div>
       </div>
     );
@@ -201,7 +201,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
             {/* Body */}
             <div className="p-6 space-y-6">
               {loading && (
-                <div className="flex items-center justify-center py-12">
+                <div className="flex items-center justify-center py-12" role="status" aria-label="Loading preview">
                   <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
                   <span className="ml-3 text-text-secondary">Computing preview…</span>
                 </div>
@@ -233,15 +233,15 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-text-secondary">Compliance Score</span>
-                          <span className="font-bold text-text-primary">{previewResult.before.complianceScore.toFixed(1)}%</span>
+                          <span className="font-bold text-text-primary">{previewResult?.before?.complianceScore?.toFixed(1) ?? '0.0'}%</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-text-secondary">Mapped Taxonomies</span>
-                          <span className="font-bold text-text-primary">{previewResult.before.totalMappedTaxonomies}</span>
+                          <span className="font-bold text-text-primary">{previewResult?.before?.totalMappedTaxonomies ?? 0}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-text-secondary">Systems Met</span>
-                          <span className="font-bold text-data-positive">{previewResult.before.systemsMet}</span>
+                          <span className="font-bold text-data-positive">{previewResult?.before?.systemsMet ?? 0}</span>
                         </div>
                       </div>
                     </div>
@@ -251,15 +251,15 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-text-secondary">Compliance Score</span>
-                          <span className="font-bold text-text-primary">{previewResult.after.complianceScore.toFixed(1)}%</span>
+                          <span className="font-bold text-text-primary">{previewResult?.after?.complianceScore?.toFixed(1) ?? '0.0'}%</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-text-secondary">Mapped Taxonomies</span>
-                          <span className="font-bold text-text-primary">{previewResult.after.totalMappedTaxonomies}</span>
+                          <span className="font-bold text-text-primary">{previewResult?.after?.totalMappedTaxonomies ?? 0}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-text-secondary">Systems Met</span>
-                          <span className="font-bold text-data-positive">{previewResult.after.systemsMet}</span>
+                          <span className="font-bold text-data-positive">{previewResult?.after?.systemsMet ?? 0}</span>
                         </div>
                       </div>
                     </div>

@@ -15,6 +15,8 @@ export interface MappingChange {
   taxonomyCode: string;
   systemCode: string;
   previousSystemCode?: string;
+  taxonomyName?: string;
+  systemName?: string;
 }
 
 export interface TaxonomyMappingCompliance {

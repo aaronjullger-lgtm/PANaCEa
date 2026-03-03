@@ -51,21 +51,33 @@ const mockSuggestions: MappingSuggestion[] = [
 
 const mockPreviewResult: PreviewResult = {
   before: {
-    overallCompliance: 0.85,
+    complianceScore: 0.85,
     systems: [
       { system: 'CV', targetPercent: 11, actualPercent: 9.5, deviation: -1.5, status: 'under' },
       { system: 'PUL', targetPercent: 9, actualPercent: 10.2, deviation: 1.2, status: 'over' },
       { system: 'GI', targetPercent: 8, actualPercent: 8.0, deviation: 0, status: 'met' },
     ],
+    systemsMet: 1,
+    systemsUnder: 1,
+    systemsOver: 1,
+    totalMappedTaxonomies: 3,
+    analyzedAt: '2026-03-03T20:45:00.000Z',
+    topDeviations: [],
     recommendations: ['Increase cardiovascular content', 'Maintain pulmonary coverage'],
   },
   after: {
-    overallCompliance: 0.92,
+    complianceScore: 0.92,
     systems: [
       { system: 'CV', targetPercent: 11, actualPercent: 10.8, deviation: -0.2, status: 'met' },
       { system: 'PUL', targetPercent: 9, actualPercent: 9.5, deviation: 0.5, status: 'met' },
       { system: 'GI', targetPercent: 8, actualPercent: 8.0, deviation: 0, status: 'met' },
     ],
+    systemsMet: 3,
+    systemsUnder: 0,
+    systemsOver: 0,
+    totalMappedTaxonomies: 3,
+    analyzedAt: '2026-03-03T20:45:00.000Z',
+    topDeviations: [],
     recommendations: ['Excellent balance achieved'],
   },
   changes: [
