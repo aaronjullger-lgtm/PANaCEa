@@ -46,6 +46,11 @@ export const API_ENDPOINTS = {
   ANALYTICS_PEER_STATS: (questionId: string) => `/api/analytics/peer-stats?questionId=${questionId}`,
   QUESTION_STATISTICS: (questionId: string) => `/api/question-statistics/${questionId}`,
   USER_STABILITY_TREND: '/api/user/stability-trend',
+  // Study Path Optimizer (Phase 6.3)
+  STUDY_PATH_RECOMMENDATION: '/api/study-path/recommendation',
+  STUDY_PATH_PROGRESS: '/api/study-path/progress',
+  STUDY_PATH_ACCEPT: '/api/study-path/accept',
+  STUDY_PATH_REGENERATE: '/api/study-path/regenerate',
 } as const;
 
 export type ApiEndpoint = keyof typeof API_ENDPOINTS;

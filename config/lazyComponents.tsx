@@ -92,6 +92,11 @@ export const GapAnalysisDashboard = lazy(() =>
     default: m.GapAnalysisDashboard,
   }))
 );
+export const StudyPathDashboard = lazy(() =>
+  import('../components/dashboard/StudyPathDashboard').then((m) => ({
+    default: m.StudyPathDashboard,
+  }))
+);
 export const CommandCenterHub = lazy(() => import('../components/navigation/CommandCenterHub'));
 export const TrainingMenu = lazy(() => import('../components/dashboard/TrainingMenu'));
 export const SimulationPage = lazy(() =>

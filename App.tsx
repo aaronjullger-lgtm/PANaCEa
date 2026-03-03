@@ -54,6 +54,7 @@ import {
   MediaApproval,
   ToolkitHub,
   GapAnalysisDashboard,
+  StudyPathDashboard,
   CommandCenterHub,
   TrainingMenu,
   SimulationPage,
@@ -282,6 +283,8 @@ const App: React.FC = () => {
       setView('reference_library');
     } else if (path.startsWith('/study/utilities')) {
       setView('toolkit');
+    } else if (path.startsWith('/study/path')) {
+      setView('study_path_dashboard');
     } else if (path === '/medical-database' || path.startsWith('/medical-database')) {
       setView('medical_database');
     } else if (path === '/live-collaboration' || path.startsWith('/live-collaboration')) {
@@ -985,6 +988,11 @@ const App: React.FC = () => {
     setView('custom_study');
   }, []);
 
+  // Navigate to study path dashboard - memoized
+  const handleNavigateToStudyPathDashboard = useCallback(() => {
+    setView('study_path_dashboard');
+  }, []);
+
   const pageTransition = useAccessibleTransition({
     duration: 0.25,
     ease: [0.32, 0.72, 0, 1] as const, // Snappy ease-out
@@ -1360,6 +1368,7 @@ const App: React.FC = () => {
                                           }
                                           // Canonical FSRS flow is main session (QuizView) MC only; due = variants in same session. SRS Flashcards view hidden.
                                           onNavigateToPearlDeck={() => setView('pearl_deck')}
+                                          onNavigateToStudyPathDashboard={handleNavigateToStudyPathDashboard}
                                           growthAreas={growthAreas}
                                           examLabel={examLabel ?? 'PANCE'}
                                           hasActiveSession={hasActiveSession}
@@ -2124,6 +2133,26 @@ const App: React.FC = () => {
                                           <CustomStudyMode
                                             onBack={() => setView('command_center')}
                                           />
+                                        </Suspense>
+                                      </WithGeminiErrorBoundary>
+                                    </motion.div>
+                                  )}
+
+                                  {view === 'study_path_dashboard' && (
+                                    <motion.div
+                                      key="study_path_dashboard"
+                                      variants={pageVariants}
+                                      initial="initial"
+                                      animate="animate"
+                                      exit="exit"
+                                      transition={pageTransition}
+                                    >
+                                      <WithGeminiErrorBoundary
+                                        viewName="study_path_dashboard"
+                                        onRetry={() => setView('study_path_dashboard')}
+                                      >
+                                        <Suspense fallback={<Loader />}>
+                                          <StudyPathDashboard />
                                         </Suspense>
                                       </WithGeminiErrorBoundary>
                                     </motion.div>

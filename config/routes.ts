@@ -19,6 +19,7 @@ export const ROUTES = {
   STUDY_REFERENCE: '/study/reference',
   /** @deprecated Use STUDY_UTILITIES */
   STUDY_TOOLKIT: '/study/toolkit',
+  STUDY_PATH: '/study/path',
   MENU: '/menu',
 } as const;
 

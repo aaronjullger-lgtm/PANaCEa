@@ -55,6 +55,7 @@ export type View =
   | 'srs_flashcards'
   | 'medical_database'
   | 'commuter_mode'
+  | 'study_path_dashboard'
   | 'live_collaboration';
 
 /** Drill mode IDs with dedicated view implementations */

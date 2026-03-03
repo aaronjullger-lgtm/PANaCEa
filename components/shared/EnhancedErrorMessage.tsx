@@ -16,7 +16,7 @@ import {
   ExternalLink,
   HelpCircle,
 } from 'lucide-react';
-import { StandardButton, PrimaryButton, OutlineButton, OutlineButton } from './StandardButton';
+import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
 
 export type ErrorSeverity = 'error' | 'warning' | 'info' | 'success';
 export type ErrorCategory =

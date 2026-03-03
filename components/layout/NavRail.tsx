@@ -16,6 +16,7 @@ import {
   Home,
   Dumbbell,
   BarChart3,
+  TrendingUp,
   BookOpen,
   Calculator,
   Headphones,
@@ -86,6 +87,14 @@ const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = [
     href: '/study/utilities',
     section: 'resources',
     showInBottomBar: true,
+  },
+  {
+    id: 'study_path',
+    label: 'Study Path',
+    icon: TrendingUp,
+    href: '/study/path',
+    section: 'resources',
+    showInBottomBar: false,
   },
 ];
 
