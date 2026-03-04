@@ -4,6 +4,8 @@
  */
 
 import { z } from 'zod';
+import { GraphEdgeType } from '@prisma/client/edge';
+import type { GraphEdge, GraphNode } from '@prisma/client/edge';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
@@ -16,7 +18,7 @@ import { getOrSet } from '../_shared/kv-cache';
 const BodySchema = z.object({
   nodeIds: z.array(z.string().min(1)).min(1).max(100),
   depth: z.number().int().min(1).max(3).default(1),
-  edgeTypes: z.array(z.string()).optional(),
+  edgeTypes: z.array(z.nativeEnum(GraphEdgeType)).optional(),
   includeOriginalNodes: z.boolean().default(true),
 });
 
@@ -48,6 +50,8 @@ export interface GraphEdgeResponse {
   description?: string;
   evidenceCount?: number;
 }
+
+type GraphEdgeWithRelations = GraphEdge & { source: GraphNode; target: GraphNode };
 
 export const onRequestOptions = withCors();
 
@@ -85,7 +89,7 @@ export const onRequestPost = authenticatedEndpoint(
               const nextFrontier: string[] = [];
 
               // Fetch edges where source is in current frontier (outgoing)
-              const outgoingEdges = await prisma.graphEdge.findMany({
+              const outgoingEdges: GraphEdgeWithRelations[] = await prisma.graphEdge.findMany({
                 where: {
                   sourceId: { in: currentFrontier },
                   ...(edgeTypes && edgeTypes.length > 0 ? { edgeType: { in: edgeTypes } } : {}),
@@ -98,7 +102,7 @@ export const onRequestPost = authenticatedEndpoint(
 
               // Also incoming edges if we want bidirectional expansion? For now only outgoing.
               // Could also include incoming edges for undirected graph.
-              const incomingEdges = await prisma.graphEdge.findMany({
+              const incomingEdges: GraphEdgeWithRelations[] = await prisma.graphEdge.findMany({
                 where: {
                   targetId: { in: currentFrontier },
                   ...(edgeTypes && edgeTypes.length > 0 ? { edgeType: { in: edgeTypes } } : {}),
@@ -145,7 +149,7 @@ export const onRequestPost = authenticatedEndpoint(
                 }
               }
 
-              currentFrontier = [...new Set(nextFrontier)];
+              currentFrontier = Array.from(new Set(nextFrontier));
               currentDepth++;
             }
 

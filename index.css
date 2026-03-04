@@ -419,6 +419,28 @@ a,
   --color-category-toolkit: #7a8f6e; /* Sage */
   --color-category-command: #5e8686; /* Slate-Teal */
 
+  /* ===== GRAPH NODE & EDGE TYPE COLORS ===== */
+  --color-node-condition: #dc2626;
+  --color-node-finding: #2563eb;
+  --color-node-drug: #16a34a;
+  --color-node-procedure: #d97706;
+  --color-node-system: #7c3aed;
+  --color-node-anatomy: #64748b;
+  --color-node-lab-test: #0891b2;
+  --color-node-imaging: #db2777;
+  --color-node-vital-sign: #059669;
+  --color-node-other: #6b7280;
+  --color-edge-hierarchical: #4b5563;
+  --color-edge-co-occurrence: #3b82f6;
+  --color-edge-semantic: #10b981;
+  --color-edge-explicit: #f59e0b;
+  --color-edge-associated: #8b5cf6;
+  --color-edge-treats: #ef4444;
+  --color-edge-causes: #f97316;
+  --color-edge-manifests: #ec4899;
+  --color-edge-differential: #14b8a6;
+  --color-edge-complicates: #b91c1c;
+
   /* ===== PROFESSIONAL DARK MODE AESTHETIC VARIABLES ===== */
   /* Deep backgrounds with subtle opacity */
   --clinical-bg-primary: rgba(15, 23, 42, 0.95); /* slate-950/95 */
@@ -574,6 +596,28 @@ a,
   --color-category-specialty: #c5b38a; /* Muted Amber (lighter) */
   --color-category-toolkit: #96a78a; /* Sage (lighter) */
   --color-category-command: #7da3a3; /* Slate-Teal (lighter) */
+
+  /* ===== GRAPH NODE & EDGE TYPE COLORS (Dark Mode) ===== */
+  --color-node-condition: #dc2626;
+  --color-node-finding: #2563eb;
+  --color-node-drug: #16a34a;
+  --color-node-procedure: #d97706;
+  --color-node-system: #7c3aed;
+  --color-node-anatomy: #64748b;
+  --color-node-lab-test: #0891b2;
+  --color-node-imaging: #db2777;
+  --color-node-vital-sign: #059669;
+  --color-node-other: #6b7280;
+  --color-edge-hierarchical: #4b5563;
+  --color-edge-co-occurrence: #3b82f6;
+  --color-edge-semantic: #10b981;
+  --color-edge-explicit: #f59e0b;
+  --color-edge-associated: #8b5cf6;
+  --color-edge-treats: #ef4444;
+  --color-edge-causes: #f97316;
+  --color-edge-manifests: #ec4899;
+  --color-edge-differential: #14b8a6;
+  --color-edge-complicates: #b91c1c;
 }
 
 /* ===== COMMUTER MODE / VOICE-FIRST ACCESSIBILITY ===== */
