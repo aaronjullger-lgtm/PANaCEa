@@ -59,6 +59,13 @@ export const API_ENDPOINTS = {
   MAPPING_ENRICHMENT_SUGGEST: '/api/mapping-enrichment/suggest',
   MAPPING_ENRICHMENT_PREVIEW: '/api/mapping-enrichment/preview',
   MAPPING_ENRICHMENT_AUDIT_LOGS: '/api/mapping-enrichment/audit-logs',
+  // Cross‑System Integration Explorer (Phase 6.2)
+  GRAPH_NODE: (id: string) => `/api/graph/node/${id}`,
+  GRAPH_EXPAND: '/api/graph/expand',
+  GRAPH_NETWORK: (conditionId: string) => `/api/graph/network/${conditionId}`,
+  GRAPH_SEARCH: '/api/graph/search',
+  GRAPH_PATH: '/api/graph/path',
+  GRAPH_CONFIDENCE: '/api/graph/confidence',
 } as const;
 
 export type ApiEndpoint = keyof typeof API_ENDPOINTS;
