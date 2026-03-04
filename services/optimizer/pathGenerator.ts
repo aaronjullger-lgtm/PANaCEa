@@ -304,6 +304,12 @@ async function buildPlan(
         // Stop if we've reached horizon
         if (currentDay >= horizonDays) break;
       }
+      // After potentially closing a session (or if there was no session),
+      // check if the item fits in a fresh day.
+      // If it still doesn't fit, skip this item (cannot be scheduled within constraints).
+      if (item.estimatedMinutes > dailyRemainingMinutes) {
+        continue;
+      }
     }
     // Add topic to current session
     currentSessionTopics.push({
@@ -321,8 +327,8 @@ async function buildPlan(
     sessions.push(createSession(currentDay, currentSessionTopics));
   }
 
-  // If no sessions were created, create a default "rest day" session
-  if (sessions.length === 0) {
+  // If no sessions were created, create a default "rest day" session only if there were items to schedule
+  if (sessions.length === 0 && items.length > 0) {
     sessions.push(createSession(0, []));
   }
 

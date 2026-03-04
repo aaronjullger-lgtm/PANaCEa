@@ -6,7 +6,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import cytoscape, { Core, ElementDefinition, NodeSingular, EdgeSingular } from 'cytoscape';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
-import { debounce } from '@/lib/utils/debounce';
+import { debounce, createDebouncedFunction } from '@/lib/utils/debounce';
 import {
   GraphNodeResponse,
   GraphEdgeResponse,
@@ -160,9 +160,14 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
+  const viewportExpandRef = useRef<{ cancel: () => void } | null>(null);
   const [nodes, setNodes] = useState<GraphNodeResponse[]>([]);
   const [edges, setEdges] = useState<GraphEdgeResponse[]>([]);
   const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(() => new Set());
+  const expandedNodeIdsRef = useRef(expandedNodeIds);
+  useEffect(() => {
+    expandedNodeIdsRef.current = expandedNodeIds;
+  }, [expandedNodeIds]);
   const [selectedNode, setSelectedNode] = useState<GraphNodeResponse | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<GraphEdgeResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -420,10 +425,31 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
       fetchGraphData([nodeId]);
     });
 
+    // Viewport‑based lazy loading
+    const viewportExpandHandler = () => {
+      if (!enableExpand || !cyRef.current) return;
+      const cy = cyRef.current;
+      const viewport = cy.extent(); // { x1, y1, x2, y2 }
+      const nodesInViewport = cy.nodes().filter(node => {
+        const pos = node.position();
+        return pos.x >= viewport.x1 && pos.x <= viewport.x2 &&
+               pos.y >= viewport.y1 && pos.y <= viewport.y2;
+      });
+      const nodeIds = nodesInViewport.map(node => node.id()).filter(id => !expandedNodeIdsRef.current.has(id));
+      if (nodeIds.length > 0) {
+        // Limit to 5 nodes to avoid overloading
+        fetchGraphData(nodeIds.slice(0, 5));
+      }
+    };
+    const { debounced: debouncedViewportExpand, cancel } = createDebouncedFunction(viewportExpandHandler, 500);
+    viewportExpandRef.current = { cancel };
+    cy.on('pan zoom resize', debouncedViewportExpand);
+
     cyRef.current = cy;
 
     // Cleanup on unmount
     return () => {
+      viewportExpandRef.current?.cancel();
       if (cyRef.current) {
         cyRef.current.destroy();
         cyRef.current = null;

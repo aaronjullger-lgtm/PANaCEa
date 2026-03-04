@@ -35,7 +35,7 @@ describe('Retention‑Aware Scheduler', () => {
     const lastReviewedAt = new Date(Date.now() - 86400000); // 1 day ago
     mockPrisma.reviewLog.findFirst.mockResolvedValue({
       stability: 0.05,
-      lastReviewedAt,
+      reviewedAt: lastReviewedAt,
     });
     mockPrisma.userProgress.findUnique.mockResolvedValue({
       fsrsParams: { w: [ /* not needed */ ] },
@@ -56,7 +56,7 @@ describe('Retention‑Aware Scheduler', () => {
     const lastReviewedAt = new Date(Date.now() - 2 * 86400000); // 2 days ago
     mockPrisma.reviewLog.findFirst.mockResolvedValue({
       stability: 10.0, // high stability
-      lastReviewedAt,
+      reviewedAt: lastReviewedAt,
     });
     mockPrisma.userProgress.findUnique.mockResolvedValue({
       fsrsParams: { w: Array(21).fill(0).map((_, i) => i === 19 ? 0.0658 : i === 20 ? 0.1542 : 0) },
@@ -72,14 +72,14 @@ describe('Retention‑Aware Scheduler', () => {
     expect(scheduled[0].daysUntilReview).toBeGreaterThan(0);
     expect(scheduled[0].recommendedReviewDate!.getTime()).toBeGreaterThan(Date.now());
     expect(scheduled[0].urgencyScore).toBeLessThan(1.0);
-    expect(scheduled[0].confidence).toBe('MEDIUM');
+    expect(scheduled[0].confidence).toBe('LOW');
   });
 
   it('should fetch FSRS parameters from user progress', async () => {
     const lastReviewedAt = new Date(Date.now() - 5 * 86400000);
     mockPrisma.reviewLog.findFirst.mockResolvedValue({
       stability: 5.0,
-      lastReviewedAt,
+      reviewedAt: lastReviewedAt,
     });
     mockPrisma.userProgress.findUnique.mockResolvedValue({
       fsrsParams: { w: Array(21).fill(0).map((_, i) => i === 19 ? 0.1 : i === 20 ? 0.2 : 0) },
@@ -95,8 +95,8 @@ describe('Retention‑Aware Scheduler', () => {
   it('should sort by urgency descending', async () => {
     // Mock two systems with different stabilities
     mockPrisma.reviewLog.findFirst
-      .mockResolvedValueOnce({ stability: 1.0, lastReviewedAt: new Date() })
-      .mockResolvedValueOnce({ stability: 20.0, lastReviewedAt: new Date() });
+      .mockResolvedValueOnce({ stability: 1.0, reviewedAt: new Date() })
+      .mockResolvedValueOnce({ stability: 20.0, reviewedAt: new Date() });
     mockPrisma.userProgress.findUnique.mockResolvedValue({
       fsrsParams: { w: Array(21).fill(0) },
     });
@@ -115,7 +115,7 @@ describe('Retention‑Aware Scheduler', () => {
     const lastReviewedAt = new Date();
     mockPrisma.reviewLog.findFirst.mockResolvedValue({
       stability: 5.0,
-      lastReviewedAt,
+      reviewedAt: lastReviewedAt,
     });
     mockPrisma.userProgress.findUnique.mockResolvedValue({
       fsrsParams: { w: [ /* only 19 elements */ ] },

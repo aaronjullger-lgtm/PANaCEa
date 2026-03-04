@@ -22,8 +22,7 @@ export interface SentryConfig {
  * Only loads Sentry SDK if DSN is configured
  */
 export async function initializeSentry(config?: Partial<SentryConfig>): Promise<void> {
-  // @ts-ignore
-  const mode = import.meta.env?.MODE;
+  const mode = import.meta.env.MODE;
   const isProduction = mode === 'production';
 
   // Only touch the DSN when we're in production
@@ -32,8 +31,7 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
     return;
   }
 
-  // @ts-ignore
-  const dsn = import.meta.env?.VITE_SENTRY_DSN;
+  const dsn = import.meta.env.VITE_SENTRY_DSN;
 
   if (!dsn) {
     console.log('[Sentry] DSN not configured, error tracking disabled');
