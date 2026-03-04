@@ -1,0 +1,209 @@
+/**
+ * CrossSystemExplorer – Main component for the Cross‑System Integration Explorer.
+ * Integrates InteractiveGraphCanvas, NodeDetailPanel, and FilterSidebar.
+ */
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { X } from 'lucide-react';
+import { InteractiveGraphCanvas } from './InteractiveGraphCanvas';
+import { NodeDetailPanel } from './NodeDetailPanel';
+import { FilterSidebar } from './FilterSidebar';
+import { GraphSearchBar } from './GraphSearchBar';
+import { GraphFilter } from '@/lib/types/graph';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
+import { createDebouncedFunction } from '@/lib/utils/debounce';
+
+const DEFAULT_FILTER: GraphFilter = {
+  systemCodes: [],
+  edgeTypes: [],
+  nodeTypes: [],
+  minWeight: 0,
+  maxDepth: 3,
+};
+
+interface CrossSystemExplorerProps {
+  onClose?: () => void;
+}
+
+export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClose }) => {
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<GraphFilter>(DEFAULT_FILTER);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showPerformanceOverlay, setShowPerformanceOverlay] = useState(false);
+
+  const handleNodeSelect = useCallback((nodeId: string) => {
+    setSelectedNodeId(nodeId);
+  }, []);
+
+  const handleSearchSelect = useCallback((nodeId: string) => {
+    handleNodeSelect(nodeId);
+    // Optionally scroll to node or other effects
+  }, [handleNodeSelect]);
+
+  // Debounced filter update
+  const filterDebounceRef = useRef<{
+    debounced: (filter: GraphFilter) => void;
+    cancel: () => void;
+  } | null>(null);
+
+  if (!filterDebounceRef.current) {
+    filterDebounceRef.current = createDebouncedFunction(setFilter, 300);
+  }
+
+  const handleFilterChange = useCallback((newFilter: GraphFilter) => {
+    filterDebounceRef.current?.debounced(newFilter);
+    // In a real implementation, you would re‑fetch graph data with the filter
+    // or apply client‑side filtering to the existing graph.
+    console.log('Filter changed (debounced):', newFilter);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      filterDebounceRef.current?.cancel();
+    };
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed(prev => !prev);
+  }, []);
+
+  // Path finding states
+  const [startNodeId, setStartNodeId] = useState<string | null>(null);
+  const [endNodeId, setEndNodeId] = useState<string | null>(null);
+  const [highlightedPath, setHighlightedPath] = useState<string[]>([]);
+  const [pathFinding, setPathFinding] = useState(false);
+
+  const handleStartSelect = useCallback((nodeId: string, nodeLabel: string) => {
+    setStartNodeId(nodeId);
+  }, []);
+
+  const handleEndSelect = useCallback((nodeId: string, nodeLabel: string) => {
+    setEndNodeId(nodeId);
+  }, []);
+
+  const handleFindPath = useCallback(async () => {
+    if (!startNodeId || !endNodeId) {
+      alert('Please select both start and end nodes.');
+      return;
+    }
+    setPathFinding(true);
+    try {
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.GRAPH_PATH), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          startNodeId,
+          endNodeId,
+          algorithm: 'bfs',
+          maxDepth: 10,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(`Path finding failed: ${response.statusText}`);
+      }
+      const result = await response.json();
+      const path = result.data?.path || [];
+      setHighlightedPath(path.map((node: any) => node.id));
+    } catch (error) {
+      console.error('Failed to find path', error);
+      alert('Could not find a path between the selected nodes.');
+    } finally {
+      setPathFinding(false);
+    }
+  }, [startNodeId, endNodeId]);
+
+  const handleClearPath = useCallback(() => {
+    setHighlightedPath([]);
+    setStartNodeId(null);
+    setEndNodeId(null);
+  }, []);
+
+  return (
+    <div className="flex h-screen bg-surface-primary overflow-hidden">
+      {/* Left Sidebar – Filters */}
+      <FilterSidebar
+        filter={filter}
+        onChange={handleFilterChange}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={toggleSidebar}
+      />
+
+      {/* Main Graph Canvas */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header with title, search, and close button */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-card">
+          <h2 className="text-lg font-semibold text-text-primary">Cross‑System Integration Explorer</h2>
+          <div className="flex-1 max-w-xl mx-4">
+            <GraphSearchBar onNodeSelect={handleSearchSelect} />
+          </div>
+          <button
+            onClick={() => setShowPerformanceOverlay(prev => !prev)}
+            className={`px-3 py-1.5 rounded-md border transition-colors ${
+              showPerformanceOverlay
+                ? 'bg-action-primary text-white border-action-primary'
+                : 'bg-surface-card text-text-primary border-border hover:bg-surface-hover'
+            }`}
+            aria-label={showPerformanceOverlay ? 'Hide performance overlay' : 'Show performance overlay'}
+          >
+            {showPerformanceOverlay ? 'Performance Overlay ON' : 'Performance Overlay'}
+          </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-2 rounded-md hover:bg-surface-hover transition-colors"
+              aria-label="Close explorer"
+            >
+              <X className="w-5 h-5 text-text-muted" />
+            </button>
+          )}
+        </div>
+        {/* Path finding toolbar */}
+        <div className="flex items-center gap-4 px-4 py-2 border-b border-border bg-surface-card">
+          <div className="flex-1 max-w-xs">
+            <GraphSearchBar
+              placeholder="Start node..."
+              onNodeSelect={handleStartSelect}
+            />
+          </div>
+          <div className="flex-1 max-w-xs">
+            <GraphSearchBar
+              placeholder="End node..."
+              onNodeSelect={handleEndSelect}
+            />
+          </div>
+          <button
+            onClick={handleFindPath}
+            disabled={pathFinding || !startNodeId || !endNodeId}
+            className="px-4 py-2 bg-action-primary text-white rounded-md hover:bg-action-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {pathFinding ? 'Finding...' : 'Find Path'}
+          </button>
+          <button
+            onClick={handleClearPath}
+            className="px-4 py-2 bg-surface-card border border-border rounded-md hover:bg-surface-hover"
+          >
+            Clear
+          </button>
+          {highlightedPath.length > 0 && (
+            <span className="text-sm text-text-muted">
+              Path: {highlightedPath.length} nodes
+            </span>
+          )}
+        </div>
+        <div className="flex-1 relative">
+          <InteractiveGraphCanvas
+            onNodeSelect={handleNodeSelect}
+            filter={filter}
+            highlightedPath={highlightedPath}
+            initialNodeIds={['condition:1']} // Example starting point
+          />
+        </div>
+        {/* Selected Node Details (if any) */}
+        {selectedNodeId && (
+          <div className="border-t border-border bg-surface-card">
+            <NodeDetailPanel nodeId={selectedNodeId} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

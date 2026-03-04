@@ -11,6 +11,7 @@ export const ROUTES = {
   ADMIN_CURATION: '/admin/curation',
   CLINICAL_EYE: '/clinical-eye',
   VISUALIZER: '/visualizer',
+  CROSS_SYSTEM_EXPLORER: '/explorer',
   /** Study hub; path→view sync in App.tsx */
   STUDY: '/study',
   STUDY_KNOWLEDGE: '/study/knowledge',

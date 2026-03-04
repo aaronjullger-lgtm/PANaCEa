@@ -56,7 +56,8 @@ export type View =
   | 'medical_database'
   | 'commuter_mode'
   | 'study_path_dashboard'
-  | 'live_collaboration';
+  | 'live_collaboration'
+  | 'cross_system_explorer';
 
 /** Drill mode IDs with dedicated view implementations */
 export const DRILL_MODE_IDS = {

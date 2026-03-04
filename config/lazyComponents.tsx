@@ -158,6 +158,9 @@ export const ClinicalEyePage = lazy(() =>
 export const VisualizerPage = lazy(() =>
   import('../pages/VisualizerPage').then((m) => ({ default: m.VisualizerPage }))
 );
+export const CrossSystemExplorer = lazy(() =>
+  import('../components/explorer/CrossSystemExplorer').then((m) => ({ default: m.CrossSystemExplorer }))
+);
 export const MedicalDatabaseSearch = lazy(() =>
   import('../components/external/MedicalDatabaseSearch').then((m) => ({
     default: m.MedicalDatabaseSearch,

@@ -3593,6 +3593,77 @@ model MappingAuditLog {
   @@index([timestamp])
 }
 
+enum GraphNodeType {
+  CONDITION
+  FINDING
+  DRUG
+  PROCEDURE
+  SYSTEM
+  ANATOMY
+  LAB_TEST
+  IMAGING
+  VITAL_SIGN
+  OTHER
+}
+
+enum GraphEdgeType {
+  HIERARCHICAL
+  CO_OCCURRENCE
+  SEMANTIC
+  EXPLICIT
+  ASSOCIATED
+  TREATS
+  CAUSES
+  MANIFESTS
+  DIFFERENTIAL
+  COMPLICATES
+}
+
+model GraphNode {
+  id          String        @id @default(cuid())
+  nodeType    GraphNodeType
+  label       String
+  description String?
+  sourceType  String        // e.g., "MedicalTaxonomy", "MedicalContent", "AnatomyStructure"
+  sourceId    String        // e.g., taxonomy code, conditionId, anatomyId
+  taxonomyCode String?      // optional reference to MedicalTaxonomy.code
+  systemCodes String[]      @default([]) // NCCPA system codes
+  metadata    Json?         // additional fields like depth, parentId, contentCount, averageAccuracy, stability
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+
+  outgoingEdges GraphEdge[] @relation("OutgoingEdges")
+  incomingEdges GraphEdge[] @relation("IncomingEdges")
+
+  @@unique([sourceType, sourceId])
+  @@index([nodeType])
+  @@index([sourceType, sourceId])
+  @@index([systemCodes])
+  @@index([taxonomyCode])
+}
+
+model GraphEdge {
+  id          String        @id @default(cuid())
+  sourceId    String
+  targetId    String
+  edgeType    GraphEdgeType
+  weight      Float?        @default(1.0)
+  description String?
+  evidenceCount Int?        @default(0)
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+
+  source GraphNode @relation("OutgoingEdges", fields: [sourceId], references: [id], onDelete: Cascade)
+  target GraphNode @relation("IncomingEdges", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId, edgeType])
+  @@index([sourceId])
+  @@index([targetId])
+  @@index([edgeType])
+  @@index([weight])
+}
+
 enum CircadianPhase {
   PEAK
   TROUGH

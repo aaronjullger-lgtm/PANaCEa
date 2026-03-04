@@ -226,7 +226,7 @@ export function calculateDiagnosticEfficiency(
 ): DiagnosticEfficiency {
   const correctActions = actions.filter(a => a.isCorrect === true).length;
   const unnecessaryActions = actions.filter(a => a.isCorrect === false).length;
-  const redFlagsMissed = actions.filter(a => a.isRedFlag === false).length;
+  const redFlagsMissed = actions.filter(a => a.isRedFlag === true && a.isCorrect === false).length;
   const criticalActionsPerformed = actions.filter(a => a.isCorrect === true && a.type === 'exam').length;
   
   // Determine time to diagnosis: find first action of type 'diagnosis' that is correct

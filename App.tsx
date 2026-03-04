@@ -74,6 +74,7 @@ import {
   MyPearlsPanel,
   ClinicalEyePage,
   VisualizerPage,
+  CrossSystemExplorer,
   MedicalDatabaseSearch,
   LiveStudySession,
   PracticePage,
@@ -230,6 +231,7 @@ const App: React.FC = () => {
       '/visualizer',
       '/medical-database',
       '/live-collaboration',
+      '/explorer',
     ];
 
     const isKnownPath =
@@ -241,7 +243,8 @@ const App: React.FC = () => {
       path.startsWith('/modes/') ||
       path === '/core-adaptive' ||
       path.startsWith('/medical-database') ||
-      path.startsWith('/live-collaboration');
+      path.startsWith('/live-collaboration') ||
+      path.startsWith('/explorer');
 
     if (!isKnownPath) {
       setShowNotFound(true);
@@ -289,6 +292,8 @@ const App: React.FC = () => {
       setView('medical_database');
     } else if (path === '/live-collaboration' || path.startsWith('/live-collaboration')) {
       setView('live_collaboration');
+    } else if (path.startsWith('/explorer')) {
+      setView('cross_system_explorer');
     }
   }, [location.pathname]);
 
@@ -2253,6 +2258,27 @@ const App: React.FC = () => {
                                         }
                                       >
                                         <LiveStudySession
+                                          onClose={() => setView('command_center')}
+                                        />
+                                      </Suspense>
+                                    </motion.div>
+                                  )}
+
+                                  {view === 'cross_system_explorer' && (
+                                    <motion.div
+                                      key="cross_system_explorer"
+                                      variants={pageVariants}
+                                      initial="initial"
+                                      animate="animate"
+                                      exit="exit"
+                                      transition={pageTransition}
+                                    >
+                                      <Suspense
+                                        fallback={
+                                          <Loader message="Loading cross‑system explorer..." />
+                                        }
+                                      >
+                                        <CrossSystemExplorer
                                           onClose={() => setView('command_center')}
                                         />
                                       </Suspense>

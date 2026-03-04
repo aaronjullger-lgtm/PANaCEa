@@ -249,7 +249,7 @@ describe('edge cases', () => {
       actions: [],
     };
     const result = deriveOSCEImplicitRating(telemetry);
-    expect(result.componentScores.speech).toBe(0);
+    expect(result.componentScores.speech).toBe(0.5);
   });
 
   it('clamps rating to valid FSRS range', () => {

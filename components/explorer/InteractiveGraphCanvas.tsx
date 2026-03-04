@@ -6,6 +6,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import cytoscape, { Core, ElementDefinition, NodeSingular, EdgeSingular } from 'cytoscape';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
+import { debounce } from '@/lib/utils/debounce';
 import {
   GraphNodeResponse,
   GraphEdgeResponse,
@@ -161,19 +162,41 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
   const cyRef = useRef<Core | null>(null);
   const [nodes, setNodes] = useState<GraphNodeResponse[]>([]);
   const [edges, setEdges] = useState<GraphEdgeResponse[]>([]);
+  const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(() => new Set());
   const [selectedNode, setSelectedNode] = useState<GraphNodeResponse | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<GraphEdgeResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confidenceScores, setConfidenceScores] = useState<Record<string, number>>({});
 
-  // Fetch initial graph data
+  // Helper to merge new graph data with existing nodes/edges (deduplicate by id)
+  const mergeGraphData = useCallback(
+    (newNodes: GraphNodeResponse[], newEdges: GraphEdgeResponse[]) => {
+      setNodes(prevNodes => {
+        const nodeMap = new Map(prevNodes.map(n => [n.id, n]));
+        newNodes.forEach(n => nodeMap.set(n.id, n));
+        return Array.from(nodeMap.values());
+      });
+      setEdges(prevEdges => {
+        const edgeMap = new Map(prevEdges.map(e => [e.id, e]));
+        newEdges.forEach(e => edgeMap.set(e.id, e));
+        return Array.from(edgeMap.values());
+      });
+    },
+    []
+  );
+
+  // Fetch initial graph data (with merging)
   const fetchGraphData = useCallback(async (nodeIds: string[]) => {
     if (nodeIds.length === 0) {
       // If no IDs provided, maybe fetch a default seed (e.g., a high‑level system node)
       // For now, do nothing.
       return;
     }
+    // Skip if all nodes already expanded (optional optimization)
+    const newIds = nodeIds.filter(id => !expandedNodeIds.has(id));
+    if (newIds.length === 0) return;
+
     setIsLoading(true);
     setError(null);
     try {
@@ -181,7 +204,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nodeIds,
+          nodeIds: newIds,
           depth: 1,
           edgeTypes: [],
           includeOriginalNodes: true,
@@ -192,8 +215,17 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
       }
       const result = await response.json();
       const data = result.data as GraphExpandResponse;
-      setNodes(data.nodes);
-      setEdges(data.edges);
+      // Merge new nodes/edges with existing ones
+      mergeGraphData(data.nodes, data.edges);
+      // Mark node IDs as expanded
+      setExpandedNodeIds(prev => {
+        const next = new Set(prev);
+        newIds.forEach(id => next.add(id));
+        return next;
+      });
+      // Notify parent with merged state (could compute but we don't have merged state synchronously)
+      // We'll rely on nodes/edges state updates and onGraphChange will be called via useEffect?
+      // For now, call onGraphChange with the newly fetched data (merging is already done).
       onGraphChange?.({ nodes: data.nodes, edges: data.edges });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -201,7 +233,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [onGraphChange]);
+  }, [onGraphChange, mergeGraphData, expandedNodeIds]);
 
   // Fetch confidence scores for nodes (used by performance overlay)
   const fetchConfidenceScores = useCallback(async (nodeIds: string[]) => {
