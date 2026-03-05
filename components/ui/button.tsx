@@ -18,6 +18,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
   loading?: boolean;
   icon?: React.ReactNode;
+  iconRight?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -38,21 +39,28 @@ const sizeClasses: Record<ButtonSize, string> = {
   lg: 'px-6 py-3 text-lg',
 };
 
-export function Button({ 
-  variant = 'primary', 
-  size = 'md', 
+export function Button({
+  variant = 'primary',
+  size = 'md',
   loading = false,
   icon,
+  iconRight,
   disabled,
   children,
   className = '',
-  ...props 
+  ...props
 }: ButtonProps) {
   const renderedIcon = React.isValidElement(icon)
     ? icon
     : typeof icon === 'function'
       ? React.createElement(icon)
       : icon;
+
+  const renderedIconRight = React.isValidElement(iconRight)
+    ? iconRight
+    : typeof iconRight === 'function'
+      ? React.createElement(iconRight)
+      : iconRight;
 
   return (
     <button
@@ -75,6 +83,7 @@ export function Button({
         <span className="flex items-center gap-2">
           {renderedIcon}
           {children}
+          {renderedIconRight}
         </span>
       )}
     </button>
