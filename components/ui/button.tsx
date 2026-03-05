@@ -48,6 +48,12 @@ export function Button({
   className = '',
   ...props 
 }: ButtonProps) {
+  const renderedIcon = React.isValidElement(icon)
+    ? icon
+    : typeof icon === 'function'
+      ? React.createElement(icon)
+      : icon;
+
   return (
     <button
       disabled={disabled || loading}
@@ -67,7 +73,7 @@ export function Button({
         </span>
       ) : (
         <span className="flex items-center gap-2">
-          {icon}
+          {renderedIcon}
           {children}
         </span>
       )}
