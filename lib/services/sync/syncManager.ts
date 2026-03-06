@@ -33,6 +33,7 @@ export interface OfflineAnswer {
   telemetryJson?: Record<string, unknown>;
   answerChangedCount?: number;
   durationMs?: number;
+  isMainSession?: boolean; // True if this attempt belongs to a main session (not cram/rapid recall)
   attemptId?: string; // Set after first sync for SRS analyze-behavior
   timestamp: number;
   synced: boolean;
@@ -382,6 +383,7 @@ class SyncManager {
             system: answer.system,
             conditionId: answer.conditionId,
             mode: 'session',
+            isMainSession: answer.isMainSession ?? false,
             selectedAnswer: ['A', 'B', 'C', 'D'][answer.selectedAnswer],
             ...(answer.telemetryJson && { telemetryJson: answer.telemetryJson }),
             ...(answer.answerChangedCount != null && {

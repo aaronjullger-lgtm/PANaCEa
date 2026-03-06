@@ -31,6 +31,7 @@ const AttemptSchema = z.object({
       .optional(),
     telemetryJson: z.record(z.string(), z.unknown()).optional(),
     durationMs: z.number().optional(),
+    isMainSession: z.boolean().optional().default(false),
   }),
 });
 
@@ -68,6 +69,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       selectedAnswer: selectedAnswerRaw,
       telemetryJson,
       durationMs,
+      isMainSession = false,
     } = validated.body;
 
     // Support both isCorrect and wasCorrect field names
@@ -107,6 +109,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
           questionType: questionType ?? null,
           mode: mode ?? null,
           isRankedAttempt,
+          isMainSession,
           timeSpentMs: timeSpentMillis ?? durationMs ?? null,
           answerChangedCount: answerChangedCount ?? null,
           selectedAnswer: selectedAnswerLetter,

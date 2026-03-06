@@ -925,6 +925,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       timeSpentMs: timeToAnswer,
       system: currentQuestion.system ?? undefined,
       conditionId: currentQuestion.conditionId ?? undefined,
+      isMainSession: sessionSettings.mode !== 'rapid_recall' && sessionSettings.mode !== 'cram_mode',
       telemetryJson: (telemetryForApi ?? undefined) as Record<string, unknown> | undefined,
       answerChangedCount: behavioralPayload?.answer_change_count ?? answerChangeCountRef.current,
       durationMs: behavioralPayload?.duration_ms ?? timeToAnswer,
