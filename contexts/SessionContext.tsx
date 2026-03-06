@@ -14,6 +14,7 @@ import React, {
   createContext,
   useContext,
   useState,
+  useEffect,
   useCallback,
   ReactNode,
   useMemo,
@@ -92,6 +93,7 @@ interface SessionProviderProps {
 }
 
 interface SessionState {
+  version?: number;
   settings: SessionSettings;
   questionQueue: Question[];
   currentQuestionIndex: number;
@@ -100,6 +102,8 @@ interface SessionState {
 }
 
 const SESSION_STORAGE_KEY = 'panacea-active-session';
+const MAX_SESSION_AGE_MS = 30 * 60 * 1000; // 30 minutes
+const SESSION_STORAGE_VERSION = 1;
 
 export function SessionProvider({ children }: SessionProviderProps) {
   const { getToken } = useAuth();
@@ -113,14 +117,27 @@ export function SessionProvider({ children }: SessionProviderProps) {
   // JOL Calibration state
   const [calibration, setCalibration] = useState<SessionCalibration | null>(null);
   const calibrationRef = useRef<SessionCalibration | null>(null);
+  const isRestored = useRef(false);
 
   const hasActiveSession = useMemo(() => {
     return !!sessionSettings && questionQueue.length > 0;
   }, [sessionSettings, questionQueue.length]);
 
+  const shouldRestoreSavedSession = useCallback((state: SessionState): boolean => {
+    const version = state.version ?? 1;
+    if (version !== SESSION_STORAGE_VERSION) return false;
+    const age = Date.now() - state.startTime;
+    if (age > MAX_SESSION_AGE_MS) return false;
+    if (!state.settings || !state.questionQueue || state.questionQueue.length === 0) return false;
+    // Ensure each question has required fields (optional)
+    if (!state.questionQueue.every(q => q.id && q.question)) return false;
+    return true;
+  }, []);
+
   const saveSessionState = useCallback(() => {
     if (sessionSettings && calibration) {
       const state: SessionState = {
+        version: SESSION_STORAGE_VERSION,
         settings: sessionSettings,
         questionQueue,
         currentQuestionIndex,
@@ -132,18 +149,38 @@ export function SessionProvider({ children }: SessionProviderProps) {
   }, [sessionSettings, questionQueue, currentQuestionIndex, calibration]);
 
   const resumeSession = useCallback(() => {
-    const savedState = localStorage.getItem(SESSION_STORAGE_KEY);
-    if (savedState) {
-      const state: SessionState = JSON.parse(savedState);
+    if (isRestored.current) return false;
+    const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!saved) return false;
+    try {
+      const state: SessionState = JSON.parse(saved);
+      // Default version to 1 if missing
+      state.version = state.version ?? 1;
+      if (!shouldRestoreSavedSession(state)) {
+        // Clear invalid session
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        return false;
+      }
       setSessionSettings(state.settings);
       setQuestionQueue(state.questionQueue);
       setCurrentQuestionIndex(state.currentQuestionIndex);
       setCalibration(state.calibration);
       calibrationRef.current = state.calibration;
+      isRestored.current = true;
       return true;
+    } catch (error) {
+      console.error('Failed to parse saved session:', error);
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+      return false;
     }
-    return false;
-  }, []);
+  }, [shouldRestoreSavedSession]);
+
+  // Restore saved session on mount if valid
+  useEffect(() => {
+    if (!hasActiveSession) {
+      resumeSession();
+    }
+  }, [hasActiveSession, resumeSession]);
 
   const startSession = useCallback(
     async (
@@ -170,6 +207,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
     setQuestionQueue([]);
     setCurrentQuestionIndex(0);
     localStorage.removeItem(SESSION_STORAGE_KEY);
+    isRestored.current = false;
   }, []);
 
   const pauseSession = useCallback(() => {
