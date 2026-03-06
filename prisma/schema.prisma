@@ -2799,6 +2799,7 @@ model StudySession {
   wasInterrupted         Boolean           @default(false)
   sessionType            String?
   systemsTargeted        String[]          @default([])
+  questionIds            String[]          @default([])
   thinkingTimeMs         Int?
   SessionAnalytics       SessionAnalytics?
   User                   User              @relation(fields: [userId], references: [id], onDelete: Cascade)

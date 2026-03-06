@@ -8,6 +8,7 @@ import { lazy } from 'react';
 export const QuizViewWithErrorBoundary = lazy(
   () => import('../components/session/QuizViewWithErrorBoundary')
 );
+export const SessionRunner = lazy(() => import('../components/session/SessionRunner'));
 export const MenuView = lazy(() => import('../components/navigation/MenuView'));
 export const PhotoDrillSession = lazy(() => import('../components/session/PhotoDrillSession'));
 export const RapidRecallDrill = lazy(() => import('../components/drill/recall/RapidRecallDrill'));

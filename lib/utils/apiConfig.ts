@@ -31,6 +31,7 @@ export const API_ENDPOINTS = {
   KNOWLEDGE_STUDENT_CONTEXT: '/api/knowledge/cache/student-context',
   DDX_GENERATE: '/api/ddx/generate',
   SESSIONS: '/api/sessions',
+  SESSION_QUESTIONS: (sessionId: string) => `/api/study/session/${sessionId}/questions`,
   REVIEWS: '/api/reviews',
   SYNC: '/api/sync',
   INTELLIGENCE_PROFILE: '/api/intelligence/profile',
@@ -40,6 +41,7 @@ export const API_ENDPOINTS = {
   USER_STATS: '/api/user/stats',
   USER_PREFERENCES: '/api/user/preferences',
   USER_SESSION: '/api/user/session',
+  OSCE_ANALYSIS_GRADE: '/api/osce/analysis/grade',
   // Analytics (use getApiEndpoint for base URL consistency)
   ANALYTICS_CALIBRATION: '/api/analytics/calibration',
   ANALYTICS_PERFORMANCE_DELTAS: '/api/analytics/performance-deltas',

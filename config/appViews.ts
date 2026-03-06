@@ -8,6 +8,7 @@ export type View =
   | 'menu'
   | 'command_center'
   | 'quiz'
+  | 'session_runner'
   | 'custom_study'
   | 'integrations'
   | 'photo_drill'

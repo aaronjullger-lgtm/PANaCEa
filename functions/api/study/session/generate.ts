@@ -89,6 +89,7 @@ export const onRequestPost = authenticatedEndpoint(SessionGenerationSchema, asyn
                 {} as Record<string, boolean>
               )
             ),
+            questionIds: result.questionIds,
           },
         });
 

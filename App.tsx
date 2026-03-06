@@ -14,6 +14,7 @@ import PerformanceMonitor from './components/shared/PerformanceMonitor';
 import PWAInstallPrompt from './components/shared/PWAInstallPrompt';
 import {
   QuizViewWithErrorBoundary,
+  SessionRunner,
   MenuView,
   PhotoDrillSession,
   RapidRecallDrill,
@@ -244,7 +245,8 @@ const App: React.FC = () => {
       path === '/core-adaptive' ||
       path.startsWith('/medical-database') ||
       path.startsWith('/live-collaboration') ||
-      path.startsWith('/explorer');
+      path.startsWith('/explorer') ||
+      path.startsWith('/session/');
 
     if (!isKnownPath) {
       setShowNotFound(true);
@@ -260,6 +262,11 @@ const App: React.FC = () => {
     }
     if (path.startsWith('/study/toolkit')) {
       navigate('/study/utilities', { replace: true });
+      return;
+    }
+
+    if (path.startsWith('/session/')) {
+      setView('session_runner');
       return;
     }
 
@@ -1139,8 +1146,8 @@ const App: React.FC = () => {
                 element={
                   <>
                     {showNotFound ? (
-                      // 404 Page Not Found
-                      <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center px-4">
+                      <React.Fragment key="not-found">
+                        <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center px-4">
                         <div className="max-w-md w-full text-center">
                           <div className="mb-8">
                             <h1 className="text-6xl font-bold text-[var(--color-text-primary)] mb-4">
@@ -1161,8 +1168,9 @@ const App: React.FC = () => {
                           </button>
                         </div>
                       </div>
+                      </React.Fragment>
                     ) : (
-                      <>
+                      <React.Fragment key="main">
                         {/* Skip to Main Content - hidden until focused via keyboard (screen reader + a11y) */}
                         <a
                           href="#main-content"
@@ -1485,6 +1493,31 @@ const App: React.FC = () => {
                                         </Suspense>
                                       </WithGeminiErrorBoundary>
                                     </motion.div>
+                                  )}
+
+                                  {view === 'session_runner' && (
+                                    <WithGeminiErrorBoundary
+                                      viewName="session_runner"
+                                      onRetry={() => setView('session_runner')}
+                                    >
+                                      <Suspense fallback={<Loader message="Loading session…" />}>
+                                        <SessionRunner
+                                          onExit={() => setView('command_center')}
+                                          addPerformanceRecord={addPerformanceRecord}
+                                          addMissedQuestion={addMissedQuestion}
+                                          updateReviewQuestion={updateReviewQuestion}
+                                          removeDueConcept={removeDueConcept}
+                                          updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+                                          performanceData={performanceData}
+                                          fontSizeAdjustment={fontSizeAdjustment}
+                                          setFontSizeAdjustment={setFontSizeAdjustment}
+                                          flaggedQuestions={flaggedQuestions}
+                                          addFlaggedQuestion={addFlaggedQuestion}
+                                          removeFlaggedQuestion={removeFlaggedQuestion}
+                                          updateQuestionNote={updateQuestionNote}
+                                        />
+                                      </Suspense>
+                                    </WithGeminiErrorBoundary>
                                   )}
 
                                   {view === 'photo_drill' && (
@@ -2379,7 +2412,7 @@ const App: React.FC = () => {
                           isOpen={showProductTour}
                           onClose={() => setShowProductTour(false)}
                         />
-                      </>
+                      </React.Fragment>
                     )}
                   </>
                 }
