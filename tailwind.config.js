@@ -204,6 +204,7 @@ export default {
         'text-muted': 'var(--color-text-muted)',
         accent: 'var(--color-accent)',
         'accent-hover': 'var(--color-accent-hover)',
+        'gold-dark': 'var(--color-gold-dark)',
       },
     },
   },
@@ -218,8 +219,8 @@ export default {
           '--color-text-secondary': '#334155',
           '--color-text-muted': '#64748b',
           '--color-border': '#e2e8f0',
-          '--color-accent': '#7a6f52', // Updated to match new darker gold
-          '--color-accent-hover': '#6a5f42',
+          '--color-accent': 'var(--color-gold-dark)', // Updated to match new darker gold
+          '--color-accent-hover': 'var(--color-gold-dark-hover)',
           filter: 'grayscale(100%) contrast(1.12)',
           colorScheme: 'light',
         },

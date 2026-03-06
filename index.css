@@ -358,6 +358,9 @@ a,
   --color-gold: #9a8f72;
   --color-gold-hover: #8a7f62;
   --color-gold-text: #f8fafc;
+  /* Gold dark tokens for exam mode and accents */
+  --color-gold-dark: #7a6f52;
+  --color-gold-dark-hover: #6a5f42;
 
   /* ===== SEMANTIC DESIGN SYSTEM - LIGHT MODE ===== */
 
@@ -390,16 +393,16 @@ a,
   --color-border: #e2e8f0;
   --color-border-light: #f1f5f9;
   --chart-grid-stroke: rgba(15, 23, 42, 0.08);
-  --color-accent: #64748b; /* Slate-500 for Stormy Slate aesthetic — 4.5:1 with bg-primary (WCAG AA) */
-  --color-accent-hover: #475569; /* Slate-600 */
-  --color-accent-button: #475569; /* Slate-600 for buttons — 4.8:1 contrast with white (WCAG AA) */
-  --color-accent-border: #9a8f72; /* Lighter gold for borders to improve contrast */
-  --color-accent-cta: #7a6f52; /* Darker gold for primary CTAs only (one per screen) */
+  --color-accent: var(--color-gold-dark); /* Darker gold (Stormy Slate) — WCAG AA with bg-primary */
+  --color-accent-hover: var(--color-gold-dark-hover);
+  --color-accent-button: var(--color-gold-dark); /* Darker gold for buttons — 4.5:1+ with white text */
+  --color-accent-border: var(--color-gold); /* Lighter gold for borders to improve contrast */
+  --color-accent-cta: var(--color-gold-dark); /* Darker gold for primary CTAs only (one per screen) */
   --color-accent-secondary: #728ba6; /* Steel blue - charts, secondary CTAs */
   --color-accent-light: #f5f2ec;
   --color-overlay: rgba(15, 23, 42, 0.5);
   --color-shadow-soft: rgba(15, 23, 42, 0.06);
-  --color-focus-ring: #64748b; /* Slate-500 for focus indicators */
+  --color-focus-ring: var(--color-gold-dark); /* Darker gold for focus indicators */
 
   /* Text on accent - off-white in both modes for continuity */
   --color-text-inverse: #f8fafc;
@@ -545,6 +548,9 @@ a,
   --color-gold: #a89b7a;
   --color-gold-hover: #b8ab8a;
   --color-gold-text: #f8fafc;
+  /* Gold dark tokens for exam mode and accents (dark mode lighter variant) */
+  --color-gold-dark: #c4b78a;
+  --color-gold-dark-hover: #b4a77a;
 
   /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
 
@@ -577,18 +583,18 @@ a,
   --color-border: #475569;
   --color-border-light: #334155;
   --chart-grid-stroke: rgba(71, 85, 105, 0.2);
-  --color-accent: #94a3b8; /* Slate-400 for dark mode Stormy Slate */
-  --color-accent-hover: #cbd5e1; /* Slate-300 */
-  --color-accent-button: #64748b; /* Slate-500 for better text contrast (WCAG AA) */
-  --color-accent-border: #c4b78a; /* Lighter gold for borders to improve visibility */
-  --color-accent-cta: #c4b78a; /* Gold for primary CTAs in dark mode (sufficient contrast) */
-  --color-accent-cta-dark: #c4b78a; /* Gold for primary CTAs in dark mode (sufficient contrast) */
+  --color-accent: var(--color-gold); /* Lighter gold on dark background (Stormy Slate) */
+  --color-accent-hover: var(--color-gold-dark);
+  --color-accent-button: #8a7f62; /* Gold for buttons — 4.5:1 with white text on dark */
+  --color-accent-border: var(--color-gold-dark); /* Lighter gold for borders to improve visibility */
+  --color-accent-cta: var(--color-gold-dark); /* Gold for primary CTAs in dark mode (sufficient contrast) */
+  --color-accent-cta-dark: var(--color-gold-dark); /* Gold for primary CTAs in dark mode (sufficient contrast) */
   --color-accent-secondary: #91a6bd; /* Steel blue (lighter) - charts, secondary CTAs */
   --color-accent-light: #1e293b;
   --color-text-inverse: #f8fafc;
   --color-overlay: rgba(15, 23, 42, 0.85);
   --color-shadow-soft: rgba(15, 23, 42, 0.4);
-  --color-focus-ring: #94a3b8; /* Slate-400 for dark mode focus */
+  --color-focus-ring: var(--color-gold); /* Gold for dark mode focus */
 
   --color-modal-bg: #475569;
   --color-glass-bg: rgba(30, 41, 59, 0.7);
