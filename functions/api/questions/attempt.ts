@@ -9,6 +9,7 @@ import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { scheduleConceptReview } from '../intelligence/profile';
+import { getRolling360Service } from '../../../lib/services/rolling360Service';
 
 const LETTERS = ['A', 'B', 'C', 'D'] as const;
 
@@ -230,6 +231,24 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       }
     }
 
+    // Update Rolling 360 for main session attempts
+    if (isMainSession) {
+      try {
+        const systemForRolling = system ?? await getQuestionSystem(prisma, questionId);
+        await getRolling360Service(prisma).updateRolling360OnSubmit({
+          attemptId,
+          userId,
+          isCorrect: correctness ?? false,
+          system: systemForRolling ?? 'Unknown',
+          answeredAt: new Date(),
+        });
+      } catch (rollingError) {
+        logger.warn('Failed to update Rolling 360 stats', {
+          error: rollingError instanceof Error ? rollingError.message : String(rollingError),
+        });
+      }
+    }
+
     logger.info('Attempt recorded', { userId: auth.userId, questionId, correctness });
 
     return {
@@ -250,6 +269,22 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
     await safePrismaDisconnect(prisma);
   }
 });
+
+async function getQuestionSystem(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  questionId: string
+): Promise<string> {
+  const question = await prisma.question.findUnique({
+    where: { id: questionId },
+    select: { system: true },
+  });
+  if (question?.system) return question.system;
+  const preGenerated = await prisma.preGeneratedQuestion.findUnique({
+    where: { id: questionId },
+    select: { system: true },
+  });
+  return preGenerated?.system ?? 'Unknown';
+}
 
 async function getUserSystemStats(
   prisma: ReturnType<typeof createEdgePrismaClient>,

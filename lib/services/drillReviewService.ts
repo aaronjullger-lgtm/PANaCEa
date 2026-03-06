@@ -21,6 +21,7 @@ import { buildCircadianContext, applyCircadianModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from './userStatisticsService';
 import { applyHonestRating } from '../srs/ghostGrader';
+import { getRolling360Service } from './rolling360Service';
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
 function toCircadianPhaseEnum(phase: string): PrismaCircadianPhase | undefined {
@@ -349,6 +350,7 @@ export async function submitDrillReview(
 
   const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
   const isRapidGuess = telemetry?.rapid_guess ?? numericTime < 500;
+  const isMainSession = sessionType !== 'cram' && sessionType !== 'rapid_recall';
   const attemptId = `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
   try {
@@ -424,6 +426,23 @@ export async function submitDrillReview(
         duration: effectiveDurationMs,
         threshold: telemetry?.mvrt_threshold_ms ?? 2000,
       });
+    }
+
+    // Update Rolling 360 for main session attempts
+    if (isMainSession) {
+      try {
+        await getRolling360Service(prisma).updateRolling360OnSubmit({
+          attemptId,
+          userId,
+          isCorrect,
+          system: question.system ?? 'Unknown',
+          answeredAt: new Date(),
+        });
+      } catch (rollingError) {
+        logger?.warn?.('Failed to update Rolling 360 stats', {
+          error: rollingError instanceof Error ? rollingError.message : String(rollingError),
+        });
+      }
     }
   } catch (attemptError) {
     logger?.warn?.('Failed to create QuestionAttempt record', {
