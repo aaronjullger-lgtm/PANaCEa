@@ -9,7 +9,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-
+import { getSystemAbbreviation } from '@/lib/constants/blueprint';
 export interface SystemStats {
   total: number;
   correct: number;
@@ -45,6 +45,24 @@ const SYSTEM_TO_REGION: Record<string, { cx: number; cy: number; r: number; labe
   PSYCH: { cx: 50, cy: 16, r: 6, label: 'Psych' },
   PRO: { cx: 50, cy: 72, r: 6, label: 'Pro' },
 };
+
+/**
+ * Convert a system name to its region key (abbreviation) used in SYSTEM_TO_REGION.
+ * Falls back to the input if no mapping found.
+ */
+function getRegionKey(system: string): string {
+  const abbreviation = getSystemAbbreviation(system);
+  // If abbreviation exists as a key in SYSTEM_TO_REGION, use it
+  if (SYSTEM_TO_REGION[abbreviation]) {
+    return abbreviation;
+  }
+  // If the system itself is a key, use it
+  if (SYSTEM_TO_REGION[system]) {
+    return system;
+  }
+  // Otherwise return the abbreviation (or original) for potential future regions
+  return abbreviation;
+}
 
 type MasteryLevel = 'mastery' | 'passing' | 'critical' | 'nodata';
 
@@ -129,7 +147,8 @@ export function BodyMapWidget({
 
           {/* System region dots with tooltips */}
           {systemsWithData.map(([system, stats]) => {
-            const region = SYSTEM_TO_REGION[system];
+            const regionKey = getRegionKey(system);
+            const region = SYSTEM_TO_REGION[regionKey];
             if (!region) return null;
             const isWeak = weakestSet.has(system);
             const level = getMasteryLevel(stats.accuracy, stats.total);

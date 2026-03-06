@@ -34,6 +34,7 @@ export const API_ENDPOINTS = {
   SESSION_QUESTIONS: (sessionId: string) => `/api/study/session/${sessionId}/questions`,
   REVIEWS: '/api/reviews',
   SYNC: '/api/sync',
+  REFLECTION: '/api/reflection',
   INTELLIGENCE_PROFILE: '/api/intelligence/profile',
   SRS_SUBMIT: '/api/srs/submit',
   RECOMMENDATIONS: '/api/recommendations',

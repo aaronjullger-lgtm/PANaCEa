@@ -2542,6 +2542,26 @@ model SavedQuestion {
   @@index([userId, type])
 }
 
+model Reflection {
+  id               String   @id @default(cuid())
+  userId           String
+  sessionId        String? @unique
+  patternsNoticed  String
+  improvementPlan  String
+  confidenceRating Int
+  topicsToReview   Json
+  completedAt      DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime
+
+  User        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  StudySession StudySession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([completedAt])
+}
+
 model ScoringSystem {
   id                         String                       @id
   name                       String                       @unique
@@ -2802,6 +2822,7 @@ model StudySession {
   questionIds            String[]          @default([])
   thinkingTimeMs         Int?
   SessionAnalytics       SessionAnalytics?
+  Reflection             Reflection?
   User                   User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([startedAt])
@@ -2954,6 +2975,7 @@ model User {
   ReviewLog               ReviewLog[]
   SRSItem                 SRSItem[]
   SavedQuestion           SavedQuestion[]
+  Reflection              Reflection[]
   SessionAnalytics        SessionAnalytics[]
   StudyGroupMember        StudyGroupMember[]
   StudyRecommendation     StudyRecommendation[]

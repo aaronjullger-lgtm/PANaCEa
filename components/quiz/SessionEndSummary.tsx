@@ -60,6 +60,7 @@ import { callGeminiText } from '@/services/ai/geminiService';
 import { GEMINI_FLASH_MODEL } from '@/src/constants';
 import { fireStreakCelebration } from '@/lib/streakCelebration';
 import { saveLastSession } from '@/lib/utils/sessionStorage';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import styles from './SessionEndSummary.module.css';
 
 interface SessionEndSummaryProps {
@@ -803,9 +804,27 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             averageTimePerQuestion: overallStats.avgTimePerQuestionMs,
             difficulty: 'medium', // PANCE-level is always medium
           }}
-          onComplete={(reflection) => {
+          onComplete={async (reflection) => {
             console.log('[SessionEndSummary] Reflection submitted:', reflection);
-            // Reflection sync to database can be added via API when backend is ready.
+            try {
+              const token = await getToken();
+              const response = await fetch(getApiEndpoint(API_ENDPOINTS.REFLECTION), {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ reflection }),
+              });
+              if (!response.ok) {
+                const errorText = await response.text();
+                console.error('[SessionEndSummary] Failed to save reflection:', response.status, errorText);
+              } else {
+                console.log('[SessionEndSummary] Reflection saved successfully');
+              }
+            } catch (error) {
+              console.error('[SessionEndSummary] Error saving reflection:', error);
+            }
             setShowReflection(false);
           }}
           onSkip={() => setShowReflection(false)}
