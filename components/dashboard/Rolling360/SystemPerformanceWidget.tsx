@@ -194,7 +194,7 @@ export function SystemPerformanceWidget({
           <p className="text-[var(--color-text-muted)] mb-4">Not yet assessed</p>
           <button
             type="button"
-            onClick={() => window.location.assign('/study/main-session')}
+            onClick={() => window.location.assign('/study')}
             className="px-4 py-2.5 rounded-xl bg-[var(--color-data-pass)]/90 text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-data-pass)] transition-colors"
           >
             Take a 10-question diagnostic quiz to unlock this graph

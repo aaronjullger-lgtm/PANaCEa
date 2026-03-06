@@ -227,6 +227,8 @@ const App: React.FC = () => {
       '/menu',
       '/study',
       '/study/',
+      '/study/main-session',
+      '/study/main-session/',
       '/admin',
       '/clinical-eye',
       '/visualizer',
@@ -262,6 +264,10 @@ const App: React.FC = () => {
     }
     if (path.startsWith('/study/toolkit')) {
       navigate('/study/utilities', { replace: true });
+      return;
+    }
+    if (path === '/study/main-session' || path === '/study/main-session/') {
+      navigate('/study', { replace: true });
       return;
     }
 

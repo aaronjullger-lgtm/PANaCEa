@@ -598,7 +598,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
         </p>
         <button
           type="button"
-          onClick={() => window.location.assign('/study/main-session')}
+          onClick={() => window.location.assign('/study')}
           className="px-4 py-2.5 rounded-xl bg-action-primary text-action-primary text-sm font-medium hover:opacity-90 transition-opacity"
         >
           Take a 10-question diagnostic quiz to unlock your analytics

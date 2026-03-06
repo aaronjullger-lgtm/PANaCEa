@@ -103,7 +103,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
     <div
       onClick={() => {
         if (!isCalibrated) {
-          window.location.assign('/study/main-session');
+          window.location.assign('/study');
         }
       }}
       className={`p-4 rounded-xl border-2 transition-colors ${
@@ -116,7 +116,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
       onKeyDown={(e) => {
         if (!isCalibrated && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
-          window.location.assign('/study/main-session');
+          window.location.assign('/study');
         }
       }}
     >

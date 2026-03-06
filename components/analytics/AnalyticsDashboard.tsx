@@ -332,7 +332,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   const totalAttempts = userStats?.stats.overall.totalAttempts ?? 0;
 
   const handleStartSession = () => {
-    window.location.assign('/study/main-session');
+    window.location.assign('/study');
   };
 
   // Loading state skeleton

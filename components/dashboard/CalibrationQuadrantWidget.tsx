@@ -154,7 +154,7 @@ export function CalibrationQuadrantWidget({ className = '' }: Readonly<{ classNa
         </p>
         <button
           type="button"
-          onClick={() => window.location.assign('/study/main-session')}
+          onClick={() => window.location.assign('/study')}
           className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity"
         >
           Take a 10-question diagnostic quiz to unlock this graph
