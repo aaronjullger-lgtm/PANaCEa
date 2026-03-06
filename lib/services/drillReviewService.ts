@@ -351,59 +351,80 @@ export async function submitDrillReview(
   const effectiveDurationMs = telemetry?.duration_ms ?? numericTime;
   const isRapidGuess = telemetry?.rapid_guess ?? numericTime < 500;
   const isMainSession = sessionType !== 'cram' && sessionType !== 'rapid_recall';
-  const attemptId = `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  let attemptId = `drill_review_${userId}_${questionId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
   try {
-    await prisma.questionAttempt.create({
-      data: {
-        id: attemptId,
+    // Check for existing attempt within last 5 minutes to avoid duplicates
+    const existingAttempt = await prisma.questionAttempt.findFirst({
+      where: {
         userId,
         questionId,
-        conditionId: question.conditionId ?? undefined,
-        medicalContentId: question.medicalContentId ?? undefined,
-        system: question.system ?? undefined,
-        // Match the FSRS gate logic: undefined/missing sessionType is treated as main
-        isMainSession: sessionType !== 'cram' && sessionType !== 'rapid_recall',
-        selectedAnswer: normalizedSelectedAnswer,
-        wasCorrect: isCorrect,
-        durationMs: effectiveDurationMs,
-        implicitConfidence,
-        telemetryJson: telemetry
-          ? {
-              ...telemetry,
-              server_computed: {
-                par_time_ms: parTimeMs,
-                latency_ratio: effectiveDurationMs / parTimeMs,
-                implicit_rating: rating,
-                implicit_confidence: implicitConfidence,
-                grade_continuous: gradeContinuous,
-                circadian_phase: circadianContext.circadianPhase,
-                is_rapid_guess: isRapidGuess,
-              },
-            }
-          : {
-              duration_ms: numericTime,
-              rapid_guess: isRapidGuess,
-              question_type: 'unknown' as const,
-              mvrt_threshold_ms: 2000,
-              question_displayed_at: new Date(Date.now() - numericTime).toISOString(),
-              answer_submitted_at: new Date().toISOString(),
-              answer_changes: answerSwitches ?? 0,
-              hint_viewed: false,
-              time_to_first_interaction_ms: timeToFirstClick ?? null,
-              hint_view_duration_ms: null,
-              server_computed: {
-                par_time_ms: parTimeMs,
-                latency_ratio: numericTime / parTimeMs,
-                implicit_rating: rating,
-                implicit_confidence: implicitConfidence,
-                grade_continuous: gradeContinuous,
-                circadian_phase: circadianContext.circadianPhase,
-                is_rapid_guess: isRapidGuess,
-              },
-            },
+        createdAt: {
+          gte: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes
+        },
       },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
     });
+
+    let finalAttemptId = attemptId;
+    if (existingAttempt) {
+      finalAttemptId = existingAttempt.id;
+      // Skip creation, we'll reuse the existing attempt
+    } else {
+      await prisma.questionAttempt.create({
+        data: {
+          id: finalAttemptId,
+          userId,
+          questionId,
+          conditionId: question.conditionId ?? undefined,
+          medicalContentId: question.medicalContentId ?? undefined,
+          system: question.system ?? undefined,
+          // Match the FSRS gate logic: undefined/missing sessionType is treated as main
+          isMainSession: sessionType !== 'cram' && sessionType !== 'rapid_recall',
+          selectedAnswer: normalizedSelectedAnswer,
+          wasCorrect: isCorrect,
+          durationMs: effectiveDurationMs,
+          implicitConfidence,
+          telemetryJson: telemetry
+            ? {
+                ...telemetry,
+                server_computed: {
+                  par_time_ms: parTimeMs,
+                  latency_ratio: effectiveDurationMs / parTimeMs,
+                  implicit_rating: rating,
+                  implicit_confidence: implicitConfidence,
+                  grade_continuous: gradeContinuous,
+                  circadian_phase: circadianContext.circadianPhase,
+                  is_rapid_guess: isRapidGuess,
+                },
+              }
+            : {
+                duration_ms: numericTime,
+                rapid_guess: isRapidGuess,
+                question_type: 'unknown' as const,
+                mvrt_threshold_ms: 2000,
+                question_displayed_at: new Date(Date.now() - numericTime).toISOString(),
+                answer_submitted_at: new Date().toISOString(),
+                answer_changes: answerSwitches ?? 0,
+                hint_viewed: false,
+                time_to_first_interaction_ms: timeToFirstClick ?? null,
+                hint_view_duration_ms: null,
+                server_computed: {
+                  par_time_ms: parTimeMs,
+                  latency_ratio: numericTime / parTimeMs,
+                  implicit_rating: rating,
+                  implicit_confidence: implicitConfidence,
+                  grade_continuous: gradeContinuous,
+                  circadian_phase: circadianContext.circadianPhase,
+                  is_rapid_guess: isRapidGuess,
+                },
+              },
+        },
+      });
+    }
+    // Ensure attemptId variable used later matches the final attempt ID
+    attemptId = finalAttemptId;
     // Update peer validation statistics
     try {
       await prisma.preGeneratedQuestion.update({
