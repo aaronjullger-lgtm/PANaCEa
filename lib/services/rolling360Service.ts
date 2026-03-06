@@ -673,8 +673,7 @@ export class Rolling360Service {
       // Rebuild by replaying each attempt
       let finalStats: Rolling360Stats | null = null;
 
-      for (let i = 0; i < attempts.length; i++) {
-        const attempt = attempts[i];
+      for (const attempt of attempts) {
         if (attempt == null) continue;
         finalStats = await this.updateRolling360OnSubmitInTransaction(tx, {
           attemptId: attempt.id,

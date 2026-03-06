@@ -267,9 +267,28 @@ export class MainSessionQuestionSelector {
       `;
 
       const first = results[0];
-      if (first?.weights) {
-        return first.weights as BlueprintWeights;
+      if (!first?.weights) {
+        // Fallback to default 2025 PANCE weights (Official NCCPA)
+        return {
+          Cardiovascular: 0.11,
+          Pulmonary: 0.09,
+          Gastrointestinal: 0.09,
+          Musculoskeletal: 0.09,
+          HEENT: 0.08,
+          Reproductive: 0.08,
+          Neurological: 0.07,
+          Psychiatry: 0.07,
+          Endocrine: 0.06,
+          Dermatology: 0.05,
+          Genitourinary: 0.05,
+          Hematology: 0.04,
+          'Infectious Disease': 0.04,
+          Nephrology: 0.04,
+          'Emergency Medicine': 0.02,
+          General: 0.02,
+        };
       }
+      return first.weights as BlueprintWeights;
     } catch (error) {
       // Table may not exist yet or other error - use defaults
       console.warn('[MainSessionSelector] Blueprint query failed, using defaults:', error);
@@ -703,27 +722,25 @@ export class MainSessionQuestionSelector {
       // CORNER CASE: Forced to repeat (only one system has questions left)
       if (!placed && currentOrder.length > 0) {
         const forcedSystem = currentOrder[0];
-        if (forcedSystem !== undefined) {
-          const pool = workingPools.get(forcedSystem);
-          const question = pool?.shift();
-          if (question) {
-            result.push(question);
-            lastPlacedSystem = forcedSystem;
+        if (forcedSystem === undefined) break;
+        const pool = workingPools.get(forcedSystem);
+        const question = pool?.shift();
+        if (!question) break;
+        result.push(question);
+        lastPlacedSystem = forcedSystem;
 
-            // LOG WARNING (Permissive Mode - don't crash)
-            const violation: InterleavingViolation = {
-              position: result.length - 1,
-              system: forcedSystem,
-              reason: 'only_system_remaining',
-            };
-            violations.push(violation);
+        // LOG WARNING (Permissive Mode - don't crash)
+        const violation: InterleavingViolation = {
+          position: result.length - 1,
+          system: forcedSystem,
+          reason: 'only_system_remaining',
+        };
+        violations.push(violation);
 
-            console.warn(
-              `[Interleaver] FORCED REPEAT: ${forcedSystem} at position ${result.length}`,
-              `- this indicates a selection phase issue or cold start scenario`
-            );
-          }
-        }
+        console.warn(
+          `[Interleaver] FORCED REPEAT: ${forcedSystem} at position ${result.length}`,
+          `- this indicates a selection phase issue or cold start scenario`
+        );
       }
     }
 
