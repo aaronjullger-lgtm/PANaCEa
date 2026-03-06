@@ -2,7 +2,7 @@
  * Layout Components Index
  * Central exports for PANaCEa layout system.
  * Active: NavRail, AppBrand, PageContainer, SiteFooter, SectorGrid, DrillShell.
- * Deprecated (not mounted in App): MainLayout, Sidebar, AppSidebar — see LAYOUT_README.md.
+ * Deprecated (deleted): MainLayout, Sidebar, AppSidebar, AccountFooter — see LAYOUT_README.md.
  */
 
 export { NavRail } from './NavRail';

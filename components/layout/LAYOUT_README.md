@@ -14,11 +14,11 @@
 - **App shell**: App.tsx renders header (AppBrand + PageContainer) and NavRail; content is view-state driven. URL sync in App.tsx and CommandCenterHub.
 - **Landing**: LandingPage uses AppBrand (size lg, no link) and PageContainer for sections; SiteFooter for footer.
 
-## Deprecated (not mounted)
+## Deprecated (deleted)
 
-- **MainLayout** – Uses Sidebar; not mounted in App. Kept for future route-based layouts.
-- **Sidebar** – Uses NAVIGATION_STRUCTURE; paths do not map to App view state. Not mounted.
-- **AppSidebar** – Uses NAVIGATION_CONFIG; not mounted.
-- **AccountFooter** – Not used; account/sync UI lives in EnhancedSettingsTab. File kept for possible future footer bar.
+- **MainLayout** – Previously used Sidebar; not mounted in App. Deleted as part of repository health cleanup.
+- **Sidebar** – Previously used NAVIGATION_STRUCTURE; paths did not map to App view state. Deleted as part of repository health cleanup.
+- **AppSidebar** – Previously used NAVIGATION_CONFIG; not mounted. Deleted as part of repository health cleanup.
+- **AccountFooter** – Not used; account/sync UI lives in EnhancedSettingsTab. Deleted as part of repository health cleanup.
 
 See `config/navigation.ts` for NavRail as the only active nav and NAVIGATION_STRUCTURE/NAVIGATION_CONFIG as reference.

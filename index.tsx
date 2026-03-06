@@ -10,7 +10,7 @@ import App from './App';
 import './index.css';
 import { AuthProvider } from './components/auth/AuthProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { ShortcutProvider } from './src/context/ShortcutContext';
+import { ShortcutProvider } from './contexts/ShortcutContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { MasteryHeatmapProvider } from './contexts/MasteryHeatmapContext';
 

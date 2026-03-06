@@ -19,7 +19,7 @@ import {
   formatKeyForDisplay,
   getActionDisplayName,
   isKeyConflict,
-} from '@/src/context/ShortcutContext';
+} from '@/contexts/ShortcutContext';
 
 interface ShortcutSettingsProps {
   /** Optional callback when shortcuts are updated */
