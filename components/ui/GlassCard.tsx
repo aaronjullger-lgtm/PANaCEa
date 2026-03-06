@@ -29,9 +29,9 @@ interface GlassCardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
 
 const variantStyles: Record<CardVariant, { bg: string; border: string; glow: string }> = {
   primary: {
-    bg: 'bg-gradient-to-br from-action-blue/10 via-deep-plum-400/5 to-deep-plum-300/10',
-    border: 'border-action-blue/20 hover:border-action-blue/40',
-    glow: 'bg-action-blue/10',
+    bg: 'bg-gradient-to-br from-[var(--color-accent)]/10 via-[var(--color-accent)]/5 to-[var(--color-accent)]/10',
+    border: 'border-[var(--color-accent)]/20 hover:border-[var(--color-accent)]/40',
+    glow: 'bg-[var(--color-accent)]/10',
   },
   success: {
     bg: 'bg-gradient-to-br from-sage-500/10 via-sage-400/5 to-sage-600/10',
@@ -44,7 +44,7 @@ const variantStyles: Record<CardVariant, { bg: string; border: string; glow: str
     glow: 'bg-muted-amber/10',
   },
   info: {
-    bg: 'bg-gradient-to-br from-steel-blue-400/10 via-steel-blue-500/5 to-action-blue/10',
+    bg: 'bg-gradient-to-br from-steel-blue-400/10 via-steel-blue-500/5 to-[var(--color-accent)]/10',
     border: 'border-steel-blue-400/20 hover:border-steel-blue-400/40',
     glow: 'bg-steel-blue-400/10',
   },
@@ -116,7 +116,7 @@ interface CardHeaderProps {
 
 export const CardHeader: React.FC<CardHeaderProps> = ({
   icon: Icon,
-  iconColor = 'text-action-blue',
+  iconColor = 'text-[var(--color-accent)]',
   title,
   subtitle,
   badge,
@@ -133,7 +133,7 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
           <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h3>
           {badge && (
             <span
-              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badge.color || 'bg-action-blue/10 text-action-blue border border-action-blue/20'}`}
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badge.color || 'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20'}`}
             >
               {badge.text}
             </span>
@@ -165,7 +165,7 @@ export const CardStats: React.FC<CardStatsProps> = ({ stats }) => {
       {stats.map((stat) => (
         <div
           key={`${stat.label}-${stat.value}`}
-          className={`flex items-center gap-2 px-4 py-2 backdrop-blur-sm rounded-lg border ${stat.color || 'bg-action-blue/10 border-action-blue/20'}`}
+          className={`flex items-center gap-2 px-4 py-2 backdrop-blur-sm rounded-lg border ${stat.color || 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/20'}`}
         >
           <stat.icon className="w-4 h-4" />
           <span className="text-sm font-medium">

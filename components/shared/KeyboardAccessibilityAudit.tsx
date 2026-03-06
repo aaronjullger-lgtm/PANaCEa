@@ -557,7 +557,7 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
                                 {shortcut.key}
                               </kbd>
                               <span
-                                className={`text-xs px-2 py-1 rounded ${shortcut.category === 'navigation' ? 'bg-blue-500/20 text-blue-500' : shortcut.category === 'quiz' ? 'bg-purple-500/20 text-purple-500' : 'bg-gray-500/20 text-gray-500'}`}
+                                className={`text-xs px-2 py-1 rounded ${shortcut.category === 'navigation' ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]' : shortcut.category === 'quiz' ? 'bg-purple-500/20 text-purple-500' : 'bg-gray-500/20 text-gray-500'}`}
                               >
                                 {shortcut.category}
                               </span>

@@ -733,7 +733,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               <button
                 onClick={fetchAiSummary}
                 disabled={loadingAiSummary}
-                className="text-sm text-[var(--color-accent)] font-medium hover:underline disabled:opacity-50"
+                className="text-sm text-[var(--color-accent)] font-medium hover:underline disabled:opacity-50 min-h-[44px] px-4 py-2"
               >
                 {loadingAiSummary ? 'Generating AI summary…' : 'Get AI summary'}
               </button>
@@ -746,7 +746,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           {overallStats.incorrect > 0 && onReviewMissed && (
             <button
               onClick={onReviewMissed}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] font-medium hover:bg-[var(--color-data-provisional)]/30 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] font-medium hover:bg-[var(--color-data-provisional)]/30 transition-colors min-h-[44px]"
             >
               <XCircle className="w-5 h-5" />
               Review {overallStats.incorrect} To Review
@@ -756,7 +756,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           {/* Metacognitive Reflection Button - Research shows 15-20% learning gains */}
           <button
             onClick={() => setShowReflection(true)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-accent)]/20 text-[var(--color-accent)] font-medium hover:bg-[var(--color-accent)]/30 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-accent)]/20 text-[var(--color-accent)] font-medium hover:bg-[var(--color-accent)]/30 transition-colors min-h-[44px]"
           >
             <BookOpen className="w-5 h-5" />
             Reflect
@@ -773,7 +773,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
                 resetPauseTracking();
                 onStartNewSession();
               }}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium hover:bg-[var(--color-accent)]/90 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-accent-cta)] text-[var(--color-text-inverse)] font-medium hover:bg-[var(--color-accent-cta)]/90 transition-colors min-h-[44px]"
             >
               <Zap className="w-5 h-5" />
               New Session
@@ -782,7 +782,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 
           <button
             onClick={handleClose}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-bg-tertiary)]/80 transition-colors border border-[var(--color-border)]"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-bg-tertiary)]/80 transition-colors border border-[var(--color-border)] min-h-[44px]"
           >
             Done
           </button>

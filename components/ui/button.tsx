@@ -50,15 +50,18 @@ export function Button({
   className = '',
   ...props
 }: ButtonProps) {
+  const isComponent = (v: unknown): v is React.ComponentType =>
+    typeof v === 'function' || (v != null && typeof v === 'object' && '$$typeof' in (v as object));
+
   const renderedIcon = React.isValidElement(icon)
     ? icon
-    : typeof icon === 'function'
+    : isComponent(icon)
       ? React.createElement(icon)
       : icon;
 
   const renderedIconRight = React.isValidElement(iconRight)
     ? iconRight
-    : typeof iconRight === 'function'
+    : isComponent(iconRight)
       ? React.createElement(iconRight)
       : iconRight;
 

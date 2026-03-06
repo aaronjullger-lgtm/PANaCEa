@@ -176,7 +176,7 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
         {onRetry && (
           <button
             onClick={onRetry}
-            className="px-4 py-2 text-[var(--color-category-practice)] text-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg transition"
+            className="px-4 py-2 text-[var(--color-category-practice)] hover:bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg transition"
           >
             Try Another Case
           </button>

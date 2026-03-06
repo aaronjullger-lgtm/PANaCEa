@@ -88,7 +88,7 @@ export const CDNOptimizationDemo: React.FC<CDNOptimizationDemoProps> = ({
     { id: '2g', label: '2G', speed: '100-300 Kbps', icon: Wifi, color: 'text-orange-500' },
     { id: '3g', label: '3G', speed: '700 Kbps - 1.5 Mbps', icon: Wifi, color: 'text-yellow-500' },
     { id: '4g', label: '4G', speed: '5-50 Mbps', icon: Wifi, color: 'text-data-pass' },
-    { id: '5g', label: '5G', speed: '100+ Mbps', icon: Zap, color: 'text-blue-500' },
+    { id: '5g', label: '5G', speed: '100+ Mbps', icon: Zap, color: 'text-[var(--color-accent)]' },
   ];
 
   const formats = [

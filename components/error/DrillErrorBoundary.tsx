@@ -136,7 +136,7 @@ function ApiErrorFallback({ error, errorType, onRetry, onReturnHome }: ErrorFall
       <div className="flex gap-3">
         <button
           onClick={onRetry}
-          className="flex items-center gap-2 px-4 py-2 bg-action-blue-600 text-white rounded-lg hover:bg-action-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Try Again
@@ -203,12 +203,12 @@ function NetworkErrorFallback({ onRetry, onReturnHome, drillType }: ErrorFallbac
         </div>
       )}
 
-      <div className="bg-action-blue-50 dark:bg-action-blue-900/20 rounded-lg p-4 mb-6 max-w-md">
-        <div className="flex items-center gap-2 text-action-blue-700 dark:text-action-blue-300 font-medium mb-2">
+      <div className="bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 rounded-lg p-4 mb-6 max-w-md">
+        <div className="flex items-center gap-2 text-[var(--color-accent)] font-medium mb-2">
           <BookOpen className="w-4 h-4" />
           Offline Mode Available
         </div>
-        <p className="text-sm text-action-blue-600 dark:text-action-blue-400">
+        <p className="text-sm text-[var(--color-text-secondary)]">
           You can continue studying with previously cached questions. Your progress will sync when
           you reconnect.
         </p>
@@ -220,7 +220,7 @@ function NetworkErrorFallback({ onRetry, onReturnHome, drillType }: ErrorFallbac
           disabled={!isOnline}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
             isOnline
-              ? 'bg-action-blue-600 text-white hover:bg-action-blue-700'
+              ? 'bg-[var(--color-accent)] text-white hover:opacity-90'
               : 'bg-clinical-slate-300 dark:bg-clinical-slate-600 text-clinical-slate-500 cursor-not-allowed'
           }`}
         >
@@ -304,7 +304,7 @@ function UnknownErrorFallback({ error, errorType, onRetry, onReturnHome }: Error
       <div className="flex gap-3">
         <button
           onClick={onRetry}
-          className="flex items-center gap-2 px-4 py-2 bg-action-blue-600 text-white rounded-lg hover:bg-action-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Try Again

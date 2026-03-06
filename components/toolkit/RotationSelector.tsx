@@ -36,7 +36,7 @@ const ROTATION_OPTIONS: RotationOption[] = [
     id: 'surgery',
     label: 'Surgery',
     description: 'Surgical procedures and management',
-    modes: ['fluid_electrolyte', 'osce', 'patient_encounter', 'condition_drill'],
+    modes: ['fluid_electrolyte', 'patient_encounter', 'condition_drill'],
   },
   {
     id: 'internal_medicine',

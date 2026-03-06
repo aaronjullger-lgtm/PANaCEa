@@ -9,6 +9,9 @@
  * - Keystone concepts that would unlock the most learning
  * - Recommended learning path to address gaps
  * - Prerequisite analysis
+ *
+ * Deduplication: knowledgeGaps are unique by conditionId; keystoneConcepts
+ * are unique by system (one entry per system with sufficient attempts).
  */
 
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';

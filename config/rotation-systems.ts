@@ -2,6 +2,9 @@
  * Rotation → System mapping for Clinical Students (EOR / Rotator)
  * Selecting a rotation presets which organ systems are in scope for that rotation.
  * Used to filter questions and set "enabled systems" when user is in Clinical Year.
+ *
+ * Note: Time-blocked rotation UI (e.g. locking content by EOR exam date) is not yet
+ * implemented; EOR countdown and daily targets are shown via EorCountdownCard.
  */
 
 import type { ClinicalRotation, SystemCode } from '@/types';

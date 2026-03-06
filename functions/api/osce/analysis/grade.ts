@@ -5,6 +5,8 @@
  * Asynchronous grading of a completed OSCE session against a clinical rubric
  * via Gemini, simulating faculty review. Persists OsceResult and optionally
  * creates ConceptGap for Tutor targeting when Differential Diagnosis fails.
+ *
+ * Rate-limiting: Applied via _shared/rateLimiter to protect Gemini quota.
  */
 
 import { z } from 'zod';

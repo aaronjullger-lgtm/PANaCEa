@@ -3,6 +3,7 @@
  * Handles persistence for Patient Encounter sessions
  */
 
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import type { PatientEncounterCase, PatientQuestion } from '@/types/drill-modes';
 
 export interface OSCESession {
@@ -154,7 +155,7 @@ export async function gradeOSCESession(
   token?: string | null
 ): Promise<OsceGradeResult | null> {
   try {
-    const response = await fetch('/api/osce/analysis/grade', {
+    const response = await fetch(getApiEndpoint(API_ENDPOINTS.OSCE_ANALYSIS_GRADE), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -230,7 +230,7 @@ export function SystemMappingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
         <span className="ml-2 text-lg">Loading system mappings...</span>
       </div>
     );
@@ -244,7 +244,7 @@ export function SystemMappingsPage() {
         <p className="text-slate-600 mb-6">You must be an administrator to view this page.</p>
         <button
           onClick={() => navigate(ROUTES.HOME)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
         >
           Return Home
         </button>
@@ -270,7 +270,7 @@ export function SystemMappingsPage() {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg flex items-center gap-2 hover:bg-blue-600"
+          className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg flex items-center gap-2 hover:opacity-90"
         >
           <Plus className="w-4 h-4" /> Add Mapping
         </button>
@@ -343,7 +343,7 @@ export function SystemMappingsPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openEditModal(map)}
-                        className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded"
+                        className="p-1.5 text-slate-600 hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 rounded"
                         aria-label="Edit"
                       >
                         <Edit className="w-4 h-4" />
@@ -465,7 +465,7 @@ export function SystemMappingsPage() {
               <button
                 onClick={editingMapping ? saveEdit : handleCreate}
                 disabled={submitting}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg flex items-center gap-2 hover:bg-blue-600 disabled:opacity-50"
+                className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg flex items-center gap-2 hover:opacity-90 disabled:opacity-50"
               >
                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingMapping ? 'Save Changes' : 'Create'}

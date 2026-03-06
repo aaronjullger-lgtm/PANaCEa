@@ -20,6 +20,8 @@ import {
 import FormattedSection from '../../components/conditions/FormattedSection';
 import { BuzzwordBanner } from '../../components/conditions/BuzzwordBanner';
 import { ConditionStructuredCards } from '../../components/conditions/ConditionStructuredCards';
+import { PastMistakesSection } from '../../components/conditions/PastMistakesSection';
+import { KeyDifferencesTable } from '../../components/conditions/KeyDifferencesTable';
 import {
   getConditionById,
   isMeaningfulContent,
@@ -100,6 +102,7 @@ const ConditionPage: React.FC = () => {
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const prefersReducedMotion = useReducedMotion();
   const { getToken } = useAuth();
+  const navigate = useNavigate();
 
   // IntersectionObserver: highlight TOC item for section in view (runs when sectionIds/sections exist)
   useEffect(() => {
@@ -653,6 +656,16 @@ const ConditionPage: React.FC = () => {
                   </div>
                 </>
               )}
+
+              {/* Past Mistakes - user's wrong answers for this condition */}
+              <PastMistakesSection conditionId={conditionId} getToken={getToken} />
+
+              {/* Key Differences - contrastive table vs confused conditions */}
+              <KeyDifferencesTable
+                conditionId={conditionId}
+                conditionName={displayName}
+                getToken={getToken}
+              />
             </div>
           </div>
         </>

@@ -52,7 +52,7 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
         score: gap,
         interpretation: 'Low Anion Gap',
         recommendation:
-          'Consider hypoalbuminemia, hypercalcemia, hypermag nesemia, lithium toxicity, or lab error.',
+          'Consider hypoalbuminemia, hypercalcemia, hypermagnesemia, lithium toxicity, or lab error.',
         riskLevel: 'low',
         details: 'Low AG is uncommon. Verify lab values and consider repeat testing.',
       };

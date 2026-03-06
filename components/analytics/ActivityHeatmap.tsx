@@ -35,7 +35,7 @@ interface DailyStats {
 
 /**
  * Color intensity based on questions answered per day
- * Uses semantic action-blue scale: darker = more activity
+ * Uses semantic accent/blue scale: darker = more activity
  * Following "Stormy Slate" design system
  */
 function getIntensityColor(count: number): string {

@@ -233,13 +233,13 @@ const GrandRoundsBanner: React.FC<{
     <GlassCard variant="warning" hoverable className="mb-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-start gap-4 flex-1">
-          <div className="p-3 rounded-xl bg-muted-amber/20 backdrop-blur-sm">
-            <Trophy className="w-6 h-6 text-muted-amber" />
+          <div className="p-3 rounded-xl bg-[var(--color-category-specialty)]/20 backdrop-blur-sm">
+            <Trophy className="w-6 h-6 text-[var(--color-category-specialty)]" />
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h3>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted-amber/10 text-muted-amber border border-muted-amber/20">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-category-specialty)]/10 text-[var(--color-category-specialty)] border border-[var(--color-category-specialty)]/20">
                 Daily Challenge • {dateStr}
               </span>
             </div>
@@ -292,13 +292,13 @@ const CoreAdaptiveHero: React.FC<{
       <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
         <div className="flex-1 flex flex-col justify-between">
           <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-action-blue/20 backdrop-blur-sm">
-              <Brain className="w-7 h-7 text-action-blue" />
+            <div className="p-3 rounded-xl bg-[var(--color-accent)]/20 backdrop-blur-sm">
+              <Brain className="w-7 h-7 text-[var(--color-accent)]" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{mainTitle}</h3>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-action-blue/10 text-action-blue border border-action-blue/20">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20">
                   {badgeLabel}
                 </span>
               </div>
@@ -308,12 +308,12 @@ const CoreAdaptiveHero: React.FC<{
 
           <div className="mt-4 flex flex-wrap items-center gap-4 text-[var(--color-text-muted)]">
             <span className="inline-flex items-center gap-1.5 text-sm">
-              <Target className="w-4 h-4 text-sage-500" aria-hidden />
+              <Target className="w-4 h-4 text-[var(--color-accent)]" aria-hidden />
               {accuracy !== null ? `${accuracy}%` : 'Waiting for first session'}{' '}
               {accuracyLabel ?? 'accuracy'}
             </span>
             <span className="inline-flex items-center gap-1.5 text-sm">
-              <CheckCircle className="w-4 h-4 text-action-blue" aria-hidden />
+              <CheckCircle className="w-4 h-4 text-[var(--color-accent)]" aria-hidden />
               {questionsToday} today
             </span>
           </div>
@@ -344,13 +344,13 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
     <GlassCard variant="info" hoverable className="mb-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-start gap-4 flex-1">
-          <div className="p-3 rounded-xl bg-steel-blue-400/20 backdrop-blur-sm">
-            <MessageSquare className="w-6 h-6 text-steel-blue-500" />
+          <div className="p-3 rounded-xl bg-[var(--color-category-practice)]/20 backdrop-blur-sm">
+            <MessageSquare className="w-6 h-6 text-[var(--color-category-practice)]" />
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Live OSCE</h3>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold text-steel-blue-400">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold text-[var(--color-category-practice)]">
                 Voice patient
               </span>
             </div>
@@ -425,8 +425,8 @@ const HeroTriple: React.FC<{
         {/* Main Session */}
         <GlassCard variant="primary" hoverable className="flex flex-col">
           <div className="flex items-start gap-3 mb-3">
-            <div className="p-2.5 rounded-xl bg-action-blue/20 shrink-0">
-              <Brain className="w-6 h-6 text-action-blue" aria-hidden />
+            <div className="p-2.5 rounded-xl bg-[var(--color-accent)]/20 shrink-0">
+              <Brain className="w-6 h-6 text-[var(--color-accent)]" aria-hidden />
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-[var(--color-text-primary)]">Build Session</h3>
@@ -449,8 +449,8 @@ const HeroTriple: React.FC<{
         {/* OSCE */}
         <GlassCard variant="info" hoverable className="flex flex-col">
           <div className="flex items-start gap-3 mb-3">
-            <div className="p-2.5 rounded-xl bg-steel-blue-400/20 shrink-0">
-              <MessageSquare className="w-6 h-6 text-steel-blue-500" aria-hidden />
+            <div className="p-2.5 rounded-xl bg-[var(--color-category-practice)]/20 shrink-0">
+              <MessageSquare className="w-6 h-6 text-[var(--color-category-practice)]" aria-hidden />
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-[var(--color-text-primary)]">Live OSCE</h3>
@@ -473,8 +473,8 @@ const HeroTriple: React.FC<{
         {/* Analytics */}
         <GlassCard variant="info" hoverable className="flex flex-col">
           <div className="flex items-start gap-3 mb-3">
-            <div className="p-2.5 rounded-xl bg-sage-500/20 shrink-0">
-              <BarChart3 className="w-6 h-6 text-sage-600 dark:text-sage-400" aria-hidden />
+            <div className="p-2.5 rounded-xl bg-[var(--color-category-toolkit)]/20 shrink-0">
+              <BarChart3 className="w-6 h-6 text-[var(--color-category-toolkit)]" aria-hidden />
             </div>
             <div className="min-w-0">
               <h3 className="font-bold text-[var(--color-text-primary)]">Progress & Analytics</h3>
@@ -523,21 +523,21 @@ const QuickStatsBar: React.FC<{
       label: 'Study Continuity',
       value: streak,
       icon: Zap,
-      color: 'text-teal-600 dark:text-teal-400',
+      color: 'text-[var(--color-data-pass)]',
     },
     {
       label: dueLabel,
       value: dueCount,
       icon: AlertCircle,
-      color: dueCount > 0 ? 'text-muted-amber' : 'text-[var(--color-text-muted)]',
+      color: dueCount > 0 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-text-muted)]',
     },
     {
       label: accuracyLabel,
       value: accuracy !== null ? `${accuracy}%` : 'Waiting for first session',
       icon: Target,
-      color: 'text-sage-500',
+      color: 'text-[var(--color-accent)]',
     },
-    { label: 'Today', value: questionsToday, icon: CheckCircle, color: 'text-action-blue' },
+    { label: 'Today', value: questionsToday, icon: CheckCircle, color: 'text-[var(--color-accent)]' },
   ];
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
@@ -772,7 +772,7 @@ function ResidencyCockpitSection({
                     type="button"
                     onClick={() => onNavigateToDrillWithSystem('system_drill', system)}
                     className={`
-                      text-left p-4 rounded-xl border transition-all
+                      text-left p-4 rounded-xl border transition-all min-h-[44px]
                       bg-[var(--color-bg-primary)] border-[var(--color-border)]
                       hover:border-[var(--color-accent)]/50 hover:shadow-lg
                       ${isWeak ? 'ring-1 ring-[var(--color-accent)]/30' : ''}
@@ -1239,7 +1239,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 <button
                   type="button"
                   onClick={onResumeSession}
-                  className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)]"
+                  className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] min-h-[44px]"
                 >
                   <Play className="w-4 h-4" aria-hidden />
                   Resume
@@ -1505,7 +1505,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       );
                       window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
                     }}
-                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
+                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px]"
                   >
                     Enable All
                   </button>
@@ -1516,7 +1516,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
                       window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
                     }}
-                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
+                    className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px]"
                   >
                     Disable All
                   </button>
@@ -1525,7 +1525,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       type="button"
                       onClick={onOpenSettings}
                       title="More options"
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px]"
                     >
                       <MoreHorizontal className="w-4 h-4" aria-hidden />
                       <span>More options</span>
@@ -1549,12 +1549,12 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-deep-plum-500/10 to-deep-plum-400/10 border border-deep-plum-500/30 p-5 mb-6"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-category-simulation)]/10 to-[var(--color-category-simulation)]/10 border border-[var(--color-category-simulation)]/30 p-5 mb-6"
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-deep-plum-500/20">
-                  <GraduationCap className="w-6 h-6 text-deep-plum-500" />
+                <div className="p-3 rounded-xl bg-[var(--color-category-simulation)]/20">
+                  <GraduationCap className="w-6 h-6 text-[var(--color-category-simulation)]" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
@@ -1570,7 +1570,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => onNavigateToDrillMode('panre_la')}
-                className="flex items-center gap-2 px-4 py-2 bg-deep-plum-500 hover:bg-deep-plum-600 text-[var(--color-text-inverse)] font-medium rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-category-simulation)] hover:brightness-90 text-[var(--color-text-inverse)] font-medium rounded-lg transition-colors"
               >
                 Start Practice
                 <ChevronRight className="w-4 h-4" />

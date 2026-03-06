@@ -157,7 +157,7 @@ function BottomTabBar({
               <Icon
                 className={`h-5 w-5 transition-colors ${
                   isActive
-                    ? 'text-action-blue-600 dark:text-[var(--color-accent)]'
+                    ? 'text-[var(--color-accent)]'
                     : 'text-secondary dark:text-[var(--color-text-muted)]'
                 }`}
                 aria-hidden
@@ -165,7 +165,7 @@ function BottomTabBar({
               <span
                 className={`text-[10px] leading-none font-medium transition-colors ${
                   isActive
-                    ? 'text-action-blue-600 dark:text-[var(--color-accent)]'
+                    ? 'text-[var(--color-accent)]'
                     : 'text-secondary dark:text-[var(--color-text-muted)]'
                 }`}
               >
@@ -174,7 +174,7 @@ function BottomTabBar({
               {isActive && (
                 <motion.span
                   layoutId="bottom-tab-indicator"
-                  className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-action-blue-600 dark:bg-[var(--color-accent)]"
+                  className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[var(--color-accent)]"
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}

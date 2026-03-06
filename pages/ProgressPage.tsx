@@ -49,7 +49,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       <section className="mb-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h3 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-action-blue" />
+            <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
             Your Learning Analytics
           </h3>
           <HighContrastDataToggle compact className="shrink-0" />
@@ -77,7 +77,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             onClick={() => setShowAdvancedAnalytics(!showAdvancedAnalytics)}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
               showAdvancedAnalytics
-                ? 'bg-action-blue text-[var(--color-text-inverse)]'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
                 : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
             }`}
           >

@@ -140,7 +140,7 @@ const ListField: React.FC<{ label: string; value: string[]; color?: string }> = 
   if (!value || value.length === 0) return null;
 
   const colorClasses = {
-    blue: 'bg-action-blue/15 text-action-blue border-action-blue/30',
+    blue: 'bg-[var(--color-accent)]/15 text-[var(--color-accent)] border-[var(--color-accent)]/30',
     emerald: 'bg-sage-500/15 text-sage-400 border-sage-500/30',
     rose: 'bg-dusty-rose/15 text-dusty-rose border-dusty-rose/30',
     amber: 'bg-muted-amber/15 text-muted-amber border-muted-amber/30',
@@ -287,7 +287,7 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                     </span>
                   )}
                   {drug.panceYield && drug.panceYield >= 3 && (
-                    <span className="px-3 py-1 rounded-full bg-action-blue/20 text-action-blue text-xs font-semibold border border-action-blue/30">
+                    <span className="px-3 py-1 rounded-full bg-[var(--color-accent)]/20 text-[var(--color-accent)] text-xs font-semibold border border-[var(--color-accent)]/30">
                       PANCE: {drug.panceYield}/5
                     </span>
                   )}
@@ -310,10 +310,10 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
             {/* Quick Facts Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {drug.mechanismOfAction && (
-                <div className="p-4 rounded-xl bg-gradient-to-br from-action-blue/20 to-steel-blue-600/10 border border-action-blue/30">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-[var(--color-accent)]/20 to-[var(--color-accent)]/10 border border-[var(--color-accent)]/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <Beaker className="w-4 h-4 text-action-blue" />
-                    <span className="text-xs font-semibold text-action-blue uppercase tracking-wide">
+                    <Beaker className="w-4 h-4 text-[var(--color-accent)]" />
+                    <span className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wide">
                       Mechanism
                     </span>
                   </div>
@@ -457,7 +457,7 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
               <Section
                 title="Pharmacology & Pharmacokinetics"
                 icon={Beaker}
-                accentColor="text-action-blue"
+                accentColor="text-[var(--color-accent)]"
               >
                 <TextField label="Absorption" value={drug.absorption} />
                 <TextField label="Distribution" value={drug.distribution} />
@@ -531,10 +531,10 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
 
                   {/* Lactation */}
                   {(drug.lactationSafety || drug.lactationNotes) && (
-                    <div className="p-3 rounded-lg bg-action-blue/10 border border-action-blue/30">
+                    <div className="p-3 rounded-lg bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30">
                       <div className="flex items-center gap-2 mb-2">
-                        <Droplet className="w-4 h-4 text-action-blue" />
-                        <h5 className="text-xs font-semibold text-action-blue uppercase">
+                        <Droplet className="w-4 h-4 text-[var(--color-accent)]" />
+                        <h5 className="text-xs font-semibold text-[var(--color-accent)] uppercase">
                           Lactation
                         </h5>
                       </div>

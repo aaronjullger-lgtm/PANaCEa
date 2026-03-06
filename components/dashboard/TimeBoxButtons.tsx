@@ -29,21 +29,21 @@ const TIME_PRESETS: TimeBoxPreset[] = [
     label: '5 min',
     questionEstimate: 3,
     icon: Zap,
-    gradient: 'from-emerald-500/10 to-teal-500/10',
+    gradient: 'from-[var(--color-accent)]/15 to-[var(--color-accent)]/5',
   },
   {
     minutes: 10,
     label: '10 min',
     questionEstimate: 6,
     icon: Clock,
-    gradient: 'from-blue-500/10 to-cyan-500/10',
+    gradient: 'from-[var(--color-accent)]/12 to-[var(--color-accent-light)]/50',
   },
   {
     minutes: 20,
     label: '20 min',
     questionEstimate: 13,
     icon: Clock,
-    gradient: 'from-purple-500/10 to-pink-500/10',
+    gradient: 'from-[var(--color-accent)]/10 to-[var(--color-accent-light)]/30',
   },
 ];
 

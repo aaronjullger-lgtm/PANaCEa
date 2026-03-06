@@ -483,7 +483,7 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                      <Layers className="w-5 h-5 text-action-blue-600" />
+                      <Layers className="w-5 h-5 text-[var(--color-accent)]" />
                       {system.name}
                     </h3>
                     <p className="text-sm text-data-neutral leading-relaxed">{system.description}</p>

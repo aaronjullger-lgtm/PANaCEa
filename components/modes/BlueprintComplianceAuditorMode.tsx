@@ -208,7 +208,7 @@ export function BlueprintComplianceAuditorMode() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <Target className="w-8 h-8 text-blue-600" />
+              <Target className="w-8 h-8 text-[var(--color-accent)]" />
               Blueprint Compliance Auditor
             </h1>
             <p className="text-gray-600 mt-2">
@@ -409,8 +409,8 @@ export function BlueprintComplianceAuditorMode() {
                   <CardContent>
                     <ul className="space-y-3">
                       {currentData.recommendations.map((rec, idx) => (
-                        <li key={idx} className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-                          <AlertTriangle className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                        <li key={idx} className="flex items-start gap-3 p-3 bg-[var(--color-accent)]/10 rounded-lg">
+                          <AlertTriangle className="w-5 h-5 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
                           <span className="text-gray-800">{rec}</span>
                         </li>
                       ))}

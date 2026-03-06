@@ -34,6 +34,7 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response): P
     const user = await prisma.user.upsert({
       where: { clerkId: userId },
       create: {
+        id: crypto.randomUUID(),
         clerkId: userId,
         email: '', // Will be updated by Clerk webhook
         role: 'USER',

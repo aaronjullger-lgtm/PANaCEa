@@ -165,7 +165,7 @@ export function QuestionGeneratorPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
         <span className="ml-2 text-lg">Loading taxonomies...</span>
       </div>
     );
@@ -179,7 +179,7 @@ export function QuestionGeneratorPage() {
         <p className="text-slate-600 mb-6">You must be an administrator to view this page.</p>
         <button
           onClick={() => navigate(ROUTES.HOME)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
         >
           Return Home
         </button>
@@ -313,7 +313,7 @@ export function QuestionGeneratorPage() {
               <button
                 onClick={handleGenerate}
                 disabled={generating || !selectedTaxonomy}
-                className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg flex items-center justify-center gap-2 hover:bg-blue-600 disabled:opacity-50"
+                className="w-full px-4 py-3 bg-[var(--color-accent)] text-white rounded-lg flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50"
               >
                 {generating ? (
                   <>
@@ -358,7 +358,7 @@ export function QuestionGeneratorPage() {
               <button
                 onClick={handleGenerate}
                 disabled={generating || !selectedTaxonomy}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 disabled:opacity-50"
               >
                 <Plus className="w-4 h-4" /> Generate Your First Question
               </button>
@@ -398,7 +398,7 @@ export function QuestionGeneratorPage() {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--color-accent)]/10 text-[var(--color-accent)] rounded-full text-sm font-medium">
                         {q.system || selectedTaxonomy}
                         <span className="text-xs">•</span>
                         {q.type}
@@ -467,7 +467,7 @@ export function QuestionGeneratorPage() {
                     <div className="flex items-center gap-4">
                       <button
                         onClick={() => handleSaveQuestion(q)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-[var(--color-accent)] hover:underline"
                       >
                         Save
                       </button>
@@ -501,7 +501,7 @@ export function QuestionGeneratorPage() {
                     <button
                       key={idx}
                       onClick={() => setPreviewIndex(idx)}
-                      className={`w-2 h-2 rounded-full ${idx === previewIndex ? 'bg-blue-500' : 'bg-slate-300'}`}
+                      className={`w-2 h-2 rounded-full ${idx === previewIndex ? 'bg-[var(--color-accent)]' : 'bg-slate-300'}`}
                       aria-label={`Go to question ${idx + 1}`}
                     />
                   ))}

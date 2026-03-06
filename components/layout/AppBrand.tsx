@@ -45,9 +45,9 @@ export const AppBrand: React.FC<AppBrandProps> = ({
 
   const brandContent = (
     <>
-      <img src={LOGO_LIGHT} alt={BRAND_ALT} className={`${logoClass} w-auto dark:hidden`} />
-      <img src={LOGO_DARK} alt={BRAND_ALT} className={`${logoClass} w-auto hidden dark:block`} />
-      <span className={`font-bold text-[var(--color-text-primary)] font-poppins ${textClass}`}>
+      <img key="logo-light" src={LOGO_LIGHT} alt={BRAND_ALT} className={`${logoClass} w-auto dark:hidden`} />
+      <img key="logo-dark" src={LOGO_DARK} alt={BRAND_ALT} className={`${logoClass} w-auto hidden dark:block`} />
+      <span key="brand-text" className={`font-bold text-[var(--color-text-primary)] font-poppins ${textClass}`}>
         PANaCEa
       </span>
     </>

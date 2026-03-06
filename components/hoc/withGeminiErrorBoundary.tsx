@@ -59,7 +59,7 @@ export const WithGeminiErrorBoundary: React.FC<WithGeminiErrorBoundaryProps> = (
   viewName,
   onRetry,
 }) => {
-  return <GeminiErrorBoundary onRetry={onRetry}>{children}</GeminiErrorBoundary>;
+  return <GeminiErrorBoundary key={viewName} onRetry={onRetry}>{children}</GeminiErrorBoundary>;
 };
 
 /**

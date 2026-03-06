@@ -74,14 +74,14 @@ const TOAST_STYLES: Record<ToastVariant, string> = {
     'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700/50 text-red-800 dark:text-red-200',
   warning:
     'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700/50 text-amber-800 dark:text-amber-200',
-  info: 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700/50 text-blue-800 dark:text-blue-200',
+  info: 'bg-[var(--color-bg-secondary)] dark:bg-[var(--color-bg-tertiary)] border-[var(--color-accent)]/30 text-[var(--color-text-primary)]',
 };
 
 const ICON_STYLES: Record<ToastVariant, string> = {
   success: 'text-emerald-500 dark:text-emerald-400',
   error: 'text-red-500 dark:text-red-400',
   warning: 'text-amber-500 dark:text-amber-400',
-  info: 'text-blue-500 dark:text-blue-400',
+  info: 'text-[var(--color-accent)]',
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {

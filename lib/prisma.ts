@@ -73,8 +73,9 @@ NODE_ENV: ${process.env.NODE_ENV || 'undefined'}
 
   // LOCAL DEVELOPMENT & TESTING: Use PG Adapter to satisfy WASM engine requirements
   if (isDevelopment) {
+    const connUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
     const pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: connUrl,
     });
 
     const adapter = new PrismaPg(pool);

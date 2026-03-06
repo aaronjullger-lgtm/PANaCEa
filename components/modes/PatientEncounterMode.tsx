@@ -975,7 +975,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       case 'essential':
         return 'text-sage-700 bg-sage-50 border-sage-200 dark:text-sage-300 dark:bg-sage-950/30 dark:border-sage-900';
       case 'helpful':
-        return 'text-action-blue-700 bg-action-blue-50 border-action-blue-200 dark:text-action-blue-300 dark:bg-action-blue-950/30 dark:border-action-blue-900';
+        return 'text-[var(--color-accent)] bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/40';
       case 'unnecessary':
         return 'text-muted-amber-700 bg-muted-amber-50 border-muted-amber-200 dark:text-muted-amber-300 dark:bg-muted-amber-950/30 dark:border-muted-amber-900';
       case 'redundant':
@@ -2684,17 +2684,17 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   )}
                 </>
               ) : (
-                <div className="rounded-lg border border-data-neutral bg-data-neutral/50 p-4">
-                  <p className="font-medium text-data-neutral">Rubric: Unavailable for this case</p>
-                  <p className="text-sm text-data-neutral mt-1">
-                    Grading could not be completed; you still have Preceptor feedback below.
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] p-4">
+                  <p className="font-medium text-[var(--color-text-primary)]">Rubric unavailable for this case</p>
+                  <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                    Grading could not be completed. You can retry below or use the Preceptor feedback.
                   </p>
                   {session?.id && (
                     <button
                       type="button"
                       onClick={handleRetryGrading}
                       disabled={gradeResultLoading}
-                      className="mt-3 px-3 py-2 text-sm font-medium rounded-lg bg-data-neutral hover:bg-data-neutral disabled:opacity-50 text-white transition-colors"
+                      className="mt-3 px-3 py-2 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-white hover:opacity-90 disabled:opacity-50 transition-colors"
                     >
                       {gradeResultLoading ? 'Grading…' : 'Retry grading'}
                     </button>
@@ -2778,26 +2778,26 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
-              className="bg-action-blue-50 dark:bg-action-blue-900/20 rounded-xl p-6 border border-action-blue-200 dark:border-action-blue-800"
+              className="bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 rounded-xl p-6 border border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/40"
             >
-              <h3 className="text-lg font-semibold mb-3 text-action-blue-700 dark:text-action-blue-300">
+              <h3 className="text-lg font-semibold mb-3 text-[var(--color-accent)]">
                 Correct Diagnosis
               </h3>
-              <p className="text-2xl font-bold text-action-blue-900 dark:text-action-blue-100 mb-3">
+              <p className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
                 {currentCase.correctDiagnosis}
               </p>
               {currentCase.teachingPoints && currentCase.teachingPoints.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-action-blue-200 dark:border-action-blue-800">
-                  <p className="text-sm font-semibold text-action-blue-700 dark:text-action-blue-300 mb-2">
+                <div className="mt-4 pt-4 border-t border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/40">
+                  <p className="text-sm font-semibold text-[var(--color-accent)] mb-2">
                     Teaching Points:
                   </p>
                   <ul className="space-y-1">
                     {currentCase.teachingPoints.map((point, idx) => (
                       <li
                         key={idx}
-                        className="text-sm text-action-blue-900 dark:text-action-blue-100 flex items-start gap-2"
+                        className="text-sm text-[var(--color-text-primary)] flex items-start gap-2"
                       >
-                        <Award className="w-4 h-4 text-action-blue-500 flex-shrink-0 mt-0.5" />
+                        <Award className="w-4 h-4 text-[var(--color-accent)] flex-shrink-0 mt-0.5" />
                         <span>{point}</span>
                       </li>
                     ))}
@@ -2961,7 +2961,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               transition={{ delay: 0.3 }}
               className="bg-card rounded-xl p-6 border border-border text-center shadow-sm"
             >
-              <Clock className="w-8 h-8 text-action-blue-500 dark:text-action-blue-400 mx-auto mb-2" />
+              <Clock className="w-8 h-8 text-[var(--color-accent)] mx-auto mb-2" />
               <p className="text-sm text-muted-foreground mb-1">Efficiency</p>
               <p className={`text-4xl font-bold ${getScoreColor(score.efficiency)}`}>
                 {Math.round(score.efficiency)}%

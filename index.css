@@ -255,6 +255,15 @@ a,
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
+  /* Primary CTA button - Darker gold for primary CTAs only (one per screen) */
+  .btn-primary-cta {
+    @apply px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-md
+           bg-[var(--color-accent-cta)] text-white
+           hover:brightness-110 hover:shadow-lg
+           active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
   /* Pill Selection Controls - Medical Theme with High Contrast */
   .pill-select {
     @apply px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 cursor-pointer;
@@ -385,6 +394,7 @@ a,
   --color-accent-hover: #475569; /* Slate-600 */
   --color-accent-button: #475569; /* Slate-600 for buttons — 4.8:1 contrast with white (WCAG AA) */
   --color-accent-border: #9a8f72; /* Lighter gold for borders to improve contrast */
+  --color-accent-cta: #7a6f52; /* Darker gold for primary CTAs only (one per screen) */
   --color-accent-secondary: #728ba6; /* Steel blue - charts, secondary CTAs */
   --color-accent-light: #f5f2ec;
   --color-overlay: rgba(15, 23, 42, 0.5);
@@ -571,6 +581,8 @@ a,
   --color-accent-hover: #cbd5e1; /* Slate-300 */
   --color-accent-button: #64748b; /* Slate-500 for better text contrast (WCAG AA) */
   --color-accent-border: #c4b78a; /* Lighter gold for borders to improve visibility */
+  --color-accent-cta: #c4b78a; /* Gold for primary CTAs in dark mode (sufficient contrast) */
+  --color-accent-cta-dark: #c4b78a; /* Gold for primary CTAs in dark mode (sufficient contrast) */
   --color-accent-secondary: #91a6bd; /* Steel blue (lighter) - charts, secondary CTAs */
   --color-accent-light: #1e293b;
   --color-text-inverse: #f8fafc;

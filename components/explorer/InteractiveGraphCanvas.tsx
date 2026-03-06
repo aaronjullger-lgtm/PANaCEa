@@ -601,7 +601,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
               )}
               <div className="mt-2 flex flex-wrap gap-1">
                 {selectedNode.systemCodes.map(code => (
-                  <span key={code} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                  <span key={code} className="px-2 py-1 bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-xs rounded">
                     {code}
                   </span>
                 ))}

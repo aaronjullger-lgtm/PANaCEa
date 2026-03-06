@@ -133,7 +133,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
         {/* Quick Stats Bar */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between p-3 hover:bg-[var(--color-bg-secondary)] transition-colors"
+          className="w-full flex items-center justify-between p-3 hover:bg-[var(--color-bg-secondary)] transition-colors min-h-[44px]"
         >
           <div className="flex items-center gap-4">
             {/* Question Count */}

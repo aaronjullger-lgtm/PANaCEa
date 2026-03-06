@@ -275,9 +275,9 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
 
       <div className="w-full grid gap-4 md:grid-cols-2">
         <AnimatePresence mode="popLayout">
-          {recommendations.map((rec) => (
+          {recommendations.map((rec, index) => (
             <motion.div
-              key={rec.id}
+              key={rec.id || `rec-${index}-${rec.topic}-${rec.type}`}
               layout
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}

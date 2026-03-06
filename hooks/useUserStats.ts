@@ -107,6 +107,9 @@ export function useUserStats(): UseUserStatsResult {
     persistenceEnabledRef.current = true;
   }, []);
 
+  // Track that we've run initial sync for this sign-in (avoids re-running when other state updates)
+  const initialSyncDoneRef = useRef(false);
+
   /**
    * Upload local data to cloud
    */
@@ -296,6 +299,7 @@ export function useUserStats(): UseUserStatsResult {
   // Clear loading and sync state when user signs out (handles sign-out before sync completes)
   useEffect(() => {
     if (!isSignedIn || !user) {
+      initialSyncDoneRef.current = false;
       setIsLoading(false);
       setIsSyncing(false);
       setSyncError(null);
@@ -307,6 +311,10 @@ export function useUserStats(): UseUserStatsResult {
     if (!isSignedIn || !user) {
       return;
     }
+    if (initialSyncDoneRef.current) {
+      return;
+    }
+    initialSyncDoneRef.current = true;
 
     // Prefer the in-memory state (initialized from localStorage during render).
     // This avoids edge cases where some other test/code clears localStorage between
