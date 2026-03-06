@@ -157,6 +157,13 @@ export class FSRS {
     };
   }
 
+  /**
+   * Linear interpolation between a and b by t (0 <= t <= 1)
+   */
+  private lerp(a: number, b: number, t: number): number {
+    return a + (b - a) * t;
+  }
+
   createEmptyCard(): FSRSCard {
     return {
       stability: 0,
@@ -181,7 +188,7 @@ export class FSRS {
     return scheduled;
   }
 
-  next(card: FSRSCard, now: Date, rating: Rating): { card: FSRSCard; due: Date } {
+  next(card: FSRSCard, now: Date, rating: Rating | number): { card: FSRSCard; due: Date } {
     const newCard = { ...card };
 
     if (card.state === FSRSState.New) {
@@ -194,7 +201,8 @@ export class FSRS {
     newCard.last_review = now;
     newCard.reps += 1;
 
-    if (rating === Rating.Again) {
+    // Lapse increment for ratings below 1.5 (Again)
+    if (rating < 1.5) {
       newCard.lapses += 1;
     }
 
@@ -204,8 +212,8 @@ export class FSRS {
       newCard.state = FSRSState.Learning;
     } else if (card.state === FSRSState.Learning || card.state === FSRSState.Relearning) {
       this.next_ds(newCard, rating);
-      newCard.state =
-        rating === Rating.Good || rating === Rating.Easy ? FSRSState.Review : FSRSState.Learning;
+      // Transition to Review if rating >= 2.5 (Good/Easy), otherwise stay in Learning/Relearning
+      newCard.state = rating >= 2.5 ? FSRSState.Review : FSRSState.Learning;
     } else if (card.state === FSRSState.Review) {
       // Use recalculated elapsed_days, not the stale value from input card
       const interval = newCard.elapsed_days;
@@ -220,7 +228,7 @@ export class FSRS {
 
       this.next_ds(newCard, rating);
 
-      if (rating === Rating.Again) {
+      if (rating < 1.5) {
         newCard.state = FSRSState.Relearning;
         newCard.stability = this.next_forget_stability(last_d, last_s, retrievability);
       } else {
@@ -245,14 +253,40 @@ export class FSRS {
     if (newCard.state === FSRSState.Review) {
       next_interval = this.next_interval(newCard.stability);
     } else {
-      // Learning steps (graduated intervals)
-      // Again: ~5min, Hard: ~10min, Good: 1day, Easy: 4days
-      if (rating === Rating.Again)
-        next_interval = 0.0035; // ~5 min
-      else if (rating === Rating.Hard)
-        next_interval = 0.007; // ~10 min
-      else if (rating === Rating.Good) next_interval = 1;
-      else if (rating === Rating.Easy) next_interval = 4;
+      // Learning steps (graduated intervals) with interpolation for float ratings
+      if (Number.isInteger(rating)) {
+        // Backwards compatibility: integer ratings produce same intervals as before
+        switch (rating) {
+          case 1:
+            next_interval = 0.0035; // ~5 min
+            break;
+          case 2:
+            next_interval = 0.007; // ~10 min
+            break;
+          case 3:
+            next_interval = 1; // 1 day
+            break;
+          case 4:
+            next_interval = 4; // 4 days
+            break;
+          default:
+            // fallback to interpolation (should not happen)
+            next_interval = this.lerp(0.0035, 4, (rating - 1) / 3);
+        }
+      } else {
+        // Continuous interpolation using bucket boundaries (1.5, 2.5, 3.5)
+        if (rating < 1.5) {
+          next_interval = 0.0035; // ~5 min
+        } else if (rating < 2.5) {
+          // interpolate between 0.007 (Hard) and 1 (Good)
+          next_interval = this.lerp(0.007, 1, rating - 1.5);
+        } else if (rating < 3.5) {
+          // interpolate between 1 (Good) and 4 (Easy)
+          next_interval = this.lerp(1, 4, rating - 2.5);
+        } else {
+          next_interval = 4;
+        }
+      }
     }
 
     newCard.scheduled_days = next_interval;
@@ -292,7 +326,7 @@ export class FSRS {
    * @param rating - User's rating
    * @returns Updated short-term stability
    */
-  private next_short_term_stability(stability: number, rating: Rating): number {
+  private next_short_term_stability(stability: number, rating: number): number {
     const w17Val = this.p.w[17];
     const w18Val = this.p.w[18];
     const w19Val = this.p.w[19];
@@ -314,8 +348,15 @@ export class FSRS {
    * Initialize difficulty and stability for a new card
    * FSRS v6: Uses exponential formula for initial difficulty
    */
-  private init_ds(card: FSRSCard, rating: Rating): void {
-    card.stability = this.p.w[rating - 1] ?? 1;
+  private init_ds(card: FSRSCard, rating: number): void {
+    // Interpolate between w[floor] and w[ceil] where floor = Math.floor(rating - 1), ceil = Math.ceil(rating - 1)
+    const index = rating - 1;
+    const floor = Math.floor(index);
+    const ceil = Math.ceil(index);
+    const t = index - floor;
+    const wFloor = this.p.w[floor] ?? 1;
+    const wCeil = this.p.w[ceil] ?? 1;
+    card.stability = this.lerp(wFloor, wCeil, t);
     card.difficulty = this.init_difficulty(rating);
   }
 
@@ -326,7 +367,7 @@ export class FSRS {
    * @param rating - User's rating (1-4)
    * @returns Initial difficulty value (constrained to 1-10)
    */
-  private init_difficulty(rating: Rating): number {
+  private init_difficulty(rating: number): number {
     const w4 = this.p.w[4] ?? 6.4133;
     const w5 = this.p.w[5] ?? 0.8334;
     return this.constrain_difficulty(w4 - Math.exp((rating - 1) * w5) + 1);
@@ -336,7 +377,7 @@ export class FSRS {
    * Update difficulty after a review
    * FSRS v6: Uses linear_damping for difficulty changes
    */
-  private next_ds(card: FSRSCard, rating: Rating): void {
+  private next_ds(card: FSRSCard, rating: number): void {
     const delta_d = -(this.p.w[6] ?? 0) * (rating - 3);
     const next_d = card.difficulty + this.linear_damping(delta_d, card.difficulty);
     // Mean reversion targets init_difficulty(Easy) per official ts-fsrs
@@ -377,14 +418,28 @@ export class FSRS {
   /**
    * Calculate new stability after successful recall
    */
-  private next_recall_stability(d: number, s: number, r: number, rating: Rating): number {
+  private next_recall_stability(d: number, s: number, r: number, rating: number): number {
     const w8 = this.p.w[8] ?? 1.8722;
     const w9 = this.p.w[9] ?? 0.1666;
     const w10 = this.p.w[10] ?? 0.796;
     const w15 = this.p.w[15] ?? 0.6014;
     const w16 = this.p.w[16] ?? 1.8729;
-    const hard_penalty = rating === Rating.Hard ? w15 : 1;
-    const easy_bonus = rating === Rating.Easy ? Math.max(1.08, w16) : 1;
+    
+    // Hard penalty interpolation between w15 (rating <= 2) and 1 (rating >= 3)
+    let hard_penalty = 1;
+    if (rating <= 2) {
+      hard_penalty = w15;
+    } else if (rating < 3) {
+      hard_penalty = this.lerp(w15, 1, rating - 2);
+    }
+    
+    // Easy bonus interpolation between 1 (rating <= 3) and max(1.08, w16) (rating >= 4)
+    let easy_bonus = 1;
+    if (rating >= 4) {
+      easy_bonus = Math.max(1.08, w16);
+    } else if (rating > 3) {
+      easy_bonus = this.lerp(1, Math.max(1.08, w16), rating - 3);
+    }
 
     return (
       s *

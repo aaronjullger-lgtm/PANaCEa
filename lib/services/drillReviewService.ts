@@ -22,6 +22,7 @@ import { propagateRecallToSiblings } from './semanticSiblingService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from './userStatisticsService';
 import { applyHonestRating } from '../srs/ghostGrader';
 import { getRolling360Service } from './rolling360Service';
+import { applyEorClampIfNeeded } from '../fsrs/eorScheduler';
 
 /** Map lib/circadian phase to ReviewLog CircadianPhase enum */
 function toCircadianPhaseEnum(phase: string): PrismaCircadianPhase | undefined {
@@ -189,6 +190,7 @@ export interface DrillReviewLogger {
  * Submit a drill review: process answer, update FSRS, record telemetry, update progress.
  * This path is the canonical writer for QuestionAttempt with implicitConfidence (used by calibration).
  * When sessionType is 'main' or omitted, reviews are written to UserProgress.reviewHistory for FSRS.
+ * When eorRotationEnd is set (EOR mode), next-review date is clamped to rotation end.
  */
 export async function submitDrillReview(
   prisma: PrismaClient,
@@ -201,7 +203,9 @@ export async function submitDrillReview(
     medicalContentId?: string | null;
     system?: string | null;
   },
-  logger?: DrillReviewLogger
+  logger?: DrillReviewLogger,
+  /** When set (EOR mode), next-review date is clamped to this date. */
+  eorRotationEnd?: Date | null
 ): Promise<SubmitDrillReviewResult> {
   const {
     questionId,
@@ -315,7 +319,10 @@ export async function submitDrillReview(
     tremorScore,
   });
 
-  const gradeContinuous = continuousResult.grade;
+  let gradeContinuous = continuousResult.grade;
+  if (rating === Rating.Hard && gradeContinuous > 2.0) {
+    gradeContinuous = 2.0;
+  }
   const implicitConfidence = continuousResult.confidence;
 
   const quality =
@@ -510,9 +517,8 @@ export async function submitDrillReview(
             : new Date(),
       };
 
-      const { card: rawCard } = fsrs.next(currentCard, new Date(), rating);
-      const gradeModifier = applyStabilityModifierFromGrade(gradeContinuous);
-      let modifiedStability = rawCard.stability * gradeModifier;
+      const { card: rawCard } = fsrs.next(currentCard, new Date(), gradeContinuous);
+      let modifiedStability = rawCard.stability;
       modifiedStability = applyCircadianModifier(modifiedStability, circadianContext);
       // implicitConfidence is floored at 0.5 → implicitDifficulty maxes at 0.5.
       // Using >= instead of > so the modifier can actually fire at the boundary.
@@ -522,10 +528,13 @@ export async function submitDrillReview(
       }
       const updatedCard = { ...rawCard, stability: Math.max(0.01, modifiedStability) };
 
-      // Capture real FSRS schedule for the API response
+      const rawNextDue = new Date(Date.now() + updatedCard.scheduled_days * 86400000);
+      const { due: clampedNextDue } = applyEorClampIfNeeded(rawNextDue, eorRotationEnd ?? null);
+
+      // Capture real FSRS schedule for the API response (use clamped date when in EOR mode)
       fsrsSchedule = {
         intervalDays: updatedCard.scheduled_days,
-        nextDueDate: new Date(Date.now() + updatedCard.scheduled_days * 86400000).toISOString(),
+        nextDueDate: clampedNextDue.toISOString(),
         stability: updatedCard.stability,
         difficulty: updatedCard.difficulty,
       };
@@ -604,6 +613,7 @@ export async function submitDrillReview(
           fsrsCard: updatedCard,
           rating,
           accuracy: isCorrect ? 1.0 : 0.0,
+          nextReviewAt: eorRotationEnd ? clampedNextDue : undefined,
         });
 
         try {

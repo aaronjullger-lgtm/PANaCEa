@@ -17,6 +17,7 @@ import {
   FSRSState,
   FSRSCard,
 } from '../../../lib/fsrs';
+import { getEorRotationEnd, applyEorClampIfNeeded } from '../../../lib/fsrs/eorScheduler';
 import { VariantQueueService } from '../../../services/core/variantQueueService';
 import { getTaskTypeFromContent } from '../../../lib/taskTypes';
 import {
@@ -30,6 +31,7 @@ const SRSSubmitSchema = z.object({
     topicProgressId: z.string().uuid().optional(),
     questionId: z.string().uuid(),
     rating: z.number().int().min(1).max(4), // FSRS Rating: 1=Again, 2=Hard, 3=Good, 4=Easy
+    gradeContinuous: z.number().min(1).max(4).optional(),
     isCorrect: z.boolean(),
     userAnswer: z.string().optional(),
     timeSpent: z.number().optional(),
@@ -55,13 +57,14 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       topicProgressId,
       questionId,
       rating,
+      gradeContinuous,
       isCorrect,
       variantId,
       attemptId,
       telemetry,
     } = validated.body;
 
-    let effectiveRating = rating;
+    let effectiveRating = gradeContinuous !== undefined ? gradeContinuous : rating;
     let implicitDifficulty: number | null = null;
 
     if (telemetry != null || attemptId != null) {
@@ -103,10 +106,16 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       }
     }
 
-    // Get user's database ID
+    // Get user's database ID and EOR context for time-blocked scheduling
     const user = await prisma.user.findUnique({
       where: { clerkId: auth.userId },
-      select: { id: true },
+      select: {
+        id: true,
+        yearInProgram: true,
+        currentRotation: true,
+        eorTestDate: true,
+        rotationEndDate: true,
+      },
     });
 
     if (!user) {
@@ -118,6 +127,12 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
     }
 
     const dbUserId = user.id;
+    const eorRotationEnd = getEorRotationEnd({
+      yearInProgram: user.yearInProgram,
+      currentRotation: user.currentRotation,
+      eorTestDate: user.eorTestDate?.toISOString() ?? null,
+      rotationEndDate: user.rotationEndDate?.toISOString() ?? null,
+    });
     const fsrs = new FSRS();
     const now = new Date();
 
@@ -156,14 +171,15 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       }
     }
 
-    const ratingForFsrs = effectiveRating as 1 | 2 | 3 | 4;
+    const ratingForFsrs = effectiveRating;
 
     // Update UserTopicProgress (Primary driver for Variants)
     if (topicProgress) {
       const card = topicProgressToCard(topicProgress);
       const scheduled = fsrs.next(card, now, ratingForFsrs);
       reviewState = scheduled.card;
-      nextReviewDate = scheduled.due;
+      const { due: clampedDue } = applyEorClampIfNeeded(scheduled.due, eorRotationEnd);
+      nextReviewDate = clampedDue;
 
       let stability = reviewState.stability;
       if (implicitDifficulty != null && implicitDifficulty > 0.5) {
@@ -187,7 +203,8 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       const emptyCard = fsrs.createEmptyCard();
       const scheduled = fsrs.next(emptyCard, now, ratingForFsrs);
       reviewState = scheduled.card;
-      nextReviewDate = scheduled.due;
+      const { due: clampedDue } = applyEorClampIfNeeded(scheduled.due, eorRotationEnd);
+      nextReviewDate = clampedDue;
 
       let stability = reviewState.stability;
       if (implicitDifficulty != null && implicitDifficulty > 0.5) {
@@ -228,11 +245,13 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
 
         const scheduled = fsrs.next(card, now, ratingForFsrs);
 
+        const { due: clampedDue } = applyEorClampIfNeeded(scheduled.due, eorRotationEnd);
+
         await prisma.sRSItem.update({
           where: { id: srsItemId },
           data: {
             lastReviewed: now,
-            dueDate: scheduled.due,
+            dueDate: clampedDue,
             repetition: scheduled.card.reps,
             fsrsStability: scheduled.card.stability,
             fsrsDifficulty: scheduled.card.difficulty,
