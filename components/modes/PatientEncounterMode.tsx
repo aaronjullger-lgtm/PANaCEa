@@ -2640,10 +2640,25 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   <div className="h-4 bg-data-neutral rounded animate-pulse w-5/6" />
                   <p className="text-sm text-data-neutral mt-2">Grading…</p>
                 </div>
-              ) : gradeResult &&
-                (gradeResult.checklist?.length > 0 || gradeResult.redFlagsMissed?.length > 0) ? (
+              ) : gradeResult ? (
                 <>
-                  {gradeResult.checklist?.length > 0 && (
+                  {/* Score summary */}
+                  <div className="flex items-center gap-4 mb-4 p-3 bg-data-neutral rounded-lg border border-data-neutral">
+                    <div className="flex-1 text-center">
+                      <p className="text-xs text-data-neutral uppercase tracking-wider">Score</p>
+                      <p className="text-2xl font-bold text-data-neutral">{gradeResult.score}</p>
+                      <p className="text-xs text-data-neutral">out of 100</p>
+                    </div>
+                    <div className="h-10 w-px bg-data-neutral" />
+                    <div className="flex-1 text-center">
+                      <p className="text-xs text-data-neutral uppercase tracking-wider">Clinical Reasoning</p>
+                      <p className="text-2xl font-bold text-data-neutral">{gradeResult.clinicalReasoningScore}</p>
+                      <p className="text-xs text-data-neutral">out of 100</p>
+                    </div>
+                  </div>
+
+                  {/* Checklist if any */}
+                  {gradeResult.checklist?.length > 0 ? (
                     <ul className="space-y-2 mb-4">
                       {gradeResult.checklist.map((item, idx) => (
                         <li
@@ -2668,7 +2683,16 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                         </li>
                       ))}
                     </ul>
+                  ) : (
+                    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] p-4 mb-4">
+                      <p className="font-medium text-[var(--color-text-primary)]">No critical actions tracked</p>
+                      <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                        This case did not include a specific rubric checklist.
+                      </p>
+                    </div>
                   )}
+
+                  {/* Red flags if any */}
                   {gradeResult.redFlagsMissed?.length > 0 && (
                     <div>
                       <p className="text-sm font-semibold text-data-fail mb-2">Red flags missed:</p>
