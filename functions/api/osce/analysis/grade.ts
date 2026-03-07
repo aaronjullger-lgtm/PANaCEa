@@ -53,6 +53,12 @@ type SoftSkillsReport = {
   pacing: { score: number; feedback: string };
 };
 
+const SoftSkillsReportSchema = z.object({
+  empathy: z.object({ score: z.number().min(1).max(5), feedback: z.string() }),
+  professionalism: z.object({ score: z.number().min(1).max(5), feedback: z.string() }),
+  pacing: z.object({ score: z.number().min(1).max(5), feedback: z.string() }),
+});
+
 /** Validates a single grade checklist item from Gemini before persisting */
 const GRADE_CHECKLIST_ITEM = z.object({
   item: z.string(),
@@ -60,6 +66,15 @@ const GRADE_CHECKLIST_ITEM = z.object({
   feedback: z.string(),
 });
 type GradeChecklistItem = z.infer<typeof GRADE_CHECKLIST_ITEM>;
+
+const GradePayloadSchema = z.object({
+  score: z.number().min(0).max(100),
+  checklist: z.array(GRADE_CHECKLIST_ITEM).default([]),
+  redFlagsMissed: z.array(z.string()).default([]),
+  clinicalReasoningScore: z.number().min(0).max(100),
+  billingCodeSuggestion: z.string().default('N/A'),
+});
+
 
 function validateGradeChecklist(
   items: unknown[],
@@ -131,12 +146,13 @@ async function callGeminiSoftSkills(
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) return null;
   try {
-    return JSON.parse(
+    const parsed = JSON.parse(
       text
         .replace(/^```json\s*/i, '')
         .replace(/\s*```\s*$/i, '')
         .trim()
-    ) as SoftSkillsReport;
+    );
+    return SoftSkillsReportSchema.parse(parsed);
   } catch {
     return null;
   }
@@ -180,20 +196,34 @@ function parseGradePayload(
     .replace(/^```json\s*/i, '')
     .replace(/\s*```\s*$/i, '')
     .trim();
-  const parsed = JSON.parse(stripped) as GradePayload;
-  const rawChecklist = Array.isArray(parsed.checklist) ? parsed.checklist : [];
+  const parsed = JSON.parse(stripped) as unknown;
+  
+  // Clean checklist and redFlagsMissed, preserving logging of dropped items
+  const rawChecklist = Array.isArray((parsed as any).checklist) ? (parsed as any).checklist : [];
   const checklist = validateGradeChecklist(rawChecklist, log);
-  const redFlagsMissed = Array.isArray(parsed.redFlagsMissed)
-    ? parsed.redFlagsMissed.filter((x): x is string => typeof x === 'string')
-    : [];
-  return {
-    score: Number(parsed.score) || 0,
+  const rawRedFlags = Array.isArray((parsed as any).redFlagsMissed) ? (parsed as any).redFlagsMissed : [];
+  const redFlagsMissed = rawRedFlags.filter((x): x is string => typeof x === 'string');
+  
+  const cleaned = {
+    score: Number((parsed as any).score) || 0,
     checklist,
     redFlagsMissed,
-    clinicalReasoningScore: Number(parsed.clinicalReasoningScore) || 0,
-    billingCodeSuggestion:
-      typeof parsed.billingCodeSuggestion === 'string' ? parsed.billingCodeSuggestion : 'N/A',
+    clinicalReasoningScore: Number((parsed as any).clinicalReasoningScore) || 0,
+    billingCodeSuggestion: typeof (parsed as any).billingCodeSuggestion === 'string'
+      ? (parsed as any).billingCodeSuggestion
+      : 'N/A',
   };
+  
+  // Validate with Zod schema to enforce ranges and types
+  try {
+    return GradePayloadSchema.parse(cleaned);
+  } catch (error) {
+    // If validation fails, log and rethrow (caller will handle)
+    if (log) {
+      log('Grade payload validation failed', { error, cleaned });
+    }
+    throw error;
+  }
 }
 
 interface SessionWithCase {
@@ -413,6 +443,18 @@ Output your grading as a single JSON object only.`;
         log.warn(msg, meta as Record<string, unknown>)
       );
     } catch (error_) {
+      if (error_ instanceof z.ZodError) {
+        log.error('Gemini returned invalid grade payload', {
+          raw: rawText.slice(0, 300),
+          issues: error_.issues
+        });
+        return {
+          status: 422,
+          error: 'Invalid grading response format',
+          details: error_.issues.map(issue => issue.message).join(', ')
+        };
+      }
+      // JSON parse error or other unexpected error
       log.error('Failed to parse Gemini JSON', { raw: rawText.slice(0, 300), err: error_ });
       return { status: 502, error: 'Invalid grading response format' };
     }

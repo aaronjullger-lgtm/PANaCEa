@@ -47,6 +47,22 @@ export const onRequestPost = authenticatedEndpoint(
         return { status: 404, error: 'User not found' };
       }
 
+      // Fetch the session first to check status and ensure idempotency
+      const session = await prisma.patientEncounterSession.findUnique({
+        where: { id: sessionId, userId: user.id },
+        select: { status: true }
+      });
+
+      if (!session) {
+        log.warn('Session not found on complete', { sessionId, userId: user.id });
+        return { status: 404, error: 'Session not found' };
+      }
+
+      if (session.status === 'completed') {
+        log.info('Session already completed, idempotent success', { sessionId });
+        return { data: { success: true, alreadyCompleted: true } };
+      }
+
       const updated = await prisma.patientEncounterSession.updateMany({
         where: { id: sessionId, userId: user.id },
         data: {
@@ -57,12 +73,11 @@ export const onRequestPost = authenticatedEndpoint(
         },
       });
 
+      // Since we already checked the session exists and is active, count should be 1
       if (updated.count === 0) {
-        log.warn('No session updated on complete (not found or not owned by user)', {
-          sessionId,
-          userId: user.id,
-        });
-        return { status: 404, error: 'Session not found' };
+        // This should not happen, but guard against race conditions
+        log.error('Race condition: session not updated after status check', { sessionId });
+        return { status: 500, error: 'Internal server error' };
       }
 
       // NEW: Create CaseFile if analytics provided (Module 4)

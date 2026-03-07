@@ -26,7 +26,7 @@ import type {
   EncounterSession,
   PatientPersona,
 } from '@/types/drill-modes';
-import type { PlacedOrder, ExamFinding, OSCEScoreReport } from '@/types/osce-enhanced';
+import type { PlacedOrder, ExamFinding, OSCEScoreReport, BodyRegion, OrderCategory } from '@/types/osce-enhanced';
 
 // Import OSCE Enhancement Components
 import {
@@ -546,6 +546,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setIsTyping(true);
     detectInterventionIntent(currentQuestion);
 
+    // Track question in scoring engine
+    if (enhancedOSCE.state.isSessionActive) {
+      enhancedOSCE.processMessage(currentQuestion);
+    }
+
     // NEW: Track conversation node for echo path
     const parentNodeId =
       session.questions.length > 0 ? `node-${session.questions.length - 1}` : undefined;
@@ -708,6 +713,17 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setIsLoading(true);
     try {
       const result = await performPhysicalExam(examAction, currentCase);
+      // Track exam finding in scoring engine
+      if (enhancedOSCE.state.isSessionActive) {
+        const finding: ExamFinding = {
+          maneuverId: `exam-${examAction.toLowerCase().replace(/\s+/g, '-')}`,
+          maneuverName: examAction,
+          region: 'chest_anterior', // default region
+          finding: result,
+          isAbnormal: false,
+        };
+        enhancedOSCE.recordExamFinding(finding);
+      }
       setPhysicalFindings((prev) => [...prev, { maneuver: examAction, finding: result }]);
       setExamAction('');
     } catch (error) {
@@ -721,6 +737,21 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const handleOrderTest = async () => {
     if (!diagnosticOrder.trim() || !currentCase) return;
     setIsLoading(true);
+    // Track order in scoring engine
+    if (enhancedOSCE.state.isSessionActive) {
+      const category: OrderCategory = diagnosticOrder.toLowerCase().includes('ct') || diagnosticOrder.toLowerCase().includes('mri') || diagnosticOrder.toLowerCase().includes('xray') ? 'imaging' : 'labs';
+      const order: PlacedOrder = {
+        id: `order-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        itemId: `custom-${diagnosticOrder.toLowerCase().replace(/\s+/g, '-')}`,
+        itemName: diagnosticOrder,
+        category,
+        orderedAt: Date.now(),
+        status: 'pending',
+        isStat: false,
+        alerts: [],
+      };
+      enhancedOSCE.placeOrder(order);
+    }
     try {
       const data = await orderDiagnosticTest(diagnosticOrder, currentCase);
       setDiagnosticResults((prev) => [
