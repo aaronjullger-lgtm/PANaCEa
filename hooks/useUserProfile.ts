@@ -14,6 +14,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { mergeEorFieldsFromApi } from '@/services/analytics/userProfileService';
+import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
 // =============================================================================
 // Types (match API contract)
@@ -31,6 +33,9 @@ export interface UserProfileData {
   school: string | null;
   currentRotation: string | null;
   yearInProgram: string | null;
+  eorTestDate: string | null;
+  rotationStartDate: string | null;
+  rotationEndDate: string | null;
   hasCompletedBaseline: boolean;
   hasCompletedOnboarding: boolean;
   updatedAt: string;
@@ -45,6 +50,9 @@ export interface UserProfileUpdateInput {
   school?: string | null;
   currentRotation?: string | null;
   yearInProgram?: string | null;
+  eorTestDate?: string | null;
+  rotationStartDate?: string | null;
+  rotationEndDate?: string | null;
   hasCompletedBaseline?: boolean;
   hasCompletedOnboarding?: boolean;
 }
@@ -80,7 +88,7 @@ export async function fetchUserProfile(
   getToken: () => Promise<string | null>
 ): Promise<UserProfileData> {
   const token = await getToken();
-  const res = await fetch('/api/user/profile', {
+  const res = await fetch(getApiEndpoint(API_ENDPOINTS.USER_PROFILE), {
     method: 'GET',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
@@ -112,7 +120,7 @@ export async function updateUserProfile(
   }
 
   const token = await getToken();
-  const res = await fetch('/api/user/profile', {
+  const res = await fetch(getApiEndpoint(API_ENDPOINTS.USER_PROFILE), {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -172,6 +180,7 @@ export function useUserProfile(): UseUserProfileReturn {
     try {
       const data = await fetchUserProfile(getToken);
       setProfile(data);
+      mergeEorFieldsFromApi(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load profile');
       setProfile(null);
@@ -190,6 +199,7 @@ export function useUserProfile(): UseUserProfileReturn {
       try {
         const updated = await updateUserProfile(getToken, updates);
         setProfile(updated);
+        mergeEorFieldsFromApi(updated);
         return updated;
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Failed to update profile';

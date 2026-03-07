@@ -290,6 +290,21 @@ export const profileUpdateSchema = z
     school: z.string().max(200).optional().nullable(),
     currentRotation: z.string().max(100).optional().nullable(),
     yearInProgram: z.string().max(50).optional().nullable(),
+    eorTestDate: z
+      .string()
+      .refine((s) => !Number.isNaN(Date.parse(s)), { message: 'Invalid EOR test date format' })
+      .optional()
+      .nullable(),
+    rotationStartDate: z
+      .string()
+      .refine((s) => !Number.isNaN(Date.parse(s)), { message: 'Invalid rotation start date format' })
+      .optional()
+      .nullable(),
+    rotationEndDate: z
+      .string()
+      .refine((s) => !Number.isNaN(Date.parse(s)), { message: 'Invalid rotation end date format' })
+      .optional()
+      .nullable(),
     hasCompletedBaseline: z.boolean().optional(),
     hasCompletedOnboarding: z.boolean().optional(),
   })

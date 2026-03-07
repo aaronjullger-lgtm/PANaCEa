@@ -29,6 +29,15 @@ function buildProfileUpdateData(validated: ProfileUpdateValidated): Record<strin
   if (validated.school !== undefined) data.school = validated.school;
   if (validated.currentRotation !== undefined) data.currentRotation = validated.currentRotation;
   if (validated.yearInProgram !== undefined) data.yearInProgram = validated.yearInProgram;
+  if (validated.eorTestDate !== undefined) {
+    const dateValue = validated.eorTestDate ? new Date(validated.eorTestDate) : null;
+    data.eorTestDate = dateValue;
+    data.rotationExamDate = dateValue; // canonical store for EOR scheduler
+  }
+  if (validated.rotationStartDate !== undefined)
+    data.rotationStartDate = validated.rotationStartDate ? new Date(validated.rotationStartDate) : null;
+  if (validated.rotationEndDate !== undefined)
+    data.rotationEndDate = validated.rotationEndDate ? new Date(validated.rotationEndDate) : null;
   if (validated.hasCompletedBaseline !== undefined)
     data.hasCompletedBaseline = validated.hasCompletedBaseline;
   if (validated.hasCompletedOnboarding !== undefined)
@@ -65,6 +74,10 @@ export const onRequestGet = authenticatedEndpoint(
           school: true,
           currentRotation: true,
           yearInProgram: true,
+          rotationExamDate: true,
+          eorTestDate: true,
+          rotationStartDate: true,
+          rotationEndDate: true,
           hasCompletedBaseline: true,
           hasCompletedOnboarding: true,
           updatedAt: true,
@@ -86,6 +99,9 @@ export const onRequestGet = authenticatedEndpoint(
             ...user,
             examDate: user.examDate?.toISOString() ?? null,
             graduationDate: user.graduationDate?.toISOString() ?? null,
+            eorTestDate: (user.rotationExamDate ?? user.eorTestDate)?.toISOString() ?? null,
+            rotationStartDate: user.rotationStartDate?.toISOString() ?? null,
+            rotationEndDate: user.rotationEndDate?.toISOString() ?? null,
             updatedAt: user.updatedAt.toISOString(),
           },
         },
@@ -148,6 +164,10 @@ export const onRequestPut = authenticatedEndpoint(profileUpdateSchema, async (co
         school: true,
         currentRotation: true,
         yearInProgram: true,
+        rotationExamDate: true,
+        eorTestDate: true,
+        rotationStartDate: true,
+        rotationEndDate: true,
         hasCompletedBaseline: true,
         hasCompletedOnboarding: true,
         updatedAt: true,
@@ -163,6 +183,9 @@ export const onRequestPut = authenticatedEndpoint(profileUpdateSchema, async (co
           ...updatedUser,
           examDate: updatedUser.examDate?.toISOString() ?? null,
           graduationDate: updatedUser.graduationDate?.toISOString() ?? null,
+          eorTestDate: (updatedUser.rotationExamDate ?? updatedUser.eorTestDate)?.toISOString() ?? null,
+          rotationStartDate: updatedUser.rotationStartDate?.toISOString() ?? null,
+          rotationEndDate: updatedUser.rotationEndDate?.toISOString() ?? null,
           updatedAt: updatedUser.updatedAt.toISOString(),
         },
         message: 'Profile updated successfully',

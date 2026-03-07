@@ -49,6 +49,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { refreshUserContext } from '@/hooks/useUserContext';
 import { usePreferences } from '@/hooks/usePreferences';
 import { RotationSelector } from '@/components/onboarding/RotationSelector';
+import { isEorRotation } from '@/config/rotation-systems';
 import { ANALYTICS_PALETTES, type AnalyticsPalette } from '@/components/modals/SettingsStatsModal';
 import FSRSOptimizer from './FSRSOptimizer';
 import WorkloadProjector from './WorkloadProjector';
@@ -100,16 +101,6 @@ const PHASE_OPTIONS: { value: YearInProgram; label: string; sublabel: string }[]
   },
 ];
 
-const EOR_ROTATIONS: ClinicalRotation[] = [
-  'Emergency Medicine',
-  'Family Medicine',
-  'Internal Medicine',
-  'Surgery',
-  'Pediatrics',
-  'Psychiatry',
-  'Obstetrics & Gynecology',
-];
-
 const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
   theme,
   onToggleTheme,
@@ -146,6 +137,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
           : local.graduationDate, // API returns ISO; month input needs YYYY-MM
         yearInProgram,
         currentRotation,
+        eorTestDate: apiProfile.eorTestDate ?? local.eorTestDate,
+        rotationStartDate: apiProfile.rotationStartDate ?? local.rotationStartDate,
+        rotationEndDate: apiProfile.rotationEndDate ?? local.rotationEndDate,
         isCertifiedPA: local.isCertifiedPA,
       });
       if (yearInProgram != null) localStorage.setItem('panceai_year_in_program', yearInProgram);
@@ -237,6 +231,17 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
           apiUpdates.yearInProgram = updates.yearInProgram || null;
         if (updates.currentRotation !== undefined)
           apiUpdates.currentRotation = updates.currentRotation || null;
+        // EOR/rotation dates persisted via API when signed in; server is source of truth
+        if (updates.eorTestDate !== undefined)
+          apiUpdates.eorTestDate = updates.eorTestDate ? `${updates.eorTestDate}T00:00:00.000Z` : null;
+        if (updates.rotationStartDate !== undefined)
+          apiUpdates.rotationStartDate = updates.rotationStartDate
+            ? `${updates.rotationStartDate}T00:00:00.000Z`
+            : null;
+        if (updates.rotationEndDate !== undefined)
+          apiUpdates.rotationEndDate = updates.rotationEndDate
+            ? `${updates.rotationEndDate}T00:00:00.000Z`
+            : null;
         if (updates.hasCompletedOnboarding !== undefined)
           apiUpdates.hasCompletedOnboarding = updates.hasCompletedOnboarding;
 
@@ -544,16 +549,7 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                       label="Current Clinical Rotation"
                     />
                     {/* EOR Test Date - when on an EOR rotation, set date to show EOR Readiness on dashboard */}
-                    {userProfile.currentRotation &&
-                      [
-                        'Emergency Medicine',
-                        'Family Medicine',
-                        'Internal Medicine',
-                        'Surgery',
-                        'Pediatrics',
-                        'Psychiatry',
-                        'Obstetrics & Gynecology',
-                      ].includes(userProfile.currentRotation) && (
+                    {userProfile.currentRotation && isEorRotation(userProfile.currentRotation) && (
                         <div>
                           <label
                             htmlFor="settings-eor-test-date"

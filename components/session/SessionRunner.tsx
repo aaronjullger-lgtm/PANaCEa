@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import type { SessionSettings, Question, PerformanceRecord } from '@/types';
 import { QuizViewWithErrorBoundary } from '@/components/session/QuizViewWithErrorBoundary';
-import { Loader } from '@/components/loading/Loader';
-import { EnhancedErrorMessage } from '@/components/error/EnhancedErrorMessage';
+import Loader from '@/components/loading/Loader';
+import { EnhancedErrorMessage } from '@/components/shared/EnhancedErrorMessage';
 
 interface SessionRunnerProps {
   /** Callback to navigate back to the menu */
@@ -75,12 +75,10 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
         const text = await response.text();
         throw new Error(`Failed to fetch session: ${response.status} ${text}`);
       }
-      const data = await response.json();
-      // The endpoint returns an array of Question objects in the correct order.
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid response format: expected array of questions');
-      }
-      setQuestions(data);
+      const json = await response.json();
+      const questions =
+        json?.data?.questions ?? json?.questions ?? [];
+      setQuestions(Array.isArray(questions) ? questions : []);
 
       // Construct minimal SessionSettings from the session metadata (if available).
       // For now, we use defaults; could be extended if the endpoint returns session metadata.

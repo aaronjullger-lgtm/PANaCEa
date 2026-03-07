@@ -11,7 +11,9 @@ import { parseJsonOrThrow } from '../lib/utils/safeJsonResponse';
 import {
   getSystemsForRotation,
   ALL_SYSTEMS as ROTATION_ALL_SYSTEMS,
+  isEorRotation,
 } from '../config/rotation-systems';
+import { loadUserProfile } from '@/services/analytics';
 
 // Pool status tracking
 let lastPoolCheck = 0;
@@ -213,7 +215,9 @@ async function fetchFromPool(
   systems?: string[],
   category?: string,
   difficulty?: string,
-  token?: string | null
+  token?: string | null,
+  eorMode?: boolean,
+  eorDeadline?: string
 ): Promise<{ questions: Question[]; poolStatus: PoolStatus }> {
   const params = new URLSearchParams();
   params.set('count', count.toString());
@@ -221,6 +225,8 @@ async function fetchFromPool(
   if (systems?.length) params.set('systems', systems.join(','));
   if (category) params.set('category', category);
   if (difficulty) params.set('difficulty', difficulty);
+  if (eorMode) params.set('eorMode', 'true');
+  if (eorDeadline) params.set('eorDeadline', eorDeadline);
 
   const headers: HeadersInit = {};
   
@@ -457,7 +463,26 @@ export async function getQuestion(
       savePearlsToDatabase(question.conditionId, extractedPearls, token);
     }
   }
-
+  
+  function getEorContextFromStorage(): {
+    isEor: boolean;
+    deadline: string | null;
+  } {
+    if (typeof window === 'undefined') return { isEor: false, deadline: null };
+    try {
+      const profile = loadUserProfile();
+      const { currentRotation } = getClinicalContextFromStorage();
+      const eorTestDate = profile?.eorTestDate;
+      const isEor = currentRotation && isEorRotation(currentRotation as import('../types').ClinicalRotation) && eorTestDate;
+      return {
+        isEor: !!isEor,
+        deadline: eorTestDate || null,
+      };
+    } catch {
+      return { isEor: false, deadline: null };
+    }
+  }
+  
   // Seed the generated question into the pool for future use
   const token = getToken ? await getToken() : null;
   seedGeneratedQuestion(question, token, system, poolDifficulty);
@@ -569,6 +594,7 @@ export async function getQuestionBatch(
 
   // Clinical Year 60/40: 60% current rotation topic, 40% background PANCE prep
   const { yearInProgram, currentRotation } = getClinicalContextFromStorage();
+  const { isEor, deadline } = getEorContextFromStorage();
   const isClinicalRotationMode =
     yearInProgram === 'Clinical Year' && currentRotation && currentRotation.trim().length > 0;
   const rotationSystems = isClinicalRotationMode
@@ -594,14 +620,16 @@ export async function getQuestionBatch(
     if (do60_40 && backgroundCount > 0) {
       // Fetch 60% from current rotation systems, 40% from background PANCE; merge and shuffle
       const [rotationResult, backgroundResult] = await Promise.all([
-        fetchFromPool(rotationCount, undefined, rotationSystems, undefined, poolDifficulty, token),
+        fetchFromPool(rotationCount, undefined, rotationSystems, undefined, poolDifficulty, token, isEor, deadline || undefined),
         fetchFromPool(
           backgroundCount,
           undefined,
           backgroundSystems,
           undefined,
           poolDifficulty,
-          token
+          token,
+          isEor,
+          deadline || undefined
         ),
       ]);
       const combined = [...rotationResult.questions, ...backgroundResult.questions];
@@ -623,7 +651,9 @@ export async function getQuestionBatch(
         rotationSystems,
         undefined,
         poolDifficulty,
-        token
+        token,
+        isEor,
+        deadline || undefined
       );
       return [...combined, ...fallback.questions].slice(0, count);
     }

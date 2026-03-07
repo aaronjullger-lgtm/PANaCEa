@@ -23,6 +23,9 @@ export interface SessionQuestionRequest {
   minSystems?: number;
   /** Core PANCE Simulation: strict NCCIPA blueprint, no weak-area bias, PANCE-level difficulty only */
   simulationStrict?: boolean;
+  /** EOR rotation mode: filter by due date and stability, clamp to deadline */
+  eorMode?: boolean;
+  eorDeadline?: string;
 }
 
 export interface EnrichedQuestion {
@@ -81,6 +84,8 @@ export class SessionService {
       excludeQuestionIds = [],
       minSystems = 3,
       simulationStrict = false,
+      eorMode = false,
+      eorDeadline,
     } = params;
 
     // Core PANCE Simulation: ignore single-system/weakness — strict blueprint only
@@ -133,6 +138,8 @@ export class SessionService {
       mode: effectiveMode,
       seenIds,
       poolCount,
+      eorMode,
+      eorDeadline,
     });
   }
 
@@ -145,12 +152,14 @@ export class SessionService {
     panceLevelOnly: boolean;
     seenIds: Set<string>;
     poolCount: number;
+    eorMode?: boolean;
+    eorDeadline?: string;
   }): Promise<{
     questions: EnrichedQuestion[];
     analytics: SessionAnalytics;
     poolStatus: { available: number; needsGeneration: boolean };
   }> {
-    const { userId, count, system, conditionId, mode, panceLevelOnly, seenIds, poolCount } = options;
+    const { userId, count, system, conditionId, mode, panceLevelOnly, seenIds, poolCount, eorMode = false, eorDeadline } = options;
 
     // Fetch from all sources in parallel with reasonable limits
     const [poolResult, seedQuestions, mainQuestions] = await Promise.all([
@@ -159,18 +168,24 @@ export class SessionService {
         system,
         conditionId,
         panceLevelOnly,
+        eorMode,
+        eorDeadline,
       }),
       mode !== 'review' ? this.expandFromSeeds(userId, seenIds, {
         count: Math.max(0, Math.min(count - 5, 10)), // Reserve some for pool
         system,
         conditionId,
         panceLevelOnly,
+        eorMode,
+        eorDeadline,
       }) : Promise.resolve([]),
       this.fetchFromMain(userId, seenIds, {
         count: Math.max(0, Math.min(count - 10, 10)), // Reserve for pool and seeds
         system,
         conditionId,
         panceLevelOnly,
+        eorMode,
+        eorDeadline,
       }),
     ]);
 
@@ -233,12 +248,14 @@ export class SessionService {
     mode?: string;
     seenIds: Set<string>;
     poolCount: number;
+    eorMode?: boolean;
+    eorDeadline?: string;
   }): Promise<{
     questions: EnrichedQuestion[];
     analytics: SessionAnalytics;
     poolStatus: { available: number; needsGeneration: boolean };
   }> {
-    const { userId, count, simulationStrict, minSystems, panceLevelOnly, mode, seenIds, poolCount } = options;
+    const { userId, count, simulationStrict, minSystems, panceLevelOnly, mode, seenIds, poolCount, eorMode = false, eorDeadline } = options;
 
     // Calculate system distribution
     const systemQuotas = simulationStrict
@@ -259,16 +276,22 @@ export class SessionService {
           count: Math.min(targetCount, 10), // Limit per system
           system: systemAbbrev,
           panceLevelOnly,
+          eorMode,
+          eorDeadline,
         }),
         mode !== 'review' ? this.expandFromSeeds(userId, seenIds, {
           count: Math.max(0, Math.min(targetCount - 2, 8)), // Reserve some for pool
           system: systemAbbrev,
           panceLevelOnly,
+          eorMode,
+          eorDeadline,
         }) : Promise.resolve([]),
         this.fetchFromMain(userId, seenIds, {
           count: Math.max(0, Math.min(targetCount - 5, 5)), // Reserve for pool and seeds
           system: systemAbbrev,
           panceLevelOnly,
+          eorMode,
+          eorDeadline,
         }),
       ]);
 
@@ -417,9 +440,11 @@ export class SessionService {
       difficulty?: string;
       /** Exclude easy; only medium/hard (PANCE-level) */
       panceLevelOnly?: boolean;
+      eorMode?: boolean;
+      eorDeadline?: string;
     }
   ): Promise<{ questions: EnrichedQuestion[] }> {
-    const { count, system, conditionId, difficulty, panceLevelOnly } = options;
+    const { count, system, conditionId, difficulty, panceLevelOnly, eorMode = false, eorDeadline } = options;
 
     const where: Prisma.PreGeneratedQuestionWhereInput = {};
     if (system) where.system = system;
@@ -494,9 +519,11 @@ export class SessionService {
       conditionId?: string;
       difficulty?: string;
       panceLevelOnly?: boolean;
+      eorMode?: boolean;
+      eorDeadline?: string;
     }
   ): Promise<EnrichedQuestion[]> {
-    const { count, system, conditionId, difficulty, panceLevelOnly } = options;
+    const { count, system, conditionId, difficulty, panceLevelOnly, eorMode = false, eorDeadline } = options;
 
     const where: Prisma.QuestionSeedWhereInput = {};
     if (system) where.system = system;
@@ -582,15 +609,40 @@ export class SessionService {
       conditionId?: string;
       difficulty?: string;
       panceLevelOnly?: boolean;
+      eorMode?: boolean;
+      eorDeadline?: string;
     }
   ): Promise<EnrichedQuestion[]> {
-    const { count, system, conditionId, difficulty, panceLevelOnly } = options;
+    const { count, system, conditionId, difficulty, panceLevelOnly, eorMode = false, eorDeadline } = options;
 
     const where: Prisma.QuestionWhereInput = {};
     if (system) where.system = system;
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
     if (panceLevelOnly) where.difficulty = { in: ['medium', 'hard'] };
+
+    // EOR mode: filter by due date and stability
+    if (eorMode && eorDeadline) {
+      const deadlineDate = new Date(eorDeadline);
+      const thresholdStability = 100; // days
+      const progressEntries = await this.prisma.userProgress.findMany({
+        where: {
+          userId,
+          ...(system ? { system } : {}),
+          OR: [
+            { nextReviewAt: { lte: deadlineDate } },
+            { fsrsStability: { lt: thresholdStability } },
+            { nextReviewAt: null },
+          ],
+        },
+        select: { conditionId: true },
+      });
+      const dueConditionIds = progressEntries.map(p => p.conditionId).filter(Boolean);
+      if (dueConditionIds.length > 0) {
+        where.conditionId = { in: dueConditionIds };
+      }
+      // Note: ordering by nextReviewAt is not implemented due to complexity
+    }
 
     // Optimize: fetch only what we need plus a small buffer, not count * 3
     const fetchLimit = Math.min(count + 15, 30); // Max 30 questions per fetch

@@ -1,307 +1,92 @@
 {
-  "mcpServers": {
-    "git": {
-      "command": "uvx",
-      "args": [
-        "mcp-server-git",
-        "--repository",
-        "/Users/aaronullger/GitHub"
-      ],
-      "disabled": true,
-      "alwaysAllow": []
-    },
-    "sqlite": {
-      "command": "uvx",
-      "args": [
-        "mcp-server-sqlite",
-        "--db-path",
-        "/Users/aaronullger/GitHub"
-      ],
-      "disabled": true,
-      "alwaysAllow": []
-    },
-    "postgres": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-postgres",
-        "postgresql://postgres:!(PANCE123)!@db.lzfescdrpezzjhgveotz.supabase.co:5432/postgres"
-      ],
-      "disabled": true,
-      "alwaysAllow": []
-    },
-    "gdrive": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-gdrive"
-      ],
-      "env": {
-        "GDRIVE_CREDENTIALS_PATH": "/Users/aaronullger/GitHub/StudyPANaCEa"
-      },
-      "disabled": true,
-      "alwaysAllow": []
-    },
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@playwright/mcp@0.0.38"
-      ],
-      "alwaysAllow": [
-        "browser_navigate"
-      ]
-    },
-    "augment-context-engine": {
-      "command": "auggie",
-      "args": [
-        "--mcp",
-        "--mcp-auto-workspace"
-      ]
-    },
-    "microsoft-learn": {
-      "type": "streamable-http",
-      "url": "https://learn.microsoft.com/api/mcp",
-      "alwaysAllow": [
-        "microsoft_docs_search"
-      ]
-    },
-    "google-maps-platform-code-assist": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@googlemaps/code-assist-mcp@0.2.0"
-      ],
-      "disabled": true,
-      "alwaysAllow": []
-    },
-    "azure-devops": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@azure-devops/mcp@1.0.0",
-        "--hash",
-        "sha1:742d3aa74ec8a13283a62c77c9fc5c2a0d276624",
-        "ullgeraj25"
-      ]
-    }
-  },
-  "modeAliases": {
-    "accessibility-tester": "product-ux-strategist",
-    "adaptive-swarm-coordinator": "devops-platform-engineer",
-    "agent-organizer": "devops-platform-engineer",
-    "ai-engineer": "devops-platform-engineer",
-    "ai-prompt-security-specialist": "data-ai-engineer",
-    "angular-architect": "devops-platform-engineer",
-    "api-designer": "full-stack-engineer",
-    "api-documenter": "devops-platform-engineer",
-    "api-governance-lead": "security-compliance-auditor",
-    "architect": "devops-platform-engineer",
-    "architect-reviewer": "devops-platform-engineer",
-    "ask": "devops-platform-engineer",
-    "backend-developer": "devops-platform-engineer",
-    "benchmark-orchestrator-performance-benchmark": "devops-platform-engineer",
-    "blockchain-developer": "devops-platform-engineer",
-    "bullshit-detection-analyst": "data-ai-engineer",
-    "business-analyst": "product-ux-strategist",
-    "chaos-engineer": "devops-platform-engineer",
-    "chaos-resilience-lead": "devops-platform-engineer",
-    "claude-code": "testing-quality-assurance",
-    "cli-developer": "testing-quality-assurance",
-    "cloud-architect": "devops-platform-engineer",
-    "cloud-security-architect": "security-compliance-auditor",
-    "code": "full-stack-engineer",
-    "code-reviewer": "devops-platform-engineer",
-    "code-skeptic": "testing-quality-assurance",
-    "competitive-analyst": "product-ux-strategist",
-    "compliance-auditor-canada": "security-compliance-auditor",
-    "compliance-auditor-usa": "security-compliance-auditor",
-    "compliance-automation-engineer": "devops-platform-engineer",
-    "compliance-specialist-canada": "security-compliance-auditor",
-    "compliance-specialist-usa": "security-compliance-auditor",
-    "computer-vision": "devops-platform-engineer",
-    "content-marketer": "product-ux-strategist",
-    "context-manager": "devops-platform-engineer",
-    "corporate-law-canada": "security-compliance-auditor",
-    "corporate-law-usa": "security-compliance-auditor",
-    "cpp-pro": "devops-platform-engineer",
-    "criminal-law-canada": "security-compliance-auditor",
-    "criminal-law-usa": "security-compliance-auditor",
-    "csharp-developer": "devops-platform-engineer",
-    "customer-success-manager": "product-ux-strategist",
-    "cybersecurity-expert": "security-compliance-auditor",
-    "data-analyst": "data-ai-engineer",
-    "data-engineer": "devops-platform-engineer",
-    "data-researcher": "product-ux-strategist",
-    "data-scientist": "data-ai-engineer",
-    "database-administrator": "devops-platform-engineer",
-    "database-optimizer": "devops-platform-engineer",
-    "dataset-curator": "testing-quality-assurance",
-    "debug": "testing-quality-assurance",
-    "debugger": "devops-platform-engineer",
-    "dependency-manager": "devops-platform-engineer",
-    "deployment-engineer": "devops-platform-engineer",
-    "design--brand-guardian": "security-compliance-auditor",
-    "design--ux-researcher": "product-ux-strategist",
-    "design--visual-storyteller": "product-ux-strategist",
-    "devops": "devops-platform-engineer",
-    "devops-engineer": "devops-platform-engineer",
-    "devops-incident-responder": "devops-platform-engineer",
-    "django-developer": "devops-platform-engineer",
-    "docs-writer": "product-ux-strategist",
-    "documentation-engineer": "devops-platform-engineer",
-    "documentation-writer": "full-stack-engineer",
-    "dotnet-core-expert": "devops-platform-engineer",
-    "dx-optimizer": "devops-platform-engineer",
-    "edge-computing-architect": "devops-platform-engineer",
-    "electron-pro": "devops-platform-engineer",
-    "embedded-systems": "devops-platform-engineer",
-    "employment-law-canada": "security-compliance-auditor",
-    "employment-law-usa": "security-compliance-auditor",
-    "engineering--mobile-app-builder": "data-ai-engineer",
-    "error-coordinator": "devops-platform-engineer",
-    "error-detective": "devops-platform-engineer",
-    "experience-polish-director": "product-ux-strategist",
-    "feature-flag-orchestrator": "devops-platform-engineer",
-    "finops-optimizer": "devops-platform-engineer",
-    "fintech-engineer": "devops-platform-engineer",
-    "flow-nexus--app-store": "security-compliance-auditor",
-    "flow-nexus--challenges": "security-compliance-auditor",
-    "flow-nexus--sandbox": "security-compliance-auditor",
-    "flow-nexus--swarm": "security-compliance-auditor",
-    "flutter-expert": "devops-platform-engineer",
-    "framework-currency": "devops-platform-engineer",
-    "frontend-developer": "devops-platform-engineer",
-    "frontend-performance-auditor": "testing-quality-assurance",
-    "full-stack-developer": "full-stack-engineer",
-    "fullstack-developer": "full-stack-engineer",
-    "game-developer": "product-ux-strategist",
-    "git-workflow-manager": "devops-platform-engineer",
-    "github--multi-repo-swarm": "devops-platform-engineer",
-    "github--release-swarm": "devops-platform-engineer",
-    "github--swarm-pr": "devops-platform-engineer",
-    "github-issue-tracker": "testing-quality-assurance",
-    "github-repository-architect": "devops-platform-engineer",
-    "github-sync-coordinator": "devops-platform-engineer",
-    "golang-pro": "devops-platform-engineer",
-    "graph-builder-graph-builder": "devops-platform-engineer",
-    "graphql-architect": "full-stack-engineer",
-    "growth-experimentation-lead": "product-ux-strategist",
-    "hardware-acceleration-engineer": "devops-platform-engineer",
-    "hierarchical-swarm-coordinator": "devops-platform-engineer",
-    "i18n-l10n-reviewer": "testing-quality-assurance",
-    "incident-command-director": "security-compliance-auditor",
-    "incident-responder": "devops-platform-engineer",
-    "initial-discovery-process": "security-compliance-auditor",
-    "integration": "devops-platform-engineer",
-    "intellectual-property-canada": "security-compliance-auditor",
-    "intellectual-property-usa": "security-compliance-auditor",
-    "iot-engineer": "devops-platform-engineer",
-    "java-architect": "devops-platform-engineer",
-    "javascript-pro": "full-stack-engineer",
-    "jest-test-engineer": "testing-quality-assurance",
-    "knowledge-synthesizer": "data-ai-engineer",
-    "kotlin-specialist": "full-stack-engineer",
-    "kubernetes-specialist": "devops-platform-engineer",
-    "laravel-specialist": "devops-platform-engineer",
-    "legacy-modernizer": "devops-platform-engineer",
-    "legal-advisor-canada": "security-compliance-auditor",
-    "legal-advisor-usa": "security-compliance-auditor",
-    "litigation-support-canada": "devops-platform-engineer",
-    "litigation-support-usa": "devops-platform-engineer",
-    "llm-architect": "devops-platform-engineer",
-    "machine-learning-engineer": "devops-platform-engineer",
-    "market-researcher": "product-ux-strategist",
-    "marketing-strategist": "data-ai-engineer",
-    "mcp": "full-stack-engineer",
-    "mcp-integration-mcp": "security-compliance-auditor",
-    "merge-resolver": "devops-platform-engineer",
-    "microservices-architect": "devops-platform-engineer",
-    "ml-engineer": "devops-platform-engineer",
-    "mlops-engineer": "devops-platform-engineer",
-    "mobile-app-developer": "devops-platform-engineer",
-    "mobile-developer": "devops-platform-engineer",
-    "mode-orchestrator": "devops-platform-engineer",
-    "model-registry-auditor": "testing-quality-assurance",
-    "modular-builder-modular-builder": "security-compliance-auditor",
-    "multi-agent-coordinator": "devops-platform-engineer",
-    "multi-repo-swarm---cross-repository-swarm-orchestration": "devops-platform-engineer",
-    "network-engineer": "devops-platform-engineer",
-    "nextjs-developer": "devops-platform-engineer",
-    "nlp-engineer": "data-ai-engineer",
-    "nlp-specialist": "devops-platform-engineer",
-    "observability-architect": "devops-platform-engineer",
-    "oss-license-auditor": "security-compliance-auditor",
-    "pattern-emergence-pattern-emergence": "devops-platform-engineer",
-    "payment-integration": "devops-platform-engineer",
-    "penetration-tester": "devops-platform-engineer",
-    "performance-benchmark": "devops-platform-engineer",
-    "performance-engineer": "devops-platform-engineer",
-    "performance-monitor": "devops-platform-engineer",
-    "php-pro": "devops-platform-engineer",
-    "platform-engineer": "devops-platform-engineer",
-    "policy-as-code-auditor": "devops-platform-engineer",
-    "post-deployment-monitoring-mode": "devops-platform-engineer",
-    "postgres-pro": "devops-platform-engineer",
-    "product-analytics-scientist": "product-ux-strategist",
-    "product-manager": "product-ux-strategist",
-    "project-manager": "testing-quality-assurance",
-    "prompt-engineer": "testing-quality-assurance",
-    "python-developer": "data-ai-engineer",
-    "python-pro": "devops-platform-engineer",
-    "qa-expert": "testing-quality-assurance",
-    "quant-analyst": "data-ai-engineer",
-    "rag-evaluator": "data-ai-engineer",
-    "rails-expert": "full-stack-engineer",
-    "react-optimization-director": "devops-platform-engineer",
-    "react-specialist": "testing-quality-assurance",
-    "refactoring-specialist": "testing-quality-assurance",
-    "refinement-optimization-mode": "devops-platform-engineer",
-    "release-governance-lead": "devops-platform-engineer",
-    "release-swarm---intelligent-release-automation": "devops-platform-engineer",
-    "research-analyst": "product-ux-strategist",
-    "research-analyst-elite-research-analyst": "data-ai-engineer",
-    "risk-manager": "security-compliance-auditor",
-    "rust-engineer": "devops-platform-engineer",
-    "sales-engineer": "devops-platform-engineer",
-    "scrum-master": "product-ux-strategist",
-    "search-specialist": "product-ux-strategist",
-    "secrets-hygiene-auditor": "devops-platform-engineer",
-    "security-auditor": "security-compliance-auditor",
-    "security-engineer": "devops-platform-engineer",
-    "security-review": "security-compliance-auditor",
-    "serverless-platform-architect": "devops-platform-engineer",
-    "silent-coder": "testing-quality-assurance",
-    "site-readiness-engineer": "devops-platform-engineer",
-    "skill-writer": "devops-platform-engineer",
-    "sparc": "devops-platform-engineer",
-    "spec-pseudocode": "devops-platform-engineer",
-    "spring-boot-engineer": "devops-platform-engineer",
-    "sql-pro": "devops-platform-engineer",
-    "sre-engineer": "devops-platform-engineer",
-    "supabase-admin": "full-stack-engineer",
-    "supply-chain-security-auditor": "devops-platform-engineer",
-    "swarm-orchestrator": "devops-platform-engineer",
-    "swift-expert": "full-stack-engineer",
-    "task-distributor": "devops-platform-engineer",
-    "tdd": "testing-quality-assurance",
-    "tech-research-strategist": "devops-platform-engineer",
-    "technical-seo-optimizer": "devops-platform-engineer",
-    "technical-writer": "product-ux-strategist",
-    "terraform-engineer": "devops-platform-engineer",
-    "terraform-module-author": "devops-platform-engineer",
-    "tooling-engineer": "devops-platform-engineer",
-    "trend-analyst": "product-ux-strategist",
-    "tutorial": "data-ai-engineer",
-    "typescript-pro": "full-stack-engineer",
-    "ui-expert": "product-ux-strategist",
-    "ux-researcher": "product-ux-strategist",
-    "vue-expert": "devops-platform-engineer",
-    "web-design-specialist": "product-ux-strategist",
-    "website-foundation-planner": "product-ux-strategist",
-    "websocket-engineer": "devops-platform-engineer",
-    "workflow-automation---github-actions-integration": "devops-platform-engineer",
-    "workflow-orchestrator": "devops-platform-engineer",
-    "zero-trust-strategist": "devops-platform-engineer"
-  }
+	"mcpServers": {
+		"git": {
+			"command": "uvx",
+			"args": [
+				"mcp-server-git",
+				"--repository",
+				"/Users/aaronullger/GitHub"
+			],
+			"disabled": true,
+			"alwaysAllow": []
+		},
+		"sqlite": {
+			"command": "uvx",
+			"args": [
+				"mcp-server-sqlite",
+				"--db-path",
+				"/Users/aaronullger/GitHub"
+			],
+			"disabled": true,
+			"alwaysAllow": []
+		},
+		"postgres": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-postgres",
+				"postgresql://postgres:!(PANCE123)!@db.lzfescdrpezzjhgveotz.supabase.co:5432/postgres"
+			],
+			"disabled": true,
+			"alwaysAllow": []
+		},
+		"gdrive": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-gdrive"
+			],
+			"env": {
+				"GDRIVE_CREDENTIALS_PATH": "/Users/aaronullger/GitHub/StudyPANaCEa"
+			},
+			"disabled": true,
+			"alwaysAllow": []
+		},
+		"playwright": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@playwright/mcp@0.0.38"
+			],
+			"alwaysAllow": [
+				"browser_navigate"
+			],
+			"disabled": true
+		},
+		"augment-context-engine": {
+			"command": "auggie",
+			"args": [
+				"--mcp",
+				"--mcp-auto-workspace"
+			]
+		},
+		"microsoft-learn": {
+			"type": "streamable-http",
+			"url": "https://learn.microsoft.com/api/mcp",
+			"alwaysAllow": [
+				"microsoft_docs_search"
+			]
+		},
+		"google-maps-platform-code-assist": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@googlemaps/code-assist-mcp@0.2.0"
+			],
+			"disabled": true,
+			"alwaysAllow": []
+		},
+		"azure-devops": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@azure-devops/mcp@1.0.0",
+				"--hash",
+				"sha1:742d3aa74ec8a13283a62c77c9fc5c2a0d276624",
+				"ullgeraj25"
+			],
+			"disabled": true,
+			"alwaysAllow": []
+		}
+	}
 }

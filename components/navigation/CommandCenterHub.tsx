@@ -53,8 +53,9 @@ import {
 } from 'lucide-react';
 import type { PerformanceRecord, Question, SessionSettings, SystemCode } from '@/types';
 import type { ClinicalRotation } from '@/types';
-import { loadUserProfile, updateUserProfile } from '@/services/analytics';
-import { getSystemsForRotation, isEorRotation } from '@/config/rotation-systems';
+import { loadUserProfile } from '@/services/analytics';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { getSystemsForRotation, isEorRotation, DEFAULT_SYSTEM_PROGRESS_TOTAL } from '@/config/rotation-systems';
 import { RotationSelector } from '@/components/onboarding/RotationSelector';
 import {
   AnalyticsDashboard,
@@ -908,7 +909,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       system: system as SystemCode,
       name: ABBREVIATION_TO_TOPIC_MAP[system] || system,
       reviewed: stats.total,
-      total: 100, // TODO: Get actual condition count per system from registry
+      total: DEFAULT_SYSTEM_PROGRESS_TOTAL,
       percent: stats.total >= 5 ? Math.min(stats.accuracy * 100, 100) : 0,
       accuracy: stats.accuracy,
     }));
@@ -918,6 +919,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   const [userProfile, setUserProfile] = useState(
     () => loadUserProfile() || { hasCompletedOnboarding: false }
   );
+
+  const { updateProfile } = useUserProfile();
 
   // Study Tools tab state
   const [activeTab, setActiveTab] = useState<'training' | 'resources' | 'analytics'>(
@@ -1008,7 +1011,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   const eorTestDate = userProfile?.eorTestDate;
 
   const handleRotationChange = useCallback((rotation: ClinicalRotation) => {
-    updateUserProfile({ currentRotation: rotation });
+    updateProfile({ currentRotation: rotation });
     setUserProfile((prev) => ({ ...prev, currentRotation: rotation }));
     const systems = getSystemsForRotation(rotation);
     setEnabledSystems(new Set(systems));
@@ -1020,7 +1023,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   }, []);
 
   const handleEorTestDateChange = useCallback((date: string) => {
-    updateUserProfile({ eorTestDate: date || undefined });
+    // EOR/rotation dates persisted via updateProfile (API) when signed in; server is source of truth
+    updateProfile({ eorTestDate: date || undefined });
     setUserProfile((prev) => ({ ...prev, eorTestDate: date || undefined }));
   }, []);
 
@@ -1275,7 +1279,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </div>
               )}
               {eorTestDate && currentRotation && isEorRotation(currentRotation) && (
-                <div className={userProfile?.graduationDate ? '' : 'lg:col-span-2'}>
+                <div
+                  className={`eor-accent ${userProfile?.graduationDate ? '' : 'lg:col-span-2'}`}
+                >
                   <EorCountdownCard examDate={eorTestDate} rotation={currentRotation} />
                 </div>
               )}

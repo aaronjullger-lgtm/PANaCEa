@@ -2,6 +2,7 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { authenticatedEndpoint } from '../_shared/middleware';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { submitDrillReview } from '../../../lib/services/drillReviewService';
+import { getEorRotationEnd } from '../../../lib/fsrs/eorScheduler';
 import { scheduleConceptReview } from '../intelligence/profile';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
 import { DrillSubmitReviewSchema } from './submit-review';
@@ -33,7 +34,13 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
 
     const user = await prisma.user.findUnique({
       where: { clerkId: auth.userId },
-      select: { id: true },
+      select: {
+        id: true,
+        yearInProgram: true,
+        currentRotation: true,
+        eorTestDate: true,
+        rotationEndDate: true,
+      },
     });
 
     if (!user) {
@@ -43,6 +50,13 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
         message: 'Your user account has not been synced yet.',
       };
     }
+
+    const eorRotationEnd = getEorRotationEnd({
+      yearInProgram: user.yearInProgram,
+      currentRotation: user.currentRotation,
+      eorTestDate: user.eorTestDate?.toISOString() ?? null,
+      rotationEndDate: user.rotationEndDate?.toISOString() ?? null,
+    });
 
     const results = [];
     for (const review of validated) {
@@ -94,7 +108,8 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
             sessionType,
           },
           question,
-          { info: logger.info.bind(logger), warn: logger.warn.bind(logger) }
+          { info: logger.info.bind(logger), warn: logger.warn.bind(logger) },
+          eorRotationEnd
         );
 
         // SRS: Schedule concept review (Leitner-style: fail +1 day, pass +3 days)

@@ -69,6 +69,12 @@ export const EOR_ROTATIONS: ClinicalRotation[] = [
   'Obstetrics & Gynecology',
 ];
 
+/** Default target total questions to spread over the rotation for EOR daily target calculation. */
+export const EOR_TARGET_QUESTIONS_DEFAULT = 300;
+
+/** Default denominator for system progress ring when per-system condition count is not available from API. */
+export const DEFAULT_SYSTEM_PROGRESS_TOTAL = 100;
+
 export function getSystemsForRotation(rotation: ClinicalRotation): SystemCode[] {
   return ROTATION_SYSTEMS[rotation] ?? [...ALL_SYSTEMS];
 }

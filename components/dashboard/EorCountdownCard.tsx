@@ -7,6 +7,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Stethoscope } from 'lucide-react';
 import type { ClinicalRotation } from '@/types';
+import { EOR_TARGET_QUESTIONS_DEFAULT } from '@/config/rotation-systems';
 
 interface EorCountdownCardProps {
   examDate: string;
@@ -24,7 +25,7 @@ function getDaysRemaining(examDateStr: string): number {
 
 function getEorDailyTarget(daysRemaining: number): number {
   if (daysRemaining <= 0) return 0;
-  return Math.min(40, Math.max(10, Math.ceil(300 / daysRemaining)));
+  return Math.min(40, Math.max(10, Math.ceil(EOR_TARGET_QUESTIONS_DEFAULT / daysRemaining)));
 }
 
 export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
@@ -45,28 +46,25 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`
-        relative overflow-hidden rounded-xl
-        bg-[var(--color-bg-secondary)]
-        p-6 shadow-sm
-        ${className}
-      `}
+      className={`eor-accent relative overflow-hidden rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-sm ${className}`}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-data-pass/15 rounded-lg">
-            <Stethoscope className="w-5 h-5 text-data-pass" />
+          <div className="p-2 bg-[var(--color-accent)]/15 rounded-lg">
+            <Stethoscope className="w-5 h-5 text-[var(--color-accent)]" />
           </div>
           <h3 className="font-bold text-[var(--color-text-primary)]">EOR Countdown</h3>
         </div>
         <div className="text-right">
-          <div className="text-3xl font-bold text-data-pass leading-none">{daysRemaining}</div>
+          <div className="text-3xl font-bold text-[var(--color-accent)] leading-none">
+            {daysRemaining}
+          </div>
           <div className="text-xs text-[var(--color-text-muted)] mt-1">{daysLabel}</div>
         </div>
       </div>
 
       <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-        <Calendar className="w-4 h-4 text-data-pass/80" />
+        <Calendar className="w-4 h-4 text-[var(--color-accent)]/80" />
         <span className="font-medium text-[var(--color-text-secondary)]">{rotation}</span>
       </div>
 
@@ -84,7 +82,7 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mt-4 p-3 bg-data-pass/10 rounded-lg"
+          className="mt-4 p-3 bg-[var(--color-accent)]/10 rounded-lg"
         >
           <p className="text-xs text-[var(--color-text-secondary)]">
             <span className="font-semibold">Final stretch:</span> Focus on rotation-relevant content

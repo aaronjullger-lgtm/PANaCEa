@@ -33,6 +33,37 @@ export function saveUserProfile(profile: UserProfile): void {
 }
 
 /**
+ * Merge EOR and rotation date fields from API profile into localStorage.
+ * Call after fetching or updating profile via API so loadUserProfile() stays in sync.
+ */
+export function mergeEorFieldsFromApi(apiProfile: {
+  eorTestDate?: string | null;
+  rotationStartDate?: string | null;
+  rotationEndDate?: string | null;
+  currentRotation?: string | null;
+  yearInProgram?: string | null;
+}): void {
+  const current = loadUserProfile() || { hasCompletedOnboarding: false };
+  const updated: UserProfile = {
+    ...current,
+    ...(apiProfile.eorTestDate !== undefined && { eorTestDate: apiProfile.eorTestDate ?? undefined }),
+    ...(apiProfile.rotationStartDate !== undefined && {
+      rotationStartDate: apiProfile.rotationStartDate ?? undefined,
+    }),
+    ...(apiProfile.rotationEndDate !== undefined && {
+      rotationEndDate: apiProfile.rotationEndDate ?? undefined,
+    }),
+    ...(apiProfile.currentRotation !== undefined && {
+      currentRotation: apiProfile.currentRotation ?? undefined,
+    }),
+    ...(apiProfile.yearInProgram !== undefined && {
+      yearInProgram: apiProfile.yearInProgram ?? undefined,
+    }),
+  };
+  saveUserProfile(updated);
+}
+
+/**
  * Update specific fields in user profile
  */
 export function updateUserProfile(updates: Partial<UserProfile>): UserProfile {

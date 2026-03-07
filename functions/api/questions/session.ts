@@ -21,6 +21,8 @@ const SessionGetSchema = z.object({
     .string()
     .optional()
     .transform((v) => v === 'true' || v === '1'),
+  eorMode: z.string().optional().transform((v) => v === 'true' || v === '1'),
+  eorDeadline: z.string().optional(),
 });
 
 const SessionPostSchema = z.object({
@@ -30,6 +32,8 @@ const SessionPostSchema = z.object({
   systems: z.array(z.string()).optional(),
   prioritizeWeakAreas: z.boolean().optional(),
   simulationStrict: z.boolean().optional(),
+  eorMode: z.boolean().optional(),
+  eorDeadline: z.string().optional(),
 });
 
 export const onRequestOptions = withCors();
@@ -94,6 +98,8 @@ export const onRequestGet = authenticatedEndpoint(
       const system = validated?.system || undefined;
       const mode = (validated?.mode || 'standard') as SessionQuestionRequest['mode'];
       const simulationStrict = validated?.simulationStrict === true;
+      const eorMode = validated?.eorMode === true;
+      const eorDeadline = validated?.eorDeadline || undefined;
 
       sessionService = new SessionService(env.DATABASE_URL, env);
       const result = await sessionService.getSessionQuestions({
@@ -102,6 +108,8 @@ export const onRequestGet = authenticatedEndpoint(
         system,
         mode,
         simulationStrict,
+        eorMode,
+        eorDeadline,
       });
 
       logger.info('Session questions fetched (GET)', {

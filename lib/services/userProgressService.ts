@@ -16,6 +16,8 @@ export interface UpdateUserProgressInput {
   fsrsCard: FSRSCard;
   rating: Rating;
   accuracy: number; // 0-1 float
+  /** When set (e.g. EOR time-block), use this instead of deriving from fsrsCard.scheduled_days. Caller (e.g. drillReviewService) is responsible for EOR clamping via applyEorClampIfNeeded when in EOR context. */
+  nextReviewAt?: Date;
 }
 
 /**
@@ -27,10 +29,14 @@ export async function updateUserProgressWithHistory(
   prisma: any,
   input: UpdateUserProgressInput
 ): Promise<void> {
-  const { userId, conditionId, fsrsCard, rating, accuracy } = input;
+  const { userId, conditionId, fsrsCard, rating, accuracy, nextReviewAt } = input;
 
   const snapshot: ReviewSnapshot = createReviewSnapshot(fsrsCard, rating);
   const snapshotJson = JSON.stringify(snapshot);
+
+  const now = new Date();
+  const derivedNext = new Date(now.getTime() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000);
+  const nextReviewDate = nextReviewAt ?? derivedNext;
 
   // 1. Atomic append to existing row (merge review logs; never overwrite whole array)
   const executeRaw =
@@ -50,7 +56,6 @@ export async function updateUserProgressWithHistory(
         });
         const totalAttempts = (row?.totalAttempts ?? 0) + 1;
         const correctCount = (row?.correctCount ?? 0) + (accuracy >= 0.7 ? 1 : 0);
-        const now = new Date();
         await prisma.userProgress.update({
           where: { userId_conditionId: { userId, conditionId } },
           data: {
@@ -68,7 +73,7 @@ export async function updateUserProgressWithHistory(
             correctCount,
             accuracy: totalAttempts > 0 ? correctCount / totalAttempts : 0,
             lastReviewAt: now,
-            nextReviewAt: new Date(now.getTime() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000),
+            nextReviewAt: nextReviewDate,
             updatedAt: now,
           },
         });
@@ -95,8 +100,8 @@ export async function updateUserProgressWithHistory(
   const correctCount = (existing?.correctCount ?? 0) + (accuracy >= 0.7 ? 1 : 0);
   const newAccuracy = totalAttempts > 0 ? correctCount / totalAttempts : 0;
 
-  const now = new Date();
-  const nextReviewDate = new Date(now.getTime() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000);
+  const derivedNext = new Date(now.getTime() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000);
+  const nextReviewDate = nextReviewAt ?? derivedNext;
 
   try {
     await prisma.userProgress.upsert({

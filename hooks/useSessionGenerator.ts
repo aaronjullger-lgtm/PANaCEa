@@ -95,7 +95,8 @@ export function useSessionGenerator(): UseSessionGeneratorReturn {
           throw new Error(`Failed to generate session: ${response.statusText}`);
         }
 
-        const session: GeneratedSession = await response.json();
+        const json = await response.json();
+        const session: GeneratedSession = (json?.data ?? json) as GeneratedSession;
         setLastSession(session);
 
         // Navigate to the session

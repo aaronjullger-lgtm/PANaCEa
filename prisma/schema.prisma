@@ -2948,10 +2948,14 @@ model User {
   school                  String?
   currentRotation         String?
   yearInProgram           String?
+  eorTestDate             DateTime?
+  rotationStartDate       DateTime?
+  rotationEndDate         DateTime?
   isAnonymous             Boolean                   @default(false)
   role                    UserRole                  @default(USER)
   lifecycleRole           UserLifecycleRole         @default(STUDENT)
   trainingPhase           TrainingPhase?
+  /// Canonical EOR exam date (maps to frontend's eorTestDate).
   rotationExamDate        DateTime?
   activeSystems           String[]                  @default([])
   /// * FSRS v6 optimized weights (21 params). Empty = use defaults. Denormalized from PersonalizedFSRSParams.

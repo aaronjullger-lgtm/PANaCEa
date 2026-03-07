@@ -224,6 +224,10 @@ export default {
           filter: 'grayscale(100%) contrast(1.12)',
           colorScheme: 'light',
         },
+        '.eor-accent': {
+          '--color-accent': '#7a6f52',
+          '--color-accent-hover': '#6a5f42',
+        },
       });
     },
   ],

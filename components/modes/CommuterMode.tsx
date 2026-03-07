@@ -1,15 +1,16 @@
 /**
  * CommuterMode - Hands‑free voice‑driven question practice
- * 
+ *
  * Integrates speech synthesis, voice recognition, and large touch targets
  * for studying while commuting (driving, walking, public transit).
+ *
+ * Triggers session generation via useSessionGenerator; on success, navigates
+ * to /session/:id where SessionRunner loads questions from GET /api/study/session/:id/questions.
  */
 
 import React, { useState, useEffect } from 'react';
 import { useCommuter } from '@/contexts/CommuterContext';
 import { useSessionGenerator } from '@/hooks/useSessionGenerator';
-import { useUserContext } from '@/hooks/useUserContext';
-import QuizView from '@/components/session/QuizView';
 import { MiniModeLayout, MiniModeHeader, MiniModeCard } from './MiniModeLayout';
 
 interface CommuterModeProps {
@@ -18,41 +19,39 @@ interface CommuterModeProps {
 
 const CommuterMode: React.FC<CommuterModeProps> = ({ onExit }) => {
   const commuter = useCommuter();
-  const { careerStage } = useUserContext();
   const sessionGenerator = useSessionGenerator();
-  const [queue, setQueue] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Enable commuter mode when component mounts
   useEffect(() => {
     commuter.enableCommuterMode();
-    // Optionally set auto‑read and voice enabled
     commuter.updateSettings({ autoReadQuestions: true, voiceEnabled: true });
-    return () => {
-      // Keep commuter mode enabled globally? No need to disable.
-    };
+    return () => {};
   }, [commuter]);
 
-  // Generate a session queue
+  // Generate session and navigate to /session/:id (useSessionGenerator handles navigation)
   useEffect(() => {
-    const generateSession = async () => {
+    const runGenerate = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const session = await sessionGenerator.generateSession({
-          count: 10,
-          focus: 'all',
-          systems: [],
-          sessionType: 'MAIN',
+          mode: 'mainSession',
+          size: 10,
         });
-        setQueue(session.questions);
+        if (session) {
+          // Navigation happens inside useSessionGenerator; component may unmount
+          return;
+        }
+        setError('Failed to generate session');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to generate questions');
       } finally {
         setIsLoading(false);
       }
     };
-    generateSession();
+    runGenerate();
   }, [sessionGenerator]);
 
   if (isLoading) {
@@ -73,67 +72,35 @@ const CommuterMode: React.FC<CommuterModeProps> = ({ onExit }) => {
     );
   }
 
-  if (error) {
-    return (
-      <MiniModeLayout>
-        <MiniModeHeader
-          title="Commuter Mode"
-          description="Unable to start session"
-          onExit={onExit}
-        />
-        <MiniModeCard>
-          <div className="p-8 text-center">
-            <p className="text-error">{error}</p>
-            <button
-              className="mt-4 rounded-lg bg-action-primary px-4 py-2 text-white"
-              onClick={() => window.location.reload()}
-            >
-              Retry
-            </button>
-          </div>
-        </MiniModeCard>
-      </MiniModeLayout>
-    );
-  }
-
-  if (queue.length === 0) {
-    return (
-      <MiniModeLayout>
-        <MiniModeHeader
-          title="Commuter Mode"
-          description="No questions available"
-          onExit={onExit}
-        />
-        <MiniModeCard>
-          <div className="p-8 text-center">
-            <p className="text-text-secondary">No questions could be generated. Please try another mode.</p>
-          </div>
-        </MiniModeCard>
-      </MiniModeLayout>
-    );
-  }
-
+  // Error or fallback: show retry (on success, useSessionGenerator navigates away)
   return (
     <MiniModeLayout>
       <MiniModeHeader
         title="Commuter Mode"
-        description="Hands‑free voice‑driven question practice"
+        description={error ? 'Unable to start session' : 'Start session'}
         onExit={onExit}
       />
-      <div className="p-4">
-        <QuizView
-          initialQueue={queue}
-          setParentQueue={setQueue}
-          sessionSettings={{
-            mode: 'commuter_mode',
-            system: 'all',
-            focus: 'all',
-            count: 10,
-          }}
-          isCommuterMode={true}
-          onExit={onExit}
-        />
-      </div>
+      <MiniModeCard>
+        <div className="p-8 text-center">
+          {error && <p className="text-error">{error}</p>}
+          <button
+            className="mt-4 rounded-lg bg-action-primary px-4 py-2 text-white"
+            onClick={() => {
+              setError(null);
+              setIsLoading(true);
+              sessionGenerator
+                .generateSession({ mode: 'mainSession', size: 10 })
+                .then((session) => {
+                  if (!session) setError('Failed to generate session');
+                })
+                .catch((err) => setError(err instanceof Error ? err.message : 'Failed to generate'))
+                .finally(() => setIsLoading(false));
+            }}
+          >
+            {error ? 'Retry' : 'Start session'}
+          </button>
+        </div>
+      </MiniModeCard>
     </MiniModeLayout>
   );
 };

@@ -186,6 +186,10 @@ export interface UserProfile {
   currentRotation?: ClinicalRotation;
   /** EOR exam date for current rotation (ISO date string); when set, dashboard shows EOR Readiness */
   eorTestDate?: string;
+  /** Rotation start date (ISO date string); for EOR time-blocked scheduling */
+  rotationStartDate?: string;
+  /** Rotation end date (ISO date string); for EOR time-blocked scheduling */
+  rotationEndDate?: string;
   yearInProgram?: YearInProgram;
   hasCompletedOnboarding: boolean;
   isCertifiedPA?: boolean; // For PANRE-LA access
