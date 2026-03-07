@@ -100,9 +100,6 @@ export async function updateUserProgressWithHistory(
   const correctCount = (existing?.correctCount ?? 0) + (accuracy >= 0.7 ? 1 : 0);
   const newAccuracy = totalAttempts > 0 ? correctCount / totalAttempts : 0;
 
-  const derivedNext = new Date(now.getTime() + fsrsCard.scheduled_days * 24 * 60 * 60 * 1000);
-  const nextReviewDate = nextReviewAt ?? derivedNext;
-
   try {
     await prisma.userProgress.upsert({
       where: { userId_conditionId: { userId, conditionId } },
