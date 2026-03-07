@@ -1,4 +1,7 @@
+# Pass-through: serve static assets with correct MIME types
+# Must appear BEFORE the catch-all; otherwise /assets/* would return index.html (text/html)
+/assets/*  /assets/:splat  200
 # Serve index.html for index path (avoids infinite loop on catch-all)
 /index.html  /index.html  200
-# SPA fallback: serve index.html for all other paths
+# SPA fallback: serve index.html for all other paths (routes like /study, /dashboard, etc.)
 /*  /index.html  200
