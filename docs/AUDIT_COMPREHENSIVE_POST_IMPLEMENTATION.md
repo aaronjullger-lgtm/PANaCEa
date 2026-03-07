@@ -18,23 +18,23 @@
 
 ---
 
-### 2. **CaseRubric missing → grading returns 404**
+### 2. **CaseRubric fallback in grading (implemented)**
 
 **Location:** `functions/api/osce/analysis/grade.ts` → `resolveSessionAndRubric()`
 
-**Issue:** Grading requires a `CaseRubric` for the case. If none exists, the API returns 404 with "No rubric found for this case. Create a CaseRubric for the case before grading." There is **no documented API or seed path** to create rubrics (see `OSCE_GRADING_AUDIT.md`). So for most cases, grading is effectively unavailable unless rubrics are created out-of-band.
+**Current behavior:** Grading no longer requires a `CaseRubric` to exist. If no rubric is found, the API builds a fallback checklist from case `essentialQuestions` and `idealWorkup`, then continues grading and persists `OsceResult`.
 
-**Fix:** Implement at least one of: (a) seed script or migration that creates default rubrics from existing cases (e.g. from `essentialQuestions` / `idealWorkup`), (b) admin or internal API to create/update `CaseRubric` for a given `caseId`, or (c) fallback in the grader that builds a minimal rubric from case fields when no rubric exists (and optionally persist it). Document the chosen approach.
+**Status:** Implemented via in-handler fallback rubric construction. A seeding/admin rubric-management path is still useful for rubric consistency, but not required for endpoint availability.
 
 ---
 
-### 3. **Grade API not invoked on end encounter → checklist never shown**
+### 3. **Grade API invocation on end encounter (implemented)**
 
 **Location:** `components/modes/PatientEncounterMode.tsx` → `handleEndEncounter()`
 
-**Issue:** On "End Encounter," the flow calls Virtual Preceptor (`generateDebrief`) and enhanced OSCE report. It does **not** call `POST /api/osce/analysis/grade`. So the rubric-based checklist (item + PASS/FAIL + feedback) and `redFlagsMissed` are never fetched or displayed. Users do not see the formal "Critical actions" checklist in the results view.
+**Current behavior:** On "End Encounter," the flow completes the session and then calls `POST /api/osce/analysis/grade`, so rubric checklist data and `redFlagsMissed` are fetched in the results flow.
 
-**Fix:** From the results flow, either (1) call the grade API when the session is completed (and ensure session is marked completed before calling grade), then display `checklist` and `redFlagsMissed` in the results UI, or (2) surface the same information from the Preceptor / enhanced report (e.g. explicit "Critical actions: done / missed" section). Prefer (1) for a single source of truth and persistence of `OsceResult`.
+**Status:** Implemented with correct sequencing (`complete` → `analysis/grade`), preserving `OsceResult` as the source of truth.
 
 ---
 
@@ -132,12 +132,12 @@ Address these in order of product priority (e.g. Critical Action Grading and Spe
 
 1. **OSCE ownership**
    - As User A, start an OSCE session and note `sessionId`.
-   - As User B (different account), call `POST /api/osce/complete` and `POST /api/osce/chat` with User A’s `sessionId`. Expect 404 (not 200).
+   - As User B (different account), call `POST /api/osce/complete` and `POST /api/osce/chat` with User A’s `sessionId` using wrapped bodies (`{ body: { ... } }`). Expect 404 (not 200).
    - As User B, call `GET /api/osce/history?sessionId=<A's sessionId>`. Expect 404.
 
 2. **Grading and CaseRubric**
-   - Complete an OSCE session for a case that has **no** `CaseRubric`. Call `POST /api/osce/analysis/grade` with that sessionId. Expect 404 "No rubric found."
-   - For a case that **has** a rubric, complete the session then call the grade API. Expect 200 and a body with `checklist`, `redFlagsMissed`, `score`.
+   - Complete an OSCE session for a case that has **no** `CaseRubric`. Call `POST /api/osce/analysis/grade` with that sessionId. Expect **200** with fallback checklist grading.
+   - For a case that **has** a rubric, complete the session then call the grade API. Expect **200** and a body with `checklist`, `redFlagsMissed`, `score`.
 
 3. **Commuter Mode and storage**
    - Enable Commuter Mode in Settings. Reload the app. Confirm commuter mode is still enabled (read from same key).
@@ -164,8 +164,8 @@ Address these in order of product priority (e.g. Critical Action Grading and Spe
 | Category | Item | Severity | Status |
 |----------|------|----------|--------|
 | Critical | Storage key panacea vs panceai | High | Open |
-| Critical | CaseRubric missing → 404 | High | Open |
-| Critical | Grade API not called → checklist not shown | High | Open |
+| Critical | CaseRubric fallback for grading | Medium | Implemented |
+| Critical | Grade API call wired to end encounter flow | Medium | Implemented |
 | Critical | XSS surface on rationale/HTML | Medium | Open |
 | Omission | Normal Labs panel | Medium | Not implemented |
 | Omission | Vague patient AI / OPQRST | Medium | Partial |
