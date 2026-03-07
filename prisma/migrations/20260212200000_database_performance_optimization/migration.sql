@@ -6,23 +6,23 @@
 -- ============================================================================
 
 -- 1.1 Add missing index for user timeline queries (critical for pagination)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "QuestionAttempt_userId_createdAt_desc_idx" 
+CREATE INDEX IF NOT EXISTS "QuestionAttempt_userId_createdAt_desc_idx" 
 ON "QuestionAttempt"("userId", "createdAt" DESC);
 
 -- 1.2 Add covering index for system accuracy analytics
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "QuestionAttempt_system_wasCorrect_createdAt_idx" 
+CREATE INDEX IF NOT EXISTS "QuestionAttempt_system_wasCorrect_createdAt_idx" 
 ON "QuestionAttempt"("system", "wasCorrect", "createdAt");
 
 -- 1.3 Add index for mode-based analytics
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "QuestionAttempt_userId_mode_createdAt_idx" 
+CREATE INDEX IF NOT EXISTS "QuestionAttempt_userId_mode_createdAt_idx" 
 ON "QuestionAttempt"("userId", "mode", "createdAt");
 
 -- 1.4 Add index for condition-based queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "QuestionAttempt_userId_conditionId_createdAt_idx" 
+CREATE INDEX IF NOT EXISTS "QuestionAttempt_userId_conditionId_createdAt_idx" 
 ON "QuestionAttempt"("userId", "conditionId", "createdAt");
 
 -- 1.5 Add partial index for main session queries only (reduces index size)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "QuestionAttempt_main_session_userId_createdAt_idx" 
+CREATE INDEX IF NOT EXISTS "QuestionAttempt_main_session_userId_createdAt_idx" 
 ON "QuestionAttempt"("userId", "createdAt") 
 WHERE "isMainSession" = true;
 
@@ -31,19 +31,19 @@ WHERE "isMainSession" = true;
 -- ============================================================================
 
 -- 2.1 Add missing index for user review history (critical for FSRS calculations)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "ReviewLog_userId_reviewedAt_desc_idx" 
+CREATE INDEX IF NOT EXISTS "ReviewLog_userId_reviewedAt_desc_idx" 
 ON "ReviewLog"("userId", "reviewedAt" DESC);
 
 -- 2.2 Add covering index for condition-based review history
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "ReviewLog_userId_conditionId_reviewedAt_idx" 
+CREATE INDEX IF NOT EXISTS "ReviewLog_userId_conditionId_reviewedAt_idx" 
 ON "ReviewLog"("userId", "conditionId", "reviewedAt");
 
 -- 2.3 Add index for state-based queries (filtering by card state)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "ReviewLog_userId_state_reviewedAt_idx" 
+CREATE INDEX IF NOT EXISTS "ReviewLog_userId_state_reviewedAt_idx" 
 ON "ReviewLog"("userId", "state", "reviewedAt");
 
 -- 2.4 Add partial index for real reviews only (excludes simulated reviews)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "ReviewLog_real_reviews_userId_reviewedAt_idx" 
+CREATE INDEX IF NOT EXISTS "ReviewLog_real_reviews_userId_reviewedAt_idx" 
 ON "ReviewLog"("userId", "reviewedAt") 
 WHERE "review_type" = 'real';
 
@@ -52,20 +52,20 @@ WHERE "review_type" = 'real';
 -- ============================================================================
 
 -- 3.1 Add index for due card queries (critical for session generation)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "UserProgress_userId_nextReviewAt_idx" 
+CREATE INDEX IF NOT EXISTS "UserProgress_userId_nextReviewAt_idx" 
 ON "UserProgress"("userId", "nextReviewAt");
 
 -- 3.2 Add covering index for system-level progress queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "UserProgress_userId_system_nextReviewAt_idx" 
+CREATE INDEX IF NOT EXISTS "UserProgress_userId_system_nextReviewAt_idx" 
 ON "UserProgress"("userId", "system", "nextReviewAt");
 
 -- 3.3 Add partial index for active cards only (reduces index size)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "UserProgress_active_cards_idx" 
+CREATE INDEX IF NOT EXISTS "UserProgress_active_cards_idx" 
 ON "UserProgress"("userId", "nextReviewAt") 
-WHERE "state" IN (2, 3); -- Review (2) and Relearning (3) states
+WHERE "fsrsState" IN (2, 3); -- Review (2) and Relearning (3) states
 
 -- 3.4 Add index for condition lookup in user progress
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "UserProgress_conditionId_userId_idx" 
+CREATE INDEX IF NOT EXISTS "UserProgress_conditionId_userId_idx" 
 ON "UserProgress"("conditionId", "userId");
 
 -- ============================================================================
@@ -73,15 +73,15 @@ ON "UserProgress"("conditionId", "userId");
 -- ============================================================================
 
 -- 4.1 Add expression index for system + parent_category queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "MedicalContent_system_parent_category_idx" 
+CREATE INDEX IF NOT EXISTS "MedicalContent_system_parent_category_idx" 
 ON "MedicalContent"("system", "parent_category");
 
 -- 4.2 Add expression index for system + subcategory + parent_category queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "MedicalContent_system_subcategory_parent_category_idx" 
+CREATE INDEX IF NOT EXISTS "MedicalContent_system_subcategory_parent_category_idx" 
 ON "MedicalContent"("system", "subcategory", "parent_category");
 
 -- 4.3 Add index for status-based queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "MedicalContent_status_conditionId_idx" 
+CREATE INDEX IF NOT EXISTS "MedicalContent_status_conditionId_idx" 
 ON "MedicalContent"("status", "conditionId");
 
 -- ============================================================================
@@ -89,12 +89,12 @@ ON "MedicalContent"("status", "conditionId");
 -- ============================================================================
 
 -- 5.1 Add covering index for unused question selection
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "PreGeneratedQuestion_unused_selection_idx" 
+CREATE INDEX IF NOT EXISTS "PreGeneratedQuestion_unused_selection_idx" 
 ON "PreGeneratedQuestion"("system", "questionType", "validationStatus", "usedAt") 
 WHERE "usedAt" IS NULL AND "validationStatus" = 'validated';
 
 -- 5.2 Add index for system-based pool monitoring
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "PreGeneratedQuestion_system_usedAt_idx" 
+CREATE INDEX IF NOT EXISTS "PreGeneratedQuestion_system_usedAt_idx" 
 ON "PreGeneratedQuestion"("system", "usedAt");
 
 -- ============================================================================
@@ -102,11 +102,11 @@ ON "PreGeneratedQuestion"("system", "usedAt");
 -- ============================================================================
 
 -- 6.1 Add index for user question history lookups
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "UserQuestionSeen_userId_questionId_idx" 
+CREATE INDEX IF NOT EXISTS "UserQuestionSeen_userId_questionId_idx" 
 ON "UserQuestionSeen"("userId", "questionId");
 
 -- 6.2 Add index for last seen queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "UserQuestionSeen_userId_lastSeenAt_idx" 
+CREATE INDEX IF NOT EXISTS "UserQuestionSeen_userId_lastSeenAt_idx" 
 ON "UserQuestionSeen"("userId", "lastSeenAt" DESC);
 
 -- ============================================================================
