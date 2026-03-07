@@ -525,17 +525,62 @@ Key test scenarios:
 ### Grading flow
 
 1. User completes encounter and clicks **End Encounter**.
-2. Front end calls `POST /api/osce/complete` with `sessionId`, then `POST /api/osce/analysis/grade` with `sessionId`.
-3. Grade API loads the completed session and its case; if no `CaseRubric` exists, it builds a checklist from `essentialQuestions` and `idealWorkup` (fallback). Gemini grades the transcript; result is persisted as `OsceResult` and optionally creates a `ConceptGap` for Tutor targeting.
-4. Results view shows Preceptor debrief, rubric checklist (PASS/FAIL per item), and red flags missed. If grading failed, the user sees **Rubric: Unavailable** and can use **Retry grading**.
+2. Front end calls `POST /api/osce/complete` first, then `POST /api/osce/analysis/grade` (grade requires `session.status === 'completed'`).
+3. Grade API loads the completed session and case rubric; if no `CaseRubric` exists, it falls back to a checklist built from `essentialQuestions` + `idealWorkup`.
+4. Gemini returns rubric grading, the API persists/updates `OsceResult`, and optionally creates `ConceptGap` for tutor targeting when differential performance is poor.
+5. Results view shows Preceptor debrief plus rubric checklist (PASS/FAIL per item), red flags missed, and supports **Retry grading**.
 
 ### Seed scripts
 
 - **Cases:** `npm run seed:osce-cases` — seeds `PatientEncounterCase` rows (run first).
 - **Rubrics:** `npm run seed:osce-rubrics` — creates `CaseRubric` for cases that don’t have one, using `essentialQuestions` and `idealWorkup`. Grading works without rubrics via the API fallback; rubrics improve consistency.
 
-### OSCE API (GET) contract
+### OSCE API contract
+
+All endpoints below require authenticated requests.
 
 - **GET /api/osce/history?sessionId=…&limit=…**  
   Query params: `sessionId` (required), `limit` (optional, 1–500, default 100).  
-  Returns `{ data: { history } }`. Session ownership enforced; 404 if not found or not owned.
+  Returns `{ history }`. Session ownership enforced; 404 if not found or not owned.
+
+- **POST /api/osce/complete**  
+  Request body:
+  ```json
+  {
+    "body": {
+      "sessionId": "string",
+      "diagnosis": "string (optional)",
+      "treatmentPlan": "string (optional)",
+      "soapComparison": "object (optional)",
+      "timingAnalytics": "object (optional)",
+      "infographics": ["string"]
+    }
+  }
+  ```
+  Behavior:
+  - Marks the encounter session as `completed` (idempotent).
+  - Returns `{ "success": true, "alreadyCompleted": true }` when already completed.
+  - Creates `CaseFile` best-effort when analytics payload is present (`soapComparison` or `timingAnalytics`).
+
+- **POST /api/osce/analysis/grade**  
+  Request body:
+  ```json
+  {
+    "body": {
+      "sessionId": "string"
+    }
+  }
+  ```
+  Success response fields:
+  - `resultId`
+  - `score` (0-100)
+  - `checklist` (`[{ item, status: "PASS" | "FAIL", feedback }]`)
+  - `redFlagsMissed` (`string[]`)
+  - `clinicalReasoningScore` (0-100)
+  - `billingCodeSuggestion`
+  - `softSkillsReport` (optional)
+  - `conceptGapCreated` (boolean)
+  
+  Notes:
+  - Returns `400` if session is not completed.
+  - Applies Gemini-specific rate limiting (`429` when exceeded).

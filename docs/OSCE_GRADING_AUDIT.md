@@ -95,23 +95,23 @@ Apply the same ownership check in both `complete.ts` and `chat.ts`.
 
 ---
 
-### 3. **No way to create CaseRubric**
+### 3. **CaseRubric fallback in grader (implemented)**
 
 **Location:** Schema and OSCE APIs
 
-**Issue:** The grading flow assumes a `CaseRubric` exists for each `PatientEncounterCase`. There is no API or seed path documented to create rubrics. Grading returns 404 with “No rubric found for this case” until rubrics are created out-of-band.
+**Current behavior:** The grader no longer fails when `CaseRubric` is missing. It builds a fallback checklist from case `essentialQuestions` and `idealWorkup`, then continues grading and persistence.
 
-**Recommendation:** Add at least one of: (a) a seed script or migration that creates default rubrics from existing cases (e.g. from `essentialQuestions` / `idealWorkup`), (b) an admin or internal API to create/update `CaseRubric` for a given `caseId`, or (c) a fallback in the grader that builds a minimal rubric from case fields when no rubric exists (and optionally persist it). Document the chosen approach.
+**Recommendation:** Keep fallback behavior for availability, and still add rubric seeding/admin tooling to improve consistency and instructional quality across cases.
 
 ---
 
-### 4. **Gemini rate limit not applied to grade endpoint**
+### 4. **Gemini rate limit on grade endpoint (implemented)**
 
 **Location:** `functions/api/osce/analysis/grade.ts` vs `functions/api/gemini/index.ts`, `functions/api/clinical-eye/analyze.ts`
 
-**Issue:** Other Gemini-consuming endpoints use `withRateLimit(env, identifier, 'gemini')` to cap expensive calls. The grade endpoint uses only the generic rate limit from `authenticatedEndpoint`. A single user can trigger many grading requests and burn quota.
+**Current behavior:** The grade endpoint applies Gemini-specific rate limiting via `_shared/rateLimiter` (`withRateLimit(..., 'gemini')`) in addition to the baseline authenticated API limiter.
 
-**Recommendation:** After validating env (e.g. `GEMINI`), call the same `withRateLimit(..., 'gemini')` (and `getRateLimitIdentifier(request)`) before calling Gemini in the grade handler; return 429 and appropriate headers when over limit.
+**Recommendation:** Keep the Gemini-specific limiter in place and tune quotas based on production usage.
 
 ---
 
@@ -162,9 +162,9 @@ Apply the same ownership check in both `complete.ts` and `chat.ts`.
 1. **Ownership and security**
    - As User A, create an OSCE session and get `sessionId`.
    - As User B (different account), call:
-     - `POST /api/osce/complete` with User A’s `sessionId`.
-     - `POST /api/osce/chat` with User A’s `sessionId` and a body with messages.
-   - **Expected:** Both should fail (404 or 403) after you add the ownership checks. Today they can succeed and modify User A’s data.
+     - `POST /api/osce/complete` with body `{ body: { sessionId: "<A-session-id>" } }`.
+     - `POST /api/osce/chat` with body `{ body: { sessionId: "<A-session-id>", messages: [...] } }`.
+   - **Expected:** Both fail with 404/403 for non-owner access.
    - After fixing history: as User B, call `GET /api/osce/history?sessionId=<User A's sessionId>`. **Expected:** 404 or empty, not User A’s history.
 
 2. **History endpoint**
@@ -176,10 +176,9 @@ Apply the same ownership check in both `complete.ts` and `chat.ts`.
    - **Expected:** 200 and a new session. If you see DB errors about `updatedAt`, add `@updatedAt` or `@default(now())` to `PatientEncounterSession.updatedAt` and migrate.
 
 4. **Grading flow**
-   - Create a `CaseRubric` for a case (via script or future API).
-   - Complete a session (status = completed) that has messages.
+   - Complete a session (status = completed) that has messages (with or without `CaseRubric`).
    - Call `POST /api/osce/analysis/grade` with body `{ body: { sessionId: "<that-session-id>" } }`.
-   - **Expected:** 200, `data.resultId`, `data.score`, `data.checklist`, `data.conceptGapCreated` (true when differential fails or red flags missed). No 502 from parse or Gemini.
+   - **Expected:** 200, `resultId`, `score`, `checklist`, `conceptGapCreated` (true when differential fails or red flags missed). No 502 from parse or Gemini.
    - Re-call grade with the same sessionId; **expected:** 200 and updated result; check that ConceptGap duplication (if any) is acceptable or reduced by the dedup logic.
 
 5. **ConceptGap and Tutor**
@@ -206,8 +205,8 @@ Apply the same ownership check in both `complete.ts` and `chat.ts`.
 | Critical            | PatientEncounterSession.create missing updatedAt | Medium   | Yes       |
 | Logical             | ConceptGap.system vs OrganSystemSchema    | Medium   | Recommended |
 | Logical             | Duplicate ConceptGaps on re-grade         | Low      | Recommended |
-| Logical             | No CaseRubric creation path               | Medium   | Recommended |
-| Logical             | Grade endpoint no Gemini rate limit       | Medium   | Recommended |
+| Logical             | CaseRubric admin/seeding path (fallback exists) | Low | Recommended |
+| Logical             | Gemini rate limit on grade endpoint       | Low      | Implemented |
 | Technical debt      | Request body double-wrap documentation   | Low      | Optional  |
 | Technical debt      | Checklist item validation in grade        | Low      | Optional  |
 | Technical debt      | RLS vs API-layer security documented      | Low      | Optional  |

@@ -24,6 +24,10 @@ Welcome to the PANaCEa documentation! This index helps you quickly find the info
 2. **[Database Implementation](guides/DATABASE_IMPLEMENTATION.md)** - Database architecture
 3. **[Search Engine](guides/SEARCH_ENGINE_UPGRADE.md)** - Search functionality
 
+### For API Surface
+
+1. **[API Overview](api/API_OVERVIEW.md)** - Current request/response contracts for updated endpoints
+
 ---
 
 ## 🏗️ Architecture
@@ -34,6 +38,14 @@ Learn about PANaCEa's system design:
 - **[Database-First Architecture](architecture/DATABASE_FIRST_ARCHITECTURE.md)** - Database-centric approach
 - **[Registry-First Architecture](architecture/REGISTRY_FIRST_ARCHITECTURE.md)** - Registry system design
 - **[Hybrid Content Engine](architecture/HYBRID_CONTENT_ENGINE.md)** - Content delivery system
+
+---
+
+## 🔌 API
+
+Backend endpoint contracts and API behavior docs:
+
+- **[API Overview](api/API_OVERVIEW.md)** - Updated OSCE endpoint contracts (`/api/osce/complete`, `/api/osce/analysis/grade`)
 
 ---
 
@@ -162,6 +174,7 @@ When adding new documentation:
 
 1. **Choose the right folder:**
    - `architecture/` - System design documents
+   - `api/` - Endpoint contracts and request/response references
    - `deployment/` - Production and hosting guides
    - `implementation/` - Feature implementation docs
    - `guides/` - User and developer guides
