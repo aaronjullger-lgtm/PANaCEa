@@ -64,9 +64,9 @@ Single checklist for the main session and OSCE audits. Use this to track impleme
 | Check | Status | Notes |
 |-------|--------|--------|
 | Critical actions in code | ✅ Present | `services/domain/osceScoringEngine.ts` defines condition-specific critical actions (e.g. ACS: order ECG within 10 min). `functions/api/osce/analysis/grade.ts` grades against a per-case `CaseRubric` (checklist + red flags). |
-| Wired to results UI | ❌ Gap | On "End Encounter," `PatientEncounterMode` calls Virtual Preceptor (`generateDebrief`) and enhanced OSCE report; it does **not** call `POST /api/osce/analysis/grade`. So the rubric checklist (item + PASS/FAIL + feedback) is not shown. |
+| Wired to results UI | ✅ Present | On "End Encounter," `PatientEncounterMode` completes the session via `POST /api/osce/complete` and then calls `POST /api/osce/analysis/grade`, enabling rubric checklist data (item + PASS/FAIL + feedback) and red flags in results. |
 
-**Action:** [ ] Either (1) call the grade API when ending the encounter and display its `checklist` and `redFlagsMissed` in the results view, or (2) ensure the Preceptor / enhanced report explicitly lists "Critical actions: done / missed" in the results UI.
+**Action:** [x] Keep grade-call sequencing in place (`complete` → `analysis/grade`) and continue surfacing `checklist` + `redFlagsMissed` in results.
 
 **Ref:** `docs/AUDIT_VIRTUAL_OSCE_AI_PATIENT.md` § 3.1, 3.3.
 
