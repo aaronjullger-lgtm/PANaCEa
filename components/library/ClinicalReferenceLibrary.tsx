@@ -271,6 +271,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   const retrievabilityMap = useMemo(() => {
     const map: Record<string, number | null> = {};
     Object.entries(progressMap).forEach(([conditionId, data]) => {
+      if (!data || typeof data !== 'object') return;
       const { stability, lastReviewAt, fsrsParams } = data;
       const w19 = fsrsParams?.[19] ?? defaultParameters.w[19];
       const w20 = fsrsParams?.[20] ?? defaultParameters.w[20];

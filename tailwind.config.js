@@ -173,10 +173,10 @@ export default {
           card: 'var(--color-surface-card)',
         },
         action: {
-          primary: '#f8fafc', // Slate 50 (White - high contrast CTA)
-          secondary: '#334155', // Slate 700
-          'primary-hover': '#e2e8f0', // Slate 200
-          'secondary-hover': '#475569', // Slate 600
+          primary: 'var(--color-action-primary)', // Accent (gold) for CTAs, icons
+          secondary: 'var(--color-action-secondary)', // theme-aware secondary text
+          'primary-hover': 'var(--color-action-primary-hover)',
+          'secondary-hover': 'var(--color-action-secondary)',
         },
         data: {
           pass: '#0a766c', // Teal 700 - success/passing (improved contrast for light mode)

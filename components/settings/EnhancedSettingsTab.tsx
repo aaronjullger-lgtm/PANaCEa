@@ -560,7 +560,13 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                           <input
                             id="settings-eor-test-date"
                             type="date"
-                            value={userProfile.eorTestDate ?? ''}
+                            value={
+                              userProfile.eorTestDate
+                                ? userProfile.eorTestDate.includes('T')
+                                  ? userProfile.eorTestDate.split('T')[0]
+                                  : userProfile.eorTestDate
+                                : ''
+                            }
                             onChange={(e) =>
                               handleUpdateProfile({ eorTestDate: e.target.value || undefined })
                             }
