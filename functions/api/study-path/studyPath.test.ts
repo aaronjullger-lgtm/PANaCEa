@@ -74,10 +74,6 @@ describe('Study Path Recommendation Endpoint', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (authenticateRequest as any).mockResolvedValue({
-      userId: 'user123',
-      sessionId: 'sess_123',
-    });
     // Default mocks
     (isKVAvailable as any).mockReturnValue(false);
     (getStudyPathCacheKey as any).mockReturnValue('cache-key');
