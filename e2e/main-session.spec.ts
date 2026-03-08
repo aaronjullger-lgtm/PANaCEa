@@ -239,4 +239,44 @@ test.describe('Main Session End-to-End', () => {
 
     console.log('✅ Main session E2E test passed');
   });
+
+  test('should support keyboard submit and quiz overflow lab calculators', async ({ page }) => {
+    // Step 1: Navigate to app
+    await page.goto(BASE_URL);
+    await waitForAppReady(page);
+
+    // Step 2: Ensure authenticated (skip if not)
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      console.log('⊘ Skipping keyboard/overflow test - authentication required');
+      test.skip();
+      return;
+    }
+
+    // Step 3: Start a main session
+    await startMainSession(page);
+
+    // Step 4: Keyboard answer + submit (A then Enter)
+    await page.keyboard.press('a');
+    await page.keyboard.press('Enter');
+
+    // Step 5: Wait for post-submit UI
+    await expect(page.locator('button:has-text("Next Question")').first()).toBeVisible({
+      timeout: 10000,
+    });
+
+    // Step 6: Open overflow menu and launch lab calculators
+    const overflowButton = page.locator('button[title="More actions"]').first();
+    await expect(overflowButton).toBeVisible({ timeout: 5000 });
+    await overflowButton.click();
+
+    const labCalculatorsButton = page.locator('button:has-text("Lab Calculators")').first();
+    await expect(labCalculatorsButton).toBeVisible({ timeout: 5000 });
+    await labCalculatorsButton.click();
+
+    await expect(page.locator('text=Lab Calculators').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('button:has-text("Anion Gap")').first()).toBeVisible({
+      timeout: 5000,
+    });
+  });
 });
