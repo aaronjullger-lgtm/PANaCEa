@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { onRequestGet } from './recommendation';
 import type { CloudflareContext } from '../_shared/middleware';
 
 // Mock external services
@@ -33,6 +32,12 @@ vi.mock('../_shared/cors', () => ({
   getCorsConfig: vi.fn(() => ({ allowedOrigins: ['*'] })),
   getCorsHeaders: vi.fn(() => ({})),
 }));
+vi.mock('../_shared/auth', () => ({
+  authenticateRequest: vi.fn().mockResolvedValue({
+    userId: 'user123',
+    sessionId: 'sess_123',
+  }),
+}));
 vi.mock('../_shared/prisma-edge', () => ({
   createEdgePrismaClient: vi.fn(() => ({
     $connect: vi.fn(),
@@ -48,10 +53,13 @@ import { balanceBlueprintPriorities } from '@/services/optimizer/blueprintBalanc
 import { generateStudyPlan } from '@/services/optimizer/pathGenerator';
 import { computeConfidence, fetchConfidenceData } from '@/services/optimizer/confidenceScorer';
 import { getFromCache, setInCache, isKVAvailable, getStudyPathCacheKey } from '../_shared/cache';
+import { authenticateRequest } from '../_shared/auth';
+const { onRequestGet } = await import('./recommendation');
 
 describe('Study Path Recommendation Endpoint', () => {
   const mockEnv = {
     DATABASE_URL: 'postgresql://test',
+    CLERK_SECRET_KEY: 'test-clerk-secret',
     CACHE: {} as any,
   };
   const mockAuth = {
@@ -70,6 +78,10 @@ describe('Study Path Recommendation Endpoint', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (authenticateRequest as any).mockResolvedValue({
+      userId: 'user123',
+      sessionId: 'sess_123',
+    });
     // Default mocks
     (isKVAvailable as any).mockReturnValue(false);
     (getStudyPathCacheKey as any).mockReturnValue('cache-key');

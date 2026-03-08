@@ -67,6 +67,7 @@ describe('TrainingMenu Component Logic', () => {
       'Target',
       'Grid3x3',
       'Monitor',
+      'BarChart',
     ];
 
     it('should have valid icon names for all modes', () => {

@@ -48,6 +48,7 @@ describe('Performance Gap Analyzer', () => {
 
     const gaps = await analyzePerformanceGaps(mockPrisma, 'user123', {
       targetRetention: 0.9,
+      minimumReviewCount: 1,
     });
 
     expect(gaps).toHaveLength(1);
@@ -68,6 +69,7 @@ describe('Performance Gap Analyzer', () => {
 
     const gaps = await analyzePerformanceGaps(mockPrisma, 'user123', {
       includeSubcategories: true,
+      minimumReviewCount: 1,
     });
 
     // subcategory column not present; grouping ignores subcategory
@@ -102,7 +104,9 @@ describe('Performance Gap Analyzer', () => {
       { system: 'Pulmonary', subcategory: null, wasCorrect: false, reviewedAt: now },
     ]);
 
-    const gaps = await analyzePerformanceGaps(mockPrisma, 'user123');
+    const gaps = await analyzePerformanceGaps(mockPrisma, 'user123', {
+      minimumReviewCount: 1,
+    });
     expect(gaps).toHaveLength(2);
     // Pulmonary accuracy 0.0 → gap 0.9 (largest)
     // Cardiovascular accuracy 1.0 → gap -0.1 (negative, meaning over‑performance)
@@ -121,6 +125,7 @@ describe('Performance Gap Analyzer', () => {
 
     const gaps = await analyzePerformanceGaps(mockPrisma, 'user123', {
       targetRetention: undefined, // let it fetch from DB
+      minimumReviewCount: 1,
     });
 
     expect(gaps[0].targetAccuracy).toBe(0.85);

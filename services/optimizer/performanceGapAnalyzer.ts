@@ -53,10 +53,15 @@ export async function analyzePerformanceGaps(
 ): Promise<PerformanceGap[]> {
   const {
     rollingWindowSize = 200,
-    targetRetention = 0.90,
+    targetRetention,
     includeSubcategories = false,
     minimumReviewCount = 5,
   } = options;
+
+  const effectiveTargetRetention =
+    typeof targetRetention === 'number'
+      ? targetRetention
+      : await getUserTargetRetention(prisma, userId);
 
   // Step 1: Fetch recent reviews for this user (session_type = 'MAIN')
   // We need to get the last N reviews per system (or per system+subcategory) but
@@ -122,13 +127,13 @@ export async function analyzePerformanceGaps(
     if (group.total < minimumReviewCount) continue;
 
     const currentAccuracy = group.correct / group.total;
-    const gap = targetRetention - currentAccuracy;
+    const gap = effectiveTargetRetention - currentAccuracy;
 
     gaps.push({
       taxonomyCode: group.taxonomyCode,
       subcategory: group.subcategory,
       currentAccuracy,
-      targetAccuracy: targetRetention,
+      targetAccuracy: effectiveTargetRetention,
       gap,
       reviewCount: group.total,
       lastReviewedAt: group.lastReviewedAt ?? undefined,

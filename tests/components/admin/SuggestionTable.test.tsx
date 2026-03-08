@@ -97,20 +97,23 @@ describe('SuggestionTable', () => {
     vi.clearAllMocks();
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ suggestions: mockSuggestions, total: mockSuggestions.length }),
+      json: async () => ({
+        suggestions: mockSuggestions,
+        pagination: { total: mockSuggestions.length, totalPages: 1 },
+      }),
     });
   });
 
   it('renders loading state initially', () => {
     render(<SuggestionTable />);
-    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByText(/loading mapping suggestions/i)).toBeInTheDocument();
   });
 
   it('renders suggestions after loading', async () => {
     render(<SuggestionTable />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading mapping suggestions/i)).not.toBeInTheDocument();
     });
 
     // Check that suggestion rows are present
@@ -119,21 +122,35 @@ describe('SuggestionTable', () => {
     expect(screen.getByText('Gastrointestinal')).toBeInTheDocument();
 
     // Check status badges
-    expect(screen.getByText('Pending')).toBeInTheDocument();
-    expect(screen.getByText('Approved')).toBeInTheDocument();
-    expect(screen.getByText('Rejected')).toBeInTheDocument();
+    expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Approved').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Rejected').length).toBeGreaterThan(0);
 
     // Check confidence displayed as percentage
-    expect(screen.getByText('95%')).toBeInTheDocument();
-    expect(screen.getByText('87%')).toBeInTheDocument();
-    expect(screen.getByText('65%')).toBeInTheDocument();
+    expect(screen.getByText('95.0%')).toBeInTheDocument();
+    expect(screen.getByText('87.0%')).toBeInTheDocument();
+    expect(screen.getByText('65.0%')).toBeInTheDocument();
   });
 
   it('applies status filter', async () => {
+    mockFetch.mockImplementation((url) => {
+      const hasPendingFilter = String(url).includes('status=PENDING');
+      const filtered = hasPendingFilter
+        ? mockSuggestions.filter((s) => s.status === 'PENDING')
+        : mockSuggestions;
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          suggestions: filtered,
+          pagination: { total: filtered.length, totalPages: 1 },
+        }),
+      });
+    });
+
     render(<SuggestionTable initialStatus="PENDING" />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading mapping suggestions/i)).not.toBeInTheDocument();
     });
 
     // Only pending suggestion should be visible
@@ -147,7 +164,7 @@ describe('SuggestionTable', () => {
     render(<SuggestionTable selectable onSelectionChange={onSelectionChange} />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading mapping suggestions/i)).not.toBeInTheDocument();
     });
 
     const checkboxes = screen.getAllByRole('checkbox');
@@ -169,7 +186,10 @@ describe('SuggestionTable', () => {
       // Default for GET suggestions
       return Promise.resolve({
         ok: true,
-        json: async () => ({ suggestions: mockSuggestions, total: mockSuggestions.length }),
+        json: async () => ({
+          suggestions: mockSuggestions,
+          pagination: { total: mockSuggestions.length, totalPages: 1 },
+        }),
       });
     });
 
@@ -177,7 +197,7 @@ describe('SuggestionTable', () => {
     render(<SuggestionTable onSuggestionUpdated={onSuggestionUpdated} />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading mapping suggestions/i)).not.toBeInTheDocument();
     });
 
     // Find the approve button for the first suggestion (pending row)
@@ -209,7 +229,7 @@ describe('SuggestionTable', () => {
     render(<SuggestionTable />);
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to load suggestions/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/failed to load suggestions/i).length).toBeGreaterThan(0);
     });
   });
 });

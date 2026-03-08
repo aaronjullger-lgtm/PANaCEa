@@ -15,7 +15,7 @@ import { updateReviewOutcome } from '../lib/services/srsService';
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn(function() {
     return {
-      questionAttempt: { create: vi.fn() },
+      questionAttempt: { findFirst: vi.fn(), create: vi.fn() },
       reviewLog: { create: vi.fn() },
       userProgress: { findUnique: vi.fn(), update: vi.fn() },
       medicalContent: { findFirst: vi.fn() },

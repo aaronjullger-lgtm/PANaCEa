@@ -480,8 +480,13 @@ export const MappingEnrichmentDashboard: React.FC = () => {
       {selectedSuggestionIds.length > 0 && (
         <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border border-[var(--color-border)]">
           <BulkApprovalPanel
-            selectedSuggestionIds={selectedSuggestionIds}
-            onComplete={handleBulkActionComplete}
+            selectedIds={selectedSuggestionIds}
+            totalCount={stats?.totalSuggestions ?? selectedSuggestionIds.length}
+            onClearSelection={() => {
+              setSelectedSuggestionIds([]);
+              setSelectedSuggestions([]);
+            }}
+            onActionComplete={handleBulkActionComplete}
           />
         </div>
       )}

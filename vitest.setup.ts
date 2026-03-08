@@ -2,6 +2,8 @@
 // - Ensures browser-like APIs (localStorage) exist even in edge cases.
 // - Sets up DATABASE_URL for Prisma client initialization in tests
 
+import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach } from 'vitest';
 
 // Ensure test env so hooks that branch on NODE_ENV use test paths (e.g. use-photo-drill fetchPhotoCases)
@@ -97,4 +99,5 @@ beforeEach(() => {
 afterEach(() => {
   ensureLocalStorage();
   globalThis.localStorage.clear();
+  cleanup();
 });

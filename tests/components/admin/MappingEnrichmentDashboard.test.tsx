@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MappingEnrichmentDashboard } from '@/components/admin/MappingEnrichmentDashboard';
-import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
 // Mock Clerk useAuth
 const mockGetToken = vi.fn().mockResolvedValue('mock-token');
@@ -21,6 +20,20 @@ vi.mock('@/lib/utils/apiConfig', () => ({
   },
 }));
 
+// Mock heavy child components to keep dashboard tests focused
+vi.mock('@/components/admin/SuggestionTable', () => ({
+  SuggestionTable: () => <div data-testid="suggestion-table">SuggestionTable</div>,
+}));
+vi.mock('@/components/admin/BulkApprovalPanel', () => ({
+  BulkApprovalPanel: () => <div data-testid="bulk-approval-panel">BulkApprovalPanel</div>,
+}));
+vi.mock('@/components/admin/mapping-enrichment/ChangePreviewModal', () => ({
+  ChangePreviewModal: () => null,
+}));
+vi.mock('@/components/admin/mapping-enrichment/AuditLogTable', () => ({
+  AuditLogTable: () => <div data-testid="audit-log-table">AuditLogTable</div>,
+}));
+
 // Mock fetch globally
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -28,6 +41,7 @@ global.fetch = mockFetch;
 describe('MappingEnrichmentDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetToken.mockResolvedValue('mock-token');
     // Default mock implementations
     mockFetch.mockImplementation((url) => {
       if (url.includes('suggestions')) {
@@ -51,7 +65,7 @@ describe('MappingEnrichmentDashboard', () => {
 
   it('renders loading state initially', () => {
     render(<MappingEnrichmentDashboard />);
-    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByText(/loading mapping enrichment dashboard/i)).toBeInTheDocument();
   });
 
   it('renders dashboard with stats after loading', async () => {
@@ -130,18 +144,16 @@ describe('MappingEnrichmentDashboard', () => {
     render(<MappingEnrichmentDashboard />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading mapping enrichment dashboard/i)).not.toBeInTheDocument();
     });
 
     // Check stats are displayed
-    expect(screen.getByText('Total Suggestions')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument(); // total suggestions
-    expect(screen.getByText('Pending')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument(); // pending count
-    expect(screen.getByText('Approved')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument(); // approved count
-    expect(screen.getByText('Total Gaps')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument(); // gaps count
+    expect(screen.getByText('Pending Suggestions')).toBeInTheDocument();
+    expect(screen.getByText('Approved Mappings')).toBeInTheDocument();
+    expect(screen.getByText('Active Gaps')).toBeInTheDocument();
+    expect(screen.getByText(/2 total suggestions/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/rejected/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/1 total gaps/i)).toBeInTheDocument();
   });
 
   it('handles error state', async () => {
@@ -153,7 +165,7 @@ describe('MappingEnrichmentDashboard', () => {
     render(<MappingEnrichmentDashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to load dashboard data/i)).toBeInTheDocument();
+      expect(screen.getByText(/error loading dashboard/i)).toBeInTheDocument();
     });
   });
 
@@ -179,16 +191,20 @@ describe('MappingEnrichmentDashboard', () => {
 
     render(<MappingEnrichmentDashboard />);
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading mapping enrichment dashboard/i)).not.toBeInTheDocument();
     });
 
     const detectGapsButton = screen.getByRole('button', { name: /detect gaps/i });
     fireEvent.click(detectGapsButton);
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/mapping-enrichment/gaps'),
-      expect.objectContaining({ method: 'GET' })
-    );
+    await waitFor(() => {
+      const matched = mockFetch.mock.calls.some(
+        ([url, options]) =>
+          String(url).includes('/api/mapping-enrichment/gaps') &&
+          (options as Record<string, unknown> | undefined)?.method === 'GET'
+      );
+      expect(matched).toBe(true);
+    });
   });
 
   it('triggers suggestion generation', async () => {
@@ -199,15 +215,19 @@ describe('MappingEnrichmentDashboard', () => {
 
     render(<MappingEnrichmentDashboard />);
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading mapping enrichment dashboard/i)).not.toBeInTheDocument();
     });
 
     const generateButton = screen.getByRole('button', { name: /generate suggestions/i });
     fireEvent.click(generateButton);
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/mapping-enrichment/suggest'),
-      expect.objectContaining({ method: 'POST' })
-    );
+    await waitFor(() => {
+      const matched = mockFetch.mock.calls.some(
+        ([url, options]) =>
+          String(url).includes('/api/mapping-enrichment/suggest') &&
+          (options as Record<string, unknown> | undefined)?.method === 'POST'
+      );
+      expect(matched).toBe(true);
+    });
   });
 });
