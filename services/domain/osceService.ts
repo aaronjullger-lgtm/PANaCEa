@@ -117,7 +117,9 @@ export async function completeOSCESession(
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ sessionId, diagnosis, treatmentPlan }),
+      body: JSON.stringify({
+        body: { sessionId, diagnosis, treatmentPlan },
+      }),
     });
 
     return response.ok;

@@ -117,6 +117,12 @@ const routes = [
     description: 'Mechanical ventilation management',
   },
   {
+    name: 'Virtual OSCE',
+    url: '/?view=patient_encounter',
+    expectText: 'Virtual OSCE',
+    description: 'Patient encounter mode shell and landing render',
+  },
+  {
     name: 'Admin Media',
     url: '/?view=admin_media',
     expectText: 'Media',
