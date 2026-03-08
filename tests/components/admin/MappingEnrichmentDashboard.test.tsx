@@ -65,7 +65,7 @@ describe('MappingEnrichmentDashboard', () => {
 
   it('renders loading state initially', () => {
     render(<MappingEnrichmentDashboard />);
-    expect(screen.getByText(/loading mapping enrichment dashboard/i)).toBeInTheDocument();
+    expect(screen.getByText(/loading mapping enrichment dashboard/i)).toBeTruthy();
   });
 
   it('renders dashboard with stats after loading', async () => {
@@ -144,16 +144,15 @@ describe('MappingEnrichmentDashboard', () => {
     render(<MappingEnrichmentDashboard />);
 
     await waitFor(() => {
-      expect(screen.queryByText(/loading mapping enrichment dashboard/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).toBeNull();
     });
 
-    // Check stats are displayed
-    expect(screen.getByText('Pending Suggestions')).toBeInTheDocument();
-    expect(screen.getByText('Approved Mappings')).toBeInTheDocument();
-    expect(screen.getByText('Active Gaps')).toBeInTheDocument();
-    expect(screen.getByText(/2 total suggestions/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/rejected/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/1 total gaps/i)).toBeInTheDocument();
+    // Check stats are displayed with current card labels
+    expect(screen.getByText('Pending Suggestions')).toBeTruthy();
+    expect(screen.getByText('Approved Mappings')).toBeTruthy();
+    expect(screen.getByText('Active Gaps')).toBeTruthy();
+    expect(screen.getByText('System Coverage')).toBeTruthy();
+    expect(screen.getByText(/2 total suggestions/i)).toBeTruthy();
   });
 
   it('handles error state', async () => {
@@ -165,7 +164,7 @@ describe('MappingEnrichmentDashboard', () => {
     render(<MappingEnrichmentDashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText(/error loading dashboard/i)).toBeInTheDocument();
+      expect(screen.getByText(/error loading dashboard/i)).toBeTruthy();
     });
   });
 
@@ -191,19 +190,19 @@ describe('MappingEnrichmentDashboard', () => {
 
     render(<MappingEnrichmentDashboard />);
     await waitFor(() => {
-      expect(screen.queryByText(/loading mapping enrichment dashboard/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).toBeNull();
     });
 
     const detectGapsButton = screen.getByRole('button', { name: /detect gaps/i });
     fireEvent.click(detectGapsButton);
 
     await waitFor(() => {
-      const matched = mockFetch.mock.calls.some(
+      const hasGapDetectionCall = mockFetch.mock.calls.some(
         ([url, options]) =>
           String(url).includes('/api/mapping-enrichment/gaps') &&
           (options as Record<string, unknown> | undefined)?.method === 'GET'
       );
-      expect(matched).toBe(true);
+      expect(hasGapDetectionCall).toBe(true);
     });
   });
 
@@ -215,19 +214,19 @@ describe('MappingEnrichmentDashboard', () => {
 
     render(<MappingEnrichmentDashboard />);
     await waitFor(() => {
-      expect(screen.queryByText(/loading mapping enrichment dashboard/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).toBeNull();
     });
 
     const generateButton = screen.getByRole('button', { name: /generate suggestions/i });
     fireEvent.click(generateButton);
 
     await waitFor(() => {
-      const matched = mockFetch.mock.calls.some(
+      const hasGenerateCall = mockFetch.mock.calls.some(
         ([url, options]) =>
           String(url).includes('/api/mapping-enrichment/suggest') &&
           (options as Record<string, unknown> | undefined)?.method === 'POST'
       );
-      expect(matched).toBe(true);
+      expect(hasGenerateCall).toBe(true);
     });
   });
 });

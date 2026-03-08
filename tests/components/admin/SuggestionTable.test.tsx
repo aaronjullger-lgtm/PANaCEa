@@ -106,20 +106,20 @@ describe('SuggestionTable', () => {
 
   it('renders loading state initially', () => {
     render(<SuggestionTable />);
-    expect(screen.getByText(/loading mapping suggestions/i)).toBeInTheDocument();
+    expect(screen.getByText(/loading mapping suggestions/i)).toBeTruthy();
   });
 
   it('renders suggestions after loading', async () => {
     render(<SuggestionTable />);
 
     await waitFor(() => {
-      expect(screen.queryByText(/loading mapping suggestions/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading mapping suggestions/i)).toBeNull();
     });
 
     // Check that suggestion rows are present
-    expect(screen.getByText('Cardiovascular')).toBeInTheDocument();
-    expect(screen.getByText('Pulmonary')).toBeInTheDocument();
-    expect(screen.getByText('Gastrointestinal')).toBeInTheDocument();
+    expect(screen.getByText('Cardiovascular')).toBeTruthy();
+    expect(screen.getByText('Pulmonary')).toBeTruthy();
+    expect(screen.getByText('Gastrointestinal')).toBeTruthy();
 
     // Check status badges
     expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
@@ -127,22 +127,21 @@ describe('SuggestionTable', () => {
     expect(screen.getAllByText('Rejected').length).toBeGreaterThan(0);
 
     // Check confidence displayed as percentage
-    expect(screen.getByText('95.0%')).toBeInTheDocument();
-    expect(screen.getByText('87.0%')).toBeInTheDocument();
-    expect(screen.getByText('65.0%')).toBeInTheDocument();
+    expect(screen.getByText('95.0%')).toBeTruthy();
+    expect(screen.getByText('87.0%')).toBeTruthy();
+    expect(screen.getByText('65.0%')).toBeTruthy();
   });
 
   it('applies status filter', async () => {
-    mockFetch.mockImplementation((url) => {
-      const hasPendingFilter = String(url).includes('status=PENDING');
-      const filtered = hasPendingFilter
+    mockFetch.mockImplementation((url: string) => {
+      const suggestions = url.includes('status=PENDING')
         ? mockSuggestions.filter((s) => s.status === 'PENDING')
         : mockSuggestions;
       return Promise.resolve({
         ok: true,
         json: async () => ({
-          suggestions: filtered,
-          pagination: { total: filtered.length, totalPages: 1 },
+          suggestions,
+          pagination: { total: suggestions.length, totalPages: 1 },
         }),
       });
     });
@@ -150,13 +149,13 @@ describe('SuggestionTable', () => {
     render(<SuggestionTable initialStatus="PENDING" />);
 
     await waitFor(() => {
-      expect(screen.queryByText(/loading mapping suggestions/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading mapping suggestions/i)).toBeNull();
     });
 
     // Only pending suggestion should be visible
-    expect(screen.getByText('Cardiovascular')).toBeInTheDocument();
-    expect(screen.queryByText('Pulmonary')).not.toBeInTheDocument();
-    expect(screen.queryByText('Gastrointestinal')).not.toBeInTheDocument();
+    expect(screen.getByText('Cardiovascular')).toBeTruthy();
+    expect(screen.queryByText('Pulmonary')).toBeNull();
+    expect(screen.queryByText('Gastrointestinal')).toBeNull();
   });
 
   it('handles selection when selectable is true', async () => {
@@ -164,7 +163,7 @@ describe('SuggestionTable', () => {
     render(<SuggestionTable selectable onSelectionChange={onSelectionChange} />);
 
     await waitFor(() => {
-      expect(screen.queryByText(/loading mapping suggestions/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading mapping suggestions/i)).toBeNull();
     });
 
     const checkboxes = screen.getAllByRole('checkbox');
@@ -197,7 +196,7 @@ describe('SuggestionTable', () => {
     render(<SuggestionTable onSuggestionUpdated={onSuggestionUpdated} />);
 
     await waitFor(() => {
-      expect(screen.queryByText(/loading mapping suggestions/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading mapping suggestions/i)).toBeNull();
     });
 
     // Find the approve button for the first suggestion (pending row)
@@ -229,7 +228,7 @@ describe('SuggestionTable', () => {
     render(<SuggestionTable />);
 
     await waitFor(() => {
-      expect(screen.getAllByText(/failed to load suggestions/i).length).toBeGreaterThan(0);
+      expect(screen.getByText(/failed to load suggestions/i)).toBeTruthy();
     });
   });
 });

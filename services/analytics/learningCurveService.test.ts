@@ -10,8 +10,15 @@ import {
   type StabilityTrendPoint,
 } from './learningCurveService';
 
+vi.mock('@/lib/utils/apiConfig', () => ({
+  getApiEndpoint: vi.fn((endpoint: string) => `http://localhost${endpoint}`),
+  API_ENDPOINTS: {
+    USER_STABILITY_TREND: '/api/user/stability-trend',
+  },
+}));
+
 const mockFetch = vi.fn();
-global.fetch = mockFetch as unknown as typeof fetch;
+vi.stubGlobal('fetch', mockFetch);
 
 describe('mergeLearningCurveData', () => {
   it('should merge daily performance and stability points by date', () => {
@@ -95,30 +102,51 @@ describe('fetchLearningCurveData', () => {
 
   it('should merge data from both endpoints', async () => {
     const mockToken = 'test-token';
+    const mockDailyResult = {
+      dailyPerformance: [
+        { date: '2025-01-01', attempts: 10, correct: 8, accuracy: 80 },
+      ],
+      period: '30 days',
+    };
+    const mockStabilityResult = {
+      trendData: [
+        { date: '2025-01-01', avgStability: 5.2, totalReviews: 12, conditions: [] },
+      ],
+    };
+
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            period: '30 days',
-            dailyPerformance: [{ date: '2025-01-01', attempts: 10, correct: 8, accuracy: 80 }],
-          }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
-        )
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            data: [{ date: '2025-01-01', avgStability: 5.2, totalReviews: 12, conditions: [] }],
-          }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
-        )
-      );
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => mockDailyResult,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ data: mockStabilityResult.trendData }),
+      });
 
     const result = await fetchLearningCurveData(mockToken, 30);
 
     expect(mockFetch).toHaveBeenCalledTimes(2);
-    expect(mockFetch.mock.calls[0]?.[0]).toContain('/api/user/daily-performance?days=30');
-    expect(mockFetch.mock.calls[1]?.[0]).toContain('/api/user/stability-trend?days=30');
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      1,
+      'http://localhost/api/user/daily-performance?days=30',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: `Bearer ${mockToken}`,
+        }),
+      })
+    );
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      'http://localhost/api/user/stability-trend?days=30',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: `Bearer ${mockToken}`,
+        }),
+      })
+    );
     expect(result).toEqual({
       points: [
         { date: '2025-01-01', accuracy: 80, attempts: 10, correct: 8, avgStability: 5.2, totalReviews: 12 },
@@ -136,22 +164,27 @@ describe('fetchLearningCurveData', () => {
 
   it('should handle missing stability data', async () => {
     const mockToken = 'test-token';
+    const mockDailyResult = {
+      dailyPerformance: [
+        { date: '2025-01-01', attempts: 5, correct: 4, accuracy: 80 },
+      ],
+      period: '30 days',
+    };
+    const mockStabilityResult = {
+      trendData: [],
+    };
+
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            period: '30 days',
-            dailyPerformance: [{ date: '2025-01-01', attempts: 5, correct: 4, accuracy: 80 }],
-          }),
-          { status: 200, headers: { 'Content-Type': 'application/json' } }
-        )
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ data: [] }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      );
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => mockDailyResult,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ data: mockStabilityResult.trendData }),
+      });
 
     const result = await fetchLearningCurveData(mockToken, 30);
 

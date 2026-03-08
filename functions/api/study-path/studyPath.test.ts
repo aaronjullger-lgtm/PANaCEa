@@ -32,11 +32,8 @@ vi.mock('../_shared/cors', () => ({
   getCorsConfig: vi.fn(() => ({ allowedOrigins: ['*'] })),
   getCorsHeaders: vi.fn(() => ({})),
 }));
-vi.mock('../_shared/auth', () => ({
-  authenticateRequest: vi.fn().mockResolvedValue({
-    userId: 'user123',
-    sessionId: 'sess_123',
-  }),
+vi.mock('../_shared/middleware', () => ({
+  authenticatedEndpoint: vi.fn((_schema, handler) => handler),
 }));
 vi.mock('../_shared/prisma-edge', () => ({
   createEdgePrismaClient: vi.fn(() => ({
@@ -53,8 +50,7 @@ import { balanceBlueprintPriorities } from '@/services/optimizer/blueprintBalanc
 import { generateStudyPlan } from '@/services/optimizer/pathGenerator';
 import { computeConfidence, fetchConfidenceData } from '@/services/optimizer/confidenceScorer';
 import { getFromCache, setInCache, isKVAvailable, getStudyPathCacheKey } from '../_shared/cache';
-import { authenticateRequest } from '../_shared/auth';
-const { onRequestGet } = await import('./recommendation');
+import { onRequestGet } from './recommendation';
 
 describe('Study Path Recommendation Endpoint', () => {
   const mockEnv = {

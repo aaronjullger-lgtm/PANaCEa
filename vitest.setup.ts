@@ -5,6 +5,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
 
 // Ensure test env so hooks that branch on NODE_ENV use test paths (e.g. use-photo-drill fetchPhotoCases)
 if (typeof process !== 'undefined') {
@@ -97,6 +98,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  cleanup();
   ensureLocalStorage();
   globalThis.localStorage.clear();
   cleanup();

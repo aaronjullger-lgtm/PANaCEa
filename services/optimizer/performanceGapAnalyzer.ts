@@ -53,10 +53,11 @@ export async function analyzePerformanceGaps(
 ): Promise<PerformanceGap[]> {
   const {
     rollingWindowSize = 200,
-    targetRetention,
     includeSubcategories = false,
     minimumReviewCount = 5,
   } = options;
+  const targetRetention =
+    options.targetRetention ?? (await getUserTargetRetention(prisma, userId));
 
   const effectiveTargetRetention =
     typeof targetRetention === 'number'

@@ -94,6 +94,7 @@ describe('submitDrillReview', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prisma = new PrismaClient();
+    (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null);
   });
 
   describe('Happy Path – Main Session with Condition ID', () => {

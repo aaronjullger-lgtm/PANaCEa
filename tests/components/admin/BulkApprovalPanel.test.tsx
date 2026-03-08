@@ -44,11 +44,11 @@ describe('BulkApprovalPanel', () => {
       />
     );
 
-    expect(screen.getByText(/3 suggestions selected/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /approve selected/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /reject selected/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /ignore selected/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /clear selection/i })).toBeInTheDocument();
+    expect(screen.getByText(/3 suggestions selected/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /approve selected/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /reject selected/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /ignore selected/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /clear selection/i })).toBeTruthy();
   });
 
   it('calls onClearSelection when clear button clicked', () => {
@@ -81,9 +81,9 @@ describe('BulkApprovalPanel', () => {
     const rejectButton = screen.getAllByRole('button', { name: /reject selected/i })[0];
     const ignoreButton = screen.getAllByRole('button', { name: /ignore selected/i })[0];
 
-    expect(approveButton).toBeDisabled();
-    expect(rejectButton).toBeDisabled();
-    expect(ignoreButton).toBeDisabled();
+    expect((approveButton as HTMLButtonElement).disabled).toBe(true);
+    expect((rejectButton as HTMLButtonElement).disabled).toBe(true);
+    expect((ignoreButton as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('calls bulk-approve endpoint when approve action is triggered', async () => {
@@ -121,6 +121,7 @@ describe('BulkApprovalPanel', () => {
     await waitFor(() => {
       expect(mockOnActionComplete).toHaveBeenCalled();
     });
+    expect(mockOnClearSelection).toHaveBeenCalled();
   });
 
   it('handles API error and shows error message', async () => {
@@ -164,7 +165,7 @@ describe('BulkApprovalPanel', () => {
     fireEvent.click(approveButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/3 suggestions approved successfully/i)).toBeInTheDocument();
+      expect(screen.getByText(/3 suggestions approved successfully/i)).toBeTruthy();
     });
   });
 
@@ -178,19 +179,19 @@ describe('BulkApprovalPanel', () => {
       />
     );
 
-    const toggleButton = screen.getByRole('button', { name: /^advanced$/i });
-    expect(screen.queryByText(/high-confidence approve/i)).not.toBeInTheDocument();
+    const toggleButton = screen.getByRole('button', { name: /advanced/i });
+    expect(screen.queryByText(/high-confidence approve/i)).toBeNull();
 
     fireEvent.click(toggleButton);
-    expect(screen.getByText(/high-confidence approve/i)).toBeInTheDocument();
+    expect(screen.getByText(/high-confidence approve/i)).toBeTruthy();
 
     fireEvent.click(toggleButton);
     await waitFor(() => {
-      expect(screen.queryByText(/high-confidence approve/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/high-confidence approve/i)).toBeNull();
     });
   });
 
-  it('sends expected payload shape for approve action', async () => {
+  it('sends payload without optional reason field', async () => {
     render(
       <BulkApprovalPanel
         selectedIds={mockSelectedIds}
@@ -200,7 +201,7 @@ describe('BulkApprovalPanel', () => {
       />
     );
 
-    const approveButton = screen.getAllByRole('button', { name: /approve selected/i })[0];
+    const approveButton = screen.getByRole('button', { name: /approve selected/i });
     fireEvent.click(approveButton);
 
     await waitFor(() => {

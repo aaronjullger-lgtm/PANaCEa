@@ -121,8 +121,8 @@ describe('ChangePreviewModal', () => {
     );
 
     // Should show loading spinner
-    expect(screen.getByRole('status')).toBeInTheDocument();
-    expect(screen.getByText(/computing preview/i)).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeTruthy();
+    expect(screen.getByText(/computing preview/i)).toBeTruthy();
   });
 
   it('displays preview data after successful fetch', async () => {
@@ -145,20 +145,22 @@ describe('ChangePreviewModal', () => {
     await waitFor(() => expect(screen.queryByRole('status')).toBeNull());
 
     // Should display before/after sections
-    expect(screen.getByText(/^before$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^after$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^before$/i)).toBeTruthy();
+    expect(screen.getByText(/^after$/i)).toBeTruthy();
 
     // Should display system rows
     expect(screen.getAllByText('CV').length).toBeGreaterThan(0);
     expect(screen.getAllByText('PUL').length).toBeGreaterThan(0);
 
-    // Should display recommendations
-    expect(screen.getByText(/excellent balance achieved/i)).toBeInTheDocument();
-    expect(screen.getByText(/excellent balance achieved/i)).toBeInTheDocument();
+    // Should display compliance scores
+    expect(screen.getAllByText(/compliance score/i).length).toBeGreaterThan(0);
 
-    // Should display changes table
-    expect(screen.getByText('Cardiovascular')).toBeInTheDocument();
-    expect(screen.getByText('Pulmonary')).toBeInTheDocument();
+    // Should display recommendations
+    expect(screen.getByText(/excellent balance achieved/i)).toBeTruthy();
+
+    // Should display proposed changes table content
+    expect(screen.getByText('Cardiovascular')).toBeTruthy();
+    expect(screen.getByText('Pulmonary')).toBeTruthy();
   });
 
   it('shows error message when fetch fails', async () => {
@@ -179,8 +181,8 @@ describe('ChangePreviewModal', () => {
 
     await waitFor(() => expect(screen.queryByRole('status')).toBeNull());
 
-    expect(screen.getByText(/invalid request/i)).toBeInTheDocument();
-    expect(screen.getByText(/preview failed/i)).toBeInTheDocument();
+    expect(screen.getByText(/preview failed/i)).toBeTruthy();
+    expect(screen.getByText(/invalid request/i)).toBeTruthy();
   });
 
   it('calls onApprovePreview when "Proceed to Approval" clicked', async () => {
@@ -231,7 +233,7 @@ describe('ChangePreviewModal', () => {
 
     await waitFor(() => expect(screen.queryByRole('status')).toBeNull());
 
-    const closeButton = screen.getAllByRole('button', { name: /close/i })[0];
+    const closeButton = screen.getByLabelText(/close/i);
     fireEvent.click(closeButton);
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
