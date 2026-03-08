@@ -1457,7 +1457,13 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </label>
                 <input
                   type="date"
-                  value={eorTestDate ?? ''}
+                  value={
+                    eorTestDate
+                      ? eorTestDate.includes('T')
+                        ? eorTestDate.split('T')[0]
+                        : eorTestDate
+                      : ''
+                  }
                   onChange={(e) => handleEorTestDateChange(e.target.value)}
                   className="w-full max-w-xs px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] text-sm"
                   aria-label="EOR test date for current rotation"

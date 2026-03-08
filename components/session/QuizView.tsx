@@ -237,7 +237,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         ref={containerRef}
         id="question-container"
         tabIndex={-1}
-        className="text-xl md:text-2xl leading-relaxed text-action-primary bg-surface-card border border-border-subtle rounded-xl p-6 shadow-sm space-y-4"
+        className="text-xl md:text-2xl leading-relaxed text-text-primary bg-surface-card border border-border-subtle rounded-xl p-6 shadow-sm space-y-4"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
         {/* Text before the table */}
@@ -269,7 +269,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         ref={containerRef}
         id="question-container"
         tabIndex={-1}
-        className="text-xl md:text-2xl font-semibold text-action-primary whitespace-pre-wrap bg-surface-card border border-border-subtle rounded-xl p-6 shadow-sm"
+        className="text-xl md:text-2xl font-semibold text-text-primary whitespace-pre-wrap bg-surface-card border border-border-subtle rounded-xl p-6 shadow-sm"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
         {normalizedText}
@@ -286,7 +286,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
       ref={containerRef}
       id="question-container"
       tabIndex={-1}
-      className="text-xl md:text-2xl leading-relaxed text-action-primary bg-surface-card border border-border-subtle rounded-xl p-6 shadow-sm"
+      className="text-xl md:text-2xl leading-relaxed text-text-primary bg-surface-card border border-border-subtle rounded-xl p-6 shadow-sm"
       style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
     >
       <p className="whitespace-pre-wrap">{vignette}</p>
@@ -1505,8 +1505,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               {/* Quick Wins: Time-box session timer */}
               {timeRemainingMs !== null && timeRemainingMs > 0 && (
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-action-primary/10 border border-action-primary/20">
-                  <Clock className="w-3.5 h-3.5 text-action-primary" />
-                  <span className="text-xs font-semibold text-action-primary">
+                  <Clock className="w-3.5 h-3.5 text-text-primary" />
+                  <span className="text-xs font-semibold text-text-primary">
                     {Math.ceil(timeRemainingMs / 60000)} min
                   </span>
                 </div>
@@ -1523,8 +1523,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               title="Toggle session stats (S)"
               className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                 showStatsOverlay
-                  ? 'bg-action-primary/10 text-action-primary border-action-primary'
-                  : 'bg-surface-card text-muted border-border-subtle hover:bg-action-primary/10 hover:text-action-primary hover:border-action-primary'
+                  ? 'bg-action-primary/10 text-text-primary border-action-primary'
+                  : 'bg-surface-card text-muted border-border-subtle hover:bg-action-primary/10 hover:text-text-primary hover:border-action-primary'
               }`}
             >
               <BarChart3 className="w-5 h-5" />
@@ -1550,7 +1550,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 title="More actions"
                 className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                   showOverflowMenu
-                    ? 'bg-action-primary/10 text-action-primary border-action-primary'
+                    ? 'bg-action-primary/10 text-text-primary border-action-primary'
                     : 'bg-surface-card text-muted border-border-subtle hover:bg-surface-tertiary hover:border-action-primary'
                 }`}
               >
@@ -1598,7 +1598,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-action-secondary hover:bg-surface-tertiary transition-colors"
                   >
-                    <Calculator className="w-4 h-4 text-action-primary" />
+                    <Calculator className="w-4 h-4 text-text-primary" />
                     Lab Calculators
                   </button>
                   {/* Font size controls */}
@@ -1657,7 +1657,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 setError(null);
                 void replenishQueue();
               }}
-              className="flex-shrink-0 rounded-md px-3 py-1 font-medium text-action-primary hover:bg-action-primary/10"
+              className="flex-shrink-0 rounded-md px-3 py-1 font-medium text-text-primary hover:bg-action-primary/10"
             >
               Retry
             </button>
@@ -1898,7 +1898,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                         {/* ALWAYS VISIBLE: Bottom Line */}
                         {structured.bottomLine && (
                           <section>
-                            <h3 className="font-bold text-base mb-1.5 text-action-primary">
+                            <h3 className="font-bold text-base mb-1.5 text-text-primary">
                               Bottom Line
                             </h3>
                             <p className="text-action-secondary leading-relaxed font-medium bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3">
@@ -1910,7 +1910,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                         {/* ALWAYS VISIBLE: Why YOUR answer was wrong (if incorrect) */}
                         {wasIncorrect && userChoiceExplanation && userChoiceLetter && (
                           <section>
-                            <h3 className="font-bold text-base mb-1.5 text-action-primary">
+                            <h3 className="font-bold text-base mb-1.5 text-text-primary">
                               Why Your Answer Was Wrong
                             </h3>
                             <div className="px-4 py-3 rounded-lg border text-sm bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border-dusty-rose-300 dark:border-dusty-rose-700">
@@ -1936,7 +1936,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                         {/* ALWAYS VISIBLE (if correct, or inside expanded): Why Correct */}
                         {(!wasIncorrect || showFullExplanation) && (
                           <section>
-                            <h3 className="font-bold text-base mb-1.5 text-action-primary">
+                            <h3 className="font-bold text-base mb-1.5 text-text-primary">
                               Why the Correct Answer is Right
                             </h3>
                             <div
@@ -1959,7 +1959,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                             {!showFullExplanation ? (
                               <button
                                 onClick={() => setShowFullExplanation(true)}
-                                className="flex items-center gap-2 text-sm font-medium text-action-primary hover:text-action-primary/80 transition-colors py-2"
+                                className="flex items-center gap-2 text-sm font-medium text-text-primary hover:text-text-primary/80 transition-colors py-2"
                               >
                                 <ChevronDown className="w-4 h-4" />
                                 Show full explanation
@@ -1969,7 +1969,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                                 {/* Why Correct (shown here for incorrect answers since it was hidden above) */}
                                 {wasIncorrect && (
                                   <section>
-                                    <h3 className="font-bold text-base mb-1.5 text-action-primary">
+                                    <h3 className="font-bold text-base mb-1.5 text-text-primary">
                                       Why the Correct Answer is Right
                                     </h3>
                                     <div
@@ -1989,7 +1989,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                                 {/* Other Distractors */}
                                 {hasOtherDistractors && (
                                   <section>
-                                    <h3 className="font-bold text-base mb-1.5 text-action-primary">
+                                    <h3 className="font-bold text-base mb-1.5 text-text-primary">
                                       Other Distractors
                                     </h3>
                                     <div className="space-y-2">
@@ -2031,7 +2031,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                                 {structured.highYieldImageOrTable &&
                                   structured.highYieldImageOrTable !== 'N/A' && (
                                     <section>
-                                      <h3 className="font-bold text-base mb-1.5 text-action-primary">
+                                      <h3 className="font-bold text-base mb-1.5 text-text-primary">
                                         High-Yield Image / Table
                                       </h3>
                                       <p className="text-action-secondary text-sm leading-relaxed bg-steel-blue-50 dark:bg-steel-blue-900/20 border border-steel-blue-200 dark:border-steel-blue-800 rounded-lg px-4 py-3">
@@ -2043,7 +2043,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                                 {/* Clinical Pearl */}
                                 {structured.clinicalPearl && (
                                   <section>
-                                    <h3 className="font-bold text-base mb-1.5 text-action-primary">
+                                    <h3 className="font-bold text-base mb-1.5 text-text-primary">
                                       Clinical Pearl
                                     </h3>
                                     <div
@@ -2064,7 +2064,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                                 {structured.commonPitfalls &&
                                   structured.commonPitfalls.length > 0 && (
                                     <section>
-                                      <h3 className="font-bold text-base mb-1.5 text-action-primary">
+                                      <h3 className="font-bold text-base mb-1.5 text-text-primary">
                                         Common Pitfalls
                                       </h3>
                                       <ul className="list-disc list-inside space-y-1 text-sm text-action-secondary bg-surface-secondary border border-border-subtle rounded-lg px-4 py-3">
@@ -2093,7 +2093,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     <div className="space-y-4">
                       {bottomLine && (
                         <section>
-                          <h3 className="font-bold text-base mb-1.5 text-action-primary">
+                          <h3 className="font-bold text-base mb-1.5 text-text-primary">
                             Bottom Line
                           </h3>
                           <p className="text-action-secondary leading-relaxed font-medium bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3">
@@ -2103,7 +2103,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                       )}
                       {(showRest || !bottomLine) && (
                         <section>
-                          <h3 className="font-bold text-base mb-1.5 text-action-primary">
+                          <h3 className="font-bold text-base mb-1.5 text-text-primary">
                             Rationale
                           </h3>
                           <div
@@ -2131,7 +2131,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     <button
                       type="button"
                       onClick={() => setShowSocraticTutor(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-action-primary/10 text-action-primary font-medium text-sm hover:bg-action-primary/20 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-action-primary/10 text-text-primary font-medium text-sm hover:bg-action-primary/20 transition-colors"
                     >
                       <MessageCircle className="h-4 w-4" aria-hidden />
                       Tutor Me
@@ -2156,7 +2156,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
                 {alternateRationale && !isExplainerLoading && (
                   <div className="mt-4 pt-4 border-t border-border-subtle animate-fade-in">
-                    <h4 className="font-bold text-md mb-2 text-action-primary">
+                    <h4 className="font-bold text-md mb-2 text-text-primary">
                       Alternate Explanation
                     </h4>
                     <p className="text-action-secondary leading-relaxed whitespace-pre-wrap">
@@ -2168,7 +2168,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 {/* Clinical Pearls Section */}
                 {currentQuestion.pearls && currentQuestion.pearls.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-border-subtle">
-                    <h3 className="font-bold text-lg mb-2 text-action-primary">
+                    <h3 className="font-bold text-lg mb-2 text-text-primary">
                       Key Pearls: {currentQuestion.condition}
                     </h3>
                     <ul className="list-disc list-inside space-y-1 text-action-secondary">
@@ -2186,21 +2186,21 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   {!showNotes && !localNote ? (
                     <button
                       onClick={() => setShowNotes(true)}
-                      className="flex items-center gap-2 text-sm font-medium text-muted hover:text-action-primary transition-colors py-1"
+                      className="flex items-center gap-2 text-sm font-medium text-muted hover:text-text-primary transition-colors py-1"
                     >
                       <PenLine className="w-4 h-4" />
                       Add Note
                     </button>
                   ) : (
                     <>
-                      <h3 className="font-bold text-lg mb-2 text-action-primary">
+                      <h3 className="font-bold text-lg mb-2 text-text-primary">
                         My Notes
                       </h3>
                       <textarea
                         value={localNote}
                         onChange={handleNoteChange}
                         placeholder="Type your notes here... They will be saved automatically."
-                        className="w-full p-2 border border-border-subtle bg-surface-secondary text-action-primary rounded-md text-sm focus:ring-2 focus:ring-action-primary focus:border-transparent"
+                        className="w-full p-2 border border-border-subtle bg-surface-secondary text-text-primary rounded-md text-sm focus:ring-2 focus:ring-action-primary focus:border-transparent"
                         rows={3}
                         autoFocus={showNotes && !localNote}
                       />
