@@ -39,6 +39,20 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
   useFocusTrap(modalRef as React.RefObject<HTMLElement>, true);
   useKeyboardNavigation(onClose);
 
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    goalType: 'daily' as 'daily' | 'weekly' | 'exam_date' | 'mastery',
+    targetValue: 40,
+    targetUnit: 'questions' as 'questions' | 'minutes' | 'conditions' | 'accuracy',
+    targetDate: '',
+    targetSystem: '',
+    targetStability: 0.9,
+    isRecurring: true,
+    motivationNotes: '',
+    rewardMessage: '',
+  });
+
   // Validate form on changes
   useEffect(() => {
     clearMessages();
@@ -93,20 +107,6 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
       });
     }
   }, [formData, addMessage, clearMessages, clearFieldMessages]);
-
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    goalType: 'daily' as 'daily' | 'weekly' | 'exam_date' | 'mastery',
-    targetValue: 40,
-    targetUnit: 'questions' as 'questions' | 'minutes' | 'conditions' | 'accuracy',
-    targetDate: '',
-    targetSystem: '',
-    targetStability: 0.9,
-    isRecurring: true,
-    motivationNotes: '',
-    rewardMessage: '',
-  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

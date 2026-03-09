@@ -158,17 +158,17 @@ export function DailyChallengesHub() {
 
   const handleStartGrandRounds = () => {
     // Navigate to Grand Rounds mode
-    window.location.href = '/grand-rounds';
+    window.location.href = '/modes/grand-rounds';
   };
 
   const handleStartDiagnosticPuzzle = () => {
     // Navigate to Diagnostic Puzzle mode
-    window.location.href = '/diagnostic-puzzle';
+    window.location.href = '/modes/diagnostic-puzzle';
   };
 
   const handleStartWordle = () => {
     // Navigate to Medical Wordle mode
-    window.location.href = '/medical-wordle';
+    window.location.href = '/modes/medical-wordle';
   };
 
   return (
