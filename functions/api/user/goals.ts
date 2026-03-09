@@ -26,7 +26,10 @@ const GoalListSchema = z.object({
   status: z.enum(['active', 'completed', 'paused', 'failed']).optional(),
   goalType: z.enum(['daily', 'weekly', 'exam_date', 'mastery']).optional(),
   limit: z.string().regex(/^\d+$/).optional(),
-});
+}).transform((v) => ({
+  ...v,
+  limit: v.limit ? Math.min(100, Math.max(1, parseInt(v.limit, 10))) : 50,
+}));
 
 const GoalCreateSchema = z.object({
   body: z.object({
@@ -81,7 +84,7 @@ export const onRequestGet = authenticatedEndpoint(
       // Parse query params
       const status = validated.status;
       const goalType = validated.goalType;
-      const limit = validated.limit ? parseInt(validated.limit) : 50;
+      const limit = validated.limit ?? 50;
 
       // Build where clause
       const where: any = { userId: auth.userId };
@@ -143,6 +146,17 @@ export const onRequestPost = authenticatedEndpoint(GoalCreateSchema, async (cont
       motivationNotes,
       rewardMessage,
     } = validated.body;
+
+    // DoS guard: cap total goals per user
+    const existingCount = await prisma.userGoal.count({
+      where: { userId: auth.userId },
+    });
+    if (existingCount >= 100) {
+      return {
+        data: { success: false, error: 'Maximum number of goals (100) reached' },
+        status: 400,
+      };
+    }
 
     // Create goal
     const goal = await prisma.userGoal.create({

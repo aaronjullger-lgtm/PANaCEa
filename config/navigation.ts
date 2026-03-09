@@ -17,6 +17,13 @@ import {
   CreditCard,
   Database,
   Users,
+  Home,
+  Dumbbell,
+  BarChart3,
+  TrendingUp,
+  BookOpen,
+  Calculator,
+  Calendar,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -48,18 +55,125 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   CreditCard,
   Database,
   Users,
+  Home,
+  Dumbbell,
+  BarChart3,
+  TrendingUp,
+  BookOpen,
+  Calculator,
+  Calendar,
 };
+
+/**
+ * Nav rail item shape for the primary app navigation (NavRail).
+ * Single source of truth for rail labels, paths, and icons.
+ */
+export interface NavRailItem {
+  id: string;
+  label: string;
+  path: string;
+  icon: LucideIcon;
+  section: 'study' | 'resources';
+  showInBottomBar: boolean;
+}
+
+/**
+ * Canonical nav rail items. Used by NavRail and referenced in docs.
+ * Exactly five items in mobile bottom bar; Study Path is rail-only on desktop.
+ */
+export const NAV_RAIL_ITEMS: NavRailItem[] = [
+  {
+    id: 'home',
+    label: 'Home',
+    path: '/study',
+    icon: Home,
+    section: 'study',
+    showInBottomBar: true,
+  },
+  {
+    id: 'practice',
+    label: 'Practice',
+    path: '/practice',
+    icon: Dumbbell,
+    section: 'study',
+    showInBottomBar: true,
+  },
+  {
+    id: 'progress',
+    label: 'Progress',
+    path: '/progress',
+    icon: BarChart3,
+    section: 'study',
+    showInBottomBar: true,
+  },
+  {
+    id: 'knowledge',
+    label: 'Knowledge',
+    path: '/study/knowledge',
+    icon: BookOpen,
+    section: 'resources',
+    showInBottomBar: true,
+  },
+  {
+    id: 'utilities',
+    label: 'Tools',
+    path: '/study/utilities',
+    icon: Calculator,
+    section: 'resources',
+    showInBottomBar: true,
+  },
+  {
+    id: 'study_path',
+    label: 'Study Path',
+    path: '/study/path',
+    icon: TrendingUp,
+    section: 'resources',
+    showInBottomBar: false,
+  },
+  {
+    id: 'daily_challenges',
+    label: 'Daily',
+    path: '/daily-challenges',
+    icon: Calendar,
+    section: 'resources',
+    showInBottomBar: false,
+  },
+];
+
+/**
+ * Paths that map to app views or explicit routes. Used for 404 detection in App.tsx.
+ * Add new routes here so unknown paths show the 404 page.
+ */
+export const CANONICAL_PATHS: string[] = [
+  '/',
+  '/study',
+  '/study/',
+  '/menu',
+  '/practice',
+  '/progress',
+  '/study/main-session',
+  '/study/main-session/',
+  '/study/knowledge',
+  '/study/utilities',
+  '/study/reference',
+  '/study/toolkit',
+  '/study/path',
+  '/admin',
+  '/clinical-eye',
+  '/visualizer',
+  '/medical-database',
+  '/live-collaboration',
+  '/explorer',
+  '/daily-challenges',
+  '/core-adaptive',
+];
 /**
  * Universal Medical Companion - Main Navigation Configuration
  *
- * NAVIGATION ARCHITECTURE (single source of truth):
- * - NavRail (components/layout/NavRail.tsx) is the only active navigation.
- *   Exactly five items, URL-driven; App.tsx syncs path → view.
- *   Study: Home (/study), Practice (/menu), Progress (/study?tab=analytics).
- *   Resources: Reference (/study/reference), Toolkit (/study/toolkit).
- * - NAVIGATION_CONFIG only contains paths that map to real routes or views in App.tsx.
- *   Dead links (/education, /settings, /subscription, /skills) have been removed.
- *   Settings is accessed via header button (modal), not a route.
+ * SOURCE OF TRUTH:
+ * - NAV_RAIL_ITEMS: Primary nav (NavRail, Command Palette). Add or change rail items here only.
+ * - CANONICAL_PATHS: Paths used for 404 detection in App.tsx. Add new routes here.
+ * - NAVIGATION_CONFIG / NAVIGATION_STRUCTURE: Legacy. Do not use for new features; see NAV_RAIL_ITEMS.
  */
 export const NAVIGATION_CONFIG: NavigationCategory[] = [
   {

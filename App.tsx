@@ -2,8 +2,10 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, X, Shield, User } from 'lucide-react';
+import { Settings, X, Shield, User, HelpCircle } from 'lucide-react';
 import { ROUTES } from './config/routes';
+import { CANONICAL_PATHS } from './config/navigation';
+import { runStorageKeyMigration } from './lib/storage/storageRegistry';
 import { NavRail } from './components/layout/NavRail';
 import { AppBrand } from './components/layout/AppBrand';
 import { type View, pageVariants, DRILL_MODE_IDS } from './config/appViews';
@@ -43,6 +45,7 @@ import {
   PolypharmacyPuzzleMode,
   CommuterMode,
   MedicalWordleMode,
+  DiagnosticPuzzleMode,
   FullSitDownTestMode,
   IntegrationsHub,
   SettingsStatsModal,
@@ -80,6 +83,7 @@ import {
   LiveStudySession,
   PracticePage,
   ProgressPage,
+  DailyChallengesHub,
 } from './config/lazyComponents';
 import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { useUser, useAuth } from '@clerk/clerk-react';
@@ -217,6 +221,11 @@ const App: React.FC = () => {
   const [showNotFound, setShowNotFound] = useState(false);
   const startViewTransition = useViewTransition();
 
+  // One-time migration from legacy panacea_* keys to panceai_* (see storageRegistry)
+  useEffect(() => {
+    runStorageKeyMigration();
+  }, []);
+
   // Sync URL to view: single source of truth so NavRail and direct URLs always show correct content
   useEffect(() => {
     const path = location.pathname;
@@ -227,6 +236,8 @@ const App: React.FC = () => {
       '/menu',
       '/study',
       '/study/',
+      '/practice',
+      '/progress',
       '/study/main-session',
       '/study/main-session/',
       '/admin',
@@ -243,6 +254,9 @@ const App: React.FC = () => {
       path.startsWith('/study/utilities') ||
       path.startsWith('/study/reference') ||
       path.startsWith('/study/toolkit') ||
+      path.startsWith('/study/path') ||
+      path.startsWith('/gap-analysis') ||
+      path.startsWith('/clinical-profile') ||
       path.startsWith('/modes/') ||
       path === '/core-adaptive' ||
       path.startsWith('/medical-database') ||
@@ -301,12 +315,25 @@ const App: React.FC = () => {
       setView('toolkit');
     } else if (path.startsWith('/study/path')) {
       setView('study_path_dashboard');
+    } else if (path === '/gap-analysis' || path.startsWith('/gap-analysis')) {
+      setView('gap_analysis');
+    } else if (path === '/clinical-profile' || path.startsWith('/clinical-profile')) {
+      setView('clinical_profile');
     } else if (path === '/medical-database' || path.startsWith('/medical-database')) {
       setView('medical_database');
     } else if (path === '/live-collaboration' || path.startsWith('/live-collaboration')) {
       setView('live_collaboration');
     } else if (path.startsWith('/explorer')) {
       setView('cross_system_explorer');
+    }
+  }, [location.pathname]);
+
+  // Focus main content after client-side navigation for screen reader and keyboard users
+  useEffect(() => {
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      mainContent.setAttribute('tabindex', '-1');
+      mainContent.focus({ preventScroll: true });
     }
   }, [location.pathname]);
 
@@ -357,6 +384,16 @@ const App: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isHelpModalOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsHelpModalOpen(false);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isHelpModalOpen]);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
@@ -366,6 +403,7 @@ const App: React.FC = () => {
   const [onboardingWeakestSystems, setOnboardingWeakestSystems] = useState<string[]>([]);
   const [onboardingExamDate, setOnboardingExamDate] = useState<string | null>(null);
   const [showProductTour, setShowProductTour] = useState(false);
+  const [showProTip, setShowProTip] = useState(false);
   const productTourShouldShow = useProductTourShouldShow();
 
   // Show product tour on first visit to command center (when not from onboarding)
@@ -899,13 +937,18 @@ const App: React.FC = () => {
     setIsOnboardingModalOpen(false);
     setOnboardingStep(null);
     setIsModalOpen(true);
-    // Tour will show on next visit to command_center after session
+    if (typeof window !== 'undefined' && !window.localStorage.getItem('hasSeenAIPrompt')) {
+      setShowProTip(true);
+    }
   }, []);
 
   const handleYourPlanSkip = useCallback(() => {
     setIsOnboardingModalOpen(false);
     setOnboardingStep(null);
     setShowProductTour(productTourShouldShow);
+    if (typeof window !== 'undefined' && !window.localStorage.getItem('hasSeenAIPrompt')) {
+      setShowProTip(true);
+    }
   }, [productTourShouldShow]);
 
   // Fetch exam date when showing "Your plan" step
@@ -925,7 +968,11 @@ const App: React.FC = () => {
         if (!cancelled && data?.data?.profile?.examDate)
           setOnboardingExamDate(data.data.profile.examDate);
       })
-      .catch(() => {});
+      .catch((e) => {
+        if (!cancelled) {
+          console.warn('[Onboarding] Exam date fetch failed', e);
+        }
+      });
     return () => {
       cancelled = true;
     };
@@ -964,12 +1011,23 @@ const App: React.FC = () => {
       [DRILL_MODE_COMMUTER]: 'commuter_mode',
       polypharmacy_puzzle: 'polypharmacy_puzzle',
       medical_wordle: 'medical_wordle',
+      diagnostic_puzzle: 'diagnostic_puzzle',
       admin_media: 'admin_media',
       toolkit: 'toolkit',
     };
     const targetView = modeViewMap[modeId];
     if (targetView) setView(targetView);
   }, []);
+
+  const handleNavigateToModeRoute = useCallback((route: string, modeId: string) => {
+    // If route is a dedicated path (starts with '/'), navigate using React Router
+    if (route.startsWith('/')) {
+      navigate(route);
+      return;
+    }
+    // Otherwise fall back to view-based navigation
+    handleNavigateToDrillMode(modeId);
+  }, [navigate, handleNavigateToDrillMode]);
 
   const _handleNavigateToDrillWithSystem = useCallback((modeId: string, system: string) => {
     setInitialDrillSystem(system);
@@ -1088,6 +1146,14 @@ const App: React.FC = () => {
                       performanceData={heatmapPerformance}
                       dueCount={dueQuestionsCount}
                     />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/daily-challenges"
+                element={
+                  <Suspense fallback={<Loader message="Loading daily challenges..." />}>
+                    <DailyChallengesHub />
                   </Suspense>
                 }
               />
@@ -1217,6 +1283,14 @@ const App: React.FC = () => {
                                 <Settings className="w-5 h-5" />
                               </motion.button>
                               <MasteryHeatmapToggle compact className="hidden sm:inline-flex" />
+                              <button
+                                type="button"
+                                onClick={() => setIsHelpModalOpen(true)}
+                                className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-700 hover:text-slate-900 bg-[var(--color-bg-secondary)] hover:bg-slate-100 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
+                                aria-label="Help and getting started"
+                              >
+                                <HelpCircle className="w-5 h-5" />
+                              </button>
                               <ThemeToggleButton />
                             </AppBrand>
                           </div>
@@ -1259,27 +1333,83 @@ const App: React.FC = () => {
                           />
                         </Suspense>
 
+                        {/* Help / Getting started modal */}
+                        {isHelpModalOpen && (
+                          <div
+                            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm"
+                            onClick={() => setIsHelpModalOpen(false)}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="help-modal-title"
+                          >
+                            <div
+                              className="bg-[var(--color-bg-primary)] rounded-2xl shadow-xl border border-[var(--color-border)] max-w-md w-full p-6"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="flex items-center justify-between mb-4">
+                                <h2
+                                  id="help-modal-title"
+                                  className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2"
+                                >
+                                  <HelpCircle className="w-5 h-5 text-[var(--color-accent)]" />
+                                  Getting started
+                                </h2>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsHelpModalOpen(false)}
+                                  className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                                  aria-label="Close"
+                                >
+                                  <X className="w-5 h-5" />
+                                </button>
+                              </div>
+                              <ul className="space-y-3 text-[var(--color-text-secondary)] text-sm mb-6">
+                                <li>
+                                  <strong className="text-[var(--color-text-primary)]">Start a session</strong> — From the dashboard, click &quot;Start practice session&quot; or open the Practice tab to choose a mode.
+                                </li>
+                                <li>
+                                  <strong className="text-[var(--color-text-primary)]">Command palette</strong> — Press <kbd className="px-1.5 py-0.5 rounded bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-xs">⌘K</kbd> (or Ctrl+K) to jump to any mode or page.
+                                </li>
+                                <li>
+                                  <strong className="text-[var(--color-text-primary)]">Grand Rounds</strong> — Try the daily challenge from Practice or the dashboard.
+                                </li>
+                                <li>
+                                  <strong className="text-[var(--color-text-primary)]">Toolkit</strong> — Use the Tools tab for calculators, generators, and reference tools.
+                                </li>
+                              </ul>
+                              <button
+                                type="button"
+                                onClick={() => setIsHelpModalOpen(false)}
+                                className="w-full py-2.5 px-4 rounded-xl font-medium bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] hover:opacity-90 transition-opacity"
+                              >
+                                Got it
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Full-screen views that break out of max-w-4xl constraint */}
                         {view === 'reference_library' && (
-                          <div className="w-full">
-                            <WithGeminiErrorBoundary
-                              viewName="reference_library"
-                              onRetry={() => setView('reference_library')}
-                            >
-                              <Suspense fallback={<Loader message="Loading knowledge base…" />}>
-                                <KnowledgeBaseHub
-                                  onClose={() => {
-                                    setView('command_center');
-                                    navigate('/study');
-                                  }}
-                                />
-                              </Suspense>
-                            </WithGeminiErrorBoundary>
+                          <div
+                            className="w-full min-w-0 overflow-hidden flex-1"
+                            style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
+                          >
+                            <Suspense fallback={<Loader message="Loading knowledge base…" />}>
+                              <KnowledgeBaseHub
+                                onClose={() => {
+                                  setView('command_center');
+                                  navigate('/study');
+                                }}
+                              />
+                            </Suspense>
                           </div>
                         )}
 
                         {view === 'my_library' && (
-                          <div className="w-full">
+                          <div
+                            className="w-full min-w-0 overflow-hidden flex-1"
+                            style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
+                          >
                             <Suspense fallback={<Loader message="Loading library…" />}>
                               <MyLibraryPage onExit={() => setView('command_center')} />
                             </Suspense>
@@ -1287,7 +1417,10 @@ const App: React.FC = () => {
                         )}
 
                         {view === 'pearl_deck' && (
-                          <div className="w-full">
+                          <div
+                            className="w-full min-w-0 overflow-hidden flex-1"
+                            style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
+                          >
                             <Suspense fallback={<Loader message="Loading pearl deck…" />}>
                               <MyPearlsPanel
                                 onClose={() => setView('command_center')}
@@ -1306,11 +1439,10 @@ const App: React.FC = () => {
                           view !== 'pearl_deck' && (
                             <main
                               id="main-content"
-                              className="min-h-screen min-w-0 max-w-full overflow-visible transition-all duration-300"
+                              className="main-content-area min-h-screen min-w-0 max-w-full overflow-visible transition-all duration-300"
                               style={{
                                 marginLeft: 'var(--nav-rail-width, 56px)',
                                 paddingTop: 'var(--header-height, 4rem)',
-                                paddingBottom: '6rem',
                               }}
                             >
                               <div
@@ -1923,6 +2055,19 @@ const App: React.FC = () => {
                                     </WithGeminiErrorBoundary>
                                   )}
 
+                                  {view === 'diagnostic_puzzle' && (
+                                    <WithGeminiErrorBoundary
+                                      viewName="diagnostic_puzzle"
+                                      onRetry={() => setView('diagnostic_puzzle')}
+                                    >
+                                      <Suspense fallback={<Loader />}>
+                                        <DiagnosticPuzzleMode
+                                          onExit={() => navigate('/practice')}
+                                        />
+                                      </Suspense>
+                                    </WithGeminiErrorBoundary>
+                                  )}
+
                                   {view === 'full_sit_down_test' && (
                                     <WithGeminiErrorBoundary
                                       viewName="full_sit_down_test"
@@ -2075,7 +2220,7 @@ const App: React.FC = () => {
                                           <TrainingMenu
                                             onClose={() => setView('command_center')}
                                             onNavigateToMode={(route, mode) =>
-                                              handleNavigateToDrillMode(mode.id)
+                                              handleNavigateToModeRoute(route, mode.id)
                                             }
                                             onStartSession={handleTrainingMenuStart}
                                             dueQuestionsCount={dueQuestionsCount}
@@ -2334,6 +2479,7 @@ const App: React.FC = () => {
                             isOpen={isCommandPaletteOpen}
                             onClose={() => setIsCommandPaletteOpen(false)}
                             onNavigate={handleNavigateToDrillMode}
+                            onNavigatePath={(path) => navigate(path)}
                           />
                         </Suspense>
 
@@ -2372,7 +2518,7 @@ const App: React.FC = () => {
                                     onStartSession={handleTrainingMenuStart}
                                     onNavigateToMode={(route, mode) => {
                                       setIsModalOpen(false);
-                                      handleNavigateToDrillMode(mode.id);
+                                      handleNavigateToModeRoute(route, mode.id);
                                     }}
                                     onClose={() => setIsModalOpen(false)}
                                     dueQuestionsCount={dueQuestionsCount}
@@ -2418,6 +2564,27 @@ const App: React.FC = () => {
                           isOpen={showProductTour}
                           onClose={() => setShowProductTour(false)}
                         />
+
+                        {/* One-time pro tip after onboarding */}
+                        {showProTip && (
+                          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] max-w-md mx-4 px-4 py-3 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] shadow-lg flex items-center gap-3">
+                            <p className="text-sm text-[var(--color-text-primary)]">
+                              Pro tip: Press <kbd className="px-1.5 py-0.5 rounded bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-xs">⌘K</kbd> to open the command palette and jump to any mode.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (typeof window !== 'undefined') {
+                                  window.localStorage.setItem('hasSeenAIPrompt', '1');
+                                }
+                                setShowProTip(false);
+                              }}
+                              className="shrink-0 px-3 py-1.5 text-sm font-medium rounded-lg bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] hover:opacity-90"
+                            >
+                              Got it
+                            </button>
+                          </div>
+                        )}
                       </React.Fragment>
                     )}
                   </>

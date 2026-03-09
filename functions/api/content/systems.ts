@@ -17,6 +17,15 @@ export const onRequestOptions = withCors();
 export const onRequestGet = authenticatedEndpoint(ContentSystemsSchema, async (context) => {
   const { env } = context;
   const logger = createEndpointLogger('/api/content/systems');
+
+  if (!env.DATABASE_URL) {
+    logger.error('DATABASE_URL not configured');
+    return {
+      data: { error: 'Systems unavailable', message: 'Database is not configured.' },
+      status: 503,
+    };
+  }
+
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
@@ -36,10 +45,12 @@ export const onRequestGet = authenticatedEndpoint(ContentSystemsSchema, async (c
     logger.info('Systems fetched', { count: systems.length });
     return { data: systems, headers: { 'Cache-Control': 'public, max-age=3600' } };
   } catch (error) {
-    logger.error('Failed to fetch systems', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw new Error('Failed to fetch systems');
+    const errMsg = error instanceof Error ? error.message : String(error);
+    logger.error('Failed to fetch systems', { error: errMsg });
+    return {
+      data: { error: 'Failed to fetch systems', message: 'Please try again later.' },
+      status: 500,
+    };
   } finally {
     await safePrismaDisconnect(prisma);
   }

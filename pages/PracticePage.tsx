@@ -49,9 +49,11 @@ import {
   QUESTION_PRACTICE_MODES,
   SPECIALTY_DRILL_MODES,
   CATEGORY_INFO,
+  MODE_REGISTRY,
   type TrainingModeConfig,
   type TrainingCategory,
 } from '@/config/training-modes';
+import { getRecentModeIds, recordRecentMode } from '@/lib/recentModes';
 import { BodyMapWidget } from '@/components/dashboard/BodyMapWidget';
 import { RoundsButton } from '@/components/dashboard/RoundsButton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -213,9 +215,30 @@ export const PracticePage: React.FC<PracticePageProps> = ({
 
   const handleModeSelect = useCallback(
     (mode: TrainingModeConfig) => {
+      recordRecentMode(mode.id);
       onNavigateToDrillMode(mode.id);
     },
     [onNavigateToDrillMode]
+  );
+
+  const recentModeIds = getRecentModeIds();
+  const recentModes = useMemo(
+    () =>
+      recentModeIds
+        .map((id) => MODE_REGISTRY.find((m) => m.id === id))
+        .filter((m): m is TrainingModeConfig => !!m && !m.isComingSoon)
+        .slice(0, 6),
+    [recentModeIds]
+  );
+
+  const recommendedModeIds = ['core_adaptive', 'grand_rounds', 'diagnostic_puzzle'] as const;
+  const recommendedModes = useMemo(
+    () =>
+      recommendedModeIds
+        .map((id) => MODE_REGISTRY.find((m) => m.id === id))
+        .filter((m): m is TrainingModeConfig => !!m && !m.isComingSoon)
+        .filter((m) => !m.panreOnly || showPANREContent),
+    [showPANREContent]
   );
 
   const weakestSet = useMemo(() => new Set(rolling360Stats?.weakestSystems ?? []), [rolling360Stats?.weakestSystems]);
@@ -230,6 +253,36 @@ export const PracticePage: React.FC<PracticePageProps> = ({
         <p className="text-[var(--color-text-muted)]">Choose a training mode to sharpen your clinical skills</p>
       </div>
 
+      {/* Start here — recommended modes when not searching */}
+      {!searchQuery && recommendedModes.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-[var(--color-accent)]" />
+            Start here
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {recommendedModes.map((mode) => (
+              <ModeCard key={mode.id} mode={mode} onSelect={() => handleModeSelect(mode)} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Recently used — same storage as Command Palette */}
+      {!searchQuery && recentModes.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-[var(--color-text-muted)]" />
+            Recently used
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {recentModes.map((mode) => (
+              <ModeCard key={mode.id} mode={mode} onSelect={() => handleModeSelect(mode)} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Search & Filters */}
       <div className="mb-6 space-y-3">
         <div className="relative">
@@ -243,8 +296,10 @@ export const PracticePage: React.FC<PracticePageProps> = ({
           />
           {searchQuery && (
             <button
+              type="button"
               onClick={() => setSearchQuery('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
+              aria-label="Clear search"
             >
               <X className="w-4 h-4 text-[var(--color-text-muted)]" />
             </button>

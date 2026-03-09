@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import {
   Activity,
+  BarChart3,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -193,8 +194,9 @@ export const DatabaseAnalyticsDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Header with refresh */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-          📊 Performance Analytics
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
+          Performance Analytics
         </h2>
         <button
           onClick={() => refetch()}

@@ -1,6 +1,8 @@
 ### __Current State Summary__
 
-| Component | Location | Lines | Issues | |-----------|----------|-------|--------| | `ClinicalReferenceLibrary.tsx` | `components/library/` | ~700 | Fetches from reference services (anatomy, labs, etc.) - separate from MedicalContent | | `ClinicalLibrary.tsx` | `components/toolkit/` | ~200 | Fetches from `/api/content/library` - correct MedicalContent source | | `LibraryCard.tsx` | `components/library/` | ~200 | Detail card with collapsible sections - decent but needs JSON handling fixes | | `ToolkitHub.tsx` | `components/toolkit/` | __~2000__ | __MASSIVE monolith__ - all calculators inline, needs severe refactoring |
+**Architecture note (updated):** The **Condition Library** is implemented by `ClinicalReferenceLibrary.tsx` (Knowledge Base → Condition Library). It is the main library and uses `/api/content/library` and SmartConditionView for details. `MedicalContentBrowser.tsx` and `LibraryCard.tsx` have been removed as unused. See `.cursor/plans/clinical_library_audit_plan_c988b4ab.plan.md` and `docs/LIBRARY_SEARCH_BEHAVIOR.md`.
+
+| Component | Location | Lines | Issues | |-----------|----------|-------|--------| `ClinicalReferenceLibrary.tsx` | `components/library/` | ~700 | Main library; fetches from `/api/content/library` | | `LibraryCard.tsx` | (removed) | — | Replaced by EnhancedConditionCard | | `ToolkitHub.tsx` | `components/toolkit/` | __~2000__ | __MASSIVE monolith__ - all calculators inline, needs severe refactoring |
 
 __Key Problems Identified:__
 
@@ -148,9 +150,8 @@ __Card Structure:__
 
 ### 2.2 Consolidate Library Components
 
-- __DELETE:__ `components/library/ClinicalReferenceLibrary.tsx` (redundant)
-- __KEEP & REFACTOR:__ `components/toolkit/ClinicalLibrary.tsx` → rename to `MedicalContentBrowser.tsx`
-- __KEEP:__ `components/library/LibraryCard.tsx` → evolves into `MedicalContentCard`
+- __KEEP:__ `components/library/ClinicalReferenceLibrary.tsx` — main Condition Library (Knowledge Base tab). Uses `/api/content/library`, SmartConditionView, EnhancedConditionCard.
+- __MedicalContentBrowser.tsx__ and __LibraryCard.tsx__ have been removed (unused). Library cards use EnhancedConditionCard.
 
 ### 2.3 Implement Masonry/Grid Layout
 
@@ -271,6 +272,6 @@ const CALCULATOR_CATEGORIES = [
 
 ## 📦 Deliverables Summary
 
-| Deliverable | Action | Priority | |-------------|--------|----------| | `types/medical-content.ts` | CREATE | P0 | | `lib/utils/jsonParser.ts` | CREATE | P0 | | `components/ui/content-renderers/*` | CREATE | P0 | | `components/library/LibraryCard.tsx` | REFACTOR | P1 | | `components/toolkit/ClinicalLibrary.tsx` | REFACTOR → `MedicalContentBrowser.tsx` | P1 | | `components/ui/cards/MedicalContentCard.tsx` | CREATE | P1 | | `components/library/ClinicalReferenceLibrary.tsx` | DELETE (redundant) | P2 | | `components/toolkit/calculators/*` | EXTRACT from monolith | P2 | | `components/toolkit/ToolkitHub.tsx` | SLIM DOWN (700 lines max) | P2 | | CSS/Tailwind dark theme updates | UPDATE | P2 |
+| Deliverable | Action | Priority | |-------------|--------|----------| | `types/medical-content.ts` | CREATE | P0 | | `lib/utils/jsonParser.ts` | CREATE | P0 | | `components/ui/content-renderers/*` | CREATE | P0 | | `components/library/ClinicalReferenceLibrary.tsx` | KEEP — main Condition Library | P1 | | `components/ui/cards/MedicalContentCard.tsx` or EnhancedConditionCard | USE | P1 | | `components/toolkit/calculators/*` | EXTRACT from monolith | P2 | | `components/toolkit/ToolkitHub.tsx` | SLIM DOWN (700 lines max) | P2 | | CSS/Tailwind dark theme updates | UPDATE | P2 |
 
 ---

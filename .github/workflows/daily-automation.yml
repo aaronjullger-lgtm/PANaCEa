@@ -30,6 +30,22 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: npm run automation:daily
 
+      - name: Call cron API endpoints (aggregate, prescription, replenish)
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          for endpoint in aggregate-analytics daily-prescription replenish-pool; do
+            echo "Calling /api/cron/$endpoint..."
+            curl -sS -X POST \
+              -H "Authorization: Bearer $CRON_SECRET" \
+              -H "Content-Type: application/json" \
+              "${PRODUCTION_URL}/api/cron/$endpoint" \
+              -d '{}' || true
+            echo ""
+          done
+        continue-on-error: true
+
       - name: Upload task logs
         if: always()
         uses: actions/upload-artifact@v4

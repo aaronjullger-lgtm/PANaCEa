@@ -228,14 +228,13 @@ test.describe('Main Session End-to-End', () => {
 
     // Step 6: Verify session summary is visible
     const summaryVisible = await page
-      .locator('text=/summary|results|score|complete/i')
+      .locator('text=/summary|results|score|complete|Progress saved/i')
       .first()
       .isVisible({ timeout: 5000 });
     expect(summaryVisible).toBe(true);
 
-    // TODO: If we have a way to query the database, we could verify that attempts
-    // were recorded with isMainSession: true. That's out of scope for pure UI E2E.
-    // For now we trust that the UI flow succeeded.
+    // Optional: When test API or dashboard stats are available, assert updated counts or Rolling 360.
+    // Attempts are recorded with isMainSession: true (attempt API + Rolling 360); DB check is out of scope for UI E2E.
 
     console.log('✅ Main session E2E test passed');
   });

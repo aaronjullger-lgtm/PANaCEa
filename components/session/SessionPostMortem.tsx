@@ -12,6 +12,17 @@
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Shield,
+  Calendar,
+  TrendingUp,
+  Building2,
+  Flame,
+  Trophy,
+  PartyPopper,
+  Check,
+  Circle,
+} from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { CalibrationPanel } from './CalibrationPanel';
 import type { CalibrationSummary } from '../../services/analytics/calibrationService';
@@ -74,19 +85,19 @@ interface SessionPostMortemProps {
 // CONSTANTS
 // =============================================================================
 
-const STATUS_EMOJI: Record<string, string> = {
-  critical: '🔴',
-  at_risk: '🟡',
-  stable: '🟢',
-  mastered: '🔵',
-};
-
 const STATUS_COLORS: Record<string, string> = {
   critical: 'text-[var(--color-data-fail)]',
   at_risk: 'text-[var(--color-data-provisional)]',
   stable: 'text-[var(--color-data-pass)]',
   mastered: 'text-[var(--color-accent)]',
 };
+
+function StatusDot({ status }: { status: string }) {
+  const colorClass = STATUS_COLORS[status] ?? STATUS_COLORS.at_risk;
+  return (
+    <Circle className={cn('w-2.5 h-2.5 fill-current shrink-0', colorClass)} strokeWidth={0} />
+  );
+}
 
 // =============================================================================
 // SUB-COMPONENTS
@@ -158,7 +169,9 @@ function ImpactCards({
       >
         <div className="text-3xl font-bold text-[var(--color-accent)]">{stabilized}</div>
         <div className="text-xs text-[var(--color-accent)] mt-1">Cards Stabilized</div>
-        <div className="text-lg mt-1">⬆️</div>
+        <div className="text-lg mt-1">
+          <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
+        </div>
       </motion.div>
 
       <motion.div
@@ -171,7 +184,9 @@ function ImpactCards({
           -{decayPrevented.toFixed(1)}%
         </div>
         <div className="text-xs text-[var(--color-data-provisional)] mt-1">Decay Prevented</div>
-        <div className="text-lg mt-1">🛡️</div>
+        <div className="text-lg mt-1">
+          <Shield className="w-5 h-5 text-[var(--color-data-provisional)]" />
+        </div>
       </motion.div>
 
       <motion.div
@@ -182,7 +197,9 @@ function ImpactCards({
       >
         <div className="text-3xl font-bold text-[var(--color-data-pass)]">+{bufferDays}</div>
         <div className="text-xs text-[var(--color-data-pass)] mt-1">Days Buffer</div>
-        <div className="text-lg mt-1">📅</div>
+        <div className="text-lg mt-1">
+          <Calendar className="w-5 h-5 text-[var(--color-data-pass)]" />
+        </div>
       </motion.div>
     </div>
   );
@@ -202,7 +219,8 @@ function SystemTriageChanges({ impact }: { impact: SystemImpactData[] }) {
       className="bg-[var(--color-bg-secondary)] rounded-xl p-4"
     >
       <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-3 flex items-center gap-2">
-        🏥 System Triage Update
+        <Building2 className="w-4 h-4" />
+        System Triage Update
       </h4>
       <div className="space-y-2">
         {changedSystems.slice(0, 5).map((sys, i) => (
@@ -215,8 +233,10 @@ function SystemTriageChanges({ impact }: { impact: SystemImpactData[] }) {
           >
             <span className="font-medium text-[var(--color-text-primary)]">{sys.system}</span>
             <div className="flex items-center gap-2">
-              <span className="text-[var(--color-text-muted)]">
-                {STATUS_EMOJI[sys.previousStatus]}→{STATUS_EMOJI[sys.newStatus]}
+              <span className="flex items-center gap-1 text-[var(--color-text-muted)]">
+                <StatusDot status={sys.previousStatus} />
+                <span className="text-xs">→</span>
+                <StatusDot status={sys.newStatus} />
               </span>
               <span className="text-[var(--color-text-muted)] tabular-nums">
                 {sys.previousAccuracy.toFixed(0)}% → {sys.newAccuracy.toFixed(0)}%
@@ -259,7 +279,8 @@ function TrajectoryUpdate({
       className="bg-gradient-to-r from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-xl p-4"
     >
       <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2 flex items-center gap-2">
-        📈 Trajectory Update
+        <TrendingUp className="w-4 h-4" />
+        Trajectory Update
       </h4>
       <div className="text-sm text-[var(--color-text-secondary)] space-y-1">
         <div>
@@ -280,8 +301,9 @@ function TrajectoryUpdate({
         </div>
       </div>
       {bufferDays > 0 && (
-        <div className="mt-3 text-sm font-medium text-[var(--color-data-pass)]">
-          ✅ You just bought yourself {bufferDays} extra day{bufferDays !== 1 ? 's' : ''} of buffer!
+        <div className="mt-3 text-sm font-medium text-[var(--color-data-pass)] flex items-center gap-2">
+          <Check className="w-4 h-4 shrink-0" />
+          You just bought yourself {bufferDays} extra day{bufferDays !== 1 ? 's' : ''} of buffer!
         </div>
       )}
     </motion.div>
@@ -299,7 +321,7 @@ function StreakBadge({ streak, milestone }: { streak: number; milestone: string 
       className="text-center"
     >
       <div className="inline-flex items-center gap-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-4 py-2 rounded-full">
-        <span className="text-xl">🔥</span>
+        <Flame className="w-5 h-5 shrink-0" />
         <span className="font-bold">{streak}-Day Study Streak!</span>
       </div>
       {milestone && (
@@ -325,7 +347,7 @@ function AchievementBadge({ achievement }: { achievement: string }) {
       className="text-center"
     >
       <div className="inline-flex items-center gap-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] px-4 py-2 rounded-full">
-        <span className="text-xl">🏆</span>
+        <Trophy className="w-5 h-5 shrink-0" />
         <span className="font-bold">{achievement}</span>
       </div>
     </motion.div>
@@ -363,9 +385,9 @@ export function SessionPostMortem({
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="text-3xl mb-2"
+          className="mb-2"
         >
-          🎉
+          <PartyPopper className="w-10 h-10 mx-auto text-[var(--color-text-inverse)]" />
         </motion.div>
         <motion.h2
           initial={{ y: -10, opacity: 0 }}
@@ -469,12 +491,12 @@ export function SessionPostMortem({
 // =============================================================================
 
 function getHeadline(data: SessionPostMortemData): string {
-  if (data.scoreChange >= 5) return '🚀 MASSIVE GAIN!';
-  if (data.scoreChange >= 2) return '💪 Strong Progress!';
-  if (data.scoreChange > 0) return '📈 Moving Forward';
-  if (data.decayPrevented > 5) return '🛡️ Knowledge Defended';
-  if (data.accuracy >= 90) return '⭐ Excellent Session!';
-  if (data.accuracy >= 75) return '✅ Solid Work!';
+  if (data.scoreChange >= 5) return 'MASSIVE GAIN!';
+  if (data.scoreChange >= 2) return 'Strong Progress!';
+  if (data.scoreChange > 0) return 'Moving Forward';
+  if (data.decayPrevented > 5) return 'Knowledge Defended';
+  if (data.accuracy >= 90) return 'Excellent Session!';
+  if (data.accuracy >= 75) return 'Solid Work!';
   return 'SESSION COMPLETE';
 }
 

@@ -75,6 +75,7 @@ import { Progress } from '@/components/ui/progress';
 import { OpenStaxAttributionFooter } from '@/components/ui/OpenStaxAttributionFooter';
 import { SplitPaneDrillLayout } from '@/components/drill/SplitPaneDrillLayout';
 import { DrillLoadingState } from '@/components/drill/DrillLoadingState';
+import { NormalLabsPanel } from '@/components/session/NormalLabsPanel';
 
 // Icons
 import { CloseIcon } from '@/components/icons/CloseIcon';
@@ -82,6 +83,7 @@ import { FlagIcon } from '@/components/icons/FlagIcon';
 import {
   AlertTriangle,
   BarChart3,
+  Beaker,
   Calculator,
   MessageCircle,
   Clock,
@@ -463,6 +465,8 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [showFullExplanation, setShowFullExplanation] = useState(false);
   // Fix #6c: Notes textarea toggle
   const [showNotes, setShowNotes] = useState(false);
+  // Normal Labs reference panel (slide-out from right)
+  const [showNormalLabsPanel, setShowNormalLabsPanel] = useState(false);
 
   // ---- SESSION RECOVERY ----
   const userId = user?.id;
@@ -1492,8 +1496,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               {questionNumber > 3 && <MomentumBadge refreshKey={behavioralRefreshKey} />}
               {/* Sprint 4: Streak Badge */}
               {currentStreak >= 3 && <StreakBadge streak={currentStreak} />}
-              {/* Sprint 4: Question Timer */}
-              {currentQuestion && (
+              {/* Sprint 4: Question Timer — hidden in Commuter Mode per audit */}
+              {currentQuestion && !commuter?.isCommuterMode && (
                 <QuestionTimer
                   startTime={questionStartTime}
                   parTimeMs={parTimeMs}
@@ -1502,8 +1506,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   compact
                 />
               )}
-              {/* Quick Wins: Time-box session timer */}
-              {timeRemainingMs !== null && timeRemainingMs > 0 && (
+              {/* Quick Wins: Time-box session timer — hidden in Commuter Mode */}
+              {!commuter?.isCommuterMode && timeRemainingMs !== null && timeRemainingMs > 0 && (
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-action-primary/10 border border-action-primary/20">
                   <Clock className="w-3.5 h-3.5 text-text-primary" />
                   <span className="text-xs font-semibold text-text-primary">
@@ -1541,6 +1545,21 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               }`}
             >
               <FlagIcon className="w-5 h-5" />
+            </button>
+
+            {/* Normal Labs reference (slide-out panel) */}
+            <button
+              onClick={() => setShowNormalLabsPanel((prev) => !prev)}
+              title="Normal Labs reference"
+              className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
+                showNormalLabsPanel
+                  ? 'bg-action-primary/10 text-text-primary border-action-primary'
+                  : 'bg-surface-card text-muted border-border-subtle hover:bg-surface-tertiary hover:border-action-primary'
+              }`}
+              aria-label="Toggle Normal Labs reference"
+              aria-expanded={showNormalLabsPanel ? 'true' : 'false'}
+            >
+              <Beaker className="w-5 h-5" />
             </button>
 
             {/* Overflow menu — secondary actions collapsed behind "more" */}
@@ -1986,11 +2005,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                                   </section>
                                 )}
 
-                                {/* Other Distractors */}
+                                {/* Other Distractors — why each wrong answer is wrong */}
                                 {hasOtherDistractors && (
                                   <section>
                                     <h3 className="font-bold text-base mb-1.5 text-text-primary">
-                                      Other Distractors
+                                      Why the other answers are wrong
                                     </h3>
                                     <div className="space-y-2">
                                       {letters.map((letter, i) => {
@@ -2243,6 +2262,12 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
       {/* Lab calculators modal – Anion Gap, Osmolar Gap, Parkland (in-question Calc button) */}
       {showLabCalcModal && <QuizLabCalcModal onClose={() => setShowLabCalcModal(false)} />}
+
+      {/* Normal Labs reference panel (slide-out from right) */}
+      <NormalLabsPanel
+        isOpen={showNormalLabsPanel}
+        onClose={() => setShowNormalLabsPanel(false)}
+      />
 
       {/* Report Question Issue Modal */}
       {currentQuestion && (

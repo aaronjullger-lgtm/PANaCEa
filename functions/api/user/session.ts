@@ -12,12 +12,12 @@ const SessionStartSchema = z.object({
 
 const SessionUpdateSchema = z.object({
   body: z.object({
-    sessionId: z.string().min(1),
+    sessionId: z.string().min(1).max(200),
     action: z.enum(['end', 'update']),
-    questionsAnswered: z.number().int().min(0).optional(),
-    correctCount: z.number().int().min(0).optional(),
+    questionsAnswered: z.number().int().min(0).max(10000).optional(),
+    correctCount: z.number().int().min(0).max(10000).optional(),
     /** Gemini 3 Deep Think: thinking phase latency (ms), logged separately from response time */
-    thinkingTimeMs: z.number().int().min(0).optional(),
+    thinkingTimeMs: z.number().int().min(0).max(600000).optional(),
   }),
 });
 

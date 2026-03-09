@@ -98,7 +98,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-white dark:bg-data-neutral rounded-xl border border-data-neutral dark:border-data-neutral p-5 hover:shadow-lg transition-shadow"
+      className="bg-white dark:bg-data-neutral-bg rounded-xl border border-data-neutral dark:border-data-neutral p-5 hover:shadow-lg transition-shadow"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
@@ -240,8 +240,9 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
       {/* Reward Message */}
       {goal.status === 'completed' && goal.rewardMessage && (
         <div className="mt-4 pt-4 border-t border-data-neutral dark:border-data-neutral">
-          <div className="text-sm text-data-pass dark:text-data-pass font-medium">
-            🎉 {goal.rewardMessage}
+          <div className="text-sm text-data-pass dark:text-data-pass font-medium flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 shrink-0" />
+            {goal.rewardMessage}
           </div>
         </div>
       )}

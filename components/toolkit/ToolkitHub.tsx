@@ -393,10 +393,9 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] flex">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] flex min-w-0 flex-1 overflow-hidden">
       {/* Sidebar Navigation - Desktop */}
-      <div className="hidden lg:block w-64 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex-shrink-0">
-        <div className="sticky top-0 h-screen overflow-y-auto">
+      <div className="hidden lg:block w-64 flex-shrink-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] overflow-y-auto overflow-x-hidden">
           <div className="p-4 border-b border-[var(--color-border)]">
             <button
               onClick={onClose}
@@ -422,7 +421,6 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
               />
             ))}
           </nav>
-        </div>
       </div>
 
       {/* Mobile Sidebar Toggle */}

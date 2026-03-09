@@ -6,6 +6,8 @@
  * confused condition pairs.
  */
 
+import { StorageKeys } from '../storage/storageRegistry';
+
 // ============================================================================
 // Types & Interfaces
 // ============================================================================
@@ -64,7 +66,7 @@ export interface TopConfusion {
 // Constants
 // ============================================================================
 
-const CONFUSION_STORAGE_KEY = 'panacea_confusion_map';
+const CONFUSION_STORAGE_KEY = StorageKeys.CONFUSION_MAP;
 const CONFUSION_VERSION = 'v1';
 const MINIMUM_DISPLAY_THRESHOLD = 0.2; // Normalized weight threshold for displaying
 

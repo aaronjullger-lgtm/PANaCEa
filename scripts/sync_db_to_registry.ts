@@ -25,8 +25,8 @@ const __dirname = path.dirname(__filename);
 
 const prisma = new PrismaClient();
 
-const CONDITION_REGISTRY_PATH = path.join(__dirname, '../conditionRegistry.ts');
-const DRUG_REGISTRY_PATH = path.join(__dirname, '../drugRegistry.ts');
+const CONDITION_REGISTRY_PATH = path.join(__dirname, '../config/conditionRegistry.ts');
+const DRUG_REGISTRY_PATH = path.join(__dirname, '../src/registries/drugRegistry.ts');
 
 /**
  * Normalize a name for comparison (lowercase, remove special chars)
@@ -45,7 +45,8 @@ function conditionExistsInFile(fileText: string, conditionName: string): boolean
   for (const line of lines) {
     // Look for: condition: "..."
     const match = line.match(/condition:\s*["']([^"']+)["']/);
-    if (match && normalizeName(match[1]) === normalized) {
+    const captured = match?.[1];
+    if (captured && normalizeName(captured) === normalized) {
       return true;
     }
   }
@@ -63,7 +64,8 @@ function drugExistsInFile(fileText: string, genericName: string): boolean {
   for (const line of lines) {
     // Look for: genericName: "..."
     const match = line.match(/genericName:\s*["']([^"']+)["']/);
-    if (match && normalizeName(match[1]) === normalized) {
+    const captured = match?.[1];
+    if (captured && normalizeName(captured) === normalized) {
       return true;
     }
   }
@@ -178,19 +180,20 @@ function updateMainExport(fileText: string, newArrayName: string, isCondition: b
   const exportRegex = new RegExp(`export const ${exportName}.*?=\\s*\\[([\\s\\S]*?)\\];`, '');
 
   const match = fileText.match(exportRegex);
-  if (!match) {
+  const innerContent = match?.[1];
+  if (!match || !innerContent) {
     console.warn(`⚠️  Could not find export for ${exportName}`);
     return fileText;
   }
 
   // Check if the new array is already included
-  if (match[1].includes(newArrayName)) {
+  if (innerContent.includes(newArrayName)) {
     return fileText; // Already included
   }
 
   // Add the new array to the export
   const replacement = `export const ${exportName} = [
-${match[1].trim()},
+${innerContent.trim()},
   ...${newArrayName},
 ];`;
 
@@ -234,8 +237,9 @@ async function backSyncConditions(): Promise<number> {
   // Group by system
   const bySystem = missing.reduce(
     (acc, cond) => {
-      if (!acc[cond.system]) acc[cond.system] = [];
-      acc[cond.system].push(cond);
+      const system = cond.system ?? 'unknown';
+      if (!acc[system]) acc[system] = [];
+      acc[system].push(cond);
       return acc;
     },
     {} as Record<string, typeof missing>

@@ -6,9 +6,16 @@
  * - Raw text with list structure (newlines, bullets)
  * - "null" strings that should be actual null
  * - Already-parsed arrays/objects from Prisma
+ *
+ * Field lists align with lib/medicalContentFields.ts (canonical source of truth).
  */
 
 import { safeParseJson, handleFakeNull, safeParseList } from './jsonParser';
+import {
+  MEDICAL_CONTENT_LIST_FIELDS,
+  MEDICAL_CONTENT_TEXT_FIELDS,
+  MEDICAL_CONTENT_OBJECT_FIELDS,
+} from '../medicalContentFields';
 
 /**
  * Universal parser for all MedicalContent fields.
@@ -104,62 +111,26 @@ export const parseTextField = (value: unknown): string | null => {
 
 /**
  * Normalize entire MedicalContent record
- * Apply universalParser to all relevant JSONB fields
+ * Apply universalParser to all relevant JSONB/text fields per canonical field list.
  */
 export function normalizeMedicalContent<T extends Record<string, unknown>>(rawData: T): T {
   const normalized = { ...rawData };
 
-  // List fields
-  const listFields = [
-    'buzzwords',
-    'clinical_pearls',
-    'symptoms',
-    'signs',
-    'risk_factors',
-    'labs_findings',
-    'imaging_findings',
-    'complications',
-    'synonyms',
-    'classic_triad',
-    'mnemonics',
-    'associations',
-  ];
-
-  listFields.forEach((field) => {
+  MEDICAL_CONTENT_LIST_FIELDS.forEach((field) => {
     if (field in normalized) {
-      (normalized as any)[field] = parseListField(normalized[field]);
+      (normalized as Record<string, unknown>)[field] = parseListField(normalized[field]);
     }
   });
 
-  // Text fields
-  const textFields = [
-    'overview',
-    'pathophysiology',
-    'treatment',
-    'etiology',
-    'epidemiology',
-    'prognosis',
-    'prevention',
-    'patient_education',
-    'classic_patient',
-    'physical_exam',
-    'monitoring',
-    'lifestyle',
-    'riskFactors',
-  ];
-
-  textFields.forEach((field) => {
+  MEDICAL_CONTENT_TEXT_FIELDS.forEach((field) => {
     if (field in normalized) {
-      (normalized as any)[field] = parseTextField(normalized[field]);
+      (normalized as Record<string, unknown>)[field] = parseTextField(normalized[field]);
     }
   });
 
-  // Object fields
-  const objectFields = ['diagnosis', 'differentials'];
-
-  objectFields.forEach((field) => {
+  MEDICAL_CONTENT_OBJECT_FIELDS.forEach((field) => {
     if (field in normalized) {
-      (normalized as any)[field] = parseObjectField(normalized[field]);
+      (normalized as Record<string, unknown>)[field] = parseObjectField(normalized[field]);
     }
   });
 

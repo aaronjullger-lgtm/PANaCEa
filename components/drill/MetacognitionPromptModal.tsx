@@ -133,8 +133,9 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
                   <p className="text-sm text-purple-700 dark:text-purple-300 mb-2">
                     {prompt.confusionPairInfo.distinguishingFeature}
                   </p>
-                  <p className="text-xs text-purple-600 dark:text-purple-400 italic">
-                    💡 {prompt.confusionPairInfo.clinicalPearl}
+                  <p className="text-xs text-purple-600 dark:text-purple-400 italic flex items-start gap-2">
+                    <Lightbulb className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    {prompt.confusionPairInfo.clinicalPearl}
                   </p>
                 </div>
               </div>

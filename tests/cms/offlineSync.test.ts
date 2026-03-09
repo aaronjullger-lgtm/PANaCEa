@@ -2,7 +2,8 @@
  * Tests for Offline Sync Service
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { StorageKeys } from '../../../lib/storage/storageRegistry';
 
 describe('Offline Sync', () => {
   // Mock localStorage with proper typing
@@ -49,12 +50,12 @@ describe('Offline Sync', () => {
         status: 'pending' as const,
       };
 
-      // Store in queue
+      // Store in queue (use StorageKeys to match production)
       const queue = [operation];
-      localStorage.setItem('panacea_offline_queue', JSON.stringify(queue));
+      localStorage.setItem(StorageKeys.OFFLINE_QUEUE, JSON.stringify(queue));
 
       // Retrieve and verify
-      const stored = JSON.parse(localStorage.getItem('panacea_offline_queue') || '[]');
+      const stored = JSON.parse(localStorage.getItem(StorageKeys.OFFLINE_QUEUE) || '[]');
       expect(stored).toHaveLength(1);
       expect(stored[0].operation).toBe('save_progress');
       expect(stored[0].data.score).toBe(100);
@@ -80,9 +81,9 @@ describe('Offline Sync', () => {
         },
       ];
 
-      localStorage.setItem('panacea_offline_queue', JSON.stringify(ops));
+      localStorage.setItem(StorageKeys.OFFLINE_QUEUE, JSON.stringify(ops));
 
-      const stored = JSON.parse(localStorage.getItem('panacea_offline_queue') || '[]');
+      const stored = JSON.parse(localStorage.getItem(StorageKeys.OFFLINE_QUEUE) || '[]');
       expect(stored).toHaveLength(2);
     });
   });

@@ -11,7 +11,10 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Mobile bottom bar spacing — add to main content containers on mobile */
+/* Main content bottom spacing — desktop default; mobile uses safe area for tab bar */
+.main-content-area {
+  padding-bottom: 6rem;
+}
 @media (max-width: 767px) {
   .main-content-area {
     padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
@@ -419,6 +422,8 @@ a,
   --color-data-pass: #475569; /* slate-600 */
   --color-data-fail: #1e293b; /* slate-800 */
   --color-data-provisional: #94a3b8; /* slate-400 */
+  --color-data-neutral: #64748b; /* slate-500 - text/borders */
+  --color-data-neutral-bg: #f1f5f9; /* slate-100 - card surfaces */
 
   /* Semantic aliases for design system docs */
   --surface-canvas: var(--color-bg-primary);
@@ -606,6 +611,8 @@ a,
   --color-data-pass: #94a3b8; /* slate-400 */
   --color-data-fail: #cbd5e1; /* slate-300 */
   --color-data-provisional: #64748b; /* slate-500 */
+  --color-data-neutral: #94a3b8; /* slate-400 - readable text on dark surfaces */
+  --color-data-neutral-bg: #334155; /* slate-700 - card surface in dark mode */
 
   /* ===== MUTED SEMANTIC CATEGORY ACCENTS (Dark Mode) ===== */
   --color-category-visual: #c09e9e; /* Dusty Rose (lighter) */
@@ -1841,35 +1848,26 @@ a,
   color: #475569 !important; /* slate-600 */
 }
 
-/* Dark mode: Remove safety overrides when dark class is present */
-.dark [class*='bg-white'],
-.dark [class*='bg-slate-50'],
-.dark [class*='bg-blue-50'],
-.dark [class*='from-blue-50'],
-.dark [class*='from-indigo-50'] {
+/* Dark mode: Only override when element has a dark: variant (theme-aware card).
+   Avoid forcing inherit on elements that stay light in dark mode (would cause light-on-white). */
+.dark [class*='bg-white'][class*='dark:bg-'],
+.dark [class*='bg-slate-50'][class*='dark:'],
+.dark [class*='bg-blue-50'][class*='dark:'],
+.dark [class*='from-blue-50'][class*='dark:'],
+.dark [class*='from-indigo-50'][class*='dark:'] {
   color: inherit !important;
 }
 
-.dark [class*='bg-white'] h1,
-.dark [class*='bg-white'] h2,
-.dark [class*='bg-white'] h3,
-.dark [class*='bg-white'] h4,
-.dark [class*='bg-slate-50'] h1,
-.dark [class*='bg-slate-50'] h2,
-.dark [class*='bg-slate-50'] h3,
-.dark [class*='bg-slate-50'] h4,
-.dark [class*='bg-blue-50'] h1,
-.dark [class*='bg-blue-50'] h2,
-.dark [class*='bg-blue-50'] h3,
-.dark [class*='bg-blue-50'] h4 {
+.dark [class*='bg-white'][class*='dark:bg-'] h1,
+.dark [class*='bg-white'][class*='dark:bg-'] h2,
+.dark [class*='bg-white'][class*='dark:bg-'] h3,
+.dark [class*='bg-white'][class*='dark:bg-'] h4 {
   color: inherit !important;
 }
 
-.dark [class*='bg-white'] p,
-.dark [class*='bg-slate-50'] p,
-.dark [class*='bg-blue-50'] p,
-.dark [class*='from-blue-50'] p,
-.dark [class*='from-indigo-50'] p {
+.dark [class*='bg-white'][class*='dark:bg-'] p,
+.dark [class*='bg-slate-50'][class*='dark:'] p,
+.dark [class*='bg-blue-50'][class*='dark:'] p {
   color: inherit !important;
 }
 

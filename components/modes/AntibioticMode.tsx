@@ -544,7 +544,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
       return (
         <div className="space-y-6">
           {/* Organism Card */}
-          <div className="bg-white dark:bg-data-neutral rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
+          <div className="bg-white dark:bg-data-neutral-bg rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
             <h3 className="text-lg font-semibold mb-2 text-purple-600 dark:text-purple-400">
               Target Organism
             </h3>
@@ -566,7 +566,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
           </div>
 
           {/* Drug Selection */}
-          <div className="bg-white dark:bg-data-neutral rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
+          <div className="bg-white dark:bg-data-neutral-bg rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
             <h3 className="text-lg font-semibold mb-4 text-purple-600 dark:text-purple-400">
               Select Appropriate Antibiotics
             </h3>
@@ -582,7 +582,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                   className={`p-4 rounded-lg border-2 transition-all text-left shadow-sm ${
                     selectedDrugs.includes(drug.id)
                       ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/30'
-                      : 'border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral hover:border-purple-300 dark:hover:border-purple-700'
+                      : 'border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg hover:border-purple-300 dark:hover:border-purple-700'
                   } ${isSubmitted ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <div className="font-semibold text-data-neutral dark:text-data-neutral text-sm">
@@ -628,7 +628,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
         )}
 
         {/* Question */}
-        <div className="bg-white dark:bg-data-neutral rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
+        <div className="bg-white dark:bg-data-neutral-bg rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
           <h3 className="text-lg font-semibold mb-4 text-purple-600 dark:text-purple-400">
             Question
           </h3>
@@ -646,7 +646,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                 className={`w-full p-4 rounded-lg border-2 transition-all text-left shadow-sm ${
                   selectedAnswer === index
                     ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/30'
-                    : 'border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral hover:border-purple-300 dark:hover:border-purple-700'
+                    : 'border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg hover:border-purple-300 dark:hover:border-purple-700'
                 } ${isSubmitted ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <div className="flex items-start gap-3">
@@ -680,9 +680,9 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   // Landing Page
   if (viewState === 'landing') {
     return (
-      <div className="min-h-screen bg-white dark:bg-data-neutral text-data-neutral dark:text-data-neutral transition-colors duration-300">
+      <div className="min-h-screen bg-white dark:bg-data-neutral-bg text-data-neutral dark:text-data-neutral transition-colors duration-300">
         {/* Header */}
-        <div className="border-b border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
@@ -723,7 +723,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             </div>
 
             {/* Drill Types Card */}
-            <div className="bg-white dark:bg-data-neutral rounded-2xl p-8 border border-data-neutral dark:border-data-neutral shadow-lg space-y-6">
+            <div className="bg-white dark:bg-data-neutral-bg rounded-2xl p-8 border border-data-neutral dark:border-data-neutral shadow-lg space-y-6">
               <h3 className="text-2xl font-semibold text-data-neutral dark:text-data-neutral mb-6">
                 Drill Types
               </h3>
@@ -829,7 +829,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   // Loading State
   if (viewState === 'loading') {
     return (
-      <div className="min-h-screen bg-white dark:bg-data-neutral text-data-neutral dark:text-data-neutral flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-data-neutral-bg text-data-neutral dark:text-data-neutral flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 border-4 border-purple-200 dark:border-purple-900 border-t-purple-600 dark:border-t-purple-400 rounded-full animate-spin mx-auto" />
           <p className="text-lg font-medium text-data-neutral dark:text-data-neutral">Loading drill...</p>
@@ -841,9 +841,9 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   // Error State
   if (viewState === 'error') {
     return (
-      <div className="min-h-screen bg-white dark:bg-data-neutral text-data-neutral dark:text-data-neutral">
+      <div className="min-h-screen bg-white dark:bg-data-neutral-bg text-data-neutral dark:text-data-neutral">
         {/* Header */}
-        <div className="border-b border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
@@ -910,7 +910,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   return (
     <div className="min-h-screen bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral">
       {/* Header */}
-      <div className="border-b border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral sticky top-0 z-10 shadow-sm">
+      <div className="border-b border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">

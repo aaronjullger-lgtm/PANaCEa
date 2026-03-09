@@ -13,18 +13,13 @@ import { motion } from 'framer-motion';
 import {
   ChevronLeft,
   ChevronRight,
-  Home,
-  Dumbbell,
-  BarChart3,
-  TrendingUp,
-  BookOpen,
-  Calculator,
   Headphones,
   PanelLeftClose,
   PanelLeftOpen,
   Download,
   LucideIcon,
 } from 'lucide-react';
+import { NAV_RAIL_ITEMS } from '@/config/navigation';
 import { useCommuter } from '@/contexts/CommuterContext';
 import { usePWAEnhancer } from '@/services/pwaEnhancer';
 import { SidebarItem } from '@/components/layout/SidebarItem';
@@ -47,56 +42,15 @@ interface NavRailProps {
   className?: string;
 }
 
-const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = [
-  {
-    id: 'home',
-    label: 'Home',
-    icon: Home,
-    href: '/study',
-    section: 'study',
-    showInBottomBar: true,
-  },
-  {
-    id: 'practice',
-    label: 'Practice',
-    icon: Dumbbell,
-    href: '/practice',
-    section: 'study',
-    showInBottomBar: true,
-  },
-  {
-    id: 'progress',
-    label: 'Progress',
-    icon: BarChart3,
-    href: '/progress',
-    section: 'study',
-    showInBottomBar: true,
-  },
-  {
-    id: 'knowledge',
-    label: 'Knowledge',
-    icon: BookOpen,
-    href: '/study/knowledge',
-    section: 'resources',
-    showInBottomBar: true,
-  },
-  {
-    id: 'utilities',
-    label: 'Tools',
-    icon: Calculator,
-    href: '/study/utilities',
-    section: 'resources',
-    showInBottomBar: true,
-  },
-  {
-    id: 'study_path',
-    label: 'Study Path',
-    icon: TrendingUp,
-    href: '/study/path',
-    section: 'resources',
-    showInBottomBar: false,
-  },
-];
+/** Default nav items from config (single source of truth). */
+const DEFAULT_QUICK_ACTIONS: QuickActionItem[] = NAV_RAIL_ITEMS.map((item) => ({
+  id: item.id,
+  label: item.label,
+  icon: item.icon,
+  href: item.path,
+  section: item.section,
+  showInBottomBar: item.showInBottomBar,
+}));
 
 const RAIL_WIDTH_COLLAPSED = 56;
 const RAIL_WIDTH_EXPANDED = 208;

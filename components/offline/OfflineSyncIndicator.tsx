@@ -1,10 +1,13 @@
 /**
  * Offline sync status indicator component
- * Shows sync status and pending operations count
+ * Shows sync status and pending operations count.
+ * Combines:
+ * - offlineSyncService (general API queue)
+ * - syncManager (answers, pearl actions, reviews)
  */
 
 import React, { useEffect, useState } from 'react';
-import { WifiOff, Wifi, CloudOff, Cloud, Loader2 } from 'lucide-react';
+import { WifiOff, CloudOff, Cloud, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   getSyncStatus,
@@ -12,6 +15,7 @@ import {
   setupAutoSync,
   isOnline as checkOnline,
 } from '@/lib/services/offlineSyncService';
+import { useSyncManager } from '@/lib/services/sync/syncManager';
 
 interface SyncStatus {
   pendingCount: number;
@@ -21,7 +25,8 @@ interface SyncStatus {
 
 export function OfflineSyncIndicator() {
   const { getToken } = useAuth();
-  const [status, setStatus] = useState<SyncStatus>({
+  const { status: syncManagerStatus, syncNow } = useSyncManager();
+  const [offlineStatus, setOfflineStatus] = useState<SyncStatus>({
     pendingCount: 0,
     lastSyncTime: null,
     isOffline: false,
@@ -29,14 +34,21 @@ export function OfflineSyncIndicator() {
   const [syncing, setSyncing] = useState(false);
   const [isOnline, setIsOnline] = useState(checkOnline());
 
-  // Update status periodically
+  // Combined pending from both systems
+  const managerPending =
+    syncManagerStatus.pendingAnswers +
+    syncManagerStatus.pendingPearlActions +
+    syncManagerStatus.pendingReviews;
+  const totalPending = offlineStatus.pendingCount + managerPending;
+  const hasSyncError = !!syncManagerStatus.lastSyncError;
+
+  // Update offline status periodically
   useEffect(() => {
     const updateStatus = () => {
       const newStatus = getSyncStatus();
       const newIsOnline = checkOnline();
 
-      // Only update state if values actually changed to prevent infinite loops
-      setStatus((prev) => {
+      setOfflineStatus((prev) => {
         if (
           prev.pendingCount !== newStatus.pendingCount ||
           prev.lastSyncTime !== newStatus.lastSyncTime ||
@@ -51,9 +63,8 @@ export function OfflineSyncIndicator() {
     };
 
     updateStatus();
-    const interval = setInterval(updateStatus, 5000); // Check every 5 seconds
+    const interval = setInterval(updateStatus, 5000);
 
-    // Setup automatic sync with token from Clerk
     const cleanup = setupAutoSync(async () => {
       try {
         return await getToken();
@@ -69,16 +80,16 @@ export function OfflineSyncIndicator() {
     };
   }, [getToken]);
 
-  // Manual sync trigger
+  // Manual sync trigger – syncs both systems
   const handleManualSync = async () => {
     if (!isOnline || syncing) return;
 
     setSyncing(true);
     try {
-      // Get fresh token from Clerk before syncing
       const token = await getToken();
       await syncPendingOperations(token || undefined);
-      setStatus(getSyncStatus());
+      await syncNow(token ?? undefined);
+      setOfflineStatus(getSyncStatus());
     } catch (error) {
       console.error('Manual sync failed:', error);
     } finally {
@@ -103,74 +114,75 @@ export function OfflineSyncIndicator() {
   };
 
   // Don't show indicator if everything is synced and online
-  if (!status.isOffline && status.pendingCount === 0) {
+  if (!offlineStatus.isOffline && totalPending === 0 && !hasSyncError) {
     return null;
   }
+
+  const lastSync = syncManagerStatus.lastSyncTime ?? offlineStatus.lastSyncTime;
 
   return (
     <div
       className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg border transition-all ${
-        status.isOffline
+        offlineStatus.isOffline
           ? 'bg-[var(--color-data-provisional)]/90 border-[var(--color-data-provisional)]/70 text-[var(--color-text-inverse)]'
-          : status.pendingCount > 0
-            ? 'bg-[var(--color-accent)]/90 border-[var(--color-accent)]/70 text-[var(--color-text-inverse)]'
-            : 'bg-[var(--color-data-pass)]/90 border-[var(--color-data-pass)]/70 text-[var(--color-text-inverse)]'
+          : hasSyncError
+            ? 'bg-[var(--color-data-fail)]/90 border-[var(--color-data-fail)]/70 text-[var(--color-text-inverse)]'
+            : totalPending > 0
+              ? 'bg-[var(--color-accent)]/90 border-[var(--color-accent)]/70 text-[var(--color-text-inverse)]'
+              : 'bg-[var(--color-data-pass)]/90 border-[var(--color-data-pass)]/70 text-[var(--color-text-inverse)]'
       }`}
     >
-      {/* Status Icon */}
       <div className="flex-shrink-0">
         {syncing ? (
           <Loader2 className="w-5 h-5 animate-spin" />
-        ) : status.isOffline ? (
+        ) : offlineStatus.isOffline ? (
           <CloudOff className="w-5 h-5" />
-        ) : status.pendingCount > 0 ? (
-          <Cloud className="w-5 h-5" />
+        ) : hasSyncError ? (
+          <AlertCircle className="w-5 h-5" />
         ) : (
           <Cloud className="w-5 h-5" />
         )}
       </div>
 
-      {/* Status Text */}
       <div className="flex flex-col text-sm">
         <div className="font-medium">
           {syncing ? (
             'Syncing...'
-          ) : status.isOffline ? (
+          ) : offlineStatus.isOffline ? (
             <>
               <WifiOff className="inline w-4 h-4 mr-1" />
               You're offline
             </>
-          ) : status.pendingCount > 0 ? (
-            `${status.pendingCount} pending`
+          ) : hasSyncError ? (
+            'Sync failed'
+          ) : totalPending > 0 ? (
+            `${totalPending} pending${managerPending > 0 ? ` (${syncManagerStatus.pendingReviews} reviews)` : ''}`
           ) : (
-            <>
-              <Wifi className="inline w-4 h-4 mr-1" />
-              Up to date
-            </>
+            'Up to date'
           )}
         </div>
-        {!syncing && status.lastSyncTime && (
+        {!syncing && lastSync && (
           <div className="text-xs opacity-80">
-            {status.pendingCount > 0
-              ? 'Will sync when ready'
-              : `Synced ${formatLastSync(status.lastSyncTime)}`}
+            {totalPending > 0 || hasSyncError
+              ? hasSyncError
+                ? syncManagerStatus.lastSyncError
+                : 'Will sync when ready'
+              : `Synced ${formatLastSync(lastSync)}`}
           </div>
         )}
       </div>
 
-      {/* Manual Sync Button */}
-      {!status.isOffline && status.pendingCount > 0 && (
+      {(totalPending > 0 || hasSyncError) && !offlineStatus.isOffline && (
         <button
           onClick={handleManualSync}
           disabled={syncing}
           className="ml-2 px-3 py-1 text-xs font-medium rounded bg-white/20 hover:bg-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Sync Now
+          Retry
         </button>
       )}
 
-      {/* Info message when offline */}
-      {status.isOffline && (
+      {offlineStatus.isOffline && (
         <div className="ml-2 text-xs opacity-80 max-w-[220px]">
           Changes will sync when connection is restored.
         </div>

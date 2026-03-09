@@ -16,6 +16,7 @@ import { ContextNavRail } from '@/components/layout/ContextNavRail';
 import { ClinicalReferenceLibrary } from '@/components/library/ClinicalReferenceLibrary';
 import { PharmacopeiaView } from './PharmacopeiaView';
 import { LabReferenceView } from './LabReferenceView';
+import { NormalLabsLibraryView } from './NormalLabsLibraryView';
 
 interface KnowledgeBaseHubProps {
   onClose: () => void;
@@ -86,12 +87,15 @@ const SidebarNavButton: React.FC<SidebarNavButtonProps> = ({ tab, isActive, onCl
 
 const VALID_TAB_IDS: TabId[] = ['conditions', 'pharmacopeia', 'labs'];
 
+type LabSubTab = 'tests' | 'normal-ranges';
+
 const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) => {
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as TabId | null;
   const [activeTab, setActiveTab] = useState<TabId>(
     tabFromUrl && VALID_TAB_IDS.includes(tabFromUrl) ? tabFromUrl : 'conditions'
   );
+  const [labSubTab, setLabSubTab] = useState<LabSubTab>('tests');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -122,10 +126,9 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
   const currentTab = NAV_TABS.find((t) => t.id === activeTab) ?? NAV_TABS[0]!;
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] flex">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] flex min-w-0 flex-1 overflow-hidden">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block w-64 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] flex-shrink-0">
-        <div className="sticky top-0 h-screen overflow-y-auto">
+      <div className="hidden lg:block w-64 flex-shrink-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] overflow-y-auto overflow-x-hidden">
           <div className="p-4 border-b border-[var(--color-border)]">
             <button
               onClick={onClose}
@@ -149,7 +152,6 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
               />
             ))}
           </nav>
-        </div>
       </div>
 
       {/* Mobile Sidebar Toggle */}
@@ -213,7 +215,7 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0 overflow-y-auto relative">
+      <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden relative">
         <div className="p-6 max-w-7xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
@@ -251,8 +253,31 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
               >
-                <LabReferenceView />
+                <div className="flex gap-2 border-b border-[var(--color-border)] pb-4">
+                  <button
+                    onClick={() => setLabSubTab('tests')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      labSubTab === 'tests'
+                        ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                        : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                    }`}
+                  >
+                    Lab Tests
+                  </button>
+                  <button
+                    onClick={() => setLabSubTab('normal-ranges')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      labSubTab === 'normal-ranges'
+                        ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
+                        : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                    }`}
+                  >
+                    Normal Ranges
+                  </button>
+                </div>
+                {labSubTab === 'tests' ? <LabReferenceView /> : <NormalLabsLibraryView />}
               </motion.div>
             )}
           </AnimatePresence>

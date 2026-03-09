@@ -88,7 +88,7 @@ const CustomTooltip: React.FC<any> = ({ active, payload }) => {
       {data.isCMRR && (
         <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
           <p className="text-xs text-[var(--color-accent)]">
-            ⭐ Optimal balance of retention and workload
+            Optimal balance of retention and workload
           </p>
         </div>
       )}
@@ -157,7 +157,7 @@ export const WorkloadChart: React.FC<WorkloadChartProps> = ({
           <div className="flex items-start justify-between">
             <div>
               <h3 className="text-sm font-semibold text-[var(--color-accent)] mb-1">
-                ⭐ Recommended Retention: {(cmrrPoint.retention * 100).toFixed(0)}%
+                Recommended Retention: {(cmrrPoint.retention * 100).toFixed(0)}%
               </h3>
               <p className="text-xs text-[var(--color-text-secondary)]">
                 Optimal balance: {cmrrPoint.reviews.toFixed(0)} reviews/day (

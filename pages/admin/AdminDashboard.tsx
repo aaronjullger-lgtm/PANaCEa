@@ -41,6 +41,7 @@ import { FlaggedQuestionsDashboard } from '../../components/admin/FlaggedQuestio
 import { QuestionPerformanceDashboard } from '../../components/admin/QuestionPerformanceDashboard';
 import QuestionCurationPanel from '../../components/admin/QuestionCurationPanel';
 import { MappingEnrichmentDashboard } from '../../components/admin/MappingEnrichmentDashboard';
+import { LibraryEnrichmentDashboard } from '../../components/admin/LibraryEnrichmentDashboard';
 
 interface AdminStats {
   totalUsers: number;
@@ -61,7 +62,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const [userRole, setUserRole] = useState<UserRole>('user');
   const [hasAccess, setHasAccess] = useState(false);
   const [activePanel, setActivePanel] = useState<
-    'dashboard' | 'flags' | 'performance' | 'curation' | 'mappingEnrichment'
+    'dashboard' | 'flags' | 'performance' | 'curation' | 'mappingEnrichment' | 'libraryEnrichment'
   >('dashboard');
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -242,6 +243,11 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                       <Map className="w-7 h-7 text-data-provisional" />
                       System Mapping Enrichment
                     </>
+                  ) : activePanel === 'libraryEnrichment' ? (
+                    <>
+                      <BookOpen className="w-7 h-7 text-data-provisional" />
+                      Library Enrichment
+                    </>
                   ) : (
                     <>
                       <Shield className="w-7 h-7 text-[var(--color-accent)]" />
@@ -258,6 +264,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                         ? 'Review and approve AI-generated questions'
                         : activePanel === 'mappingEnrichment'
                           ? 'Enrich taxonomy-system mappings with AI suggestions'
+                          : activePanel === 'libraryEnrichment'
+                            ? 'Monitor automated field extraction from medical library'
                           : 'Platform management and analytics'}
                   <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
                     {getRoleDisplayName(userRole)}
@@ -307,6 +315,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         ) : activePanel === 'mappingEnrichment' ? (
           <div className="p-6">
             <MappingEnrichmentDashboard />
+          </div>
+        ) : activePanel === 'libraryEnrichment' ? (
+          <div className="p-6">
+            <LibraryEnrichmentDashboard />
           </div>
         ) : (
           <>
@@ -528,6 +540,21 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)]">
                         Review AI‑suggested system mappings
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActivePanel('libraryEnrichment')}
+                    className="flex items-center gap-3 p-4 bg-data-provisional/10 border border-data-provisional/30 rounded-lg hover:bg-data-provisional/20 transition-colors text-left"
+                  >
+                    <BookOpen className="w-5 h-5 text-data-provisional" />
+                    <div>
+                      <div className="font-medium text-[var(--color-text-primary)]">
+                        Library Enrichment
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)]">
+                        Monitor automated field extraction from medical library
                       </div>
                     </div>
                   </button>

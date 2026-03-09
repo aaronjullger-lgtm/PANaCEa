@@ -63,13 +63,13 @@ export async function startOSCESession(
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ caseId }),
+      body: JSON.stringify({ body: { caseId } }),
     });
 
     if (!response.ok) return null;
 
     const data = await parseJsonResponse(response);
-    return data?.session ?? null;
+    return data?.data?.session ?? data?.session ?? null;
   } catch (error) {
     console.error('Error starting OSCE session:', error);
     return null;
@@ -91,7 +91,7 @@ export async function saveOSCEChat(
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ sessionId, messages }),
+      body: JSON.stringify({ body: { sessionId, messages } }),
     });
 
     return response.ok;
@@ -117,7 +117,7 @@ export async function completeOSCESession(
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ sessionId, diagnosis, treatmentPlan }),
+      body: JSON.stringify({ body: { sessionId, diagnosis, treatmentPlan } }),
     });
 
     return response.ok;

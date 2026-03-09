@@ -14,37 +14,19 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
 import { MODE_REGISTRY } from '@/config/training-modes';
+import { NAV_RAIL_ITEMS } from '@/config/navigation';
+import { getRecentModeIds, recordRecentMode, MAX_RECENT_MODES } from '@/lib/recentModes';
 import { safeFetchJson } from '@/lib/utils/safeFetch';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
-const RECENT_MODES_KEY = 'panceai_recent_modes';
-const MAX_RECENT = 8;
-
-function getRecentModeIds(): string[] {
-  try {
-    const raw = localStorage.getItem(RECENT_MODES_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : [];
-  } catch {
-    return [];
-  }
-}
-
-function recordRecentMode(modeId: string): void {
-  try {
-    const recent = getRecentModeIds();
-    const updated = [modeId, ...recent.filter((id) => id !== modeId)].slice(0, MAX_RECENT);
-    localStorage.setItem(RECENT_MODES_KEY, JSON.stringify(updated));
-  } catch {
-    /* ignore */
-  }
-}
+const MAX_RECENT = MAX_RECENT_MODES;
 
 interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (modeId: string) => void;
+  /** When provided, palette shows "Go to X" nav items that call this with path */
+  onNavigatePath?: (path: string) => void;
 }
 
 interface SearchResult {
@@ -86,7 +68,12 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, onNavigate }) => {
+export const CommandPalette: React.FC<CommandPaletteProps> = ({
+  isOpen,
+  onClose,
+  onNavigate,
+  onNavigatePath,
+}) => {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
@@ -148,7 +135,21 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
   useEffect(() => {
     const fetchResults = async () => {
       if (!debouncedQuery.trim()) {
-        // Show recently used modes first, then popular modes
+        // Nav items from canonical config (when path navigation available)
+        const navResults: SearchResult[] =
+          onNavigatePath ?
+            NAV_RAIL_ITEMS.map((item) => ({
+              id: `nav-${item.id}`,
+              title: `Go to ${item.label}`,
+              subtitle: item.path,
+              category: 'action' as const,
+              action: () => {
+                onNavigatePath(item.path);
+                onClose();
+              },
+            }))
+          : [];
+
         const recentIds = getRecentModeIds();
         const modeMap = new Map(MODE_REGISTRY.map((m) => [m.id, m]));
         const recentModes = recentIds
@@ -161,19 +162,19 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
         );
         const modesToShow = [...recentModes, ...otherModes].slice(0, MAX_RECENT);
 
-        setResults(
-          modesToShow.map((mode) => ({
-            id: mode.id,
-            title: mode.label,
-            subtitle: recentIdsSet.has(mode.id) ? 'Recently used' : mode.description,
-            category: 'mode' as const,
-            action: () => {
-              recordRecentMode(mode.id);
-              onNavigate(mode.id);
-              onClose();
-            },
-          }))
-        );
+        const modeResults = modesToShow.map((mode) => ({
+          id: mode.id,
+          title: mode.label,
+          subtitle: recentIdsSet.has(mode.id) ? 'Recently used' : mode.description,
+          category: 'mode' as const,
+          action: () => {
+            recordRecentMode(mode.id);
+            onNavigate(mode.id);
+            onClose();
+          },
+        }));
+
+        setResults([...navResults, ...modeResults]);
         setIsSearching(false);
         return;
       }
@@ -231,7 +232,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
     };
 
     fetchResults();
-  }, [debouncedQuery, onNavigate, onClose, fetchServerResults]);
+  }, [debouncedQuery, onNavigate, onNavigatePath, onClose, fetchServerResults]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -329,6 +330,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
             <button
               onClick={onClose}
               className="p-1 hover:bg-[var(--color-bg-tertiary)] rounded transition-colors"
+              aria-label="Close command palette"
             >
               <X className="w-5 h-5 text-[var(--color-text-muted)]" />
             </button>

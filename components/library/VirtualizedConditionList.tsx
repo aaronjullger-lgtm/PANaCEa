@@ -28,6 +28,12 @@ interface VirtualizedConditionListProps {
   emptyMessage?: string;
   /** Grid columns (1-4) */
   columns?: 1 | 2 | 3 | 4;
+  /** Selected condition id for highlight */
+  selectedConditionId?: string | null;
+  /** Retrievability per condition id (0-100) */
+  retrievabilityMap?: Record<string, number | null>;
+  /** Optional badge per condition (e.g. "85% match") */
+  getBadge?: (condition: Partial<MedicalContentDisplay>) => string | undefined;
 }
 
 export const VirtualizedConditionList: React.FC<VirtualizedConditionListProps> = ({
@@ -42,6 +48,9 @@ export const VirtualizedConditionList: React.FC<VirtualizedConditionListProps> =
   isLoading = false,
   emptyMessage = 'No conditions found',
   columns = 2,
+  selectedConditionId,
+  retrievabilityMap = {},
+  getBadge,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -163,6 +172,9 @@ export const VirtualizedConditionList: React.FC<VirtualizedConditionListProps> =
                   <EnhancedConditionCard
                     condition={condition}
                     onClick={() => onConditionClick(condition)}
+                    isSelected={selectedConditionId === condition.id}
+                    retrievability={condition.id ? retrievabilityMap[condition.id] ?? null : null}
+                    badge={getBadge?.(condition)}
                   />
                 </motion.div>
               ))}

@@ -27,6 +27,7 @@ import {
 import type { AttendingPersona } from '@/services/ai';
 import { ATTENDING_PERSONAS, loadPreferredPersona, savePreferredPersona } from '@/services/ai';
 import type { SpanishMode } from '@/services/domain';
+import { StorageKeys } from '@/lib/storage/storageRegistry';
 
 interface AdvancedFeaturesPanelProps {
   onOpenWellnessCheck?: () => void;
@@ -45,7 +46,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
   const [watchNotificationsEnabled, setWatchNotificationsEnabled] = useState(false);
 
   useEffect(() => {
-    const savedWatch = localStorage.getItem('panceai_watch_enabled');
+    const savedWatch = localStorage.getItem(StorageKeys.WATCH_ENABLED);
     if (savedWatch) setWatchNotificationsEnabled(savedWatch === 'true');
   }, []);
   const [hapticEnabled, setHapticEnabled] = useState(true);
@@ -58,16 +59,16 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
     const savedPersona = loadPreferredPersona();
     setSelectedPersona(savedPersona);
 
-    const savedSpanishMode = localStorage.getItem('panceai_spanish_mode') as SpanishMode;
+    const savedSpanishMode = localStorage.getItem(StorageKeys.SPANISH_MODE) as SpanishMode;
     if (savedSpanishMode) setSpanishMode(savedSpanishMode);
 
-    const savedHaptic = localStorage.getItem('panceai_haptic_enabled');
+    const savedHaptic = localStorage.getItem(StorageKeys.HAPTIC_ENABLED);
     if (savedHaptic) setHapticEnabled(savedHaptic === 'true');
 
-    const savedWellness = localStorage.getItem('panceai_wellness_enabled');
+    const savedWellness = localStorage.getItem(StorageKeys.WELLNESS_ENABLED);
     if (savedWellness) setWellnessChecksEnabled(savedWellness === 'true');
 
-    const savedCircadian = localStorage.getItem('panceai_circadian_enabled');
+    const savedCircadian = localStorage.getItem(StorageKeys.CIRCADIAN_ENABLED);
     if (savedCircadian) setCircadianTrackingEnabled(savedCircadian === 'true');
   }, []);
 
@@ -78,25 +79,25 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
 
   const handleSpanishModeChange = (mode: SpanishMode) => {
     setSpanishMode(mode);
-    localStorage.setItem('panceai_spanish_mode', mode);
+    localStorage.setItem(StorageKeys.SPANISH_MODE, mode);
   };
 
   const handleHapticToggle = () => {
     const newValue = !hapticEnabled;
     setHapticEnabled(newValue);
-    localStorage.setItem('panceai_haptic_enabled', newValue.toString());
+    localStorage.setItem(StorageKeys.HAPTIC_ENABLED, newValue.toString());
   };
 
   const handleWellnessToggle = () => {
     const newValue = !wellnessChecksEnabled;
     setWellnessChecksEnabled(newValue);
-    localStorage.setItem('panceai_wellness_enabled', newValue.toString());
+    localStorage.setItem(StorageKeys.WELLNESS_ENABLED, newValue.toString());
   };
 
   const handleCircadianToggle = () => {
     const newValue = !circadianTrackingEnabled;
     setCircadianTrackingEnabled(newValue);
-    localStorage.setItem('panceai_circadian_enabled', newValue.toString());
+    localStorage.setItem(StorageKeys.CIRCADIAN_ENABLED, newValue.toString());
   };
 
   return (
@@ -190,7 +191,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
               onClick={() => {
                 const newValue = !watchNotificationsEnabled;
                 setWatchNotificationsEnabled(newValue);
-                localStorage.setItem('panceai_watch_enabled', newValue.toString());
+                localStorage.setItem(StorageKeys.WATCH_ENABLED, newValue.toString());
               }}
               className={`p-2 rounded-lg transition-colors ${
                 watchNotificationsEnabled

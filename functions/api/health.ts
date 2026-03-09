@@ -59,21 +59,35 @@ export const onRequestGet = async (context: any) => {
     }
 
     // 3. Test database connection (skip if DATABASE_URL missing; dynamic import to avoid load-time throw in Workers)
-    let prisma: { user: { count: () => Promise<number> }; [key: string]: unknown } | null = null;
+    let prisma: unknown = null;
+    let disconnect: ((p: unknown) => Promise<void>) | null = null;
     if (!dbUrl) {
       diagnostics.prismaClientCreated = false;
       diagnostics.dbConnected = false;
       diagnostics.dbError = 'DATABASE_URL is missing';
     } else {
-      let disconnect: ((p: unknown) => Promise<void>) | null = null;
       try {
         const prismaEdge = await import('./_shared/prisma-edge');
         disconnect = prismaEdge.safePrismaDisconnect;
-        prisma = prismaEdge.createEdgePrismaClient(dbUrl) as typeof prisma;
+        prisma = prismaEdge.createEdgePrismaClient(dbUrl);
+        const client = prisma as { user: { count: () => Promise<number> }; medicalContent: { findMany: (args: { select: { system: true }; where: { status: string } }) => Promise<{ system: string | null }[]> } };
         diagnostics.prismaClientCreated = true;
-        const userCount = await prisma.user.count();
+        const userCount = await client.user.count();
         diagnostics.dbConnected = true;
         diagnostics.userCount = userCount;
+
+        // Content check: distinct systems count (Condition Library availability)
+        try {
+          const systems = await client.medicalContent.findMany({
+            select: { system: true },
+            where: { status: 'published' },
+          });
+          const systemSet = new Set(systems.map((r) => r.system).filter(Boolean));
+          diagnostics.contentSystemsCount = systemSet.size;
+          diagnostics.contentConditionCount = systems.length;
+        } catch (contentErr) {
+          diagnostics.contentError = contentErr instanceof Error ? contentErr.message : String(contentErr);
+        }
       } catch (err) {
         diagnostics.prismaClientCreated = !!prisma;
         diagnostics.dbConnected = false;
@@ -95,8 +109,30 @@ export const onRequestGet = async (context: any) => {
     }
 
     const allGood = diagnostics.dbConnected === true;
+    const checks = {
+      functionDeployed: {
+        status: 'pass' as const,
+        message: 'Cloudflare Pages Functions',
+      },
+      environment: diagnostics.env,
+      database: diagnostics.dbConnected ? { status: 'pass' as const } : { status: 'fail' as const, message: diagnostics.dbError },
+      content:
+        typeof diagnostics.contentSystemsCount === 'number'
+          ? { status: diagnostics.contentSystemsCount > 0 ? ('pass' as const) : ('warn' as const), systemsCount: diagnostics.contentSystemsCount }
+          : { status: 'skip' as const, message: diagnostics.contentError || 'Not checked' },
+    };
     return new Response(
-      JSON.stringify({ status: allGood ? 'healthy' : 'unhealthy', diagnostics }, null, 2),
+      JSON.stringify(
+        {
+          timestamp: diagnostics.timestamp,
+          endpoint: '/api/health',
+          status: allGood ? 'healthy' : 'unhealthy',
+          checks,
+          diagnostics,
+        },
+        null,
+        2
+      ),
       { status: allGood ? 200 : 503, headers: jsonHeaders }
     );
   } catch (topErr) {

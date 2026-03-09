@@ -70,6 +70,7 @@ import {
   saveWidgetPreferences as saveWidgetPrefs,
 } from '@/lib/dashboardUtils';
 import { getAccuracyBarClassSemantic } from '@/lib/accuracyColorUtils';
+import { Skeleton } from '@/components/loading/SkeletonLoader';
 // Lazy-load heavy analytics components — only rendered in specific tabs
 const ActivityHeatmap = lazy(() => import('@/components/analytics/ActivityHeatmap'));
 const DecisionTimeAnalysis = lazy(() => import('@/components/analytics/DecisionTimeAnalysis'));
@@ -88,6 +89,7 @@ import { useClinicalFidelitySettings } from '@/hooks/useClinicalFidelitySettings
 import RadialProgress from '@/components/ui/RadialProgress';
 import TrendSparkline from '@/components/ui/TrendSparkline';
 import { Skeleton } from '@/components/loading';
+import { StorageKeys } from '@/lib/storage/storageRegistry';
 
 // Lazy load Character Gallery
 const CharacterGallery = lazy(() => import('@/components/characters/CharacterGallery'));
@@ -387,7 +389,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
   // System selection state - Load from localStorage (Practicing PAs default to all ON)
   const [enabledSystems, setEnabledSystems] = useState<Set<SystemCode>>(() => {
-    const saved = localStorage.getItem('panceai_enabled_systems');
+    const saved = localStorage.getItem(StorageKeys.ENABLED_SYSTEMS);
     const all = Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[];
     if (saved) {
       try {
@@ -403,18 +405,18 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   // Practicing PAs: when opening settings with empty enabled systems, default to all
   useEffect(() => {
     if (!isOpen || careerStage !== 'practicing') return;
-    const saved = localStorage.getItem('panceai_enabled_systems');
+    const saved = localStorage.getItem(StorageKeys.ENABLED_SYSTEMS);
     if (saved === '[]' || !saved) {
       const all = Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[];
       setEnabledSystems(new Set(all));
-      localStorage.setItem('panceai_enabled_systems', JSON.stringify(all));
+      localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify(all));
       window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
     }
   }, [isOpen, careerStage]);
 
   // Active Unit (current learning) vs Completed/Review - for 80% current / 20% review sessions
   const [activeUnitSystems, setActiveUnitSystems] = useState<Set<SystemCode>>(() => {
-    const saved = localStorage.getItem('panceai_active_unit_systems');
+    const saved = localStorage.getItem(StorageKeys.ACTIVE_UNIT_SYSTEMS);
     if (saved) {
       try {
         return new Set(JSON.parse(saved) as SystemCode[]);
@@ -433,7 +435,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     'high-contrast',
   ]);
   const [analyticsPalette, setAnalyticsPalette] = useState<AnalyticsPalette>(() => {
-    const saved = localStorage.getItem('panceai_analytics_palette');
+    const saved = localStorage.getItem(StorageKeys.ANALYTICS_PALETTE);
     const value = saved?.trim();
     return value && VALID_ANALYTICS_PALETTES.has(value as AnalyticsPalette)
       ? (value as AnalyticsPalette)
@@ -447,7 +449,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   // Mini Modes selection - Load from localStorage
   const [miniModesSearch, setMiniModesSearch] = useState('');
   const [enabledMiniModes, setEnabledMiniModes] = useState<Set<string>>(() => {
-    const saved = localStorage.getItem('panceai_enabled_mini_modes');
+    const saved = localStorage.getItem(StorageKeys.ENABLED_MINI_MODES);
     if (saved) {
       try {
         return new Set(JSON.parse(saved) as string[]);
@@ -510,7 +512,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       } else {
         next.add(system);
       }
-      localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(next)));
+      localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify(Array.from(next)));
       notifyEnabledSystemsChanged();
       toast.success('Changes saved');
       return next;
@@ -520,14 +522,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   const handleEnableAllSystems = () => {
     const allSystems = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
     setEnabledSystems(allSystems);
-    localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(allSystems)));
+    localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify(Array.from(allSystems)));
     notifyEnabledSystemsChanged();
     toast.success('Changes saved');
   };
 
   const handleDisableAllSystems = () => {
     setEnabledSystems(new Set());
-    localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
+    localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify([]));
     notifyEnabledSystemsChanged();
     toast.success('Changes saved');
   };
@@ -537,7 +539,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       const next = new Set(prev);
       if (asActive) next.add(system);
       else next.delete(system);
-      localStorage.setItem('panceai_active_unit_systems', JSON.stringify(Array.from(next)));
+      localStorage.setItem(StorageKeys.ACTIVE_UNIT_SYSTEMS, JSON.stringify(Array.from(next)));
       toast.success('Changes saved');
       return next;
     });
@@ -556,7 +558,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       } else {
         next.add(modeId);
       }
-      localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify(Array.from(next)));
+      localStorage.setItem(StorageKeys.ENABLED_MINI_MODES, JSON.stringify(Array.from(next)));
       toast.success('Changes saved');
       return next;
     });
@@ -565,13 +567,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   const handleEnableAllMiniModes = () => {
     const allModes = new Set(ALL_MINI_MODES);
     setEnabledMiniModes(allModes);
-    localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify(Array.from(allModes)));
+    localStorage.setItem(StorageKeys.ENABLED_MINI_MODES, JSON.stringify(Array.from(allModes)));
     toast.success('Changes saved');
   };
 
   const handleDisableAllMiniModes = () => {
     setEnabledMiniModes(new Set());
-    localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify([]));
+    localStorage.setItem(StorageKeys.ENABLED_MINI_MODES, JSON.stringify([]));
     toast.success('Changes saved');
   };
 
@@ -691,7 +693,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
   const handleSetAnalyticsPalette = (palette: AnalyticsPalette, skipToast?: boolean) => {
     setAnalyticsPalette(palette);
-    localStorage.setItem('panceai_analytics_palette', palette);
+    localStorage.setItem(StorageKeys.ANALYTICS_PALETTE, palette);
     if (!skipToast) toast.success('Changes saved');
     // Apply palette colors to CSS variables for charts/visualizations
     const paletteConfig = ANALYTICS_PALETTES.find((p) => p.id === palette);
@@ -1404,7 +1406,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 )}
 
                 {/* Decision Time Analysis */}
-                <Suspense fallback={<div className="h-64 animate-pulse bg-[var(--color-bg-tertiary)] rounded-xl" />}>
+                <Suspense fallback={<Skeleton height={256} className="rounded-xl" />}>
                   <DecisionTimeAnalysis performanceData={performanceData} theme={theme} />
                 </Suspense>
 
@@ -1431,7 +1433,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
             ) : activeTab === 'activity' ? (
               <div className="space-y-4 sm:space-y-6">
                 {/* Longitudinal Progress Dashboard */}
-                <Suspense fallback={<div className="h-64 animate-pulse bg-[var(--color-bg-tertiary)] rounded-xl" />}>
+                <Suspense fallback={<Skeleton height={256} className="rounded-xl" />}>
                   <LongitudinalProgressDashboard
                     performanceData={performanceData}
                     userYearInProgram={userProfile.yearInProgram}
@@ -1441,7 +1443,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                 {/* Activity Heatmap */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 sm:p-6">
-                  <Suspense fallback={<div className="h-64 animate-pulse bg-[var(--color-bg-tertiary)] rounded-xl" />}>
+                  <Suspense fallback={<Skeleton height={256} className="rounded-xl" />}>
                     <ActivityHeatmap
                       performanceData={performanceData}
                       weeks={13}
@@ -1471,7 +1473,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 />
 
                 {/* Weakness Cheatsheet Export */}
-                <Suspense fallback={<div className="h-64 animate-pulse bg-[var(--color-bg-tertiary)] rounded-xl" />}>
+                <Suspense fallback={<Skeleton height={256} className="rounded-xl" />}>
                   <WeaknessCheatsheetExporter performanceData={performanceData} theme={theme} />
                 </Suspense>
 
@@ -1535,7 +1537,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   Changes save automatically. You'll see a confirmation when you update a setting.
                 </p>
                 {/* Enhanced Settings Tab - Career Stage & Profile */}
-                <Suspense fallback={<div className="h-64 animate-pulse bg-[var(--color-bg-tertiary)] rounded-xl" />}>
+                <Suspense fallback={<Skeleton height={256} className="rounded-xl" />}>
                   <EnhancedSettingsTab
                     theme={theme}
                     onToggleTheme={onToggleTheme}

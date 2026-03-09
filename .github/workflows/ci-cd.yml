@@ -433,6 +433,15 @@ jobs:
           echo "🚀 Deploying to Cloudflare Pages..."
           wrangler pages deploy dist/ --project-name=panacea --branch=main
 
+      - name: Sync registries to database (post-deploy)
+        run: |
+          npm ci
+          npx prisma generate
+          npm run sync:all-registries
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        continue-on-error: true
+
       - name: Run post-deployment health check
         continue-on-error: true
         run: |

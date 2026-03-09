@@ -231,7 +231,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="bg-white dark:bg-data-neutral rounded-2xl shadow-lg p-6"
+          className="bg-white dark:bg-data-neutral-bg rounded-2xl shadow-lg p-6"
         >
           {/* Question Text */}
           <div className="mb-6">
@@ -327,7 +327,7 @@ interface IncrementCompleteProps {
 function IncrementComplete({ stats, onContinue, onEnd }: IncrementCompleteProps) {
   return (
     <div className="max-w-md mx-auto p-4">
-      <div className="bg-white dark:bg-data-neutral rounded-2xl shadow-lg p-6 text-center">
+      <div className="bg-white dark:bg-data-neutral-bg rounded-2xl shadow-lg p-6 text-center">
         <div className="w-16 h-16 bg-data-pass dark:bg-data-pass/30 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-8 h-8 text-data-pass" />
         </div>

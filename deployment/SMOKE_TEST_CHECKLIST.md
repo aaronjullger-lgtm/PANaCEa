@@ -32,6 +32,15 @@ Run these tests immediately after any deployment:
 | 2.6  | Continue through 5 questions   | All questions load successfully    | [ ] |
 | 2.7  | Complete session               | Session summary displays           | [ ] |
 
+### 2b. Main Session (Rolling 360)
+
+| Step | Action | Expected Result | ✓/✗ |
+| ---- | ------ | --------------- | --- |
+| 2b.1 | Start main session (Build Session / Start session) | Session starts; questions load | [ ] |
+| 2b.2 | Answer at least 2 questions and submit each | Feedback appears; no console errors | [ ] |
+| 2b.3 | End or complete session | Session summary displays | [ ] |
+| 2b.4 | Return to Command Center / dashboard | Dashboard or stats show updated activity; Rolling 360 widget updates when visible | [ ] |
+
 ### 3. Critical API Endpoints
 
 | Endpoint   | Test Command       | Expected Status       | ✓/✗ |
@@ -62,15 +71,35 @@ Run these additional tests for major releases:
 | 5.2  | Photo Drill  | Images load             | [ ] |
 | 5.3  | DDx Trainer  | Differential mode works | [ ] |
 
-### 6. Error Handling
+### 6. OSCE Flow
+
+| Step | Action | Expected Result | ✓/✗ |
+| ---- | ------ | --------------- | --- |
+| 6.1  | Navigate to OSCE / Patient Encounter | OSCE or Patient Encounter entry loads | [ ] |
+| 6.2  | Start encounter (select or random case, create session) | Session created; chat/encounter UI appears | [ ] |
+| 6.3  | Send at least one chat message | Message sends; patient/model response appears | [ ] |
+| 6.4  | Complete encounter (submit diagnosis/plan or End Encounter) | Session completes without error | [ ] |
+| 6.5  | View results | Preceptor feedback appears; when available, rubric checklist or "no rubric" message shows | [ ] |
+
+### 6b. Knowledge Base / Condition Library
+
+| Step | Action | Expected Result | ✓/✗ |
+| ---- | ------ | --------------- | --- |
+| 6b.1 | Navigate to Knowledge Base (e.g. NavRail or study/knowledge) | Knowledge Base or Condition Library entry loads | [ ] |
+| 6b.2 | Open Condition Library tab | Systems sidebar and content area load | [ ] |
+| 6b.3 | Select a system (e.g. Cardiovascular) | Condition list loads for that system | [ ] |
+| 6b.4 | Open a condition (click a card) | Detail slide-over opens; summary and/or details load | [ ] |
+| 6b.5 | (Optional) Use search | Search results or empty state appears; no console errors | [ ] |
+
+### 7. Error Handling
 
 | Test | Action            | Expected Result          | ✓/✗ |
 | ---- | ----------------- | ------------------------ | --- |
-| 6.1  | Network offline   | Graceful error message   | [ ] |
-| 6.2  | Invalid URL       | 404 page displays        | [ ] |
-| 6.3  | Long press submit | No duplicate submissions | [ ] |
+| 7.1  | Network offline   | Graceful error message   | [ ] |
+| 7.2  | Invalid URL       | 404 page displays        | [ ] |
+| 7.3  | Long press submit | No duplicate submissions | [ ] |
 
-### 7. Cross-Browser (if time permits)
+### 8. Cross-Browser (if time permits)
 
 | Browser         | Tested | Notes | ✓/✗ |
 | --------------- | ------ | ----- | --- |
@@ -79,7 +108,6 @@ Run these additional tests for major releases:
 | Safari Desktop  | [ ]    |       |     |
 | Chrome Mobile   | [ ]    |       |     |
 | Safari iOS      | [ ]    |       |     |
-
 ---
 
 ## 🚨 If Tests Fail
@@ -126,16 +154,19 @@ Rollback immediately if:
 
 ---
 
-## 🤖 Automated Smoke Tests (Future)
+## 🤖 Automated Verification
 
-When E2E tests are fully implemented, run:
+Run health check E2E before or after deployment:
 
 ```bash
-# Run Playwright smoke tests against production
-PLAYWRIGHT_BASE_URL=https://your-domain.pages.dev npm run test:e2e:smoke
+# Run against local wrangler
+npm run verify:health
+
+# Run against production (set BASE_URL)
+BASE_URL=https://studypanacea.com npm run verify:health
 ```
 
-See `e2e/smoke.spec.ts` for automated test cases.
+See [e2e/api-health.spec.ts](../e2e/api-health.spec.ts) for the health check spec.
 
 ---
 

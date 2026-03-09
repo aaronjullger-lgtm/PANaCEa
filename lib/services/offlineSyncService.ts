@@ -4,6 +4,8 @@
  * Critical for hospitals with poor connectivity (lead-lined walls, etc.)
  */
 
+import { StorageKeys } from '../storage/storageRegistry';
+
 // Debug logging - set to true to re-enable verbose logs
 const DEBUG_OFFLINE_SYNC = false;
 
@@ -41,12 +43,12 @@ const BATCH_SIZE = 50;
 const MAX_RETRIES = 3;
 
 /**
- * LocalStorage keys
+ * LocalStorage keys (use registry for consistency)
  */
 const STORAGE_KEYS = {
-  PENDING_OPS: 'panacea_pending_sync_ops',
-  LAST_SYNC: 'panacea_last_sync_time',
-  OFFLINE_MODE: 'panacea_offline_mode',
+  PENDING_OPS: StorageKeys.PENDING_SYNC_OPS,
+  LAST_SYNC: StorageKeys.LAST_SYNC_TIME,
+  OFFLINE_MODE: StorageKeys.OFFLINE_MODE,
 };
 
 /**

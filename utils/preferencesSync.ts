@@ -11,27 +11,28 @@
  * - Always write to both locations for reliability
  */
 
+import { StorageKeys } from '@/lib/storage/storageRegistry';
 import type { UserPreferencesPayload } from '@/types';
 
-// localStorage keys for preferences
-export const PREF_KEYS = {
-  THEME: 'panceai_theme',
-  DAILY_GOAL: 'panceai_daily_goal',
-  PREFERRED_SYSTEMS: 'panceai_preferred_systems',
-  SESSION_LENGTH: 'panceai_session_length',
-  DIFFICULTY: 'panceai_difficulty',
-  SOUND_ENABLED: 'panceai_sound_enabled',
-  HAPTIC_FEEDBACK: 'panceai_haptic_feedback',
-  ANIMATIONS_ENABLED: 'panceai_animations_enabled',
-  FONT_SIZE: 'panceai_font_size',
-  SHOW_HINTS: 'panceai_show_hints',
-  AUTO_ADVANCE: 'panceai_auto_advance',
-  EXPLANATION_DEPTH: 'panceai_explanation_depth',
-  SHOW_PEARLS: 'panceai_show_pearls',
-  KEYBOARD_SHORTCUTS: 'panceai_keyboard_shortcuts',
-  FSRS_ENABLED: 'panceai_fsrs_enabled',
-  SYNCED_TO_DB: 'panceai_prefs_synced', // Flag to track if synced
-};
+// Preference keys from central registry (no local PREF_KEYS duplicate)
+const PREF_KEYS = {
+  THEME: StorageKeys.THEME,
+  DAILY_GOAL: StorageKeys.DAILY_GOAL,
+  PREFERRED_SYSTEMS: StorageKeys.PREFERRED_SYSTEMS,
+  SESSION_LENGTH: StorageKeys.SESSION_LENGTH,
+  DIFFICULTY: StorageKeys.DIFFICULTY,
+  SOUND_ENABLED: StorageKeys.SOUND_ENABLED,
+  HAPTIC_FEEDBACK: StorageKeys.HAPTIC_FEEDBACK,
+  ANIMATIONS_ENABLED: StorageKeys.ANIMATIONS_ENABLED,
+  FONT_SIZE: StorageKeys.FONT_SIZE,
+  SHOW_HINTS: StorageKeys.SHOW_HINTS,
+  AUTO_ADVANCE: StorageKeys.AUTO_ADVANCE,
+  EXPLANATION_DEPTH: StorageKeys.EXPLANATION_DEPTH,
+  SHOW_PEARLS: StorageKeys.SHOW_PEARLS,
+  KEYBOARD_SHORTCUTS: StorageKeys.KEYBOARD_SHORTCUTS,
+  FSRS_ENABLED: StorageKeys.FSRS_ENABLED,
+  SYNCED_TO_DB: StorageKeys.SYNCED_TO_DB,
+} as const;
 
 /**
  * Extract preferences from localStorage

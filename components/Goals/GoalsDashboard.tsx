@@ -257,7 +257,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-data-neutral p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
+        <div className="bg-white dark:bg-data-neutral-bg p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
           <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral text-sm mb-1">
             <Target className="w-4 h-4" />
             Active Goals
@@ -267,7 +267,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
           </div>
         </div>
 
-        <div className="bg-white dark:bg-data-neutral p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
+        <div className="bg-white dark:bg-data-neutral-bg p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
           <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral text-sm mb-1">
             <CheckCircle className="w-4 h-4" />
             Completed
@@ -275,7 +275,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
           <div className="text-2xl font-bold text-data-pass">{stats.completed}</div>
         </div>
 
-        <div className="bg-white dark:bg-data-neutral p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
+        <div className="bg-white dark:bg-data-neutral-bg p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
           <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral text-sm mb-1">
             <Flame className="w-4 h-4" />
             Total Streak
@@ -283,7 +283,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
           <div className="text-2xl font-bold text-orange-600">{stats.totalStreak}</div>
         </div>
 
-        <div className="bg-white dark:bg-data-neutral p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
+        <div className="bg-white dark:bg-data-neutral-bg p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
           <div className="flex items-center gap-2 text-data-neutral dark:text-data-neutral text-sm mb-1">
             <Trophy className="w-4 h-4" />
             Best Streak
@@ -300,7 +300,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1 rounded-lg border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral text-sm"
+            className="px-3 py-1 rounded-lg border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg text-sm"
           >
             <option value="all">All</option>
             <option value="active">Active</option>
@@ -315,7 +315,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-1 rounded-lg border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral text-sm"
+            className="px-3 py-1 rounded-lg border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg text-sm"
           >
             <option value="all">All</option>
             <option value="daily">Daily</option>

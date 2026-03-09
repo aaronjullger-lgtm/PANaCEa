@@ -432,6 +432,7 @@ export async function submitDrillReview(
     }
     // Ensure attemptId variable used later matches the final attempt ID
     attemptId = finalAttemptId;
+    const weCreatedAttempt = !existingAttempt;
     // Update peer validation statistics
     try {
       await prisma.preGeneratedQuestion.update({
@@ -456,8 +457,9 @@ export async function submitDrillReview(
       });
     }
 
-    // Update Rolling 360 for main session attempts
-    if (isMainSession) {
+    // Update Rolling 360 for main session attempts only when we created the attempt here.
+    // If we reused an existing attempt (e.g. created by POST /api/questions/attempt), that path already updated Rolling 360—skip to avoid double count.
+    if (isMainSession && weCreatedAttempt) {
       try {
         await getRolling360Service(prisma).updateRolling360OnSubmit({
           attemptId,

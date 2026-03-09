@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -169,7 +169,7 @@ const EnrichGetSchema = z.object({
 export const onRequestOptions = withCors();
 
 // GET returns usage info
-export const onRequestGet = authenticatedEndpoint(EnrichGetSchema, async (context) => {
+export const onRequestGet = adminEndpoint(EnrichGetSchema, async (context) => {
   const { auth } = context;
   const logger = createEndpointLogger('/api/admin/enrich-condition');
 
@@ -192,28 +192,18 @@ export const onRequestGet = authenticatedEndpoint(EnrichGetSchema, async (contex
   };
 });
 
-export const onRequestPost = authenticatedEndpoint(EnrichConditionSchema, async (context) => {
+export const onRequestPost = adminEndpoint(EnrichConditionSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/admin/enrich-condition');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Check admin role
     const user = await prisma.user.findUnique({
       where: { clerkId: auth.userId },
-      select: { role: true, id: true },
+      select: { id: true },
     });
-
-    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN')) {
-      logger.warn('Non-admin attempted content enrichment', {
-        userId: auth.userId,
-        role: user?.role,
-      });
-
-      return {
-        data: { error: 'Admin access required' },
-        status: 403,
-      };
+    if (!user) {
+      return { status: 404, error: 'User not found' };
     }
 
     const { conditionId, fieldsToEnrich, forceRegenerate } = validated.body;

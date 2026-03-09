@@ -37,7 +37,7 @@ const TopicTrendChart: React.FC<TopicTrendChartProps> = ({ topic }) => {
   const chartData = getMockPerformanceData(topic);
 
   return (
-    <div className="p-4 bg-white dark:bg-data-neutral rounded-xl shadow-md">
+    <div className="p-4 bg-white dark:bg-data-neutral-bg rounded-xl shadow-md">
       <h3 className="text-lg font-bold text-data-neutral dark:text-data-neutral mb-4">
         Performance Trend: {topic}
       </h3>

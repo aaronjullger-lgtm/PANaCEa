@@ -6,7 +6,9 @@
  */
 
 // Storage key for widget preferences
-export const WIDGET_PREFS_KEY = 'panacea_widget_preferences';
+import { StorageKeys } from './storage/storageRegistry';
+
+export const WIDGET_PREFS_KEY = StorageKeys.WIDGET_PREFS;
 
 /**
  * Calculate accuracy percentage from correct and total counts

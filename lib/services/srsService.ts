@@ -151,7 +151,9 @@ const USE_FSRS = true;
 // Local Storage Keys
 // ============================================================================
 
-const SRS_STORAGE_KEY = 'panacea_srs_items';
+import { StorageKeys } from '../storage/storageRegistry';
+
+const SRS_STORAGE_KEY = StorageKeys.SRS_ITEMS;
 const SRS_VERSION = 'v1';
 
 // ============================================================================

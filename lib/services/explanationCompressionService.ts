@@ -10,6 +10,8 @@
  * - Intelligent content prioritization
  */
 
+import { StorageKeys } from '../storage/storageRegistry';
+
 /**
  * User bias profile for adaptive explanations.
  * Tracks common error patterns to customize explanation focus.
@@ -409,9 +411,9 @@ export async function storeUserReaction(
 
   // Store in localStorage for offline support
   try {
-    const existing = JSON.parse(localStorage.getItem('panacea_explanation_reactions') || '[]');
+    const existing = JSON.parse(localStorage.getItem(StorageKeys.EXPLANATION_REACTIONS) || '[]');
     existing.push(reactionData);
-    localStorage.setItem('panacea_explanation_reactions', JSON.stringify(existing));
+    localStorage.setItem(StorageKeys.EXPLANATION_REACTIONS, JSON.stringify(existing));
 
     // Attempt to sync to backend if available
     try {
@@ -448,9 +450,9 @@ export async function updateWeaknessMap(conditionId: string, wasCorrect: boolean
   };
 
   try {
-    const existing = JSON.parse(localStorage.getItem('panacea_weakness_map') || '[]');
+    const existing = JSON.parse(localStorage.getItem(StorageKeys.WEAKNESS_MAP) || '[]');
     existing.push(weaknessData);
-    localStorage.setItem('panacea_weakness_map', JSON.stringify(existing));
+    localStorage.setItem(StorageKeys.WEAKNESS_MAP, JSON.stringify(existing));
 
     // Attempt to sync to backend for adaptive learning
     try {
@@ -490,9 +492,9 @@ export async function updateConfusionGraph(
   };
 
   try {
-    const existing = JSON.parse(localStorage.getItem('panacea_confusion_graph') || '[]');
+    const existing = JSON.parse(localStorage.getItem(StorageKeys.CONFUSION_GRAPH) || '[]');
     existing.push(confusionData);
-    localStorage.setItem('panacea_confusion_graph', JSON.stringify(existing));
+    localStorage.setItem(StorageKeys.CONFUSION_GRAPH, JSON.stringify(existing));
 
     // Attempt to sync to backend for confusion pattern analysis
     try {

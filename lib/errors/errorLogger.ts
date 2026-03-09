@@ -15,6 +15,7 @@
 
 import type { AppError, ErrorSeverity } from './types';
 import { isAppError, toAppError } from './types';
+import { StorageKeys } from '../storage/storageRegistry';
 
 /**
  * Breadcrumb for tracking user actions leading to errors
@@ -270,7 +271,7 @@ export function logError(error: unknown, context?: Record<string, unknown>): voi
   // Store in session storage for debugging (browser only)
   if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
     try {
-      const errorLog = sessionStorage.getItem('panacea_error_log');
+      const errorLog = sessionStorage.getItem(StorageKeys.ERROR_LOG);
       const errors = errorLog ? JSON.parse(errorLog) : [];
       errors.push(logEntry);
 
@@ -279,7 +280,7 @@ export function logError(error: unknown, context?: Record<string, unknown>): voi
         errors.shift();
       }
 
-      sessionStorage.setItem('panacea_error_log', JSON.stringify(errors));
+      sessionStorage.setItem(StorageKeys.ERROR_LOG, JSON.stringify(errors));
     } catch {
       // Ignore sessionStorage errors
     }
@@ -312,7 +313,7 @@ export function getErrorLogs(): ErrorLogEntry[] {
   }
 
   try {
-    const errorLog = sessionStorage.getItem('panacea_error_log');
+    const errorLog = sessionStorage.getItem(StorageKeys.ERROR_LOG);
     return errorLog ? JSON.parse(errorLog) : [];
   } catch {
     return [];
@@ -325,7 +326,7 @@ export function getErrorLogs(): ErrorLogEntry[] {
 export function clearErrorLogs(): void {
   if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
     try {
-      sessionStorage.removeItem('panacea_error_log');
+      sessionStorage.removeItem(StorageKeys.ERROR_LOG);
     } catch {
       // Ignore errors
     }

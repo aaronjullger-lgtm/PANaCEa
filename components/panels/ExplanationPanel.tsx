@@ -526,7 +526,7 @@ Keep your response concise (3-5 sentences max) and supportive.`;
               {pearls.map((pearl) => (
                 <li key={pearl.slice(0, 80)}>
                   <ClinicalPearlHighlight label="Pearl">
-                    <span dangerouslySetInnerHTML={{ __html: pearl }} />
+                    <span dangerouslySetInnerHTML={{ __html: sanitizeForRationale(pearl) }} />
                   </ClinicalPearlHighlight>
                 </li>
               ))}

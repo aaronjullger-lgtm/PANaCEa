@@ -14,6 +14,8 @@ export const ROUTES = {
   CROSS_SYSTEM_EXPLORER: '/explorer',
   /** Study hub; path→view sync in App.tsx */
   STUDY: '/study',
+  PRACTICE: '/practice',
+  PROGRESS: '/progress',
   STUDY_KNOWLEDGE: '/study/knowledge',
   STUDY_UTILITIES: '/study/utilities',
   /** @deprecated Use STUDY_KNOWLEDGE */
@@ -21,6 +23,7 @@ export const ROUTES = {
   /** @deprecated Use STUDY_UTILITIES */
   STUDY_TOOLKIT: '/study/toolkit',
   STUDY_PATH: '/study/path',
+  DAILY_CHALLENGES: '/daily-challenges',
   MENU: '/menu',
 } as const;
 

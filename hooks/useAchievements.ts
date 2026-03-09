@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
+import { StorageKeys } from '@/lib/storage/storageRegistry';
 
 export interface UserAchievement {
   achievementId: string;
@@ -59,7 +60,8 @@ export function useAchievements() {
     try {
       // In production, this would call your API
       // For now, load from localStorage for offline support
-      const stored = localStorage.getItem(`panacea_achievements_${userId}`);
+      const key = `${StorageKeys.ACHIEVEMENTS}_${userId}`;
+      const stored = localStorage.getItem(key);
       if (stored) {
         const data = JSON.parse(stored);
         setState({
@@ -85,10 +87,8 @@ export function useAchievements() {
       if (!userId) return;
 
       try {
-        localStorage.setItem(
-          `panacea_achievements_${userId}`,
-          JSON.stringify({ achievements, streak })
-        );
+        const key = `${StorageKeys.ACHIEVEMENTS}_${userId}`;
+        localStorage.setItem(key, JSON.stringify({ achievements, streak }));
       } catch (error) {
         console.error('Failed to save achievements:', error);
       }

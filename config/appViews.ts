@@ -40,6 +40,7 @@ export type View =
   | 'cram_mode'
   | 'polypharmacy_puzzle'
   | 'medical_wordle'
+  | 'diagnostic_puzzle'
   | 'admin_media'
   | 'social_dashboard'
   | 'toolkit'
@@ -87,6 +88,7 @@ export const DRILL_MODE_IDS = {
   CRAM: 'cram_mode' as TrainingModeId,
   POLYPHARMACY: 'polypharmacy_puzzle' as TrainingModeId,
   MEDICAL_WORDLE: 'medical_wordle' as TrainingModeId,
+  DIAGNOSTIC_PUZZLE: 'diagnostic_puzzle' as TrainingModeId,
   COMMUTER: 'commuter_mode' as TrainingModeId,
   FULL_SIT_DOWN_TEST: 'full_sit_down_test' as TrainingModeId,
 } as const;
