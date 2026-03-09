@@ -168,7 +168,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           }`}
         >
           {recentTrend === 'improving'
-            ? '📈 Improving'
+            ? 'Improving'
             : recentTrend === 'declining'
               ? '📉 Declining'
               : '➡️ Stable'}

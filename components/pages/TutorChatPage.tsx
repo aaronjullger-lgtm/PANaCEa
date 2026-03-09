@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircle, ChevronLeft, Sparkles, Loader2, User, Bot } from 'lucide-react';
+import { MessageCircle, ChevronLeft, Sparkles, Loader2, User, Bot, RefreshCw } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { usePreferences } from '@/hooks/usePreferences';
 import { API_ENDPOINTS, buildApiUrl, getApiEndpoint } from '@/lib/utils/apiConfig';
@@ -27,6 +27,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
   const { preferences } = usePreferences();
   const [tutorContext, setTutorContext] = useState<string | null>(null);
   const [isLoadingContext, setIsLoadingContext] = useState(true);
+  const [profileLoadFailed, setProfileLoadFailed] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -41,44 +42,48 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
     | string
     | undefined;
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      setIsLoadingContext(true);
-      try {
-        const token = await getToken();
-        if (!token) {
-          setTutorContext(
-            'Student Weaknesses: Unknown (no profile loaded). Proceed with standard Socratic dialogue.'
-          );
-          return;
-        }
-        const res = await fetch(buildApiUrl(API_ENDPOINTS.INTELLIGENCE_PROFILE), {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!res.ok) {
-          setTutorContext(
-            'Student Weaknesses: Profile service unavailable. Proceed with standard Socratic dialogue.'
-          );
-          return;
-        }
-        const data = (await res.json()) as { data?: { tutorContext?: string } };
+  const fetchProfile = useCallback(async () => {
+    setIsLoadingContext(true);
+    setProfileLoadFailed(false);
+    try {
+      const token = await getToken();
+      if (!token) {
         setTutorContext(
-          data.data?.tutorContext ??
-            'Student Weaknesses: None identified. Proceed with standard Socratic dialogue.'
+          'Student Weaknesses: Unknown (no profile loaded). Proceed with standard Socratic dialogue.'
         );
-      } catch {
+        setProfileLoadFailed(true);
+        return;
+      }
+      const res = await fetch(buildApiUrl(API_ENDPOINTS.INTELLIGENCE_PROFILE), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) {
         setTutorContext(
           'Student Weaknesses: Profile service unavailable. Proceed with standard Socratic dialogue.'
         );
-      } finally {
-        setIsLoadingContext(false);
+        setProfileLoadFailed(true);
+        return;
       }
-    };
-
-    void fetchProfile();
+      const data = (await res.json()) as { data?: { tutorContext?: string } };
+      setTutorContext(
+        data.data?.tutorContext ??
+          'Student Weaknesses: None identified. Proceed with standard Socratic dialogue.'
+      );
+    } catch {
+      setTutorContext(
+        'Student Weaknesses: Profile service unavailable. Proceed with standard Socratic dialogue.'
+      );
+      setProfileLoadFailed(true);
+    } finally {
+      setIsLoadingContext(false);
+    }
   }, [getToken]);
+
+  useEffect(() => {
+    void fetchProfile();
+  }, [fetchProfile]);
 
   const ensureSession = useCallback(async (): Promise<string | null> => {
     if (sessionId) return sessionId;
@@ -266,6 +271,26 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
           )}
         </div>
       </div>
+
+      {profileLoadFailed && !isLoadingContext && (
+        <div
+          className="mb-4 px-3 py-2 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 dark:border-amber-400/30 dark:bg-amber-400/10 flex items-center justify-between gap-3"
+          aria-live="polite"
+        >
+          <span className="text-xs">
+            Personalized weaknesses unavailable; using standard tutoring.
+          </span>
+          <button
+            type="button"
+            onClick={() => void fetchProfile()}
+            disabled={isLoadingContext}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-500/20 hover:bg-amber-500/30 dark:bg-amber-400/20 dark:hover:bg-amber-400/30 disabled:opacity-50 transition-colors"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingContext ? 'animate-spin' : ''}`} aria-hidden />
+            Retry
+          </button>
+        </div>
+      )}
 
       <div
         className="mb-4 h-64 sm:h-80 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/60 overflow-hidden flex flex-col"

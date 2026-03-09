@@ -249,7 +249,7 @@ const QuestionCurationPanel = () => {
       {/* Questions List */}
       {filteredQuestions.length === 0 ? (
         <div className="text-center py-12 text-[var(--color-text-muted)]">
-          No questions pending review. Great job! 🎉
+          No questions pending review. Great job!
         </div>
       ) : (
         <div className="space-y-4">

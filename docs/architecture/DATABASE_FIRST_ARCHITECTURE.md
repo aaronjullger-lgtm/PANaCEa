@@ -8,7 +8,7 @@ PANaCEa has been refactored to use a **database-first architecture** where all m
 
 ### 1. conditionDataLoader.ts - Database Only
 
-**Location**: `services/conditionDataLoader.ts`
+**Location**: `services/core/conditionDataLoader.ts`
 
 **Changes**:
 

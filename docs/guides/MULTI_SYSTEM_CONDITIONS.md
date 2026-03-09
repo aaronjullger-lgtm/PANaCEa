@@ -185,7 +185,7 @@ await createDraft(
 ### Step 4: Query Multi-System Conditions
 
 ```typescript
-import { getConditionsBySystem } from './services/conditionDataLoader';
+import { getConditionsBySystem } from './services/core/conditionDataLoader';
 
 // Get all conditions for a system (includes relatedSystems)
 const dermConditions = await getConditionsBySystem('DERM');
@@ -353,7 +353,7 @@ All changes are backward compatible:
 - [x] Update Prisma schema with relatedSystems field
 - [x] Create database migration SQL
 - [x] Add GIN index for array queries
-- [x] Update conditionDataLoader.ts service
+- [x] Update services/core/conditionDataLoader.ts service
 - [x] Update CMS contentService.ts
 - [x] Create migration script with auto-population
 - [x] Add npm script for easy execution
@@ -376,7 +376,7 @@ For questions or issues:
 ## Related Files
 
 - `prisma/schema.prisma` - Schema definition
-- `services/conditionDataLoader.ts` - Data loading logic
+- `services/core/conditionDataLoader.ts` - Data loading logic
 - `lib/services/cms/contentService.ts` - CMS operations
 - `scripts/migrateRelatedSystems.ts` - Population script
 - `conditionRegistry.ts` - Type definitions

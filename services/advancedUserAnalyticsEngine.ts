@@ -13,6 +13,7 @@
 
 import type { FSRSParameters } from '@/lib/fsrs';
 import { defaultParameters } from '@/lib/fsrs';
+import { StorageKeys } from '@/lib/storage/storageRegistry';
 
 // ============================================================================
 // Types & Interfaces
@@ -154,16 +155,16 @@ export interface AnalyticsInsight {
 }
 
 // ============================================================================
-// Storage Keys
+// Storage Keys (from central registry)
 // ============================================================================
 
 const STORAGE_KEYS = {
-  COGNITIVE_HISTORY: 'panceai_cognitive_history',
-  RESPONSE_PATTERNS: 'panceai_response_patterns',
-  TIME_OF_DAY_STATS: 'panceai_tod_stats',
-  LEARNING_VELOCITY: 'panceai_learning_velocity',
-  PERSONALIZED_FSRS: 'panceai_personalized_fsrs',
-  SESSION_COGNITIVE: 'panceai_session_cognitive',
+  COGNITIVE_HISTORY: StorageKeys.COGNITIVE_HISTORY,
+  RESPONSE_PATTERNS: StorageKeys.RESPONSE_PATTERNS,
+  TIME_OF_DAY_STATS: StorageKeys.TIME_OF_DAY_STATS,
+  LEARNING_VELOCITY: StorageKeys.LEARNING_VELOCITY,
+  PERSONALIZED_FSRS: StorageKeys.PERSONALIZED_FSRS,
+  SESSION_COGNITIVE: StorageKeys.SESSION_COGNITIVE,
 } as const;
 
 // ============================================================================

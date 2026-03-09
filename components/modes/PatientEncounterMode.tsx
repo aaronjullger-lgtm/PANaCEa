@@ -41,7 +41,6 @@ import { useEnhancedOSCE } from '@/hooks/useEnhancedOSCE';
 import {
   getRandomEncounterCase,
   calculateEncounterScore,
-  saveChatMessage,
   getSessionHistory,
   clearSession,
   startOSCESession,
@@ -175,7 +174,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [enhancedScoreReport, setEnhancedScoreReport] = useState<OSCEScoreReport | null>(null);
   const [gradeResult, setGradeResult] = useState<OsceGradeResult | null>(null);
   const [gradeResultLoading, setGradeResultLoading] = useState(false);
-  const [emrTab, setEmrTab] = useState<'hpi' | 'pmh' | 'meds' | 'labs'>('hpi');
+  const [emrTab, setEmrTab] = useState<'hpi' | 'pmh' | 'meds' | 'vitals' | 'labs'>('hpi');
 
   // Initialize Enhanced OSCE Hook
   const enhancedOSCE = useEnhancedOSCE({
@@ -356,6 +355,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       setCurrentAVState(engine.getCurrentAVState());
     } catch (error) {
       console.error('Failed to initialize state machine:', error);
+      toast.error('Voice interaction could not be initialized. Continuing without voice.');
     }
 
     // Cleanup: unsubscribe stale engine listener when case/session changes
@@ -506,6 +506,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         setLoadError(
           'Unable to load patient case. Please ensure the backend server is running (npm run dev:all) and try again.'
         );
+        toast.error('Unable to load patient case. Please try again.');
         setViewState('landing');
         return;
       }
@@ -534,6 +535,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     } catch (err) {
       console.error('Failed to start encounter', err);
       setLoadError('Unable to load patient case. Please check your connection and try again.');
+      toast.error('Unable to start encounter. Please check your connection and try again.');
       setViewState('landing');
     } finally {
       setIsLoading(false);
@@ -596,13 +598,21 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
       setCurrentQuestion('');
 
-      // Persist chat messages individually
+      // Persist chat to server (full messages array for Cloudflare API)
       if (session.id) {
         const token = await getToken();
-        // Save user message
-        await saveChatMessage(session.id, 'user', currentQuestion, token);
-        // Save patient response
-        await saveChatMessage(session.id, 'patient', response, token);
+        const messages = [
+          ...session.questions.flatMap((q) => [
+            { role: 'user' as const, content: q.questionText },
+            { role: 'assistant' as const, content: q.response },
+          ]),
+          { role: 'user' as const, content: currentQuestion },
+          { role: 'assistant' as const, content: response },
+        ];
+        const saved = await saveOSCEChat(session.id, messages, token);
+        if (!saved) {
+          toast.error('Chat could not be saved to the server. Your progress may not be recorded.');
+        }
       }
     } catch (error) {
       console.error('Error getting patient response:', error);
@@ -788,10 +798,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       // Complete session in backend
       if (session?.id) {
         const token = await getToken();
-        await completeOSCESession(session.id, userDiagnosis, treatmentPlan, token);
+        const saved = await completeOSCESession(session.id, userDiagnosis, treatmentPlan, token);
+        if (!saved) {
+          toast.error('Session could not be saved. Your results may not be recorded.');
+        }
       }
     } catch (error) {
       console.error('Treatment error:', error);
+      toast.error('Could not evaluate treatment plan or save session. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -1040,12 +1054,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   // Landing Page View - Clinical White/Navy Theme
   if (viewState === 'landing') {
     return (
-      <div className="min-h-dvh bg-data-neutral text-data-neutral transition-colors duration-300">
+      <div className="min-h-dvh bg-data-neutral-bg text-data-neutral transition-colors duration-300">
         {/* Header */}
         <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-data-neutral flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-data-neutral-bg flex items-center justify-center shadow-sm">
                 <MessageSquare className="w-6 h-6 text-data-neutral" />
               </div>
               <div>
@@ -1057,7 +1071,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <button
                 onClick={onExit}
                 aria-label="Exit Encounter"
-                className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors border border-data-neutral"
+                className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors border border-data-neutral"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1082,7 +1096,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* What You'll Practice */}
             <div className="grid md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-data-neutral rounded-2xl p-6 border border-data-neutral">
+              <div className="bg-data-neutral-bg rounded-2xl p-6 border border-data-neutral">
                 <h3 className="text-lg font-semibold text-data-neutral mb-4 flex items-center gap-2">
                   <Stethoscope className="w-5 h-5 text-data-neutral" />
                   Clinical Skills Practiced
@@ -1111,7 +1125,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 </ul>
               </div>
 
-              <div className="bg-data-neutral rounded-2xl p-6 border border-data-neutral">
+              <div className="bg-data-neutral-bg rounded-2xl p-6 border border-data-neutral">
                 <h3 className="text-lg font-semibold text-data-neutral mb-4 flex items-center gap-2">
                   <Award className="w-5 h-5 text-data-neutral" />
                   How You're Evaluated
@@ -1138,7 +1152,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </div>
 
             {/* How It Works Card */}
-            <div className="bg-data-neutral rounded-2xl p-8 border border-data-neutral shadow-lg space-y-6">
+            <div className="bg-data-neutral-bg rounded-2xl p-8 border border-data-neutral shadow-lg space-y-6">
               <h3 className="text-2xl font-semibold text-white">Encounter Flow</h3>
 
               <div className="space-y-5">
@@ -1169,7 +1183,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   },
                 ].map((step) => (
                   <div key={step.num} className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-data-neutral flex items-center justify-center flex-shrink-0 border border-data-neutral">
+                    <div className="w-10 h-10 rounded-xl bg-data-neutral-bg flex items-center justify-center flex-shrink-0 border border-data-neutral">
                       <step.Icon className="w-5 h-5 text-data-neutral" />
                     </div>
                     <div className="flex-1">
@@ -1184,7 +1198,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </div>
 
               {/* Pro Tips */}
-              <div className="bg-data-neutral rounded-xl p-6 border border-data-neutral">
+              <div className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral">
                 <p className="text-sm text-data-neutral font-semibold mb-3 flex items-center gap-2">
                   <Award className="w-4 h-4" />
                   Clinical Pearls
@@ -1275,11 +1289,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   if (viewState === 'loading_encounter') {
     return (
-      <div className="min-h-screen bg-data-neutral text-data-neutral">
+      <div className="min-h-screen bg-data-neutral-bg text-data-neutral">
         <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-data-neutral flex items-center justify-center shadow-sm border border-data-neutral">
+              <div className="w-10 h-10 rounded-xl bg-data-neutral-bg flex items-center justify-center shadow-sm border border-data-neutral">
                 <MessageSquare className="w-6 h-6 text-data-neutral" />
               </div>
               <div>
@@ -1291,7 +1305,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <button
                 onClick={onExit}
                 aria-label="Exit"
-                className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors border border-data-neutral"
+                className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors border border-data-neutral"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1301,52 +1315,52 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="bg-data-neutral rounded-xl border border-data-neutral overflow-hidden animate-pulse">
+              <div className="bg-data-neutral-bg rounded-xl border border-data-neutral overflow-hidden animate-pulse">
                 <div className="p-4 md:p-6 flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-data-neutral flex-shrink-0" />
+                  <div className="w-12 h-12 rounded-xl bg-data-neutral-bg flex-shrink-0" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-5 w-32 bg-data-neutral rounded" />
-                    <div className="h-4 w-48 bg-data-neutral rounded" />
+                    <div className="h-5 w-32 bg-data-neutral-bg rounded" />
+                    <div className="h-4 w-48 bg-data-neutral-bg rounded" />
                   </div>
                 </div>
                 <div className="px-4 pb-4 md:px-6 md:pb-6 space-y-3">
                   <div className="flex items-center gap-2 text-data-neutral">
-                    <span className="w-2 h-2 rounded-full bg-data-neutral animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-data-neutral-bg animate-pulse" />
                     <span className="text-sm font-medium">
                       {LOADING_STATUS_MESSAGES[loadingStatusIndex]}
                     </span>
                   </div>
-                  <div className="h-24 bg-data-neutral rounded-lg" />
+                  <div className="h-24 bg-data-neutral-bg rounded-lg" />
                   <div className="grid grid-cols-2 gap-3">
                     {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="h-20 bg-data-neutral rounded-lg" />
+                      <div key={i} className="h-20 bg-data-neutral-bg rounded-lg" />
                     ))}
                   </div>
                 </div>
               </div>
-              <div className="bg-data-neutral rounded-xl p-4 md:p-6 border border-data-neutral">
-                <div className="h-4 w-24 bg-data-neutral rounded mb-4" />
+              <div className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral">
+                <div className="h-4 w-24 bg-data-neutral-bg rounded mb-4" />
                 <div className="flex gap-2">
-                  <div className="flex-1 h-12 bg-data-neutral rounded-lg" />
-                  <div className="w-12 h-12 bg-data-neutral rounded-lg" />
+                  <div className="flex-1 h-12 bg-data-neutral-bg rounded-lg" />
+                  <div className="w-12 h-12 bg-data-neutral-bg rounded-lg" />
                 </div>
               </div>
             </div>
-            <div className="bg-data-neutral rounded-xl border border-data-neutral p-4 md:p-6 min-h-[320px] flex flex-col items-center justify-center">
+            <div className="bg-data-neutral-bg rounded-xl border border-data-neutral p-4 md:p-6 min-h-[320px] flex flex-col items-center justify-center">
               <p className="text-data-neutral text-sm text-center max-w-xs">
                 Conversation will appear here once the patient is ready.
               </p>
               <div className="flex items-center gap-2 mt-4 text-data-neutral">
                 <div
-                  className="w-2 h-2 bg-data-neutral rounded-full animate-bounce"
+                  className="w-2 h-2 bg-data-neutral-bg rounded-full animate-bounce"
                   style={{ animationDelay: '0ms' }}
                 />
                 <div
-                  className="w-2 h-2 bg-data-neutral rounded-full animate-bounce"
+                  className="w-2 h-2 bg-data-neutral-bg rounded-full animate-bounce"
                   style={{ animationDelay: '150ms' }}
                 />
                 <div
-                  className="w-2 h-2 bg-data-neutral rounded-full animate-bounce"
+                  className="w-2 h-2 bg-data-neutral-bg rounded-full animate-bounce"
                   style={{ animationDelay: '300ms' }}
                 />
               </div>
@@ -1364,12 +1378,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     const seconds = elapsedSeconds % 60;
 
     return (
-      <div className="min-h-screen bg-data-neutral text-data-neutral">
+      <div className="min-h-screen bg-data-neutral-bg text-data-neutral">
         {/* Header */}
         <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-data-neutral flex items-center justify-center shadow-sm border border-data-neutral">
+              <div className="w-10 h-10 rounded-xl bg-data-neutral-bg flex items-center justify-center shadow-sm border border-data-neutral">
                 <MessageSquare className="w-6 h-6 text-data-neutral" />
               </div>
               <div>
@@ -1394,9 +1408,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 
                       ${
                         isCompleted
-                          ? 'bg-data-neutral border-data-neutral text-white'
+                          ? 'bg-data-neutral-bg border-data-neutral text-white'
                           : isCurrent
-                            ? 'bg-data-neutral border-data-neutral text-white'
+                            ? 'bg-data-neutral-bg border-data-neutral text-white'
                             : 'bg-transparent border-data-neutral text-data-neutral'
                       }`}
                     >
@@ -1414,14 +1428,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* Mobile Phase Indicator */}
             <div className="md:hidden flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-data-neutral animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-data-neutral-bg animate-pulse" />
               <span className="text-xs font-bold text-data-neutral uppercase tracking-widest">
                 {phase}
               </span>
               {session.id && (
                 <button
                   onClick={() => setShowLiveSession(true)}
-                  className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors"
+                  className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors"
                   title="Live voice patient"
                   aria-label="Live voice patient"
                 >
@@ -1477,7 +1491,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <button
                 onClick={toggleLanguageMode}
                 aria-label="Toggle Language Mode"
-                className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors flex items-center gap-2 border border-data-neutral"
+                className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors flex items-center gap-2 border border-data-neutral"
                 title="Toggle Language (English / Spanish / Side-by-Side)"
               >
                 <Globe className="w-4 h-4 text-data-neutral" />
@@ -1502,7 +1516,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <button
                   onClick={onExit}
                   aria-label="Exit Encounter"
-                  className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors border border-data-neutral"
+                  className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors border border-data-neutral"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1537,7 +1551,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         <div className="max-w-7xl mx-auto px-4 py-6">
           {/* Phase progression stepper */}
           <nav
-            className="flex flex-wrap items-center gap-2 sm:gap-4 mb-6 py-3 px-4 rounded-xl bg-data-neutral/80 border border-data-neutral"
+            className="flex flex-wrap items-center gap-2 sm:gap-4 mb-6 py-3 px-4 rounded-xl bg-data-neutral-bg/80 border border-data-neutral"
             aria-label="Encounter phase"
           >
             {(
@@ -1604,13 +1618,13 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-data-neutral rounded-xl border border-data-neutral shadow-md overflow-hidden"
+                className="bg-data-neutral-bg rounded-xl border border-data-neutral shadow-md overflow-hidden"
               >
                 <div
-                  className="p-4 md:p-6 flex items-start gap-4 cursor-pointer hover:bg-data-neutral/50 transition-colors"
+                  className="p-4 md:p-6 flex items-start gap-4 cursor-pointer hover:bg-data-neutral-bg/50 transition-colors"
                   onClick={() => setIsPatientInfoExpanded(!isPatientInfoExpanded)}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-data-neutral flex items-center justify-center border border-data-neutral flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-data-neutral-bg flex items-center justify-center border border-data-neutral flex-shrink-0">
                     <User className="w-6 h-6 text-data-neutral" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1650,7 +1664,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                             role="tablist"
                             aria-label="EMR sections"
                           >
-                            {(['hpi', 'pmh', 'meds', 'labs'] as const).map((tab) => (
+                            {(['hpi', 'pmh', 'meds', 'vitals', 'labs'] as const).map((tab) => (
                               <button
                                 key={tab}
                                 type="button"
@@ -1669,12 +1683,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                     ? 'PMH'
                                     : tab === 'meds'
                                       ? 'Meds'
-                                      : 'Labs'}
+                                      : tab === 'vitals'
+                                        ? 'Vitals'
+                                        : 'Labs'}
                               </button>
                             ))}
                           </div>
                           <div
-                            className="bg-data-neutral rounded-lg p-4 border border-data-neutral min-h-[120px]"
+                            className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral min-h-[120px]"
                             role="tabpanel"
                           >
                             {emrTab === 'hpi' && (
@@ -1753,10 +1769,34 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                                   : 'No labs documented.'}
                               </div>
                             )}
+                            {emrTab === 'vitals' && (
+                              <div className="grid sm:grid-cols-2 gap-3">
+                                <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
+                                  <span className="text-xs font-bold text-data-neutral uppercase tracking-widest block mb-2">Blood Pressure</span>
+                                  <span className="text-2xl font-mono font-bold text-white">{Math.round(currentVitals.sbp ?? 0)}/{Math.round(currentVitals.dbp ?? 0)}</span>
+                                  <span className="text-sm font-mono text-data-neutral ml-1">mmHg</span>
+                                </div>
+                                <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
+                                  <span className="text-xs font-bold text-data-neutral uppercase tracking-widest block mb-2">Heart Rate</span>
+                                  <span className="text-2xl font-mono font-bold text-white">{Math.round(currentVitals.hr ?? 0)}</span>
+                                  <span className="text-sm font-mono text-data-neutral ml-1">bpm</span>
+                                </div>
+                                <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
+                                  <span className="text-xs font-bold text-data-neutral uppercase tracking-widest block mb-2">Respiratory Rate</span>
+                                  <span className="text-2xl font-mono font-bold text-white">{Math.round(currentVitals.rr ?? 0)}</span>
+                                  <span className="text-sm font-mono text-data-neutral ml-1">/min</span>
+                                </div>
+                                <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
+                                  <span className="text-xs font-bold text-data-neutral uppercase tracking-widest block mb-2">O₂ Saturation</span>
+                                  <span className="text-2xl font-mono font-bold text-white">{Math.round(currentVitals.o2 ?? 0)}</span>
+                                  <span className="text-sm font-mono text-data-neutral ml-1">%</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </>
                       ) : (
-                        <div className="bg-data-neutral rounded-lg p-4 border border-data-neutral">
+                        <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
                           <p className="text-xs font-bold text-data-neutral uppercase tracking-widest mb-2">
                             Chief Complaint
                           </p>
@@ -1764,20 +1804,22 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                             {currentCase?.chiefComplaint ? (
                               getTranslatedText(currentCase.chiefComplaint)
                             ) : (
-                              <span className="inline-block w-32 h-4 bg-data-neutral rounded animate-pulse"></span>
+                              <span className="inline-block w-32 h-4 bg-data-neutral-bg rounded animate-pulse"></span>
                             )}
                           </p>
                         </div>
                       )}
 
-                      <div className="rounded-lg p-4 border border-data-neutral space-y-3 bg-data-neutral">
+                      {/* When EMR interface is OFF, show always-visible vitals monitor; when ON, vitals are in Vitals tab only */}
+                      {!clinicalFidelity.emrInterface && (
+                      <div className="rounded-lg p-4 border border-data-neutral space-y-3 bg-data-neutral-bg">
                         <div className="flex items-center justify-between">
                           <p className="text-xs font-bold text-data-neutral uppercase tracking-widest">
                             EMR Monitor
                           </p>
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-data-neutral flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-data-neutral animate-pulse" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-data-neutral-bg animate-pulse" />
                               Live
                             </span>
                             <button
@@ -1792,7 +1834,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
                         <div className="grid sm:grid-cols-2 gap-3">
                           {/* Blood Pressure Card */}
-                          <div className="bg-data-neutral rounded-lg p-4 border border-data-neutral">
+                          <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
                             <span className="text-xs font-bold text-data-neutral uppercase tracking-widest block mb-2">
                               Blood Pressure
                             </span>
@@ -1816,7 +1858,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                           </div>
 
                           {/* Heart Rate Card */}
-                          <div className="bg-data-neutral rounded-lg p-4 border border-data-neutral">
+                          <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
                             <span className="text-xs font-bold text-data-neutral uppercase tracking-widest block mb-2">
                               Heart Rate
                             </span>
@@ -1839,7 +1881,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                           </div>
 
                           {/* Respiratory Rate Card */}
-                          <div className="bg-data-neutral rounded-lg p-4 border border-data-neutral">
+                          <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
                             <span className="text-xs font-bold text-data-neutral uppercase tracking-widest block mb-2">
                               Respiratory Rate
                             </span>
@@ -1862,7 +1904,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                           </div>
 
                           {/* O₂ Saturation Card */}
-                          <div className="bg-data-neutral rounded-lg p-4 border border-data-neutral">
+                          <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
                             <span className="text-xs font-bold text-data-neutral uppercase tracking-widest block mb-2">
                               O₂ Saturation
                             </span>
@@ -1885,6 +1927,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                           </div>
                         </div>
                       </div>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -1898,7 +1941,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-data-neutral rounded-xl p-4 md:p-6 border border-data-neutral shadow-md"
+                  className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-data-neutral">Ask a Question</h3>
                   <div className="flex gap-2">
@@ -1908,7 +1951,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onChange={(e) => setCurrentQuestion(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleAskQuestion()}
                       placeholder="e.g., When did the chest pain start?"
-                      className="flex-1 px-4 py-3 bg-data-neutral border border-data-neutral rounded-lg 
+                      className="flex-1 px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg 
                                text-data-neutral placeholder-data-neutral 
                                focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-sm"
                       autoComplete="off"
@@ -1917,7 +1960,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onClick={handleAskQuestion}
                       disabled={!currentQuestion.trim()}
                       aria-label="Send Question"
-                      className="px-4 py-3 bg-data-neutral hover:bg-data-neutral disabled:bg-data-neutral 
+                      className="px-4 py-3 bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg 
                                disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm"
                     >
                       <Send className="w-5 h-5" />
@@ -1940,7 +1983,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-data-neutral rounded-xl p-4 md:p-6 border border-data-neutral shadow-md"
+                  className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-data-neutral">
                     Perform Physical Exam
@@ -1956,7 +1999,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onChange={(e) => setCurrentQuestion(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handlePhysicalExam()}
                       placeholder="e.g., Auscultate lungs"
-                      className="flex-1 px-4 py-3 bg-data-neutral border border-data-neutral rounded-lg 
+                      className="flex-1 px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg 
                                text-data-neutral placeholder-data-neutral 
                                focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-sm"
                       autoComplete="off"
@@ -1992,7 +2035,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-data-neutral rounded-xl p-4 md:p-6 border border-data-neutral shadow-md"
+                  className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-data-neutral">Order Diagnostics</h3>
                   <p className="text-sm text-data-neutral mb-3">
@@ -2005,7 +2048,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onChange={(e) => setCurrentQuestion(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleOrderTest()}
                       placeholder="e.g., CBC, BMP, CXR"
-                      className="flex-1 px-4 py-3 bg-data-neutral border border-data-neutral rounded-lg 
+                      className="flex-1 px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg 
                                text-data-neutral placeholder-data-neutral 
                                focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-sm"
                       autoComplete="off"
@@ -2014,7 +2057,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onClick={handleOrderTest}
                       disabled={!currentQuestion.trim() || isLoading}
                       aria-label="Order Diagnostic Test"
-                      className="px-4 py-3 bg-data-neutral hover:bg-data-neutral disabled:bg-data-neutral 
+                      className="px-4 py-3 bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg 
                                disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm flex items-center justify-center min-w-[3.5rem]"
                     >
                       {isLoading ? (
@@ -2041,7 +2084,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-data-neutral rounded-xl p-4 md:p-6 border border-data-neutral shadow-md"
+                  className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-data-neutral">Final Diagnosis</h3>
                   <input
@@ -2049,7 +2092,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     value={userDiagnosis}
                     onChange={(e) => setUserDiagnosis(e.target.value)}
                     placeholder="Enter your primary diagnosis..."
-                    className="w-full px-4 py-3 bg-data-neutral border border-data-neutral rounded-lg mb-4
+                    className="w-full px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg mb-4
                              text-data-neutral placeholder-data-neutral 
                              focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-sm"
                     autoComplete="off"
@@ -2057,7 +2100,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   <button
                     onClick={handleSubmitDiagnosis}
                     disabled={!userDiagnosis.trim() || isLoading}
-                    className="w-full bg-data-neutral hover:bg-data-neutral disabled:bg-data-neutral
+                    className="w-full bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg
                              disabled:cursor-not-allowed min-h-[44px] py-3 rounded-lg font-semibold text-white
                              transition-colors shadow-sm flex items-center justify-center gap-2"
                   >
@@ -2079,7 +2122,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-data-neutral rounded-xl p-4 md:p-6 border border-data-neutral shadow-md space-y-4"
+                  className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md space-y-4"
                 >
                   <div>
                     <h3 className="text-lg font-semibold mb-4 text-data-neutral">Treatment Plan</h3>
@@ -2090,14 +2133,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       value={treatmentPlan}
                       onChange={(e) => setTreatmentPlan(e.target.value)}
                       placeholder="e.g., Admit to telemetry, start Aspirin 325mg, Heparin drip..."
-                      className="w-full px-4 py-3 bg-data-neutral border border-data-neutral rounded-lg
+                      className="w-full px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg
                                text-white placeholder-data-neutral 
                                focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-sm min-h-[120px]"
                     />
                   </div>
 
                   {treatmentFeedback && (
-                    <div className="bg-data-neutral rounded-lg p-4 border border-data-neutral">
+                    <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
                       <p className="text-xs font-bold text-data-neutral uppercase tracking-widest mb-2">
                         Treatment Feedback
                       </p>
@@ -2110,7 +2153,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <button
                         onClick={handleTreatmentSubmit}
                         disabled={!treatmentPlan.trim() || isLoading}
-                        className="flex-1 bg-data-neutral hover:bg-data-neutral disabled:bg-data-neutral
+                        className="flex-1 bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg
                                  disabled:cursor-not-allowed min-h-[44px] py-3 rounded-lg font-semibold text-white
                                  transition-colors shadow-sm flex items-center justify-center gap-2"
                       >
@@ -2128,7 +2171,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     <button
                       onClick={handleEndEncounter}
                       disabled={isLoading}
-                      className="flex-1 bg-data-neutral hover:bg-data-neutral disabled:bg-data-neutral 
+                      className="flex-1 bg-data-neutral-bg hover:bg-data-neutral-bg disabled:bg-data-neutral-bg 
                                disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
                                transition-colors shadow-sm flex items-center justify-center gap-2"
                     >
@@ -2166,7 +2209,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-data-neutral rounded-xl p-4 md:p-6 border border-data-neutral shadow-md h-[600px] flex flex-col min-w-[250px] break-words"
+                className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md h-[600px] flex flex-col min-w-[250px] break-words"
               >
                 <h3 className="text-lg font-semibold mb-4 text-data-neutral">Encounter Log</h3>
 
@@ -2175,7 +2218,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   {session.questions.map((q, idx) => (
                     <div
                       key={`hist-${idx}`}
-                      className="bg-data-neutral rounded-lg p-4 space-y-2 border border-data-neutral"
+                      className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral"
                     >
                       <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
                         <MessageSquare className="w-3 h-3" /> History
@@ -2191,7 +2234,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   {physicalFindings.map((f, idx) => (
                     <div
                       key={`phys-${idx}`}
-                      className="bg-data-neutral rounded-lg p-4 space-y-2 border border-data-neutral"
+                      className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral"
                     >
                       <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
                         <Stethoscope className="w-3 h-3" /> Physical Exam
@@ -2210,7 +2253,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     return (
                       <div
                         key={`diag-${idx}`}
-                        className="bg-data-neutral rounded-lg p-4 space-y-2 border border-data-neutral"
+                        className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
@@ -2248,7 +2291,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
                   {/* Diagnosis Log */}
                   {diagnosisFeedback && (
-                    <div className="bg-data-neutral rounded-lg p-4 space-y-2 border border-data-neutral">
+                    <div className="bg-data-neutral-bg rounded-lg p-4 space-y-2 border border-data-neutral">
                       <div className="flex items-center gap-2 text-xs font-bold text-data-neutral uppercase tracking-widest">
                         <CheckCircle className="w-3 h-3" /> Diagnosis
                       </div>
@@ -2264,17 +2307,17 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
                   {/* Typing indicator with rotating status (latency masking so user knows system is thinking) */}
                   {isTyping && !isLoading && (
-                    <div className="flex items-center gap-2 text-data-neutral italic p-4 rounded-lg bg-data-neutral/50 border border-data-neutral/50">
+                    <div className="flex items-center gap-2 text-data-neutral italic p-4 rounded-lg bg-data-neutral-bg/50 border border-data-neutral/50">
                       <div
-                        className="w-2 h-2 bg-data-neutral rounded-full animate-bounce"
+                        className="w-2 h-2 bg-data-neutral-bg rounded-full animate-bounce"
                         style={{ animationDelay: '0ms' }}
                       />
                       <div
-                        className="w-2 h-2 bg-data-neutral rounded-full animate-bounce"
+                        className="w-2 h-2 bg-data-neutral-bg rounded-full animate-bounce"
                         style={{ animationDelay: '150ms' }}
                       />
                       <div
-                        className="w-2 h-2 bg-data-neutral rounded-full animate-bounce"
+                        className="w-2 h-2 bg-data-neutral-bg rounded-full animate-bounce"
                         style={{ animationDelay: '300ms' }}
                       />
                       <span className="text-sm ml-2">
@@ -2395,7 +2438,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
     if (showStreaming && !preceptorFeedback) {
       return (
-        <div className="min-h-screen bg-data-neutral text-data-neutral">
+        <div className="min-h-screen bg-data-neutral-bg text-data-neutral">
           <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
             <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -2408,7 +2451,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               {onExit && (
                 <button
                   onClick={onExit}
-                  className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors border border-data-neutral"
+                  className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors border border-data-neutral"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -2416,7 +2459,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </div>
           </div>
           <div className="max-w-5xl mx-auto px-4 py-8">
-            <div className="bg-data-neutral rounded-xl p-6 border border-data-neutral">
+            <div className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral">
               <p className="text-data-neutral text-sm mb-2">Streaming evaluation (token-by-token):</p>
               <pre className="text-white font-mono text-sm whitespace-pre-wrap break-words min-h-[120px]">
                 {streamedDebriefText || (
@@ -2431,7 +2474,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
     if (preceptorFeedback) {
       return (
-        <div className="min-h-screen bg-data-neutral text-data-neutral">
+        <div className="min-h-screen bg-data-neutral-bg text-data-neutral">
           {/* Header */}
           <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
             <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -2445,7 +2488,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               {onExit && (
                 <button
                   onClick={onExit}
-                  className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors border border-data-neutral"
+                  className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors border border-data-neutral"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -2472,7 +2515,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-data-neutral rounded-xl p-6 border border-data-neutral shadow-md"
+              className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-md"
             >
               <h3 className="text-xl font-semibold mb-4 text-white">Clinical Competencies</h3>
               <div className="grid md:grid-cols-2 gap-4">
@@ -2501,7 +2544,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   const percentage = ((item.score ?? 0) / 10) * 100;
                   const Icon = item.icon;
                   return (
-                    <div key={idx} className="bg-data-neutral rounded-lg p-4 border border-data-neutral">
+                    <div key={idx} className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Icon className="w-5 h-5 text-data-neutral" />
@@ -2511,7 +2554,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                           {item.score}/10
                         </span>
                       </div>
-                      <div className="w-full bg-data-neutral rounded-full h-2 overflow-hidden">
+                      <div className="w-full bg-data-neutral-bg rounded-full h-2 overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${percentage}%` }}
@@ -2536,10 +2579,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-data-neutral rounded-xl p-6 border border-data-neutral shadow-md"
+              className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-md"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-data-neutral border border-data-neutral flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-data-neutral-bg border border-data-neutral flex items-center justify-center">
                   <User className="w-6 h-6 text-data-neutral" />
                 </div>
                 <div>
@@ -2547,7 +2590,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   <p className="text-sm text-data-neutral">Clinical reasoning assessment</p>
                 </div>
               </div>
-              <div className="bg-data-neutral rounded-lg p-5 border border-data-neutral">
+              <div className="bg-data-neutral-bg rounded-lg p-5 border border-data-neutral">
                 <p className="text-white leading-relaxed italic">"{preceptorFeedback.feedback}"</p>
               </div>
             </motion.div>
@@ -2559,7 +2602,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-data-neutral rounded-xl p-6 border border-data-neutral"
+                  className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-data-neutral flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-data-neutral" /> Strengths
@@ -2580,7 +2623,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="bg-data-neutral rounded-xl p-6 border border-data-neutral"
+                  className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-data-neutral flex items-center gap-2">
                     <ArrowRight className="w-5 h-5 text-data-neutral" /> Areas for Improvement
@@ -2603,7 +2646,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="bg-data-neutral rounded-xl p-6 border border-data-neutral"
+                className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
               >
                 <h3 className="text-lg font-semibold mb-4 text-data-neutral flex items-center gap-2">
                   <XCircle className="w-5 h-5 text-data-neutral" /> Missed Critical Cues
@@ -2615,7 +2658,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   {preceptorFeedback.missedCriticalCues.map((cue, idx) => (
                     <li
                       key={idx}
-                      className="flex items-start gap-2 text-sm text-data-neutral bg-data-neutral rounded p-3 border border-data-neutral"
+                      className="flex items-start gap-2 text-sm text-data-neutral bg-data-neutral-bg rounded p-3 border border-data-neutral"
                     >
                       <span className="text-data-neutral font-bold mt-0.5">!</span>
                       <span>{cue}</span>
@@ -2631,7 +2674,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.51 }}
-                className="bg-data-neutral rounded-xl p-6 border border-data-fail/50"
+                className="bg-data-neutral-bg rounded-xl p-6 border border-data-fail/50"
               >
                 <h3 className="text-lg font-semibold mb-4 text-data-neutral flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-data-fail" /> Dangerous or Inappropriate
@@ -2644,7 +2687,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   {preceptorFeedback.dangerousActions.map((action, idx) => (
                     <li
                       key={idx}
-                      className="flex items-start gap-2 text-sm text-data-neutral bg-data-neutral rounded p-3 border border-data-neutral"
+                      className="flex items-start gap-2 text-sm text-data-neutral bg-data-neutral-bg rounded p-3 border border-data-neutral"
                     >
                       <AlertTriangle className="w-4 h-4 text-data-fail flex-shrink-0 mt-0.5" />
                       <span>{action}</span>
@@ -2659,28 +2702,28 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.52 }}
-              className="bg-data-neutral rounded-xl p-6 border border-data-neutral"
+              className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
             >
               <h3 className="text-lg font-semibold mb-4 text-data-neutral flex items-center gap-2">
                 <ClipboardList className="w-5 h-5 text-data-neutral" /> Rubric Checklist
               </h3>
               {gradeResultLoading ? (
                 <div className="space-y-2" aria-busy="true" aria-label="Grading in progress">
-                  <div className="h-4 bg-data-neutral rounded animate-pulse w-3/4" />
-                  <div className="h-4 bg-data-neutral rounded animate-pulse w-1/2" />
-                  <div className="h-4 bg-data-neutral rounded animate-pulse w-5/6" />
+                  <div className="h-4 bg-data-neutral-bg rounded animate-pulse w-3/4" />
+                  <div className="h-4 bg-data-neutral-bg rounded animate-pulse w-1/2" />
+                  <div className="h-4 bg-data-neutral-bg rounded animate-pulse w-5/6" />
                   <p className="text-sm text-data-neutral mt-2">Grading…</p>
                 </div>
               ) : gradeResult ? (
                 <>
                   {/* Score summary */}
-                  <div className="flex items-center gap-4 mb-4 p-3 bg-data-neutral rounded-lg border border-data-neutral">
+                  <div className="flex items-center gap-4 mb-4 p-3 bg-data-neutral-bg rounded-lg border border-data-neutral">
                     <div className="flex-1 text-center">
                       <p className="text-xs text-data-neutral uppercase tracking-wider">Score</p>
                       <p className="text-2xl font-bold text-data-neutral">{gradeResult.score}</p>
                       <p className="text-xs text-data-neutral">out of 100</p>
                     </div>
-                    <div className="h-10 w-px bg-data-neutral" />
+                    <div className="h-10 w-px bg-data-neutral-bg" />
                     <div className="flex-1 text-center">
                       <p className="text-xs text-data-neutral uppercase tracking-wider">Clinical Reasoning</p>
                       <p className="text-2xl font-bold text-data-neutral">{gradeResult.clinicalReasoningScore}</p>
@@ -2697,7 +2740,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                           className={`flex items-start gap-2 text-sm rounded p-3 border ${
                             item.status === 'PASS'
                               ? 'bg-data-pass/30 border-data-pass text-data-neutral'
-                              : 'bg-data-neutral border-data-neutral text-data-neutral'
+                              : 'bg-data-neutral-bg border-data-neutral text-data-neutral'
                           }`}
                         >
                           {item.status === 'PASS' ? (
@@ -2764,7 +2807,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.53 }}
-                className="bg-data-neutral rounded-xl p-6 border border-data-neutral"
+                className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
               >
                 <h3 className="text-lg font-semibold mb-4 text-data-neutral flex items-center gap-2">
                   <Heart className="w-5 h-5 text-data-neutral" aria-hidden />
@@ -2778,7 +2821,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     return (
                       <div
                         key={key}
-                        className="bg-data-neutral rounded-lg p-3 border border-data-neutral"
+                        className="bg-data-neutral-bg rounded-lg p-3 border border-data-neutral"
                       >
                         <div className="flex justify-between items-center mb-1">
                           <span className="text-sm font-medium text-data-neutral capitalize">
@@ -2810,7 +2853,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="bg-data-neutral rounded-xl p-6 border border-data-neutral"
+                className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
               >
                 <h3 className="text-lg font-semibold mb-4 text-data-neutral flex items-center gap-2">
                   <Activity className="w-5 h-5 text-data-neutral" /> Differential Diagnoses to Consider
@@ -2820,7 +2863,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 </p>
                 <div className="grid sm:grid-cols-2 gap-2">
                   {preceptorFeedback.differentialDiagnosis.map((dx, idx) => (
-                    <div key={idx} className="bg-data-neutral rounded-lg p-3 border border-data-neutral">
+                    <div key={idx} className="bg-data-neutral-bg rounded-lg p-3 border border-data-neutral">
                       <span className="font-semibold text-data-neutral">{dx}</span>
                     </div>
                   ))}
@@ -2867,7 +2910,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}
-                className="bg-data-neutral rounded-xl p-6 border border-data-neutral shadow-md"
+                className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-md"
               >
                 <h3 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
                   <FileText className="w-5 h-5" /> Additional Notes
@@ -2882,7 +2925,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             <div className="flex gap-4 pt-4">
               <motion.button
                 onClick={handleNewCase}
-                className="flex-1 bg-data-neutral hover:bg-data-neutral py-4 rounded-xl font-semibold text-white
+                className="flex-1 bg-data-neutral-bg hover:bg-data-neutral-bg py-4 rounded-xl font-semibold text-white
                        transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -2893,7 +2936,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               {onExit && (
                 <motion.button
                   onClick={onExit}
-                  className="px-8 py-4 bg-data-neutral hover:bg-data-neutral rounded-xl font-semibold
+                  className="px-8 py-4 bg-data-neutral-bg hover:bg-data-neutral-bg rounded-xl font-semibold
                          text-white transition-colors border border-data-neutral"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -2928,7 +2971,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2 rounded-lg bg-data-neutral hover:bg-data-neutral transition-colors border border-data-neutral"
+                className="p-2 rounded-lg bg-data-neutral-bg hover:bg-data-neutral-bg transition-colors border border-data-neutral"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2976,7 +3019,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </div>
             )}
 
-            <div className="bg-data-neutral rounded-lg p-4 border border-data-neutral">
+            <div className="bg-data-neutral-bg rounded-lg p-4 border border-data-neutral">
               <p className="text-sm text-data-neutral mb-1">Correct Diagnosis:</p>
               <p className="text-lg font-semibold text-white">{currentCase.correctDiagnosis}</p>
             </div>
@@ -2988,7 +3031,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-data-neutral rounded-xl p-6 border border-data-neutral text-center shadow-sm"
+              className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral text-center shadow-sm"
             >
               <Award className="w-8 h-8 text-data-neutral mx-auto mb-2" />
               <p className="text-sm text-data-neutral mb-1">Overall Score</p>
@@ -3030,7 +3073,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-data-neutral rounded-xl p-6 border border-data-neutral shadow-sm"
+              className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-sm"
             >
               <h3 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
                 <FileText className="w-5 h-5" /> After-Action Report
@@ -3046,7 +3089,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-data-neutral rounded-xl p-6 border border-data-neutral shadow-sm"
+            className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-sm"
           >
             <h3 className="text-xl font-semibold mb-4 text-white">Ideal Workup</h3>
             <ul className="space-y-2">

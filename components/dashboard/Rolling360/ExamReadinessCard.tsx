@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useUnifiedStats } from '../../../hooks/useUnifiedStats';
 import { Rolling360Stats } from '../../../hooks/useRolling360Stats';
 import { useSessionGenerator } from '../../../hooks/useSessionGenerator';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { CalibrationProtocolUI } from './CalibrationProtocolUI';
 import { StartSessionButton, SemanticButton } from '../../ui/SemanticButton';
 import { ExplainabilityTooltip } from '../../ui/ExplainabilityTooltip';
@@ -461,13 +462,25 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
   const { stats: unifiedStats, isLoading, error } = useUnifiedStats({ includeRaw: true });
   const stats = unifiedStats?._raw?.rolling360 ?? null;
   const { generateSession, isGenerating } = useSessionGenerator();
-  const [profile, setProfile] = useState(() => loadUserProfile());
+  const { profile: apiProfile } = useUserProfile();
+  const [localProfile, setLocalProfile] = useState(() => loadUserProfile());
   useEffect(() => {
-    setProfile(loadUserProfile());
-    const onStorage = () => setProfile(loadUserProfile());
+    setLocalProfile(loadUserProfile());
+    const onStorage = () => setLocalProfile(loadUserProfile());
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
   }, []);
+  // Prefer API profile for EOR so server is source of truth when loaded
+  const profile = apiProfile
+    ? {
+        ...localProfile,
+        eorTestDate: apiProfile.eorTestDate ?? localProfile?.eorTestDate,
+        rotationStartDate: apiProfile.rotationStartDate ?? localProfile?.rotationStartDate,
+        rotationEndDate: apiProfile.rotationEndDate ?? localProfile?.rotationEndDate,
+        currentRotation: apiProfile.currentRotation ?? localProfile?.currentRotation,
+        yearInProgram: apiProfile.yearInProgram ?? localProfile?.yearInProgram,
+      }
+    : localProfile;
 
   const isEorMode =
     profile?.yearInProgram === 'Clinical Year' &&

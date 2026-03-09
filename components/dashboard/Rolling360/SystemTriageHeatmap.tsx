@@ -13,6 +13,7 @@
 
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Circle } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 import NCCPA_BLUEPRINT from '../../../lib/nccpa-blueprint';
 
@@ -56,7 +57,6 @@ const STATUS_CONFIG: Record<
     border: string;
     text: string;
     label: string;
-    emoji: string;
     pulse: boolean;
   }
 > = {
@@ -65,7 +65,6 @@ const STATUS_CONFIG: Record<
     border: 'border-data-fail',
     text: 'text-data-fail',
     label: 'Needs CPR',
-    emoji: '🔴',
     pulse: true,
   },
   at_risk: {
@@ -73,7 +72,6 @@ const STATUS_CONFIG: Record<
     border: 'border-data-provisional',
     text: 'text-data-provisional',
     label: 'Unstable',
-    emoji: '🟡',
     pulse: false,
   },
   stable: {
@@ -81,7 +79,6 @@ const STATUS_CONFIG: Record<
     border: 'border-data-pass',
     text: 'text-data-pass',
     label: 'Stable',
-    emoji: '🟢',
     pulse: false,
   },
   mastered: {
@@ -89,7 +86,6 @@ const STATUS_CONFIG: Record<
     border: 'border-[var(--color-accent)]',
     text: 'text-[var(--color-accent)]',
     label: 'Discharge Ready',
-    emoji: '🔵',
     pulse: false,
   },
 };
@@ -166,8 +162,11 @@ function TriagePillList({
                 config.border
               )}
             >
-              {/* Status Emoji */}
-              <span className="text-lg">{config.emoji}</span>
+              {/* Status indicator */}
+              <Circle
+                className={cn('w-3 h-3 fill-current shrink-0', config.text)}
+                strokeWidth={0}
+              />
 
               {/* System Name */}
               <span className="flex-1 text-left font-medium text-[var(--color-text-primary)]">
@@ -329,20 +328,30 @@ export function SystemTriageHeatmap({
         {/* Summary Header */}
         <div className="flex items-center justify-between mb-4 pb-2 border-b border-[var(--color-border)]">
           <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">System Triage</h3>
-          <div className="flex gap-3 text-xs">
+          <div className="flex gap-3 text-xs items-center">
             {statusCounts.critical > 0 && (
-              <span className="text-[var(--color-data-fail)]">🔴 {statusCounts.critical}</span>
+              <span className="text-[var(--color-data-fail)] flex items-center gap-1">
+                <Circle className="w-2 h-2 fill-current" strokeWidth={0} />
+                {statusCounts.critical}
+              </span>
             )}
             {statusCounts.at_risk > 0 && (
-              <span className="text-[var(--color-data-provisional)]">
-                🟡 {statusCounts.at_risk}
+              <span className="text-[var(--color-data-provisional)] flex items-center gap-1">
+                <Circle className="w-2 h-2 fill-current" strokeWidth={0} />
+                {statusCounts.at_risk}
               </span>
             )}
             {statusCounts.stable > 0 && (
-              <span className="text-[var(--color-data-pass)]">🟢 {statusCounts.stable}</span>
+              <span className="text-[var(--color-data-pass)] flex items-center gap-1">
+                <Circle className="w-2 h-2 fill-current" strokeWidth={0} />
+                {statusCounts.stable}
+              </span>
             )}
             {statusCounts.mastered > 0 && (
-              <span className="text-[var(--color-accent)]">🔵 {statusCounts.mastered}</span>
+              <span className="text-[var(--color-accent)] flex items-center gap-1">
+                <Circle className="w-2 h-2 fill-current" strokeWidth={0} />
+                {statusCounts.mastered}
+              </span>
             )}
           </div>
         </div>
@@ -359,25 +368,29 @@ export function SystemTriageHeatmap({
         <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
           PANCE System Triage
         </h3>
-        <div className="flex gap-3 text-xs">
+        <div className="flex gap-3 text-xs items-center">
           {statusCounts.critical > 0 && (
-            <span className="text-[var(--color-data-fail)] font-medium">
-              🔴 {statusCounts.critical} Critical
+            <span className="text-[var(--color-data-fail)] font-medium flex items-center gap-1">
+              <Circle className="w-2 h-2 fill-current" strokeWidth={0} />
+              {statusCounts.critical} Critical
             </span>
           )}
           {statusCounts.at_risk > 0 && (
-            <span className="text-[var(--color-data-provisional)] font-medium">
-              🟡 {statusCounts.at_risk} At Risk
+            <span className="text-[var(--color-data-provisional)] font-medium flex items-center gap-1">
+              <Circle className="w-2 h-2 fill-current" strokeWidth={0} />
+              {statusCounts.at_risk} At Risk
             </span>
           )}
           {statusCounts.stable > 0 && (
-            <span className="text-[var(--color-data-pass)] font-medium">
-              🟢 {statusCounts.stable} Stable
+            <span className="text-[var(--color-data-pass)] font-medium flex items-center gap-1">
+              <Circle className="w-2 h-2 fill-current" strokeWidth={0} />
+              {statusCounts.stable} Stable
             </span>
           )}
           {statusCounts.mastered > 0 && (
-            <span className="text-[var(--color-accent)] font-medium">
-              🔵 {statusCounts.mastered} Mastered
+            <span className="text-[var(--color-accent)] font-medium flex items-center gap-1">
+              <Circle className="w-2 h-2 fill-current" strokeWidth={0} />
+              {statusCounts.mastered} Mastered
             </span>
           )}
         </div>
@@ -392,11 +405,23 @@ export function SystemTriageHeatmap({
 
       {/* Legend */}
       <div className="mt-4 pt-3 border-t border-[var(--color-border)]">
-        <div className="flex flex-wrap justify-center gap-4 text-xs text-[var(--color-text-muted)]">
-          <span>🔴 &lt;60% Critical</span>
-          <span>🟡 60-75% At Risk</span>
-          <span>🟢 75-90% Stable</span>
-          <span>🔵 &gt;90% Mastered</span>
+        <div className="flex flex-wrap justify-center gap-4 text-xs text-[var(--color-text-muted)] items-center">
+          <span className="flex items-center gap-1">
+            <Circle className="w-2 h-2 fill-[var(--color-data-fail)]" strokeWidth={0} />
+            &lt;60% Critical
+          </span>
+          <span className="flex items-center gap-1">
+            <Circle className="w-2 h-2 fill-[var(--color-data-provisional)]" strokeWidth={0} />
+            60-75% At Risk
+          </span>
+          <span className="flex items-center gap-1">
+            <Circle className="w-2 h-2 fill-[var(--color-data-pass)]" strokeWidth={0} />
+            75-90% Stable
+          </span>
+          <span className="flex items-center gap-1">
+            <Circle className="w-2 h-2 fill-[var(--color-accent)]" strokeWidth={0} />
+            &gt;90% Mastered
+          </span>
         </div>
       </div>
     </div>

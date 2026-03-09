@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, X } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { BackLink } from '@/components/navigation/BackLink';
+import { ROUTES } from '@/config/routes';
 
 export interface DrillShellProps {
   /** Title of the drill mode displayed in header */
@@ -49,6 +51,12 @@ export interface DrillShellProps {
    * Custom class name for the content wrapper
    */
   contentClassName?: string;
+
+  /**
+   * When provided, use URL-based BackLink instead of button.
+   * Use ROUTES.PRACTICE or ROUTES.STUDY for consistent wayfinding.
+   */
+  backTo?: string;
 }
 
 /**
@@ -96,6 +104,7 @@ export const DrillShell: React.FC<DrillShellProps> = ({
   fullScreen = false,
   backgroundColor,
   contentClassName = '',
+  backTo,
 }) => {
   const containerClasses = fullScreen
     ? 'fixed inset-0 z-50 flex flex-col'
@@ -115,17 +124,25 @@ export const DrillShell: React.FC<DrillShellProps> = ({
         <div
           className={`${fullWidth ? 'w-full' : 'max-w-5xl mx-auto'} px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2`}
         >
-          {/* Left: Back Button */}
-          <motion.button
-            onClick={onExit}
-            className="flex items-center gap-1.5 sm:gap-2 text-muted hover:text-action-primary transition-colors p-2 rounded-lg hover:bg-surface-secondary min-h-[44px] group"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            aria-label="Back to Dashboard"
-          >
-            <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5" />
-            <span className="text-sm font-medium hidden sm:inline">Dashboard</span>
-          </motion.button>
+          {/* Left: Back Button or BackLink */}
+          {backTo ? (
+            <BackLink
+              to={backTo}
+              label={backTo === ROUTES.STUDY ? 'Back to Dashboard' : 'Back to Practice'}
+              className="text-muted hover:text-action-primary"
+            />
+          ) : (
+            <motion.button
+              onClick={onExit}
+              className="flex items-center gap-1.5 sm:gap-2 text-muted hover:text-action-primary transition-colors p-2 rounded-lg hover:bg-surface-secondary min-h-[44px] group"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              aria-label="Back to Dashboard"
+            >
+              <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5" />
+              <span className="text-sm font-medium hidden sm:inline">Dashboard</span>
+            </motion.button>
+          )}
 
           {/* Center: Title & Subtitle */}
           <div className="flex-1 flex flex-col items-start sm:items-center min-w-0">

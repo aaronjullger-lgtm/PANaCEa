@@ -2,6 +2,10 @@
  * POST /api/questions/attempt
  * Record a question attempt for a user.
  * Updates UserQuestionSeen and QuestionAttempt tables.
+ *
+ * Single-writer note: For main-session flow, this is the primary writer for QuestionAttempt.
+ * When isMainSession is true we also update Rolling 360 here. Submit-review (drillReviewService)
+ * reuses an existing attempt if one exists within 5 minutes and skips Rolling 360 to avoid double count.
  */
 
 import { z } from 'zod';
@@ -227,6 +231,24 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       } catch (srsErr) {
         logger.warn('SRS scheduleConceptReview failed (non-fatal)', {
           error: srsErr instanceof Error ? srsErr.message : String(srsErr),
+        });
+      }
+    }
+
+    // Rolling 360: update circular buffer and stats for main-session attempts
+    if (isMainSession && typeof correctness === 'boolean') {
+      try {
+        const systemFor360 = system ?? (await getQuestionSystem(prisma, questionId));
+        await getRolling360Service(prisma).updateRolling360OnSubmit({
+          attemptId: result.attemptId,
+          userId,
+          isCorrect: correctness,
+          system: systemFor360,
+          answeredAt: new Date(),
+        });
+      } catch (r360Err) {
+        logger.warn('Rolling 360 update failed (non-fatal)', {
+          error: r360Err instanceof Error ? r360Err.message : String(r360Err),
         });
       }
     }

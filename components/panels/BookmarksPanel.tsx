@@ -1,6 +1,8 @@
 /**
- * Bookmarks Panel Component
- * Displays and manages bookmarked questions for quick reference
+ * BookmarksPanel - Displays bookmarked questions (To Review / MenuView)
+ *
+ * Shows user's bookmarked questions with search and tag filters.
+ * For condition bookmarks (library), use components/library/BookmarksPanel.
  */
 
 import React, { useState, useMemo } from 'react';
@@ -31,7 +33,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
   const allTags = useMemo(() => {
     const tags = new Set<string>();
     bookmarkedQuestions.forEach((q) => {
-      q.tags?.forEach((tag) => tags.add(tag));
+      q.tags?.forEach((tag: string) => tags.add(tag));
     });
     return Array.from(tags);
   }, [bookmarkedQuestions]);
@@ -205,7 +207,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -100 }}
                     transition={{ delay: index * 0.05 }}
-                    className="bg-white dark:bg-data-neutral rounded-lg border border-data-neutral dark:border-data-neutral p-4 hover:shadow-md transition-shadow"
+                    className="bg-white dark:bg-data-neutral-bg rounded-lg border border-data-neutral dark:border-data-neutral p-4 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start gap-3">
                       <BookmarkCheck className="w-5 h-5 text-data-provisional flex-shrink-0 mt-1" />
@@ -236,7 +238,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                         {/* Tags */}
                         {question.tags && question.tags.length > 0 && (
                           <div className="flex items-center gap-1 mb-2">
-                            {question.tags.map((tag) => (
+                            {question.tags.map((tag: string) => (
                               <span
                                 key={tag}
                                 className="inline-block px-2 py-0.5 bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral text-xs rounded"

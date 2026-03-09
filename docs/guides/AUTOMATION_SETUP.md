@@ -2,13 +2,15 @@
 
 ## Current Status
 
-The automated tasks are **already set up** and will run automatically once you deploy. No additional configuration needed!
+Automation runs via **GitHub Actions** (not Cloudflare cron). Cloudflare Pages does not support cron triggers, so all scheduled jobs are handled by GitHub Actions workflows.
 
 ## How It Works
 
-### Daily Automation (3 AM)
+### Daily Automation (3 AM UTC)
 
-**Automatically runs:**
+**Workflow:** `.github/workflows/daily-automation.yml`
+
+Runs automatically:
 
 1. Creates today's Grand Rounds challenge
 2. Cleans up old OSCE chat history (7+ days)
@@ -17,12 +19,15 @@ The automated tasks are **already set up** and will run automatically once you d
 5. Identifies content gaps
 6. Checks media asset quality
 7. Aggregates performance metrics
+8. Calls cron API endpoints (aggregate-analytics, daily-prescription, replenish-pool) if PRODUCTION_URL and CRON_SECRET secrets are set
 
-**Setup for deployment:**
+**Required secrets:** `DATABASE_URL`, `GEMINI_API_KEY`, `PRODUCTION_URL`, `CRON_SECRET` (optional for cron endpoint calls)
 
-#### Option 1: Cloudflare Pages (Recommended)
+### Alternative setups (for reference)
 
-The automation will NOT run automatically on Cloudflare Pages (static site). You need to set up a scheduled worker or use Option 2.
+#### Option 1: Cloudflare Worker (if not using GitHub Actions)
+
+Cloudflare Pages itself does not support cron triggers. To run automation from Cloudflare, you would need a separate Cloudflare Worker with cron triggers.
 
 **To add scheduled automation:**
 
@@ -77,38 +82,9 @@ cron.schedule('0 3 * * *', async () => {
 
 3. **Deploy** - The cron job will run automatically
 
-#### Option 3: GitHub Actions (Simple Alternative)
+#### Option 3: GitHub Actions (Current Setup)
 
-Create `.github/workflows/daily-automation.yml`:
-
-```yaml
-name: Daily Automation
-
-on:
-  schedule:
-    - cron: '0 3 * * *' # 3 AM daily
-  workflow_dispatch: # Manual trigger
-
-jobs:
-  run-automation:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run daily tasks
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: npm run automation:daily
-```
+The `.github/workflows/daily-automation.yml` workflow is already in place and runs daily at 3 AM UTC. It executes `npm run automation:daily` and calls the cron API endpoints. Ensure `DATABASE_URL`, `GEMINI_API_KEY`, `PRODUCTION_URL`, and `CRON_SECRET` are set in GitHub repo secrets.
 
 ## Manual Execution
 
@@ -206,9 +182,8 @@ This ensures:
 
 ## Summary
 
-**Status**: ✅ Code is ready, just needs cron scheduling
-**Recommended**: Use GitHub Actions (Option 3) - simplest and most reliable
-**No user setup needed**: All automation logic is implemented, just add scheduling
-**Deploys automatically**: Once scheduled, runs every day at 3 AM
+**Status**: Automation runs via GitHub Actions (`.github/workflows/daily-automation.yml`, `weekly-automation.yml`). No Cloudflare cron is used because Cloudflare Pages does not support it.
 
-The automated tasks will start working immediately after you set up the scheduling using any of the options above.
+**Secrets required**: `DATABASE_URL`, `GEMINI_API_KEY` (for daily); `PRODUCTION_URL`, `CRON_SECRET` (optional, for cron API endpoint calls).
+
+**Deploy integration**: Registry sync (`sync:all-registries`) runs post-deploy in the CI/CD pipeline. Database orchestration (`db:orchestrate`) runs weekly. See `docs/AUTOMATION_RUNBOOK.md` for the full schedule.

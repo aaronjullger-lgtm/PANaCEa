@@ -662,25 +662,30 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
               </span>
         </label>
 
-        {/* Grand Rounds - Unified Premium Card */}
+        {/* Daily Challenges Hub Card */}
         {!searchQuery &&
           (() => {
             const grandRoundsMode = MODE_REGISTRY.find((m) => m.id === 'grand_rounds');
             if (!grandRoundsMode) return null;
 
+            const dailyChallengesMode = {
+              ...grandRoundsMode,
+              route: '/daily-challenges',
+            };
+
             return (
               <DashboardActionCard
-                title="Grand Rounds"
-                subtitle="Daily Competitive Challenge"
-                description="Daily standardized assessment."
+                title="Daily Challenges"
+                subtitle="Grand Rounds, Diagnostic Puzzle, Medical Wordle"
+                description="Complete daily challenges to maintain your streak."
                 icon={Trophy}
                 stats={[
-                  { label: "Today's Set", value: 20 },
-                  { label: 'Your Rank', value: '-', icon: Trophy },
-                  { label: 'Top Score', value: '92%', icon: Target },
+                  { label: "Today's Set", value: 3 },
+                  { label: 'Your Streak', value: '-', icon: Trophy },
+                  { label: 'Completion', value: '0%', icon: Target },
                 ]}
-                buttonText="Start Daily Challenge"
-                onAction={() => handleDrillClick(grandRoundsMode)}
+                buttonText="View All Daily Challenges"
+                onAction={() => handleDrillClick(dailyChallengesMode)}
                 variant="daily"
                 buttonVariant="warning"
                 badge={

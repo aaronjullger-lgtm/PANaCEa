@@ -4,8 +4,9 @@
  */
 
 import type { UserProfile } from '@/types';
+import { StorageKeys } from '@/lib/storage/storageRegistry';
 
-const PROFILE_KEY = 'panceai_user_profile';
+const PROFILE_KEY = StorageKeys.USER_PROFILE;
 
 /**
  * Load user profile from localStorage

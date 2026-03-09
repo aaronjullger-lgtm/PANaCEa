@@ -8,6 +8,7 @@
  */
 
 import { getApiEndpoint, API_ENDPOINTS } from '../../utils/apiConfig';
+import { StorageKeys } from '../../storage/storageRegistry';
 
 // Debug logging - set to true to re-enable verbose logs
 const DEBUG_OFFLINE_SYNC = false;
@@ -21,8 +22,8 @@ export interface SyncOperation {
   status: 'pending' | 'synced' | 'failed';
 }
 
-const STORAGE_KEY = 'panacea_offline_queue';
-const DEAD_LETTER_QUEUE_KEY = 'panacea_dead_letter_queue';
+const STORAGE_KEY = StorageKeys.OFFLINE_QUEUE;
+const DEAD_LETTER_QUEUE_KEY = StorageKeys.DEAD_LETTER_QUEUE;
 const MAX_ATTEMPTS = 5;
 const RETRY_DELAY = 2000; // 2 seconds
 const DEBOUNCE_DELAY = 500; // 500ms as per spec

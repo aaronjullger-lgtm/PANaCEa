@@ -155,7 +155,7 @@ export function DDxRankingStep({
   // Get item styling based on result - using design system colors
   const getItemStyle = (item: DifferentialItem, index: number) => {
     if (!isSubmitted) {
-      return 'bg-white dark:bg-data-neutral border-data-neutral dark:border-data-neutral';
+      return 'bg-white dark:bg-data-neutral-bg border-data-neutral dark:border-data-neutral';
     }
 
     if (item.id === correctAnswerId) {

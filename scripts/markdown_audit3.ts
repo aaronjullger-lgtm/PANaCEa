@@ -1,5 +1,14 @@
 import { prisma } from './helpers/prisma-client';
 
+interface SummaryRow {
+  table: string;
+  rowCount: number;
+  column: string;
+  dataType: string;
+  hasMarkdown: string;
+  samplePreview: string;
+}
+
 async function getTableRowCounts() {
   const tables = await prisma.$queryRaw<Array<{ table_name: string }>>`
     SELECT table_name
@@ -79,7 +88,7 @@ async function main() {
     columnByTable[col.table_name].push(col);
   });
 
-  const summary: any[] = [];
+  const summary: SummaryRow[] = [];
 
   // Examine Drug table in detail
   console.log('\n=== DRUG TABLE DETAIL ===');

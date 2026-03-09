@@ -12,9 +12,11 @@
 
 **Location:** `lib/storage/storageRegistry.ts` vs `contexts/CommuterContext.tsx`, `components/toolkit/ToolkitHub.tsx`
 
-**Issue:** The registry defines `COMMUTER_MODE: 'panacea_commuter_mode'` and `COMMUTER_SETTINGS: 'panacea_commuter_settings'` (and other `panacea_*` keys). `CommuterContext` uses `'panceai_commuter_mode'` and `'panceai_commuter_settings'`. Any code that uses `StorageKeys.COMMUTER_MODE` would read/write a **different** key than the app, so commuter state would not sync. `ToolkitHub` uses `'panceai_recent_calculators'` / `'panceai_pinned_calculators'` directly while the registry has `'panacea_recent_calculators'` / `'panacea_pinned_calculators'`.
+**Issue:** The registry had `panacea_*` keys while the app used `panceai_*`. Any code using `StorageKeys.COMMUTER_MODE` would read/write a different key than the app.
 
-**Fix:** Align on one prefix. Either (a) change the registry to `panceai_*` for all user-facing keys (recommended for consistency with the rest of the app), or (b) change CommuterContext and ToolkitHub to use `StorageKeys` and fix the registry values. Then use the registry everywhere for these keys so future renames are in one place.
+**Fix:** Registry aligned to `panceai_*` for all user-facing keys. CommuterContext, FailedSyncItems, useAchievements, and tests now use `StorageKeys` consistently.
+
+**Status:** Implemented.
 
 ---
 
@@ -46,6 +48,8 @@
 
 **Fix:** (1) Sanitize all content before passing to `dangerouslySetInnerHTML` (e.g. allow only a small tag set: `<b>`, `<i>`, `<br>`, `<table>`, etc., and strip script/event handlers). Consider a small client-side sanitizer or a shared `sanitizeForRationale()` that strips dangerous tags. (2) Ensure every generator path that produces rationale/HTML runs through the same sanitization or tag allow-list before storage/display.
 
+**Status:** Implemented. `lib/sanitizeHtml.ts` provides `sanitizeForRationale()` with an allow-list (b, i, u, strong, em, br, p, ul, ol, li, table, thead, tbody, tr, th, td, span, div). Audit (grep) confirms all `dangerouslySetInnerHTML` usages in `QuizView.tsx` and `ExplanationPanel.tsx` pass content through `sanitizeForRationale`. XSS item closed.
+
 ---
 
 ## Logical Omissions
@@ -54,13 +58,13 @@
 
 | Item | Plan | Current state |
 |------|------|----------------|
-| Normal Lab Reference | Slide-out "Normal Labs" panel during questions | Not implemented; no drawer/panel in QuizView. |
-| "Vague" Patient AI | OSCE patient initially non-medical, requires OPQRST | Partial; no explicit lay-language / withhold-medical-terms rule in `chatWithPatientSimulator`. |
-| Specific Exam Triggers | Only reveal findings for requested body systems | Vulnerability; "full physical exam" can dump all findings; no strict one-maneuver-one-finding rule. |
+| Normal Lab Reference | Slide-out "Normal Labs" panel during questions | Implemented. QuizView has NormalLabsPanel, Beaker toggle; fetches `/api/reference/normal-labs`. |
+| "Vague" Patient AI | OSCE patient initially non-medical, requires OPQRST | Implemented. `chatWithPatientSimulator` prompt includes "VAGUE PATIENT / LAY LANGUAGE" and OPQRST example. |
+| Specific Exam Triggers | Only reveal findings for requested body systems | Implemented. Generic "full exam" triggers "Which part of the exam would you like to do?" in prompt. |
 | Critical Action Grading | Grade and show checklist (e.g. "Ordered EKG") | Logic and API exist; grade API not called from results; checklist not shown. |
-| Distractor Explanations | Explanations address why wrong answers are wrong | Generation requires it; main session shows single rationale string; structured rationale UI not used in QuizView. |
+| Distractor Explanations | Explanations address why wrong answers are wrong | Partial. ExplanationPanel defines StructuredRationale; QuizView parses whyIncorrectA/B/C/D; generation/visibility could be stronger. |
 | Commuter: hide timer | Hide countdown when Commuter Mode is on | Timer always shown; QuizView does not use `useCommuter()` to hide timer. |
-| EMR tabbed layout | Tabbed HPI \| PMH \| Meds \| Labs when EMR toggle on | Toggle exists; tabbed layout not implemented (single scroll in Patient Encounter). |
+| EMR tabbed layout | Tabbed HPI \| PMH \| Meds \| Labs when EMR toggle on | Implemented. PatientEncounterMode uses clinicalFidelity.emrInterface for HPI \| PMH \| Meds \| Vitals \| Labs. |
 
 Address these in order of product priority (e.g. Critical Action Grading and Specific Exam Triggers for OSCE; Normal Labs and Commuter timer for main session).
 
@@ -163,15 +167,15 @@ Address these in order of product priority (e.g. Critical Action Grading and Spe
 
 | Category | Item | Severity | Status |
 |----------|------|----------|--------|
-| Critical | Storage key panacea vs panceai | High | Open |
+| Critical | Storage key panacea vs panceai | High | Implemented |
 | Critical | CaseRubric fallback for grading | Medium | Implemented |
 | Critical | Grade API call wired to end encounter flow | Medium | Implemented |
-| Critical | XSS surface on rationale/HTML | Medium | Open |
-| Omission | Normal Labs panel | Medium | Not implemented |
-| Omission | Vague patient AI / OPQRST | Medium | Partial |
-| Omission | Specific exam triggers | Medium | Vulnerability |
+| Critical | XSS surface on rationale/HTML | Medium | Implemented |
+| Omission | Normal Labs panel | Medium | Implemented |
+| Omission | Vague patient AI / OPQRST | Medium | Implemented |
+| Omission | Specific exam triggers | Medium | Implemented |
 | Omission | Commuter hide timer | Low | Not implemented |
-| Omission | EMR tabbed layout | Low | Not implemented |
+| Omission | EMR tabbed layout | Low | Implemented |
 | Omission | Distractor explanations in main session UI | Low | Partial |
 | Debt | Clinical fidelity settings DRY | Low | Duplicated |
 | Debt | Storage registry consistency | Low | Inconsistent |

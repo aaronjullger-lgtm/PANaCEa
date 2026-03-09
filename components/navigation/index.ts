@@ -4,6 +4,7 @@
  * Centralized exports for navigation and command-related components
  */
 
+export { default as BackLink } from './BackLink';
 export { default as CommandCenter } from './CommandCenter';
 export { CommandCenterHub } from './CommandCenterHub';
 export { default as CommandPalette } from './CommandPalette';

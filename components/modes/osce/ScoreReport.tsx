@@ -56,7 +56,7 @@ export const ScoreReport: React.FC<ScoreReportProps> = ({ report, onClose, onRet
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white dark:bg-data-neutral rounded-2xl shadow-xl overflow-hidden">
+    <div className="max-w-4xl mx-auto bg-white dark:bg-data-neutral-bg rounded-2xl shadow-xl overflow-hidden">
       {/* Header */}
       <div className={`p-6 ${getGradeBg(report.overallScore)} border-b`}>
         <div className="flex items-center justify-between">
@@ -338,7 +338,7 @@ const TimelineView: React.FC<{ entries: TimelineEntry[] }> = ({ entries }) => (
                   ? 'bg-data-provisional border-data-provisional'
                   : entry.evaluation === 'poor'
                     ? 'bg-data-fail border-data-fail'
-                    : 'bg-white dark:bg-data-neutral border-data-neutral dark:border-data-neutral'
+                    : 'bg-white dark:bg-data-neutral-bg border-data-neutral dark:border-data-neutral'
           }`}
         />
         <div className="text-xs text-data-neutral mb-0.5">

@@ -214,9 +214,9 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
   // Landing Page - Clinical White/Navy Theme
   if (viewState === 'landing') {
     return (
-      <div className="min-h-screen bg-white dark:bg-data-neutral text-data-neutral dark:text-data-neutral transition-colors duration-300">
+      <div className="min-h-screen bg-white dark:bg-data-neutral-bg text-data-neutral dark:text-data-neutral transition-colors duration-300">
         {/* Header */}
-        <div className="border-b border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
@@ -257,7 +257,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             </div>
 
             {/* Features Card */}
-            <div className="bg-white dark:bg-data-neutral rounded-2xl p-8 border border-data-neutral dark:border-data-neutral shadow-lg space-y-6">
+            <div className="bg-white dark:bg-data-neutral-bg rounded-2xl p-8 border border-data-neutral dark:border-data-neutral shadow-lg space-y-6">
               <h3 className="text-2xl font-semibold text-data-neutral dark:text-data-neutral mb-6">
                 What You'll Practice
               </h3>
@@ -359,7 +359,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
   // Loading State
   if (viewState === 'loading') {
     return (
-      <div className="min-h-screen bg-white dark:bg-data-neutral text-data-neutral dark:text-data-neutral flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-data-neutral-bg text-data-neutral dark:text-data-neutral flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 border-4 border-cyan-200 dark:border-cyan-900 border-t-cyan-600 dark:border-t-cyan-400 rounded-full animate-spin mx-auto" />
           <p className="text-lg font-medium text-data-neutral dark:text-data-neutral">Loading case...</p>
@@ -371,9 +371,9 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
   // Error State
   if (viewState === 'error') {
     return (
-      <div className="min-h-screen bg-white dark:bg-data-neutral text-data-neutral dark:text-data-neutral">
+      <div className="min-h-screen bg-white dark:bg-data-neutral-bg text-data-neutral dark:text-data-neutral">
         {/* Header */}
-        <div className="border-b border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
@@ -440,7 +440,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
   return (
     <div className="min-h-screen bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral">
       {/* Header */}
-      <div className="border-b border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral sticky top-0 z-10 shadow-sm">
+      <div className="border-b border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
@@ -494,7 +494,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             className="space-y-4"
           >
             {/* Clinical Vignette */}
-            <div className="bg-white dark:bg-data-neutral rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
+            <div className="bg-white dark:bg-data-neutral-bg rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
               <h2 className="text-xl font-semibold mb-3 text-cyan-600 dark:text-cyan-400">
                 {currentCase.title}
               </h2>
@@ -504,7 +504,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             </div>
 
             {/* Labs */}
-            <div className="bg-white dark:bg-data-neutral rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
+            <div className="bg-white dark:bg-data-neutral-bg rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
               <h3 className="text-lg font-semibold mb-4 text-cyan-600 dark:text-cyan-400">
                 Laboratory Results
               </h3>
@@ -598,7 +598,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
               </p>
 
               {currentCase.calculationHint && (
-                <div className="bg-white dark:bg-data-neutral rounded-lg p-3 mb-4 border border-data-neutral dark:border-data-neutral">
+                <div className="bg-white dark:bg-data-neutral-bg rounded-lg p-3 mb-4 border border-data-neutral dark:border-data-neutral">
                   <p className="text-xs font-semibold text-data-neutral dark:text-data-neutral mb-1">
                     Formula Hint:
                   </p>
@@ -620,12 +620,12 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                   placeholder="Enter your answer"
                   disabled={isSubmitted}
                   autoComplete="off"
-                  className="flex-1 px-4 py-3 bg-white dark:bg-data-neutral border border-data-neutral dark:border-data-neutral rounded-lg 
+                  className="flex-1 px-4 py-3 bg-white dark:bg-data-neutral-bg border border-data-neutral dark:border-data-neutral rounded-lg 
                            text-data-neutral dark:text-data-neutral placeholder-data-neutral dark:placeholder-data-neutral 
                            focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 focus:border-transparent
                            disabled:opacity-50 disabled:cursor-not-allowed font-mono text-lg shadow-sm"
                 />
-                <div className="flex items-center px-3 bg-white dark:bg-data-neutral border border-data-neutral dark:border-data-neutral rounded-lg text-data-neutral dark:text-data-neutral shadow-sm">
+                <div className="flex items-center px-3 bg-white dark:bg-data-neutral-bg border border-data-neutral dark:border-data-neutral rounded-lg text-data-neutral dark:text-data-neutral shadow-sm">
                   {currentCase.unit}
                 </div>
               </div>
@@ -695,7 +695,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white dark:bg-data-neutral rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md"
+            className="bg-white dark:bg-data-neutral-bg rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md"
           >
             <h3 className="text-xl font-semibold mb-4 text-cyan-600 dark:text-cyan-400">
               Urine Chemistry Reference

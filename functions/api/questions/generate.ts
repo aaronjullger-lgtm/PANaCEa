@@ -179,7 +179,9 @@ const GenerateQuestionSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(GenerateQuestionSchema, async (context) => {
+export const onRequestPost = authenticatedEndpoint(
+  GenerateQuestionSchema,
+  async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/questions/generate');
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
@@ -425,7 +427,9 @@ export const onRequestPost = authenticatedEndpoint(GenerateQuestionSchema, async
       await safePrismaDisconnect(prisma);
     }
   }
-});
+},
+  { requestsPerMinute: 60 }
+);
 
 async function getTextbookContext(
   prisma: ReturnType<typeof createEdgePrismaClient>,

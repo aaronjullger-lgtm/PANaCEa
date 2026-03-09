@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, X, Star } from 'lucide-react';
+import { Award, X, Star, Trophy } from 'lucide-react';
 import type { AchievementBadge } from '@/types/interface-fabric-system';
 
 interface AchievementNotificationProps {
@@ -168,7 +168,9 @@ export function AchievementNotification({
 
               {/* Confetti Effect */}
               {badge.rarity === 'epic' || badge.rarity === 'legendary' ? (
-                <div className="text-center text-4xl">🎊 🎉 🎊</div>
+                <div className="text-center flex justify-center gap-2">
+                  <Trophy className="w-12 h-12 text-[var(--color-accent)]" />
+                </div>
               ) : null}
             </motion.div>
 

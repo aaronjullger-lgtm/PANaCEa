@@ -7,7 +7,7 @@
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flame, TrendingUp, Equal, TrendingDown, Snowflake, Zap, Coffee } from 'lucide-react';
+import { Flame, TrendingUp, Equal, TrendingDown, Snowflake, Zap, Coffee, Lightbulb } from 'lucide-react';
 import {
   calculateMomentum,
   detectFatigueSignals,
@@ -180,8 +180,9 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
             transition={noMotion ? { duration: 0 } : undefined}
             className="px-3 py-2 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/80 rounded-lg"
           >
-            <p className="text-xs text-[var(--color-accent)] dark:text-[var(--color-accent)]/90">
-              💡 {momentum.recommendation}
+            <p className="text-xs text-[var(--color-accent)] dark:text-[var(--color-accent)]/90 flex items-start gap-2">
+              <Lightbulb className="w-4 h-4 shrink-0 mt-0.5" />
+              {momentum.recommendation}
             </p>
           </motion.div>
         )}

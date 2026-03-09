@@ -281,7 +281,7 @@ const PredictiveAlert: React.FC<{
           <CheckCircle className="w-6 h-6 text-[var(--color-data-pass)]" />
           <div>
             <h3 className="font-semibold text-[var(--color-text-primary)]">
-              Memory Looking Good! 🎉
+              Memory Looking Good!
             </h3>
             <p className="text-sm text-[var(--color-text-muted)]">
               All your cards are stable.{' '}

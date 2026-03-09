@@ -62,6 +62,9 @@ export const PolypharmacyPuzzleMode = lazy(() =>
 export const MedicalWordleMode = lazy(() =>
   import('../components/modes').then((m) => ({ default: m.MedicalWordleMode }))
 );
+export const DiagnosticPuzzleMode = lazy(() =>
+  import('../components/modes').then((m) => ({ default: m.DiagnosticPuzzleMode }))
+);
 export const FullSitDownTestMode = lazy(() =>
   import('../components/modes').then((m) => ({ default: m.FullSitDownTestMode }))
 );
@@ -100,6 +103,9 @@ export const StudyPathDashboard = lazy(() =>
 );
 export const CommandCenterHub = lazy(() => import('../components/navigation/CommandCenterHub'));
 export const TrainingMenu = lazy(() => import('../components/dashboard/TrainingMenu'));
+export const DailyChallengesHub = lazy(() =>
+  import('@/components/pages/DailyChallengesHub').then((m) => ({ default: m.DailyChallengesHub }))
+);
 export const SimulationPage = lazy(() =>
   import('../pages/SimulationPage').then((m) => ({ default: m.SimulationPage }))
 );

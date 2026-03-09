@@ -8,7 +8,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Info, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
 
 // Confidence levels
 export type ConfidenceLevel = 'very_sure' | 'somewhat_sure' | 'guessing';
@@ -174,7 +174,7 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-data-neutral rounded-lg border border-data-neutral dark:border-data-neutral overflow-hidden">
+    <div className="bg-white dark:bg-data-neutral-bg rounded-lg border border-data-neutral dark:border-data-neutral overflow-hidden">
       {/* Header */}
       <button
         onClick={onToggle}
@@ -257,8 +257,9 @@ export const ConfidenceCalibration: React.FC<ConfidenceCalibrationProps> = ({
                     ⚠ Consider slowing down on "Very Sure" answers - review before submitting.
                   </span>
                 ) : stats.guessingAccuracy !== null && stats.guessingAccuracy > 50 ? (
-                  <span className="text-[var(--color-accent)]">
-                    💡 You're underconfident! Trust your knowledge more on uncertain questions.
+                  <span className="text-[var(--color-accent)] flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4 shrink-0" />
+                    You're underconfident! Trust your knowledge more on uncertain questions.
                   </span>
                 ) : (
                   <span>Keep answering to improve calibration insights.</span>

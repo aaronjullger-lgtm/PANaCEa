@@ -93,7 +93,18 @@ console.log("Agent run ID:", id);
 
 A `/fix-bug [issue URL]` Slack command (or similar) can call a small backend that invokes the same client with an instruction like: *"Investigate and suggest a fix for this issue: [url]. Repo: StudyPANaCEa."* Implement that in a separate service using the same env and `launchAgent()` contract; see this doc for the API shape.
 
+## Pre-warmed environment
+
+`.cursor/environment.json` configures the cloud agent environment so that `npm install` (and thus `prisma generate` via `postinstall`) runs before each agent starts. Cursor caches the result when the install takes more than a few seconds, speeding up subsequent agents and making `npm run build` faster.
+
+- **Install:** `npm install` (idempotent; runs from project root)
+- **Prisma:** Generated automatically by `postinstall` after dependencies install
+- **Resolution order:** Team config → Personal config → `.cursor/environment.json` (repo)
+
+See [Cursor: Cloud Agent Setup](https://cursor.com/docs/cloud-agent/setup).
+
 ## References
 
 - [Cursor: Launch an agent (API)](https://docs.cursor.com/background-agent/api/launch-an-agent)
+- [Cursor: Cloud Agent Setup](https://cursor.com/docs/cloud-agent/setup)
 - Plan: `.cursor/plans/cloud_agents_api_integration.plan.md`

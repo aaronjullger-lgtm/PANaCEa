@@ -310,7 +310,7 @@ export const FlagFeedbackNotification: React.FC<FlagFeedbackNotificationProps> =
             </div>
             <div>
               <p className="font-medium text-[var(--color-data-pass)]">
-                {newResolvedCount} of your flag{newResolvedCount > 1 ? 's' : ''} resolved! 🎉
+                {newResolvedCount} of your flag{newResolvedCount > 1 ? 's' : ''} resolved!
               </p>
               <p className="text-sm text-[var(--color-text-secondary)]">
                 Thanks for helping improve question quality.

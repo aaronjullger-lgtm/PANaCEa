@@ -14,6 +14,8 @@ interface ShortcutItem {
 }
 
 const SHORTCUTS: ShortcutItem[] = [
+  // Navigation shortcuts
+  { keys: ['['], description: 'Toggle sidebar (expand/collapse/hide)', category: 'navigation' },
   // Quiz shortcuts
   { keys: ['A'], description: 'Answer A', category: 'quiz' },
   { keys: ['B'], description: 'Answer B', category: 'quiz' },
@@ -56,6 +58,7 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen,
     };
   }, [isOpen]);
 
+  const navShortcuts = SHORTCUTS.filter((s) => s.category === 'navigation');
   const quizShortcuts = SHORTCUTS.filter((s) => s.category === 'quiz');
   const generalShortcuts = SHORTCUTS.filter((s) => s.category === 'general');
 
@@ -104,6 +107,20 @@ const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({ isOpen,
 
             {/* Content */}
             <div className="p-6 overflow-y-auto max-h-[calc(85vh-80px)]">
+              {/* Navigation Shortcuts */}
+              {navShortcuts.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--color-text-muted)] mb-3">
+                    Navigation
+                  </h3>
+                  <div className="space-y-2">
+                    {navShortcuts.map((shortcut, idx) => (
+                      <ShortcutRow key={idx} shortcut={shortcut} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Quiz Shortcuts */}
               <div className="mb-6">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--color-text-muted)] mb-3">

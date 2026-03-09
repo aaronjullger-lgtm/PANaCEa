@@ -182,7 +182,8 @@ export default {
           pass: '#0a766c', // Teal 700 - success/passing (improved contrast for light mode)
           fail: '#ef4444', // Red 500 - failure/errors
           provisional: '#f59e0b', // Amber 500 - building/uncertain
-          neutral: '#64748b', // Slate 500 - baseline
+          neutral: 'var(--color-data-neutral)', // Theme-aware: light #64748b, dark #94a3b8
+          'neutral-bg': 'var(--color-data-neutral-bg)', // Theme-aware: light #f1f5f9, dark #334155
         },
 
         // Semantic Design System

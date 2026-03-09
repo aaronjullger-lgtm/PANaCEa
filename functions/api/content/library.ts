@@ -3,12 +3,17 @@
  *
  * Fetch filtered library content for Clinical Library browser
  * Supports filtering by system, subcategory, and search
+ * FTS uses search_vector; on failure falls back to ILIKE.
  */
 
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { LibraryResponseSchema } from '@/lib/schemas/medicalContent';
+
+const MAX_SEARCH_LENGTH = 200;
 
 // Flat schema for query parameters (not nested under 'query')
 const LibraryQuerySchema = z.object({
@@ -38,9 +43,17 @@ export const onRequestGet = authenticatedEndpoint(
     }
 
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const safeValidated = validated ?? {};
 
     try {
-      const { system, subcategory, search, highYield } = validated || {};
+      const system = typeof safeValidated.system === 'string' ? safeValidated.system : undefined;
+      const subcategory =
+        typeof safeValidated.subcategory === 'string' ? safeValidated.subcategory : undefined;
+      const rawSearch =
+        typeof safeValidated.search === 'string' ? safeValidated.search : undefined;
+      const highYield = safeValidated.highYield;
+
+      const search = rawSearch?.trim().slice(0, MAX_SEARCH_LENGTH) || undefined;
 
       // Build where clause — when system is missing or 'all', return all conditions (no system filter)
       const where: Record<string, unknown> = {};
@@ -49,29 +62,30 @@ export const onRequestGet = authenticatedEndpoint(
       if (highYield === 'true') where.pance_yield = { gte: 3 };
 
       let searchResults: string[] | undefined;
-      if (search && search.trim()) {
+      if (search) {
         try {
-          const ftsResults = await prisma.$queryRaw<Array<{ id: string }>>`
-            SELECT id FROM "MedicalContent"
-            WHERE search_vector @@ websearch_to_tsquery('english', ${search})
-            ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', ${search})) DESC
-          `;
-          searchResults = ftsResults.map((r: { id: string }) => r.id);
+          const query = Prisma.sql`SELECT id FROM "MedicalContent"
+            WHERE search_vector IS NOT NULL
+              AND search_vector @@ websearch_to_tsquery('english', ${search})
+            ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', ${search})) DESC`;
+          const ftsResults = await prisma.$queryRaw<Array<{ id: string }>>(query);
+          searchResults = ftsResults.map((r) => r.id);
           logger.info('Full-text search results', { count: searchResults.length });
           if (searchResults.length > 0) {
-            delete where.OR; // clear any previous OR
+            delete where.OR;
             where.id = { in: searchResults };
           } else {
-            delete where.id; // clear any previous id
+            delete where.id;
             where.OR = [
               { condition: { contains: search, mode: 'insensitive' } },
               { overview: { contains: search, mode: 'insensitive' } },
               { classic_patient: { contains: search, mode: 'insensitive' } },
             ];
           }
-        } catch {
-          logger.warn('Full-text search failed, falling back to LIKE');
-          delete where.id; // ensure no conflicting id
+        } catch (ftsError) {
+          const ftsMsg = ftsError instanceof Error ? ftsError.message : String(ftsError);
+          logger.warn('Full-text search failed, falling back to ILIKE', { error: ftsMsg });
+          delete where.id;
           where.OR = [
             { condition: { contains: search, mode: 'insensitive' } },
             { overview: { contains: search, mode: 'insensitive' } },
@@ -122,8 +136,13 @@ export const onRequestGet = authenticatedEndpoint(
       }
 
       logger.info('Library content fetched', { count: content.length, system, search });
+      const payload = { content, count: content.length };
+      const parsed = LibraryResponseSchema.safeParse(payload);
+      if (!parsed.success) {
+        logger.warn('Library response shape validation failed', { issues: parsed.error.issues });
+      }
       return {
-        data: { content, count: content.length },
+        data: parsed.success ? parsed.data : payload,
         headers: { 'Cache-Control': 'public, max-age=3600' },
       };
     } catch (error) {
@@ -131,12 +150,12 @@ export const onRequestGet = authenticatedEndpoint(
       logger.error('Error fetching library content', { error: errMsg });
       return {
         data: {
-          error: 'Failed to fetch library content',
-          message: errMsg || 'Please try again later.',
+          error: 'Library unavailable',
+          message: 'Please try again later.',
           content: [],
           count: 0,
         },
-        status: 500,
+        status: 503,
       };
     } finally {
       await safePrismaDisconnect(prisma);

@@ -119,7 +119,7 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
         <span
           className={`flex items-center justify-between ${
             isEliminated && !isAnswered ? 'line-through' : ''
-          }`}
+          } ${isAnswered && !isCorrect ? 'line-through' : ''}`}
         >
           <span className="flex-1 pr-8 flex items-center">
             <kbd className="inline-flex items-center justify-center min-w-[24px] h-6 px-1.5 mr-2 rounded bg-[var(--color-bg-secondary)] border border-[var(--color-border)] border-b-2 text-xs font-mono font-bold shadow-sm">

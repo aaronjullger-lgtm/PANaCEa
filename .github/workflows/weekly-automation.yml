@@ -129,6 +129,14 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
+      - name: Database backup (pre-orchestration)
+        run: npm run db:backup
+        continue-on-error: true
+
+      - name: Run database orchestration
+        run: npm run db:orchestrate
+        continue-on-error: true
+
       - name: Run database cleanup
         run: |
           npx tsx -e "

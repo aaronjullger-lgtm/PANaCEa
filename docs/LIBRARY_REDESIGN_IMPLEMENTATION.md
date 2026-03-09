@@ -179,7 +179,7 @@ components/library/
 ├── EnhancedConditionCard.tsx     (NEW)
 ├── MobileMenuToggle.tsx          (NEW)
 ├── RecentConditionsPanel.tsx     (NEW)
-├── CompressedConditionCard.tsx   (existing)
+├── EnhancedConditionCard.tsx
 ├── ConditionMaster.tsx           (existing)
 ├── ConditionDetailPanel.tsx      (existing)
 ├── index.ts                      (UPDATED)

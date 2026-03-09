@@ -7,7 +7,7 @@ interface Props {
 
 export const DiagnosisBiasCard: React.FC<Props> = ({ biases }) => {
   return (
-    <div className="rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral/80 p-4">
+    <div className="rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg/80 p-4">
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs uppercase tracking-wide text-data-neutral">Diagnosis Bias</p>
         <span className="text-xs text-data-neutral">Most over-selected</span>

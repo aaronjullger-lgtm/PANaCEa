@@ -18,6 +18,9 @@ import {
   CheckCircle,
   AlertTriangle,
   Zap,
+  Star,
+  BookOpen,
+  ThumbsUp,
 } from 'lucide-react';
 import type { CustomSessionSummary as SummaryType } from '../../types/custom-session';
 import { FOCUS_AREA_META } from '../../types/custom-session';
@@ -37,13 +40,10 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
     return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${remainingSeconds}s`;
   };
 
-  // Get grade emoji based on accuracy
-  const getGradeEmoji = (accuracy: number) => {
-    if (accuracy >= 90) return '🌟';
-    if (accuracy >= 80) return '🎯';
-    if (accuracy >= 70) return '👍';
-    if (accuracy >= 60) return '📚';
-    return '💪';
+  // Get grade icon based on accuracy
+  const getGradeIcon = (accuracy: number) => {
+    const Icon = accuracy >= 90 ? Star : accuracy >= 80 ? Target : accuracy >= 70 ? ThumbsUp : accuracy >= 60 ? BookOpen : Zap;
+    return <Icon className="w-16 h-16 mx-auto text-white" />;
   };
 
   return (
@@ -51,11 +51,11 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-data-neutral rounded-2xl shadow-lg overflow-hidden"
+        className="bg-white dark:bg-data-neutral-bg rounded-2xl shadow-lg overflow-hidden"
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center text-white">
-          <div className="text-6xl mb-2">{getGradeEmoji(summary.firstAttemptAccuracy)}</div>
+          <div className="mb-2">{getGradeIcon(summary.firstAttemptAccuracy)}</div>
           <h1 className="text-2xl font-bold mb-1">Session Complete!</h1>
           <p className="text-[var(--color-category-practice)]">Great work on your custom study session</p>
         </div>

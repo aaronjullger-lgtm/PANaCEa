@@ -21,6 +21,7 @@ import React, {
   ReactNode,
 } from 'react';
 import { toast } from '@/lib/toast';
+import { StorageKeys } from '@/lib/storage/storageRegistry';
 
 // Web Speech API types are defined in types/speech.d.ts
 
@@ -63,19 +64,16 @@ interface CommuterContextType {
 
 const CommuterContext = createContext<CommuterContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'panceai_commuter_mode';
-const SETTINGS_KEY = 'panceai_commuter_settings';
-
 export function CommuterProvider({ children }: { children: ReactNode }) {
   const [isCommuterMode, setIsCommuterMode] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(StorageKeys.COMMUTER_MODE);
     return stored === 'true';
   });
 
   const [settings, setSettings] = useState<CommuterSettings>(() => {
     if (typeof window === 'undefined') return DEFAULT_SETTINGS;
-    const stored = localStorage.getItem(SETTINGS_KEY);
+    const stored = localStorage.getItem(StorageKeys.COMMUTER_SETTINGS);
     if (stored) {
       try {
         return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
@@ -147,7 +145,7 @@ export function CommuterProvider({ children }: { children: ReactNode }) {
 
   // Persist commuter mode state
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, String(isCommuterMode));
+    localStorage.setItem(StorageKeys.COMMUTER_MODE, String(isCommuterMode));
 
     // Apply high-contrast mode to document
     if (isCommuterMode && settings.highContrastMode) {
@@ -159,7 +157,7 @@ export function CommuterProvider({ children }: { children: ReactNode }) {
 
   // Persist settings
   useEffect(() => {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    localStorage.setItem(StorageKeys.COMMUTER_SETTINGS, JSON.stringify(settings));
   }, [settings]);
 
   const toggleCommuterMode = useCallback(() => {

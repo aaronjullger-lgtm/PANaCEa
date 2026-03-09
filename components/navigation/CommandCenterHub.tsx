@@ -51,6 +51,7 @@ import {
   MoreHorizontal,
   RotateCcw,
 } from 'lucide-react';
+import { StorageKeys } from '@/lib/storage/storageRegistry';
 import type { PerformanceRecord, Question, SessionSettings, SystemCode } from '@/types';
 import type { ClinicalRotation } from '@/types';
 import { loadUserProfile } from '@/services/analytics';
@@ -920,7 +921,20 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     () => loadUserProfile() || { hasCompletedOnboarding: false }
   );
 
-  const { updateProfile } = useUserProfile();
+  const { profile: apiProfile, updateProfile } = useUserProfile();
+
+  // When API profile loads, merge EOR/rotation fields into local state so API is source of truth
+  useEffect(() => {
+    if (!apiProfile) return;
+    setUserProfile((prev) => ({
+      ...prev,
+      eorTestDate: apiProfile.eorTestDate ?? prev?.eorTestDate,
+      rotationStartDate: apiProfile.rotationStartDate ?? prev?.rotationStartDate,
+      rotationEndDate: apiProfile.rotationEndDate ?? prev?.rotationEndDate,
+      currentRotation: apiProfile.currentRotation ?? prev?.currentRotation,
+      yearInProgram: apiProfile.yearInProgram ?? prev?.yearInProgram,
+    }));
+  }, [apiProfile?.eorTestDate, apiProfile?.rotationStartDate, apiProfile?.rotationEndDate, apiProfile?.currentRotation, apiProfile?.yearInProgram]);
 
   // Study Tools tab state
   const [activeTab, setActiveTab] = useState<'training' | 'resources' | 'analytics'>(
@@ -956,7 +970,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   }, [rolling360Stats?.systemStats]);
   // Load enabled systems from localStorage (updates when Settings modal changes them)
   const [enabledSystems, setEnabledSystems] = useState<Set<SystemCode>>(() => {
-    const saved = localStorage.getItem('panceai_enabled_systems');
+    const saved = localStorage.getItem(StorageKeys.ENABLED_SYSTEMS);
     if (saved) {
       try {
         return new Set(JSON.parse(saved) as SystemCode[]);
@@ -969,7 +983,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
   useEffect(() => {
     const handler = () => {
-      const saved = localStorage.getItem('panceai_enabled_systems');
+      const saved = localStorage.getItem(StorageKeys.ENABLED_SYSTEMS);
       if (saved) {
         try {
           setEnabledSystems(new Set(JSON.parse(saved) as SystemCode[]));
@@ -986,10 +1000,10 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   useEffect(() => {
     if (careerStage !== 'practicing') return;
     const all = Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[];
-    const saved = localStorage.getItem('panceai_enabled_systems');
+    const saved = localStorage.getItem(StorageKeys.ENABLED_SYSTEMS);
     if (!saved || saved === '[]') {
       setEnabledSystems(new Set(all));
-      localStorage.setItem('panceai_enabled_systems', JSON.stringify(all));
+      localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify(all));
       window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
     }
   }, [careerStage]);
@@ -999,7 +1013,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       const next = new Set(prev);
       if (next.has(system)) next.delete(system);
       else next.add(system);
-      localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(next)));
+      localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify(Array.from(next)));
       window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
       return next;
     });
@@ -1015,11 +1029,11 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     setUserProfile((prev) => ({ ...prev, currentRotation: rotation }));
     const systems = getSystemsForRotation(rotation);
     setEnabledSystems(new Set(systems));
-    localStorage.setItem('panceai_enabled_systems', JSON.stringify(systems));
+    localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify(systems));
     window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
     // Persist for question service Clinical 60/40 (60% rotation / 40% background)
-    localStorage.setItem('panceai_current_rotation', rotation);
-    localStorage.setItem('panceai_year_in_program', 'Clinical Year');
+    localStorage.setItem(StorageKeys.CURRENT_ROTATION, rotation);
+    localStorage.setItem(StorageKeys.YEAR_IN_PROGRAM, 'Clinical Year');
   }, []);
 
   const handleEorTestDateChange = useCallback((date: string) => {
@@ -1192,6 +1206,56 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             Ready to advance your clinical knowledge?
           </p>
         </motion.div>
+
+        {/* Getting started — first actions after onboarding when little or no activity */}
+        {userProfile?.hasCompletedOnboarding &&
+          performanceData.length < 5 &&
+          !hasActiveSession && (
+            <motion.div
+              initial={sectionEnter}
+              animate={sectionAnimate}
+              transition={sectionTransition(0)}
+              className="mb-6"
+            >
+              <div className="rounded-2xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-4 md:p-5 shadow-sm">
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2 mb-2">
+                  <Sparkles className="w-5 h-5 text-[var(--color-accent)]" aria-hidden />
+                  Getting started
+                </h2>
+                <p className="text-sm text-[var(--color-text-muted)] mb-4">
+                  Start your first practice session or try today&apos;s daily challenge.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {onNavigateToSimulation && (
+                    <button
+                      type="button"
+                      onClick={() => onNavigateToSimulation()}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] hover:opacity-90 min-h-[44px]"
+                    >
+                      <Play className="w-4 h-4" aria-hidden />
+                      Start practice session
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => onNavigateToDrillMode('grand_rounds')}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] min-h-[44px]"
+                  >
+                    <Trophy className="w-4 h-4" aria-hidden />
+                    Try today&apos;s Grand Rounds
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onNavigateToToolkit}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] min-h-[44px]"
+                  >
+                    <Calculator className="w-4 h-4" aria-hidden />
+                    Explore the Toolkit
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
         {/* Welcome Back Card - shows last completed session (not same as active session resume) */}
         {!hasActiveSession && showWelcomeBack && lastSession && (
@@ -1512,7 +1576,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       const all = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
                       setEnabledSystems(all);
                       localStorage.setItem(
-                        'panceai_enabled_systems',
+                        StorageKeys.ENABLED_SYSTEMS,
                         JSON.stringify(Array.from(all))
                       );
                       window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
@@ -1525,7 +1589,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     type="button"
                     onClick={() => {
                       setEnabledSystems(new Set());
-                      localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
+                      localStorage.setItem(StorageKeys.ENABLED_SYSTEMS, JSON.stringify([]));
                       window.dispatchEvent(new CustomEvent('panceai_enabled_systems_changed'));
                     }}
                     className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg min-h-[44px]"

@@ -13,6 +13,7 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home, Bug, ChevronDown, ChevronUp } from 'lucide-react';
+import { StorageKeys } from '../../lib/storage/storageRegistry';
 import { captureError } from '../../lib/monitoring/sentry';
 import { createAppError, getUserFacingError } from '../../lib/utils/errorHandlingUtils';
 import { MaintenancePage } from './MaintenancePage';
@@ -55,9 +56,9 @@ function persistError(errorId: string, error: Error, errorInfo: ErrorInfo): void
     };
 
     // Keep last 5 errors
-    const existingErrors = JSON.parse(localStorage.getItem('panacea_error_log') || '[]');
+    const existingErrors = JSON.parse(localStorage.getItem(StorageKeys.ERROR_LOG) || '[]');
     existingErrors.unshift(errorLog);
-    localStorage.setItem('panacea_error_log', JSON.stringify(existingErrors.slice(0, 5)));
+    localStorage.setItem(StorageKeys.ERROR_LOG, JSON.stringify(existingErrors.slice(0, 5)));
   } catch {
     // Ignore localStorage errors
   }

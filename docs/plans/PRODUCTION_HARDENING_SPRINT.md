@@ -59,6 +59,8 @@ grep -r "fetch.*\/api\/" --include="*.tsx" --include="*.ts" components/ hooks/ s
 - [ ] `/api/questions/generate-batch`
 - [ ] `/api/questions/pool`
 - [ ] `/api/drills/contrastive/*`
+- [ ] `/api/content/systems` (Condition Library systems list)
+- [ ] `/api/content/library` (Condition Library content; requires auth)
 
 ### 1.3 Standardized API Response Format
 
@@ -135,6 +137,7 @@ id = "xxx" # Create via: wrangler kv:namespace create PANACEA_CACHE
 | Endpoint               | TTL      | Stale-While-Revalidate |
 | ---------------------- | -------- | ---------------------- |
 | `/api/content/systems` | 1 hour   | Yes                    |
+| `/api/content/library` | 1 hour   | Yes                    |
 | `/api/conditions`      | 1 hour   | Yes                    |
 | `/api/drugs/classes`   | 24 hours | Yes                    |
 | `/api/user/*`          | No cache | No                     |

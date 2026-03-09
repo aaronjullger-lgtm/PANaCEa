@@ -131,6 +131,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "verify:health": "playwright test e2e/api-health.spec.ts",
     "test:e2e:wrangler": "playwright test --config=playwright.wrangler.config.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",

@@ -266,7 +266,10 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
                               border-2 border-transparent focus:border-[var(--color-accent)] focus:outline-none
                               placeholder:text-[var(--color-text-muted)]"
                           />
-                          <p className="text-[var(--color-text-muted)] text-sm">💡 {prompt.hint}</p>
+                          <p className="text-[var(--color-text-muted)] text-sm flex items-start gap-2">
+                            <Lightbulb className="w-4 h-4 shrink-0 mt-0.5" />
+                            {prompt.hint}
+                          </p>
                         </>
                       )}
                     </>

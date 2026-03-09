@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { Stethoscope, AlertTriangle, Activity, Target } from 'lucide-react';
+import { Stethoscope, AlertTriangle, Activity, Target, Trophy } from 'lucide-react';
 import MiniDrillLayout, { QuestionCard, AnswerOption } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from './DrillLandingPage';
@@ -170,7 +170,9 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
       >
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="text-6xl mb-4">🏆</div>
+            <div className="mb-4">
+              <Trophy className="w-16 h-16 text-[var(--color-accent)] mx-auto" />
+            </div>
             <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
               Session Complete!
             </h2>

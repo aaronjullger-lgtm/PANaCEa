@@ -159,12 +159,13 @@ export const onRequestGet = authenticatedEndpoint(StatsSchema, async (context) =
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
     log.error('Dashboard stats error', { error: errorMessage, stack: errorStack });
+    const includeDetails = (env as { NODE_ENV?: string }).NODE_ENV === 'development';
     return {
       status: 500,
       data: {
         success: false,
         error: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+        details: includeDetails ? errorMessage : undefined
       },
     };
   } finally {
