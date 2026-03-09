@@ -5,7 +5,7 @@ import { createEndpointLogger } from '../../_shared/secureLogger';
 
 const ContrastiveStartSchema = z.object({
   body: z.object({
-    setId: z.string().min(1, 'setId is required'),
+    setId: z.string().min(1, 'setId is required').max(100),
   }),
 });
 

@@ -103,7 +103,7 @@ const CognitiveLoadGauge: React.FC<{ load: CognitiveLoadProfile }> = ({ load }) 
   };
 
   return (
-    <div className="bg-white dark:bg-data-neutral rounded-2xl p-5 border border-data-neutral dark:border-data-neutral">
+    <div className="bg-white dark:bg-data-neutral-bg rounded-2xl p-5 border border-data-neutral dark:border-data-neutral">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-purple-500" />
@@ -223,7 +223,7 @@ const SleepImpactCard: React.FC<{ assessment: SleepImpactAssessment }> = ({ asse
   const impactPercent = Math.round(assessment.cognitiveImpact * 100);
 
   return (
-    <div className="bg-white dark:bg-data-neutral rounded-2xl p-5 border border-data-neutral dark:border-data-neutral">
+    <div className="bg-white dark:bg-data-neutral-bg rounded-2xl p-5 border border-data-neutral dark:border-data-neutral">
       <div className="flex items-center gap-2 mb-4">
         <Moon className="w-5 h-5 text-indigo-500" />
         <h3 className="font-semibold text-data-neutral dark:text-data-neutral">Sleep Impact</h3>
@@ -326,7 +326,7 @@ const DifficultyOptimizer: React.FC<{
   };
 
   return (
-    <div className="bg-white dark:bg-data-neutral rounded-2xl p-5 border border-data-neutral dark:border-data-neutral">
+    <div className="bg-white dark:bg-data-neutral-bg rounded-2xl p-5 border border-data-neutral dark:border-data-neutral">
       <div className="flex items-center gap-2 mb-4">
         <Target className="w-5 h-5 text-rose-500" />
         <h3 className="font-semibold text-data-neutral dark:text-data-neutral">Optimal Difficulty</h3>
@@ -585,16 +585,16 @@ export const SmartStudyDashboard: React.FC<SmartStudyDashboardProps> = ({
           </span>
         </div>
         <div className="flex flex-wrap gap-2 text-xs text-data-neutral dark:text-data-neutral">
-          <span className="px-2 py-1 bg-white dark:bg-data-neutral rounded">
+          <span className="px-2 py-1 bg-white dark:bg-data-neutral-bg rounded">
             Bjork (2011) - Desirable Difficulties
           </span>
-          <span className="px-2 py-1 bg-white dark:bg-data-neutral rounded">
+          <span className="px-2 py-1 bg-white dark:bg-data-neutral-bg rounded">
             Sweller (1988) - Cognitive Load Theory
           </span>
-          <span className="px-2 py-1 bg-white dark:bg-data-neutral rounded">
+          <span className="px-2 py-1 bg-white dark:bg-data-neutral-bg rounded">
             Walker (2008) - Sleep & Memory
           </span>
-          <span className="px-2 py-1 bg-white dark:bg-data-neutral rounded">
+          <span className="px-2 py-1 bg-white dark:bg-data-neutral-bg rounded">
             Roediger & Karpicke (2006) - Testing Effect
           </span>
         </div>

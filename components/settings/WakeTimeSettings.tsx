@@ -141,7 +141,7 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-lg">
-                {currentStatus.isOptimal ? '✨ Optimal Study Time' : '💡 Current Status'}
+                {currentStatus.isOptimal ? 'Optimal Study Time' : 'Current Status'}
               </h3>
               <p className="text-white/90 text-sm mt-1">{currentStatus.recommendation}</p>
             </div>
@@ -267,7 +267,7 @@ export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({
           </div>
         </div>
         <div className="mt-3 text-xs text-[var(--color-text-muted)]">
-          💡 Optimal exam time for your chronotype: <strong>{optimalExamTime}</strong>
+          Optimal exam time for your chronotype: <strong>{optimalExamTime}</strong>
         </div>
       </div>
 

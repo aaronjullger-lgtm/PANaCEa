@@ -28,6 +28,34 @@ export const StorageKeys = {
   USER_PROFILE: 'panceai_user_profile',
   ENABLED_SYSTEMS: 'panceai_enabled_systems',
   FONT_SIZE: 'panceai_font_size',
+  THEME: 'panceai_theme',
+  DAILY_GOAL: 'panceai_daily_goal',
+  PREFERRED_SYSTEMS: 'panceai_preferred_systems',
+  SESSION_LENGTH: 'panceai_session_length',
+  DIFFICULTY: 'panceai_difficulty',
+  SOUND_ENABLED: 'panceai_sound_enabled',
+  HAPTIC_FEEDBACK: 'panceai_haptic_feedback',
+  ANIMATIONS_ENABLED: 'panceai_animations_enabled',
+  SHOW_HINTS: 'panceai_show_hints',
+  AUTO_ADVANCE: 'panceai_auto_advance',
+  EXPLANATION_DEPTH: 'panceai_explanation_depth',
+  SHOW_PEARLS: 'panceai_show_pearls',
+  KEYBOARD_SHORTCUTS: 'panceai_keyboard_shortcuts',
+  FSRS_ENABLED: 'panceai_fsrs_enabled',
+  SYNCED_TO_DB: 'panceai_prefs_synced',
+  CURRENT_ROTATION: 'panceai_current_rotation',
+  YEAR_IN_PROGRAM: 'panceai_year_in_program',
+  ANALYTICS_PALETTE: 'panceai_analytics_palette',
+  MINI_MODES: 'panceai_mini_modes',
+  ENABLED_MINI_MODES: 'panceai_enabled_mini_modes',
+  ACTIVE_UNIT_SYSTEMS: 'panceai_active_unit_systems',
+  WATCH_ENABLED: 'panceai_watch_enabled',
+  SPANISH_MODE: 'panceai_spanish_mode',
+  HAPTIC_ENABLED: 'panceai_haptic_enabled',
+  WELLNESS_REMINDERS: 'panceai_wellness_reminders',
+  WELLNESS_ENABLED: 'panceai_wellness_enabled',
+  CIRCADIAN_ENABLED: 'panceai_circadian_enabled',
+  SPLIT_VIGNETTE_PERCENT: 'panceai_split_vignette_percent',
 
   // Session/temporary data
   DAILY_STREAK: 'panceai_daily_streak',
@@ -58,9 +86,71 @@ export const StorageKeys = {
 
   // Drill/session data
   DRILL_RECORDS: 'panceai_drill_records',
+
+  // Additional keys (migrated from panacea_*)
+  PENDING_SYNC_OPS: 'panceai_pending_sync_ops',
+  LAST_SYNC_TIME: 'panceai_last_sync_time',
+  OFFLINE_MODE: 'panceai_offline_mode',
+  WIDGET_PREFS: 'panceai_widget_preferences',
+  ERROR_LOG: 'panceai_error_log',
+  EXPLANATION_REACTIONS: 'panceai_explanation_reactions',
+  WEAKNESS_MAP: 'panceai_weakness_map',
+  CONFUSION_GRAPH: 'panceai_confusion_graph',
+  CONFUSION_MAP: 'panceai_confusion_map',
+  SOAP_GRADING_EVENTS: 'panceai_soap_grading_events_v1',
+  CACHE_PREFIX: 'panceai_cache_',
+
+  // User-scoped (append userId: ACHIEVEMENTS_userId)
+  ACHIEVEMENTS: 'panceai_achievements',
+
+  // Advanced analytics (advancedUserAnalyticsEngine)
+  COGNITIVE_HISTORY: 'panceai_cognitive_history',
+  RESPONSE_PATTERNS: 'panceai_response_patterns',
+  TIME_OF_DAY_STATS: 'panceai_tod_stats',
+  LEARNING_VELOCITY: 'panceai_learning_velocity',
+  PERSONALIZED_FSRS: 'panceai_personalized_fsrs',
+  SESSION_COGNITIVE: 'panceai_session_cognitive',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];
+
+/** Legacy keys (panacea_*) that were migrated to panceai_*. Used for one-time migration. */
+const LEGACY_PANACEA_KEYS: Record<string, StorageKey> = {
+  panacea_commuter_mode: StorageKeys.COMMUTER_MODE,
+  panacea_commuter_settings: StorageKeys.COMMUTER_SETTINGS,
+  panacea_recent_calculators: StorageKeys.RECENT_CALCULATORS,
+  panacea_pinned_calculators: StorageKeys.PINNED_CALCULATORS,
+  panacea_clinical_fidelity: StorageKeys.CLINICAL_FIDELITY,
+};
+
+const MIGRATION_FLAG_KEY = 'panceai_storage_migration_v1';
+
+/**
+ * One-time migration: copy data from legacy panacea_* keys to panceai_* keys,
+ * then remove legacy keys. Call once on app load. Safe to call repeatedly.
+ */
+export function runStorageKeyMigration(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (localStorage.getItem(MIGRATION_FLAG_KEY) === 'done') return;
+
+    let migrated = 0;
+    for (const [legacyKey, newKey] of Object.entries(LEGACY_PANACEA_KEYS)) {
+      const value = localStorage.getItem(legacyKey);
+      if (value !== null && localStorage.getItem(newKey) === null) {
+        localStorage.setItem(newKey, value);
+        localStorage.removeItem(legacyKey);
+        migrated++;
+      }
+    }
+    if (migrated > 0) {
+      console.log(`[Storage] Migrated ${migrated} keys from panacea_* to panceai_*`);
+    }
+    localStorage.setItem(MIGRATION_FLAG_KEY, 'done');
+  } catch (e) {
+    console.warn('[Storage] Migration failed:', e);
+  }
+}
 
 /**
  * Keys that require user ID for namespacing

@@ -161,7 +161,7 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({
           <ul className="space-y-2">
             {pearls.map((pearl, idx) => (
               <li key={idx} className="flex items-start gap-2 text-[var(--color-text-secondary)]">
-                <span className="text-[var(--color-data-provisional)] mt-1">💡</span>
+                <Lightbulb className="w-4 h-4 text-[var(--color-data-provisional)] mt-1 shrink-0" />
                 <span>{pearl}</span>
               </li>
             ))}

@@ -48,15 +48,15 @@ export function PhantomPatientCard({ patient, className = '' }: PhantomPatientCa
   const getStatusMessage = (status: PhantomPatient['status']) => {
     switch (status) {
       case 'healthy':
-        return { emoji: '😊', message: 'Doing great!' };
+        return { message: 'Doing great!' };
       case 'stable':
-        return { emoji: '😐', message: 'Stable' };
+        return { message: 'Stable' };
       case 'declining':
-        return { emoji: '😟', message: 'Not feeling well' };
+        return { message: 'Not feeling well' };
       case 'critical':
-        return { emoji: '😰', message: 'Needs your help!' };
+        return { message: 'Needs your help!' };
       case 'recovered':
-        return { emoji: '🎉', message: 'Fully recovered!' };
+        return { message: 'Fully recovered!' };
     }
   };
 
@@ -74,7 +74,17 @@ export function PhantomPatientCard({ patient, className = '' }: PhantomPatientCa
             {patient.name || 'Your Patient'}
           </h3>
         </div>
-        <div className="text-2xl">{statusInfo.emoji}</div>
+        <div className="text-2xl">
+          <Heart
+            className={`w-8 h-8 ${
+              patient.status === 'recovered'
+                ? 'text-[var(--color-data-pass)]'
+                : patient.status === 'critical' || patient.status === 'declining'
+                  ? 'text-[var(--color-data-fail)]'
+                  : 'text-[var(--color-text-muted)]'
+            }`}
+          />
+        </div>
       </div>
 
       {/* Video Player (if available) */}

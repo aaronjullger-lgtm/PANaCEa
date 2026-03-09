@@ -48,6 +48,7 @@ import {
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { refreshUserContext } from '@/hooks/useUserContext';
 import { usePreferences } from '@/hooks/usePreferences';
+import { StorageKeys } from '@/lib/storage/storageRegistry';
 import { RotationSelector } from '@/components/onboarding/RotationSelector';
 import { isEorRotation } from '@/config/rotation-systems';
 import { ANALYTICS_PALETTES, type AnalyticsPalette } from '@/components/modals/SettingsStatsModal';
@@ -142,9 +143,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
         rotationEndDate: apiProfile.rotationEndDate ?? local.rotationEndDate,
         isCertifiedPA: local.isCertifiedPA,
       });
-      if (yearInProgram != null) localStorage.setItem('panceai_year_in_program', yearInProgram);
+      if (yearInProgram != null) localStorage.setItem(StorageKeys.YEAR_IN_PROGRAM, yearInProgram);
       if (currentRotation != null)
-        localStorage.setItem('panceai_current_rotation', currentRotation);
+        localStorage.setItem(StorageKeys.CURRENT_ROTATION, currentRotation);
     }
   }, [isSignedIn, apiProfile]);
 
@@ -211,13 +212,13 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
       // Persist yearInProgram and currentRotation to localStorage for question service (Clinical 60/40)
       if (updates.yearInProgram !== undefined) {
         if (updates.yearInProgram)
-          localStorage.setItem('panceai_year_in_program', updates.yearInProgram);
-        else localStorage.removeItem('panceai_year_in_program');
+          localStorage.setItem(StorageKeys.YEAR_IN_PROGRAM, updates.yearInProgram);
+        else localStorage.removeItem(StorageKeys.YEAR_IN_PROGRAM);
       }
       if (updates.currentRotation !== undefined) {
         if (updates.currentRotation)
-          localStorage.setItem('panceai_current_rotation', updates.currentRotation);
-        else localStorage.removeItem('panceai_current_rotation');
+          localStorage.setItem(StorageKeys.CURRENT_ROTATION, updates.currentRotation);
+        else localStorage.removeItem(StorageKeys.CURRENT_ROTATION);
       }
 
       if (isSignedIn) {

@@ -21,6 +21,7 @@ import { resolveUserByClerkId } from '../../_shared/resolveUser';
 import { validateFunctionEnv, MissingEnvError } from '../../_shared/env-validation';
 import { withRateLimit, getRateLimitIdentifier } from '../../_shared/rateLimiter';
 import { IDSchema } from '../../_shared/schemas';
+import { scheduleConceptReview } from '../../intelligence/profile';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 // Stable: gemini-2.5-pro; use gemini-3-pro-preview when needed for latest reasoning.
@@ -486,6 +487,19 @@ Output your grading as a single JSON object only.`;
         userId: session.User?.id,
         sessionId,
       });
+      if (user?.id) {
+        try {
+          const system = inferSystemFromCase(
+            caseRecord.chiefComplaint,
+            caseRecord.correctDiagnosis
+          );
+          await scheduleConceptReview(prisma, user.id, `${system}|osce`, false);
+        } catch (srsErr) {
+          log.warn('SRS scheduleConceptReview failed (non-fatal)', {
+            error: srsErr instanceof Error ? srsErr.message : String(srsErr),
+          });
+        }
+      }
     }
     log.info('OSCE grading completed', { sessionId, score: payload.score });
     return {

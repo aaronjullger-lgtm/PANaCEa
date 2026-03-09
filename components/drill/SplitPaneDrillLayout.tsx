@@ -5,6 +5,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { SplitPane } from '@/components/ui/SplitPane';
+import { StorageKeys } from '@/lib/storage/storageRegistry';
 
 interface SplitPaneDrillLayoutProps {
   /** Left pane: Clinical vignette (static, scrollable). When provided, enables split layout. */
@@ -14,12 +15,11 @@ interface SplitPaneDrillLayoutProps {
   className?: string;
 }
 
-const STORAGE_KEY = 'panceai_split_vignette_percent';
 const DEFAULT_LEFT_PERCENT = 38;
 
 function getStoredLeftPercent(): number {
   if (globalThis.localStorage == null) return DEFAULT_LEFT_PERCENT;
-  const v = globalThis.localStorage.getItem(STORAGE_KEY);
+  const v = globalThis.localStorage.getItem(StorageKeys.SPLIT_VIGNETTE_PERCENT);
   const n = v ? Number.parseInt(v, 10) : Number.NaN;
   return Number.isFinite(n) && n >= 30 && n <= 70 ? n : DEFAULT_LEFT_PERCENT;
 }
@@ -35,7 +35,7 @@ export function SplitPaneDrillLayout({
   const handleSplitChange = useCallback((percent: number) => {
     setLeftPercent(percent);
     try {
-      globalThis.localStorage.setItem(STORAGE_KEY, String(percent));
+      globalThis.localStorage.setItem(StorageKeys.SPLIT_VIGNETTE_PERCENT, String(percent));
     } catch {
       /* ignore */
     }

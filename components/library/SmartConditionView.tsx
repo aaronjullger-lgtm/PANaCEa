@@ -1305,7 +1305,14 @@ export const SmartConditionView: React.FC<SmartConditionViewProps> = ({
   if (errorSummary || !summary) {
     return (
       <div className="p-6">
-        <ErrorState message={errorSummary ?? 'Condition not found'} onRetry={refetchSummary} />
+        <ErrorState
+          title="Condition not found"
+          message={errorSummary ?? 'We couldn’t load this condition.'}
+          onRetry={refetchSummary}
+          secondaryAction={
+            onClose ? { label: 'Close', onClick: onClose } : undefined
+          }
+        />
       </div>
     );
   }

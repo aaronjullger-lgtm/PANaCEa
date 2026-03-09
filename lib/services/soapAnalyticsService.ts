@@ -2,6 +2,7 @@
 // Lightweight analytics tracking for SOAP Note grading sessions
 
 import type { GradingResult } from './soapGradingService';
+import { StorageKeys } from '../storage/storageRegistry';
 
 interface SoapGradingEvent {
   caseId: string;
@@ -11,7 +12,7 @@ interface SoapGradingEvent {
   userId?: string;
 }
 
-const STORAGE_KEY = 'panacea_soap_grading_events_v1';
+const STORAGE_KEY = StorageKeys.SOAP_GRADING_EVENTS;
 
 function loadEvents(): SoapGradingEvent[] {
   try {

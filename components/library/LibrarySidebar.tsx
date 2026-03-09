@@ -29,6 +29,8 @@ import {
   Dna,
   Wind,
   Beaker,
+  Clock,
+  Bookmark,
 } from 'lucide-react';
 
 interface SystemData {
@@ -57,6 +59,16 @@ interface LibrarySidebarProps {
   onRetrySystems?: () => void;
   isMobileOpen?: boolean;
   onMobileClose?: () => void;
+  /** Recent conditions (optional) */
+  recentConditions?: Array< { id: string; condition: string; system?: string; viewedAt: string } >;
+  onRecentConditionClick?: (id: string) => void;
+  onRecentRemove?: (id: string) => void;
+  onRecentClearAll?: () => void;
+  /** Condition bookmarks (optional) */
+  bookmarks?: Array< { id: string; condition: string; system?: string; bookmarkedAt: string } >;
+  onBookmarkClick?: (id: string) => void;
+  onBookmarkRemove?: (id: string) => void;
+  onBookmarkClearAll?: () => void;
 }
 
 // System icons mapping
@@ -202,6 +214,14 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
   onHighYieldToggle,
   onSearch,
   onRetrySystems,
+  recentConditions,
+  onRecentConditionClick,
+  onRecentRemove,
+  onRecentClearAll,
+  bookmarks,
+  onBookmarkClick,
+  onBookmarkRemove,
+  onBookmarkClearAll,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -314,6 +334,74 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
 
       {/* System Tree */}
       <div className="flex-1 overflow-y-auto p-3 space-y-1">
+        {/* Recent (optional) */}
+        {recentConditions && recentConditions.length > 0 && onRecentConditionClick && (
+          <>
+            <div className="flex items-center justify-between px-3 mb-2">
+              <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                Recent
+              </span>
+              {onRecentClearAll && (
+                <button
+                  onClick={onRecentClearAll}
+                  className="text-xs text-[var(--color-text-muted)] hover:text-data-fail transition-colors"
+                  title="Clear all recent"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="space-y-1 mb-3">
+              {recentConditions.slice(0, 5).map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => onRecentConditionClick(c.id)}
+                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors flex items-center gap-2 text-sm text-[var(--color-text-secondary)] truncate"
+                >
+                  <ChevronRight className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">{c.condition}</span>
+                </button>
+              ))}
+            </div>
+            <div className="h-px bg-[var(--color-border)] my-2" />
+          </>
+        )}
+
+        {/* Bookmarks (optional) */}
+        {bookmarks && bookmarks.length > 0 && onBookmarkClick && (
+          <>
+            <div className="flex items-center justify-between px-3 mb-2">
+              <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide flex items-center gap-1">
+                <Bookmark className="w-3 h-3 fill-data-provisional text-data-provisional" />
+                Bookmarks ({bookmarks.length})
+              </span>
+              {onBookmarkClearAll && (
+                <button
+                  onClick={onBookmarkClearAll}
+                  className="text-xs text-[var(--color-text-muted)] hover:text-data-fail transition-colors"
+                  title="Clear all bookmarks"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="space-y-1 mb-3">
+              {bookmarks.slice(0, 5).map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => onBookmarkClick(b.id)}
+                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors flex items-center gap-2 text-sm text-[var(--color-text-secondary)] truncate"
+                >
+                  <Bookmark className="w-3 h-3 flex-shrink-0 fill-data-provisional text-data-provisional" />
+                  <span className="truncate">{b.condition}</span>
+                </button>
+              ))}
+            </div>
+            <div className="h-px bg-[var(--color-border)] my-2" />
+          </>
+        )}
+
         {/* All Systems Option */}
         <SidebarItem
           as="button"

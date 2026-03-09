@@ -358,7 +358,7 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
 
             {/* Tips */}
             <div className="text-xs text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] p-3 rounded-lg">
-              <strong>💡 Tip:</strong> Click "Try Another" for different mnemonic styles. Save your
+              <strong>Tip:</strong> Click "Try Another" for different mnemonic styles. Save your
               favorites to build a personal memory library!
             </div>
           </div>

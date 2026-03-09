@@ -95,13 +95,8 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
         )}
       </section>
 
-      {/* Overview */}
+      {/* Performance Analytics - Database-backed stats and nav to detailed views */}
       <section className="mb-8">
-        <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-[var(--color-text-muted)]" />
-          Overview
-        </h3>
-
         {/* Database-backed analytics */}
         <Suspense fallback={<SkeletonLoader />}>
           <DatabaseAnalyticsDashboard />

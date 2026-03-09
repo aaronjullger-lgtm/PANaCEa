@@ -1,25 +1,33 @@
 # PANaCEa Automation Setup Guide
 
-This document explains how to set up automated background jobs for data analysis, user analytics, daily study prescriptions, and maintenance tasks.
+This document explains how automated background jobs work for data analysis, user analytics, daily study prescriptions, and maintenance tasks.
 
 ---
 
-## 📋 Overview of Available Automations
+## Current Implementation
 
-| Job                        | Frequency    | Purpose                                    | Setup Required  |
-| -------------------------- | ------------ | ------------------------------------------ | --------------- |
-| Question Pool Replenish    | Daily        | Keep question pool above minimum threshold | Cloudflare Cron |
-| User Analytics Aggregation | Daily        | Compile performance metrics                | Cloudflare Cron |
-| Daily Study Prescription   | Daily (6 AM) | Generate personalized study plans          | Cloudflare Cron |
-| Drift Detection            | Weekly       | Flag stale AI content                      | GitHub Actions  |
-| Database Cleanup           | Weekly       | Remove orphaned records                    | GitHub Actions  |
-| Full Analytics Report      | Monthly      | Comprehensive user insights                | GitHub Actions  |
+**Cloudflare Pages does not support cron triggers.** All scheduled jobs run via **GitHub Actions**. The cron API endpoints (`/api/cron/*`) are called by the daily-automation workflow, which POSTs to production using `PRODUCTION_URL` and `CRON_SECRET`.
 
 ---
 
-## 🔧 Part 1: Cloudflare Cron Triggers (You Must Configure)
+## Overview of Available Automations
 
-Cloudflare Pages Functions can run on a schedule via Cron Triggers. You need to set these up in your Cloudflare dashboard.
+| Job                        | Frequency    | Purpose                                    | Implementation        |
+| -------------------------- | ------------ | ------------------------------------------ | --------------------- |
+| Daily Automation           | Daily 3 AM   | Grand Rounds, cleanup, content validation  | `daily-automation.yml` |
+| Cron API Endpoints         | Daily 3 AM   | Analytics, prescription, replenish         | Called by daily workflow |
+| Question Pool Replenish    | Daily        | Keep question pool above minimum           | `/api/cron/replenish-pool` |
+| User Analytics Aggregation | Daily        | Compile performance metrics                | `/api/cron/aggregate-analytics` |
+| Daily Study Prescription   | Daily        | Generate personalized study plans          | `/api/cron/daily-prescription` |
+| Database Orchestration     | Weekly Sun   | Sync, validate, repair, write-back         | `weekly-automation.yml` |
+| Database Cleanup           | Weekly Sun   | Remove old jobs, sync queue items          | `weekly-automation.yml` |
+| Registry Sync              | On deploy    | Sync local registries to database          | `ci-cd.yml` post-deploy |
+
+---
+
+## Part 1: Cron API Endpoints (Cloudflare Pages)
+
+Cloudflare Pages does **not** support cron triggers. The cron endpoints exist and are called by GitHub Actions; no Cloudflare cron setup is required.
 
 ### Step 1: Create Scheduled Functions
 
@@ -95,12 +103,24 @@ async function generateStudyPrescriptions(env: Env) {
 In Cloudflare Pages dashboard:
 
 1. Go to Settings → Environment Variables
-2. Add `CRON_SECRET` with a secure random string
-3. This prevents unauthorized cron endpoint access
+2. Add `CRON_SECRET` with a secure random string (must match GitHub secret)
+3. Add `PRODUCTION_URL` if calling cron endpoints from GitHub Actions
+
+The daily-automation workflow calls these endpoints with `PRODUCTION_URL` and `CRON_SECRET` from GitHub secrets.
 
 ---
 
-## 🔄 Part 2: GitHub Actions (Copy & Configure)
+## Part 2: GitHub Actions (Existing Workflows)
+
+The following workflows are already configured:
+
+- **daily-automation.yml** – Runs `automation:daily` and calls cron endpoints
+- **weekly-automation.yml** – Runs health checks, user stats, `db:orchestrate`, cleanup
+- **ci-cd.yml** – Runs `sync:all-registries` post-deploy
+
+See `docs/AUTOMATION_RUNBOOK.md` for the full schedule and manual commands.
+
+### Optional: Create Additional Workflows
 
 ### Drift Detection (Weekly)
 

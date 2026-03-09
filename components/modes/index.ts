@@ -17,6 +17,7 @@ export { default as CommuterMode } from './CommuterMode';
 export { default as GrandRoundsMode } from './GrandRoundsMode';
 export { default as CramMode } from './CramMode';
 export { default as MedicalWordleMode } from './MedicalWordleMode';
+export { default as DiagnosticPuzzleMode } from './DiagnosticPuzzleMode';
 export { default as FullSitDownTestMode } from './FullSitDownTestMode';
 
 // Utility

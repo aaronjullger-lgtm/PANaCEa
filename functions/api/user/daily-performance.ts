@@ -9,39 +9,62 @@ import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { resolveUserId } from '../_shared/user-resolver';
 
 const DailyPerformanceSchema = z.object({
-  query: z.object({
-    days: z.string().optional().default('30'),
-  }),
+  days: z.string().optional().default('30'),
 });
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(DailyPerformanceSchema, async (context) => {
-  const { env, auth, validated } = context;
-  const logger = createEndpointLogger('/api/user/daily-performance');
-  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+export const onRequestGet = authenticatedEndpoint(
+  DailyPerformanceSchema,
+  async (context) => {
+    const { env, auth, validated } = context;
+    const logger = createEndpointLogger('/api/user/daily-performance');
+    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
-  try {
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    // Parse and validate days parameter
-    const days = Math.min(parseInt(validated.query?.days || '30'), 90); // Max 90 days
+      const days = Math.min(Math.max(1, parseInt(validated?.days || '30', 10)), 90);
 
-    // Calculate date range
-    const endDate = new Date();
-    const startDate = new Date(endDate.getTime() - days * 86400000);
+      const userId = await resolveUserId(prisma, auth.userId);
+      if (!userId) {
+        const endDate = new Date();
+        const startDate = new Date(endDate.getTime() - days * 86400000);
+        return {
+          data: {
+            period: `${days}d`,
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
+            dailyPerformance: [] as Array<{
+              date: string;
+              attempts: number;
+              correct: number;
+              accuracy: number;
+            }>,
+            summary: {
+              totalAttempts: 0,
+              totalCorrect: 0,
+              activeDays: 0,
+              avgAttemptsPerActiveDay: 0,
+            },
+          },
+        };
+      }
 
-    // Get all attempts in the date range
-    const attempts = await prisma.questionAttempt.findMany({
-      where: {
-        userId: auth.userId,
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
+      const endDate = new Date();
+      const startDate = new Date(endDate.getTime() - days * 86400000);
+
+      const attempts = await prisma.questionAttempt.findMany({
+        where: {
+          userId,
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
         },
-      },
       select: {
         wasCorrect: true,
         createdAt: true,
@@ -107,4 +130,6 @@ export const onRequestGet = authenticatedEndpoint(DailyPerformanceSchema, async 
   } finally {
     await safePrismaDisconnect(prisma);
   }
-});
+},
+  { source: 'query' }
+);

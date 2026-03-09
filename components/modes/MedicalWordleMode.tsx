@@ -359,7 +359,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
               {game.hints.class && (
                 <p className="text-sm text-data-neutral mt-1">
                   <span className="text-data-neutral">Type:</span>{' '}
-                  <span className="font-medium text-cyan-400">{game.hints.class}</span>
+                  <span className="font-medium text-data-provisional">{game.hints.class}</span>
                 </p>
               )}
               {game.hints.system && (

@@ -7,9 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Copy, Trash2, X, CheckCircle } from 'lucide-react';
 import { getDeadLetterQueue, type SyncOperation } from '@/lib/services/sync/offlineSync';
-
-// Use the same constant as offlineSync to avoid hardcoding
-const DEAD_LETTER_QUEUE_KEY = 'panacea_dead_letter_queue';
+import { StorageKeys } from '@/lib/storage/storageRegistry';
 
 interface FailedSyncItemsProps {
   isOpen: boolean;
@@ -39,12 +37,12 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
   const handleRemoveItem = (itemId: string) => {
     const updatedItems = failedItems.filter((item) => item.id !== itemId);
     setFailedItems(updatedItems);
-    localStorage.setItem(DEAD_LETTER_QUEUE_KEY, JSON.stringify(updatedItems));
+    localStorage.setItem(StorageKeys.DEAD_LETTER_QUEUE, JSON.stringify(updatedItems));
   };
 
   const handleClearAll = () => {
     setFailedItems([]);
-    localStorage.removeItem(DEAD_LETTER_QUEUE_KEY);
+    localStorage.removeItem(StorageKeys.DEAD_LETTER_QUEUE);
     setShowConfirmClear(false);
   };
 

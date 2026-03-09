@@ -41,7 +41,7 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
     validated: z.infer<typeof GeminiRequestSchema>;
   };
 
-  // GEMINI_API_KEY is validated below (with process.env fallback for local dev)
+  // GEMINI_API_KEY must be set in Cloudflare env or .dev.vars for local wrangler
 
   // Rate limit AI requests (user ID if available, else IP)
   const identifier = getRateLimitIdentifier(request);
@@ -63,11 +63,8 @@ export const onRequestPost = authenticatedEndpoint(GeminiRequestSchema, async (c
     cachedContent,
     thinkingLevel,
   } = validated;
-  // Use context.env first (Cloudflare); fallback to process.env for local dev (e.g. wrangler + .env)
-  const apiKey =
-    (env.GEMINI_API_KEY && String(env.GEMINI_API_KEY).trim()) ||
-    (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY?.trim()) ||
-    '';
+  // Use context.env only (Edge/Workers). For local dev, set GEMINI_API_KEY in .dev.vars so wrangler injects it into env.
+  const apiKey = (env.GEMINI_API_KEY && String(env.GEMINI_API_KEY).trim()) || '';
   if (!apiKey) {
     return new Response(
       JSON.stringify({

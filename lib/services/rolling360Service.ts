@@ -675,12 +675,13 @@ export class Rolling360Service {
 
       for (const attempt of attempts) {
         if (attempt == null) continue;
+        const a = attempt;
         finalStats = await this.updateRolling360OnSubmitInTransaction(tx, {
-          attemptId: attempt.id,
+          attemptId: a.id,
           userId,
-          isCorrect: attempt.wasCorrect,
-          system: attempt.systemNormalized || attempt.system || 'Unknown',
-          answeredAt: attempt.createdAt,
+          isCorrect: a.wasCorrect,
+          system: a.systemNormalized || a.system || 'Unknown',
+          answeredAt: a.createdAt,
         });
       }
 

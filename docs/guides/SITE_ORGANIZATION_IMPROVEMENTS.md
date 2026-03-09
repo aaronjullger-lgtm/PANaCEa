@@ -190,7 +190,8 @@ Every drill mode now has:
 
 ### Phase 2: Drill Mode Standardization (IN PROGRESS)
 
-- [ ] Standardize all drill mode landing pages
+- [x] **Shared landing layout:** Use [components/drill/DrillLandingPage.tsx](../components/drill/DrillLandingPage.tsx) as the standard. It provides: hero (title, description, icon), Back button, meta (estimated time, categories), one primary "Start Drill" CTA, optional "Learning Objectives", "How it Works" (instructions), stats, and optional children for mode-specific options.
+- [ ] Standardize all drill mode landing pages to use DrillLandingPage (audit [config/training-modes.ts](../config/training-modes.ts) and each mode component; migrate custom landings to pass props into DrillLandingPage).
 - [ ] Apply monochrome icons
 - [ ] Ensure consistent theme usage
 - [ ] Update each mode to use MiniModeLayout properly
@@ -261,6 +262,7 @@ App.tsx
 
 - No change to actual React Router setup
 - Navigation handled via view state in App.tsx
+- **Route map:** See [docs/ROUTES_AND_VIEWS.md](../ROUTES_AND_VIEWS.md) for path → view and canonical paths (404 and nav).
 - Command Palette updates view state directly
 - Maintains SPA feel with instant transitions
 

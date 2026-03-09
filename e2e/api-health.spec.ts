@@ -30,6 +30,14 @@ test.describe('API Health (Cloudflare Functions)', () => {
 
     expect(body.checks).toHaveProperty('environment');
     expect(body.checks).toHaveProperty('database');
+
+    // Content check (Condition Library): when present, systemsCount is a number
+    if (body.checks.content) {
+      expect(body.checks.content).toHaveProperty('status');
+      if (typeof body.checks.content.systemsCount === 'number') {
+        expect(body.checks.content.systemsCount).toBeGreaterThanOrEqual(0);
+      }
+    }
   });
 
   test('GET /api/health returns valid JSON', async ({ request }) => {

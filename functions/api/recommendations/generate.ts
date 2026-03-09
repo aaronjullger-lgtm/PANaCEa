@@ -47,5 +47,6 @@ export const onRequestPost = authenticatedEndpoint(
     } finally {
       await safePrismaDisconnect(prisma);
     }
-  }
+  },
+  { requestsPerMinute: 60 }
 );

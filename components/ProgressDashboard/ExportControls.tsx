@@ -134,7 +134,7 @@ const ExportControls: React.FC<ExportControlsProps> = ({
             ? 'bg-data-neutral dark:bg-data-neutral text-data-neutral cursor-not-allowed'
             : lastExported === 'csv'
               ? 'bg-data-pass dark:bg-data-pass text-data-pass dark:text-data-pass'
-              : 'bg-white dark:bg-data-neutral text-data-neutral dark:text-data-neutral border border-data-neutral dark:border-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
+              : 'bg-white dark:bg-data-neutral-bg text-data-neutral dark:text-data-neutral border border-data-neutral dark:border-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
         }`}
       >
         {lastExported === 'csv' ? (
@@ -153,7 +153,7 @@ const ExportControls: React.FC<ExportControlsProps> = ({
             ? 'bg-data-neutral dark:bg-data-neutral text-data-neutral cursor-not-allowed'
             : lastExported === 'json'
               ? 'bg-data-pass dark:bg-data-pass text-data-pass dark:text-data-pass'
-              : 'bg-white dark:bg-data-neutral text-data-neutral dark:text-data-neutral border border-data-neutral dark:border-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
+              : 'bg-white dark:bg-data-neutral-bg text-data-neutral dark:text-data-neutral border border-data-neutral dark:border-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral'
         }`}
       >
         {lastExported === 'json' ? <Check className="w-4 h-4" /> : <FileJson className="w-4 h-4" />}

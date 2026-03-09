@@ -17,6 +17,8 @@ import {
   Gauge,
   Clock,
   TrendingUp,
+  TrendingDown,
+  Minus,
   Activity,
   AlertCircle,
   BarChart3,
@@ -776,10 +778,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-[320px]">
-                  <div className="text-6xl font-bold text-action-primary mb-4">
-                    {userStats.stats.recentPerformance.trend === 'improving' && '📈'}
-                    {userStats.stats.recentPerformance.trend === 'declining' && '📉'}
-                    {userStats.stats.recentPerformance.trend === 'stable' && '➡️'}
+                  <div className="mb-4">
+                    {userStats.stats.recentPerformance.trend === 'improving' && (
+                      <TrendingUp className="w-16 h-16 text-action-primary" />
+                    )}
+                    {userStats.stats.recentPerformance.trend === 'declining' && (
+                      <TrendingDown className="w-16 h-16 text-action-primary" />
+                    )}
+                    {userStats.stats.recentPerformance.trend === 'stable' && (
+                      <Minus className="w-16 h-16 text-action-primary" />
+                    )}
                   </div>
                   <p className="text-lg font-semibold text-action-primary mb-2">
                     {userStats.stats.recentPerformance.trend === 'improving' && 'Trending Upward'}

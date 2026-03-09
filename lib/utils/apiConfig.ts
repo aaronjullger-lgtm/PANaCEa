@@ -50,6 +50,10 @@ export const API_ENDPOINTS = {
   ANALYTICS_PEER_STATS: (questionId: string) => `/api/analytics/peer-stats?questionId=${questionId}`,
   QUESTION_STATISTICS: (questionId: string) => `/api/question-statistics/${questionId}`,
   USER_STABILITY_TREND: '/api/user/stability-trend',
+  // Daily Challenges
+  GRAND_ROUNDS_COMPLETED: '/api/grand-rounds/completed',
+  DIAGNOSTIC_PUZZLE_DAILY: '/api/diagnostic-puzzle/daily',
+  WORDLE_DAILY: '/api/games/wordle/daily',
   // Study Path Optimizer (Phase 6.3)
   STUDY_PATH_RECOMMENDATION: '/api/study-path/recommendation',
   STUDY_PATH_PROGRESS: '/api/study-path/progress',
@@ -63,6 +67,9 @@ export const API_ENDPOINTS = {
   MAPPING_ENRICHMENT_SUGGEST: '/api/mapping-enrichment/suggest',
   MAPPING_ENRICHMENT_PREVIEW: '/api/mapping-enrichment/preview',
   MAPPING_ENRICHMENT_AUDIT_LOGS: '/api/mapping-enrichment/audit-logs',
+  // Library Enrichment Pipeline (Targeted RAG)
+  LIBRARY_ENRICHMENT_LOGS: '/api/admin/library-enrichment-logs',
+  LIBRARY_ENRICHMENT_PRIORITY: '/api/admin/library-enrichment-priority',
   // Cross‑System Integration Explorer (Phase 6.2)
   GRAPH_NODE: (id: string) => `/api/graph/node/${id}`,
   GRAPH_EXPAND: '/api/graph/expand',

@@ -60,12 +60,17 @@ id = "<namespace-id>"
 
 ### 3. Database Preparation
 
-- [ ] Run all pending migrations: `npx prisma migrate deploy`
+- [ ] Run all pending migrations against production: `npx prisma migrate deploy`
 - [ ] Verify database connectivity: `npx prisma db pull --print`
 - [ ] Check RLS policies are enabled (if configured)
 - [ ] Verify connection pooling is enabled in Supabase
 
-### 4. Clerk Configuration
+### 4. Edge Runtime (Cloudflare Pages Functions)
+
+- [ ] All API handlers use `context.env` for DATABASE_URL, CLERK_SECRET_KEY, GEMINI_API_KEY (not `process.env`)
+- [ ] KV namespaces `CACHE` and `RATE_LIMIT_KV` are bound in wrangler.toml and created in Cloudflare
+
+### 5. Clerk Configuration
 
 - [ ] Verify webhook endpoint: `/api/webhooks/clerk`
 - [ ] Add production domain to allowed origins
@@ -172,6 +177,8 @@ curl https://your-domain.pages.dev/api/health
 
 Run through the [SMOKE_TEST_CHECKLIST.md](./SMOKE_TEST_CHECKLIST.md) after each deployment.
 
+- [ ] Complete the **OSCE flow** steps (navigate to OSCE, start session, send message, complete encounter, confirm results). Verify no 4xx/5xx on `/api/osce/*` in Cloudflare Pages → Functions → Real-time logs during the flow.
+
 ### 3. Error Monitoring
 
 - [ ] Verify Sentry is receiving events (trigger a test error)
@@ -206,8 +213,8 @@ npx prisma migrate resolve --rolled-back <migration_name>
 - [ ] No `VITE_` prefix on sensitive variables (except publishable key)
 - [ ] CORS configured correctly in `_headers` file
 - [ ] Rate limiting enabled on Gemini endpoints
-- [ ] RLS policies active in Supabase
-- [ ] Clerk webhook signature verification enabled
+- [ ] **RLS enabled:** Supabase RLS policies are enabled on main tables (User, UserPreferences, PatientEncounterSession, OsceResult, etc.) so users can only access their own rows. See `docs/security/SUPABASE_SETUP.md`.
+- [ ] **Clerk webhook verification enabled:** The `/api/webhooks/clerk` handler verifies the request signature using `CLERK_WEBHOOK_SECRET` (Svix headers: `svix-id`, `svix-timestamp`, `svix-signature`) before processing. Ensure `CLERK_WEBHOOK_SECRET` is set in Cloudflare env and matches the signing secret in Clerk Dashboard → Webhooks.
 
 ---
 

@@ -382,9 +382,12 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             // Vendor chunks
             if (id.includes('node_modules')) {
-              // React and related - skip manual chunking to avoid circular dependency
+              // Charting - heavy; split out so route-level chunks load it on demand
+              if (id.includes('recharts')) {
+                return 'charting';
+              }
               // UI libraries
-              if (id.includes('framer-motion') || id.includes('recharts') || id.includes('lucide-react')) {
+              if (id.includes('framer-motion') || id.includes('lucide-react')) {
                 return 'vendor-ui';
               }
               // State management and utilities

@@ -117,10 +117,29 @@ model AnatomyStructure {
   AnatomyConditionLink AnatomyConditionLink[]
   MediaAsset           MediaAsset[]
   Condition            Condition[]            @relation("AnatomyStructureToCondition")
+  anatomyModelId       String?
+  AnatomyModel         AnatomyModel?          @relation("AnatomyStructureToAnatomyModel", fields: [anatomyModelId], references: [id])
 
   @@index([name])
   @@index([panceYield])
   @@index([region])
+  @@index([system])
+}
+
+model AnatomyModel {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  system      String
+  modelUrl    String   // URL to .glb/.glTF file
+  citation    String?  // NIH citation or source
+  structures  Json?    // string[] (references AnatomyStructure.id)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  AnatomyStructures AnatomyStructure[] @relation("AnatomyStructureToAnatomyModel")
+
   @@index([system])
 }
 
@@ -399,7 +418,7 @@ model CohortMember {
 model ConceptGap {
   id         String   @id
   userId     String
-  system     String
+  system     String   // e.g. "cardiovascular", "pulmonary" (lowercase, matches inferSystemFromCase in grade API)
   sourceType String
   sourceId   String?
   createdAt  DateTime @default(now())
@@ -456,6 +475,7 @@ model Condition {
   WeaknessPattern                                             WeaknessPattern[]
   AnatomyStructure                                            AnatomyStructure[]           @relation("AnatomyStructureToCondition")
   SpecialTest                                                 SpecialTest[]                @relation("ConditionToSpecialTest")
+  DiagnosticPuzzle                                            DiagnosticPuzzle[]
 
   @@index([displayName])
   @@index([name])
@@ -853,7 +873,9 @@ model Drug {
   elimination                                   String?
   metabolism                                    String?
   sideEffects                                   String[]
+  sideEffectsJsonb                               Json?
   interactions                                  String[]
+  interactionsJsonb                             Json?
   absorption                                    String?
   administrationTips                            String?
   bioavailability                               String?
@@ -902,11 +924,28 @@ model Drug {
   DrugInteraction_DrugInteraction_drugId1ToDrug DrugInteraction[]   @relation("DrugInteraction_drugId1ToDrug")
   DrugInteraction_DrugInteraction_drugId2ToDrug DrugInteraction[]   @relation("DrugInteraction_drugId2ToDrug")
   MediaAsset                                    MediaAsset[]
+  SideEffects                                   DrugSideEffect[] @relation("DrugToSideEffect")
 
   @@index([drugClass])
   @@index([genericName])
   @@index([isFirstLine])
   @@index([panceYield])
+}
+
+model DrugSideEffect {
+  id           String   @id @default(cuid())
+  drugId       String
+  Drug         Drug     @relation("DrugToSideEffect", fields: [drugId], references: [id], onDelete: Cascade)
+
+  name         String   // e.g., “QTc prolongation”
+  severity     String   // 'common', 'serious', 'rare'
+  system       String   // 'cardiac', 'neuro', 'gi', 'derm', 'other'
+  visualization String? // 'ekg', 'wave', 'alert'
+  description  String?
+
+  @@index([drugId])
+  @@index([severity])
+  @@index([system])
 }
 
 model DrugConditionLink {
@@ -1621,6 +1660,7 @@ model MedicalContent {
   UserProgress                                                    UserProgress[]
   VitalSignConditionLink                                          VitalSignConditionLink[]
   WeaknessPattern                                                 WeaknessPattern[]
+  Structured                                                      MedicalContentStructured? @relation("MedicalContentToStructured")
 
   @@index([canonicalName])
   @@index([conditionId])
@@ -1637,6 +1677,27 @@ model MedicalContent {
   @@index([system, subcategory, parent_category])
   @@index([updatedAt])
   @@index([search_vector], map: "idx_medical_content_search", type: Gin)
+}
+
+model MedicalContentStructured {
+  id               String   @id @default(cuid())
+  medicalContentId String   @unique
+  MedicalContent   MedicalContent @relation("MedicalContentToStructured", fields: [medicalContentId], references: [id], onDelete: Cascade)
+
+  // Parsed from Gemini‑structured endpoint
+  clinical_pearls       String[]
+  history_key_features  String[]
+  physical_exam_findings String[]
+  diagnostic_labs       String[]
+  gold_standard         String?
+  treatment_first_line  String?
+
+  // Metadata
+  parsedAt        DateTime @default(now())
+  parserVersion   String   @default("gemini‑1.5‑pro")
+  confidence      Float?   // 0‑1
+
+  @@index([medicalContentId])
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -1842,7 +1903,7 @@ model PatientEncounterSession {
   userId               String
   caseId               String
   startTime            DateTime             @default(now())
-  updatedAt            DateTime
+  updatedAt            DateTime             @updatedAt
   status               String               @default("active")
   messages             Json
   physicalFindings     Json?
@@ -1929,7 +1990,7 @@ model PersonalizedFSRSParams {
   validationBrierScore   Float?
   parameterBounds        Json?
   createdAt              DateTime  @default(now())
-  updatedAt              DateTime
+  updatedAt             DateTime @updatedAt
   w                      Float[]
   User                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1943,7 +2004,7 @@ model PhysicalExamFinding {
   description          String?
   clinicalSignificance String?
   createdAt            DateTime               @default(now())
-  updatedAt            DateTime
+  updatedAt        DateTime @updatedAt
   aliases              String[]               @default([])
   associatedFindings   String[]               @default([])
   boardYieldFacts      String[]               @default([])
@@ -2545,7 +2606,7 @@ model SavedQuestion {
 model Reflection {
   id               String   @id @default(cuid())
   userId           String
-  sessionId        String? @unique
+  sessionId        String?  @unique
   patternsNoticed  String
   improvementPlan  String
   confidenceRating Int
@@ -2554,7 +2615,7 @@ model Reflection {
   createdAt        DateTime @default(now())
   updatedAt        DateTime
 
-  User        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   StudySession StudySession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
 
   @@index([userId])
@@ -2929,83 +2990,84 @@ model TreatmentConditionLink {
 }
 
 model User {
-  id                      String                    @id
-  clerkId                 String                    @unique
-  email                   String                    @unique
-  firstName               String?
-  lastName                String?
-  createdAt               DateTime                  @default(now())
-  updatedAt               DateTime
-  emailVerified           DateTime?
-  resetToken              String?
-  resetTokenExpiry        DateTime?
-  verifyToken             String?
-  verifyTokenExpiry       DateTime?
-  hasCompletedBaseline    Boolean                   @default(false)
-  hasCompletedOnboarding  Boolean                   @default(false)
-  examDate                DateTime?
-  graduationDate          DateTime?
-  school                  String?
-  currentRotation         String?
-  yearInProgram           String?
-  eorTestDate             DateTime?
-  rotationStartDate       DateTime?
-  rotationEndDate         DateTime?
-  isAnonymous             Boolean                   @default(false)
-  role                    UserRole                  @default(USER)
-  lifecycleRole           UserLifecycleRole         @default(STUDENT)
-  trainingPhase           TrainingPhase?
+  id                        String                      @id
+  clerkId                   String                      @unique
+  email                     String                      @unique
+  firstName                 String?
+  lastName                  String?
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime
+  emailVerified             DateTime?
+  resetToken                String?
+  resetTokenExpiry          DateTime?
+  verifyToken               String?
+  verifyTokenExpiry         DateTime?
+  hasCompletedBaseline      Boolean                     @default(false)
+  hasCompletedOnboarding    Boolean                     @default(false)
+  examDate                  DateTime?
+  graduationDate            DateTime?
+  school                    String?
+  currentRotation           String?
+  yearInProgram             String?
+  eorTestDate               DateTime?
+  rotationStartDate         DateTime?
+  rotationEndDate           DateTime?
+  isAnonymous               Boolean                     @default(false)
+  role                      UserRole                    @default(USER)
+  lifecycleRole             UserLifecycleRole           @default(STUDENT)
+  trainingPhase             TrainingPhase?
   /// Canonical EOR exam date (maps to frontend's eorTestDate).
-  rotationExamDate        DateTime?
-  activeSystems           String[]                  @default([])
+  rotationExamDate          DateTime?
+  activeSystems             String[]                    @default([])
   /// * FSRS v6 optimized weights (21 params). Empty = use defaults. Denormalized from PersonalizedFSRSParams.
-  fsrs_weights            Float[]                   @default([])
-  Card                    Card[]
-  CohortMember            CohortMember[]
-  ConceptGap              ConceptGap[]
-  ConfusionPair           ConfusionPair[]
-  ContrastiveDrillAttempt ContrastiveDrillAttempt[]
-  DailyStreak             DailyStreak[]
-  DailyUserAnalytics      DailyUserAnalytics[]
-  DrillSessionRecord      DrillSessionRecord[]
-  GrandRoundsAttempt      GrandRoundsAttempt[]
-  GrandRoundsHistory      GrandRoundsHistory[]
-  KnowledgeCache          KnowledgeCache[]
-  PatientEncounterSession PatientEncounterSession[]
-  PeerStatistic           PeerStatistic[]
-  PerformanceRecord       PerformanceRecord[]
-  PersonalizedFSRSParams  PersonalizedFSRSParams?
-  Podcast                 Podcast[]
-  ReviewLog               ReviewLog[]
-  SRSItem                 SRSItem[]
-  SavedQuestion           SavedQuestion[]
-  Reflection              Reflection[]
-  SessionAnalytics        SessionAnalytics[]
-  StudyGroupMember        StudyGroupMember[]
-  StudyRecommendation     StudyRecommendation[]
-  StudySession            StudySession[]
-  UserAchievement         UserAchievement[]
-  UserBehaviorMetrics     UserBehaviorMetrics[]
-  UserCircadianProfile    UserCircadianProfile?
-  UserConditionAccuracy   UserConditionAccuracy[]
-  UserConfusionPattern    UserConfusionPattern[]
-  UserGoal                UserGoal[]
-  UserLearningProfile     UserLearningProfile?
-  UserPearl               UserPearl[]
-  UserPreferences         UserPreferences?
-  UserProgress            UserProgress[]
-  UserQuestionHistory     UserQuestionHistory[]
-  UserQuestionSeen        UserQuestionSeen[]
-  UserRolling360Stats     UserRolling360Stats?
-  UserSRSConfig           UserSRSConfig?
-  UserStatistics          UserStatistics?
-  UserStatisticsSnapshot  UserStatisticsSnapshot[]
-  UserTopicProgress       UserTopicProgress[]
-  UserWordleState         UserWordleState[]
-  VisualizerGeneration    VisualizerGeneration[]
-  WeaknessPattern         WeaknessPattern[]
-  mappingSuggestions      MappingSuggestion[]
-  mappingAuditLogs        MappingAuditLog[]
+  fsrs_weights              Float[]                     @default([])
+  Card                      Card[]
+  CohortMember              CohortMember[]
+  ConceptGap                ConceptGap[]
+  ConfusionPair             ConfusionPair[]
+  ContrastiveDrillAttempt   ContrastiveDrillAttempt[]
+  DailyStreak               DailyStreak[]
+  DailyUserAnalytics        DailyUserAnalytics[]
+  DrillSessionRecord        DrillSessionRecord[]
+  GrandRoundsAttempt        GrandRoundsAttempt[]
+  GrandRoundsHistory        GrandRoundsHistory[]
+  KnowledgeCache            KnowledgeCache[]
+  PatientEncounterSession   PatientEncounterSession[]
+  PeerStatistic             PeerStatistic[]
+  PerformanceRecord         PerformanceRecord[]
+  PersonalizedFSRSParams    PersonalizedFSRSParams?
+  Podcast                   Podcast[]
+  ReviewLog                 ReviewLog[]
+  SRSItem                   SRSItem[]
+  SavedQuestion             SavedQuestion[]
+  Reflection                Reflection[]
+  SessionAnalytics          SessionAnalytics[]
+  StudyGroupMember          StudyGroupMember[]
+  StudyRecommendation       StudyRecommendation[]
+  StudySession              StudySession[]
+  UserAchievement           UserAchievement[]
+  UserBehaviorMetrics       UserBehaviorMetrics[]
+  UserCircadianProfile      UserCircadianProfile?
+  UserConditionAccuracy     UserConditionAccuracy[]
+  UserConfusionPattern      UserConfusionPattern[]
+  UserGoal                  UserGoal[]
+  UserLearningProfile       UserLearningProfile?
+  UserPearl                 UserPearl[]
+  UserPreferences           UserPreferences?
+  UserProgress              UserProgress[]
+  UserQuestionHistory       UserQuestionHistory[]
+  UserQuestionSeen          UserQuestionSeen[]
+  UserRolling360Stats       UserRolling360Stats?
+  UserSRSConfig             UserSRSConfig?
+  UserStatistics            UserStatistics?
+  UserStatisticsSnapshot    UserStatisticsSnapshot[]
+  UserTopicProgress         UserTopicProgress[]
+  UserWordleState           UserWordleState[]
+  UserDiagnosticPuzzleState UserDiagnosticPuzzleState[]
+  VisualizerGeneration      VisualizerGeneration[]
+  WeaknessPattern           WeaknessPattern[]
+  mappingSuggestions        MappingSuggestion[]
+  mappingAuditLogs          MappingAuditLog[]
 
   @@index([clerkId])
   @@index([email])
@@ -3448,6 +3510,53 @@ model UserWordleState {
   @@index([userId])
 }
 
+model DiagnosticPuzzle {
+  id                    String                  @id @default(cuid())
+  conditionId           String
+  clue1                 String
+  clue2                 String?
+  clue3                 String?
+  clue4                 String?
+  clue5                 String?
+  clue6                 String?
+  title                 String?
+  difficulty            Int?
+  system                String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime
+  Condition             Condition               @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  DailyDiagnosticPuzzle DailyDiagnosticPuzzle[]
+
+  @@index([conditionId])
+  @@index([system])
+}
+
+model DailyDiagnosticPuzzle {
+  id               String           @id @default(cuid())
+  date             DateTime         @unique @db.Date
+  puzzleId         String
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime
+  DiagnosticPuzzle DiagnosticPuzzle @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
+
+  @@index([date])
+  @@index([puzzleId])
+}
+
+model UserDiagnosticPuzzleState {
+  id        String       @id @default(cuid())
+  userId    String
+  date      DateTime     @db.Date
+  guesses   String[]     @default([])
+  status    WordleStatus @default(playing)
+  updatedAt DateTime
+  User      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([date])
+  @@index([userId])
+}
+
 model VisualizerGeneration {
   id                 String   @id
   userId             String
@@ -3537,9 +3646,9 @@ model MedicalTaxonomy {
   createdAt   DateTime @default(now())
   updatedAt   DateTime
 
-  systemMappings SystemMapping[]
+  systemMappings     SystemMapping[]
   mappingSuggestions MappingSuggestion[]
-  mappingAuditLogs MappingAuditLog[]
+  mappingAuditLogs   MappingAuditLog[]
 
   @@index([code])
 }
@@ -3579,21 +3688,21 @@ enum MappingAuditAction {
 }
 
 model MappingSuggestion {
-  id                  String                    @id @default(cuid())
+  id                  String                  @id @default(cuid())
   taxonomyCode        String
   taxonomyName        String
   suggestedSystemCode String
   confidence          Float
   reason              String
   alternativeSystems  Json
-  status              MappingSuggestionStatus   @default(PENDING)
+  status              MappingSuggestionStatus @default(PENDING)
   reviewedBy          String?
   reviewedAt          DateTime?
-  createdAt           DateTime                  @default(now())
+  createdAt           DateTime                @default(now())
   updatedAt           DateTime
 
-  taxonomy            MedicalTaxonomy           @relation(fields: [taxonomyCode], references: [code], onDelete: Cascade)
-  reviewedByUser      User?                     @relation(fields: [reviewedBy], references: [id], onDelete: NoAction)
+  taxonomy       MedicalTaxonomy @relation(fields: [taxonomyCode], references: [code], onDelete: Cascade)
+  reviewedByUser User?           @relation(fields: [reviewedBy], references: [id], onDelete: NoAction)
 
   @@index([taxonomyCode])
   @@index([status])
@@ -3602,17 +3711,17 @@ model MappingSuggestion {
 }
 
 model MappingAuditLog {
-  id                  String              @id @default(cuid())
-  taxonomyCode        String
-  systemCode          String
-  action              MappingAuditAction
-  userId              String?
-  timestamp           DateTime            @default(now())
-  rationale           String?
-  previousSystemCode  String?
+  id                 String             @id @default(cuid())
+  taxonomyCode       String
+  systemCode         String
+  action             MappingAuditAction
+  userId             String?
+  timestamp          DateTime           @default(now())
+  rationale          String?
+  previousSystemCode String?
 
-  taxonomy            MedicalTaxonomy?    @relation(fields: [taxonomyCode], references: [code], onDelete: Cascade)
-  user                User?               @relation(fields: [userId], references: [id], onDelete: NoAction)
+  taxonomy MedicalTaxonomy? @relation(fields: [taxonomyCode], references: [code], onDelete: Cascade)
+  user     User?            @relation(fields: [userId], references: [id], onDelete: NoAction)
 
   @@index([taxonomyCode])
   @@index([action])
@@ -3647,17 +3756,17 @@ enum GraphEdgeType {
 }
 
 model GraphNode {
-  id          String        @id @default(cuid())
-  nodeType    GraphNodeType
-  label       String
-  description String?
-  sourceType  String        // e.g., "MedicalTaxonomy", "MedicalContent", "AnatomyStructure"
-  sourceId    String        // e.g., taxonomy code, conditionId, anatomyId
-  taxonomyCode String?      // optional reference to MedicalTaxonomy.code
-  systemCodes String[]      @default([]) // NCCPA system codes
-  metadata    Json?         // additional fields like depth, parentId, contentCount, averageAccuracy, stability
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime
+  id           String        @id @default(cuid())
+  nodeType     GraphNodeType
+  label        String
+  description  String?
+  sourceType   String // e.g., "MedicalTaxonomy", "MedicalContent", "AnatomyStructure"
+  sourceId     String // e.g., taxonomy code, conditionId, anatomyId
+  taxonomyCode String? // optional reference to MedicalTaxonomy.code
+  systemCodes  String[]      @default([]) // NCCPA system codes
+  metadata     Json? // additional fields like depth, parentId, contentCount, averageAccuracy, stability
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime
 
   outgoingEdges GraphEdge[] @relation("OutgoingEdges")
   incomingEdges GraphEdge[] @relation("IncomingEdges")
@@ -3670,16 +3779,16 @@ model GraphNode {
 }
 
 model GraphEdge {
-  id          String        @id @default(cuid())
-  sourceId    String
-  targetId    String
-  edgeType    GraphEdgeType
-  weight      Float?        @default(1.0)
-  description String?
-  evidenceCount Int?        @default(0)
-  metadata    Json?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime
+  id            String        @id @default(cuid())
+  sourceId      String
+  targetId      String
+  edgeType      GraphEdgeType
+  weight        Float?        @default(1.0)
+  description   String?
+  evidenceCount Int?          @default(0)
+  metadata      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
 
   source GraphNode @relation("OutgoingEdges", fields: [sourceId], references: [id], onDelete: Cascade)
   target GraphNode @relation("IncomingEdges", fields: [targetId], references: [id], onDelete: Cascade)
@@ -3689,6 +3798,21 @@ model GraphEdge {
   @@index([targetId])
   @@index([edgeType])
   @@index([weight])
+}
+
+model Alias {
+  id         String   @id @default(cuid())
+  entityType String   // 'Drug', 'Condition', 'AnatomyStructure', 'MedicalContent', …
+  entityId   String   // ID of the referenced entity
+  alias      String   // the alias text
+  language   String   @default("en")
+  isPrimary  Boolean  @default(false)  // whether this is the preferred alias
+  addedBy    String?  // user ID or system source
+  addedAt    DateTime @default(now())
+
+  @@unique([entityType, entityId, alias])
+  @@index([entityType, entityId])
+  @@index([alias])   // for search
 }
 
 enum CircadianPhase {

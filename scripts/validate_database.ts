@@ -344,9 +344,10 @@ async function generateReport() {
     if (!byTable[issue.table]) {
       byTable[issue.table] = { errors: [], warnings: [], info: [] };
     }
-    if (issue.severity === 'error') byTable[issue.table].errors.push(issue);
-    else if (issue.severity === 'warning') byTable[issue.table].warnings.push(issue);
-    else byTable[issue.table].info.push(issue);
+    const bucket = byTable[issue.table]!;
+    if (issue.severity === 'error') bucket.errors.push(issue);
+    else if (issue.severity === 'warning') bucket.warnings.push(issue);
+    else bucket.info.push(issue);
   }
 
   // Print by table

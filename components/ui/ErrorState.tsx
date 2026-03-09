@@ -16,6 +16,7 @@ interface ErrorStateProps {
 /**
  * ErrorState - Reusable error display component with optional retry
  *
+ * @deprecated Prefer EmptyState from '@/components/ui/EmptyState' for new code.
  * Provides consistent error UX across the application with smooth animations
  * and clear call-to-action for recoverable errors.
  *

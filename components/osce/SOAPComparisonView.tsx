@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import { FileText, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Sparkles, Lightbulb } from 'lucide-react';
 import type { SOAPComparison } from '@/types/smart-scribe-system';
 
 interface SOAPComparisonViewProps {
@@ -111,7 +111,7 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
           <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
             <span className="w-8 h-8 rounded-lg bg-data-pass/20 flex items-center justify-center">
-              ✨
+              <Sparkles className="w-6 h-6" />
             </span>
             Gold Standard
           </h3>
@@ -223,8 +223,9 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
       {/* Teaching Points */}
       {comparison.teachingPoints.length > 0 && (
         <div className="rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-6">
-          <h3 className="text-lg font-semibold text-[var(--color-accent)] mb-3">
-            💡 Teaching Points
+          <h3 className="text-lg font-semibold text-[var(--color-accent)] mb-3 flex items-center gap-2">
+            <Lightbulb className="w-5 h-5 shrink-0" />
+            Teaching Points
           </h3>
           <ul className="space-y-2">
             {comparison.teachingPoints.map((point, i) => (

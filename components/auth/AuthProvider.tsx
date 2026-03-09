@@ -6,6 +6,7 @@
 
 import React, { useEffect } from 'react';
 import { ClerkProvider, useUser } from '@clerk/clerk-react';
+import { DevAutoLogin } from './DevAutoLogin';
 import { useThemeContext } from '@/contexts/ThemeContext';
 import { SetupRequiredPage } from './SetupRequiredPage';
 
@@ -177,6 +178,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }}
     >
       <SentryUserSync />
+      <DevAutoLogin />
       {children}
     </ClerkProvider>
   );

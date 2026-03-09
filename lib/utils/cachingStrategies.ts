@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { StorageKeys } from '../storage/storageRegistry';
 
 // ============================================================================
 // CACHE TYPES AND INTERFACES
@@ -182,8 +183,10 @@ class MemoryCache {
 // PERSISTENT CACHE (localStorage)
 // ============================================================================
 
+import { StorageKeys } from '../storage/storageRegistry';
+
 class PersistentCache {
-  private prefix = 'panacea_cache_';
+  private prefix = StorageKeys.CACHE_PREFIX;
   private stats = {
     hits: 0,
     misses: 0,

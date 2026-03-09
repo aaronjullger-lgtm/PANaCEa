@@ -4,7 +4,7 @@ import {
   buildDatabaseContext,
   calculateRelevanceScore,
 } from '../lib/contentHelpers';
-import type { LoadedConditionData } from '../services/conditionDataLoader';
+import type { LoadedConditionData } from '../services/core/conditionDataLoader';
 
 describe('Content Helpers', () => {
   describe('hasCompleteContent', () => {

@@ -16,6 +16,8 @@ import {
   Heart,
   Droplet,
   Zap,
+  Star,
+  Award,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
@@ -277,13 +279,15 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                 {/* High yield / First line badges */}
                 <div className="flex gap-2 mt-3">
                   {drug.isHighYield && (
-                    <span className="px-3 py-1 rounded-full bg-data-provisional/20 text-data-provisional text-xs font-semibold border border-data-provisional/30">
-                      ⭐ High Yield
+                    <span className="px-3 py-1 rounded-full bg-data-provisional/20 text-data-provisional text-xs font-semibold border border-data-provisional/30 flex items-center gap-1">
+                      <Star className="w-3.5 h-3.5 shrink-0" />
+                      High Yield
                     </span>
                   )}
                   {drug.isFirstLine && (
-                    <span className="px-3 py-1 rounded-full bg-sage-500/20 text-sage-400 text-xs font-semibold border border-sage-500/30">
-                      🥇 First-Line
+                    <span className="px-3 py-1 rounded-full bg-sage-500/20 text-sage-400 text-xs font-semibold border border-sage-500/30 flex items-center gap-1">
+                      <Award className="w-3.5 h-3.5 shrink-0" />
+                      First-Line
                     </span>
                   )}
                   {drug.panceYield && drug.panceYield >= 3 && (
@@ -601,7 +605,7 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                             key={idx}
                             className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]"
                           >
-                            <span className="text-data-provisional mt-1">💡</span>
+                            <Lightbulb className="w-4 h-4 text-data-provisional mt-1 shrink-0" />
                             <span>{tip}</span>
                           </li>
                         ))}

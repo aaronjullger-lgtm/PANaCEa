@@ -139,7 +139,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
       >
         <Activity className="w-6 h-6" />
         {report.score > 0 && (
-          <span className="absolute -top-1 -right-1 bg-white text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] border border-[var(--color-border)] text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
             {report.score}
           </span>
         )}

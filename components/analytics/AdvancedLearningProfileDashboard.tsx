@@ -412,7 +412,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
                 icon={<Calendar className="w-5 h-5 text-data-pass" />}
                 label="Study Streak"
                 value={`${profile.currentStreak} days`}
-                sublabel={profile.currentStreak > 7 ? '🔥 On fire!' : 'Keep it going!'}
+                sublabel={profile.currentStreak > 7 ? 'On fire!' : 'Keep it going!'}
               />
             </div>
 

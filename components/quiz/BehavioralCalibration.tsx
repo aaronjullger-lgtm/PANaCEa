@@ -21,6 +21,7 @@ import {
   Brain,
   Zap,
   HelpCircle,
+  Lightbulb,
 } from 'lucide-react';
 import {
   InferredConfidence,
@@ -103,7 +104,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
   }
 
   return (
-    <div className="bg-white dark:bg-data-neutral rounded-lg border border-data-neutral dark:border-data-neutral overflow-hidden">
+    <div className="bg-white dark:bg-data-neutral-bg rounded-lg border border-data-neutral dark:border-data-neutral overflow-hidden">
       {/* Header */}
       <button
         onClick={onToggle}
@@ -189,7 +190,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
                       key={i}
                       className="flex items-start gap-2 text-xs text-data-neutral dark:text-data-neutral"
                     >
-                      <span className="text-[var(--color-accent)] mt-0.5">💡</span>
+                      <Lightbulb className="w-4 h-4 text-[var(--color-accent)] mt-0.5 shrink-0" />
                       <span>{insight}</span>
                     </div>
                   ))}

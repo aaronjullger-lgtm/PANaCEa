@@ -126,14 +126,14 @@ const TIER_COLORS = {
 };
 
 const CATEGORY_LABELS: Record<AchievementCategory, string> = {
-  streak: '🔥 Streaks',
-  accuracy: '🎯 Accuracy',
-  volume: '📚 Volume',
-  mastery: '🧠 Mastery',
-  speed: '⚡ Speed',
-  dedication: '💪 Dedication',
-  social: '👥 Social',
-  special: '✨ Special',
+  streak: 'Streaks',
+  accuracy: 'Accuracy',
+  volume: 'Volume',
+  mastery: 'Mastery',
+  speed: 'Speed',
+  dedication: 'Dedication',
+  social: 'Social',
+  special: 'Special',
 };
 
 // =============================================================================

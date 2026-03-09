@@ -21,7 +21,6 @@ export { BookmarksPanel } from './BookmarksPanel';
 
 // Card Components
 export { EnhancedConditionCard } from './EnhancedConditionCard';
-export { CompressedConditionCard } from './CompressedConditionCard';
 
 // List Components
 export { VirtualizedConditionList } from './VirtualizedConditionList';

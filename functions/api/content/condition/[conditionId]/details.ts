@@ -8,6 +8,7 @@
 import { z } from 'zod';
 import { publicEndpoint, withCors } from '../../../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
+import { ConditionDetailsSchema } from '@/lib/schemas/medicalContent';
 
 const ParamsSchema = z.object({
   conditionId: z.string().min(1).max(200),
@@ -20,6 +21,14 @@ export const onRequestGet = publicEndpoint(
   async (context) => {
     const { env, validated } = context;
     const { conditionId } = validated;
+
+    if (!env.DATABASE_URL) {
+      return {
+        data: { error: 'Service unavailable', message: 'Database is not configured.', conditionId },
+        status: 503,
+      };
+    }
+
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     try {
@@ -127,9 +136,20 @@ export const onRequestGet = publicEndpoint(
         };
       }
 
+      const parsed = ConditionDetailsSchema.safeParse(content);
+      if (!parsed.success) {
+        console.warn('[condition/details] response shape validation failed', parsed.error.issues);
+      }
       return {
-        data: content,
+        data: parsed.success ? parsed.data : content,
         headers: { 'Cache-Control': 'public, max-age=300' },
+      };
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      console.error('[condition/details]', errMsg);
+      return {
+        data: { error: 'Failed to load condition details', message: 'Please try again later.', conditionId },
+        status: 500,
       };
     } finally {
       await safePrismaDisconnect(prisma);

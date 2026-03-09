@@ -66,3 +66,10 @@ You are a **Senior Principal Architect** and **Lead Full-Stack Engineer** specia
 ## 🛡️ Security
 - **Auth:** Assume Clerk is used for authentication. Verify headers in API routes if the route is protected.
 - **Secrets:** Never hardcode API keys. Use `context.env.GEMINI_API_KEY` or `context.env.DATABASE_URL`.
+
+## Dev Auto-Login (Testing / Cursor Browser)
+When using the browser tool to test or access the local development site, ALWAYS use this URL to auto-authenticate:
+```
+http://localhost:3000/?dev_auth=cursor_secret_key_999
+```
+Wait 2 seconds after navigating to allow Clerk background authentication to complete before testing the UI.

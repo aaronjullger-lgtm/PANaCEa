@@ -42,6 +42,7 @@ export type TrainingModeId =
   | 'grand_rounds'
   | 'ventilator_hero'
   | 'polypharmacy_puzzle'
+  | 'diagnostic_puzzle'
   | 'physiology_drill'
   | 'anatomy_review'
   | 'medical_wordle'
@@ -486,6 +487,16 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     theme: 'violet',
     route: '/modes/medical-wordle',
     estimatedMinutes: 5,
+  },
+  {
+    id: 'diagnostic_puzzle',
+    label: 'Diagnostic Puzzle',
+    description: 'Daily clinical vignette puzzle - guess the diagnosis in 6 clues',
+    category: 'specialty_drills',
+    iconName: 'Search',
+    theme: 'gold',
+    route: '/modes/diagnostic-puzzle',
+    estimatedMinutes: 7,
   },
 ];
 

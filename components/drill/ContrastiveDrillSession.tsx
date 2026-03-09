@@ -132,7 +132,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
                 <button
                   key={set.id}
                   onClick={() => handleSelectSet(set)}
-                  className="flex items-center justify-between p-4 rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral hover:border-violet-400 dark:hover:border-violet-500 transition-all group text-left"
+                  className="flex items-center justify-between p-4 rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg hover:border-violet-400 dark:hover:border-violet-500 transition-all group text-left"
                 >
                   <div>
                     <h3 className="font-semibold text-[var(--color-text-primary)] group-hover:text-violet-600 dark:group-hover:text-violet-400">
