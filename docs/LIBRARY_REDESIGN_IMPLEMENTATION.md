@@ -140,14 +140,30 @@ Persists user preferences to `localStorage`.
 
 ### `GET /api/content/library`
 
-**New Parameters:**
+**Parameters in use:**
 
-- `highYield=true` - Filter to `pance_yield >= 3`
+- `system`
+- `subcategory`
+- `search`
+- `highYield=true` → filters to `pance_yield >= 3`
 
-**New Response Fields:**
+**Response shape:**
 
-- `gold_standard_dx` - For card tooltips
-- `first_line_rx` - For card tooltips
+```json
+{
+  "content": [/* card payload list */],
+  "count": 0
+}
+```
+
+### `GET /api/content/systems`
+
+Returns filter options as `{ id, label, count }[]`.
+
+### Split detail endpoints (lazy loading)
+
+- `GET /api/content/condition/:conditionId/summary` — lightweight header/cheat-sheet payload
+- `GET /api/content/condition/:conditionId/details` — full relational detail payload (labs, imaging, drugs, exam findings, ECG, treatment links)
 
 ---
 
