@@ -117,6 +117,24 @@ const routes = [
     description: 'Mechanical ventilation management',
   },
   {
+    name: 'Virtual OSCE',
+    url: '/modes/patient-encounter',
+    expectText: 'Virtual OSCE',
+    description: 'Interactive patient encounter and grading flow entry',
+  },
+  {
+    name: 'Diagnostic Puzzle',
+    url: '/modes/diagnostic-puzzle',
+    expectText: 'Daily Diagnostic Puzzle',
+    description: 'Daily clue-based diagnosis game',
+  },
+  {
+    name: 'Medical Wordle',
+    url: '/modes/medical-wordle',
+    expectText: 'Medical Wordle',
+    description: 'Daily medical term puzzle',
+  },
+  {
     name: 'Admin Media',
     url: '/?view=admin_media',
     expectText: 'Media',
