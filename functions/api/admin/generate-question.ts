@@ -2,7 +2,7 @@
 // Taxonomy‑driven question generation endpoint
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { generateSingleQuestion, type ConditionData } from '../_shared/question-generator';
@@ -20,7 +20,7 @@ export const onRequestOptions = withCors();
  * POST /api/admin/generate-question
  * Generate one or more PANCE‑style questions based on taxonomy and subcategory.
  */
-export const onRequestPost = authenticatedEndpoint(
+export const onRequestPost = adminAuthenticatedEndpoint(
   z.object({
     body: GenerateQuestionSchema,
   }),

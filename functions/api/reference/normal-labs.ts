@@ -8,13 +8,13 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
   safePrismaDisconnect,
   EdgePrismaClient,
-} from '../../_shared/prisma-edge';
-import { createEndpointLogger } from '../../_shared/secureLogger';
+} from '../_shared/prisma-edge';
+import { createEndpointLogger } from '../_shared/secureLogger';
 
 const NormalLabsQuerySchema = z.object({
   category: z.string().max(50).optional(),

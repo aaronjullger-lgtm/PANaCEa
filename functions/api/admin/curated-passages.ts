@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { isAdmin, type UserRole } from '../_shared/rbac';
@@ -33,7 +33,7 @@ const CuratedPassageMutationSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = adminAuthenticatedEndpoint(
   CuratedPassageGetSchema,
   async (context) => {
     const { env, auth, validated } = context;
@@ -102,7 +102,7 @@ export const onRequestGet = authenticatedEndpoint(
   { source: 'query' }
 );
 
-export const onRequestPost = authenticatedEndpoint(
+export const onRequestPost = adminAuthenticatedEndpoint(
   CuratedPassageMutationSchema,
   async (context) => {
     const { env, auth, validated } = context;

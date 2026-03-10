@@ -2,7 +2,7 @@
 // Admin CRUD endpoints for MedicalTaxonomy
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -22,7 +22,7 @@ export const onRequestOptions = withCors();
  * GET /api/admin/taxonomies
  * List all taxonomies (with optional pagination)
  */
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = adminAuthenticatedEndpoint(
   z.object({
     query: z.object({
       page: z.string().optional(),
@@ -98,7 +98,7 @@ export const onRequestGet = authenticatedEndpoint(
  * POST /api/admin/taxonomies
  * Create a new taxonomy
  */
-export const onRequestPost = authenticatedEndpoint(
+export const onRequestPost = adminAuthenticatedEndpoint(
   z.object({
     body: TaxonomySchema,
   }),
@@ -164,7 +164,7 @@ export const onRequestPost = authenticatedEndpoint(
  * PUT /api/admin/taxonomies/:code
  * Update a taxonomy
  */
-export const onRequestPut = authenticatedEndpoint(
+export const onRequestPut = adminAuthenticatedEndpoint(
   z.object({
     params: z.object({ code: z.string() }),
     body: UpdateTaxonomySchema,
@@ -228,7 +228,7 @@ export const onRequestPut = authenticatedEndpoint(
  * DELETE /api/admin/taxonomies/:code
  * Soft delete (set isActive = false) or hard delete based on query param
  */
-export const onRequestDelete = authenticatedEndpoint(
+export const onRequestDelete = adminAuthenticatedEndpoint(
   z.object({
     params: z.object({ code: z.string() }),
     query: z.object({ hard: z.string().optional() }),

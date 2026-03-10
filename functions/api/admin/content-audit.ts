@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 
@@ -164,7 +164,7 @@ const ContentAuditSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(ContentAuditSchema, async (context) => {
+export const onRequestGet = adminAuthenticatedEndpoint(ContentAuditSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/admin/content-audit');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
