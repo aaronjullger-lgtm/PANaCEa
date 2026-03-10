@@ -146,21 +146,26 @@ GET / api / media / list;
 
 ```typescript
 // Frontend code
+const token = await getToken();
 const response = await fetch('/api/questions/fetch', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  },
   body: JSON.stringify({
-    userId: currentUser.id,
+    userId: 'current',
     system: 'CV', // Cardiovascular
     difficulty: 'medium',
     limit: 10,
   }),
 });
 
-const { questions, source, needsGeneration } = await response.json();
+const { success, questions, source, count, needsGeneration, generationNeeded } = await response.json();
 
-// source: "database" (questions from repository)
-// source: "database_and_generation_needed" (needs more questions)
+// success: true
+// source: "database"
+// needsGeneration + generationNeeded indicate pool shortfall for requested limit
 ```
 
 ### Recording Question Viewed

@@ -79,11 +79,16 @@ Gemini 3 introduces **Thinking** (controlled via `thinking_level`), which is the
 
 **Frontend helper:** `useBoundingBox(containerSize?)` returns `{ toCSS, toPixels }`. `toCSS(box)` gives `{ top, left, width, height }` as percentage strings; `toPixels(box)` gives pixel values when container size is provided.
 
+**Related endpoint (procedure technique):** `POST /api/technique-check/analyze` — implementation: `functions/api/technique-check/analyze.ts`.  
+Consumes multipart form data (`video`, `query`) and returns `{ critique, boundingBoxes? }` for physical exam skill feedback.
+
 ---
 
 ## Phase 3: Anatomy Painter (Firefly)
 
-**Endpoint:** `POST /api/visualizer/generate` — implementation: `functions/api/visualizer/generate.ts`.
+**Endpoints:**  
+- `POST /api/visualizer/generate` — implementation: `functions/api/visualizer/generate.ts`.  
+- `POST /api/visualizer/edit` — implementation: `functions/api/visualizer/edit.ts`.
 
 **Student benefit:** Custom, anatomically accurate diagrams for rare conditions not in standard atlases. Standard AI hallucinates extra bones; PA students need precision. Structure reference locks bone geometry.
 
@@ -97,6 +102,13 @@ Gemini 3 introduces **Thinking** (controlled via `thinking_level`), which is the
 **Request body (wrapped in `body`):** `prompt`, `segmentationPrompt`, `structureReferenceUrl`, `structureReferenceImageId`, `referenceAnatomyId` (AnatomyStructure.id or MediaAsset.id), `contentClass`, `conditionId`.
 
 **Response:** `{ data: { imageBase64 (data URL), imageMime, masks, conditionId, contentClass, storageUrl?, storagePath? } }`
+
+### Conversational edit flow (`/api/visualizer/edit`)
+
+- **Request body (top-level JSON):** `imageBase64`, optional `mimeType`, `userPrompt`, optional `thoughtSignature`.
+- **Response:** `{ data: { imageBase64, imageMime, thoughtSignature? } }`
+- **Purpose:** Multi-turn image editing while preserving composition/anatomical consistency across turns using `thoughtSignature`.
+- **Env:** `GEMINI_API_KEY`; optional `VISUALIZER_EDIT_MODEL` override.
 
 **Env:** `GEMINI_API_KEY`, `ADOBE_CLIENT_ID` + `ADOBE_CLIENT_SECRET` (or `ADOBE_ACCESS_TOKEN`), optional `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` for storage + Prisma logging.
 

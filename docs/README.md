@@ -45,7 +45,7 @@ Learn about PANaCEa's system design:
 
 Backend endpoint contracts and API behavior docs:
 
-- **[API Overview](api/API_OVERVIEW.md)** - Current changed API contracts (health, Gemini, content library, diagnostic puzzle, questions, user goals/session, admin enrichment, OSCE grading)
+- **[API Overview](api/API_OVERVIEW.md)** - Current changed API contracts (health, Gemini, content library, diagnostic puzzle, questions, spark instant-calc, technique-check, visualizer edit, user goals/session, admin enrichment, OSCE grading)
 
 ---
 

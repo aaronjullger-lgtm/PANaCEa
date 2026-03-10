@@ -11,7 +11,7 @@ The Intelligence Layer adds five advanced AI-powered modules on top of the core 
 | **1. Hyper-Real Simulated Patient** | Voice-based OSCE via Gemini Live; vitals via tool | Virtual OSCE → Live voice button (during encounter) |
 | **2. Clinical Eye Tutor** | Image analysis with Gemini 2.5 Flash + code execution | Command Center → Clinical Resources → Clinical Eye |
 | **3. Infinite Smart Library** | Per-user context caching (e.g. “study brain”) for Gemini | Used by chat/proxy when `cachedContent` is supplied |
-| **4. The Visualizer** | Adobe Firefly image generation + Gemini segmentation | Command Center → Clinical Resources → Visualizer |
+| **4. The Visualizer** | Adobe Firefly generation + Gemini conversational image editing | Command Center → Clinical Resources → Visualizer |
 | **5. Audio Lecture Converter** | PDF → script (Gemini) → TTS → podcast | Optional Node service; proxy at `/api/podcast/generate` |
 
 ---
@@ -39,6 +39,10 @@ The Intelligence Layer adds five advanced AI-powered modules on top of the core 
 
 - **Module 4 (Visualizer)**  
   - **ADOBE_CLIENT_ID**, **ADOBE_CLIENT_SECRET** – For Firefly image generation. If unset, the generate endpoint may return an error or skip Firefly.
+  - **VISUALIZER_EDIT_MODEL** (optional) – Gemini image-edit model override for `POST /api/visualizer/edit` (defaults to `gemini-2.0-flash-exp`).
+
+- **Toolkit AI add-ons**
+  - **SPARK_API_KEY** (optional) – Enables `POST /api/spark/instant-calc`; when missing, endpoint returns `501` with a fallback hint.
 
 - **Module 5 (Podcast)**  
   - **PODCAST_SERVICE_URL** – Base URL of the Node podcast service (e.g. `http://localhost:3001`). If unset, `POST /api/podcast/generate` returns 501.  
@@ -76,8 +80,10 @@ See `podcast-service/README.md` for more detail.
 
 - **OSCE Live:** `GET /api/osce/live-config`, `GET /api/osce/session/:sessionId/vitals`
 - **Clinical Eye:** `POST /api/clinical-eye/analyze`
+- **Technique Check:** `POST /api/technique-check/analyze` (multipart `video` + `query`, max video size 20MB)
 - **Knowledge:** `POST /api/knowledge/upload`, `POST /api/knowledge/cache`, `GET /api/knowledge/caches`, `DELETE /api/knowledge/cache/:id`, `POST /api/knowledge/cache/student-context`
-- **Visualizer:** `POST /api/visualizer/generate`
+- **Visualizer:** `POST /api/visualizer/generate`, `POST /api/visualizer/edit`
+- **Spark calculators:** `POST /api/spark/instant-calc`
 - **Podcast:** `POST /api/podcast/generate` (proxies to podcast-service when `PODCAST_SERVICE_URL` is set)
 - **Gemini proxy:** `POST /api/gemini`, `POST /api/gemini/stream` – accept optional `cachedContent` for context caching
 

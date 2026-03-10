@@ -25,6 +25,10 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 | GET | `/api/diagnostic-puzzle/stats` | Required | User diagnostic puzzle performance stats and streak. |
 | POST | `/api/drills/contrastive/start` | Required | Load a contrastive drill set by ID. |
 | POST | `/api/osce/analysis/grade` | Required | Grade completed OSCE session transcript, persist result/concept gap. |
+| POST | `/api/spark/instant-calc` | Required | Generate an instant calculator micro-app scaffold from a prompt. |
+| POST | `/api/technique-check/analyze` | Required | Analyze uploaded physical-exam technique video with critique + optional boxes. |
+| POST | `/api/visualizer/edit` | Required | Conversationally edit an image and return updated asset + thought signature. |
+| POST | `/api/questions/fetch` | Required | Fetch pre-generated questions for a user with filters and pool health flags. |
 | POST | `/api/questions/generate` | Required | Generate (or cache-hit) question by query text/type/system/difficulty. |
 | POST | `/api/questions/attempt` | Required | Record attempt telemetry and update stats/SRS/Rolling 360. |
 | POST | `/api/recommendations/generate` | Required | Generate personalized recommendation list for user. |
@@ -247,6 +251,110 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 ```
 
 - **Notable errors:** `400`, `404`, `422`, `429`, `502`, `500`.
+
+### `POST /api/spark/instant-calc`
+
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "prompt": "Build a Wells score calculator",
+  "calcSlug": "optional-slug"
+}
+```
+
+- **Success (`200`):**
+
+```json
+{
+  "html": "<!DOCTYPE html>...",
+  "sandboxConfig": { "allowScripts": true }
+}
+```
+
+- **Current behavior:** If `SPARK_API_KEY` is configured, handler is ready to proxy Spark calls; current implementation returns a placeholder micro-app scaffold.
+- **Errors:** `400` invalid body, `401` unauthenticated, `501` Spark not configured (`SPARK_API_KEY` missing).
+
+### `POST /api/technique-check/analyze`
+
+- **Auth:** Required.
+- **Request content type:** `multipart/form-data`.
+- **Form fields:**
+  - `video` (required file, max 20MB)
+  - `query` (required string)
+- **Success (`200`):**
+
+```json
+{
+  "critique": "Keep your hand anchored and align the otoscope cone before insertion.",
+  "boundingBoxes": [
+    { "label": "Hand position", "x": 0.41, "y": 0.36, "w": 0.18, "h": 0.22 }
+  ]
+}
+```
+
+- **Errors:** `400` invalid multipart body/missing fields/video too large, `401` unauthenticated, `500` missing `GEMINI_API_KEY`, upstream Gemini status passthrough with `{ "error": "Analysis failed", "details": "..." }`.
+
+### `POST /api/visualizer/edit`
+
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "imageBase64": "data:image/png;base64,...",
+  "mimeType": "image/png",
+  "userPrompt": "Highlight the ulnar nerve in cyan",
+  "thoughtSignature": "optional-prior-turn-signature"
+}
+```
+
+- **Success (`200`):**
+
+```json
+{
+  "data": {
+    "imageBase64": "data:image/png;base64,...",
+    "imageMime": "image/png",
+    "thoughtSignature": "opaque-token"
+  }
+}
+```
+
+- **Notes:** `thoughtSignature` is optional input and output for multi-turn visual consistency.
+- **Errors:** `400` validation failure, `401` unauthenticated, `500` missing `GEMINI_API_KEY`, upstream Gemini status passthrough on edit failure, `502` when model returns no image.
+
+### `POST /api/questions/fetch`
+
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "userId": "current",
+  "system": "Cardiology",
+  "conditionId": "optional-condition-id",
+  "difficulty": "medium",
+  "questionType": "mcq",
+  "limit": 1
+}
+```
+
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "questions": [/* PreGeneratedQuestion[] */],
+  "source": "database",
+  "count": 1,
+  "needsGeneration": false,
+  "generationNeeded": 0
+}
+```
+
+- **Errors:** `400` validation failure, `401` unauthenticated, `500` fetch failure.
 
 ### `POST /api/questions/generate`
 
