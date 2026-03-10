@@ -16,9 +16,7 @@ const DRY_RUN = process.argv.includes('--dry-run');
 async function main() {
   console.log('╔════════════════════════════════════════════════════════════╗');
   console.log('║  Phase 3c: Populate PearlConditionLink                    ║');
-  console.log(
-    `║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`
-  );
+  console.log(`║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`);
   console.log('╚════════════════════════════════════════════════════════════╝');
 
   // Get pearls with conditionId set
@@ -42,10 +40,7 @@ async function main() {
   for (const pearl of pearlsWithCondition) {
     if (!pearl.conditionId) continue;
     const key = `${pearl.id}:${pearl.conditionId}`;
-    if (existingSet.has(key)) {
-      skipped++;
-      continue;
-    }
+    if (existingSet.has(key)) { skipped++; continue; }
 
     if (!DRY_RUN) {
       try {
@@ -61,12 +56,8 @@ async function main() {
         });
         existingSet.add(key);
         created++;
-      } catch {
-        skipped++;
-      }
-    } else {
-      created++;
-    }
+      } catch { skipped++; }
+    } else { created++; }
   }
 
   // Also link pearls that have medicalContentId but no conditionId
@@ -91,10 +82,7 @@ async function main() {
 
     const conditionId = mc.conditionId;
     const key = `${pearl.id}:${conditionId}`;
-    if (existingSet.has(key)) {
-      skipped++;
-      continue;
-    }
+    if (existingSet.has(key)) { skipped++; continue; }
 
     // Verify condition exists
     const condExists = await prisma.condition.findUnique({ where: { id: conditionId } });
@@ -114,12 +102,8 @@ async function main() {
         });
         existingSet.add(key);
         created++;
-      } catch {
-        skipped++;
-      }
-    } else {
-      created++;
-    }
+      } catch { skipped++; }
+    } else { created++; }
   }
 
   console.log('\n════════════════════════════════════════');
