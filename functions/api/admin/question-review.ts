@@ -9,7 +9,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { isAdmin, type UserRole } from '../_shared/rbac';
@@ -44,7 +44,7 @@ export const onRequestOptions = withCors();
 /**
  * GET - List questions for review
  */
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = adminAuthenticatedEndpoint(
   GetQuerySchema,
   async (context) => {
     const { env, auth, validated } = context;
@@ -177,7 +177,7 @@ export const onRequestGet = authenticatedEndpoint(
 /**
  * POST - Update question validation status
  */
-export const onRequestPost = authenticatedEndpoint(ValidationSchema, async (context) => {
+export const onRequestPost = adminAuthenticatedEndpoint(ValidationSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/admin/question-review');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

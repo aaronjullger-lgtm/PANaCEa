@@ -2,7 +2,7 @@
 // Admin endpoint to view cache performance metrics
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { getCacheMetrics, isKVAvailable } from '../_shared/cache';
@@ -19,7 +19,7 @@ export const onRequestOptions = withCors();
  * Returns cache hit/miss statistics for monitoring performance
  * Admin-only endpoint
  */
-export const onRequestGet = authenticatedEndpoint(CacheMetricsSchema, async (context) => {
+export const onRequestGet = adminAuthenticatedEndpoint(CacheMetricsSchema, async (context) => {
   const { env, auth } = context;
   const logger = createEndpointLogger('/api/admin/cache-metrics');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

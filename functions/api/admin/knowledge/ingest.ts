@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../../_shared/middleware';
 import { createEndpointLogger } from '../../_shared/secureLogger';
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
@@ -32,7 +32,7 @@ const IngestSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(IngestSchema, async (context) => {
+export const onRequestPost = adminAuthenticatedEndpoint(IngestSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/admin/knowledge/ingest');
 
