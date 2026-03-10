@@ -25,6 +25,7 @@ import {
 import { useIsMobile } from '@/lib/utils/responsive';
 import { useDatabaseStats } from '@/hooks/useDatabaseStats';
 import type { PerformanceRecord, SessionSettings, Question, TopicStats, SystemCode } from '@/types';
+import type { QuizQuestion } from '@/types';
 import TrainingMenu from '@/components/dashboard/TrainingMenu';
 import ProgressRing from '@/components/ui/ProgressRing';
 import TopicHeatmap from '@/components/analytics/TopicHeatmap';
@@ -73,7 +74,7 @@ interface MenuViewProps {
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   onStartSession: () => void;
-  onConfirmSession: (settings: SessionSettings) => void;
+  onConfirmSession: (settings: SessionSettings, preloadedQueue?: QuizQuestion[]) => void;
   /** Callback to remove a question from bookmarks */
   onRemoveBookmark?: (question: Question) => void;
   growthAreas: string[];
@@ -1012,13 +1013,11 @@ const MenuView: React.FC<MenuViewProps> = ({
           missedQuestions={missedQuestions}
           onClose={() => setShowQuickReview(false)}
           onStartReview={(questions) => {
-            // Start a review session with the selected questions
             setShowQuickReview(false);
-            // Note: Full implementation would trigger a special review session mode
-            // For now, this demonstrates the flow
-            onConfirmSession({
-              focus: 'review',
-            });
+            onConfirmSession(
+              { focus: 'review', count: questions.length },
+              questions
+            );
           }}
         />
       )}

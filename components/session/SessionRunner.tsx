@@ -39,6 +39,16 @@ interface SessionRunnerProps {
  * SessionRunner – resumes a previously generated study session by its ID.
  * Fetches the session's questions and renders the QuizView with the stored order.
  */
+/** Derive growth areas (systems) from session questions for adaptive focus */
+function deriveGrowthAreas(questions: Question[]): string[] {
+  const systems = new Set<string>();
+  for (const q of questions) {
+    const sys = (q as { system?: string }).system ?? (q as { condition?: { system?: string } }).condition?.system;
+    if (sys && typeof sys === 'string') systems.add(sys);
+  }
+  return Array.from(systems);
+}
+
 const SessionRunner: React.FC<SessionRunnerProps> = ({
   onExit,
   addPerformanceRecord,
@@ -59,6 +69,7 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(null);
+  const [growthAreas, setGrowthAreas] = useState<string[]>([]);
 
   const fetchSession = useCallback(async () => {
     if (!sessionId) {
@@ -76,9 +87,11 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
         throw new Error(`Failed to fetch session: ${response.status} ${text}`);
       }
       const json = await response.json();
-      const questions =
+      const rawQuestions =
         json?.data?.questions ?? json?.questions ?? [];
-      setQuestions(Array.isArray(questions) ? questions : []);
+      const questionList = Array.isArray(rawQuestions) ? rawQuestions : [];
+      setQuestions(questionList);
+      setGrowthAreas(deriveGrowthAreas(questionList));
 
       // Construct minimal SessionSettings from the session metadata (if available).
       // For now, we use defaults; could be extended if the endpoint returns session metadata.
@@ -137,6 +150,7 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
 
   return (
     <QuizViewWithErrorBoundary
+      modeLabel="Practice → Session"
       initialQueue={questions}
       setParentQueue={setQuestions}
       addPerformanceRecord={addPerformanceRecord}
@@ -147,7 +161,7 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
       setIsLoading={setLoading}
       setError={setError}
       sessionSettings={sessionSettings}
-      growthAreas={[]} // TODO: could be derived from session metadata
+      growthAreas={growthAreas}
       onEndSession={handleEndSession}
       onShowMenu={onExit}
       performanceData={performanceData}
@@ -157,9 +171,7 @@ const SessionRunner: React.FC<SessionRunnerProps> = ({
       addFlaggedQuestion={addFlaggedQuestion}
       removeFlaggedQuestion={removeFlaggedQuestion}
       updateQuestionNote={updateQuestionNote}
-      onReviewMissed={
-        performanceData.some((p) => !p.isCorrect) ? () => {/* TODO: implement review missed */} : undefined
-      }
+      onReviewMissed={undefined}
     />
   );
 };

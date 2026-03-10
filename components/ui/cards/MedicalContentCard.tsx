@@ -9,11 +9,11 @@ import {
   ClassicTriadRenderer,
 } from '@/components/ui/content-renderers';
 import {
-  safeParseJson,
-  safeParseList,
-  handleFakeNull,
-  normalizeToStringArray,
-} from '@/lib/utils/jsonParser';
+  parseMedicalContentField,
+  classicTriadSchema,
+  clinicalPearlsSchema,
+  synonymsSchema,
+} from '@/lib/schemas/medicalContentFields';
 
 interface MedicalContentCardProps {
   content: Partial<MedicalContentDisplay>;
@@ -88,13 +88,20 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
   isBookmarked = false,
   compact = false,
 }) => {
-  // Parse JSONB fields safely
-  const clinicalPearls = safeParseList(content.clinical_pearls);
-  // handleFakeNull returns T | null; we need to type assert for array check
-  const classicTriadRaw = handleFakeNull(content.classic_triad, null);
-  const classicTriad = Array.isArray(classicTriadRaw) ? (classicTriadRaw as string[]) : null;
-  const buzzwords = safeParseList(content.buzzwords);
-  const synonyms = safeParseList(content.synonyms);
+  // Parse JSONB fields with Zod schemas
+  const clinicalPearls = parseMedicalContentField(
+    content.clinical_pearls,
+    clinicalPearlsSchema,
+    []
+  );
+  const classicTriadRaw = parseMedicalContentField(
+    content.classic_triad,
+    classicTriadSchema,
+    []
+  );
+  const classicTriad = classicTriadRaw.length > 0 ? classicTriadRaw : null;
+  const buzzwords = Array.isArray(content.buzzwords) ? content.buzzwords : [];
+  const synonyms = parseMedicalContentField(content.synonyms, synonymsSchema, []);
 
   return (
     <motion.div

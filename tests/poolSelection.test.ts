@@ -97,6 +97,28 @@ describe('selectByPanceDistribution', () => {
     const selected = selectByPanceDistribution(pool, 2);
     expect(selected).toHaveLength(2);
   });
+
+  it('skewed pool (500 DERM, 50 CV) approximates Blueprint distribution within tolerance', () => {
+    const pool = [
+      ...Array.from({ length: 500 }, (_, i) => makeQuestion(`derm-${i}`, 'DERM')),
+      ...Array.from({ length: 50 }, (_, i) => makeQuestion(`cv-${i}`, 'CV')),
+    ];
+    const runs = 50;
+    const countPerRun = 20;
+    const systemCounts: Record<string, number> = {};
+    for (let r = 0; r < runs; r++) {
+      const selected = selectByPanceDistribution(pool, countPerRun);
+      for (const q of selected) {
+        systemCounts[q.system] = (systemCounts[q.system] ?? 0) + 1;
+      }
+    }
+    const total = runs * countPerRun;
+    const cvPct = (systemCounts['CV'] ?? 0) / total;
+    const dermPct = (systemCounts['DERM'] ?? 0) / total;
+    // Blueprint weighting: CV (11%) preferred over DERM (5%). With skewed pool we should not get 95% DERM.
+    expect(dermPct).toBeLessThan(0.5);
+    expect(cvPct).toBeGreaterThanOrEqual(0.05);
+  });
 });
 
 describe('PANCE_SYSTEM_PERCENTAGES', () => {

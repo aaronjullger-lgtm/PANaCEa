@@ -16,6 +16,7 @@
 import React, { useState } from 'react';
 import { CalculatorHeader, ClinicalInput, ResultDisplay } from '../shared';
 import type { CalculatorProps, CalculatorResult } from '../types';
+import { calculateGFR } from '@/lib/calculators';
 
 export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [age, setAge] = useState('');
@@ -23,22 +24,14 @@ export const GFRCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [race, setRace] = useState<'black' | 'other'>('other');
   const [creatinine, setCreatinine] = useState('');
 
-  const calculateGFR = (): number | null => {
+  const calculateResult = (): number | null => {
     const ageNum = parseFloat(age);
     const crNum = parseFloat(creatinine);
-
     if (!ageNum || !crNum || ageNum <= 0 || crNum <= 0) return null;
-
-    // MDRD equation: 175 × (Cr)^-1.154 × (Age)^-0.203 × [0.742 if female] × [1.212 if Black]
-    let gfr = 175 * Math.pow(crNum, -1.154) * Math.pow(ageNum, -0.203);
-
-    if (sex === 'female') gfr *= 0.742;
-    if (race === 'black') gfr *= 1.212;
-
-    return Math.round(gfr);
+    return calculateGFR({ age: ageNum, creatinine: crNum, sex, race });
   };
 
-  const gfr = calculateGFR();
+  const gfr = calculateResult();
 
   const getInterpretation = (gfr: number): CalculatorResult => {
     let stage: string;

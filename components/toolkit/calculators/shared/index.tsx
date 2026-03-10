@@ -291,15 +291,20 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({
 };
 
 /**
- * CalculatorHeader - Consistent header with back button
+ * CalculatorHeader - Consistent header with optional back button
+ * Omit onBack when a parent provides its own BackLink (e.g. ToolkitHub).
  */
 interface CalculatorHeaderProps {
   title: string;
   subtitle: string;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
-export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ title, subtitle, onBack }) => {
+export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
+  title,
+  subtitle,
+  onBack,
+}) => {
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
@@ -308,12 +313,14 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({ title, subti
         </h2>
         <p className="text-[var(--color-text-muted)]">{subtitle}</p>
       </div>
-      <button
-        onClick={onBack}
-        className="px-4 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-      >
-        <span>← Back</span>
-      </button>
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="px-4 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+        >
+          <span>← Back</span>
+        </button>
+      )}
     </div>
   );
 };

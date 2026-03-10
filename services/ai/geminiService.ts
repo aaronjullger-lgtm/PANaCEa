@@ -1029,7 +1029,7 @@ Core Instructions:
 1. Scenario-Based: The question must present a realistic scenario involving professional practice issues relevant to PAs, such as medical ethics, legal responsibilities, patient safety, or public health principles.
 2. Plausible Options: The options must represent plausible courses of action or interpretations of the scenario, with one clear best answer according to current professional standards.
 3. Question Quality: The stem should be clear, focused, and clinically realistic. Avoid vague wording and "gotcha" phrasing.
-4. HTML Formatting: The "rationale" string and all strings in the "pearls" array MUST use simple HTML tags (<b>, <i>) for formatting, NOT markdown.
+4. STANDARDIZED RATIONALE (5-section object, NCCPA-style): The "rationale" MUST be an object: bottomLine (one sentence: diagnosis/treatment), whyCorrect (walk through vignette steps), whyIncorrectA/B/C/D (why a student might choose it; why wrong for THIS patient; when it WOULD be correct), clinicalPearl (memorable hook), highYieldImageOrTable ("N/A" or brief description). Use <b>, <i> in strings.
 5. Key Pearls Formatting: The "pearls" array MUST contain 3–4 single, high-yield sentences related to the core principle being tested. Each sentence is a concise, complete thought.
 6. Question HTML: The "question" string MAY include a simple HTML <table> (using only <table>, <thead>, <tbody>, <tr>, <th>, <td>) and <br> tags for formatting vitals/labs. Do NOT use <b> or <i> tags in the question.
 7. Options & Condition: The "options" and "condition" fields MUST be plain text only (no HTML tags).
@@ -1040,9 +1040,19 @@ Output Format:
 Return ONLY a single JSON object (no prose before or after) with the exact structure:
 {
   "question": string,
-  "options": [string, string, string, string],
+  "options": [string, string, string, string, string],
   "correctAnswerIndex": number,
-  "rationale": string,
+  "rationale": {
+    "bottomLine": string,
+    "whyCorrect": string,
+    "whyIncorrectA": string,
+    "whyIncorrectB": string,
+    "whyIncorrectC": string,
+    "whyIncorrectD": string,
+    "whyIncorrectE": string,
+    "clinicalPearl": string,
+    "highYieldImageOrTable": "N/A" or string
+  },
   "topic": string,
   "condition": string,
   "pearls": [string, string, string]
@@ -1146,7 +1156,7 @@ Core Instructions (question quality matters):
 3. Plausible, Crafted Distractors: Three distractors must be highly plausible; each should be correct for a different patient/scenario (Kaplan-level).
 4. Vignette Formatting: Insert "\\n" in the question string to separate paragraphs; do NOT return a single wall of text.
 5. Data Table Formatting: If you include ANY vital signs and/or laboratory values, you MUST place ALL of them into a single simple HTML <table> with a header row. Use exactly two columns labeled "Parameter" and "Value". Do NOT repeat vitals or labs in plain text outside the table.
-6. HTML Formatting: The "rationale" and all "pearls" MUST use simple HTML tags (<b>, <i>) instead of markdown.
+6. STANDARDIZED RATIONALE (5-section object, NCCPA-style): The "rationale" MUST be an object: bottomLine (one sentence: diagnosis + treatment), whyCorrect (walk through vignette findings → diagnosis → answer; include pathophysiology when relevant), whyIncorrectA/B/C/D (why a student might choose it; why wrong for THIS patient; when it WOULD be correct for another scenario), clinicalPearl (memorable hook), highYieldImageOrTable ("N/A" or brief description). Use <b>, <i> in strings.
 7. Key Pearls: "pearls" must be 3–4 high-yield, single-sentence clinical pearls focusing on diagnosis, classic presentation, red flags, and first-line management.
 8. Question HTML: The "question" string MAY use the table tags above and <br> for line breaks. Do NOT use <b> or <i> tags in the question.
 9. Options & Condition: The "options" and "condition" fields MUST be plain text only (no HTML tags). The "condition" string should be the single best descriptive name of the main condition tested.
@@ -1157,9 +1167,19 @@ Output Format:
 Return ONLY a single JSON object (no prose before or after) with the exact structure:
 {
   "question": string,
-  "options": [string, string, string, string],
+  "options": [string, string, string, string, string],
   "correctAnswerIndex": number,
-  "rationale": string,
+  "rationale": {
+    "bottomLine": string,
+    "whyCorrect": string,
+    "whyIncorrectA": string,
+    "whyIncorrectB": string,
+    "whyIncorrectC": string,
+    "whyIncorrectD": string,
+    "whyIncorrectE": string,
+    "clinicalPearl": string,
+    "highYieldImageOrTable": "N/A" or string
+  },
   "topic": string,
   "condition": string,
   "pearls": [string, string, string]
@@ -1282,7 +1302,7 @@ Core Instructions:
 3. Highly plausible distractors: each wrong option correct for a different patient/scenario (Kaplan-level).
 4. Use "\\n" inside the question string for paragraph breaks.
 5. Data Table Formatting: If you include ANY vital signs and/or laboratory values, you MUST place ALL of them into a single simple HTML <table> with a header row in the question string. Use exactly two columns labeled "Parameter" and "Value". Do NOT repeat vitals or labs in plain text outside the table.
-6. STANDARDIZED RATIONALE (5-section object): "rationale" MUST be an object: bottomLine (one sentence: diagnosis + treatment), whyCorrect (walk through vignette steps), whyIncorrectA/B/C/D (why a student might have chosen it, then why wrong for this patient), clinicalPearl (memorable hook), highYieldImageOrTable ("N/A" or short description). Optionally include "commonPitfalls": array of 1-3 short pitfalls (e.g. "Confusing with X because both present with Y"). Use <b>, <i> in strings.
+6. STANDARDIZED RATIONALE (5-section object): "rationale" MUST be an object: bottomLine (one sentence: diagnosis + treatment), whyCorrect (walk through vignette steps), whyIncorrectA/B/C/D/E (why a student might have chosen it, then why wrong for this patient), clinicalPearl (memorable hook), highYieldImageOrTable ("N/A" or short description). Optionally include "commonPitfalls": array of 1-3 short pitfalls (e.g. "Confusing with X because both present with Y"). Use <b>, <i> in strings.
 7. "pearls" = 3–4 high-yield single-sentence pearls; use <b>, <i>.
 8. Question HTML: The "question" string MAY use the table tags above and <br> for line breaks, but should not use <b> or <i>.
 9. Options & Condition: The "options" and "condition" fields MUST be plain text only (no HTML tags).
@@ -1297,9 +1317,9 @@ Output Format:
 Return ONLY a single JSON object (no prose before or after) with the exact structure:
 {
   "question": string,
-  "options": [string, string, string, string],
+  "options": [string, string, string, string, string],
   "correctAnswerIndex": number,
-  "rationale": { "bottomLine": string, "whyCorrect": string, "whyIncorrectA": string, "whyIncorrectB": string, "whyIncorrectC": string, "whyIncorrectD": string, "clinicalPearl": string, "highYieldImageOrTable": "N/A" or string, "commonPitfalls": optional [string] },
+  "rationale": { "bottomLine": string, "whyCorrect": string, "whyIncorrectA": string, "whyIncorrectB": string, "whyIncorrectC": string, "whyIncorrectD": string, "whyIncorrectE": string, "clinicalPearl": string, "highYieldImageOrTable": "N/A" or string, "commonPitfalls": optional [string] },
   "topic": string,
   "condition": string,
   "pearls": [string, string, string]
@@ -1366,7 +1386,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       !parsed.question ||
       !parsed.question.includes('?') ||
       !Array.isArray(parsed.options) ||
-      parsed.options.length !== 4 ||
+      parsed.options.length !== 5 ||
       typeof parsed.correctAnswerIndex !== 'number' ||
       !hasRationale ||
       !parsed.topic ||
@@ -1600,9 +1620,9 @@ ${JSON.stringify(caseData.labData, null, 2)}
 
 INSTRUCTIONS:
 1. ROLEPLAY: Act as the patient. Speak in first person ("I feel..."). Be realistic. Do not volunteer information unless specifically asked.
-2. VAGUE PATIENT / LAY LANGUAGE: Answer in the patient's own words (lay language). Do not use medical terms unless the student has already asked clarifying questions (e.g. location, character, radiation, timing — OPQRST-style). The patient should sound like a real person describing symptoms, not a textbook; they may say "it hurts when I breathe" before you use terms like "pleuritic."
+2. VAGUE PATIENT / LAY LANGUAGE: Answer in the patient's own words (lay language). Do not use medical terms unless the student has asked clarifying questions (e.g. location, character, radiation, timing — OPQRST). The patient should sound like a real person describing symptoms; they may say "it hurts when I breathe" before you use terms like "pleuritic."
 3. PERSONALITY: If a persona is provided, let it influence how forthcoming or guarded the patient is, their anxiety level, and their communication style.
-4. PHYSICAL EXAMS: Return ONLY the physical exam finding(s) for the specific maneuver(s) the student just described. If they said only "listen to heart", return only cardiac findings. Do not return abdominal, lung, or other system findings unless they explicitly performed or asked for that part of the exam. If the student says only "I do a physical exam" or "full exam" without specifying systems, respond with: "Which part of the exam would you like to do? (e.g. heart, lungs, abdomen)". Format findings in brackets, e.g., "[Exam Finding] The abdomen is soft, non-tender."
+4. PHYSICAL EXAMS: Return ONLY physical exam findings for the specific maneuver(s) the student described. If they said "listen to heart," return only cardiac findings. If they say "full physical exam" or "complete exam" without specifying systems, respond ONLY: "Which part of the exam would you like to do? (e.g. heart, lungs, abdomen)." Do not return findings until they specify. Format findings in brackets, e.g., "[Exam Finding] The abdomen is soft, non-tender."
 5. LABS/IMAGING: If the user orders a test (e.g., "Order CBC", "Get a CXR"), provide the result from the LABS/IMAGING RESULTS section. If the test is not listed, assume it is normal/unremarkable. Format as "[Lab Result] CBC: WBC 12k...".
 6. LANGUAGE: If the user speaks Spanish, respond in Spanish.
 7. RED HERRINGS: Occasionally include one irrelevant or tangential detail when answering (e.g. an unrelated past event, complaint, or aside) to simulate a real patient who goes off-topic. Do not overdo it; keep it consistent with the persona and the flow of the encounter.
@@ -1701,7 +1721,7 @@ User Action: "${action}"
 
 Instructions:
 1. Interpret the user's action.
-2. If the user says "full exam", "complete exam", or "physical exam" without specifying a system or maneuver, respond ONLY with: "Which part of the exam would you like to do? (e.g. heart, lungs, abdomen)." Do not return any findings.
+2. Return ONLY physical exam findings for the specific maneuver(s) the student described. If they said "listen to heart," return only cardiac findings. If they said "full physical exam," "complete exam," or "physical exam" without specifying a system or body part, respond ONLY with: "Which part of the exam would you like to do? (e.g. heart, lungs, abdomen)." Do not return any findings until they specify.
 3. If the user asks for a general exam (e.g., "listen to heart", "examine abdomen"), return the corresponding finding from the Ground Truth.
 4. If the user asks for a SPECIAL TEST (e.g., "Lachman test", "Fundoscopic exam", "Murphy's sign") that is NOT explicitly in the Ground Truth, generate a medically accurate result consistent with the patient's diagnosis.
    - If the diagnosis implies a positive finding (e.g., Cholecystitis -> Positive Murphy's), generate it.

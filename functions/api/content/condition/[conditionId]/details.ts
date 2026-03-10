@@ -131,7 +131,7 @@ export const onRequestGet = publicEndpoint(
 
       if (!content) {
         return {
-          data: { error: 'Condition not found', conditionId },
+          data: { error: 'not_found', message: 'Condition not found', conditionId },
           status: 404,
         };
       }
@@ -148,8 +148,12 @@ export const onRequestGet = publicEndpoint(
       const errMsg = error instanceof Error ? error.message : String(error);
       console.error('[condition/details]', errMsg);
       return {
-        data: { error: 'Failed to load condition details', message: 'Please try again later.', conditionId },
-        status: 500,
+        data: {
+          error: 'failed_to_load_details',
+          message: 'Could not load condition details. Please try again later.',
+          conditionId,
+        },
+        status: 503,
       };
     } finally {
       await safePrismaDisconnect(prisma);

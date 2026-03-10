@@ -10,7 +10,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, BookOpen, Pill, Beaker, Menu, X } from 'lucide-react';
+import { BookOpen, Pill, Beaker, Menu, X } from 'lucide-react';
+import { BackLink } from '@/components/navigation/BackLink';
+import { ROUTES } from '@/config/routes';
 import { NavRailProvider } from '@/contexts/NavRailContext';
 import { ContextNavRail } from '@/components/layout/ContextNavRail';
 import { ClinicalReferenceLibrary } from '@/components/library/ClinicalReferenceLibrary';
@@ -89,13 +91,20 @@ const VALID_TAB_IDS: TabId[] = ['conditions', 'pharmacopeia', 'labs'];
 
 type LabSubTab = 'tests' | 'normal-ranges';
 
+const VALID_LAB_SUB: LabSubTab[] = ['tests', 'normal-ranges'];
+
 const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as TabId | null;
+  const labSubFromUrl = searchParams.get('labSub') as LabSubTab | null;
   const [activeTab, setActiveTab] = useState<TabId>(
     tabFromUrl && VALID_TAB_IDS.includes(tabFromUrl) ? tabFromUrl : 'conditions'
   );
-  const [labSubTab, setLabSubTab] = useState<LabSubTab>('tests');
+  const [labSubTab, setLabSubTab] = useState<LabSubTab>(() =>
+    tabFromUrl === 'labs' && labSubFromUrl && VALID_LAB_SUB.includes(labSubFromUrl)
+      ? labSubFromUrl
+      : 'tests'
+  );
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -104,10 +113,32 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
     }
   }, [tabFromUrl]);
 
+  useEffect(() => {
+    if (activeTab === 'labs' && labSubFromUrl && VALID_LAB_SUB.includes(labSubFromUrl)) {
+      setLabSubTab(labSubFromUrl);
+    }
+  }, [activeTab, labSubFromUrl]);
+
   const handleTabChange = useCallback((tabId: TabId) => {
     setActiveTab(tabId);
     setSidebarOpen(false);
   }, []);
+
+  const handleLabSubTabChange = useCallback(
+    (sub: LabSubTab) => {
+      setLabSubTab(sub);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (sub === 'tests') {
+          next.delete('labSub');
+        } else {
+          next.set('labSub', sub);
+        }
+        return next;
+      }, { replace: true });
+    },
+    [setSearchParams]
+  );
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -130,13 +161,7 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
       {/* Desktop Sidebar */}
       <div className="hidden lg:block w-64 flex-shrink-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] overflow-y-auto overflow-x-hidden">
           <div className="p-4 border-b border-[var(--color-border)]">
-            <button
-              onClick={onClose}
-              className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors mb-4 group w-full"
-            >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-sm">Dashboard</span>
-            </button>
+            <BackLink to={ROUTES.STUDY} className="mb-4 w-full justify-start" />
             <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Knowledge Base</h2>
             <p className="text-xs text-[var(--color-text-muted)] mt-1">Medical Reference</p>
           </div>
@@ -189,13 +214,7 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
             className="lg:hidden fixed left-0 top-0 bottom-0 w-64 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] z-50 overflow-y-auto shadow-2xl"
           >
             <div className="p-4 border-b border-[var(--color-border)]">
-              <button
-                onClick={onClose}
-                className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors mb-4 group"
-              >
-                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                <span className="text-sm">Dashboard</span>
-              </button>
+              <BackLink to={ROUTES.STUDY} className="mb-4" />
               <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Knowledge Base</h2>
               <p className="text-xs text-[var(--color-text-muted)] mt-1">Medical Reference</p>
             </div>
@@ -257,7 +276,7 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
               >
                 <div className="flex gap-2 border-b border-[var(--color-border)] pb-4">
                   <button
-                    onClick={() => setLabSubTab('tests')}
+                    onClick={() => handleLabSubTabChange('tests')}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       labSubTab === 'tests'
                         ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'
@@ -267,7 +286,7 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
                     Lab Tests
                   </button>
                   <button
-                    onClick={() => setLabSubTab('normal-ranges')}
+                    onClick={() => handleLabSubTabChange('normal-ranges')}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       labSubTab === 'normal-ranges'
                         ? 'bg-[var(--color-accent)] text-[var(--color-text-inverse)]'

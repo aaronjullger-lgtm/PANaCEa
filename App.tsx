@@ -96,6 +96,7 @@ import Loader from './components/loading/Loader';
 import { CommandCenterSkeleton } from './components/loading';
 import { DrillLoadingState } from './components/drill/DrillLoadingState';
 import { EnhancedErrorMessage } from './components/shared/EnhancedErrorMessage';
+import { NotFoundPage } from './components/error/NotFoundPage';
 import ThemeToggleButton from './components/ui/ThemeToggleButton';
 import { MasteryHeatmapToggle } from './components/ui/MasteryHeatmapToggle';
 import { useTheme } from './hooks/useTheme';
@@ -236,6 +237,7 @@ const App: React.FC = () => {
       '/menu',
       '/study',
       '/study/',
+      '/study/path',
       '/practice',
       '/progress',
       '/study/main-session',
@@ -689,11 +691,17 @@ const App: React.FC = () => {
   );
 
   const handleConfirmSession = useCallback(
-    async (settings: SessionSettings) => {
+    async (settings: SessionSettings, preloadedQueue?: QuizQuestion[]) => {
       setIsModalOpen(false);
       setSessionSettings(settings);
       setError(null);
       initializeSession();
+      if (preloadedQueue && preloadedQueue.length > 0) {
+        setQuestionQueue(preloadedQueue);
+        setView('quiz');
+        setIsLoading(false);
+        return;
+      }
       try {
         setIsLoading(true);
         if (settings.focus === 'review' || settings.focus === 'due') {
@@ -792,7 +800,85 @@ const App: React.FC = () => {
             );
             return;
           }
-          setQuestionQueue(flaggedQuestions);
+          const token = await getToken();
+          const dueItems = flaggedQuestions
+            .map((q) => ({
+              conditionId: q.conditionId ?? '',
+              taskType: q.taskType ?? null,
+              originalQuestionId: q.id ?? (q as { questionId?: string }).questionId ?? '',
+            }))
+            .filter((d) => d.conditionId && d.originalQuestionId);
+          if (token && dueItems.length > 0) {
+            try {
+              const res = await fetch('/api/questions/due-siblings', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ dueItems }),
+              });
+              const json = (await res.json().catch(() => null)) as {
+                data?: {
+                  results?: Array<{
+                    question: {
+                      id: string;
+                      question: string;
+                      vignette?: string;
+                      options: string[];
+                      correctAnswerIndex: number;
+                      rationale: string;
+                      system: string;
+                      conditionId?: string;
+                      condition?: string;
+                    } | null;
+                    dueConceptKey: { conditionId: string; taskType: string | null };
+                  }>;
+                };
+              };
+              const results = json?.data?.results ?? [];
+              const resultByOriginalId = new Map<string, (typeof results)[0]>();
+              dueItems.forEach((d, i) => {
+                resultByOriginalId.set(d.originalQuestionId, results[i]);
+              });
+              const queue: QuizQuestion[] = flaggedQuestions.map((original) => {
+                const r = resultByOriginalId.get(original.id ?? (original as { questionId?: string }).questionId ?? '');
+                if (r?.question != null) {
+                  const key = r.dueConceptKey;
+                  const q = r.question;
+                  return {
+                    id: q.id,
+                    question: q.vignette ? `${q.vignette}\n\n${q.question}` : q.question,
+                    options: q.options,
+                    correctAnswerIndex: q.correctAnswerIndex,
+                    rationale: q.rationale,
+                    system: q.system,
+                    conditionId: key.conditionId,
+                    condition: q.condition ?? '',
+                    topic: q.system,
+                    dueConceptKey: key,
+                  } as QuizQuestion;
+                }
+                return {
+                  ...original,
+                  question: original.vignette
+                    ? `${original.vignette}\n\n${original.question}`
+                    : original.question,
+                  correctAnswerIndex:
+                    original.correctAnswerIndex ?? (original as { correctIndex?: number }).correctIndex ?? 0,
+                } as QuizQuestion;
+              });
+              if (queue.length > 0) {
+                setQuestionQueue(queue);
+                setView('quiz');
+                setIsLoading(false);
+                return;
+              }
+            } catch {
+              // Fall through to use originals
+            }
+          }
+          setQuestionQueue(flaggedQuestions as QuizQuestion[]);
           setView('quiz');
         } else {
           const token = await getToken();
@@ -1219,27 +1305,12 @@ const App: React.FC = () => {
                   <>
                     {showNotFound ? (
                       <React.Fragment key="not-found">
-                        <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center px-4">
-                        <div className="max-w-md w-full text-center">
-                          <div className="mb-8">
-                            <h1 className="text-6xl font-bold text-[var(--color-text-primary)] mb-4">
-                              404
-                            </h1>
-                            <h2 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-2">
-                              Page Not Found
-                            </h2>
-                            <p className="text-[var(--color-text-muted)]">
-                              The page you're looking for doesn't exist or has been moved.
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => navigate(ROUTES.STUDY)}
-                            className="px-6 py-3 bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] rounded-lg font-medium hover:opacity-90 transition-opacity"
-                          >
-                            Go to Dashboard
-                          </button>
-                        </div>
-                      </div>
+                        <NotFoundPage
+                          currentPath={location.pathname}
+                          onGoToDashboard={() => navigate(ROUTES.STUDY)}
+                          onNavigateToPractice={() => navigate(ROUTES.PRACTICE)}
+                          onNavigateToKnowledge={() => navigate(ROUTES.STUDY_KNOWLEDGE)}
+                        />
                       </React.Fragment>
                     ) : (
                       <React.Fragment key="main">
@@ -1451,13 +1522,13 @@ const App: React.FC = () => {
                                 {isLoading &&
                                   (sessionSettings ? (
                                     <DrillLoadingState
-                                      message="Preparing your question…"
+                                      message="Loading questions…"
                                       variant="question"
                                       showTimer={false}
                                     />
                                   ) : (
                                     <Loader
-                                      message="Preparing your question…"
+                                      message="Loading questions…"
                                       forceDark={view === 'imaging_drill'}
                                     />
                                   ))}
@@ -1599,6 +1670,7 @@ const App: React.FC = () => {
                                         <Suspense fallback={<Loader message="Loading session…" />}>
                                           <BehavioralTrackerProvider>
                                             <QuizViewWithErrorBoundary
+                                              modeLabel="Practice → Adaptive Questions"
                                               initialQueue={questionQueue}
                                               setParentQueue={setQuestionQueue}
                                               addPerformanceRecord={addPerformanceRecord}

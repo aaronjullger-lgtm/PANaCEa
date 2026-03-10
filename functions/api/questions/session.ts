@@ -64,7 +64,7 @@ export const onRequestGet = authenticatedEndpoint(
         try {
           user = await prisma.user.findUnique({
             where: { clerkId: auth.userId },
-            select: { id: true },
+            select: { id: true, rotationExamDate: true },
           });
           break;
         } catch (error) {
@@ -99,7 +99,10 @@ export const onRequestGet = authenticatedEndpoint(
       const mode = (validated?.mode || 'standard') as SessionQuestionRequest['mode'];
       const simulationStrict = validated?.simulationStrict === true;
       const eorMode = validated?.eorMode === true;
-      const eorDeadline = validated?.eorDeadline || undefined;
+      let eorDeadline = validated?.eorDeadline || undefined;
+      if (eorMode && !eorDeadline && user?.rotationExamDate) {
+        eorDeadline = user.rotationExamDate.toISOString();
+      }
 
       sessionService = new SessionService(env.DATABASE_URL, env);
       const result = await sessionService.getSessionQuestions({
@@ -174,13 +177,13 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
     // Retry user lookup to handle intermittent Accelerate failures
     let user = null;
     let userLookupError = null;
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        user = await prisma.user.findUnique({
-          where: { clerkId: auth.userId },
-          select: { id: true },
-        });
-        break;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          user = await prisma.user.findUnique({
+            where: { clerkId: auth.userId },
+            select: { id: true, rotationExamDate: true },
+          });
+          break;
       } catch (error) {
         userLookupError = error;
         if (attempt < 3) {
@@ -209,11 +212,16 @@ export const onRequestPost = authenticatedEndpoint(SessionPostSchema, async (con
     }
 
     sessionService = new SessionService(env.DATABASE_URL, env);
+    const eorDeadline =
+      validated.eorDeadline ??
+      (validated.eorMode && user?.rotationExamDate ? user.rotationExamDate.toISOString() : undefined);
     const result = await sessionService.getSessionQuestions({
       ...validated,
       userId: user.id,
       count: Math.min(validated.count || 10, 50),
       simulationStrict: validated.simulationStrict === true,
+      eorMode: validated.eorMode === true,
+      eorDeadline,
     });
 
     logger.info('Session questions fetched (POST)', {

@@ -3,9 +3,11 @@
  * Diagnostic endpoint - tests database connectivity and auth setup.
  * No authentication required so you can test from a browser.
  * Prisma is imported dynamically only when DATABASE_URL is set to avoid load-time errors in Workers.
+ * Rate limited: anonymous 20/15min per plan.
  */
 
 import { getCorsHeaders, getCorsConfig } from './_shared/cors';
+import { withRateLimit, getRateLimitIdentifier } from './_shared/rateLimiter';
 
 export const onRequestOptions = async (context: any) => {
   const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
@@ -16,9 +18,19 @@ export const onRequestOptions = async (context: any) => {
 };
 
 export const onRequestGet = async (context: any) => {
+  const request = context?.request as Request;
+  const env = context?.env ?? {};
   const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
-  const cors = getCorsHeaders(context?.request, corsConfig) ?? {};
+  const cors = getCorsHeaders(request, corsConfig) ?? {};
   const jsonHeaders = { ...cors, 'Content-Type': 'application/json' };
+
+  const identifier = getRateLimitIdentifier(request);
+  const { response: rateLimitResponse } = await withRateLimit(
+    env as { RATE_LIMIT_KV?: KVNamespace },
+    identifier,
+    'anonymous'
+  );
+  if (rateLimitResponse) return rateLimitResponse;
 
   try {
     const env = context?.env ?? {};
@@ -116,6 +128,12 @@ export const onRequestGet = async (context: any) => {
       },
       environment: diagnostics.env,
       database: diagnostics.dbConnected ? { status: 'pass' as const } : { status: 'fail' as const, message: diagnostics.dbError },
+      auth: clerkKey
+        ? { status: 'pass' as const, message: `Clerk configured (${diagnostics.clerkKeyType || 'unknown'})` }
+        : { status: 'warn' as const, message: 'CLERK_SECRET_KEY not set' },
+      cache: env.RATE_LIMIT_KV
+        ? { status: 'pass' as const, message: 'RATE_LIMIT_KV bound' }
+        : { status: 'warn' as const, message: 'RATE_LIMIT_KV not bound (in-memory rate limit only)' },
       content:
         typeof diagnostics.contentSystemsCount === 'number'
           ? { status: diagnostics.contentSystemsCount > 0 ? ('pass' as const) : ('warn' as const), systemsCount: diagnostics.contentSystemsCount }

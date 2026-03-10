@@ -61,13 +61,18 @@ export const onRequestPost = authenticatedEndpoint(
         return { status: 404, error: 'Session not found' };
       }
 
-      await prisma.patientEncounterSession.update({
-        where: { id: sessionId },
+      const updated = await prisma.patientEncounterSession.updateMany({
+        where: { id: sessionId, userId: user.id },
         data: {
           messages,
           updatedAt: new Date(),
         },
       });
+
+      if (updated.count === 0) {
+        log.warn('Race: session not updated (ownership)', { sessionId });
+        return { status: 404, error: 'Session not found' };
+      }
 
       log.info('Chat saved successfully', { sessionId });
       return { data: { success: true } };

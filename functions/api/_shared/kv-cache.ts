@@ -58,6 +58,36 @@ const CACHE_KEYS = {
 } as const;
 
 /**
+ * Get cached value by key (Sprint 5: getCached)
+ */
+export async function getCached<T>(env: CloudflareEnv, key: string): Promise<T | null> {
+  if (!env.CACHE) return null;
+  try {
+    const cached = await env.CACHE.get(key, 'json');
+    return cached as T | null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Set cached value with TTL (Sprint 5: setCached)
+ */
+export async function setCached<T>(
+  env: CloudflareEnv,
+  key: string,
+  value: T,
+  ttlSeconds: number = DEFAULT_TTL
+): Promise<void> {
+  if (!env.CACHE) return;
+  try {
+    await env.CACHE.put(key, JSON.stringify(value), { expirationTtl: ttlSeconds });
+  } catch (error) {
+    console.error('[KV Cache] Error writing to cache:', error);
+  }
+}
+
+/**
  * Get cached value or fetch from source
  */
 export async function getOrSet<T>(

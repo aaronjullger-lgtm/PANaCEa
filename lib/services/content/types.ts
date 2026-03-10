@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import {
+  clinicalPearlsSchema,
+  ageDemographicSchema,
+  synonymsSchema,
+} from '../../schemas/medicalContentFields';
 
 /**
  * Zod schema for MedicalContent.content JSON structure
@@ -9,7 +14,7 @@ export const MedicalContentSchema = z.object({
   overview: z.string().optional(),
   diagnostics: z.string().optional(),
   treatment: z.string().optional(),
-  clinical_pearls: z.array(z.string()).default([]),
+  clinical_pearls: clinicalPearlsSchema,
   buzzwords: z.array(z.string()).default([]),
   symptoms: z.string().optional(),
   pathophysiology: z.string().optional(),
@@ -18,18 +23,8 @@ export const MedicalContentSchema = z.object({
   classic_patient: z.string().optional(),
   risks: z.string().optional(),
   prognosis: z.string().optional(),
-
-  // Structured fields
-  age_demographic: z
-    .object({
-      typical: z.string().optional(),
-      range: z.string().optional(),
-    })
-    .optional(),
-
-  synonyms: z.array(z.string()).optional(),
-
-  // Metadata
+  age_demographic: ageDemographicSchema,
+  synonyms: synonymsSchema.optional(),
   version: z.number().optional(),
   last_updated: z.string().optional(),
 });

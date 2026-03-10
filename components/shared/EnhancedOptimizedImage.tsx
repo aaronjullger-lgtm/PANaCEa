@@ -291,7 +291,7 @@ export const EnhancedOptimizedImage: React.FC<EnhancedOptimizedImageProps> = ({
 
         {/* Image info badge (debug mode) */}
         {process.env.NODE_ENV === 'development' && isLoaded && (
-          <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity">
+          <div className="absolute bottom-2 right-2 bg-[var(--color-bg-primary)]/90 text-[var(--color-text-primary)] text-xs px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity">
             {format?.toUpperCase()} •{' '}
             {estimatedSize ? `${Math.round(estimatedSize / 1024)}KB` : 'N/A'}
           </div>

@@ -207,7 +207,7 @@ export function BlueprintComplianceAuditorMode() {
       >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)] flex items-center gap-3">
               <Target className="w-8 h-8 text-[var(--color-accent)]" />
               Blueprint Compliance Auditor
             </h1>
@@ -471,7 +471,7 @@ export function BlueprintComplianceAuditorMode() {
             ) : (
               <div className="text-center py-12">
                 <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900">No data available</h3>
+                <h3 className="text-lg font-medium text-[var(--color-text-primary)]">No data available</h3>
                 <p className="text-gray-600 mt-2">
                   {error ? 'Failed to load compliance data.' : 'Run a compliance analysis to see results.'}
                 </p>

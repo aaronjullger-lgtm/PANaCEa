@@ -29,6 +29,7 @@ import {
   Image as ImageIcon,
   User,
 } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
 import { YieldBadge } from '@/components/ui/badges/YieldBadge';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
 import { useSmartCondition } from './hooks/useSmartCondition';
@@ -405,7 +406,10 @@ function HighYieldTab({ data }: Readonly<{ data: MedicalContent }>) {
 // Zone 3: "Presentation" Tab - Hx & Px
 // ---------------------------------------------------------------------------
 
-function PresentationTab({ data }: Readonly<{ data: MedicalContent }>) {
+function PresentationTab({
+  data,
+  detailsLoadFailed,
+}: Readonly<{ data: MedicalContent; detailsLoadFailed?: boolean }>) {
   const demographicText = (() => {
     const parts: string[] = [];
     const ageDemo = data.age_demographic;
@@ -443,7 +447,11 @@ function PresentationTab({ data }: Readonly<{ data: MedicalContent }>) {
   if (!hasContent) {
     return (
       <div className="text-center py-12">
-        <p className="text-[var(--color-text-muted)] italic">No presentation content available.</p>
+        <p className="text-[var(--color-text-muted)] italic">
+          {detailsLoadFailed
+            ? "Details couldn't be loaded. Use the Retry button above to try again."
+            : "We're still enriching this section. High-yield cards remain available above."}
+        </p>
       </div>
     );
   }
@@ -573,7 +581,10 @@ function PresentationTab({ data }: Readonly<{ data: MedicalContent }>) {
 // Zone 4: "Diagnostics" Tab - Workup Hierarchy
 // ---------------------------------------------------------------------------
 
-function DiagnosticsTab({ data }: Readonly<{ data: MedicalContent }>) {
+function DiagnosticsTab({
+  data,
+  detailsLoadFailed,
+}: Readonly<{ data: MedicalContent; detailsLoadFailed?: boolean }>) {
   const bestInitial = parseTextField(data.best_initial_test);
   const goldStandard = parseTextField(data.gold_standard_dx);
   const diagnostics = parseTextField(data.diagnostics);
@@ -592,7 +603,11 @@ function DiagnosticsTab({ data }: Readonly<{ data: MedicalContent }>) {
   if (!hasContent) {
     return (
       <div className="text-center py-12">
-        <p className="text-[var(--color-text-muted)] italic">No diagnostic content available.</p>
+        <p className="text-[var(--color-text-muted)] italic">
+          {detailsLoadFailed
+            ? "Details couldn't be loaded. Use the Retry button above to try again."
+            : "We're still enriching this section. High-yield cards remain available above."}
+        </p>
       </div>
     );
   }
@@ -809,7 +824,10 @@ function DiagnosticsTab({ data }: Readonly<{ data: MedicalContent }>) {
 // Zone 5: "Management" Tab - Therapeutics & Disposition
 // ---------------------------------------------------------------------------
 
-function ManagementTab({ data }: Readonly<{ data: MedicalContent }>) {
+function ManagementTab({
+  data,
+  detailsLoadFailed,
+}: Readonly<{ data: MedicalContent; detailsLoadFailed?: boolean }>) {
   const firstLine = parseTextField(data.first_line_rx);
   const treatment = parseTextField(data.treatment);
   const disposition = parseTextField(data.disposition);
@@ -850,7 +868,11 @@ function ManagementTab({ data }: Readonly<{ data: MedicalContent }>) {
   if (!hasContent) {
     return (
       <div className="text-center py-12">
-        <p className="text-[var(--color-text-muted)] italic">No management content available.</p>
+        <p className="text-[var(--color-text-muted)] italic">
+          {detailsLoadFailed
+            ? "Details couldn't be loaded. Use the Retry button above to try again."
+            : "We're still enriching this section. High-yield cards remain available above."}
+        </p>
       </div>
     );
   }
@@ -1021,6 +1043,7 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
   onRetryDetails,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('highyield');
+  const detailsLoadFailed = !!errorDetails;
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-[var(--color-bg-primary)]">
@@ -1062,10 +1085,10 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
                 </div>
               )}
               {data.system && (
-                <span className="px-3 py-1 rounded-lg bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/30 text-sm font-medium">
+                <Badge variant="category" className="text-sm">
                   {data.system}
                   {data.subcategory && ` • ${data.subcategory}`}
-                </span>
+                </Badge>
               )}
             </div>
           )}
@@ -1093,12 +1116,9 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {buzzwords.map((word) => (
-                        <span
-                          key={word}
-                          className="px-3 py-1 rounded-full bg-[var(--color-accent)]/15 text-[var(--color-accent)] border border-[var(--color-accent)]/30 text-sm font-medium"
-                        >
+                        <Badge key={word} variant="highYield" className="text-sm">
                           {word}
-                        </span>
+                        </Badge>
                       ))}
                     </div>
                   </div>
@@ -1133,10 +1153,12 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
 
       {/* Tab Content - min-h-0 so overflow-y-auto can scroll when embedded */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 md:p-6">
-        {/* Details-fetch error banner — shown inline so High Yield (summary-only) still works */}
+        {/* Details-fetch error banner — only for real load failures (network/5xx/4xx), not for empty sections */}
         {errorDetails && (
           <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-[var(--color-data-fail)]/40 bg-[var(--color-data-fail)]/10 px-4 py-3 text-sm text-[var(--color-text-secondary)]">
-            <span>Detailed content failed to load. Some tabs may be incomplete.</span>
+            <span>
+              We couldn&apos;t load full details. The High Yield tab is still available. Try again if the problem persists.
+            </span>
             {onRetryDetails && (
               <button
                 onClick={onRetryDetails}
@@ -1178,7 +1200,7 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
                     <Skeleton className="h-24 w-full" />
                   </div>
                 ) : (
-                  <PresentationTab data={data} />
+                  <PresentationTab data={data} detailsLoadFailed={detailsLoadFailed} />
                 )}
               </ErrorBoundary>
             </motion.div>
@@ -1199,7 +1221,7 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
                     <Skeleton className="h-24 w-full" />
                   </div>
                 ) : (
-                  <DiagnosticsTab data={data} />
+                  <DiagnosticsTab data={data} detailsLoadFailed={detailsLoadFailed} />
                 )}
               </ErrorBoundary>
             </motion.div>
@@ -1220,7 +1242,7 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
                     <Skeleton className="h-24 w-full" />
                   </div>
                 ) : (
-                  <ManagementTab data={data} />
+                  <ManagementTab data={data} detailsLoadFailed={detailsLoadFailed} />
                 )}
               </ErrorBoundary>
             </motion.div>

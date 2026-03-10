@@ -13,6 +13,7 @@
 import React, { useState } from 'react';
 import { CalculatorHeader, CheckboxCriteria, ResultDisplay } from '../shared';
 import type { CalculatorProps, CalculatorResult, CriteriaItem } from '../types';
+import { calculateWellsDVT } from '@/lib/calculators';
 
 export const WellsDVTCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [activeCA, setActiveCA] = useState(false);
@@ -26,17 +27,18 @@ export const WellsDVTCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [previousDVT, setPreviousDVT] = useState(false);
   const [alternativeDiagnosis, setAlternativeDiagnosis] = useState(false);
 
-  const score =
-    (activeCA ? 1 : 0) +
-    (paralysis ? 1 : 0) +
-    (bedridden ? 1 : 0) +
-    (tenderness ? 1 : 0) +
-    (entireLegSwollen ? 1 : 0) +
-    (calfSwelling ? 1 : 0) +
-    (pittingEdema ? 1 : 0) +
-    (collateralVeins ? 1 : 0) +
-    (previousDVT ? 1 : 0) +
-    (alternativeDiagnosis ? -2 : 0);
+  const score = calculateWellsDVT({
+    activeCA,
+    paralysis,
+    bedridden,
+    tenderness,
+    entireLegSwollen,
+    calfSwelling,
+    pittingEdema,
+    collateralVeins,
+    previousDVT,
+    alternativeDiagnosis,
+  });
 
   const getInterpretation = (): CalculatorResult => {
     if (score <= 0) {

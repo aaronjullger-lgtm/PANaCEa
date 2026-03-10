@@ -559,7 +559,7 @@ export class Rolling360Service {
           SELECT AVG(COALESCE("timeSpentMs", 0)) as avg_time
           FROM "QuestionAttempt"
           WHERE "userId" = ${userId}
-            AND "mode" = 'main_session'
+            AND "isMainSession" = true
           ORDER BY "createdAt" DESC
           LIMIT 60
         `;
@@ -589,7 +589,7 @@ export class Rolling360Service {
             COUNT(*) FILTER (WHERE "confidenceLevel" = 'high' AND "wasCorrect" = true) as confident_correct
           FROM "QuestionAttempt"
           WHERE "userId" = ${userId}
-            AND "mode" = 'main_session'
+            AND "isMainSession" = true
           ORDER BY "createdAt" DESC
           LIMIT 60
         `;

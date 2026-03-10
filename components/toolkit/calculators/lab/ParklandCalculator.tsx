@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import { Droplet } from 'lucide-react';
 import { CalculatorHeader, ClinicalInput } from '../shared';
 import type { CalculatorProps } from '../types';
+import { parkland as parklandFormula } from '@/lib/calculators';
 
 export const ParklandCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [weightKg, setWeightKg] = useState('');
@@ -16,9 +17,10 @@ export const ParklandCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
 
   const weight = parseFloat(weightKg);
   const tbsa = parseFloat(tbsaPercent);
-  const total24 = weight > 0 && tbsa > 0 ? Math.round(4 * weight * tbsa) : null;
-  const first8h = total24 !== null ? Math.round(total24 / 2) : null;
-  const next16h = total24 !== null ? total24 - (first8h ?? 0) : null;
+  const result = weight > 0 && tbsa > 0 ? parklandFormula(weight, tbsa) : null;
+  const total24 = result?.total24 ?? null;
+  const first8h = result?.first8h ?? null;
+  const next16h = result?.next16h ?? null;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

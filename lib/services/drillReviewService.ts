@@ -16,7 +16,7 @@ import { updateReviewOutcome } from './srsService';
 import { FSRS, Rating } from '../fsrs';
 import { updateUserProgressWithHistory } from './userProgressService';
 import type { ImplicitBehaviorMetrics } from '../implicit-metrics';
-import { deriveContinuousRating, applyStabilityModifierFromGrade } from '../implicit-metrics';
+import { deriveContinuousRating } from '../implicit-metrics';
 import { buildCircadianContext, applyCircadianModifier } from '../circadian';
 import { propagateRecallToSiblings } from './semanticSiblingService';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from './userStatisticsService';

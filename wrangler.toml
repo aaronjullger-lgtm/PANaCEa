@@ -11,6 +11,7 @@ pages_build_output_dir = "dist"
 binding = "RATE_LIMIT_KV"
 id = "7df124d8b81f400eafe6ba55477bf11d"
 
+# Content cache (Sprint 5: PANACEA_CACHE) - bound as CACHE for Pages Functions
 [[kv_namespaces]]
 binding = "CACHE"
 id = "b576c43270a3407a8e5ae65afad0fe7e"

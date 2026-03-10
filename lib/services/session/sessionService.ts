@@ -2,15 +2,30 @@ import { v4 as uuidv4 } from 'uuid';
 import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
 import { ContentService } from '../content/contentService';
 import { normalizeOptionsToArray } from '../../utils/questionDataNormalizer';
+import { withTimeout } from '../../timeout';
 import type { Env } from '../../../functions/api/_shared/auth';
 import type { Prisma } from '@prisma/client';
 import {
   NCCPA_2025_BLUEPRINT_PERCENT,
+  PANCE_TASK_CATEGORY_PERCENT,
   getSystemAbbreviation,
   normalizeSystemName,
   calculateSimulationTargetDistribution,
   PANCE_SIMULATION_TO_ABBREVIATION,
 } from '../../constants/blueprint';
+
+/** Pick a random task category per NCCPA Blueprint weights (Sprint 5). */
+function pickRandomTask(): string {
+  const tasks = Object.keys(PANCE_TASK_CATEGORY_PERCENT) as (keyof typeof PANCE_TASK_CATEGORY_PERCENT)[];
+  const weights = tasks.map((t) => PANCE_TASK_CATEGORY_PERCENT[t] || 0);
+  const total = weights.reduce((s, w) => s + w, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < tasks.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return tasks[i].replace(/_/g, ' ');
+  }
+  return 'diagnosis';
+}
 
 // Interfaces moved from session.ts to be used in the service
 export interface SessionQuestionRequest {
@@ -28,13 +43,28 @@ export interface SessionQuestionRequest {
   eorDeadline?: string;
 }
 
+/** Structured rationale format (shared with src/types and ExplanationPanel). */
+export interface EnrichedRationale {
+  bottomLine?: string;
+  whyCorrect: string;
+  whyIncorrectA?: string;
+  whyIncorrectB?: string;
+  whyIncorrectC?: string;
+  whyIncorrectD?: string;
+  whyIncorrectE?: string;
+  clinicalPearl?: string;
+  highYieldImageOrTable?: string;
+  commonPitfalls?: string[];
+}
+
 export interface EnrichedQuestion {
   id: string;
   question: string;
   vignette?: string;
   options: string[];
   correctAnswerIndex: number;
-  rationale: string;
+  /** Structured (object) or legacy string. Preserve object when available. */
+  rationale: string | EnrichedRationale;
   system: string;
   subcategory?: string;
   conditionId?: string;
@@ -217,6 +247,28 @@ export class SessionService {
       if (!usedIds.has(q.id)) {
         allQuestions.push(q);
         usedIds.add(q.id);
+      }
+    }
+
+    // Sprint 7: If still short and Gemini available, generate new questions (with userId for FSRS hint)
+    if (allQuestions.length < count && this.env.GEMINI_API_KEY) {
+      try {
+        const needed = count - allQuestions.length;
+        const generated = await this.generateNewQuestions({
+          count: needed,
+          system,
+          conditionId,
+          userId,
+        });
+        for (const q of generated) {
+          if (allQuestions.length >= count) break;
+          if (!usedIds.has(q.id)) {
+            allQuestions.push(q);
+            usedIds.add(q.id);
+          }
+        }
+      } catch (err) {
+        console.error('[SessionService] generateNewQuestions fallback failed:', err);
       }
     }
 
@@ -447,7 +499,7 @@ export class SessionService {
     const { count, system, conditionId, difficulty, panceLevelOnly, eorMode = false, eorDeadline } = options;
 
     const where: Prisma.PreGeneratedQuestionWhereInput = {};
-    if (system) where.system = system;
+    if (system) where.system = getSystemAbbreviation(system);
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
     if (panceLevelOnly) where.difficulty = { in: ['medium', 'hard'] };
@@ -488,13 +540,21 @@ export class SessionService {
         correctAnswerIndex = 0;
       }
 
+      // Preserve structured rationale when present; fallback to string
+      const rationale =
+        typeof data.rationale === 'object' &&
+        data.rationale !== null &&
+        'whyCorrect' in (data.rationale as object)
+          ? (data.rationale as EnrichedRationale)
+          : ((data.rationale || data.explanation || '') as string);
+
       questions.push({
         id: q.id,
         question: (data.question || data.vignette || '') as string,
         vignette: data.vignette as string | undefined,
         options,
         correctAnswerIndex,
-        rationale: (data.rationale || data.explanation || '') as string,
+        rationale,
         system: q.system || 'General',
         subcategory: data.subcategory as string | undefined,
         conditionId: q.conditionId || undefined,
@@ -526,7 +586,7 @@ export class SessionService {
     const { count, system, conditionId, difficulty, panceLevelOnly, eorMode = false, eorDeadline } = options;
 
     const where: Prisma.QuestionSeedWhereInput = {};
-    if (system) where.system = system;
+    if (system) where.system = getSystemAbbreviation(system);
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
     if (panceLevelOnly) where.difficulty = { in: ['medium', 'hard'] };
@@ -616,7 +676,7 @@ export class SessionService {
     const { count, system, conditionId, difficulty, panceLevelOnly, eorMode = false, eorDeadline } = options;
 
     const where: Prisma.QuestionWhereInput = {};
-    if (system) where.system = system;
+    if (system) where.system = getSystemAbbreviation(system);
     if (conditionId) where.conditionId = conditionId;
     if (difficulty) where.difficulty = difficulty;
     if (panceLevelOnly) where.difficulty = { in: ['medium', 'hard'] };
@@ -704,8 +764,9 @@ export class SessionService {
     system?: string;
     conditionId?: string;
     difficulty?: string;
+    userId?: string;
   }): Promise<EnrichedQuestion[]> {
-    const { count, system, conditionId, difficulty } = options;
+    const { count, system, conditionId, difficulty, userId } = options;
 
     const where: Prisma.MedicalContentWhereInput = { status: 'published' };
     if (system) where.system = system;
@@ -727,7 +788,8 @@ export class SessionService {
       if (questions.length >= count) break;
 
       try {
-        const generated = await this.generateQuestionFromContent(content, difficulty);
+        const fsrsHint = await this.getFSRSDifficultyHint(userId, content.conditionId);
+        const generated = await this.generateQuestionFromContent(content, difficulty, fsrsHint);
         if (generated) {
           questions.push(generated);
 
@@ -759,52 +821,118 @@ export class SessionService {
     return questions;
   }
 
+  /** FSRS-driven difficulty hint (Sprint 6): low stability → classic; high stability → atypical */
+  private async getFSRSDifficultyHint(
+    userId: string | undefined,
+    conditionId: string | undefined
+  ): Promise<string> {
+    if (!userId || !conditionId) return '';
+    try {
+      const up = await this.prisma.userProgress.findFirst({
+        where: { userId, conditionId },
+        select: { stability: true, fsrsCard: true },
+      });
+      if (!up) return '';
+      const stability =
+        typeof up.stability === 'number'
+          ? up.stability
+          : (up.fsrsCard as { stability?: number })?.stability;
+      if (typeof stability !== 'number') return '';
+      if (stability < 2) return 'Use classic presentation, straightforward case (low mastery).';
+      if (stability > 10) return 'Use atypical presentation, multiple comorbidities, or rare side effect (high mastery).';
+      return '';
+    } catch {
+      return '';
+    }
+  }
+
   private async generateQuestionFromContent(
     content: any,
-    difficulty?: string
+    difficulty?: string,
+    fsrsHint?: string
   ): Promise<EnrichedQuestion | null> {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(this.env.GEMINI_API_KEY as string);
     // Stable model for PANCE-style question generation (preview IDs change; use stable)
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
 
-    const prompt = `Generate a PANCE-style multiple choice question about ${content.condition}.
+    // Pass findings-only context for vignette-building; withhold diagnosis/overview from vignette
+    const findingsContext = [
+      content.symptoms ? `Symptoms/Clinical Presentation: ${String(content.symptoms).slice(0, 400)}` : '',
+      content.physicalExam ? `Physical Exam Findings: ${String(content.physicalExam).slice(0, 300)}` : '',
+      content.diagnostics ? `Lab/Imaging Patterns: ${String(content.diagnostics).slice(0, 400)}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
 
-Condition Overview: ${content.overview || 'N/A'}
-Key Diagnostics: ${content.diagnostics || 'N/A'}
-Treatment: ${content.treatment || 'N/A'}
+    const prompt = `Generate a PANCE-style multiple choice question based on these clinical findings. Use them to build a vignette that presents RAW PATIENT DATA ONLY.
+
+${findingsContext || 'Use typical findings for a common condition in this system.'}
+
+Context for answer accuracy (do NOT include in vignette text): Treatment: ${String(content.treatment || 'N/A').slice(0, 300)}
 Clinical Pearls: ${JSON.stringify(content.clinical_pearls || [])}
 
 Difficulty: ${difficulty || 'medium'}
+${fsrsHint ? `FSRS HINT: ${fsrsHint}` : ''}
+
+CRITICAL - RAW PATIENT DATA: NEVER state the diagnosis or condition name in the vignette. Provide raw patient data only (demographics, symptoms, labs, vitals). Example: "A 45-year-old male with fatigue. Labs: Hgb 9.2 g/dL, MCV 72 fL, ferritin 10 ng/mL" — NOT "A patient with iron deficiency anemia."
 
 KAPLAN-LEVEL RULES:
-- Third-order / "Double Jump": Prefer a stem that requires a chain (Vignette → Diagnosis → Complication/next step → Answer). Example: circular rash → Lyme → first-line for complication → mechanism of doxycycline (30S). Avoid first-order "What is the diagnosis?" when a third-order stem is feasible.
-- Kaplan-level distractors: Every wrong answer must be correct for a slightly different patient (e.g. otitis: viral vs bacterial vs recurrent vs penicillin-allergic). No obviously wrong options.
+- Third-order / "Double Jump" (STRICT): Prefer a stem that requires a chain (Vignette → Diagnosis → Complication/next step → Answer). Avoid first-order "What is the diagnosis?" when a third-order stem is feasible. Example: circular rash → Lyme → first-line for complication → mechanism of doxycycline (30S).
+- Kaplan-level distractors: Every wrong answer must be correct for a slightly different patient. No obviously wrong options.
+- Gold standard vs. initial: For "best initial step" or "next test" questions, include the gold standard as a distractor; rationale must clarify why wrong for this step.
+- Next best step: For "next step in management," state what has already been done first, then ask for the immediate next action.
+- Pertinent negatives: Include at least 2 pertinent negatives that rule out top differentials (e.g. "No JVD rules out tamponade; no pain on inspiration rules out pleuritis").
+    - Pharmacological contraindications: For therapeutics questions, include a comorbid condition that contraindicates first-line when appropriate (e.g. HTN + gout → avoid thiazides; otitis + penicillin allergy → use macrolide).
+- Task: This question should test ${pickRandomTask()} (per NCCPA task distribution).
+- Red flag (optional): Occasionally include a subtle red flag that changes management (e.g. back pain + urinary incontinence → cauda equina). Do not make it obvious.
 
-Return ONLY valid JSON:
+STANDARDIZED RATIONALE (5-section object, NCCPA-style): The "rationale" MUST be an object: bottomLine (one sentence: diagnosis + treatment), whyCorrect (walk through vignette findings → diagnosis → answer), whyIncorrectA/B/C/D/E (why a student might choose it; why wrong for THIS patient; when it WOULD be correct for another scenario), clinicalPearl (memorable hook), highYieldImageOrTable ("N/A" or brief description).
+
+Return ONLY valid JSON (PANCE uses 5 options):
 {
   "question": "Clinical vignette ending with a question (prefer third-order: mechanism, next step, or complication management)",
-  "options": ["Option A", "Option B", "Option C", "Option D"],
+  "options": ["Option A", "Option B", "Option C", "Option D", "Option E"],
   "correctAnswerIndex": 0,
-  "rationale": "Why the correct answer is correct; briefly why each wrong answer is wrong for this patient",
+  "rationale": {
+    "bottomLine": "The diagnosis is X, and the treatment is Y.",
+    "whyCorrect": "Walk through vignette steps: findings → diagnosis → answer.",
+    "whyIncorrectA": "Option A (Name): Incorrect because... Correct for [different scenario].",
+    "whyIncorrectB": "Option B (Name): Incorrect because... Correct for [different scenario].",
+    "whyIncorrectC": "Option C (Name): Incorrect because... Correct for [different scenario].",
+    "whyIncorrectD": "Option D (Name): Incorrect because... Correct for [different scenario].",
+    "whyIncorrectE": "Option E (Name): Incorrect because... Correct for [different scenario].",
+    "clinicalPearl": "Remember: [pattern] = [condition] until proven otherwise.",
+    "highYieldImageOrTable": "N/A"
+  },
   "pearls": ["Pearl 1", "Pearl 2", "Pearl 3"]
 }`;
 
     try {
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
+      const result = await withTimeout(
+        model.generateContent(prompt).then((r) => r.response.text()),
+        30000,
+        'Gemini generateContent timed out (30s)'
+      );
+      const text = result;
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) return null;
 
       const data = JSON.parse(jsonMatch[0]);
       const id = `gen-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+      // Accept rationale as object (structured) or string (legacy fallback)
+      const rationale =
+        typeof data.rationale === 'object' && data.rationale !== null && 'whyCorrect' in data.rationale
+          ? data.rationale
+          : (data.rationale as string) || '';
+
       return {
         id,
         question: data.question,
         options: data.options,
         correctAnswerIndex: data.correctAnswerIndex,
-        rationale: data.rationale,
+        rationale,
         system: content.system,
         subcategory: content.subcategory,
         conditionId: content.conditionId,

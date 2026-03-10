@@ -34,6 +34,7 @@ import { computeConditionRetrievability } from '@/lib/fsrs/retrievability';
 import { defaultParameters } from '@/lib/fsrs';
 import { LoadingOverlay } from '@/components/ui/layouts';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { Badge } from '@/components/ui/Badge';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { toast } from '@/lib/toast';
 import { useSemanticSearch } from '@/hooks/useSemanticSearch';
@@ -183,8 +184,32 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       });
 
       if (!res.ok) {
-        if (res.status === 401) throw new Error('Please sign in to access clinical content');
-        throw new Error(`Failed to fetch content: ${res.status}`);
+        if (res.status === 401) {
+          setError('Please sign in to access clinical content');
+          toast.error('Please sign in to access clinical content');
+          setLoading(false);
+          return;
+        }
+        let body: { message?: string; error?: string; error_code?: string } = {};
+        try {
+          const json = await res.json();
+          if (json && typeof json === 'object') body = json;
+        } catch {
+          // ignore parse errors
+        }
+        const message =
+          body.message ||
+          body.error ||
+          (res.status >= 500
+            ? 'Clinical content temporarily unavailable. Please try again.'
+            : `Failed to load content (${res.status}). Please try again.`);
+        if (body.error_code) {
+          console.warn('[ClinicalReferenceLibrary] library error_code:', body.error_code, 'status:', res.status);
+        }
+        setError(message);
+        toast.error(message);
+        setLoading(false);
+        return;
       }
 
       const text = await res.text();
@@ -501,7 +526,6 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
         onSystemSelect={handleSystemSelect}
         onSubcategorySelect={handleSubcategorySelect}
         onHighYieldToggle={setHighYieldOnly}
-        onSearch={setSearchQuery}
         onRetrySystems={fetchSystems}
         recentConditions={recentConditions}
         onRecentConditionClick={(id) => {
@@ -754,15 +778,15 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                             </span>
                           )}
                           <span>{group.subcategory}</span>
-                          <span className="px-2.5 py-1 rounded-full bg-[var(--color-accent)]/15 text-[var(--color-accent)] text-xs font-semibold tabular-nums">
+                          <Badge variant="category" className="tabular-nums">
                             {group.items.length}
-                          </span>
+                          </Badge>
                         </h3>
                       </div>
                       {hasMore && !isExpanded && (
-                        <span className="text-xs text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)]/50 px-3 py-1 rounded-full">
+                        <Badge variant="muted">
                           Showing {ITEMS_PER_SUBCATEGORY} highest yield
-                        </span>
+                        </Badge>
                       )}
                     </div>
 

@@ -55,7 +55,8 @@ interface LibrarySidebarProps {
   onSystemSelect: (systemId: string) => void;
   onSubcategorySelect: (system: string, subcategory: string | null) => void;
   onHighYieldToggle: (enabled: boolean) => void;
-  onSearch: (query: string) => void;
+  /** @deprecated Search consolidated to header; kept for optional future filter */
+  onSearch?: (query: string) => void;
   onRetrySystems?: () => void;
   isMobileOpen?: boolean;
   onMobileClose?: () => void;
@@ -212,7 +213,6 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
   onSystemSelect,
   onSubcategorySelect,
   onHighYieldToggle,
-  onSearch,
   onRetrySystems,
   recentConditions,
   onRecentConditionClick,
@@ -223,13 +223,6 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
   onBookmarkRemove,
   onBookmarkClearAll,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    onSearch(e.target.value);
-  };
-
   const totalConditions = useMemo(() => systems.reduce((sum, s) => sum + s.count, 0), [systems]);
 
   const renderSystemsState = () => {
@@ -285,19 +278,21 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
         <p className="text-xs text-[var(--color-text-muted)] mt-1">{totalConditions} conditions</p>
       </div>
 
-      {/* Search */}
+      {/* Search consolidated to header for single source of truth - sidebar no longer has duplicate search input */}
+      {false && (
       <div className="p-3 border-b border-[var(--color-border)]">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
           <input
             type="text"
-            value={searchQuery}
-            onChange={handleSearchChange}
+            value=""
+            onChange={() => {}}
             placeholder="Search conditions..."
             className="w-full pl-9 pr-3 py-2 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50"
           />
         </div>
       </div>
+      )}
 
       {/* High Yield Toggle */}
       <div className="p-3 border-b border-[var(--color-border)]">

@@ -119,6 +119,20 @@ export const BLUEPRINT_TO_ABBREVIATION: Readonly<Record<string, string>> = {
 };
 
 /**
+ * Blueprint percentages keyed by DB abbreviation (CV, PULM, etc.).
+ * Single source for pool selection and any code that needs weight-by-abbreviation.
+ */
+export const BLUEPRINT_PERCENT_BY_ABBREVIATION: Readonly<Record<string, number>> = (() => {
+  const out: Record<string, number> = {};
+  for (const [name, pct] of Object.entries(NCCPA_2025_BLUEPRINT_PERCENT)) {
+    if (name === 'General') continue;
+    const abbr = BLUEPRINT_TO_ABBREVIATION[name];
+    if (abbr) out[abbr] = pct;
+  }
+  return out;
+})();
+
+/**
  * Simulation Jan 2025 category names → DB abbreviations (for strict Core PANCE Simulation).
  */
 export const PANCE_SIMULATION_TO_ABBREVIATION: Readonly<Record<string, string>> = {

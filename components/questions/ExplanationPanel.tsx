@@ -95,6 +95,7 @@ export interface StructuredRationale {
   whyIncorrectB?: string;
   whyIncorrectC?: string;
   whyIncorrectD?: string;
+  whyIncorrectE?: string;
   /** 4. High-Yield Image/Table: Placeholder for diagram or flow-chart (optional) */
   highYieldImageOrTable?: string;
   /** 5. Clinical Pearl: A memorable hook */
@@ -182,6 +183,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
       if (rationale.whyIncorrectB) parts.push(rationale.whyIncorrectB);
       if (rationale.whyIncorrectC) parts.push(rationale.whyIncorrectC);
       if (rationale.whyIncorrectD) parts.push(rationale.whyIncorrectD);
+      if (rationale.whyIncorrectE) parts.push(rationale.whyIncorrectE);
       if (rationale.highYieldImageOrTable) parts.push(rationale.highYieldImageOrTable);
       if (rationale.clinicalPearl) parts.push(rationale.clinicalPearl);
       return parts.filter(Boolean).join(' ');
@@ -358,7 +360,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
               <div className="space-y-2">
                 {options.map((option, index) => {
                   if (index === correctAnswerIndex) return null;
-                  const letter = ['A', 'B', 'C', 'D'][index];
+                  const letter = String.fromCharCode(65 + index);
                   const key = `whyIncorrect${letter}` as keyof StructuredRationale;
                   const whyIncorrect = rationale[key];
                   if (!whyIncorrect || typeof whyIncorrect !== 'string') return null;

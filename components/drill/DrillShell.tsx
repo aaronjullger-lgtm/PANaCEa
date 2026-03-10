@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Home } from 'lucide-react';
+import { BackLink } from '@/components/navigation/BackLink';
+import { ROUTES } from '@/config/routes';
 
 interface DrillShellProps {
   /** Title of the current drill */
@@ -9,10 +11,15 @@ interface DrillShellProps {
   breadcrumb: string[];
   /** Main content of the drill */
   children: React.ReactNode;
-  /** Handler to go back one level */
+  /** Handler to go back one level (in-flow, e.g. set picker → landing) */
   onBack?: () => void;
-  /** Handler to return to main hub */
+  /** Handler to return to main hub; used when backTo is not provided */
   onBackToHub: () => void;
+  /**
+   * When provided, use BackLink for hub navigation instead of onBackToHub.
+   * Defaults to ROUTES.PRACTICE for drill modes.
+   */
+  backTo?: string;
   /** Optional header content (scores, streaks, etc.) */
   headerContent?: React.ReactNode;
   /** Optional class name for customization */
@@ -48,10 +55,12 @@ const DrillShell: React.FC<DrillShellProps> = ({
   children,
   onBack,
   onBackToHub,
+  backTo,
   headerContent,
   className = '',
   hideBreadcrumb = false,
 }) => {
+  const hubTarget = backTo ?? ROUTES.PRACTICE;
   return (
     <div className={`min-h-screen bg-surface-primary flex flex-col ${className}`}>
       {/* Header with Breadcrumb */}
@@ -64,14 +73,18 @@ const DrillShell: React.FC<DrillShellProps> = ({
           <div className="max-w-7xl mx-auto px-4 py-3">
             {/* Breadcrumb Navigation */}
             <div className="flex items-center gap-2 text-sm text-muted mb-2">
-              <button
-                onClick={onBackToHub}
-                className="flex items-center gap-1 hover:text-action-primary transition-colors group"
-                aria-label="Back to hub"
-              >
-                <Home className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
-                <span>Hub</span>
-              </button>
+              {backTo !== undefined ? (
+                <BackLink to={hubTarget} label="Back to Practice" className="text-sm" />
+              ) : (
+                <button
+                  onClick={onBackToHub}
+                  className="flex items-center gap-1 hover:text-action-primary transition-colors group"
+                  aria-label="Back to hub"
+                >
+                  <Home className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+                  <span>Hub</span>
+                </button>
+              )}
               {breadcrumb.map((crumb, index) => (
                 <React.Fragment key={index}>
                   <span className="text-border-subtle">/</span>

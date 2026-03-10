@@ -409,6 +409,7 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
       <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] overflow-y-auto">
         <div className="container mx-auto px-4 py-6">
           <QuizView
+            modeLabel="Practice → System Drill"
             initialQueue={queue}
             setParentQueue={setQueue}
             useSplitPane
