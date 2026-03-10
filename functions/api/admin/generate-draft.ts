@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { canEditContent, type UserRole } from '../_shared/rbac';
@@ -33,7 +33,7 @@ function cleanAIJsonResponse(text: string): string {
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(GenerateDraftSchema, async (context) => {
+export const onRequestPost = adminAuthenticatedEndpoint(GenerateDraftSchema, async (context) => {
   const { env, auth, validated, request } = context;
   const logger = createEndpointLogger('/api/admin/generate-draft');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

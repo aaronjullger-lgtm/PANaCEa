@@ -5,9 +5,12 @@
  */
 
 import { z } from 'zod';
+import { PANCE_TASK_CATEGORY_PERCENT } from '../../../lib/constants/blueprint';
+import { validateDistractors } from '../../../lib/distractorValidation';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { fetchWithTimeout } from '../_shared/timeout';
 
 // Flattened schema for body parsing (no nested 'body' object)
 const GenerateBatchSchema = z.object({
@@ -86,8 +89,30 @@ export const onRequestPost = authenticatedEndpoint(GenerateBatchSchema, async (c
       correctAnswerIndex: letterToIndex[q.correctAnswer?.toUpperCase()] ?? 0,
     }));
 
-    // Seed questions into PreGeneratedQuestion table
-    const records = normalizedQuestions.map((q, idx) => ({
+    // Sprint 9: Gate by distractor validation (score >= 70)
+    const DISTRACTOR_THRESHOLD = 70;
+    const withDistractorScore = normalizedQuestions.map((q) => ({
+      q,
+      validation: validateDistractors({
+        id: '',
+        question: q.question ?? '',
+        options: q.options ?? [],
+        correctAnswer: q.correctAnswer ?? 'A',
+      }),
+    }));
+    const passed = withDistractorScore.filter((x) => x.validation.score >= DISTRACTOR_THRESHOLD);
+    const failedCount = withDistractorScore.length - passed.length;
+    if (failedCount > 0) {
+      logger.info('Questions gated by distractor validation', {
+        failed: failedCount,
+        total: withDistractorScore.length,
+        threshold: DISTRACTOR_THRESHOLD,
+      });
+    }
+    const toInsert = passed.map((x) => x.q);
+
+    // Seed questions into PreGeneratedQuestion table (only those passing distractor gate)
+    const records = toInsert.map((q, idx) => ({
       id: `pregen-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 9)}`,
       questionType: selectedCategory,
       system: selectedSystem,
@@ -142,7 +167,17 @@ async function generateQuestionsWithGemini(
     vignette?: string;
     options: string[];
     correctAnswer: string;
-    explanation: string;
+    rationale?: {
+      bottomLine?: string;
+      whyCorrect: string;
+      whyIncorrectA?: string;
+      whyIncorrectB?: string;
+      whyIncorrectC?: string;
+      whyIncorrectD?: string;
+      clinicalPearl?: string;
+      highYieldImageOrTable?: string;
+    };
+    explanation?: string;
     tags?: string[];
   }>
 > {
@@ -169,6 +204,25 @@ async function generateQuestionsWithGemini(
     hard: 'complex cases, atypical presentations, differential diagnosis challenges',
   };
 
+  // Task area distribution per NCCPA Blueprint (approximate counts for batch)
+  const taskAllocations: string[] = [];
+  for (const [taskKey, pct] of Object.entries(PANCE_TASK_CATEGORY_PERCENT)) {
+    const n = Math.round(count * (pct / 100));
+    if (n > 0) {
+      const label = taskKey.replace(/_/g, ' ');
+      taskAllocations.push(`${n} ${label}`);
+    }
+  }
+  const taskMixInstruction =
+    taskAllocations.length > 0
+      ? `Vary question types per NCCPA task mix: ${taskAllocations.join(', ')}.`
+      : 'Vary question types: diagnosis (~18%), history & physical (~16%), clinical intervention (~16%), pharmaceutical (~15%), health maintenance (~11%), diagnostic lab (~10%).';
+
+  const redFlagInstruction =
+    count >= 10
+      ? `Include a subtle red-flag scenario in 1-2 questions: a benign chief complaint with a single subtle finding that changes management (e.g. back pain + urinary incontinence → cauda equina; chest pain + JVD → tamponade). Do not make the red flag obvious; it should require careful reading.`
+      : '';
+
   const prompt = `You are a board-certified physician and medical education expert writing PANCE-style questions modeled after Kaplan Medical's gold-standard question bank.
 
 Generate ${count} PANCE-style multiple choice questions for: ${system} (${systemDescriptions[system] || system})
@@ -181,7 +235,7 @@ Difficulty: ${difficulty} - ${difficultyDescriptions[difficulty] || difficulty}
    - Start with demographics: "A [age]-year-old [sex] [relevant history] presents to [setting]..."
    - Include CHIEF COMPLAINT with duration: "...with a [X]-day history of [symptoms]"
    - Add PERTINENT POSITIVES: specific clinical findings that point toward diagnosis
-   - Add PERTINENT NEGATIVES: explicitly rule out look-alikes. Example: "No tenderness to palpation (rules out costochondritis). No pain with breathing (rules out pleuritis)."
+   - PERTINENT NEGATIVES (MANDATORY - at least 2): Include at least 2 pertinent negatives that rule out top differentials. Example: "No JVD (rules out tamponade). No pain on inspiration (rules out pleuritis)." or "No tenderness to palpation (rules out costochondritis). No pain with breathing (rules out pleuritis)."
    - VITALS AS CLUES: Vitals must not be filler. Use relative baselines when relevant: e.g. "BP 110/70" in a patient "normally hypertensive (160/90)" = relative hypotension. Include relevant VITAL SIGNS or LAB VALUES that support or contradict the diagnosis or add meaningful context.
 
 2. QUESTION STEM - Use THIRD-ORDER / "DOUBLE JUMP" (Kaplan-Level):
@@ -191,9 +245,9 @@ Difficulty: ${difficulty} - ${difficultyDescriptions[difficulty] || difficulty}
    - PREFER: "Which finding would most likely be seen on [imaging/lab] if [complication] develops?"
    - Correct answer should not be obviously longer or more detailed
 
-3. ANSWER OPTIONS - KAPLAN-LEVEL DISTRACTORS:
-   - DO NOT prefix with "A.", "B.", etc. - just the option text
-   - Every wrong answer must be "the right answer to a different question" - correct for a slightly different patient (e.g. otitis: A = viral/watchful, B = bacterial = answer, C = recurrent/effusion, D = penicillin-allergic).
+3. ANSWER OPTIONS - KAPLAN-LEVEL DISTRACTORS (5 OPTIONS REQUIRED, PANCE-style):
+   - Provide exactly 5 options (A through E). DO NOT prefix with "A.", "B.", etc. - just the option text
+   - Every wrong answer must be "the right answer to a different question" - correct for a slightly different patient (e.g. otitis: A = viral/watchful, B = bacterial = answer, C = recurrent/effusion, D = penicillin-allergic, E = another plausible distractor).
    - BAD: Obviously wrong options (e.g. chemotherapy for simple otitis). GOOD: Each distractor appropriate for a different scenario.
    - Avoid "all of the above" or "none of the above"
 
@@ -201,30 +255,48 @@ Difficulty: ${difficulty} - ${difficultyDescriptions[difficulty] || difficulty}
 
 5. HIDDEN IMAGE: When an image/radiograph is referenced or shown, do NOT state the finding or diagnosis in text. Use only scenario + "Radiograph is shown" (e.g. "Patient fell on outstretched hand. Radiograph is shown.").
 
-6. CLINICAL DESCRIPTIONS (Describe, Don't Diagnose):
-   - WRONG: "A patient with pneumonia presents..."
-   - RIGHT: "A patient presents with fever, productive cough, and right lower lobe crackles..."
-   - Let the clinical picture speak - don't give away the diagnosis in the vignette
+6. RAW PATIENT DATA (NEVER Give Away the Answer):
+   - NEVER state the diagnosis or condition name in the vignette. Provide raw patient data only (demographics, symptoms, labs, vitals).
+   - WRONG: "A patient with pneumonia presents..." or "A patient with iron deficiency anemia..."
+   - RIGHT: "A 45-year-old male with fatigue. Labs: Hgb 9.2 g/dL, MCV 72 fL, ferritin 10 ng/mL."
+   - RIGHT: "A patient presents with fever, productive cough, and right lower lobe crackles on exam."
+   - Let the clinical picture speak - the student must interpret findings; do not name the diagnosis in the vignette.
 
-7. EXPLANATION (Educational Value):
-   - Explain WHY the correct answer is right with pathophysiology
-   - Briefly explain why EACH distractor is wrong
-   - Include a memorable clinical pearl or teaching point
+7. STANDARDIZED RATIONALE (5-section object, NCCPA-style): Each question MUST have a "rationale" object (not "explanation" string): bottomLine (one sentence: diagnosis + treatment), whyCorrect (walk through vignette findings → diagnosis → answer; include pathophysiology when relevant), whyIncorrectA/B/C/D/E (why a student might choose it; why wrong for THIS patient; when it WOULD be correct for another scenario), clinicalPearl (memorable hook), highYieldImageOrTable ("N/A" or brief description).
+
+8. GOLD STANDARD vs. INITIAL (Classic PANCE Trap): For questions asking "best initial step" or "most appropriate next test," include the definitive/gold standard test as a distractor. The rationale MUST clarify why that test is incorrect for this step (e.g. "Gold standard for diagnosis but not the initial test;" "Correct for confirmatory workup, not first step").
+
+9. NEXT BEST STEP: For "next step in management" questions, establish what has already been done. State completed work first, then ask for the immediate next action. Example: "EKG shows ST elevation in II, III, aVF. Aspirin and heparin given. What is the most appropriate next step?" — not "What is the first step?" when workup has already started.
+
+10. PHARMACOLOGICAL CONTRAINDICATIONS: For therapeutics questions, include a comorbid condition that contraindicates first-line treatment when appropriate. Example: HTN + gout (avoid thiazides; use ACEi/ARB); otitis + penicillin allergy (use macrolide, not amoxicillin).
+
+11. TASK AREA DISTRIBUTION: ${taskMixInstruction}
+
+12. RED FLAG RECOGNITION: ${redFlagInstruction || 'Optional: include a subtle red flag in 1 question if appropriate.'}
 
 Return ONLY a JSON array (no markdown, no code blocks):
 [
   {
     "vignette": "A 58-year-old woman with a history of hypertension and type 2 diabetes presents to the emergency department with sudden onset of crushing substernal chest pain radiating to her left arm. She appears diaphoretic and anxious. Vital signs show BP 160/95 mmHg, HR 110 bpm, RR 22/min. ECG shows ST-segment elevation in leads V1-V4.",
     "question": "What is the most appropriate initial management for this patient?",
-    "options": ["Immediate cardiac catheterization with PCI", "Administer morphine and nitroglycerin", "Start thrombolytic therapy", "Obtain serial troponins and observe"],
+    "options": ["Immediate cardiac catheterization with PCI", "Administer morphine and nitroglycerin", "Start thrombolytic therapy", "Obtain serial troponins and observe", "Place on telemetry and hold anticoagulation"],
     "correctAnswer": "A",
-    "explanation": "This patient presents with an acute STEMI (ST-elevation myocardial infarction) as evidenced by the classic presentation of chest pain, diaphoresis, and ST-elevation in the anterior leads. The most appropriate initial management is immediate percutaneous coronary intervention (PCI) within 90 minutes of presentation (door-to-balloon time). While morphine and nitroglycerin (B) may provide symptomatic relief, they do not address the underlying coronary occlusion. Thrombolytics (C) are second-line when PCI is not available within 120 minutes. Serial troponins and observation (D) would be appropriate for NSTEMI or unstable angina, not STEMI.",
+    "rationale": {
+      "bottomLine": "The diagnosis is acute STEMI, and the treatment is emergent PCI (or thrombolytics if PCI unavailable).",
+      "whyCorrect": "This patient has acute STEMI with classic presentation (chest pain, diaphoresis, ST-elevation V1-V4). Primary PCI within 90 minutes is the gold standard.",
+      "whyIncorrectB": "Morphine and nitroglycerin provide symptomatic relief but do not address coronary occlusion.",
+      "whyIncorrectC": "Thrombolytics are second-line when PCI unavailable within 120 minutes.",
+      "whyIncorrectD": "Serial troponins are for NSTEMI/unstable angina workup, not acute STEMI.",
+      "whyIncorrectE": "Telemetry is supportive but does not address acute coronary occlusion.",
+      "clinicalPearl": "Door-to-balloon time goal is <90 minutes for STEMI.",
+      "highYieldImageOrTable": "N/A"
+    },
     "tags": ["${system}", "${category}"]
   }
 ]`;
 
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
@@ -236,7 +308,8 @@ Return ONLY a JSON array (no markdown, no code blocks):
             maxOutputTokens: 16384,
           },
         }),
-      }
+      },
+      30000
     );
 
     if (!response.ok) {
@@ -278,15 +351,19 @@ Return ONLY a JSON array (no markdown, no code blocks):
       return [];
     }
 
-    // Validate structure
-    return questions.filter(
-      (q) =>
+    // Validate structure: rationale (structured) or explanation (legacy flat) required
+    return questions.filter((q) => {
+      const hasRationale =
+        (q.rationale && typeof q.rationale === 'object' && 'whyCorrect' in q.rationale) ||
+        (q.explanation && typeof q.explanation === 'string');
+      return (
         q.question &&
         Array.isArray(q.options) &&
-        q.options.length === 4 &&
+        (q.options.length === 4 || q.options.length === 5) &&
         q.correctAnswer &&
-        q.explanation
-    );
+        hasRationale
+      );
+    });
   } catch (error) {
     logger.error('Error generating questions with Gemini', {
       error: error instanceof Error ? error.message : String(error),

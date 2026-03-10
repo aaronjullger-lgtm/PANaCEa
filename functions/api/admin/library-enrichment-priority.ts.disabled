@@ -4,7 +4,7 @@
  * Admin role required.
  */
 
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { readFile } from 'fs/promises';
@@ -12,7 +12,7 @@ import { join } from 'path';
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = adminAuthenticatedEndpoint(
   async (context) => {
     const { env, auth } = context;
     const logger = createEndpointLogger('/api/admin/library-enrichment-priority');

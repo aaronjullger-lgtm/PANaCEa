@@ -12,7 +12,7 @@
  */
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { isAdmin, type UserRole } from '../_shared/rbac';
@@ -29,7 +29,7 @@ const PlatformStatsSchema = z.object({
 
 export const onRequestOptions = withCors();
 
-export const onRequestGet = authenticatedEndpoint(PlatformStatsSchema, async (context) => {
+export const onRequestGet = adminAuthenticatedEndpoint(PlatformStatsSchema, async (context) => {
   const { env, auth, validated } = context;
   const logger = createEndpointLogger('/api/admin/platform-stats');
   const prisma = createEdgePrismaClient(env.DATABASE_URL);

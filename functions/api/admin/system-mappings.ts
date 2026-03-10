@@ -2,7 +2,7 @@
 // Admin CRUD endpoints for SystemMapping
 
 import { z } from 'zod';
-import { authenticatedEndpoint, withCors } from '../_shared/middleware';
+import { adminAuthenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { clearContentCache } from '../../../services/conditionContentService';
@@ -25,7 +25,7 @@ export const onRequestOptions = withCors();
  * GET /api/admin/system-mappings
  * List system mappings with optional filtering
  */
-export const onRequestGet = authenticatedEndpoint(
+export const onRequestGet = adminAuthenticatedEndpoint(
   z.object({
     query: z.object({
       taxonomyCode: z.string().optional(),
@@ -114,7 +114,7 @@ export const onRequestGet = authenticatedEndpoint(
  * POST /api/admin/system-mappings
  * Create a new system mapping
  */
-export const onRequestPost = authenticatedEndpoint(
+export const onRequestPost = adminAuthenticatedEndpoint(
   z.object({
     body: SystemMappingSchema,
   }),
@@ -206,7 +206,7 @@ export const onRequestPost = authenticatedEndpoint(
  * PUT /api/admin/system-mappings/:taxonomyCode/:subcategory
  * Update a system mapping
  */
-export const onRequestPut = authenticatedEndpoint(
+export const onRequestPut = adminAuthenticatedEndpoint(
   z.object({
     params: z.object({
       taxonomyCode: z.string(),
@@ -291,7 +291,7 @@ export const onRequestPut = authenticatedEndpoint(
  * DELETE /api/admin/system-mappings/:taxonomyCode/:subcategory
  * Delete a system mapping
  */
-export const onRequestDelete = authenticatedEndpoint(
+export const onRequestDelete = adminAuthenticatedEndpoint(
   z.object({
     params: z.object({
       taxonomyCode: z.string(),
