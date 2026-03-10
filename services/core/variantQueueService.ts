@@ -3,10 +3,7 @@ import { generateVariant } from '@/lib/questionVariantGenerator';
 import { TASK_TYPES } from '@/lib/taskTypes';
 
 export class VariantQueueService {
-  constructor(
-    private prisma: PrismaClient,
-    private geminiApiKey?: string
-  ) {}
+  constructor(private prisma: PrismaClient) {}
 
   /**
    * Called when a user answers incorrectly.
@@ -90,16 +87,13 @@ export class VariantQueueService {
       options = originalQuestion.options as string[];
     }
 
-    const newVariantData = await generateVariant(
-      {
-        originalQuestion: originalQuestion.question,
-        originalOptions: options,
-        originalAnswer: originalQuestion.correctAnswer,
-        originalExplanation: originalQuestion.explanation,
-        targetType: targetType,
-      },
-      this.geminiApiKey
-    );
+    const newVariantData = await generateVariant({
+      originalQuestion: originalQuestion.question,
+      originalOptions: options,
+      originalAnswer: originalQuestion.correctAnswer,
+      originalExplanation: originalQuestion.explanation,
+      targetType: targetType,
+    });
 
     if (!newVariantData) return null;
 
