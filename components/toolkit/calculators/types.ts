@@ -96,7 +96,8 @@ export interface InputFieldConfig {
  * Calculator component props (standardized)
  */
 export interface CalculatorProps {
-  onBack: () => void;
+  /** Optional - omit when parent provides BackLink (e.g. ToolkitHub) */
+  onBack?: () => void;
 }
 
 export default CalculatorResult;

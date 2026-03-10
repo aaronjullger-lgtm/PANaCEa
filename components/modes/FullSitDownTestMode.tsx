@@ -155,6 +155,7 @@ const FullSitDownTestMode: React.FC<FullSitDownTestModeProps> = ({
 
   return (
     <QuizView
+      modeLabel="Practice → Full Sit-Down Test"
       initialQueue={questionQueue}
       setParentQueue={setQuestionQueue}
       addPerformanceRecord={addPerformanceRecord}

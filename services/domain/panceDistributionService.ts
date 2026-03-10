@@ -2,29 +2,14 @@
  * PANCE Distribution Service
  *
  * Manages accurate PANCE blueprint distribution for main session.
- * Tracks system coverage and ensures questions follow the official PANCE percentages.
+ * Single source of truth: lib/constants/blueprint.ts
  */
 
+import { BLUEPRINT_PERCENT_BY_ABBREVIATION } from '@/lib/constants/blueprint';
 import { PANCE_DECK, TASK_DECK, ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 
-// Official PANCE Content Blueprint Percentages (2024)
-export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = {
-  CV: 11, // Cardiovascular
-  PULM: 9, // Pulmonary
-  GI: 8, // GI/Nutrition
-  MSK: 8, // Musculoskeletal
-  ID: 7, // Infectious Disease
-  NEURO: 7, // Neurology
-  PSYCH: 7, // Psychiatry
-  REPRO: 7, // Reproductive
-  ENDO: 6, // Endocrine
-  HEENT: 6, // HEENT
-  PRO: 6, // Professional Practice
-  HEME: 5, // Hematology
-  RENAL: 5, // Renal
-  DERM: 4, // Dermatology
-  GU: 4, // Genitourinary
-};
+/** @deprecated Use BLUEPRINT_PERCENT_BY_ABBREVIATION from lib/constants/blueprint.ts */
+export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = { ...BLUEPRINT_PERCENT_BY_ABBREVIATION };
 
 // PANCE Task Categories
 export const PANCE_TASK_PERCENTAGES: Record<string, number> = {

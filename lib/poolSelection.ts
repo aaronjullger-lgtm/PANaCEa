@@ -3,24 +3,13 @@
  *
  * Pure functions for weighted random selection following PANCE blueprint.
  * Used by /api/questions/pool and unit-tested for correctness.
- * Weights derived from lib/constants/blueprint (NCCIPA Jan 2025).
+ * Single source of truth: lib/constants/blueprint.ts
  */
 
-import {
-  PANCE_SIMULATION_JAN2025_PERCENT,
-  PANCE_SIMULATION_TO_ABBREVIATION,
-} from './constants/blueprint';
+import { BLUEPRINT_PERCENT_BY_ABBREVIATION } from './constants/blueprint';
 
-/** PANCE system percentages by DB abbreviation — from NCCIPA Jan 2025 blueprint (single source of truth) */
-export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = (() => {
-  const out: Record<string, number> = {};
-  for (const [name, pct] of Object.entries(PANCE_SIMULATION_JAN2025_PERCENT)) {
-    if (name === 'General') continue;
-    const abbrev = PANCE_SIMULATION_TO_ABBREVIATION[name];
-    if (abbrev) out[abbrev] = (out[abbrev] ?? 0) + pct;
-  }
-  return out;
-})();
+/** @deprecated Use BLUEPRINT_PERCENT_BY_ABBREVIATION from lib/constants/blueprint.ts */
+export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = { ...BLUEPRINT_PERCENT_BY_ABBREVIATION };
 
 /**
  * Fisher-Yates shuffle for unbiased randomization
@@ -60,10 +49,10 @@ export function selectByPanceDistribution<T extends { system: string | null }>(
   }
 
   const systemWeights: { system: string; weight: number; index: number }[] = [];
-  const totalPercent = Object.values(PANCE_SYSTEM_PERCENTAGES).reduce((a, b) => a + b, 0);
+  const totalPercent = Object.values(BLUEPRINT_PERCENT_BY_ABBREVIATION).reduce((a, b) => a + b, 0);
 
   for (const sys of Object.keys(bySystem)) {
-    const pancePercent = PANCE_SYSTEM_PERCENTAGES[sys] ?? 3;
+    const pancePercent = BLUEPRINT_PERCENT_BY_ABBREVIATION[sys] ?? 3;
     systemWeights.push({
       system: sys,
       weight: pancePercent / totalPercent,

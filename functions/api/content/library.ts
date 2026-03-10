@@ -4,6 +4,7 @@
  * Fetch filtered library content for Clinical Library browser
  * Supports filtering by system, subcategory, and search
  * FTS uses search_vector; on failure falls back to ILIKE.
+ * Sprint 5: KV cache TTL 1h for non-search requests.
  */
 
 import { z } from 'zod';
@@ -11,7 +12,10 @@ import { Prisma } from '@prisma/client';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { getCached, setCached } from '../_shared/kv-cache';
 import { LibraryResponseSchema } from '@/lib/schemas/medicalContent';
+
+const CACHE_TTL = 3600;
 
 const MAX_SEARCH_LENGTH = 200;
 
@@ -54,6 +58,17 @@ export const onRequestGet = authenticatedEndpoint(
       const highYield = safeValidated.highYield;
 
       const search = rawSearch?.trim().slice(0, MAX_SEARCH_LENGTH) || undefined;
+
+      const cacheKey = `content:library:${system ?? 'all'}:${subcategory ?? ''}:${search ?? ''}:${highYield ?? ''}`;
+      if (!search) {
+        const cached = await getCached<{ content: unknown[]; count: number }>(
+          env as { CACHE?: KVNamespace },
+          cacheKey
+        );
+        if (cached) {
+          return { data: cached, headers: { 'Cache-Control': 'public, max-age=3600' } };
+        }
+      }
 
       // Build where clause — when system is missing or 'all', return all conditions (no system filter)
       const where: Record<string, unknown> = {};
@@ -137,6 +152,9 @@ export const onRequestGet = authenticatedEndpoint(
 
       logger.info('Library content fetched', { count: content.length, system, search });
       const payload = { content, count: content.length };
+      if (!search) {
+        await setCached(env as { CACHE?: KVNamespace }, cacheKey, payload, CACHE_TTL);
+      }
       const parsed = LibraryResponseSchema.safeParse(payload);
       if (!parsed.success) {
         logger.warn('Library response shape validation failed', { issues: parsed.error.issues });
@@ -150,8 +168,9 @@ export const onRequestGet = authenticatedEndpoint(
       logger.error('Error fetching library content', { error: errMsg });
       return {
         data: {
-          error: 'Library unavailable',
-          message: 'Please try again later.',
+          error: 'failed_to_load_library',
+          message: 'Clinical content temporarily unavailable. Please try again later.',
+          error_code: 'failed_to_load_library',
           content: [],
           count: 0,
         },

@@ -1871,6 +1871,7 @@ model OsceResult {
   clinicalReasoningScore  Float
   implicitRating          Float?
   billingCodeSuggestion   String?
+  softSkillsReport        Json?
   createdAt               DateTime                @default(now())
   PatientEncounterSession PatientEncounterSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
@@ -1915,6 +1916,7 @@ model PatientEncounterSession {
   interactionLog       Json?
   telemetry            Json?
   osceTelemetry        Json?
+  completedAt          DateTime?
   OsceResult           OsceResult?
   PatientEncounterCase PatientEncounterCase @relation(fields: [caseId], references: [id])
   User                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)

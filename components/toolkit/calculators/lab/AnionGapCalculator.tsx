@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Beaker } from 'lucide-react';
 import { CalculatorHeader, ClinicalInput, ResultDisplay } from '../shared';
 import type { CalculatorProps, CalculatorResult } from '../types';
+import { anionGap as calcAnionGap, correctedAnionGap } from '@/lib/calculators';
 
 export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [sodium, setSodium] = useState('');
@@ -24,24 +25,22 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [bicarb, setBicarb] = useState('');
   const [albumin, setAlbumin] = useState('');
 
-  const calculateAnionGap = (): number | null => {
+  const calculateResult = (): number | null => {
     const na = parseFloat(sodium);
     const cl = parseFloat(chloride);
     const hco3 = parseFloat(bicarb);
-
     if (!na || !cl || !hco3) return null;
-    return Math.round(na - cl - hco3);
+    return calcAnionGap(na, cl, hco3);
   };
 
-  const calculateCorrectedAG = (ag: number): number | null => {
+  const calculateCorrected = (ag: number): number | null => {
     const alb = parseFloat(albumin);
     if (!alb) return null;
-    // Corrected AG = AG + 2.5 × (4 − albumin)
-    return Math.round(ag + 2.5 * (4 - alb));
+    return correctedAnionGap(ag, alb);
   };
 
-  const ag = calculateAnionGap();
-  const correctedAG = ag !== null ? calculateCorrectedAG(ag) : null;
+  const ag = calculateResult();
+  const correctedAG = ag !== null ? calculateCorrected(ag) : null;
   const displayAG = correctedAG ?? ag;
 
   const getInterpretation = (gap: number | null): CalculatorResult | null => {

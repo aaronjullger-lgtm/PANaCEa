@@ -48,29 +48,47 @@ export async function generateSingleQuestion(
     `
       : '';
 
+  // Pass findings-only for vignette-building; withhold condition/overview from vignette text
+  const sections = condition.sections || {};
+  const findingsContext = [
+    sections.clinicalPresentation
+      ? `Clinical Presentation: ${String(sections.clinicalPresentation).slice(0, 500)}`
+      : '',
+    sections.diagnostics
+      ? `Lab/Imaging Patterns: ${String(sections.diagnostics).slice(0, 400)}`
+      : '',
+    sections.treatment ? `Treatment (for answer accuracy only): ${String(sections.treatment).slice(0, 300)}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+
   const prompt = `
-    CONTEXT:
-    Condition: ${condition.condition}
-    Data: ${JSON.stringify(condition.sections)}
+    CONTEXT - Use these clinical findings to build the vignette. Do NOT include condition name or diagnosis in the vignette.
+    ${findingsContext}
     ${textbookBlock}
 
+    CRITICAL - RAW PATIENT DATA: NEVER state the diagnosis or condition name in the vignette. Provide raw patient data only (demographics, symptoms, labs, vitals).
+
     KAPLAN-LEVEL RULES:
-    - Third-order / "Double Jump": Prefer stems that require a chain (Vignette → Diagnosis → Complication/next step → Answer). Example: circular rash → Lyme → first-line for complication → mechanism of doxycycline (30S). Avoid first-order "What is the diagnosis?" when a third-order stem is feasible.
-    - Kaplan-level distractors: Every wrong answer must be correct for a slightly different patient (e.g. otitis: viral vs bacterial vs recurrent vs penicillin-allergic). No obviously wrong options.
+    - Third-order / "Double Jump" (STRICT): Prefer stems that require a chain (Vignette → Diagnosis → Complication/next step → Answer). Example: circular rash → Lyme → first-line for complication → mechanism of doxycycline (30S). Avoid first-order "What is the diagnosis?" when a third-order stem is feasible.
+    - Kaplan-level distractors: Every wrong answer must be correct for a slightly different patient. No obviously wrong options.
+    - Gold standard vs. initial: For "best initial step" or "next test" questions, include the gold standard as a distractor; rationale must clarify why it is wrong for this step.
+    - Next best step: For "next step in management," state what has already been done first, then ask for the immediate next action.
+    - Pertinent negatives: Include at least 2 pertinent negatives that rule out top differentials. Pharmacological contraindications: For therapeutics, include comorbidity that contraindicates first-line (e.g. HTN + gout; otitis + penicillin allergy).
 
     TASK:
     Generate one high-quality '${type}' question strictly based on the data above.
     If textbook context is present, ensure the question aligns with those excerpts.
     
-    OUTPUT FORMAT (JSON only):
+    OUTPUT FORMAT (JSON only): Include structured rationale with whyIncorrectA/B/C/D for each distractor.
     {
       "type": "${type}",
       "question": "...",
-      "options": ["A", "B", "C", "D"], // include only for mcq/vignette
+      "options": ["A", "B", "C", "D"],
       "correctAnswer": "Matches one option exactly",
       "explanation": {
-          "rationale": "Why the correct answer is correct based on the text.",
-          "incorrect": {"A": "...", "B": "...", "C": "...", "D": "..."}
+          "rationale": "Why the correct answer is correct.",
+          "incorrect": {"A": "Why A is wrong for this patient; when it would be correct for another scenario", "B": "...", "C": "...", "D": "..."}
       },
       "difficulty": 0.5,
       "sourceSections": ["sectionKey1"]

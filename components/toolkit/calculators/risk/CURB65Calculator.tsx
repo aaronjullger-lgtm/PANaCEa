@@ -13,6 +13,7 @@
 import React, { useState } from 'react';
 import { CalculatorHeader, CheckboxCriteria, ResultDisplay } from '../shared';
 import type { CalculatorProps, CalculatorResult, CriteriaItem } from '../types';
+import { calculateCURB65 } from '@/lib/calculators';
 
 export const CURB65Calculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [confusion, setConfusion] = useState(false);
@@ -21,7 +22,13 @@ export const CURB65Calculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [bloodPressure, setBloodPressure] = useState(false);
   const [age, setAge] = useState(false);
 
-  const score = [confusion, urea, respiratory, bloodPressure, age].filter(Boolean).length;
+  const score = calculateCURB65({
+    confusion,
+    urea,
+    respiratory,
+    bloodPressure,
+    age,
+  });
 
   const getInterpretation = (): CalculatorResult => {
     if (score <= 1) {

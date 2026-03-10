@@ -186,8 +186,8 @@ export const NAVIGATION_CONFIG: NavigationCategory[] = [
   {
     category: 'Resources',
     items: [
-      { label: 'Clinical Reference', path: '/study/reference', icon: 'Library' },
-      { label: 'Toolkit', path: '/study/toolkit', icon: 'Zap' },
+      { label: 'Clinical Reference', path: '/study/knowledge', icon: 'Library' },
+      { label: 'Toolkit', path: '/study/utilities', icon: 'Zap' },
       { label: 'Medical Databases', path: '/medical-database', icon: 'Database' },
       { label: 'Live Collaboration', path: '/live-collaboration', icon: 'Users' },
       { label: 'Cross‑System Explorer', path: '/explorer', icon: 'BrainCircuit' },
@@ -216,8 +216,8 @@ export const NAVIGATION_STRUCTURE: NavigationCategory[] = [
   {
     category: 'Resources',
     items: [
-      { label: 'Clinical Reference', path: '/study/reference', icon: 'Library' },
-      { label: 'Toolkit', path: '/study/toolkit', icon: 'Zap' },
+      { label: 'Clinical Reference', path: '/study/knowledge', icon: 'Library' },
+      { label: 'Toolkit', path: '/study/utilities', icon: 'Zap' },
       { label: 'Medical Databases', path: '/medical-database', icon: 'Database' },
       { label: 'Live Collaboration', path: '/live-collaboration', icon: 'Users' },
       { label: 'Cross‑System Explorer', path: '/explorer', icon: 'BrainCircuit' },

@@ -226,8 +226,8 @@ export default {
           colorScheme: 'light',
         },
         '.eor-accent': {
-          '--color-accent': '#7a6f52',
-          '--color-accent-hover': '#6a5f42',
+          '--color-accent': 'var(--color-gold-dark)',
+          '--color-accent-hover': 'var(--color-gold-dark-hover)',
         },
       });
     },

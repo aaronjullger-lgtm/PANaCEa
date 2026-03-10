@@ -13,6 +13,7 @@
 import React, { useState } from 'react';
 import { CalculatorHeader, CheckboxCriteria, ResultDisplay } from '../shared';
 import type { CalculatorProps, CalculatorResult, CriteriaItem } from '../types';
+import { calculateCHADS2VASc } from '@/lib/calculators';
 
 export const CHADS2VAScCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [chf, setChf] = useState(false);
@@ -24,15 +25,16 @@ export const CHADS2VAScCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [age65, setAge65] = useState(false);
   const [female, setFemale] = useState(false);
 
-  const score =
-    (chf ? 1 : 0) +
-    (hypertension ? 1 : 0) +
-    (age75 ? 2 : 0) +
-    (diabetes ? 1 : 0) +
-    (stroke ? 2 : 0) +
-    (vascular ? 1 : 0) +
-    (age65 && !age75 ? 1 : 0) +
-    (female ? 1 : 0);
+  const score = calculateCHADS2VASc({
+    chf,
+    hypertension,
+    age75,
+    diabetes,
+    stroke,
+    vascular,
+    age65,
+    female,
+  });
 
   const getInterpretation = (): CalculatorResult => {
     const annualStrokeRisk =

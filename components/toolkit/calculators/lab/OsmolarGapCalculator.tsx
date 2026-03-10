@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import { Beaker } from 'lucide-react';
 import { CalculatorHeader, ClinicalInput, ResultDisplay } from '../shared';
 import type { CalculatorProps, CalculatorResult } from '../types';
+import { calculatedOsmolarity, osmolarGap } from '@/lib/calculators';
 
 export const OsmolarGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [sodium, setSodium] = useState('');
@@ -18,16 +19,16 @@ export const OsmolarGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
 
   const calculatedOsm = ((): number | null => {
     const na = parseFloat(sodium);
-    const glu = parseFloat(glucose);
-    const b = parseFloat(bun);
     if (!na) return null;
-    return 2 * na + (glu || 0) / 18 + (b || 0) / 2.8;
+    const glu = parseFloat(glucose) || 0;
+    const b = parseFloat(bun) || 0;
+    return calculatedOsmolarity(na, glu, b);
   })();
 
   const measured = measuredOsm ? parseFloat(measuredOsm) : null;
   const gap =
     calculatedOsm !== null && measured !== null && !Number.isNaN(measured)
-      ? Math.round((measured - calculatedOsm) * 10) / 10
+      ? osmolarGap(measured, calculatedOsm)
       : null;
 
   const getResult = (): CalculatorResult | null => {

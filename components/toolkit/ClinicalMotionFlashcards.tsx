@@ -53,9 +53,14 @@ type ViewMode = 'single' | 'sidebyside' | 'guess';
 
 interface ClinicalMotionFlashcardsProps {
   readonly onClose?: () => void;
+  /** When false, hide the Back button (parent provides BackLink) */
+  readonly showBackButton?: boolean;
 }
 
-export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsProps) {
+export function ClinicalMotionFlashcards({
+  onClose,
+  showBackButton = true,
+}: ClinicalMotionFlashcardsProps) {
   const { getToken } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>('single');
   const [selectedPreset, setSelectedPreset] = useState<string>('parkinsonian_gait');
@@ -363,7 +368,7 @@ export function ClinicalMotionFlashcards({ onClose }: ClinicalMotionFlashcardsPr
             New
           </button>
         )}
-        {onClose && (
+        {onClose && showBackButton && (
           <button
             onClick={onClose}
             className="flex items-center gap-2 px-4 py-2 border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all"

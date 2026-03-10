@@ -69,6 +69,7 @@ export const onRequestPost = authenticatedEndpoint(
           status: 'completed',
           diagnosis,
           treatmentPlan,
+          completedAt: new Date(),
           updatedAt: new Date(),
         },
       });

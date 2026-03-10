@@ -141,23 +141,26 @@ async function generateQuestionsV2(
   condition: ConditionInfo,
   count: number
 ): Promise<GeneratedQuestion[]> {
-  const contextInfo = [
-    condition.overview ? `Overview: ${condition.overview.slice(0, 600)}` : '',
+  // Pass findings-only for vignette-building; withhold condition name and overview from vignette text
+  const findingsContext = [
     condition.symptoms ? `Clinical Features: ${condition.symptoms.slice(0, 400)}` : '',
-    condition.diagnostics ? `Diagnostics: ${condition.diagnostics.slice(0, 400)}` : '',
-    condition.treatment ? `Treatment: ${condition.treatment.slice(0, 400)}` : '',
-    condition.pathophysiology ? `Pathophysiology: ${condition.pathophysiology.slice(0, 300)}` : '',
+    condition.diagnostics ? `Lab/Imaging Patterns: ${condition.diagnostics.slice(0, 400)}` : '',
+    condition.pathophysiology ? `Pathophysiology (for answer accuracy): ${condition.pathophysiology.slice(0, 300)}` : '',
+    condition.treatment ? `Treatment (for answer accuracy): ${condition.treatment.slice(0, 400)}` : '',
     condition.buzzwords?.length
-      ? `Key Features (DO NOT USE DIRECTLY - describe instead): ${condition.buzzwords.join(', ')}`
+      ? `Key Features (DO NOT USE DIRECTLY in vignette - describe findings instead): ${condition.buzzwords.join(', ')}`
       : '',
   ]
     .filter(Boolean)
     .join('\n\n');
 
-  const prompt = `You are a Senior Medical Board Question Writer for the PANCE. Generate ${count} unique PANCE-style questions about "${condition.name}" (${condition.system} system - ${condition.subcategory}).
+  const prompt = `You are a Senior Medical Board Question Writer for the PANCE. Generate ${count} unique PANCE-style questions based on these clinical findings (${condition.system} system - ${condition.subcategory}).
 
-=== CRITICAL: "DESCRIBE, DON'T DIAGNOSE" RULE ===
-You are STRICTLY FORBIDDEN from stating the diagnosis in the vignette or using classic "buzzwords" that give away the answer. You must DESCRIBE clinical findings as they would appear to a provider.
+Findings for vignette (RAW PATIENT DATA ONLY):
+${findingsContext || 'Use typical findings for a common condition.'}
+
+=== CRITICAL: RAW PATIENT DATA - NEVER GIVE AWAY THE ANSWER ===
+You are STRICTLY FORBIDDEN from stating the diagnosis or condition name in the vignette. Provide raw patient data only (demographics, symptoms, labs, vitals). Example: "A 45-year-old male with fatigue. Labs: Hgb 9.2 g/dL, MCV 72 fL, ferritin 10 ng/mL" — NOT "A patient with iron deficiency anemia." Do not use classic "buzzwords" that give away the answer; DESCRIBE clinical findings as they would appear to a provider.
 
 BUZZWORD POLICY (Mixed Mode):
 - For 2 of every 3 questions: Strictly DESCRIBE the finding without naming it.
@@ -174,16 +177,20 @@ IMAGING-AS-TEXT RULE (text-only): Provide the "Radiologist's Report" as descript
 VIGNETTE STRUCTURE (follow this order) – Vignette Evolution:
 1. Patient Demographics & Chief Complaint: Age, gender, complaint, duration.
 2. History of Present Illness: Character of symptoms, modifying factors, relevant negatives.
-3. PERTINENT NEGATIVES: Explicitly rule out look-alikes. Example: "No tenderness to palpation (rules out costochondritis). No pain with breathing (rules out pleuritis)."
+3. PERTINENT NEGATIVES (MANDATORY - at least 2): Explicitly rule out top differentials. Example: "No JVD (rules out tamponade). No pain on inspiration (rules out pleuritis)."
 4. Vitals: CLUES not filler. Use relative baselines when relevant (e.g. "normal" BP 110/70 in a patient normally hypertensive 160/90 = relative hypotension). Realistic numbers in a table.
 5. Physical Exam: Focused findings described ANATOMICALLY.
 6. Diagnostics: Raw labs only (no anion gap/osmolar gap in text); for imaging either descriptive report or "Radiograph/Image is shown" without stating the finding.
 
-Condition Context for Accuracy:
-${contextInfo || 'Use your medical knowledge about this condition.'}
+Context for answer accuracy (do not include in vignette):
+${findingsContext || 'Use your medical knowledge about this condition.'}
+
+Gold standard vs. initial: For "best initial step" or "next test" questions, include the gold standard as a distractor; rationale must clarify why wrong for this step. Next best step: For "next step in management," state what has already been done first, then ask for the immediate next action. Pertinent negatives: Include at least 2 that rule out top differentials. Pharmacological contraindications: For therapeutics, include comorbidity that contraindicates first-line (e.g. HTN + gout; otitis + penicillin allergy).
+Task distribution: Vary question types per NCCPA (diagnosis ~18%, history & physical ~16%, clinical intervention ~16%, pharmaceutical ~15%, health maintenance ~11%, diagnostic lab ~10%).
+Red flag (optional): For about 10% of questions when batch >= 10, include a subtle red flag that changes management. Do not make it obvious.
 
 REQUIREMENTS:
-1. Each question MUST test SECOND-ORDER thinking (not just recall)
+1. Prefer THIRD-ORDER stems: Vignette → Diagnosis → Complication/next step → Answer. Avoid first-order "What is the diagnosis?" Each question MUST test second-order or third-order thinking (not just recall)
 2. Include 4 options with ONE clearly correct answer and THREE plausible distractors
 3. Distractors should be common misconceptions or treatments for similar conditions
 4. Include a subtle "red herring" detail in each vignette
