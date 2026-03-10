@@ -251,8 +251,7 @@ describe('CoachingService', () => {
       expect(prescription.prescription).toContain('longer vignettes');
       expect(
         prescription.focusAreas.some(
-          (area: string) =>
-            area.toLowerCase().includes('stamina') || area.toLowerCase().includes('reading')
+          (area: string) => area.toLowerCase().includes('stamina') || area.toLowerCase().includes('reading')
         )
       ).toBe(true);
     });

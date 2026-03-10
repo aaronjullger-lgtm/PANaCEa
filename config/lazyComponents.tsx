@@ -178,6 +178,12 @@ export const LiveStudySession = lazy(() =>
     default: m.LiveStudySession,
   }))
 );
+export const LectureConverterPage = lazy(() =>
+  import('../pages/LectureConverterPage').then((m) => ({ default: m.LectureConverterPage }))
+);
+export const TechniqueCheckPage = lazy(() =>
+  import('../pages/TechniqueCheckPage').then((m) => ({ default: m.TechniqueCheckPage }))
+);
 export const AnalyticsDashboard = lazy(() => import('../components/analytics/AnalyticsDashboard'));
 export const DatabaseAnalyticsDashboard = lazy(() => import('../components/analytics/DatabaseAnalyticsDashboard'));
 export const LearningProfileDashboard = lazy(() => import('../components/analytics/LearningProfileDashboard'));

@@ -7,10 +7,11 @@
 export const ROUTES = {
   HOME: '/',
   ADMIN: '/admin',
-  ADMIN_REFINERY: '/admin/refinery',
   ADMIN_CURATION: '/admin/curation',
   CLINICAL_EYE: '/clinical-eye',
   VISUALIZER: '/visualizer',
+  LECTURE_CONVERTER: '/lecture-converter',
+  TECHNIQUE_CHECK: '/technique-check',
   CROSS_SYSTEM_EXPLORER: '/explorer',
   /** Study hub; path→view sync in App.tsx */
   STUDY: '/study',

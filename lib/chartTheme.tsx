@@ -9,20 +9,14 @@ import React from 'react';
 
 export const chartTheme = {
   /**
-   * Grid styling for CartesianGrid components
+   * Grid styling for CartesianGrid components.
+   * Faint blue-gray only; no vertical lines (or 10% opacity) to avoid X-axis label noise.
    */
   grid: {
-    stroke: 'var(--chart-grid-stroke, var(--color-border-light))', // index.css defines --chart-grid-stroke (faint blue-gray) per theme
-    strokeDasharray: '3 3',
-  },
-  /**
-   * Bar chart grid: horizontal lines only, faint blue-gray (no vertical line noise on X-axis labels)
-   */
-  gridBar: {
     stroke: 'var(--chart-grid-stroke)',
     strokeDasharray: '3 3',
-    horizontal: true,
     vertical: false,
+    horizontal: true,
   },
 
   /**
@@ -90,7 +84,8 @@ export const chartTheme = {
   },
 
   /**
-   * Chart colors - semantic color palette
+   * Chart colors - brand-safe palette derived from Dark Blue base (no generic blue/orange clash).
+   * Bar 1: Base Blue, Bar 2: Hue -20deg + Lightness, Bar 3: Hue +20deg + Lightness.
    */
   colors: {
     primary: 'var(--color-accent)',
@@ -100,6 +95,14 @@ export const chartTheme = {
     error: 'var(--color-data-fail)',
     info: 'var(--color-accent)',
     neutral: 'var(--color-text-muted)',
+    /** Brand-safe bar sequence for multi-series (Recharts/Chart.js) */
+    barSequence: [
+      'var(--color-accent)',           // Base blue
+      'hsl(207, 90%, 45%)',            // Base blue hue -20°, lighter
+      'hsl(227, 90%, 52%)',            // Base blue hue +20°, lighter
+      'hsl(200, 85%, 48%)',
+      'hsl(235, 85%, 55%)',
+    ],
   },
 
   /**

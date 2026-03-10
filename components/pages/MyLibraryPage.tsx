@@ -19,6 +19,7 @@ import {
   Library,
   Sparkles,
   Info,
+  Video,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { API_ENDPOINTS, buildApiUrl, getApiBaseUrl } from '@/lib/utils/apiConfig';
@@ -50,6 +51,10 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
   const [libraryAnswer, setLibraryAnswer] = useState('');
   const [libraryLoading, setLibraryLoading] = useState(false);
   const [libraryError, setLibraryError] = useState<string | null>(null);
+  const [veoPrompt, setVeoPrompt] = useState('');
+  const [veoLoading, setVeoLoading] = useState(false);
+  const [veoError, setVeoError] = useState<string | null>(null);
+  const [veoResult, setVeoResult] = useState<{ videoUrl?: string; jobId?: string } | null>(null);
 
   const activeCacheName = (preferences.customSettings as Record<string, unknown> | undefined)
     ?.activeKnowledgeCacheName as string | undefined;
@@ -68,10 +73,10 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        const errBody = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(errBody.error || `HTTP ${res.status}`);
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
       }
-      const data = (await res.json()) as { caches?: KnowledgeCacheItem[] };
+      const data = (await res.json()) as { caches: KnowledgeCacheItem[] };
       const list = data.caches ?? [];
       setCaches(list);
       // Clear active if it's no longer in the non-expired list (expired or deleted)
@@ -134,8 +139,8 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {
-          const errBody = (await res.json().catch(() => ({}))) as { error?: string };
-          throw new Error(errBody.error || `HTTP ${res.status}`);
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `HTTP ${res.status}`);
         }
         if (activeCacheName === geminiCacheName) clearActive();
         await fetchCaches();
@@ -164,8 +169,8 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
           body: formData,
         });
         if (!uploadRes.ok) {
-          const errBody = (await uploadRes.json().catch(() => ({}))) as { error?: string };
-          throw new Error(errBody.error || `Upload failed: ${uploadRes.status}`);
+          const data = await uploadRes.json().catch(() => ({}));
+          throw new Error(data.error || `Upload failed: ${uploadRes.status}`);
         }
         const uploadData = (await uploadRes.json()) as { fileUri: string; mimeType?: string };
         const cacheRes = await fetch(buildApiUrl(API_ENDPOINTS.KNOWLEDGE_CACHE), {
@@ -182,8 +187,8 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
           }),
         });
         if (!cacheRes.ok) {
-          const errBody = (await cacheRes.json().catch(() => ({}))) as { error?: string };
-          throw new Error(errBody.error || `Create cache failed: ${cacheRes.status}`);
+          const data = await cacheRes.json().catch(() => ({}));
+          throw new Error(data.error || `Create cache failed: ${cacheRes.status}`);
         }
         setUploadDisplayName('');
         await fetchCaches();
@@ -201,6 +206,46 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
     if (file) void handleUpload(file);
     e.target.value = '';
   };
+
+  const veoPresets = [
+    'Cinematic shot, medical education. Elderly male demonstrating shuffling gait with reduced arm swing.',
+    'Medical education. Patient demonstrating Parkinsonian gait, short steps, festination.',
+    'Clinical context. Seizure vs syncope: brief tonic-clonic movement then recovery.',
+  ];
+
+  const handleVeoGenerate = useCallback(async () => {
+    const prompt = veoPrompt.trim() || veoPresets[0];
+    if (!prompt) return;
+    const token = await getToken();
+    if (!token) return;
+    setVeoLoading(true);
+    setVeoError(null);
+    setVeoResult(null);
+    try {
+      const res = await fetch(buildApiUrl('/api/veo/generate'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ prompt, durationSeconds: 5 }),
+      });
+      const data = (await res.json()) as { videoUrl?: string; jobId?: string; error?: string; hint?: string };
+      if (!res.ok) {
+        if (res.status === 501) {
+          setVeoError('Video generation coming soon. Configure Veo (Vertex AI) to enable.');
+        } else {
+          setVeoError(data.error || data.hint || 'Generation failed');
+        }
+        return;
+      }
+      setVeoResult(data);
+    } catch (e) {
+      setVeoError(e instanceof Error ? e.message : 'Request failed');
+    } finally {
+      setVeoLoading(false);
+    }
+  }, [veoPrompt, getToken]);
 
   const formatExpiry = (iso: string) => {
     const d = new Date(iso);
@@ -308,6 +353,60 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
           </label>
           {uploading && <Loader2 className="w-5 h-5 animate-spin text-[var(--color-accent)]" />}
         </div>
+      </div>
+
+      {/* Clinical motion clips (Gait & Movement) */}
+      <div className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+        <h2 className="text-sm font-medium text-[var(--color-text-primary)] mb-2 flex items-center gap-2">
+          <Video className="w-4 h-4 text-[var(--color-accent)]" />
+          Clinical motion clips
+        </h2>
+        <p className="text-xs text-[var(--color-text-muted)] mb-3">
+          Generate short clinical videos (e.g. gait, movement) for neurology and musculoskeletal review.
+        </p>
+        <div className="space-y-2 mb-3">
+          {veoPresets.map((preset, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setVeoPrompt(preset)}
+              className="block w-full text-left px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-sm text-[var(--color-text-secondary)] hover:border-[var(--color-accent)]/50 truncate"
+            >
+              {preset.slice(0, 60)}…
+            </button>
+          ))}
+        </div>
+        <input
+          type="text"
+          placeholder="Or enter your own prompt"
+          value={veoPrompt}
+          onChange={(e) => setVeoPrompt(e.target.value)}
+          className="w-full mb-2 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+        />
+        <button
+          type="button"
+          onClick={handleVeoGenerate}
+          disabled={veoLoading}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-sm font-medium text-[var(--color-text-inverse)] disabled:opacity-50"
+        >
+          {veoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Video className="w-4 h-4" />}
+          Generate clip
+        </button>
+        {veoError && (
+          <p className="mt-2 text-sm text-data-fail" role="alert">
+            {veoError}
+          </p>
+        )}
+        {veoResult?.videoUrl && (
+          <div className="mt-3">
+            <video src={veoResult.videoUrl} controls className="w-full rounded-lg border border-[var(--color-border)]" />
+          </div>
+        )}
+        {veoResult?.jobId && !veoResult.videoUrl && (
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+            Generation started (job: {veoResult.jobId}). Poll for completion when async endpoint is wired.
+          </p>
+        )}
       </div>
 
       {/* List */}
