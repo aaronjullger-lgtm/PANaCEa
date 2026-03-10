@@ -57,10 +57,10 @@ export function validateQuestion(
     score -= 0.5;
   }
 
-  // 3. Structure Check
+  // 3. Structure Check (PANCE uses 5 options; allow 4 for backward compatibility)
   if (question.type === 'mcq' || question.type === 'vignette') {
-    if (!question.options || question.options.length !== 4) {
-      errors.push('MCQ/Vignette must have exactly 4 options.');
+    if (!question.options || question.options.length < 4 || question.options.length > 5) {
+      errors.push('MCQ/Vignette must have 4 or 5 options.');
       score -= 1.0; // Critical failure
     }
     if (!question.options?.includes(question.correctAnswer)) {

@@ -19,6 +19,7 @@ import {
   type VerificationContext,
   type CoVeResult,
 } from '../../../lib/cove-verification';
+import { withTimeout } from '../_shared/timeout';
 
 // ============================================================================
 // HELPER: Parse condition context string into structured verification data
@@ -318,8 +319,12 @@ CRITICAL RULES:
 
       // Generate question with optional issue warnings
       const prompt = buildGenerationPrompt(previousIssues.length > 0 ? previousIssues : undefined);
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
+      const result = await withTimeout(
+        model.generateContent(prompt).then((r) => r.response.text()),
+        30000,
+        'Gemini generateContent timed out (30s)'
+      );
+      const responseText = result;
 
       // Parse JSON response
       try {

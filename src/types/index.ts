@@ -12,6 +12,20 @@
 // Core Question and Performance Types
 // ============================================================================
 
+/** Standardized rationale format (5-section template) for PANCE-style explanations. */
+export interface StructuredRationale {
+  bottomLine?: string;
+  whyCorrect: string;
+  whyIncorrectA?: string;
+  whyIncorrectB?: string;
+  whyIncorrectC?: string;
+  whyIncorrectD?: string;
+  whyIncorrectE?: string;
+  clinicalPearl?: string;
+  highYieldImageOrTable?: string;
+  commonPitfalls?: string[];
+}
+
 export interface Question {
   /** Unique identifier for tracking */
   id?: string;
@@ -24,7 +38,8 @@ export interface Question {
   correctAnswerIndex: number;
   /** Alias for correctAnswerIndex (for backwards compatibility) */
   correctIndex?: number;
-  rationale: string;
+  /** Rationale: structured (5-section) or legacy string (JSON string when stored) */
+  rationale: string | StructuredRationale;
   topic: string;
   /** PANCE system, mirrors topic but typed */
   system?: SystemCode;

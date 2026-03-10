@@ -10,6 +10,13 @@
 import type { PrismaClient } from '@prisma/client';
 import { generateVariant } from './questionVariantGenerator';
 
+const VARIANT_TYPES = [
+  'rephrased',
+  'different_scenario',
+  'different_distractors',
+] as const;
+type VariantType = (typeof VARIANT_TYPES)[number];
+
 /** PreGeneratedQuestion fields needed for variant check + generation */
 export interface PreGenQuestionForVariant {
   id: string;
@@ -91,13 +98,17 @@ export async function ensureDueVariant(
       return;
     }
 
+    // Rotate variant type so consecutive due reviews feel more distinct (random among types)
+    const targetType: VariantType =
+      VARIANT_TYPES[Math.floor(Math.random() * VARIANT_TYPES.length)] ?? 'rephrased';
+
     const variant = await generateVariant(
       {
         originalQuestion: questionText,
         originalOptions: options,
         originalAnswer: correctAnswer,
         originalExplanation: explanation,
-        targetType: 'rephrased',
+        targetType,
       },
       apiKey
     );

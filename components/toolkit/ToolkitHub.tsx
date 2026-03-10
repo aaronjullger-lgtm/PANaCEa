@@ -2,7 +2,6 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft,
   Search,
   Calculator as CalculatorIcon,
   BookOpen,
@@ -21,6 +20,8 @@ import {
   FileText,
   FileImage,
 } from 'lucide-react';
+import { BackLink } from '@/components/navigation/BackLink';
+import { ROUTES } from '@/config/routes';
 import { CalculatorHub } from './calculators/CalculatorHub';
 import { CALCULATORS as REGISTRY_CALCULATORS } from './calculators/calculatorRegistry';
 import { StorageKeys } from '@/lib/storage/storageRegistry';
@@ -397,13 +398,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
       {/* Sidebar Navigation - Desktop */}
       <div className="hidden lg:block w-64 flex-shrink-0 bg-[var(--color-bg-secondary)] border-r border-[var(--color-border)] overflow-y-auto overflow-x-hidden">
           <div className="p-4 border-b border-[var(--color-border)]">
-            <button
-              onClick={onClose}
-              className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors mb-4 group w-full"
-            >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-sm">Dashboard</span>
-            </button>
+            <BackLink to={ROUTES.STUDY} className="mb-4 w-full justify-start" />
             <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
               Clinical Utilities
             </h2>
@@ -485,13 +480,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
           {/* Header with Search */}
           <div className="mb-6">
             <div className="lg:hidden mb-4">
-              <button
-                onClick={onClose}
-                className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Dashboard</span>
-              </button>
+              <BackLink to={ROUTES.STUDY} />
             </div>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -511,7 +500,9 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                 placeholder={
                   activeTab === 'calculators'
                     ? "Search calculators (e.g. 'afib', 'pneumonia', 'pe')"
-                    : 'Search calculators'
+                    : activeTab === 'generators'
+                      ? 'Search generators'
+                      : 'Search interpretation assistants'
                 }
                 value={searchQuery}
                 onChange={(e) => {
@@ -689,19 +680,13 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
               >
                 {selectedInterpreter ? (
                   <div className="space-y-4">
-                    <button
+                    <BackLink
+                      asButton
                       onClick={() => setSelectedInterpreter(null)}
-                      className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      Back to Interpretation Assistants
-                    </button>
-                    {selectedInterpreter === 'abg' && (
-                      <ABGInterpreter onBack={() => setSelectedInterpreter(null)} />
-                    )}
-                    {selectedInterpreter === 'ekg' && (
-                      <EKGInterpreter onBack={() => setSelectedInterpreter(null)} />
-                    )}
+                      label="Back to Interpretation Assistants"
+                    />
+                    {selectedInterpreter === 'abg' && <ABGInterpreter />}
+                    {selectedInterpreter === 'ekg' && <EKGInterpreter />}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -804,13 +789,11 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
               >
                 {selectedGenerator ? (
                   <div className="space-y-4">
-                    <button
+                    <BackLink
+                      asButton
                       onClick={() => setSelectedGenerator(null)}
-                      className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      Back to Generators
-                    </button>
+                      label="Back to Generators"
+                    />
                     {selectedGenerator === 'mnemonic' && (
                       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
                         <div className="mb-4">
@@ -843,12 +826,18 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                     )}
                     {selectedGenerator === 'clinical_motion' && (
                       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
-                        <ClinicalMotionFlashcards onClose={() => setSelectedGenerator(null)} />
+                        <ClinicalMotionFlashcards
+                          onClose={() => setSelectedGenerator(null)}
+                          showBackButton={false}
+                        />
                       </div>
                     )}
                     {selectedGenerator === 'lecture_script' && (
                       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
-                        <LectureConverter onClose={() => setSelectedGenerator(null)} />
+                        <LectureConverter
+                          onClose={() => setSelectedGenerator(null)}
+                          showBackButton={false}
+                        />
                       </div>
                     )}
                   </div>

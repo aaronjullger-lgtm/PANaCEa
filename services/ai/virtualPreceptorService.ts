@@ -165,7 +165,7 @@ Evaluate the student's performance across these competencies:
 
 5. **Dangerous or inappropriate actions** (required when present):
    - Identify any dangerous or inappropriate actions the student took. Examples: prescribing antibiotics for a clearly viral illness; missing critical workup (e.g. no EKG for chest pain); unsafe treatment; ignoring red flags.
-   - List each in \`dangerousActions\`. For each such action, also add a brief note to \`areasForImprovement\` and reduce the management subscore substantially (e.g. management ≤ 3 when such actions occur).
+   - List each in \`dangerousActions\`. For each such action, also add a brief note to \`areasForImprovement\` and apply a significant score reduction for management (e.g. management ≤ 3 when such actions occur). When dangerous actions occur, reduce the management subscore substantially—this is non-negotiable for patient safety.
 
 **Output Requirements:**
 

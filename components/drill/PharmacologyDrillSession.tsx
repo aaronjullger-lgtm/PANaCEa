@@ -399,6 +399,7 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
       <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] overflow-y-auto">
         <div className="container mx-auto px-4 py-6">
           <QuizView
+            modeLabel="Practice → Pharmacology Quiz"
             initialQueue={queue}
             setParentQueue={setQueue}
             addPerformanceRecord={addPerformanceRecord}

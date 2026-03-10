@@ -1,17 +1,21 @@
 /**
  * Quick Review Mode Component
- * Allows rapid review of recently missed questions for immediate reinforcement
+ * Allows rapid review of recently missed questions for immediate reinforcement.
+ * Fetches concept variants via due-siblings API so the same question is not repeated.
  */
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, CheckCircle2, XCircle, Clock, Target } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import type { Question } from '@/types';
+import type { QuizQuestion } from '@/types';
 
 interface QuickReviewModeProps {
   missedQuestions: Question[];
   onClose: () => void;
-  onStartReview: (questions: Question[]) => void;
+  /** Called with variant questions (or empty) to start the quiz. Skip items with no variant. */
+  onStartReview: (questions: QuizQuestion[]) => void;
 }
 
 export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
@@ -71,9 +75,88 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
     return new Date(q.lastReviewedAt).getTime() > weekAgo;
   }).length;
 
-  const handleStartReview = () => {
-    if (filteredQuestions.length > 0) {
-      onStartReview(filteredQuestions);
+  const { getToken } = useAuth();
+  const [variantLoading, setVariantLoading] = useState(false);
+  const [variantError, setVariantError] = useState<string | null>(null);
+
+  const handleStartReviewWithVariants = async () => {
+    if (filteredQuestions.length === 0) return;
+    const token = await getToken();
+    if (!token) {
+      setVariantError('Sign in to load variant questions.');
+      return;
+    }
+    setVariantLoading(true);
+    setVariantError(null);
+    try {
+      const dueItems = filteredQuestions
+        .map((q) => ({
+          conditionId: q.conditionId ?? '',
+          taskType: q.taskType ?? null,
+          originalQuestionId: q.id ?? (q as { questionId?: string }).questionId ?? '',
+        }))
+        .filter((d) => d.conditionId && d.originalQuestionId);
+      if (dueItems.length === 0) {
+        setVariantError('No concept data for selected questions.');
+        setVariantLoading(false);
+        return;
+      }
+      const res = await fetch('/api/questions/due-siblings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ dueItems }),
+      });
+      const json = (await res.json().catch(() => null)) as {
+        data?: {
+          results?: Array<{
+            question: {
+              id: string;
+              question: string;
+              vignette?: string;
+              options: string[];
+              correctAnswerIndex: number;
+              rationale: string;
+              system: string;
+              conditionId?: string;
+              condition?: string;
+            } | null;
+            dueConceptKey: { conditionId: string; taskType: string | null };
+          }>;
+        };
+      };
+      const results = json?.data?.results ?? [];
+      const queue: QuizQuestion[] = results
+        .filter((r): r is typeof r & { question: NonNullable<typeof r.question> } => r.question != null)
+        .map((r) => {
+          const key = r.dueConceptKey;
+          const q = r.question;
+          return {
+            id: q.id,
+            question: q.vignette ? `${q.vignette}\n\n${q.question}` : q.question,
+            options: q.options,
+            correctAnswerIndex: q.correctAnswerIndex,
+            rationale: q.rationale,
+            system: q.system,
+            conditionId: key.conditionId,
+            condition: q.condition ?? '',
+            topic: q.system,
+            dueConceptKey: key,
+          } as QuizQuestion;
+        });
+      if (queue.length === 0) {
+        setVariantError('No variants available for these concepts. Try a general session.');
+        setVariantLoading(false);
+        return;
+      }
+      onClose();
+      onStartReview(queue);
+    } catch {
+      setVariantError('Could not load variant questions. Try again.');
+    } finally {
+      setVariantLoading(false);
     }
   };
 
@@ -238,13 +321,18 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
               Cancel
             </button>
             <button
-              onClick={handleStartReview}
-              disabled={filteredQuestions.length === 0}
+              onClick={handleStartReviewWithVariants}
+              disabled={filteredQuestions.length === 0 || variantLoading}
               className="flex-1 py-3 px-6 rounded-lg bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-hover)] text-[var(--color-text-inverse)] font-semibold hover:from-[var(--color-accent-hover)] hover:to-[var(--color-accent)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
             >
-              Start Review ({filteredQuestions.length})
+              {variantLoading ? 'Loading variants…' : `Start Review (${filteredQuestions.length})`}
             </button>
           </div>
+          {variantError && (
+            <p className="mt-3 text-sm text-[var(--color-error)]" role="alert">
+              {variantError}
+            </p>
+          )}
         </div>
       </motion.div>
     </motion.div>

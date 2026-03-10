@@ -275,41 +275,62 @@ export function withAuth(options: { optional?: boolean } = {}): Middleware<Authe
   };
 }
 
+function getAdminIdsFromEnv(env: any): { adminIds: string[]; superadminIds: string[] } {
+  const adminIds = env.ADMIN_USER_IDS
+    ? String(env.ADMIN_USER_IDS)
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter(Boolean)
+    : [];
+  const superadminIds = env.SUPERADMIN_USER_IDS
+    ? String(env.SUPERADMIN_USER_IDS)
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter(Boolean)
+    : [];
+  return { adminIds, superadminIds };
+}
+
 /**
  * Admin role check middleware - requires authenticated user to have admin role
  * Must be used after withAuth() middleware
+ * Checks: env SUPERADMIN_USER_IDS/ADMIN_USER_IDS (clerkIds), then DB role
  */
 export function withAdminRole(): Middleware<AuthenticatedContext> {
   return async (context, next) => {
-    // Ensure we have auth context from withAuth()
     if (!context.auth || !context.auth.userId) {
       logger.error('withAdminRole called without auth context');
       return { status: 401, error: 'Authentication required' };
     }
 
-    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+    const clerkId = context.auth.userId;
 
+    const { adminIds, superadminIds } = getAdminIdsFromEnv(context.env);
+    if (superadminIds.includes(clerkId) || adminIds.includes(clerkId)) {
+      return next();
+    }
+
+    const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
     try {
-      // Fetch user from database to check role
       const user = await prisma.user.findUnique({
-        where: { clerkId: context.auth.userId },
+        where: { clerkId },
         select: { role: true },
       });
 
-      if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPERADMIN')) {
-        logger.warn('Non-admin user attempted to access admin endpoint', {
-          userId: context.auth.userId,
-          path: new URL(context.request.url).pathname,
-        });
-        return { status: 403, error: 'Admin access required' };
+      const role = (user?.role ?? '').toUpperCase();
+      if (role === 'ADMIN' || role === 'SUPERADMIN') {
+        return next();
       }
 
-      // User is admin, continue to next middleware
-      return next();
+      logger.warn('Non-admin user attempted to access admin endpoint', {
+        userId: clerkId,
+        path: new URL(context.request.url).pathname,
+      });
+      return { status: 403, error: 'Admin access required' };
     } catch (error) {
       logger.error('Error checking admin role', {
         error: error instanceof Error ? error.message : String(error),
-        userId: context.auth.userId,
+        userId: clerkId,
       });
       return { status: 500, error: 'Internal server error' };
     } finally {
@@ -645,6 +666,29 @@ export function authenticatedEndpoint<T>(
     withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
     withAuth(),
     withRateLimit({ requestsPerMinute: rateLimit, endpointType: 'api' }),
+    withValidation(schema, options),
+    withLogging(),
+    handler
+  );
+}
+
+/**
+ * Admin-only endpoint stack - same as authenticatedEndpoint but requires admin role
+ * Returns 403 for non-admin users (Sprint 2 RBAC)
+ */
+export function adminAuthenticatedEndpoint<T>(
+  schema: z.ZodSchema<T>,
+  handler: Handler<AuthenticatedContext & ValidatedContext<T>>,
+  options?: { source?: 'body' | 'query' | 'params'; requestsPerMinute?: number }
+) {
+  const rateLimit = options?.requestsPerMinute ?? 60;
+  return withMiddleware(
+    withCors(),
+    withErrorHandling(),
+    withEnvCheck(['DATABASE_URL', 'CLERK_SECRET_KEY']),
+    withAuth(),
+    withAdminRole(),
+    withRateLimit({ requestsPerMinute: rateLimit, endpointType: 'admin' }),
     withValidation(schema, options),
     withLogging(),
     handler

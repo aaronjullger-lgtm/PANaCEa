@@ -146,11 +146,17 @@ export class ReviewService {
       const srsItem = conditionGroups.get(conditionId)!;
       const originalInfo = questionConditionMap.get(srsItem.questionId);
 
+      // Exclude the original question so we only show variants (same concept, different question)
+      const excludeIds = Array.from(seenIds);
+      if (!excludeIds.includes(srsItem.questionId)) {
+        excludeIds.push(srsItem.questionId);
+      }
+
       // Fetch multiple candidates and randomly select one for variety
       const poolCandidates = await this.prisma.preGeneratedQuestion.findMany({
         where: {
           conditionId,
-          id: { notIn: Array.from(seenIds) },
+          id: { notIn: excludeIds },
           ...(system ? { system } : {}),
         },
         take: 5, // Get up to 5 candidates
@@ -193,11 +199,11 @@ export class ReviewService {
         continue;
       }
 
-      // Also randomize main question selection for variety
+      // Also randomize main question selection for variety; exclude original
       const mainCandidates = (await this.prisma.question.findMany({
         where: {
           conditionId,
-          id: { notIn: Array.from(seenIds) },
+          id: { notIn: excludeIds },
           ...(system ? { system } : {}),
         },
         take: 5,
@@ -235,39 +241,7 @@ export class ReviewService {
         continue;
       }
 
-      const fallbackQuestion = originalQuestions.find(
-        (q: { id: string }) => q.id === srsItem.questionId
-      );
-      if (fallbackQuestion) {
-        const fullQuestion = (await this.prisma.question.findUnique({
-          where: { id: fallbackQuestion.id },
-        })) as DBQuestion | null;
-
-        if (fullQuestion) {
-          const daysOverdue = Math.max(
-            0,
-            (now.getTime() - srsItem.dueDate.getTime()) / (1000 * 60 * 60 * 24)
-          );
-
-          reviewQuestions.push({
-            id: fullQuestion.id,
-            question: fullQuestion.vignette,
-            options: fullQuestion.options as string[],
-            correctAnswerIndex: fullQuestion.correctAnswerIndex,
-            rationale: fullQuestion.rationale,
-            system: fullQuestion.system,
-            condition: fullQuestion.condition ?? undefined,
-            conditionId: fullQuestion.conditionId ?? undefined,
-            difficulty: fullQuestion.difficulty ?? undefined,
-            reviewReason: 'srs_due' as const,
-            priority: Math.min(100, 50 + daysOverdue * 10),
-            lastSeen: srsItem.lastReviewed,
-            nextDue: srsItem.dueDate,
-            srsItemId: srsItem.id,
-            isRepeat: true,
-          } as ReviewQuestion & { srsItemId: string; isRepeat: boolean });
-        }
-      }
+      // No variant available: skip this due item (never show the original)
     }
 
     return reviewQuestions;

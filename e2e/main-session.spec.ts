@@ -84,6 +84,11 @@ async function startMainSession(page: Page) {
   // Wait for the quiz view to load
   await page.waitForSelector('text=/question|answer|choose|select/i', { timeout: 10000 });
   console.log('✓ Quiz view loaded');
+
+  // Back navigation should be present (BackLink to Practice)
+  const backAffordance = page.locator('a[href="/practice"], a:has-text("Back to Practice"), [aria-label*="Back to Practice"]').first();
+  await expect(backAffordance).toBeVisible({ timeout: 3000 });
+  console.log('✓ Back to Practice link visible');
 }
 
 /**
@@ -139,14 +144,14 @@ async function answerQuestion(page: Page): Promise<boolean> {
     await submitButton.click();
     console.log('✓ Clicked submit button');
 
-    // Wait for feedback (correct/incorrect indicator)
-    await page.waitForTimeout(1000);
+    // Wait for feedback (correct/incorrect indicator) and rationale/explanation
+    await page.waitForTimeout(1500);
     const hasFeedback = await page
-      .locator('text=/correct|incorrect|right|wrong|explanation|next/i')
+      .locator('text=/correct|incorrect|right|wrong|explanation|rationale|next|Bottom Line|Why Correct/i')
       .first()
-      .isVisible({ timeout: 3000 });
+      .isVisible({ timeout: 5000 });
     if (hasFeedback) {
-      console.log('✓ Feedback displayed');
+      console.log('✓ Feedback and rationale displayed');
     }
   } else {
     console.log('⚠ No submit button found');
@@ -237,5 +242,25 @@ test.describe('Main Session End-to-End', () => {
     // Attempts are recorded with isMainSession: true (attempt API + Rolling 360); DB check is out of scope for UI E2E.
 
     console.log('✅ Main session E2E test passed');
+  });
+
+  test('Study Path route loads without 404 when navigated to', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await waitForAppReady(page);
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      test.skip();
+      return;
+    }
+
+    await page.goto(`${BASE_URL}/study/path`);
+    await waitForAppReady(page);
+
+    // Should not show 404 page
+    const notFound = page.locator('text=Page Not Found');
+    await expect(notFound).not.toBeVisible({ timeout: 5000 });
+    // Should show study path content or loading/empty state
+    const hasContent = await page.locator('text=/Study Path|Dynamic Study|plan|recommendation/i').first().isVisible({ timeout: 8000 });
+    expect(hasContent).toBe(true);
   });
 });

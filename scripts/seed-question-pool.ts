@@ -120,37 +120,43 @@ async function generateQuestionsForCondition(
   condition: ConditionInfo,
   count: number
 ): Promise<GeneratedQuestion[]> {
-  const contextInfo = [
-    condition.overview ? `Overview: ${condition.overview.slice(0, 500)}` : '',
-    condition.symptoms ? `Key Symptoms: ${condition.symptoms.slice(0, 300)}` : '',
-    condition.treatment ? `Treatment: ${condition.treatment.slice(0, 300)}` : '',
+  // Pass findings-only for vignette-building; withhold condition name from vignette text
+  const findingsContext = [
+    condition.symptoms ? `Symptoms/Clinical Presentation: ${condition.symptoms.slice(0, 400)}` : '',
+    condition.treatment ? `Treatment (for answer accuracy, do not include in vignette): ${condition.treatment.slice(0, 300)}` : '',
   ]
     .filter(Boolean)
     .join('\n\n');
 
-  const prompt = `Generate ${count} unique PANCE-style medical multiple choice questions specifically about "${condition.name}" (${condition.system} system - ${condition.subcategory}).
+  const prompt = `Generate ${count} unique PANCE-style medical multiple choice questions based on these clinical findings (${condition.system} system - ${condition.subcategory}).
 
-Condition Context:
-${contextInfo || 'General knowledge about this condition.'}
+Findings for vignette (RAW PATIENT DATA ONLY - never state the diagnosis or condition name):
+${findingsContext || 'Use typical findings for a common condition in this system.'}
+
+CRITICAL - RAW PATIENT DATA: NEVER state the diagnosis or condition name in the vignette. Provide raw patient data only (demographics, symptoms, labs, vitals). Example: "A 45-year-old male with fatigue. Labs: Hgb 9.2, MCV 72, ferritin 10 ng/mL" — NOT "A patient with iron deficiency anemia."
+
+Gold standard vs. initial: For "best initial step" or "next test" questions, include the gold standard as a distractor; rationale must clarify why wrong for this step. Next best step: For "next step in management," state what has already been done first, then ask for the immediate next action. Pertinent negatives: Include at least 2 that rule out top differentials. Pharmacological contraindications: For therapeutics, include comorbidity that contraindicates first-line (e.g. HTN + gout; otitis + penicillin allergy).
+Task distribution: Vary question types per NCCPA (diagnosis ~18%, history & physical ~16%, clinical intervention ~16%, pharmaceutical ~15%, health maintenance ~11%, diagnostic lab ~10%).
+Red flag (optional): Occasionally include a subtle red flag that changes management (e.g. back pain + urinary incontinence → cauda equina). Do not make it obvious.
 
 Requirements:
-1. Each question MUST be specifically about ${condition.name}
-2. Include a brief clinical vignette (2-4 sentences) presenting a realistic patient scenario
-3. The question stem should test clinical decision-making (diagnosis, treatment, next step)
+1. Each question MUST test the condition that classically presents with these findings
+2. Include a brief clinical vignette (2-4 sentences) with raw patient data only—never state the diagnosis
+3. Prefer third-order stems: Vignette → Diagnosis → Complication/next step → Answer. Avoid first-order "What is the diagnosis?" The question stem should test clinical decision-making (mechanism, next step, complication management)
 4. Provide exactly 4 answer options (A, B, C, D)
 5. Include one correct answer and three plausible distractors
-6. The explanation should be educational and reference specific features of ${condition.name}
+6. The explanation should be educational and reference the clinical findings
 7. Questions should be appropriate for PA certification exam preparation (PANCE-level)
 8. Return valid JSON. Do NOT use trailing commas.
 
 Return ONLY a JSON array with this exact structure (no markdown, no code blocks):
 [
   {
-    "vignette": "Brief clinical scenario specific to ${condition.name}...",
+    "vignette": "Brief clinical scenario with raw patient data (demographics, symptoms, labs) - never state the diagnosis...",
     "question": "What is the most appropriate next step?",
     "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
     "correctAnswer": "A",
-    "explanation": "Detailed explanation referencing ${condition.name}...",
+    "explanation": "Detailed explanation with pathophysiology...",
     "conditionName": "${condition.name}"
   }
 ]`;

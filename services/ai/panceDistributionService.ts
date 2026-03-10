@@ -2,35 +2,16 @@
  * PANCE Distribution Service
  *
  * Implements weighted random sampling based on the 2025 NCCPA PANCE Blueprint.
- * Ensures question generation follows the official exam content distribution.
- *
- * ARCHITECTURE: Database-First
- * - This service coordinates weighted selection, but content comes from Prisma queries
- * - No static content arrays (per .clinerules)
+ * Single source of truth: lib/constants/blueprint.ts
  */
 
-/**
- * Official 2025 PANCE Blueprint System Percentages
- * Source: .clinerules SYSTEM 3 mandate
- */
-export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = {
-  Cardiovascular: 11,
-  Pulmonary: 9,
-  'GI / Nutrition': 8,
-  Musculoskeletal: 8,
-  HEENT: 8,
-  'Reproductive (Male & Female)': 7,
-  Psychiatry: 7,
-  Endocrine: 6,
-  Genitourinary: 6,
-  Dermatology: 5,
-  Neurology: 5,
-  Hematology: 5,
-  Infectious: 5,
-  'Renal / Urology': 4,
-  Immunology: 3,
-  Other: 3,
-};
+import {
+  NCCPA_2025_BLUEPRINT_PERCENT,
+  normalizeSystemName,
+} from '@/lib/constants/blueprint';
+
+/** @deprecated Use NCCPA_2025_BLUEPRINT_PERCENT from lib/constants/blueprint.ts */
+export const PANCE_SYSTEM_PERCENTAGES: Record<string, number> = { ...NCCPA_2025_BLUEPRINT_PERCENT };
 
 /**
  * PANCE Task Categories (Clinical Assessment Areas)
@@ -46,7 +27,7 @@ export const PANCE_TASK_PERCENTAGES: Record<string, number> = {
 
 /**
  * System name normalization map
- * Handles variations in system naming conventions
+ * Handles variations; delegates to blueprint for canonical names.
  */
 const SYSTEM_ALIASES: Record<string, string> = {
   cardio: 'Cardiovascular',
@@ -55,16 +36,15 @@ const SYSTEM_ALIASES: Record<string, string> = {
   pulm: 'Pulmonary',
   pulmonary: 'Pulmonary',
   respiratory: 'Pulmonary',
-  gi: 'GI / Nutrition',
-  gastrointestinal: 'GI / Nutrition',
-  'gi/nutrition': 'GI / Nutrition',
+  gi: 'Gastrointestinal',
+  gastrointestinal: 'Gastrointestinal',
+  'gi/nutrition': 'Gastrointestinal',
   msk: 'Musculoskeletal',
   musculoskeletal: 'Musculoskeletal',
   ortho: 'Musculoskeletal',
   heent: 'HEENT',
   'ent/ophthalmology': 'HEENT',
-  reproductive: 'Reproductive (Male & Female)',
-  'reproductive (male & female)': 'Reproductive (Male & Female)',
+  reproductive: 'Reproductive',
   psych: 'Psychiatry',
   psychiatry: 'Psychiatry',
   'behavioral health': 'Psychiatry',
@@ -74,17 +54,18 @@ const SYSTEM_ALIASES: Record<string, string> = {
   genitourinary: 'Genitourinary',
   derm: 'Dermatology',
   dermatology: 'Dermatology',
-  neuro: 'Neurology',
-  neurology: 'Neurology',
+  neuro: 'Neurological',
+  neurology: 'Neurological',
   heme: 'Hematology',
   hematology: 'Hematology',
-  id: 'Infectious',
-  infectious: 'Infectious',
-  'infectious disease': 'Infectious',
-  renal: 'Renal / Urology',
-  'renal/urology': 'Renal / Urology',
-  immuno: 'Immunology',
-  immunology: 'Immunology',
+  id: 'Infectious Disease',
+  infectious: 'Infectious Disease',
+  'infectious disease': 'Infectious Disease',
+  renal: 'Nephrology',
+  'renal/urology': 'Nephrology',
+  immuno: 'General',
+  immunology: 'General',
+  other: 'General',
 };
 
 /**
@@ -114,18 +95,15 @@ export function normalizeSystemCode(code: string): string | null {
 
   const normalized = code.toLowerCase().trim();
 
-  // Check if it's already a valid system
-  const exactMatch = Object.keys(PANCE_SYSTEM_PERCENTAGES).find(
-    (sys) => sys.toLowerCase() === normalized
-  );
-  if (exactMatch) return exactMatch;
-
-  // Check aliases
+  // Check aliases first (our local map)
   if (SYSTEM_ALIASES[normalized]) {
     return SYSTEM_ALIASES[normalized];
   }
 
-  // No match found
+  // Delegate to blueprint single source
+  const canonical = normalizeSystemName(code);
+  if (canonical && canonical in NCCPA_2025_BLUEPRINT_PERCENT) return canonical;
+
   return null;
 }
 

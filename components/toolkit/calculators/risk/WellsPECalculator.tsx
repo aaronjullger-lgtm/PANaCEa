@@ -13,6 +13,7 @@
 import React, { useState } from 'react';
 import { CalculatorHeader, CheckboxCriteria, ResultDisplay } from '../shared';
 import type { CalculatorProps, CalculatorResult, CriteriaItem } from '../types';
+import { calculateWellsPE } from '@/lib/calculators';
 
 export const WellsPECalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [clinicalDVT, setClinicalDVT] = useState(false);
@@ -23,14 +24,15 @@ export const WellsPECalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [hemoptysis, setHemoptysis] = useState(false);
   const [malignancy, setMalignancy] = useState(false);
 
-  const score =
-    (clinicalDVT ? 3 : 0) +
-    (peMoreLikely ? 3 : 0) +
-    (tachycardia ? 1.5 : 0) +
-    (immobilization ? 1.5 : 0) +
-    (previousPE ? 1.5 : 0) +
-    (hemoptysis ? 1 : 0) +
-    (malignancy ? 1 : 0);
+  const score = calculateWellsPE({
+    clinicalDVT,
+    peMoreLikely,
+    tachycardia,
+    immobilization,
+    previousPE,
+    hemoptysis,
+    malignancy,
+  });
 
   const getInterpretation = (): CalculatorResult => {
     if (score < 2) {

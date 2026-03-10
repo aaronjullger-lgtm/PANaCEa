@@ -57,6 +57,8 @@ import { getRecentModeIds, recordRecentMode } from '@/lib/recentModes';
 import { BodyMapWidget } from '@/components/dashboard/BodyMapWidget';
 import { RoundsButton } from '@/components/dashboard/RoundsButton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { BackLink } from '@/components/navigation/BackLink';
+import { ROUTES } from '@/config/routes';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Brain,
@@ -248,9 +250,12 @@ export const PracticePage: React.FC<PracticePageProps> = ({
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Practice & Training</h1>
-        <p className="text-[var(--color-text-muted)]">Choose a training mode to sharpen your clinical skills</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <BackLink to={ROUTES.STUDY} className="mb-2" />
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Practice & Training</h1>
+          <p className="text-[var(--color-text-muted)]">Choose a training mode to sharpen your clinical skills</p>
+        </div>
       </div>
 
       {/* Start here — recommended modes when not searching */}

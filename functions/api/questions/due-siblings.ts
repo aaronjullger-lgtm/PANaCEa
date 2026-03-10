@@ -8,12 +8,15 @@
  *
  * Strategy: same concept (conditionId), different question (id != originalQuestionId) so the user
  * proves retention, not question/answer recognition. Never returns the original question.
+ * When taskType is provided, prefers siblings with matching taskType. If no sibling exists,
+ * attempts on-demand variant generation (when GEMINI_API_KEY is set) then retries.
  */
 
 import { z } from 'zod';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { createEndpointLogger } from '../_shared/secureLogger';
+import { ensureDueVariant } from '../../../lib/ensureDueVariant';
 import type { Prisma } from '@prisma/client';
 
 const DueItemSchema = z.object({
@@ -60,6 +63,122 @@ function parsePreGenToQuestion(q: {
   };
 }
 
+/** Build PreGenQuestionForVariant from a Question row for ensureDueVariant */
+function questionToPreGenForVariant(q: {
+  id: string;
+  vignette: string;
+  question: string;
+  options: unknown;
+  correctAnswer: string;
+  explanation: string;
+  system: string;
+  conditionId: string | null;
+  difficulty: string;
+  taskType?: string | null;
+}) {
+  const optionsArr = Array.isArray(q.options)
+    ? (q.options as string[]).map((o) =>
+        typeof o === 'string'
+          ? o
+          : String(
+              (o as { value?: string; text?: string })?.value ??
+                (o as { value?: string; text?: string })?.text ??
+                o
+            )
+      )
+    : [];
+  const correctIndex = optionsArr.indexOf(q.correctAnswer);
+  return {
+    id: q.id,
+    conditionId: q.conditionId,
+    system: q.system,
+    difficulty: q.difficulty ?? 'medium',
+    questionType: 'mcq',
+    questionData: {
+      question: [q.vignette, q.question].filter(Boolean).join('\n\n') || q.question,
+      vignette: q.vignette,
+      options: optionsArr,
+      correctAnswer: q.correctAnswer,
+      correctAnswerIndex: Math.max(0, correctIndex),
+      rationale: q.explanation,
+      explanation: q.explanation,
+      taskType: q.taskType ?? undefined,
+    },
+  };
+}
+
+type PreGenRow = Parameters<typeof parsePreGenToQuestion>[0];
+
+async function tryGenerateAndFetchSibling(
+  prisma: ReturnType<typeof createEdgePrismaClient>,
+  item: { conditionId: string; taskType: string | null; originalQuestionId: string },
+  apiKey: string | undefined,
+  logger: { info: (msg: string, ctx?: Record<string, unknown>) => void; warn: (msg: string, ctx?: Record<string, unknown>) => void }
+): Promise<PreGenRow | null> {
+  if (!apiKey) return null;
+  const where: Prisma.PreGeneratedQuestionWhereInput = {
+    conditionId: item.conditionId,
+    id: { not: item.originalQuestionId },
+  };
+  const preGenOriginal = await prisma.preGeneratedQuestion.findUnique({
+    where: { id: item.originalQuestionId },
+    select: {
+      id: true,
+      questionData: true,
+      conditionId: true,
+      system: true,
+      difficulty: true,
+      questionType: true,
+    },
+  });
+  if (preGenOriginal) {
+    await ensureDueVariant(
+      prisma,
+      {
+        id: preGenOriginal.id,
+        conditionId: preGenOriginal.conditionId,
+        system: preGenOriginal.system,
+        difficulty: preGenOriginal.difficulty ?? 'medium',
+        questionType: preGenOriginal.questionType ?? 'mcq',
+        questionData: preGenOriginal.questionData,
+      },
+      apiKey,
+      { info: logger.info.bind(logger), warn: logger.warn.bind(logger) }
+    );
+  } else {
+    const questionOriginal = await prisma.question.findUnique({
+      where: { id: item.originalQuestionId },
+      select: {
+        id: true,
+        vignette: true,
+        question: true,
+        options: true,
+        correctAnswer: true,
+        explanation: true,
+        system: true,
+        conditionId: true,
+        difficulty: true,
+        taskType: true,
+      },
+    });
+    if (questionOriginal) {
+      const forVariant = questionToPreGenForVariant(questionOriginal);
+      await ensureDueVariant(prisma, forVariant, apiKey, {
+        info: logger.info.bind(logger),
+        warn: logger.warn.bind(logger),
+      });
+    }
+  }
+  const retryCandidates = await prisma.preGeneratedQuestion.findMany({
+    where,
+    take: 5,
+    orderBy: { generatedAt: 'desc' },
+  });
+  return retryCandidates.length > 0
+    ? retryCandidates[Math.floor(Math.random() * retryCandidates.length)]
+    : null;
+}
+
 export const onRequestOptions = withCors();
 
 export const onRequestPost = authenticatedEndpoint(DueSiblingsPostSchema, async (context) => {
@@ -87,15 +206,33 @@ export const onRequestPost = authenticatedEndpoint(DueSiblingsPostSchema, async 
         id: { not: item.originalQuestionId },
       };
 
-      const candidates = await prisma.preGeneratedQuestion.findMany({
+      let candidates = await prisma.preGeneratedQuestion.findMany({
         where,
-        take: 5,
+        take: 10,
         orderBy: { generatedAt: 'desc' },
       });
 
-      // Shuffle and pick one (distinct vignette is ensured by different id)
-      const shuffled = [...candidates].sort(() => Math.random() - 0.5);
-      const sibling = shuffled[0] ?? null;
+      if (item.taskType && candidates.length > 0) {
+        const withTaskType = candidates.filter((c) => {
+          const data = (c.questionData as Record<string, unknown>) || {};
+          return data.taskType === item.taskType;
+        });
+        if (withTaskType.length > 0) candidates = withTaskType;
+      }
+
+      let sibling =
+        candidates.length > 0
+          ? candidates[Math.floor(Math.random() * candidates.length)]
+          : null;
+
+      if (!sibling && env.GEMINI_API_KEY) {
+        sibling = await tryGenerateAndFetchSibling(
+          prisma,
+          { conditionId: item.conditionId, taskType: item.taskType ?? null, originalQuestionId: item.originalQuestionId },
+          env.GEMINI_API_KEY as string,
+          logger
+        );
+      }
 
       results.push({
         question: sibling ? parsePreGenToQuestion(sibling) : null,

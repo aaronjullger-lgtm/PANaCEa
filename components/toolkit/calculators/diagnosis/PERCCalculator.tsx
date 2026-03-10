@@ -13,6 +13,7 @@
 import React, { useState } from 'react';
 import { CalculatorHeader, CheckboxCriteria, ResultDisplay } from '../shared';
 import type { CalculatorProps, CalculatorResult, CriteriaItem } from '../types';
+import { isPERCNegative, percPositiveCount } from '@/lib/calculators';
 
 export const PERCCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [age50, setAge50] = useState(false);
@@ -24,7 +25,7 @@ export const PERCCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
   const [priorPE, setPriorPE] = useState(false);
   const [hormoneUse, setHormoneUse] = useState(false);
 
-  const criteria = [
+  const criteriaInput = {
     age50,
     heartRate100,
     o2sat95,
@@ -33,9 +34,9 @@ export const PERCCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
     recentSurgery,
     priorPE,
     hormoneUse,
-  ];
-  const positiveCount = criteria.filter(Boolean).length;
-  const percNegative = positiveCount === 0;
+  };
+  const positiveCount = percPositiveCount(criteriaInput);
+  const percNegative = isPERCNegative(criteriaInput);
 
   const getInterpretation = (): CalculatorResult => {
     if (percNegative) {

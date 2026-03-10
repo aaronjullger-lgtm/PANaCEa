@@ -40,6 +40,7 @@ import { ROUTES } from '../../config/routes';
 import { FlaggedQuestionsDashboard } from '../../components/admin/FlaggedQuestionsDashboard';
 import { QuestionPerformanceDashboard } from '../../components/admin/QuestionPerformanceDashboard';
 import QuestionCurationPanel from '../../components/admin/QuestionCurationPanel';
+import { QuestionQualityDashboard } from '../../components/admin/QuestionQualityDashboard';
 import { MappingEnrichmentDashboard } from '../../components/admin/MappingEnrichmentDashboard';
 import { LibraryEnrichmentDashboard } from '../../components/admin/LibraryEnrichmentDashboard';
 
@@ -62,7 +63,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const [userRole, setUserRole] = useState<UserRole>('user');
   const [hasAccess, setHasAccess] = useState(false);
   const [activePanel, setActivePanel] = useState<
-    'dashboard' | 'flags' | 'performance' | 'curation' | 'mappingEnrichment' | 'libraryEnrichment'
+    'dashboard' | 'flags' | 'performance' | 'curation' | 'questionQuality' | 'mappingEnrichment' | 'libraryEnrichment'
   >('dashboard');
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -238,6 +239,11 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                       <Sparkles className="w-7 h-7 text-data-provisional" />
                       Question Curation
                     </>
+                  ) : activePanel === 'questionQuality' ? (
+                    <>
+                      <BarChart3 className="w-7 h-7 text-data-provisional" />
+                      Question Analytics
+                    </>
                   ) : activePanel === 'mappingEnrichment' ? (
                     <>
                       <Map className="w-7 h-7 text-data-provisional" />
@@ -262,7 +268,9 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                       ? 'Identify and improve low-performing questions'
                       : activePanel === 'curation'
                         ? 'Review and approve AI-generated questions'
-                        : activePanel === 'mappingEnrichment'
+                        : activePanel === 'questionQuality'
+                          ? 'Pool health, quality distribution, and low-quality flags'
+                          : activePanel === 'mappingEnrichment'
                           ? 'Enrich taxonomy-system mappings with AI suggestions'
                           : activePanel === 'libraryEnrichment'
                             ? 'Monitor automated field extraction from medical library'
@@ -311,6 +319,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         ) : activePanel === 'curation' ? (
           <div className="p-6">
             <QuestionCurationPanel />
+          </div>
+        ) : activePanel === 'questionQuality' ? (
+          <div className="p-6">
+            <QuestionQualityDashboard />
           </div>
         ) : activePanel === 'mappingEnrichment' ? (
           <div className="p-6">
@@ -525,6 +537,21 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)]">
                         Review AI-generated questions
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActivePanel('questionQuality')}
+                    className="flex items-center gap-3 p-4 bg-data-provisional/10 border border-data-provisional/30 rounded-lg hover:bg-data-provisional/20 transition-colors text-left"
+                  >
+                    <BarChart3 className="w-5 h-5 text-data-provisional" />
+                    <div>
+                      <div className="font-medium text-[var(--color-text-primary)]">
+                        Question Analytics
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)]">
+                        Pool health and quality distribution
                       </div>
                     </div>
                   </button>

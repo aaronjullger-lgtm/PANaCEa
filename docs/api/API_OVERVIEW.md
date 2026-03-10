@@ -1,97 +1,239 @@
 # API Overview
 
-This document is the current API surface reference for recently changed OSCE endpoints.
+Current API surface for recently changed Cloudflare Pages Functions routes.
 
-## OSCE request body convention (production)
+## Conventions
 
-All OSCE POST endpoints (Cloudflare Pages Functions) expect a **wrapped** body shape. The client must send:
+- **Auth:** Most endpoints use Clerk bearer auth via middleware (`authenticatedEndpoint` / `adminEndpoint`).
+- **Error envelope:** Middleware-backed errors are returned as JSON: `{ "error": "..." }`.
+- **Body shape:** Some endpoints validate top-level JSON fields; others expect wrapped payloads in `{ "body": { ... } }`.
+- **Query source:** Endpoints that pass `{ source: 'query' }` validate URL query params; otherwise validation defaults to request body.
 
-```json
-{ "body": { ... } }
-```
+## Changed Routes (summary)
 
-Inner fields (e.g. `sessionId`, `caseId`, `messages`, `diagnosis`, `treatmentPlan`) go inside `body`. The client in `services/domain/osceService.ts` sends this shape for session, chat, complete, and grade.
+| Method | Path | Auth | One-line description |
+|---|---|---|---|
+| GET | `/api/health` | Public | Health and environment diagnostics, including DB connectivity. |
+| POST | `/api/gemini` | Required | Non-streaming Gemini proxy with rate limiting and optional context cache. |
+| GET | `/api/content/library` | Required | Condition library list with system/subcategory/high-yield/search filtering. |
+| GET | `/api/content/systems` | Required | Distinct system list with condition counts. |
+| GET | `/api/content/condition/:conditionId/summary` | Public | Lightweight condition summary for header/cheat-sheet UX. |
+| GET | `/api/content/condition/:conditionId/details` | Public | Full condition details and linked relational content. |
+| GET | `/api/dashboard/stats` | Required | Dashboard rollups (streak, weakest system, predicted pass chance). |
+| GET | `/api/diagnostic-puzzle/daily` | Required | Daily puzzle payload + user state for the current date. |
+| POST | `/api/diagnostic-puzzle/submit` | Required | Submit diagnostic puzzle guess and update puzzle state. |
+| GET | `/api/diagnostic-puzzle/stats` | Required | User diagnostic puzzle performance stats and streak. |
+| POST | `/api/drills/contrastive/start` | Required | Load a contrastive drill set by ID. |
+| POST | `/api/osce/analysis/grade` | Required | Grade completed OSCE session transcript, persist result/concept gap. |
+| POST | `/api/questions/generate` | Required | Generate (or cache-hit) question by query text/type/system/difficulty. |
+| POST | `/api/questions/attempt` | Required | Record attempt telemetry and update stats/SRS/Rolling 360. |
+| POST | `/api/recommendations/generate` | Required | Generate personalized recommendation list for user. |
+| GET | `/api/reference/normal-labs` | Required | Fetch normal lab reference records (optional category filter). |
+| GET | `/api/user/daily-performance` | Required | Daily attempt/accuracy trend for configurable lookback window. |
+| GET | `/api/user/goals` | Required | List goals with optional status/type filters. |
+| POST | `/api/user/goals` | Required | Create new goal. |
+| PATCH | `/api/user/goals/:id` | Required | Update goal progress/status/metadata. |
+| DELETE | `/api/user/goals/:id` | Required | Delete goal by ID. |
+| POST | `/api/user/session` | Required | Start study session. |
+| PATCH | `/api/user/session` | Required | Update or end study session. |
+| GET | `/api/admin/enrich-condition` | Admin | Endpoint usage contract + enrichable field list. |
+| POST | `/api/admin/enrich-condition` | Admin | AI-enrich missing `MedicalContent` fields for a condition. |
+| GET | `/api/admin/library-enrichment-logs` | Required + admin role check in handler | Read enrichment run logs with filters/pagination. |
+| GET | `/api/admin/library-enrichment-priority` | Required + admin role check in handler | Read prioritized enrichment queue payload. |
 
-## OSCE grade flow
+## Request/Response Contracts
 
-1. Session must be **completed** before grading: `session.status === 'completed'`.
-2. Client must call **in order**: `POST /api/osce/complete` with diagnosis/treatmentPlan, then `POST /api/osce/analysis/grade` with the same `sessionId`.
-3. **Re-grading**: Calling the grade endpoint again for the same session **updates** the existing `OsceResult`; it does **not** create duplicate `ConceptGap` records (deduplication in `persistGradeAndConceptGap` by `userId`, `system`, `sourceType: 'osce'`, `sourceId`).
+### `GET /api/health`
 
-## Changed Routes
+- **Request:** No auth; no body required.
+- **Success:** `200` (healthy) or `503` (unhealthy) with:
+  - `status`, `timestamp`, `endpoint`
+  - `checks` (environment/database/content checks)
+  - `diagnostics` (env presence, db URL type, optional errors)
+- **Errors:** `503` with diagnostics if top-level failure occurs.
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/osce/session` | Create or get active OSCE session for a case. Request body: `{ "body": { "caseId": "string" } }`. |
-| POST | `/api/osce/chat` | Save chat messages for a session. Request body: `{ "body": { "sessionId": "string", "messages": [{ "role": "user" \| "assistant" \| "system", "content": "string" }] } }`. |
-| POST | `/api/osce/complete` | Marks an OSCE session complete (idempotent) and optionally persists analytics to `CaseFile`. |
-| POST | `/api/osce/analysis/grade` | Grades a completed OSCE transcript against rubric/fallback checklist and persists `OsceResult` (+ optional `ConceptGap`). |
+### `POST /api/gemini`
 
-## Endpoint Contracts
-
-### `POST /api/osce/complete`
-
-**Auth:** Required (Bearer token via Clerk middleware)
-
-**Request body**
+- **Request body (top-level JSON):**
 
 ```json
 {
-  "body": {
-    "sessionId": "string",
-    "diagnosis": "string (optional)",
-    "treatmentPlan": "string (optional)",
-    "soapComparison": {},
-    "timingAnalytics": {},
-    "infographics": ["string"]
+  "prompt": "string",
+  "modelName": "gemini-2.0-flash",
+  "temperature": 0.8,
+  "maxTokens": 2048,
+  "systemInstruction": "optional string",
+  "cachedContent": "cachedContents/...",
+  "thinkingLevel": "MINIMAL | LOW | MEDIUM | HIGH"
+}
+```
+
+- **Success (`200`):**
+
+```json
+{
+  "data": {
+    "text": "generated output",
+    "model": "gemini-2.0-flash",
+    "finishReason": "..."
   }
 }
 ```
 
-**Success responses**
+- **Errors:** `400`, `429`, `500`, `503` with `{ "error": "..." }`.
 
-- `200 OK` → `{ "success": true }`
-- `200 OK` (idempotent repeat) → `{ "success": true, "alreadyCompleted": true }`
+### `GET /api/content/library`
 
-**Error responses**
+- **Auth:** Required.
+- **Query params:** `system`, `subcategory`, `search`, `highYield`, `page`, `pageSize`.
+  - Current implementation uses `system`, `subcategory`, `search`, `highYield`.
+- **Success (`200`):**
 
-- `404` → `{ "error": "User not found" }` or `{ "error": "Session not found" }`
-- `500` → `{ "error": "Internal server error" }`
+```json
+{
+  "content": [/* MedicalContent card payload */],
+  "count": 123
+}
+```
 
-**Notes**
+- **Errors:** `503` when DB unavailable; fallback error payload includes empty `content` and `count: 0`.
 
-- Creates `CaseFile` on a best-effort basis when `soapComparison` or `timingAnalytics` is provided.
-- `CaseFile` creation failure is logged but does not fail completion.
+### `GET /api/content/systems`
 
----
+- **Success (`200`):**
+
+```json
+[
+  { "id": "Cardiology", "label": "Cardiology", "count": 120 }
+]
+```
+
+- **Errors:** `503` (DB unavailable), `500` (query failure).
+
+### `GET /api/content/condition/:conditionId/summary`
+
+- **Auth:** Public.
+- **Params:** `conditionId`.
+- **Success (`200`): Minimal summary object including IDs/system/yield/buzzwords/synonyms/triad/pearls/mnemonic and `confusedWith[]`.
+- **Errors:** `404` condition not found, `503` DB unavailable, `500` load failure.
+
+### `GET /api/content/condition/:conditionId/details`
+
+- **Auth:** Public.
+- **Params:** `conditionId`.
+- **Success (`200`): Rich condition payload (overview, diagnostics, treatment, differentials, linked labs/imaging/drugs/findings/ECG/treatments, related conditions).
+- **Errors:** `404`, `503`, `500`.
+
+### `GET /api/dashboard/stats`
+
+- **Success (`200`):**
+
+```json
+{
+  "currentStreak": 0,
+  "weakestSystem": "Pulmonary (9% of PANCE)",
+  "predictedPassChance": 72,
+  "streakFreezes": 0,
+  "userCoins": 0,
+  "streakGoalDays": "all | weekdays"
+}
+```
+
+- **Errors:** `404` user not found; `500` internal error.
+
+### `GET /api/diagnostic-puzzle/daily`
+
+- **Auth:** Required.
+- **Current validated request shape:** `{ "query": { "date": "optional ISO string" } }` (handler reads `validated.query.date`).
+- **Success (`200`):**
+
+```json
+{
+  "id": "dailyPuzzleId",
+  "date": "YYYY-MM-DD",
+  "puzzle": {
+    "id": "puzzleId",
+    "conditionId": "string",
+    "conditionName": "string",
+    "system": "string | null",
+    "title": "string | null",
+    "difficulty": 1,
+    "clues": ["..."],
+    "totalClues": 6
+  },
+  "userState": {
+    "guesses": ["..."],
+    "status": "playing | won | lost",
+    "cluesRevealed": 1,
+    "attemptsLeft": 6,
+    "maxAttempts": 6
+  }
+}
+```
+
+- **Errors:** `400` service validation error, `404` user not found, `500` internal error.
+
+### `POST /api/diagnostic-puzzle/submit`
+
+- **Request body:**
+
+```json
+{
+  "body": {
+    "guess": "string",
+    "date": "optional ISO string"
+  }
+}
+```
+
+- **Success:** Same payload structure as `/api/diagnostic-puzzle/daily`, with updated `userState`.
+- **Errors:** `400`, `404`, `500`.
+
+### `GET /api/diagnostic-puzzle/stats`
+
+- **Success (`200`):**
+
+```json
+{
+  "total": 0,
+  "wins": 0,
+  "losses": 0,
+  "winRate": 0,
+  "streak": 0,
+  "guessDistribution": { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0 }
+}
+```
+
+### `POST /api/drills/contrastive/start`
+
+- **Request body:**
+
+```json
+{
+  "body": { "setId": "string" }
+}
+```
+
+- **Success (`200`):** `{ "set": { ...contrastiveSetRecord } }`
+- **Errors:** `404`/`500` style failures with `{ "error": "..." }`.
 
 ### `POST /api/osce/analysis/grade`
 
-**Auth:** Required (Bearer token via Clerk middleware)
-
-**Request body**
+- **Request body:**
 
 ```json
 {
-  "body": {
-    "sessionId": "string"
-  }
+  "body": { "sessionId": "string" }
 }
 ```
 
-**Success response (`200 OK`)**
+- **Success (`200`):**
 
 ```json
 {
   "resultId": "string",
   "score": 0,
-  "checklist": [
-    {
-      "item": "string",
-      "status": "PASS",
-      "feedback": "string"
-    }
-  ],
+  "checklist": [{ "item": "string", "status": "PASS | FAIL", "feedback": "string" }],
   "redFlagsMissed": ["string"],
   "clinicalReasoningScore": 0,
   "billingCodeSuggestion": "string",
@@ -104,28 +246,219 @@ Inner fields (e.g. `sessionId`, `caseId`, `messages`, `diagnosis`, `treatmentPla
 }
 ```
 
-**Error responses**
+- **Notable errors:** `400`, `404`, `422`, `429`, `502`, `500`.
 
-- `400` → `{ "error": "Session must be completed before grading" }`
-- `404` → `{ "error": "User not found" }` or `{ "error": "Session not found" }` or `{ "error": "Case record not found" }`
-- `429` → `{ "error": "Rate limit exceeded" }` (Gemini limiter)
-- `502` → `{ "error": "Grading service failed" }` or `{ "error": "Invalid grading response format" }`
-- `500` → `{ "error": "Internal server error" }`
+### `POST /api/questions/generate`
 
-**Notes**
+- **Request body (top-level JSON):**
 
-- If no `CaseRubric` exists, the endpoint builds a fallback checklist from case `essentialQuestions` and `idealWorkup`.
-- Persists/updates `OsceResult` and may create `ConceptGap` when clinical reasoning fails or red flags are missed.
-- Checklist items are validated with Zod (`GRADE_CHECKLIST_ITEM`) before persistence; malformed Gemini output is dropped or rejected.
+```json
+{
+  "queryText": "string",
+  "questionType": "string",
+  "system": "optional string",
+  "difficulty": "optional string"
+}
+```
 
----
+- **Success (`200`):**
 
-## OSCE tables: API-layer security
+```json
+{
+  "success": true,
+  "question": { "id": "string", "text": "string", "metadata": {} },
+  "cached": false,
+  "similarity": 0.91
+}
+```
 
-The following tables are used by the OSCE module and are **protected at the API layer** (ownership enforced in each handler), not by Supabase RLS:
+(`similarity` is present only when returning a semantic cache hit.)
 
-- `PatientEncounterSession` — session ownership enforced in session, chat, complete, history, and grade handlers (e.g. `where: { id: sessionId, userId: user.id }`).
-- `OsceResult` — created/updated only after session ownership is verified; linked to session by `sessionId`.
-- `ConceptGap` — created with `userId` from the authenticated user when grading indicates a gap.
+### `POST /api/questions/attempt`
 
-RLS is not currently applied to these tables. If you enable RLS for OSCE later, add policies that constrain `userId` (or equivalent) by `auth.uid()` / Clerk mapping so that API and RLS are aligned.
+- **Request body:**
+
+```json
+{
+  "body": {
+    "questionId": "string",
+    "isCorrect": true,
+    "wasCorrect": true,
+    "system": "optional string",
+    "conditionId": "optional string",
+    "medicalContentId": "optional string",
+    "questionType": "optional string",
+    "mode": "session",
+    "timeSpent": 1200,
+    "timeSpentMs": 1200,
+    "answerChangedCount": 1,
+    "isRankedAttempt": false,
+    "selectedAnswer": 0,
+    "telemetryJson": {},
+    "durationMs": 1200,
+    "isMainSession": false
+  }
+}
+```
+
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "attemptId": "string",
+  "stats": {
+    "totalQuestionsAnswered": 0,
+    "correctAnswers": 0,
+    "overallAccuracy": 0
+  },
+  "systemStats": {
+    "system": "Cardiology",
+    "totalAttempts": 0,
+    "correctAttempts": 0,
+    "accuracy": 0,
+    "recentTrend": "improving | declining | neutral"
+  }
+}
+```
+
+### `POST /api/recommendations/generate`
+
+- **Request:** Empty object `{}`.
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "count": 3,
+  "recommendations": [/* recommendation objects */]
+}
+```
+
+### `GET /api/reference/normal-labs`
+
+- **Query params:** `category` (optional), `limit` (1-500, default 200).
+- **Consumers:**
+  - `NormalLabsPanel` — in-session slide-out panel during quiz questions
+  - `NormalLabsLibraryView` — Knowledge Base → Lab Reference → Normal Ranges tab
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "labs": [/* NormalLabValue fields */]
+}
+```
+
+### `GET /api/user/daily-performance`
+
+- **Query params:** `days` (1-90, default 30).
+- **Success (`200`):**
+
+```json
+{
+  "period": "30d",
+  "startDate": "YYYY-MM-DD",
+  "endDate": "YYYY-MM-DD",
+  "dailyPerformance": [
+    { "date": "YYYY-MM-DD", "attempts": 0, "correct": 0, "accuracy": 0 }
+  ],
+  "summary": {
+    "totalAttempts": 0,
+    "totalCorrect": 0,
+    "activeDays": 0,
+    "avgAttemptsPerActiveDay": 0
+  }
+}
+```
+
+### `GET/POST/PATCH/DELETE /api/user/goals`
+
+- **GET query params:** `status`, `goalType`, `limit`.
+- **POST body:** `{ "body": { title, goalType, targetValue?, targetUnit?, targetDate?, ... } }`
+- **PATCH body:** `{ "body": { title?, currentValue?, status?, targetDate?, ... } }` against `/api/user/goals/:id`.
+- **DELETE:** `/api/user/goals/:id`.
+- **Success pattern:** `{ "success": true, "goal": { ... }, "message": "..." }` (or list payload for GET).
+
+### `POST /api/user/session`
+
+- **Request body:**
+
+```json
+{
+  "body": {
+    "sessionType": "mixed | focused | review",
+    "systemsTargeted": ["Cardiology"]
+  }
+}
+```
+
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "session": {
+    "id": "string",
+    "sessionType": "mixed",
+    "startedAt": "ISO timestamp"
+  }
+}
+```
+
+### `PATCH /api/user/session`
+
+- **Request body:**
+
+```json
+{
+  "body": {
+    "sessionId": "string",
+    "action": "end | update",
+    "questionsAnswered": 0,
+    "correctCount": 0,
+    "thinkingTimeMs": 0
+  }
+}
+```
+
+- **Success:** `{ "success": true, "session": { ...updated fields... } }`
+
+### `GET/POST /api/admin/enrich-condition`
+
+- **GET success:** usage contract object including `enrichableFields`.
+- **POST body:**
+
+```json
+{
+  "body": {
+    "conditionId": "string",
+    "fieldsToEnrich": ["overview", "etiology"],
+    "forceRegenerate": false
+  }
+}
+```
+
+- **POST success:** `{ conditionId, condition, fieldsUpdated, displayPriority, success }`
+
+### `GET /api/admin/library-enrichment-logs`
+
+- **Current validated request shape:** `{ "query": { "entityType"?, "status"?, "limit"?, "offset"? } }`
+- **Success (`200`):**
+
+```json
+{
+  "logs": [/* log records */],
+  "total": 0
+}
+```
+
+### `GET /api/admin/library-enrichment-priority`
+
+- **Success (`200`):** priority JSON payload (default `{ "priorityList": [] }` if file unavailable).
+
+## Operational Notes
+
+- `POST /api/osce/analysis/grade` updates existing `OsceResult` when re-grading a session (`sessionId` uniqueness), and deduplicates `ConceptGap` by `(userId, system, sourceType, sourceId)`.
+- `GET /api/content/library` uses FTS (`search_vector`) first and falls back to ILIKE matching if FTS errors or returns zero rows.
+- `GET /api/admin/library-enrichment-logs` and `/api/admin/library-enrichment-priority` currently read local JSON files under `data/` (filesystem-backed behavior).

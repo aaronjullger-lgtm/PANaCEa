@@ -64,6 +64,10 @@ test.describe('Condition Library', () => {
       (await page.locator('text=/condition/i').first().isVisible({ timeout: 5000 }));
 
     expect(hasSystems).toBe(true);
+
+    // Back navigation: Knowledge Base should show a way back to Dashboard
+    const backLink = page.locator('a[href="/study"], a:has-text("Back to Dashboard"), [aria-label*="Back to Dashboard"]').first();
+    await expect(backLink).toBeVisible({ timeout: 3000 });
   });
 
   test('should load condition list when selecting a system and open detail on card click', async ({
@@ -151,5 +155,131 @@ test.describe('Condition Library', () => {
       expect(body[0]).toHaveProperty('label');
       expect(body[0]).toHaveProperty('count');
     }
+  });
+
+  test('GET /api/content/library returns 200 and content array when authenticated', async ({
+    page,
+  }) => {
+    await page.goto(BASE_URL);
+    await waitForAppReady(page);
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      test.skip();
+      return;
+    }
+
+    const result = await page.evaluate(async () => {
+      const res = await fetch('/api/content/library?system=all', { credentials: 'include' });
+      const body = await res.json();
+      return { status: res.status, body };
+    });
+
+    expect(result.status).toBe(200);
+    const data = result.body;
+    expect(data).toHaveProperty('content');
+    expect(Array.isArray(data.content)).toBe(true);
+    if (data.content.length > 0) {
+      expect(data.content[0]).toHaveProperty('id');
+      expect(data.content[0]).toHaveProperty('condition');
+      expect(data.content[0]).toHaveProperty('system');
+    }
+    expect(data).toHaveProperty('count');
+    expect(typeof data.count).toBe('number');
+  });
+
+  test('GET /api/content/library with highYield and system filter returns valid shape', async ({
+    page,
+  }) => {
+    await page.goto(BASE_URL);
+    await waitForAppReady(page);
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      test.skip();
+      return;
+    }
+
+    const result = await page.evaluate(async () => {
+      const res = await fetch('/api/content/library?highYield=true', { credentials: 'include' });
+      const body = await res.json();
+      return { status: res.status, body };
+    });
+
+    expect(result.status).toBe(200);
+    const data = result.body;
+    expect(data).toHaveProperty('content');
+    expect(Array.isArray(data.content)).toBe(true);
+    expect(data).toHaveProperty('count');
+  });
+
+  test('Practice page shows back navigation and loads without error', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await waitForAppReady(page);
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      test.skip();
+      return;
+    }
+
+    await page.goto(`${BASE_URL}/practice`);
+    await waitForAppReady(page);
+
+    // Practice page title
+    await expect(page.locator('text=Practice & Training').first()).toBeVisible({ timeout: 5000 });
+    // Back link to Dashboard
+    const backLink = page.locator('a[href="/study"], a:has-text("Back to Dashboard")').first();
+    await expect(backLink).toBeVisible({ timeout: 3000 });
+  });
+
+  test('should load Lab Reference tab and Normal Ranges sub-tab', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await waitForAppReady(page);
+
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      test.skip();
+      return;
+    }
+
+    await page.goto(`${BASE_URL}/study/knowledge`);
+    await waitForAppReady(page);
+
+    // Click Lab Reference tab in sidebar
+    const labTab = page.locator('button:has-text("Lab Reference")').first();
+    await labTab.click();
+    await page.waitForTimeout(1000);
+
+    // Click Normal Ranges sub-tab
+    const normalRangesButton = page.locator('button:has-text("Normal Ranges")').first();
+    await expect(normalRangesButton).toBeVisible({ timeout: 5000 });
+    await normalRangesButton.click();
+    await page.waitForTimeout(2000);
+
+    // Category filter should be visible
+    const categoryLabel = page.locator('label:has-text("Category:")').first();
+    const categorySelect = page.locator('#normal-labs-category');
+    await expect(categoryLabel).toBeVisible({ timeout: 5000 });
+    await expect(categorySelect).toBeVisible({ timeout: 3000 });
+
+    // Normal Ranges view loaded (category filter visible confirms we're on that sub-tab)
+  });
+
+  test('Utilities hub loads and shows back navigation', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await waitForAppReady(page);
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      test.skip();
+      return;
+    }
+
+    await page.goto(`${BASE_URL}/study/utilities`);
+    await waitForAppReady(page);
+
+    // Clinical Utilities or Calculators/Generators
+    const hasUtilities = await page.locator('text=/Clinical Utilities|Calculators|Generators/i').first().isVisible({ timeout: 8000 });
+    expect(hasUtilities).toBe(true);
+    // Back link to Dashboard
+    const backLink = page.locator('a[href="/study"], a:has-text("Back to Dashboard")').first();
+    await expect(backLink).toBeVisible({ timeout: 3000 });
   });
 });

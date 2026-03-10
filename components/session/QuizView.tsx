@@ -91,13 +91,14 @@ import {
   ChevronDown,
   PenLine,
 } from 'lucide-react';
-import { ArrowLeftIcon } from '@/components/icons/ArrowLeftIcon';
+import { BackLink } from '@/components/navigation/BackLink';
+import { ROUTES } from '@/config/routes';
 import { ClearHighlightIcon } from '@/components/icons/ClearHighlightIcon';
 
 // Types
 import type { Question, PerformanceRecord, SessionSettings, ErrorTag } from '@/types';
 import type { SRSScheduleResult } from '@/lib/services/srsService';
-import type { StructuredRationale } from '@/components/questions/ExplanationPanel';
+import ExplanationPanel from '@/components/questions/ExplanationPanel';
 
 // Lib utils
 import { calculateParTime } from '@/lib/utils/questionComplexity';
@@ -134,6 +135,11 @@ import { feedback } from '@/services/core/feedbackService';
 import { syncManager } from '@/lib/services/sync/syncManager';
 import { logger } from '@/src/lib/logger';
 
+/** Regex to strip HTML tags (defined outside JSX to avoid TS1382 parse errors) */
+const STRIP_HTML_TAGS_REGEX = /<[^>]*>/g;
+/** Regex to match <br> and <br/> for normalizing line breaks */
+const BR_TAG_REGEX = /<br\s*\/?>/gi;
+
 const LOG_SCOPE = 'QuizView';
 
 export interface QuizViewProps {
@@ -168,6 +174,8 @@ export interface QuizViewProps {
   isFullSitDownTest?: boolean;
   /** Total number of questions in the session (used for progress tracking in full sit-down test) */
   totalQuestions?: number;
+  /** Breadcrumb/context label (e.g. "Practice → Diagnostic Puzzle") shown beside BackLink */
+  modeLabel?: string;
 }
 
 const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
@@ -220,7 +228,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
     // 3) Normalize line breaks
     const normalized = beforeAfter
       .replace(/&lt;br\s*\/?&gt;/gi, '\n')
-      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(BR_TAG_REGEX, '\n')
       .replace(/\n{2,}/g, '\n')
       .trim();
 
@@ -261,7 +269,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
   }
 
   // ---------- NON-TABLE BRANCH ----------
-  const normalizedText = text.replace(/&lt;br\s*\/?&gt;/gi, '\n').replace(/<br\s*\/?>/gi, '\n');
+  const normalizedText = text.replace(/&lt;br\s*\/?&gt;/gi, '\n').replace(BR_TAG_REGEX, '\n');
 
   const lastSentenceMatch = normalizedText.match(/[^.!?]+[.!?]+\s*$/);
 
@@ -323,6 +331,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   isExamSimulator = false,
   isFullSitDownTest = false,
   totalQuestions,
+  modeLabel,
 }) => {
   // Validate required callback props at runtime
   useEffect(() => {
@@ -462,7 +471,6 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [showOverflowMenu, setShowOverflowMenu] = useState(false);
   const overflowMenuRef = useRef<HTMLDivElement>(null);
   // Fix #6b: Collapsible detailed explanation
-  const [showFullExplanation, setShowFullExplanation] = useState(false);
   // Fix #6c: Notes textarea toggle
   const [showNotes, setShowNotes] = useState(false);
   // Normal Labs reference panel (slide-out from right)
@@ -569,7 +577,6 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // Reset collapsible states when question changes
   useEffect(() => {
-    setShowFullExplanation(false);
     setShowNotes(false);
   }, [currentQuestion?.id]);
 
@@ -1102,7 +1109,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     // Calculate question word count for vignette stamina analysis
     const questionWordCount = currentQuestion.question
-      .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+      .replace(STRIP_HTML_TAGS_REGEX, ' ') // Remove HTML tags
       .split(/\s+/)
       .filter((word) => word.length > 0).length;
 
@@ -1478,15 +1485,14 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4 mt-1">
           <div className="flex items-center space-x-3 min-w-0">
-            {/* Back to dashboard */}
+            {/* Back to Practice */}
             {!isFullSitDownTest && (
-              <button
-                onClick={onShowMenu}
-                className="min-h-[44px] min-w-[44px] rounded-full bg-surface-secondary hover:bg-surface-tertiary transition-colors flex-shrink-0 flex items-center justify-center border border-border-subtle"
-                aria-label="Back to Menu"
-              >
-                <ArrowLeftIcon className="w-6 h-6 text-action-secondary" />
-              </button>
+              <BackLink to={ROUTES.PRACTICE} label="Back to Practice" className="rounded-full bg-surface-secondary hover:bg-surface-tertiary border border-border-subtle flex-shrink-0" />
+            )}
+            {modeLabel && (
+              <span className="text-sm text-[var(--color-text-muted)] truncate hidden sm:inline" aria-hidden>
+                {modeLabel}
+              </span>
             )}
             <div className="flex items-center gap-3">
               <p className="text-sm font-medium text-muted truncate">
@@ -1864,279 +1870,41 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     );
                   })()}
 
-                {/* Core PANCE: rationale – structured (5-section) or legacy HTML */}
-                {(() => {
-                  const r = currentQuestion.rationale;
-                  const structured: StructuredRationale | null =
-                    typeof r === 'object' && r !== null && 'whyCorrect' in r
-                      ? (r as StructuredRationale)
-                      : (() => {
-                          if (typeof r !== 'string') return null;
-                          try {
-                            const parsed = JSON.parse(r) as unknown;
-                            if (parsed && typeof parsed === 'object' && 'whyCorrect' in parsed)
-                              return parsed as StructuredRationale;
-                          } catch {
-                            /* not JSON */
-                          }
-                          return null;
-                        })();
-                  if (structured) {
-                    const letters = ['A', 'B', 'C', 'D'] as const;
-                    const whyKeys = [
-                      'whyIncorrectA',
-                      'whyIncorrectB',
-                      'whyIncorrectC',
-                      'whyIncorrectD',
-                    ] as const;
-                    const wasIncorrect = selectedAnswerIndex !== currentQuestion.correctAnswerIndex;
-                    // Find the user's wrong answer explanation (if they got it wrong)
-                    const userChoiceLetter =
-                      selectedAnswerIndex !== null ? letters[selectedAnswerIndex] : null;
-                    const userChoiceKey =
-                      selectedAnswerIndex !== null ? whyKeys[selectedAnswerIndex] : null;
-                    const userChoiceExplanation = userChoiceKey
-                      ? (structured[userChoiceKey as keyof typeof structured] as string | undefined)
-                      : null;
-                    // Count how many extra sections exist for the "show full" toggle
-                    const hasExtraSections = !!(
-                      (structured.highYieldImageOrTable &&
-                        structured.highYieldImageOrTable !== 'N/A') ||
-                      structured.clinicalPearl ||
-                      (structured.commonPitfalls && structured.commonPitfalls.length > 0)
-                    );
-                    const hasOtherDistractors = letters.some(
-                      (_l, i) =>
-                        i !== currentQuestion.correctAnswerIndex &&
-                        i !== selectedAnswerIndex &&
-                        structured[whyKeys[i] as keyof typeof structured]
-                    );
-
-                    return (
-                      <div className="space-y-4">
-                        {/* ALWAYS VISIBLE: Bottom Line */}
-                        {structured.bottomLine && (
-                          <section>
-                            <h3 className="font-bold text-base mb-1.5 text-text-primary">
-                              Bottom Line
-                            </h3>
-                            <p className="text-action-secondary leading-relaxed font-medium bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3">
-                              {structured.bottomLine}
-                            </p>
-                          </section>
-                        )}
-
-                        {/* ALWAYS VISIBLE: Why YOUR answer was wrong (if incorrect) */}
-                        {wasIncorrect && userChoiceExplanation && userChoiceLetter && (
-                          <section>
-                            <h3 className="font-bold text-base mb-1.5 text-text-primary">
-                              Why Your Answer Was Wrong
-                            </h3>
-                            <div className="px-4 py-3 rounded-lg border text-sm bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border-dusty-rose-300 dark:border-dusty-rose-700">
-                              <span className="font-semibold text-muted">
-                                Option {userChoiceLetter} (
-                                {currentQuestion.options[selectedAnswerIndex!]}):
-                              </span>{' '}
-                              <span
-                                className="text-action-secondary"
-                                dangerouslySetInnerHTML={{
-                                  __html: sanitizeForRationale(
-                                    userChoiceExplanation.replace(
-                                      /\*\*([^*]+)\*\*/g,
-                                      '<strong>$1</strong>'
-                                    )
-                                  ),
-                                }}
-                              />
-                            </div>
-                          </section>
-                        )}
-
-                        {/* ALWAYS VISIBLE (if correct, or inside expanded): Why Correct */}
-                        {(!wasIncorrect || showFullExplanation) && (
-                          <section>
-                            <h3 className="font-bold text-base mb-1.5 text-text-primary">
-                              Why the Correct Answer is Right
-                            </h3>
-                            <div
-                              className="text-action-secondary leading-relaxed bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3"
-                              dangerouslySetInnerHTML={{
-                                __html: sanitizeForRationale(
-                                  structured.whyCorrect.replace(
-                                    /\*\*([^*]+)\*\*/g,
-                                    '<strong>$1</strong>'
-                                  )
-                                ),
-                              }}
-                            />
-                          </section>
-                        )}
-
-                        {/* COLLAPSIBLE: Full explanation toggle */}
-                        {(wasIncorrect || hasOtherDistractors || hasExtraSections) && (
-                          <>
-                            {!showFullExplanation ? (
-                              <button
-                                onClick={() => setShowFullExplanation(true)}
-                                className="flex items-center gap-2 text-sm font-medium text-text-primary hover:text-text-primary/80 transition-colors py-2"
-                              >
-                                <ChevronDown className="w-4 h-4" />
-                                Show full explanation
-                              </button>
-                            ) : (
-                              <>
-                                {/* Why Correct (shown here for incorrect answers since it was hidden above) */}
-                                {wasIncorrect && (
-                                  <section>
-                                    <h3 className="font-bold text-base mb-1.5 text-text-primary">
-                                      Why the Correct Answer is Right
-                                    </h3>
-                                    <div
-                                      className="text-action-secondary leading-relaxed bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3"
-                                      dangerouslySetInnerHTML={{
-                                        __html: sanitizeForRationale(
-                                          structured.whyCorrect.replace(
-                                            /\*\*([^*]+)\*\*/g,
-                                            '<strong>$1</strong>'
-                                          )
-                                        ),
-                                      }}
-                                    />
-                                  </section>
-                                )}
-
-                                {/* Other Distractors — why each wrong answer is wrong */}
-                                {hasOtherDistractors && (
-                                  <section>
-                                    <h3 className="font-bold text-base mb-1.5 text-text-primary">
-                                      Why the other answers are wrong
-                                    </h3>
-                                    <div className="space-y-2">
-                                      {letters.map((letter, i) => {
-                                        if (i === currentQuestion.correctAnswerIndex) return null;
-                                        if (i === selectedAnswerIndex) return null; // already shown above
-                                        const key = whyKeys[i];
-                                        if (!key) return null;
-                                        const text = structured[key as keyof typeof structured];
-                                        if (!text || typeof text !== 'string') return null;
-                                        const optionText = currentQuestion.options[i];
-                                        return (
-                                          <div
-                                            key={letter}
-                                            className="px-4 py-2 rounded-lg border text-sm bg-surface-secondary border-border-subtle"
-                                          >
-                                            <span className="font-semibold text-muted">
-                                              Option {letter} ({optionText}):
-                                            </span>{' '}
-                                            <span
-                                              className="text-action-secondary"
-                                              dangerouslySetInnerHTML={{
-                                                __html: sanitizeForRationale(
-                                                  text.replace(
-                                                    /\*\*([^*]+)\*\*/g,
-                                                    '<strong>$1</strong>'
-                                                  )
-                                                ),
-                                              }}
-                                            />
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </section>
-                                )}
-
-                                {/* High-Yield Image/Table */}
-                                {structured.highYieldImageOrTable &&
-                                  structured.highYieldImageOrTable !== 'N/A' && (
-                                    <section>
-                                      <h3 className="font-bold text-base mb-1.5 text-text-primary">
-                                        High-Yield Image / Table
-                                      </h3>
-                                      <p className="text-action-secondary text-sm leading-relaxed bg-steel-blue-50 dark:bg-steel-blue-900/20 border border-steel-blue-200 dark:border-steel-blue-800 rounded-lg px-4 py-3">
-                                        {structured.highYieldImageOrTable}
-                                      </p>
-                                    </section>
-                                  )}
-
-                                {/* Clinical Pearl */}
-                                {structured.clinicalPearl && (
-                                  <section>
-                                    <h3 className="font-bold text-base mb-1.5 text-text-primary">
-                                      Clinical Pearl
-                                    </h3>
-                                    <div
-                                      className="text-action-secondary leading-relaxed bg-muted-amber-50 dark:bg-muted-amber-900/20 border border-muted-amber-200 dark:border-muted-amber-800 rounded-lg px-4 py-3"
-                                      dangerouslySetInnerHTML={{
-                                        __html: sanitizeForRationale(
-                                          structured.clinicalPearl.replace(
-                                            /\*\*([^*]+)\*\*/g,
-                                            '<strong>$1</strong>'
-                                          )
-                                        ),
-                                      }}
-                                    />
-                                  </section>
-                                )}
-
-                                {/* Common Pitfalls */}
-                                {structured.commonPitfalls &&
-                                  structured.commonPitfalls.length > 0 && (
-                                    <section>
-                                      <h3 className="font-bold text-base mb-1.5 text-text-primary">
-                                        Common Pitfalls
-                                      </h3>
-                                      <ul className="list-disc list-inside space-y-1 text-sm text-action-secondary bg-surface-secondary border border-border-subtle rounded-lg px-4 py-3">
-                                        {structured.commonPitfalls.map((pitfall, i) => (
-                                          <li key={i}>{pitfall}</li>
-                                        ))}
-                                      </ul>
-                                    </section>
-                                  )}
-                              </>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    );
+                {/* Core PANCE: rationale – structured (5-section) or legacy, via ExplanationPanel */}
+                <ExplanationPanel
+                  rationale={(() => {
+                    const r = currentQuestion.rationale;
+                    if (typeof r === 'object' && r !== null && 'whyCorrect' in r) return r;
+                    if (typeof r === 'string') {
+                      try {
+                        const parsed = JSON.parse(r) as unknown;
+                        if (parsed && typeof parsed === 'object' && 'whyCorrect' in parsed)
+                          return parsed;
+                      } catch {
+                        /* not JSON */
+                      }
+                      return r;
+                    }
+                    return '';
+                  })()}
+                  condition={currentQuestion.condition ?? 'Unknown'}
+                  conditionSlug={currentQuestion.conditionId}
+                  isCorrect={selectedAnswerIndex === currentQuestion.correctAnswerIndex}
+                  correctAnswer={currentQuestion.options[currentQuestion.correctAnswerIndex] ?? ''}
+                  userAnswer={
+                    selectedAnswerIndex != null
+                      ? (currentQuestion.options[selectedAnswerIndex] ?? '')
+                      : ''
                   }
-                  // Legacy rationale: enforce 5-section style – no wall of text (see IMMEDIATE_CONTENT_ACTION_PLAN.md)
-                  const raw = (currentQuestion.rationale as string) || '';
-                  const firstSentenceEnd = raw.search(/[.!?]\s+/);
-                  const bottomLine =
-                    firstSentenceEnd > 0 ? raw.slice(0, firstSentenceEnd + 1).trim() : '';
-                  const restBody =
-                    firstSentenceEnd > 0 ? raw.slice(firstSentenceEnd + 1).trim() : '';
-                  const showRest = restBody.length > 0;
-                  return (
-                    <div className="space-y-4">
-                      {bottomLine && (
-                        <section>
-                          <h3 className="font-bold text-base mb-1.5 text-text-primary">
-                            Bottom Line
-                          </h3>
-                          <p className="text-action-secondary leading-relaxed font-medium bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg px-4 py-3">
-                            {bottomLine}
-                          </p>
-                        </section>
-                      )}
-                      {(showRest || !bottomLine) && (
-                        <section>
-                          <h3 className="font-bold text-base mb-1.5 text-text-primary">
-                            Rationale
-                          </h3>
-                          <div
-                            ref={microKinetics.registerScrollContainer}
-                            className="text-action-secondary leading-relaxed bg-surface-secondary border border-border-subtle rounded-lg px-4 py-3 max-h-[40vh] overflow-y-auto prose prose-sm dark:prose-invert max-w-none"
-                            dangerouslySetInnerHTML={{
-                              __html: sanitizeForRationale(showRest ? restBody : raw),
-                            }}
-                          />
-                        </section>
-                      )}
-                    </div>
-                  );
-                })()}
+                  correctAnswerIndex={currentQuestion.correctAnswerIndex}
+                  userAnswerIndex={selectedAnswerIndex ?? -1}
+                  options={currentQuestion.options}
+                  questionId={currentQuestion.id}
+                  fontSizeAdjustment={fontSizeAdjustment}
+                  contentSource={currentQuestion.contentSource}
+                  contentSourceTitle={currentQuestion.contentSourceTitle}
+                />
+
 
                 {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -2358,7 +2126,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               fullExplanation={(() => {
                 const stripHtml = (s: string) =>
                   s
-                    .replace(/<[^>]*>/g, ' ')
+                    .replace(STRIP_HTML_TAGS_REGEX, ' ')
                     .replace(/\s+/g, ' ')
                     .trim();
                 const r = currentQuestion.rationale;

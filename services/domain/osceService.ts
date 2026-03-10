@@ -194,18 +194,15 @@ export async function saveChatMessage(
   token?: string | null
 ): Promise<boolean> {
   try {
+    // Map 'patient' to 'assistant' for API schema; wrap in body for Cloudflare Pages Functions
+    const apiRole = role === 'patient' ? 'assistant' : 'user';
     const response = await fetch('/api/osce/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({
-        sessionId,
-        userId: 'current', // Will be replaced by server with actual userId from auth
-        role,
-        message: content,
-      }),
+      body: JSON.stringify({ body: { sessionId, messages: [{ role: apiRole, content }] } }),
     });
 
     return response.ok;

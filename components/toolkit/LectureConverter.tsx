@@ -14,12 +14,17 @@ import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
 interface LectureConverterProps {
   readonly onClose?: () => void;
+  /** When false, hide the Back button (parent provides BackLink) */
+  readonly showBackButton?: boolean;
 }
 
 const MIN_CHARS = 100;
 const MAX_CHARS = 50000;
 
-export function LectureConverter({ onClose }: LectureConverterProps) {
+export function LectureConverter({
+  onClose,
+  showBackButton = true,
+}: LectureConverterProps) {
   const { getToken } = useAuth();
   const [text, setText] = useState('');
   const [topic, setTopic] = useState('');
@@ -201,7 +206,7 @@ export function LectureConverter({ onClose }: LectureConverterProps) {
               New
             </button>
           )}
-          {onClose && (
+          {onClose && showBackButton && (
             <button
               onClick={onClose}
               className="flex items-center gap-2 px-4 py-2 border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"

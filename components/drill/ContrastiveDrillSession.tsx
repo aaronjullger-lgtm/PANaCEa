@@ -4,6 +4,7 @@ import { DrillLandingPage } from './DrillLandingPage';
 import { ContrastiveDrill } from './ContrastiveDrill';
 import { Target, Loader2, ChevronRight } from 'lucide-react';
 import DrillShell from './DrillShell';
+import { ROUTES } from '@/config/routes';
 
 interface ContrastiveSetData {
   id: string;
@@ -111,6 +112,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
         title="Select a Symptom Set"
         breadcrumb={['Drills', 'Contrastive', 'Select Set']}
         onBackToHub={onExit}
+        backTo={ROUTES.PRACTICE}
         onBack={() => setShowSetPicker(false)}
       >
         <div className="max-w-2xl mx-auto space-y-4 p-4">
@@ -165,6 +167,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
         title={`Contrastive Drill: ${selectedSet.symptom}`}
         breadcrumb={['Drills', 'Contrastive', selectedSet.symptom]}
         onBackToHub={onExit}
+        backTo={ROUTES.PRACTICE}
         onBack={() => setIsPlaying(false)}
       >
         <ContrastiveDrill set={selectedSet} drillId={drillId} onComplete={handleComplete} />
@@ -178,6 +181,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
       title="Contrastive Learning"
       breadcrumb={['Drills', 'Contrastive']}
       onBackToHub={onExit}
+      backTo={ROUTES.PRACTICE}
       hideBreadcrumb
     >
       <DrillLandingPage

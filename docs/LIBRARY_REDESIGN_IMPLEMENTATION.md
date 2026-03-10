@@ -102,6 +102,25 @@ Main component with 2-column layout.
 - Next/Previous buttons with position indicator ("3/47")
 - Content grouped by subcategory headers
 
+### 5. Normal Labs Library View
+
+Full-page reference for normal lab ranges in the Knowledge Base Lab Reference tab.
+
+**Component:** `NormalLabsLibraryView.tsx`
+
+**Features:**
+
+- Category filter (CBC, BMP, LFT, Coagulation, Lipids, Thyroid, Cardiac, Urinalysis)
+- Card layout with ranges, units, sex/age group, clinical notes, common causes
+- Shared API: `GET /api/reference/normal-labs` (same as `NormalLabsPanel`)
+
+**Lab Reference sub-tabs (Knowledge Base Hub):**
+
+- **Lab Tests** — `LabReferenceView` (clinical differentials, interpretation)
+- **Normal Ranges** — `NormalLabsLibraryView`
+
+**URL persistence:** When on Lab Reference tab, `?labSub=normal-ranges` persists the Normal Ranges sub-tab in the URL.
+
 ---
 
 ## Hooks
@@ -140,14 +159,30 @@ Persists user preferences to `localStorage`.
 
 ### `GET /api/content/library`
 
-**New Parameters:**
+**Parameters in use:**
 
-- `highYield=true` - Filter to `pance_yield >= 3`
+- `system`
+- `subcategory`
+- `search`
+- `highYield=true` → filters to `pance_yield >= 3`
 
-**New Response Fields:**
+**Response shape:**
 
-- `gold_standard_dx` - For card tooltips
-- `first_line_rx` - For card tooltips
+```json
+{
+  "content": [/* card payload list */],
+  "count": 0
+}
+```
+
+### `GET /api/content/systems`
+
+Returns filter options as `{ id, label, count }[]`.
+
+### Split detail endpoints (lazy loading)
+
+- `GET /api/content/condition/:conditionId/summary` — lightweight header/cheat-sheet payload
+- `GET /api/content/condition/:conditionId/details` — full relational detail payload (labs, imaging, drugs, exam findings, ECG, treatment links)
 
 ---
 

@@ -6,7 +6,7 @@
 
 import { z } from 'zod';
 import { selectByPanceDistribution, fisherYatesShuffle } from '../../../lib/poolSelection';
-import { getSystemWeight } from '../../../lib/constants/blueprint';
+import { getSystemWeight, calculateTargetDistribution, getSystemAbbreviation } from '../../../lib/constants/blueprint';
 import { authenticatedEndpoint, withCors } from '../_shared/middleware';
 import {
   createEdgePrismaClient,
@@ -257,17 +257,51 @@ export const onRequestGet = authenticatedEndpoint(
         cachedPool = await getFromCache((env as { CACHE: KVNamespace }).CACHE, cacheKey);
       }
 
-      // Get from pre-generated pool (systems array for didactic; single system otherwise)
+      // Get from pre-generated pool (systems array for didactic; single system; or quota-based by blueprint)
       const poolOptions = systems?.length
         ? { count, systems, category, difficulty }
         : { count, system, category, difficulty };
-      const poolQuestions = await getFromPreGeneratedPool(
-        prisma,
-        userId,
-        seenIds,
-        poolOptions,
-        cachedPool
-      );
+
+      let poolQuestions: {
+        questions: PoolQuestionOutput[];
+        remaining: number;
+        rawQuestions?: PreGeneratedQuestionRecord[];
+      };
+
+      if (!system && !systemsParam) {
+        // Quota-based fetch: for each system, fetch targetCount by abbreviation, merge and shuffle (Sprint 8)
+        const distribution = calculateTargetDistribution(count);
+        const allBySystem: PoolQuestionOutput[] = [];
+        let totalRemaining = 0;
+        for (const [systemName, targetCount] of Object.entries(distribution)) {
+          if (targetCount <= 0) continue;
+          const abbrev = getSystemAbbreviation(systemName);
+          const result = await getFromPreGeneratedPool(
+            prisma,
+            userId,
+            seenIds,
+            { count: targetCount, system: abbrev, category, difficulty },
+            undefined
+          );
+          allBySystem.push(...result.questions);
+          result.questions.forEach((q) => seenIds.add(q.id));
+          totalRemaining += result.remaining;
+        }
+        const shuffled = fisherYatesShuffle(allBySystem);
+        poolQuestions = {
+          questions: shuffled.slice(0, count),
+          remaining: totalRemaining,
+        };
+      } else {
+        poolQuestions = await getFromPreGeneratedPool(
+          prisma,
+          userId,
+          seenIds,
+          poolOptions,
+          cachedPool
+        );
+      }
+
       let questions = poolQuestions.questions;
       let poolAvailable = poolQuestions.remaining;
 

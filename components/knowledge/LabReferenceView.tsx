@@ -109,8 +109,9 @@ export const LabReferenceView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Category Filters */}
-      <div className="flex flex-wrap gap-2">
+      {/* Category Filters + Search - sticky on scroll */}
+      <div className="sticky top-0 z-10 -mx-4 px-4 py-3 bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border-b border-[var(--color-border)]/50 space-y-4">
+        <div className="flex flex-wrap gap-2">
         {LAB_CATEGORIES.map((cat) => (
           <button
             key={cat.id}
@@ -124,10 +125,10 @@ export const LabReferenceView: React.FC = () => {
             {cat.label}
           </button>
         ))}
-      </div>
+        </div>
 
-      {/* Search */}
-      <div className="relative">
+        {/* Search */}
+        <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
         <input
           type="text"
@@ -144,6 +145,7 @@ export const LabReferenceView: React.FC = () => {
             Clear
           </button>
         )}
+        </div>
       </div>
 
       {/* Lab Test Cards */}

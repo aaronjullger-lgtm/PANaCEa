@@ -23,35 +23,50 @@ interface KVNamespace {
 }
 
 // Rate limit configurations by endpoint type
+// Plan: anonymous 20/15min, authenticated 100/15min, AI endpoints 10/min
 export const RATE_LIMITS = {
-  // Gemini API calls - expensive, limit tightly
-  gemini: {
+  // Anonymous users - tight limit per plan
+  anonymous: {
     maxRequests: 20,
-    windowSeconds: 3600, // 1 hour
+    windowSeconds: 900, // 15 minutes
+    description: 'Anonymous API requests',
+  },
+  // Authenticated users - per plan
+  authenticated: {
+    maxRequests: 100,
+    windowSeconds: 900, // 15 minutes
+    description: 'Authenticated API requests',
+  },
+  // AI endpoints (Gemini, etc.) - expensive
+  ai_endpoints: {
+    maxRequests: 10,
+    windowSeconds: 60, // 1 minute
     description: 'AI generation requests',
   },
-  // Question pool requests - moderate
+  // Legacy aliases (kept for backward compatibility)
+  gemini: {
+    maxRequests: 10,
+    windowSeconds: 60,
+    description: 'AI generation requests',
+  },
   questions: {
     maxRequests: 100,
-    windowSeconds: 3600, // 1 hour
+    windowSeconds: 900,
     description: 'Question fetching',
   },
-  // Standard API calls - generous
   standard: {
     maxRequests: 300,
-    windowSeconds: 3600, // 1 hour
+    windowSeconds: 3600,
     description: 'Standard API calls',
   },
-  // Auth operations - tight to prevent brute force
   auth: {
     maxRequests: 10,
-    windowSeconds: 300, // 5 minutes
+    windowSeconds: 300,
     description: 'Authentication attempts',
   },
-  // Admin operations
   admin: {
     maxRequests: 50,
-    windowSeconds: 3600, // 1 hour
+    windowSeconds: 3600,
     description: 'Admin operations',
   },
 } as const;
