@@ -14,11 +14,27 @@ The Main Session (Deep Think Tutor) and `/api/gemini/stream` can use a **pre-cre
 
 1. Obtain a valid Clerk token for an admin user.
 2. `POST /api/admin/knowledge/ingest` with body:
-   - `content`: PANCE blueprint / high-yield text (or use `fileUri` from Gemini Files if you uploaded a PDF).
-   - `displayName`: e.g. `pance_blueprint_v1` (optional; default `cache_pance_master_v1`).
-   - `ttlSeconds`: optional; default 24h (86400).
-3. Response includes the created cache **name** (e.g. `cachedContents/abc123...`).
-4. Set **`PANCE_BLUEPRINT_CACHE_NAME`** in Cloudflare Pages (and locally in `.env`) to that exact value.
+   - Send at least one of:
+     - `content`: PANCE blueprint / high-yield text
+     - `fileUri`: Gemini Files API URI (for uploaded PDF ingestion)
+   - Optional:
+     - `category`: prepended section label when using text content
+     - `displayName`: e.g. `pance_blueprint_v1` (default `cache_pance_master_v1`)
+     - `ttlSeconds`: cache TTL (3600..604800), default 24h (`86400`)
+3. Response shape:
+
+```json
+{
+  "data": {
+    "cacheName": "cachedContents/abc123...",
+    "displayName": "pance_blueprint_v1",
+    "expireTime": "2026-03-11T12:34:56.000Z",
+    "ttlSeconds": 86400
+  }
+}
+```
+
+4. Set **`PANCE_BLUEPRINT_CACHE_NAME`** in Cloudflare Pages (and locally in `.env`) to `data.cacheName`.
 
 ### Option 2: Script (Node, for one-off or CI)
 

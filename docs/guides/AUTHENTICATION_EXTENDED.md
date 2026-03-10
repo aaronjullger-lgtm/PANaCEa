@@ -405,12 +405,12 @@ POST   /api/streaks/record                - Record daily activity
 GET    /api/streaks/stats/:userId         - Get detailed streak stats
 ```
 
-### Role Management Endpoints (To Be Implemented)
+### Role Management Endpoints (Mixed status)
 
 ```
 GET    /api/admin/users                   - List users (admin only)
 PATCH  /api/admin/users/:userId/role      - Update user role (superadmin only)
-GET    /api/admin/stats                   - Platform statistics (admin only)
+GET    /api/admin/stats                   - Platform statistics (implemented; admin only)
 ```
 
 ---

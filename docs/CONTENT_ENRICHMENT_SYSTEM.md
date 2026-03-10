@@ -19,6 +19,9 @@ GET /api/admin/content-audit?system=Cardiovascular
 
 # Limit results
 GET /api/admin/content-audit?limit=50
+
+# Include fully complete entries in the returned list
+GET /api/admin/content-audit?includeComplete=true
 ```
 
 **Response includes:**
@@ -27,6 +30,7 @@ GET /api/admin/content-audit?limit=50
 - `fullyComplete`: Count of 100% complete conditions
 - `partiallyComplete`: Count with only high-yield fields missing
 - `criticalMissing`: Count missing required fields
+- `timestamp`: ISO timestamp for when the audit ran
 - `byField`: Per-field completion statistics
 - `incompleteConditions`: Array of incomplete conditions with details
 - `topPriorityToFix`: Top 50 priority conditions to enrich
@@ -102,7 +106,6 @@ These should ideally have content or explicit N/A:
 - `complications`
 - `prognosis`
 - `differentialDiagnosis`
-- `mnemonic`
 
 ## Display Priority System
 
