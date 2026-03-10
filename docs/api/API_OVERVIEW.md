@@ -1,105 +1,63 @@
 # API Overview
 
-Current API surface for recently changed Cloudflare Pages Functions routes.
+Current Cloudflare Pages Function contracts for the API routes changed in this update.
 
 ## Conventions
 
-- **Auth:** Most endpoints use Clerk bearer auth via middleware (`authenticatedEndpoint` / `adminEndpoint`).
-- **Error envelope:** Middleware-backed errors are returned as JSON: `{ "error": "..." }`.
-- **Body shape:** Some endpoints validate top-level JSON fields; others expect wrapped payloads in `{ "body": { ... } }`.
-- **Query source:** Endpoints that pass `{ source: 'query' }` validate URL query params; otherwise validation defaults to request body.
+- **Auth stack:** `authenticatedEndpoint(...)` requires Clerk bearer auth and validates `DATABASE_URL` + `CLERK_SECRET_KEY` before handler execution.
+- **Public stack:** `publicEndpoint(...)` does not require auth but still applies validation and rate limiting.
+- **Validation source:** endpoints with `{ source: 'query' }` validate URL query params; defaults validate JSON body.
+- **Error envelope:** middleware returns JSON errors as `{ "error": "..." }` with proper HTTP status.
 
 ## Changed Routes (summary)
 
 | Method | Path | Auth | One-line description |
 |---|---|---|---|
-| GET | `/api/health` | Public | Health and environment diagnostics, including DB connectivity. |
-| POST | `/api/gemini` | Required | Non-streaming Gemini proxy with rate limiting and optional context cache. |
-| GET | `/api/content/library` | Required | Condition library list with system/subcategory/high-yield/search filtering. |
-| GET | `/api/content/systems` | Required | Distinct system list with condition counts. |
-| GET | `/api/content/condition/:conditionId/summary` | Public | Lightweight condition summary for header/cheat-sheet UX. |
-| GET | `/api/content/condition/:conditionId/details` | Public | Full condition details and linked relational content. |
-| GET | `/api/dashboard/stats` | Required | Dashboard rollups (streak, weakest system, predicted pass chance). |
-| GET | `/api/diagnostic-puzzle/daily` | Required | Daily puzzle payload + user state for the current date. |
-| POST | `/api/diagnostic-puzzle/submit` | Required | Submit diagnostic puzzle guess and update puzzle state. |
-| GET | `/api/diagnostic-puzzle/stats` | Required | User diagnostic puzzle performance stats and streak. |
-| POST | `/api/drills/contrastive/start` | Required | Load a contrastive drill set by ID. |
-| POST | `/api/osce/analysis/grade` | Required | Grade completed OSCE session transcript, persist result/concept gap. |
-| POST | `/api/questions/generate` | Required | Generate (or cache-hit) question by query text/type/system/difficulty. |
-| POST | `/api/questions/attempt` | Required | Record attempt telemetry and update stats/SRS/Rolling 360. |
-| POST | `/api/recommendations/generate` | Required | Generate personalized recommendation list for user. |
-| GET | `/api/reference/normal-labs` | Required | Fetch normal lab reference records (optional category filter). |
-| GET | `/api/user/daily-performance` | Required | Daily attempt/accuracy trend for configurable lookback window. |
-| GET | `/api/user/goals` | Required | List goals with optional status/type filters. |
-| POST | `/api/user/goals` | Required | Create new goal. |
-| PATCH | `/api/user/goals/:id` | Required | Update goal progress/status/metadata. |
-| DELETE | `/api/user/goals/:id` | Required | Delete goal by ID. |
-| POST | `/api/user/session` | Required | Start study session. |
-| PATCH | `/api/user/session` | Required | Update or end study session. |
-| GET | `/api/admin/enrich-condition` | Admin | Endpoint usage contract + enrichable field list. |
-| POST | `/api/admin/enrich-condition` | Admin | AI-enrich missing `MedicalContent` fields for a condition. |
-| GET | `/api/admin/library-enrichment-logs` | Required + admin role check in handler | Read enrichment run logs with filters/pagination. |
-| GET | `/api/admin/library-enrichment-priority` | Required + admin role check in handler | Read prioritized enrichment queue payload. |
+| GET | `/api/health` | Public | Health/runtime diagnostics with DB/env checks and anonymous rate limiting. |
+| GET | `/api/content/library` | Required | Returns filtered clinical library cards with FTS + ILIKE fallback. |
+| GET | `/api/content/systems` | Required | Returns distinct systems and per-system counts for library filters. |
+| GET | `/api/content/condition/:conditionId/details` | Public | Loads heavy condition detail payload with linked relational resources. |
+| POST | `/api/osce/chat` | Required | Saves chat transcript for an owned OSCE session. |
+| POST | `/api/osce/complete` | Required | Marks an OSCE session complete and optionally persists analytics artifacts. |
+| POST | `/api/questions/due-siblings` | Required | Fetches sibling questions for due concepts; may trigger on-demand variant generation. |
+| POST | `/api/questions/generate-enhanced` | Required | Generates Kaplan-style questions with CoVe verification metadata. |
+| GET | `/api/questions/pool` | Required | Fetches user-tailored pool questions with blueprint-aware selection and fallback logic. |
+| POST | `/api/questions/pool` | Required | Seeds a question into `PreGeneratedQuestion` pool. |
+| GET | `/api/questions/session` | Required | Fetches a session question set (query-driven contract). |
+| POST | `/api/questions/session` | Required | Fetches a session question set (JSON-body contract). |
 
 ## Request/Response Contracts
 
 ### `GET /api/health`
 
-- **Request:** No auth; no body required.
-- **Success:** `200` (healthy) or `503` (unhealthy) with:
+- **Auth:** Public.
+- **Rate limit:** anonymous profile via shared rate limiter.
+- **Success:** `200` (healthy) or `503` (unhealthy), including:
   - `status`, `timestamp`, `endpoint`
-  - `checks` (environment/database/content checks)
-  - `diagnostics` (env presence, db URL type, optional errors)
-- **Errors:** `503` with diagnostics if top-level failure occurs.
-
-### `POST /api/gemini`
-
-- **Request body (top-level JSON):**
-
-```json
-{
-  "prompt": "string",
-  "modelName": "gemini-2.0-flash",
-  "temperature": 0.8,
-  "maxTokens": 2048,
-  "systemInstruction": "optional string",
-  "cachedContent": "cachedContents/...",
-  "thinkingLevel": "MINIMAL | LOW | MEDIUM | HIGH"
-}
-```
-
-- **Success (`200`):**
-
-```json
-{
-  "data": {
-    "text": "generated output",
-    "model": "gemini-2.0-flash",
-    "finishReason": "..."
-  }
-}
-```
-
-- **Errors:** `400`, `429`, `500`, `503` with `{ "error": "..." }`.
+  - `checks` (function/env/db/auth/cache/content checks)
+  - `diagnostics` (masked env presence, DB URL type, optional errors)
+- **Top-level failure:** `503` with `status: "unhealthy"` and `diagnostics.error`.
 
 ### `GET /api/content/library`
 
 - **Auth:** Required.
 - **Query params:** `system`, `subcategory`, `search`, `highYield`, `page`, `pageSize`.
-  - Current implementation uses `system`, `subcategory`, `search`, `highYield`.
+  - Current handler behavior actively uses `system`, `subcategory`, `search`, `highYield`.
 - **Success (`200`):**
 
 ```json
 {
-  "content": [/* MedicalContent card payload */],
-  "count": 123
+  "content": [],
+  "count": 0
 }
 ```
 
-- **Errors:** `503` when DB unavailable; fallback error payload includes empty `content` and `count: 0`.
+- **Notes:** FTS (`search_vector`) preferred; falls back to case-insensitive contains matching when needed. Non-search requests are KV-cached (1h).
+- **Errors:** `503` (DB unavailable or load failure), typically with `error`/`message` and optional fallback `content`/`count`.
 
 ### `GET /api/content/systems`
 
+- **Auth:** Required.
 - **Success (`200`):**
 
 ```json
@@ -108,357 +66,246 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 ]
 ```
 
-- **Errors:** `503` (DB unavailable), `500` (query failure).
-
-### `GET /api/content/condition/:conditionId/summary`
-
-- **Auth:** Public.
-- **Params:** `conditionId`.
-- **Success (`200`): Minimal summary object including IDs/system/yield/buzzwords/synonyms/triad/pearls/mnemonic and `confusedWith[]`.
-- **Errors:** `404` condition not found, `503` DB unavailable, `500` load failure.
+- **Notes:** KV-cached (1h).
+- **Errors:** `503` (DB missing), `500` (query failure).
 
 ### `GET /api/content/condition/:conditionId/details`
 
 - **Auth:** Public.
-- **Params:** `conditionId`.
-- **Success (`200`): Rich condition payload (overview, diagnostics, treatment, differentials, linked labs/imaging/drugs/findings/ECG/treatments, related conditions).
-- **Errors:** `404`, `503`, `500`.
+- **Params:** `conditionId` (1..200 chars).
+- **Success (`200`):** full detail object (overview/diagnostics/treatment/differentials + linked labs/imaging/drugs/findings/ECG/treatments + related conditions).
+- **Headers:** `Cache-Control: public, max-age=300`.
+- **Errors:** `404` (`not_found`), `503` (DB/config/load failures).
 
-### `GET /api/dashboard/stats`
-
-- **Success (`200`):**
-
-```json
-{
-  "currentStreak": 0,
-  "weakestSystem": "Pulmonary (9% of PANCE)",
-  "predictedPassChance": 72,
-  "streakFreezes": 0,
-  "userCoins": 0,
-  "streakGoalDays": "all | weekdays"
-}
-```
-
-- **Errors:** `404` user not found; `500` internal error.
-
-### `GET /api/diagnostic-puzzle/daily`
+### `POST /api/osce/chat`
 
 - **Auth:** Required.
-- **Current validated request shape:** `{ "query": { "date": "optional ISO string" } }` (handler reads `validated.query.date`).
-- **Success (`200`):**
-
-```json
-{
-  "id": "dailyPuzzleId",
-  "date": "YYYY-MM-DD",
-  "puzzle": {
-    "id": "puzzleId",
-    "conditionId": "string",
-    "conditionName": "string",
-    "system": "string | null",
-    "title": "string | null",
-    "difficulty": 1,
-    "clues": ["..."],
-    "totalClues": 6
-  },
-  "userState": {
-    "guesses": ["..."],
-    "status": "playing | won | lost",
-    "cluesRevealed": 1,
-    "attemptsLeft": 6,
-    "maxAttempts": 6
-  }
-}
-```
-
-- **Errors:** `400` service validation error, `404` user not found, `500` internal error.
-
-### `POST /api/diagnostic-puzzle/submit`
-
-- **Request body:**
-
-```json
-{
-  "body": {
-    "guess": "string",
-    "date": "optional ISO string"
-  }
-}
-```
-
-- **Success:** Same payload structure as `/api/diagnostic-puzzle/daily`, with updated `userState`.
-- **Errors:** `400`, `404`, `500`.
-
-### `GET /api/diagnostic-puzzle/stats`
-
-- **Success (`200`):**
-
-```json
-{
-  "total": 0,
-  "wins": 0,
-  "losses": 0,
-  "winRate": 0,
-  "streak": 0,
-  "guessDistribution": { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0 }
-}
-```
-
-### `POST /api/drills/contrastive/start`
-
-- **Request body:**
-
-```json
-{
-  "body": { "setId": "string" }
-}
-```
-
-- **Success (`200`):** `{ "set": { ...contrastiveSetRecord } }`
-- **Errors:** `404`/`500` style failures with `{ "error": "..." }`.
-
-### `POST /api/osce/analysis/grade`
-
-- **Request body:**
-
-```json
-{
-  "body": { "sessionId": "string" }
-}
-```
-
-- **Success (`200`):**
-
-```json
-{
-  "resultId": "string",
-  "score": 0,
-  "checklist": [{ "item": "string", "status": "PASS | FAIL", "feedback": "string" }],
-  "redFlagsMissed": ["string"],
-  "clinicalReasoningScore": 0,
-  "billingCodeSuggestion": "string",
-  "softSkillsReport": {
-    "empathy": { "score": 1, "feedback": "string" },
-    "professionalism": { "score": 1, "feedback": "string" },
-    "pacing": { "score": 1, "feedback": "string" }
-  },
-  "conceptGapCreated": false
-}
-```
-
-- **Notable errors:** `400`, `404`, `422`, `429`, `502`, `500`.
-
-### `POST /api/questions/generate`
-
-- **Request body (top-level JSON):**
-
-```json
-{
-  "queryText": "string",
-  "questionType": "string",
-  "system": "optional string",
-  "difficulty": "optional string"
-}
-```
-
-- **Success (`200`):**
-
-```json
-{
-  "success": true,
-  "question": { "id": "string", "text": "string", "metadata": {} },
-  "cached": false,
-  "similarity": 0.91
-}
-```
-
-(`similarity` is present only when returning a semantic cache hit.)
-
-### `POST /api/questions/attempt`
-
-- **Request body:**
-
-```json
-{
-  "body": {
-    "questionId": "string",
-    "isCorrect": true,
-    "wasCorrect": true,
-    "system": "optional string",
-    "conditionId": "optional string",
-    "medicalContentId": "optional string",
-    "questionType": "optional string",
-    "mode": "session",
-    "timeSpent": 1200,
-    "timeSpentMs": 1200,
-    "answerChangedCount": 1,
-    "isRankedAttempt": false,
-    "selectedAnswer": 0,
-    "telemetryJson": {},
-    "durationMs": 1200,
-    "isMainSession": false
-  }
-}
-```
-
-- **Success (`200`):**
-
-```json
-{
-  "success": true,
-  "attemptId": "string",
-  "stats": {
-    "totalQuestionsAnswered": 0,
-    "correctAnswers": 0,
-    "overallAccuracy": 0
-  },
-  "systemStats": {
-    "system": "Cardiology",
-    "totalAttempts": 0,
-    "correctAttempts": 0,
-    "accuracy": 0,
-    "recentTrend": "improving | declining | neutral"
-  }
-}
-```
-
-### `POST /api/recommendations/generate`
-
-- **Request:** Empty object `{}`.
-- **Success (`200`):**
-
-```json
-{
-  "success": true,
-  "count": 3,
-  "recommendations": [/* recommendation objects */]
-}
-```
-
-### `GET /api/reference/normal-labs`
-
-- **Query params:** `category` (optional), `limit` (1-500, default 200).
-- **Consumers:**
-  - `NormalLabsPanel` — in-session slide-out panel during quiz questions
-  - `NormalLabsLibraryView` — Knowledge Base → Lab Reference → Normal Ranges tab
-- **Success (`200`):**
-
-```json
-{
-  "success": true,
-  "labs": [/* NormalLabValue fields */]
-}
-```
-
-### `GET /api/user/daily-performance`
-
-- **Query params:** `days` (1-90, default 30).
-- **Success (`200`):**
-
-```json
-{
-  "period": "30d",
-  "startDate": "YYYY-MM-DD",
-  "endDate": "YYYY-MM-DD",
-  "dailyPerformance": [
-    { "date": "YYYY-MM-DD", "attempts": 0, "correct": 0, "accuracy": 0 }
-  ],
-  "summary": {
-    "totalAttempts": 0,
-    "totalCorrect": 0,
-    "activeDays": 0,
-    "avgAttemptsPerActiveDay": 0
-  }
-}
-```
-
-### `GET/POST/PATCH/DELETE /api/user/goals`
-
-- **GET query params:** `status`, `goalType`, `limit`.
-- **POST body:** `{ "body": { title, goalType, targetValue?, targetUnit?, targetDate?, ... } }`
-- **PATCH body:** `{ "body": { title?, currentValue?, status?, targetDate?, ... } }` against `/api/user/goals/:id`.
-- **DELETE:** `/api/user/goals/:id`.
-- **Success pattern:** `{ "success": true, "goal": { ... }, "message": "..." }` (or list payload for GET).
-
-### `POST /api/user/session`
-
-- **Request body:**
-
-```json
-{
-  "body": {
-    "sessionType": "mixed | focused | review",
-    "systemsTargeted": ["Cardiology"]
-  }
-}
-```
-
-- **Success (`200`):**
-
-```json
-{
-  "success": true,
-  "session": {
-    "id": "string",
-    "sessionType": "mixed",
-    "startedAt": "ISO timestamp"
-  }
-}
-```
-
-### `PATCH /api/user/session`
-
 - **Request body:**
 
 ```json
 {
   "body": {
     "sessionId": "string",
-    "action": "end | update",
-    "questionsAnswered": 0,
-    "correctCount": 0,
-    "thinkingTimeMs": 0
+    "messages": [
+      { "role": "user", "content": "..." }
+    ]
   }
 }
 ```
 
-- **Success:** `{ "success": true, "session": { ...updated fields... } }`
+- **Validation:** `messages` length `1..100`, each `content` max `10000`.
+- **Success (`200`):**
 
-### `GET/POST /api/admin/enrich-condition`
+```json
+{ "success": true }
+```
 
-- **GET success:** usage contract object including `enrichableFields`.
-- **POST body:**
+- **Errors:** `404` (user/session not found), `500`.
+
+### `POST /api/osce/complete`
+
+- **Auth:** Required.
+- **Request body:**
 
 ```json
 {
   "body": {
-    "conditionId": "string",
-    "fieldsToEnrich": ["overview", "etiology"],
-    "forceRegenerate": false
+    "sessionId": "string",
+    "diagnosis": "optional string",
+    "treatmentPlan": "optional string",
+    "soapComparison": {},
+    "timingAnalytics": {},
+    "infographics": []
   }
 }
 ```
 
-- **POST success:** `{ conditionId, condition, fieldsUpdated, displayPriority, success }`
+- **Success (`200`):**
+  - Standard completion: `{ "success": true }`
+  - Idempotent re-complete: `{ "success": true, "alreadyCompleted": true }`
+- **Errors:** `404` (user/session not found), `500`.
 
-### `GET /api/admin/library-enrichment-logs`
+### `POST /api/questions/due-siblings`
 
-- **Current validated request shape:** `{ "query": { "entityType"?, "status"?, "limit"?, "offset"? } }`
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "dueItems": [
+    {
+      "conditionId": "string",
+      "taskType": "optional string or null",
+      "originalQuestionId": "string"
+    }
+  ]
+}
+```
+
 - **Success (`200`):**
 
 ```json
 {
-  "logs": [/* log records */],
-  "total": 0
+  "results": [
+    {
+      "question": {
+        "id": "string",
+        "question": "string",
+        "options": [],
+        "correctAnswerIndex": 0,
+        "rationale": "string",
+        "system": "string",
+        "difficulty": "string",
+        "source": "pool"
+      },
+      "dueConceptKey": { "conditionId": "string", "taskType": null }
+    }
+  ]
 }
 ```
 
-### `GET /api/admin/library-enrichment-priority`
+- **Notes:** never returns the `originalQuestionId`; may generate a sibling variant on demand when none exists and `GEMINI_API_KEY` is configured.
+- **Errors:** `404` (user not found), `500`.
 
-- **Success (`200`):** priority JSON payload (default `{ "priorityList": [] }` if file unavailable).
+### `POST /api/questions/generate-enhanced`
+
+- **Auth:** Required.
+- **Request body:**
+
+```json
+{
+  "body": {
+    "context": "string",
+    "conditionId": "string",
+    "conditionName": "string",
+    "system": "string",
+    "task": "string",
+    "difficulty": "easier | same | harder"
+  }
+}
+```
+
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "question": {
+    "id": "string",
+    "vignette": "string",
+    "question": "string",
+    "options": [],
+    "correctAnswerIndex": 0,
+    "rationale": {},
+    "pearls": [],
+    "conditionId": "string",
+    "conditionName": "string",
+    "system": "string",
+    "task": "string",
+    "difficulty": "same"
+  },
+  "verification": {
+    "verified": true,
+    "confidence": 0.9,
+    "attempts": 1,
+    "verificationId": "optional string",
+    "recommendation": "accept | review",
+    "flags": []
+  }
+}
+```
+
+- **Notes:** runs CoVe verification and returns verification metadata to clients.
+- **Errors:** middleware-formatted `500` on generation failure.
+
+### `GET /api/questions/pool`
+
+- **Auth:** Required.
+- **Query params:** `system`, `systems` (comma-separated), `category`, `difficulty`, `count`, `mode`.
+- **Special mode:** `mode=curation` is admin-only.
+- **Success (`200`):**
+
+```json
+{
+  "questions": [],
+  "poolStatus": {
+    "available": 0,
+    "needsGeneration": false,
+    "threshold": 20
+  }
+}
+```
+
+- **Headers:** `X-Cache: HIT|MISS` when KV cache is used.
+- **Errors:** `403` (curation without admin role), `404` (user not found), `503`/`500`.
+
+### `POST /api/questions/pool`
+
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "question": {
+    "id": "string",
+    "question": "string",
+    "options": [],
+    "correctAnswer": "A",
+    "explanation": "string",
+    "system": "optional string",
+    "conditionId": "optional string",
+    "medicalContentId": "optional string",
+    "difficulty": "optional string",
+    "vignette": "optional string",
+    "conditionName": "optional string",
+    "subcategory": "optional string",
+    "tags": []
+  }
+}
+```
+
+- **Success:** `201` with `{ "success": true }`.
+- **Errors:** `500`.
+
+### `GET /api/questions/session`
+
+- **Auth:** Required.
+- **Query params:** `count`, `system`, `mode`, `simulationStrict`, `eorMode`, `eorDeadline`.
+- **Success (`200`):** session payload from `SessionService`, including:
+
+```json
+{
+  "questions": [],
+  "analytics": {},
+  "poolStatus": { "available": 0, "needsGeneration": false }
+}
+```
+
+- **Errors:** `503` when DB unavailable/transient lookup failures, otherwise `500`.
+
+### `POST /api/questions/session`
+
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "count": 10,
+  "system": "optional string",
+  "mode": "standard | review | weakness | random | interleaved",
+  "systems": ["optional", "system", "array"],
+  "prioritizeWeakAreas": true,
+  "simulationStrict": false,
+  "eorMode": false,
+  "eorDeadline": "optional ISO string"
+}
+```
+
+- **Success (`200`):** same shape as `GET /api/questions/session`.
+- **Errors:** `503`/`500`.
 
 ## Operational Notes
 
-- `POST /api/osce/analysis/grade` updates existing `OsceResult` when re-grading a session (`sessionId` uniqueness), and deduplicates `ConceptGap` by `(userId, system, sourceType, sourceId)`.
-- `GET /api/content/library` uses FTS (`search_vector`) first and falls back to ILIKE matching if FTS errors or returns zero rows.
-- `GET /api/admin/library-enrichment-logs` and `/api/admin/library-enrichment-priority` currently read local JSON files under `data/` (filesystem-backed behavior).
+- Shared middleware now consistently injects `X-Request-ID` and forwards `Sentry-Trace` when present.
+- Authenticated endpoints are rate-limited (default `300 req/min`) unless overridden per endpoint.
+- Public endpoints use IP-based rate limiting; `/api/health` additionally uses the anonymous profile from `rateLimiter.ts`.

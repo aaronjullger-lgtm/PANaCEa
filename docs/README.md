@@ -26,7 +26,7 @@ Welcome to the PANaCEa documentation! This index helps you quickly find the info
 
 ### For API Surface
 
-1. **[API Overview](api/API_OVERVIEW.md)** - Current request/response contracts for updated endpoints
+1. **[API Overview](api/API_OVERVIEW.md)** - Current contracts for changed Cloudflare API routes (health, content library/systems/details, OSCE chat/complete, questions pool/session/due-siblings/generate-enhanced)
 
 ---
 
@@ -45,7 +45,7 @@ Learn about PANaCEa's system design:
 
 Backend endpoint contracts and API behavior docs:
 
-- **[API Overview](api/API_OVERVIEW.md)** - Current changed API contracts (health, Gemini, content library, diagnostic puzzle, questions, user goals/session, admin enrichment, OSCE grading)
+- **[API Overview](api/API_OVERVIEW.md)** - Current changed API contracts (health, content library/systems/details, OSCE chat/complete, questions pool/session/due-siblings/generate-enhanced)
 
 ---
 

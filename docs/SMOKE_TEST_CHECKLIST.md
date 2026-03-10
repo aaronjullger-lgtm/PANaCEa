@@ -22,20 +22,29 @@ Use this checklist for manual QA after deployment to verify critical paths.
 ## Quiz / Session Flow
 
 - [ ] Start a practice session (e.g. from Practice or Study)
+- [ ] `GET /api/questions/session` returns `questions` plus `analytics`/`poolStatus` payload
 - [ ] Answer at least one question and get feedback
 - [ ] Complete or exit session; results or progress visible
 - [ ] No console errors during quiz load and submit
+
+## Question Pool & Due Review
+
+- [ ] `GET /api/questions/pool` returns `questions[]` and `poolStatus`
+- [ ] Due review path triggers `POST /api/questions/due-siblings` and returns sibling question results
+- [ ] Enhanced generation path (`POST /api/questions/generate-enhanced`) returns `question` + `verification` metadata
 
 ## Critical Pages Load
 
 - [ ] Dashboard (or home) loads
 - [ ] Condition Library loads and search works
+- [ ] Condition Library filters load from `GET /api/content/systems`
+- [ ] Condition detail panel loads from `GET /api/content/condition/:conditionId/details`
 - [ ] Settings (or profile) loads
 - [ ] At least one mode (e.g. DDx, OSCE, Drill) loads without crash
 
 ## Rate Limiting (if KV bound)
 
-- [ ] Gemini/OSCE grade endpoints return 429 after exceeding limit (optional manual test)
+- [ ] Repeated `GET /api/health` requests eventually return `429` for anonymous limits (optional manual test)
 
 ## Sign-off
 

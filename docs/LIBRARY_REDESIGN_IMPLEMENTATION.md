@@ -165,6 +165,7 @@ Persists user preferences to `localStorage`.
 - `subcategory`
 - `search`
 - `highYield=true` → filters to `pance_yield >= 3`
+- (`page` and `pageSize` are currently accepted query keys but not yet applied in server-side pagination logic)
 
 **Response shape:**
 
@@ -175,14 +176,22 @@ Persists user preferences to `localStorage`.
 }
 ```
 
+**Behavior notes:**
+
+- Auth required (`authenticatedEndpoint` middleware).
+- Full-text search is attempted first; fallback uses case-insensitive string matching.
+- Non-search requests are cached in KV for 1 hour.
+
 ### `GET /api/content/systems`
 
 Returns filter options as `{ id, label, count }[]`.
 
+**Behavior notes:** Auth required; responses are cached in KV for 1 hour.
+
 ### Split detail endpoints (lazy loading)
 
 - `GET /api/content/condition/:conditionId/summary` — lightweight header/cheat-sheet payload
-- `GET /api/content/condition/:conditionId/details` — full relational detail payload (labs, imaging, drugs, exam findings, ECG, treatment links)
+- `GET /api/content/condition/:conditionId/details` — full relational detail payload (labs, imaging, drugs, exam findings, ECG, treatment links), public endpoint with `Cache-Control: public, max-age=300`
 
 ---
 
