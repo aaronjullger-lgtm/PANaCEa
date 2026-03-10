@@ -14,18 +14,13 @@ import { prisma, disconnectPrisma } from '../helpers/prisma-client';
 const DRY_RUN = process.argv.includes('--dry-run');
 
 function normalize(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '')
-    .trim();
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
 }
 
 async function main() {
   console.log('╔════════════════════════════════════════════════════════════╗');
   console.log('║  Phase 5a: Link PatientEncounterCase to Condition         ║');
-  console.log(
-    `║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`
-  );
+  console.log(`║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`);
   console.log('╚════════════════════════════════════════════════════════════╝');
 
   // Step 1: Check if conditionId column exists
@@ -35,12 +30,8 @@ async function main() {
   } catch {
     console.log('\n📝 Adding conditionId column to PatientEncounterCase...');
     if (!DRY_RUN) {
-      await prisma.$executeRawUnsafe(
-        `ALTER TABLE "PatientEncounterCase" ADD COLUMN IF NOT EXISTS "conditionId" TEXT`
-      );
-      await prisma.$executeRawUnsafe(
-        `CREATE INDEX IF NOT EXISTS "idx_pec_conditionId" ON "PatientEncounterCase" ("conditionId")`
-      );
+      await prisma.$executeRawUnsafe(`ALTER TABLE "PatientEncounterCase" ADD COLUMN IF NOT EXISTS "conditionId" TEXT`);
+      await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "idx_pec_conditionId" ON "PatientEncounterCase" ("conditionId")`);
       console.log('  ✅ Column and index created');
     } else {
       console.log('  [DRY-RUN] Would add conditionId column');
@@ -67,10 +58,9 @@ async function main() {
   console.log(`\nLoaded ${conditions.length} conditions for matching`);
 
   // Step 3: Get all encounter cases
-  const cases: Array<{ id: string; correctDiagnosis: string; conditionId: string | null }> =
-    await prisma.$queryRawUnsafe(
-      `SELECT id, "correctDiagnosis", "conditionId" FROM "PatientEncounterCase"`
-    );
+  const cases: Array<{ id: string; correctDiagnosis: string; conditionId: string | null }> = await prisma.$queryRawUnsafe(
+    `SELECT id, "correctDiagnosis", "conditionId" FROM "PatientEncounterCase"`
+  );
 
   console.log(`Total encounter cases: ${cases.length}`);
 

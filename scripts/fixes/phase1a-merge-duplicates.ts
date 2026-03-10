@@ -18,53 +18,26 @@ const DRY_RUN = process.argv.includes('--dry-run');
 // Canonical name -> duplicate name(s) to merge INTO the canonical
 // The canonical is kept; duplicates are deleted after merging
 const DUPLICATE_PAIRS: Array<{ canonical: string; duplicates: string[] }> = [
-  {
-    canonical: 'Deep Vein Thrombosis (DVT)',
-    duplicates: ['Deep Vein Thrombosis DVT', 'Deep Venous Thrombosis (DVT)'],
-  },
+  { canonical: 'Deep Vein Thrombosis (DVT)', duplicates: ['Deep Vein Thrombosis DVT', 'Deep Venous Thrombosis (DVT)'] },
   { canonical: 'Acute Arterial Occlusion', duplicates: ['Acute Arterial Occlusive Disease'] },
-  {
-    canonical: "Boxer's Fracture",
-    duplicates: ['Boxer Fracture', 'Boxer Fracture (5th Metacarpal Neck)'],
-  },
-  {
-    canonical: 'Avascular Necrosis (AVN)',
-    duplicates: ['Avascular Necrosis AVN', 'Avascular Necrosis of the Femoral Head'],
-  },
-  {
-    canonical: 'Legg-Calve-Perthes Disease',
-    duplicates: ['Legg Calve Perthes', 'Legg-Calvé-Perthes Disease'],
-  },
-  {
-    canonical: "Dupuytren's Contracture",
-    duplicates: ['Dupuytren Contracture', 'Dupuytrens Contracture'],
-  },
+  { canonical: "Boxer's Fracture", duplicates: ['Boxer Fracture', 'Boxer Fracture (5th Metacarpal Neck)'] },
+  { canonical: 'Avascular Necrosis (AVN)', duplicates: ['Avascular Necrosis AVN', 'Avascular Necrosis of the Femoral Head'] },
+  { canonical: 'Legg-Calve-Perthes Disease', duplicates: ['Legg Calve Perthes', 'Legg-Calvé-Perthes Disease'] },
+  { canonical: "Dupuytren's Contracture", duplicates: ['Dupuytren Contracture', 'Dupuytrens Contracture'] },
   { canonical: 'Trigger Finger (Stenosing Tenosynovitis)', duplicates: ['Trigger Finger'] },
-  {
-    canonical: 'Second-Degree AV Block (Mobitz I)',
-    duplicates: ['Second Degree AV Block Mobitz I Wenckebach'],
-  },
+  { canonical: 'Second-Degree AV Block (Mobitz I)', duplicates: ['Second Degree AV Block Mobitz I Wenckebach'] },
   { canonical: 'Port-Wine Stain', duplicates: ['Port Wine Stain'] },
-  {
-    canonical: 'Infantile Hemangioma',
-    duplicates: ['Strawberry Hemangioma', 'Strawberry Hemangioma (Infantile Hemangioma)'],
-  },
+  { canonical: 'Infantile Hemangioma', duplicates: ['Strawberry Hemangioma', 'Strawberry Hemangioma (Infantile Hemangioma)'] },
   { canonical: 'Pseudogout (CPPD)', duplicates: ['Pseudogout (Calcium Pyrophosphate Deposition)'] },
   { canonical: 'Epidermal Inclusion Cyst', duplicates: ['Epithelial Inclusion Cyst'] },
   { canonical: "Crohn's Disease", duplicates: ['Crohn S'] },
-  {
-    canonical: 'Hand-Foot-and-Mouth Disease',
-    duplicates: ['Hand-Foot-Mouth Disease (HFMD)', 'Hand-Foot-Mouth Disease'],
-  },
+  { canonical: 'Hand-Foot-and-Mouth Disease', duplicates: ['Hand-Foot-Mouth Disease (HFMD)', 'Hand-Foot-Mouth Disease'] },
   { canonical: 'Herpes Zoster (Shingles)', duplicates: ['Herpes Zoster Shingles Varicella'] },
   { canonical: 'Acute Angle-Closure Glaucoma', duplicates: ['Acute Angle Closure Glaucoma'] },
   { canonical: 'Adjustment Disorders', duplicates: ['Adjustment Disorder'] },
   { canonical: 'Attention-Deficit/Hyperactivity Disorder (ADHD)', duplicates: ['ADHD'] },
   { canonical: 'Binge-Eating Disorder', duplicates: ['Binge Eating Disorder'] },
-  {
-    canonical: 'Pneumocystis jirovecii Pneumonia (PCP)',
-    duplicates: ['Pneumocystis jirovecii Pneumonia (PJP)', 'Pneumocystis Pneumonia (PCP)'],
-  },
+  { canonical: 'Pneumocystis jirovecii Pneumonia (PCP)', duplicates: ['Pneumocystis jirovecii Pneumonia (PJP)', 'Pneumocystis Pneumonia (PCP)'] },
 ];
 
 // All junction tables that reference conditionId
@@ -86,7 +59,11 @@ const JUNCTION_TABLES_CONDITION = [
 ] as const;
 
 // Tables that reference conditionId (not junction)
-const OTHER_TABLES_CONDITION = ['ClinicalPearl', 'WeaknessPattern', 'SavedQuestion'] as const;
+const OTHER_TABLES_CONDITION = [
+  'ClinicalPearl',
+  'WeaknessPattern',
+  'SavedQuestion',
+] as const;
 
 async function findConditionByName(name: string) {
   // Search in Condition table
@@ -133,9 +110,7 @@ async function mergePair(canonical: string, duplicateNames: string[]) {
   }
 
   if (!canonicalCond) {
-    console.log(
-      `  ⚠️  Could not find any matching condition for "${canonical}" or its duplicates. Skipping.`
-    );
+    console.log(`  ⚠️  Could not find any matching condition for "${canonical}" or its duplicates. Skipping.`);
     return { merged: 0, skipped: 1 };
   }
 
@@ -185,9 +160,7 @@ async function mergePair(canonical: string, duplicateNames: string[]) {
             `DELETE FROM "${table}" WHERE "conditionId" = $1`,
             dupCond.id
           );
-        } catch {
-          /* ignore */
-        }
+        } catch { /* ignore */ }
       }
     }
 
@@ -199,9 +172,7 @@ async function mergePair(canonical: string, duplicateNames: string[]) {
           canonicalCond.id,
           dupCond.id
         );
-      } catch {
-        /* ignore */
-      }
+      } catch { /* ignore */ }
     }
 
     // 3. Re-point Question.conditionId
@@ -211,9 +182,7 @@ async function mergePair(canonical: string, duplicateNames: string[]) {
         canonicalCond.id,
         dupCond.id
       );
-    } catch {
-      /* ignore */
-    }
+    } catch { /* ignore */ }
 
     // 4. Re-point medicalContentId references if duplicate has a separate MC
     const dupMC = await prisma.medicalContent.findFirst({
@@ -223,23 +192,10 @@ async function mergePair(canonical: string, duplicateNames: string[]) {
     if (dupMC && canonicalMC && dupMC.id !== canonicalMC.id) {
       // Merge useful data from duplicate MC into canonical MC
       const fieldsToMerge = [
-        'pathophysiology',
-        'epidemiology',
-        'etiology',
-        'symptoms',
-        'physicalExam',
-        'diagnostics',
-        'treatment',
-        'complications',
-        'differentialDiagnosis',
-        'prognosis',
-        'riskFactors',
-        'overview',
-        'first_line_rx',
-        'gold_standard_dx',
-        'best_initial_test',
-        'classic_patient',
-        'mnemonic',
+        'pathophysiology', 'epidemiology', 'etiology', 'symptoms', 'physicalExam',
+        'diagnostics', 'treatment', 'complications', 'differentialDiagnosis',
+        'prognosis', 'riskFactors', 'overview', 'first_line_rx', 'gold_standard_dx',
+        'best_initial_test', 'classic_patient', 'mnemonic',
       ] as const;
 
       const updateData: Record<string, any> = {};
@@ -271,13 +227,8 @@ async function mergePair(canonical: string, duplicateNames: string[]) {
 
       // Re-point medicalContentId references
       const mcRefTables = [
-        'ContentAuditLog',
-        'ContentVersion',
-        'ContentStatistics',
-        'Question',
-        'QuestionSeed',
-        'PreGeneratedQuestion',
-        'ReviewLog',
+        'ContentAuditLog', 'ContentVersion', 'ContentStatistics',
+        'Question', 'QuestionSeed', 'PreGeneratedQuestion', 'ReviewLog',
         'UserProgress',
       ];
       for (const table of mcRefTables) {
@@ -287,9 +238,7 @@ async function mergePair(canonical: string, duplicateNames: string[]) {
             canonicalMC.id,
             dupMC.id
           );
-        } catch {
-          /* ignore */
-        }
+        } catch { /* ignore */ }
       }
 
       // Also re-point junction tables that have medicalContentId
@@ -300,9 +249,7 @@ async function mergePair(canonical: string, duplicateNames: string[]) {
             canonicalMC.id,
             dupMC.id
           );
-        } catch {
-          /* ignore */
-        }
+        } catch { /* ignore */ }
       }
 
       // Delete duplicate MC
@@ -310,9 +257,7 @@ async function mergePair(canonical: string, duplicateNames: string[]) {
         await prisma.medicalContent.delete({ where: { id: dupMC.id } });
         console.log(`    Deleted duplicate MedicalContent: ${dupMC.id}`);
       } catch (e: any) {
-        console.log(
-          `    ⚠️  Could not delete duplicate MC (may have remaining refs): ${e.message?.substring(0, 100)}`
-        );
+        console.log(`    ⚠️  Could not delete duplicate MC (may have remaining refs): ${e.message?.substring(0, 100)}`);
       }
     }
 
@@ -334,9 +279,7 @@ async function mergePair(canonical: string, duplicateNames: string[]) {
       console.log(`    ✅ Deleted duplicate Condition: "${dupCond.name}"`);
       mergedCount++;
     } catch (e: any) {
-      console.log(
-        `    ⚠️  Could not delete duplicate Condition (remaining refs): ${e.message?.substring(0, 100)}`
-      );
+      console.log(`    ⚠️  Could not delete duplicate Condition (remaining refs): ${e.message?.substring(0, 100)}`);
       // Try to find remaining references
       for (const table of JUNCTION_TABLES_CONDITION) {
         try {
@@ -352,9 +295,7 @@ async function mergePair(canonical: string, duplicateNames: string[]) {
             );
             console.log(`      Cleaned up ${table}`);
           }
-        } catch {
-          /* ignore */
-        }
+        } catch { /* ignore */ }
       }
       // Retry delete
       try {
@@ -388,9 +329,7 @@ async function mergePair(canonical: string, duplicateNames: string[]) {
 async function main() {
   console.log('╔════════════════════════════════════════════════════════════╗');
   console.log('║  Phase 1a: Merge Duplicate Conditions                     ║');
-  console.log(
-    `║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`
-  );
+  console.log(`║  Mode: ${DRY_RUN ? 'DRY RUN' : 'LIVE'}                                            ║`);
   console.log('╚════════════════════════════════════════════════════════════╝');
 
   const startCount = await prisma.condition.count();
