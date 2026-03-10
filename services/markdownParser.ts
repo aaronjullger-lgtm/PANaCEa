@@ -91,7 +91,7 @@ function formatTextParts(raw: string, keyword?: string): { parts: TextPart[]; is
   const parts: TextPart[] = [];
 
   const isSecondaryLabel = colonMatch
-    ? /\b(Prevalence|Type\s*\d|Stage|Classification|Category)\b/i.test(colonMatch[1] ?? '')
+    ? /\b(Prevalence|Type\s*\d|Stage|Classification|Category)\b/i.test(colonMatch[1])
     : false;
 
   if (colonMatch) {

@@ -5,15 +5,16 @@
  * Features:
  * - Tab switcher by organ system (Cardiac, Pulmonary, Vascular, Renal)
  * - Search across all calculators
- * - Professional dark mode aesthetic
+ * - Dark sportsbook aesthetic
  * - Extracted calculator components
  */
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Activity, Droplet } from 'lucide-react';
+import { Search, Heart, Activity, Droplet, ArrowLeft, Wind, Baby, Sparkles } from 'lucide-react';
 
 // Import calculator components
+import { InstantCalcView } from './InstantCalcView';
 import { CURB65Calculator } from './risk/CURB65Calculator';
 import { CHADS2VAScCalculator } from './risk/CHADS2VAScCalculator';
 import { WellsDVTCalculator } from './risk/WellsDVTCalculator';
@@ -21,35 +22,116 @@ import { WellsPECalculator } from './risk/WellsPECalculator';
 import { PERCCalculator } from './diagnosis/PERCCalculator';
 import { GFRCalculator } from './lab/GFRCalculator';
 import { AnionGapCalculator } from './lab/AnionGapCalculator';
-import { OsmolarGapCalculator } from './lab/OsmolarGapCalculator';
-import { ParklandCalculator } from './lab/ParklandCalculator';
-import { PediatricDosingPlaceholder } from './dosing/PediatricDosingPlaceholder';
-import { ClinicalGuidelinesPlaceholder } from './guidelines/ClinicalGuidelinesPlaceholder';
 
-import { CALCULATORS, CALCULATOR_CATEGORIES } from './calculatorRegistry';
+import type { Calculator, CalculatorSystem } from './types';
 
 interface CalculatorHubProps {
   onClose: () => void;
-  /** When set, open this calculator immediately (e.g. from ToolkitHub card click) */
-  initialCalculatorId?: string | null;
 }
 
-const getCategoryForCalculator = (calcId: string): string => {
-  const cat = CALCULATOR_CATEGORIES.find((c) => c.calculatorIds.includes(calcId));
-  return cat?.id ?? 'cardiac';
-};
+// Calculator registry with system classification
+const CALCULATORS: Calculator[] = [
+  {
+    id: 'curb65',
+    name: 'CURB-65',
+    description: 'Pneumonia severity assessment',
+    category: 'risk',
+    icon: Activity,
+    system: 'pulmonary',
+    synonyms: ['pneumonia', 'cap', 'community acquired pneumonia'],
+    formula: 'Confusion + Urea + RR + BP + Age ≥65',
+  },
+  {
+    id: 'chads2vasc',
+    name: 'CHA₂DS₂-VASc',
+    description: 'Stroke risk in atrial fibrillation',
+    category: 'risk',
+    icon: Heart,
+    system: 'cardiac',
+    synonyms: ['afib', 'stroke', 'anticoagulation'],
+    formula: 'CHF + HTN + Age + DM + Stroke + Vasc + Sex',
+  },
+  {
+    id: 'wells_dvt',
+    name: "Wells' DVT",
+    description: 'Deep vein thrombosis probability',
+    category: 'diagnosis',
+    icon: Activity,
+    system: 'vascular',
+    synonyms: ['dvt', 'blood clot', 'venous thrombosis'],
+  },
+  {
+    id: 'wells_pe',
+    name: "Wells' PE",
+    description: 'Pulmonary embolism probability',
+    category: 'diagnosis',
+    icon: Activity,
+    system: 'pulmonary',
+    synonyms: ['pe', 'pulmonary embolism', 'clot'],
+  },
+  {
+    id: 'perc',
+    name: 'PERC Rule',
+    description: 'PE rule-out criteria',
+    category: 'diagnosis',
+    icon: Activity,
+    system: 'pulmonary',
+    synonyms: ['pulmonary embolism', 'rule out'],
+  },
+  {
+    id: 'gfr',
+    name: 'GFR (MDRD)',
+    description: 'Glomerular filtration rate',
+    category: 'lab',
+    icon: Droplet,
+    system: 'renal',
+    synonyms: ['egfr', 'kidney function', 'creatinine clearance'],
+    formula: '186 × (Cr)^-1.154 × (Age)^-0.203',
+  },
+  {
+    id: 'anion_gap',
+    name: 'Anion Gap',
+    description: 'Metabolic acidosis assessment',
+    category: 'lab',
+    icon: Droplet,
+    system: 'renal',
+    synonyms: ['ag', 'metabolic acidosis', 'mudpiles'],
+    formula: 'Na⁺ − (Cl⁻ + HCO₃⁻)',
+  },
+  {
+    id: 'instant_calc',
+    name: 'Instant Calc',
+    description: 'Generate a calculator from a description (e.g. TIMI, HEART)',
+    category: 'risk',
+    icon: Sparkles,
+    system: 'cardiac',
+    synonyms: ['spark', 'timi', 'heart score', 'micro-app'],
+  },
+];
 
-export const CalculatorHub: React.FC<CalculatorHubProps> = ({
-  onClose,
-  initialCalculatorId = null,
-}) => {
-  const [activeCategory, setActiveCategory] = useState<string>(() =>
-    initialCalculatorId ? getCategoryForCalculator(initialCalculatorId) : 'cardiac'
-  );
+// Calculator category tabs
+const CALCULATOR_CATEGORIES: Array<{
+  id: string;
+  label: string;
+  icon: typeof Heart;
+  calculatorIds: string[];
+}> = [
+  { id: 'cardiac', label: 'Cardiac', icon: Heart, calculatorIds: ['chads2vasc', 'instant_calc'] },
+  {
+    id: 'pulmonary',
+    label: 'Pulmonary',
+    icon: Wind,
+    calculatorIds: ['curb65', 'wells_pe', 'perc'],
+  },
+  { id: 'vascular', label: 'Vascular', icon: Activity, calculatorIds: ['wells_dvt'] },
+  { id: 'renal', label: 'Renal/Labs', icon: Droplet, calculatorIds: ['gfr', 'anion_gap'] },
+  { id: 'pediatric', label: 'Pediatric', icon: Baby, calculatorIds: ['pediatric_dosing'] },
+];
+
+export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
+  const [activeCategory, setActiveCategory] = useState<string>('cardiac');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCalculator, setSelectedCalculator] = useState<string | null>(
-    initialCalculatorId ?? null
-  );
+  const [selectedCalculator, setSelectedCalculator] = useState<string | null>(null);
 
   // Filter calculators by system and search
   const filteredCalculators = useMemo(() => {
@@ -77,6 +159,8 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({
     const onBack = () => setSelectedCalculator(null);
 
     switch (selectedCalculator) {
+      case 'instant_calc':
+        return <InstantCalcView onBack={onBack} />;
       case 'curb65':
         return <CURB65Calculator onBack={onBack} />;
       case 'chads2vasc':
@@ -91,14 +175,6 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({
         return <GFRCalculator onBack={onBack} />;
       case 'anion_gap':
         return <AnionGapCalculator onBack={onBack} />;
-      case 'osmolar_gap':
-        return <OsmolarGapCalculator onBack={onBack} />;
-      case 'parkland':
-        return <ParklandCalculator onBack={onBack} />;
-      case 'pediatric_dosing':
-        return <PediatricDosingPlaceholder onBack={onBack} />;
-      case 'clinical_guidelines':
-        return <ClinicalGuidelinesPlaceholder onBack={onBack} />;
       default:
         return null;
     }

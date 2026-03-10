@@ -108,7 +108,7 @@
 
 ---
 
-## 6. Fixes applied (pass 3 – 2026-02-01)
+## 6. Fixes applied (this pass)
 
 - **App.tsx:** Added `MyPearlsPanel` to `config/lazyComponents.tsx` and imported it in App so the pearl deck view resolves.
 - **components/error/index.ts:** Fixed GeminiErrorBoundary import path from `../GeminiErrorBoundary` to `./GeminiErrorBoundary`.
@@ -137,39 +137,7 @@
 - **services/questionService.ts (root):** `condition` with `?? ''`; `pearls: []`; removed `fromStaging` from cast (not on PoolQuestion).
 - **src/types.ts & src/types/index.ts:** Added `difficulty?: string` to `SessionSettings`.
 
-### Third pass (2026-02-01 – main repo)
-
-- **App.tsx:** Removed unused imports (PharmDrillSession, QuestionCurationPanel), removed SystemCode from type import, renamed safeParse→_safeParse, prefixed unused handlers (_handleNavigateToDrillWithSystem, _handleNavigateToCommandCenter), fixed pageTransition `as any` → `as { duration: number; ease: number[] }`.
-- **AuthProvider + SetupRequiredPage:** New SetupRequiredPage component; AuthProvider renders it when Clerk key is missing instead of throwing. Users see setup instructions, Clerk Dashboard link, and copy button.
-- **services/core/comparisonGenerator.ts:** Added guard for `pair` possibly undefined; push `{ pairIndex: i, comparison: null }` and continue when pair is missing.
-- **services/core/wordleService.ts:** `DailyWordleWithWord.Buzzword.subcategory` typed as `string | null` to match Prisma schema.
-
-### Fourth pass (2026-02-01 – continued)
-
-- **services/CoachingService.test.ts:** Import from `./core/CoachingService`; typed `(area: string)`.
-- **services/core/comparisonGenerator.ts:** `if (!pair) continue` before using pair.
-- **services/core/wordleService.ts:** `Buzzword.subcategory: string | null`.
-- **services/client/questionApi.ts:** Removed `type` from returned Question object.
-- **services/domain/buzzwordService.ts:** Guard `b.buzzword != null`; filter `b.condition` for string[].
-- **services/markdownParser.ts:** `match[1] ?? ''`, `colonMatch[1] ?? ''`, `colonMatch[2] ?? ''`, `match[1] ?? ''` in toParts.
-- **src/lib/drugSearch.ts:** `ApiDrug` type and `mapDrugToEntry` accept API shape; guard `match[1]` in findDrugById.
-- **src/lib/conditionSearch.test.ts:** `top?.condition` optional chaining.
-- **src/lib/unifiedSearch.test.ts:** Guard and optional chaining for `result`.
-- **services/analytics/studentInsightsService.ts:** Guard `if (!weakest) return null`.
-- **services/analytics/masteryVelocityPredictor.ts:** `prev`/`curr` vars; slope with null checks for `recent[2]`/`recent[0]`.
-- **services/domain/anatomyModelService.ts:** `dateAccessed` with `?? ''`; `modelId`/`url` with `??`.
-- **services/markdownParser.test.ts:** Guard `first` and `first?.children ?? []`.
-- **src/archived/pharm-old/pharmRegistry.ts:** `if (!drugs) continue` in loop.
-- **src/data/labDrivenConditions.ts:** `LAB_DRIVEN_CONDITIONS[idx] ?? ''` for getRandomCondition.
-
-### Fifth pass (2026-01-31 – taskTypes, GapAnalysis, API)
-
-- **lib/taskTypes.ts:** Added `CLINICAL_PEARL: 'clinical_pearl'`; extended `getTaskTypeLabel`, `getTaskTypeDescription`, and `inferTaskType` for clinical pearls.
-- **components/dashboard/GapAnalysisDashboard.tsx:** Added `if (!data) return null` after error UI branch for type narrowing before `chartData`/`topSystems`.
-- **functions/api/analytics/srs-summary.ts:** Added missing `import { resolveUserId } from '../_shared/user-resolver';`.
-- **functions/api/questions/pool.ts:** Import `fisherYatesShuffle` from `lib/poolSelection`; added `imageUrl?: string` to `PoolQuestionOutput`.
-
-**Still to fix:** ~1,0xx TS errors (possibly undefined in services/domain, conceptDependencyService, examService, etc.). Lint: ~9,8xx issues.
+**Still to fix (for a future pass):** ~1,061 TS errors remain (path aliases, possibly undefined across services/domain, markdownParser, drugSearch Drug vs DrugData, functions/api, lib strict null). Lint: ~9,9xx issues (run `npm run lint:fix`; then address incrementally).
 
 ---
 
