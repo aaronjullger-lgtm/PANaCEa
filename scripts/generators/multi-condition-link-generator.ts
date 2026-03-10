@@ -148,7 +148,9 @@ async function generateLabLinks(
 ): Promise<LabConditionLinkData[]> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-  const conditionsList = conditions.map((c) => `${c.name} (${c.system})`).join(', ');
+  const conditionsList = conditions
+    .map((c) => `${c.name} (${c.system})`)
+    .join(', ');
 
   const prompt =
     retryCount === 0
@@ -261,7 +263,9 @@ async function generateFindingLinks(
 ): Promise<FindingConditionLinkData[]> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-  const conditionsList = conditions.map((c) => `${c.name} (${c.system})`).join(', ');
+  const conditionsList = conditions
+    .map((c) => `${c.name} (${c.system})`)
+    .join(', ');
 
   const prompt =
     retryCount === 0
@@ -370,7 +374,9 @@ async function generateProcedureLinks(
 ): Promise<ProcedureConditionLinkData[]> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-  const conditionsList = conditions.map((c) => `${c.name} (${c.system})`).join(', ');
+  const conditionsList = conditions
+    .map((c) => `${c.name} (${c.system})`)
+    .join(', ');
 
   const prompt =
     retryCount === 0
@@ -477,7 +483,9 @@ async function generatePhysiologyLinks(
 ): Promise<PhysiologyConditionLinkData[]> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-  const conditionsList = conditions.map((c) => `${c.name} (${c.system})`).join(', ');
+  const conditionsList = conditions
+    .map((c) => `${c.name} (${c.system})`)
+    .join(', ');
 
   const prompt =
     retryCount === 0
@@ -580,7 +588,9 @@ async function generateAnatomyLinks(
 ): Promise<AnatomyConditionLinkData[]> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-  const conditionsList = conditions.map((c) => `${c.name} (${c.system})`).join(', ');
+  const conditionsList = conditions
+    .map((c) => `${c.name} (${c.system})`)
+    .join(', ');
 
   const prompt =
     retryCount === 0
@@ -684,7 +694,9 @@ async function generateDrugLinks(
 ): Promise<DrugConditionLinkData[]> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-  const conditionsList = conditions.map((c) => `${c.name} (${c.system})`).join(', ');
+  const conditionsList = conditions
+    .map((c) => `${c.name} (${c.system})`)
+    .join(', ');
 
   const prompt =
     retryCount === 0
@@ -812,7 +824,9 @@ async function generateTreatmentLinks(
 > {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-  const conditionsList = conditions.map((c) => `${c.name} (${c.system})`).join(', ');
+  const conditionsList = conditions
+    .map((c) => `${c.name} (${c.system})`)
+    .join(', ');
 
   const prompt =
     retryCount === 0
