@@ -29,6 +29,7 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 | POST | `/api/questions/attempt` | Required | Record attempt telemetry and update stats/SRS/Rolling 360. |
 | POST | `/api/recommendations/generate` | Required | Generate personalized recommendation list for user. |
 | GET | `/api/reference/normal-labs` | Required | Fetch normal lab reference records (optional category filter). |
+| GET | `/api/user/stats` | Required | Comprehensive analytics rollup (overall, by-system/condition, weak/strong areas, trends, recommendations). |
 | GET | `/api/user/daily-performance` | Required | Daily attempt/accuracy trend for configurable lookback window. |
 | GET | `/api/user/goals` | Required | List goals with optional status/type filters. |
 | POST | `/api/user/goals` | Required | Create new goal. |
@@ -349,6 +350,67 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
   "labs": [/* NormalLabValue fields */]
 }
 ```
+
+### `GET /api/user/stats`
+
+- **Auth:** Required.
+- **Request:** No body; no query params.
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "stats": {
+    "overall": {
+      "totalAttempts": 0,
+      "correctAttempts": 0,
+      "accuracy": 0,
+      "questionsSeenCount": 0,
+      "currentStreak": 0,
+      "totalStudyDays": 0,
+      "avgTimeMs": null,
+      "avgAnswerChanges": null
+    },
+    "bySystems": {
+      "<canonicalSystemName>": {
+        "total": 0,
+        "correct": 0,
+        "accuracy": 0,
+        "trend": "improving | declining | neutral",
+        "avgTimeMs": null,
+        "lastAttempt": "2026-03-12T00:00:00.000Z"
+      }
+    },
+    "byConditions": [
+      { "conditionId": "uuid", "total": 0, "correct": 0, "accuracy": 0 }
+    ],
+    "weakAreas": [
+      { "system": "Cardiovascular", "accuracy": 0, "attempts": 0, "trend": "neutral" }
+    ],
+    "strongAreas": [
+      { "system": "Pulmonary", "accuracy": 0, "attempts": 0 }
+    ],
+    "weakConditions": [
+      { "conditionId": "uuid", "total": 0, "correct": 0, "accuracy": 0 }
+    ],
+    "recentPerformance": {
+      "last7Days": { "attempts": 0, "accuracy": null },
+      "previous7Days": { "attempts": 0, "accuracy": null },
+      "trend": "improving | declining | stable | insufficient_data"
+    },
+    "speedByType": {
+      "recall": { "avgTimeMs": null, "count": 0 },
+      "clinicalReasoning": { "avgTimeMs": null, "count": 0 }
+    },
+    "recommendations": ["Focus on ..."]
+  }
+}
+```
+
+- **Headers:** `X-Cache: HIT` when served from KV cache; `X-Cache: MISS` when computed fresh.
+- **Normalization note:** `stats.bySystems` keys are canonical blueprint system names (abbreviations/full names are normalized server-side).
+- **Errors:** `404` (user not found), `503` (database unavailable or Prisma initialization failure), `500` (unexpected failure).
+- **Operational fallback:** If both `QuestionAttempt` and `ReviewLog` queries fail, the endpoint currently returns `200` with `success: true` and a zeroed stats payload so dashboards remain renderable.
 
 ### `GET /api/user/daily-performance`
 
