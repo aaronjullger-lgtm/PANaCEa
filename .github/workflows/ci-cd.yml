@@ -429,9 +429,8 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          cd deployment
-          echo "🚀 Deploying to Cloudflare Pages..."
-          wrangler pages deploy dist/ --project-name=panacea --branch=main
+          echo "🚀 Deploying to Cloudflare Pages (static: deployment/dist, functions: repo root)..."
+          wrangler pages deploy deployment/dist --project-name=panacea --branch=main
 
       - name: Sync registries to database (post-deploy)
         run: |

@@ -27,7 +27,8 @@ VITE_API_URL = "https://studypanacea.com"
 VITE_SENTRY_DSN = "https://bc6b64356dcc893fa25429c1a9666565@o4510664011087872.ingest.us.sentry.io/4510664023212032"
 
 # CRITICAL: Add these secrets via Cloudflare Dashboard
-# Cloudflare Dashboard > Workers & Pages > studypanacea > Settings > Environment Variables
+# Cloudflare Dashboard > Workers & Pages > [your project] > Settings > Environment Variables
+# Set variables for BOTH "Production" and "Preview" (or at least Production for main branch).
 # Required Variables:
 # - CLERK_SECRET_KEY: sk_live_... (your actual Clerk secret key)
 # - DATABASE_URL: prisma+postgres://accelerate.prisma-data.net/?api_key=... (Prisma Accelerate URL)

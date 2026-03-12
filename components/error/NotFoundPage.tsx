@@ -85,12 +85,13 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
             </>
           )}
         </div>
-        <button
+        <Link
+          to="/study"
           onClick={onGoToDashboard}
-          className="px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-medium hover:opacity-90 transition-opacity min-h-[44px] min-w-[44px]"
+          className="inline-flex items-center justify-center px-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-xl font-medium hover:opacity-90 transition-opacity min-h-[44px] min-w-[44px]"
         >
           Go to Dashboard
-        </button>
+        </Link>
       </div>
     </div>
   );

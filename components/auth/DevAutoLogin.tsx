@@ -18,7 +18,7 @@ import { useSignIn, useUser } from '@clerk/clerk-react';
 
 const DEV_AUTH_SECRET = 'cursor_secret_key_999';
 const DEV_EMAIL = 'testing@testing123.com';
-const DEV_PASSWORD = 'testing123!';
+const DEV_PASSWORD = '(!TESTING123!)';
 
 export function DevAutoLogin() {
   const { isSignedIn } = useUser();

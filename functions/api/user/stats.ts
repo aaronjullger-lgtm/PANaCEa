@@ -31,6 +31,16 @@ export const onRequestOptions = withCors();
 export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (context) => {
   const { env, auth } = context;
   const logger = createEndpointLogger('/api/user/stats');
+  // Runtime env check for production debugging (no secrets logged)
+  const hasDatabaseUrl = !!env.DATABASE_URL;
+  const dbScheme = env.DATABASE_URL
+    ? (env.DATABASE_URL.startsWith('prisma') ? 'prisma' : 'other')
+    : 'none';
+  logger.info('user/stats env', {
+    hasDatabaseUrl,
+    dbScheme,
+    hasCache: !!env.CACHE,
+  });
   if (!env.DATABASE_URL) {
     logger.error('DATABASE_URL not configured');
     return {
@@ -45,9 +55,24 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    prisma = createEdgePrismaClient(env.DATABASE_URL);
+    try {
+      prisma = createEdgePrismaClient(env.DATABASE_URL);
+    } catch (initErr) {
+      const msg = initErr instanceof Error ? initErr.message : String(initErr);
+      logger.error('Prisma client init failed', { error: msg });
+      console.error('[user/stats] Prisma init failed:', msg);
+      return {
+        data: {
+          success: false,
+          error: 'Analytics unavailable',
+          message: 'Database connection unavailable.',
+        },
+        status: 503,
+      };
+    }
 
     const userId = await resolveUserId(prisma, auth.userId);
+    logger.info('user/stats step', { step: 'resolveUserId', hasUserId: !!userId });
     if (!userId) {
       return {
         data: { success: false, error: 'User not found - must be synced from Clerk webhook first' },
@@ -83,6 +108,7 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     let recentAttempts: any[] = [];
     let questionsSeenCount = 0;
 
+    logger.info('user/stats step', { step: 'queryStart', userId });
     try {
       // Use aggregation and bounded window instead of unbounded findMany
       const [
@@ -133,6 +159,7 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       conditionGrouped = conditionGroupedResult;
       recentAttempts = recentAttemptsResult;
       questionsSeenCount = questionsSeenCountResult;
+      logger.info('user/stats step', { step: 'questionAttemptDone' });
     } catch (dbError) {
       logger.warn('QuestionAttempt queries failed, falling back to ReviewLog', {
         error: dbError instanceof Error ? dbError.message : String(dbError),
@@ -558,9 +585,9 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       },
     };
 
-    // Cache the result if KV is available
+    // Cache the result if KV is available (use auth.userId to match cache lookup key)
     if (isKVAvailable(env.CACHE)) {
-      const cacheKey = getUserStatsCacheKey(userId);
+      const cacheKey = getUserStatsCacheKey(auth.userId);
       await setInCache(env.CACHE, cacheKey, responseData, CACHE_CONFIG.TTL.USER_STATS);
     }
 
@@ -578,10 +605,29 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
       headers: { 'X-Cache': 'MISS' },
     };
   } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const errStack = error instanceof Error ? error.stack : undefined;
     logger.error('Error fetching user stats', {
-      error: error instanceof Error ? error.message : String(error),
+      error: errMsg,
+      stack: errStack,
       userId: auth.userId,
     });
+    // Log full error for Cloudflare real-time logs (Workers & Pages > Logs)
+    console.error('[user/stats] 500:', errMsg, errStack || '');
+    // #region agent log
+    fetch('http://127.0.0.1:7257/ingest/56c80278-898b-4f8d-b762-6ccf49c3f612', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '721a9f' },
+      body: JSON.stringify({
+        sessionId: '721a9f',
+        location: 'functions/api/user/stats.ts:catch',
+        message: 'user/stats 500',
+        data: { error: errMsg, userId: auth.userId },
+        timestamp: Date.now(),
+        hypothesisId: 'A',
+      }),
+    }).catch(() => {});
+    // #endregion
     return {
       data: {
         success: false,

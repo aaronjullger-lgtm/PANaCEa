@@ -88,7 +88,6 @@ import { useUserContext } from '@/hooks/useUserContext';
 import { useClinicalFidelitySettings } from '@/hooks/useClinicalFidelitySettings';
 import RadialProgress from '@/components/ui/RadialProgress';
 import TrendSparkline from '@/components/ui/TrendSparkline';
-import { Skeleton } from '@/components/loading';
 import { StorageKeys } from '@/lib/storage/storageRegistry';
 
 // Lazy load Character Gallery

@@ -23,8 +23,6 @@ if (import.meta.env.PROD) {
     .catch(() => {
       console.warn('[Sentry] Failed to load error tracking');
     });
-} else {
-  console.log('[Sentry] Skipped in non-production mode');
 }
 
 const rootElement = document.getElementById('root');

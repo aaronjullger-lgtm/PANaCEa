@@ -457,10 +457,12 @@ const App: React.FC = () => {
     optimizeInitialLoad();
     const timer = setTimeout(() => {
       const report = performanceReportRef.current;
-      if (report.score < 70) {
-        console.warn('[Performance] Initial load needs improvement:', report);
-      } else {
-        console.log('[Performance] Initial load optimized:', report);
+      if (import.meta.env.DEV) {
+        if (report.score < 70) {
+          console.warn('[Performance] Initial load needs improvement:', report);
+        } else {
+          console.log('[Performance] Initial load optimized:', report);
+        }
       }
     }, 5000);
     return () => clearTimeout(timer);
@@ -2678,8 +2680,8 @@ const App: React.FC = () => {
               delay={15000}
               minSessionDuration={30000}
               showOfflineFeatures={true}
-              onInstall={() => console.log('PWA installed successfully')}
-              onDismiss={() => console.log('PWA prompt dismissed')}
+              onInstall={() => import.meta.env.DEV && console.log('PWA installed successfully')}
+              onDismiss={() => import.meta.env.DEV && console.log('PWA prompt dismissed')}
             />
           </div>
         </CommuterProvider>

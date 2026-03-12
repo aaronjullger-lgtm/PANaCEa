@@ -266,5 +266,12 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "overrides": {
+    "@prisma/extension-accelerate": {
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    }
   }
 }
