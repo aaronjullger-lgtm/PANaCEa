@@ -251,10 +251,15 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
     }
   }, [onTeachMe, conditionSlug]);
 
-  // Render formatted text with bold terms
+  // Render formatted text with simple markdown-style bold and strip basic HTML tags
   const renderFormattedText = (text: string) => {
+    if (!text) return null;
+
+    // Strip simple HTML tags (from older content like <b>Correct:</b>)
+    const withoutHtml = text.replace(/<[^>]+>/g, '');
+
     // Replace **text** with bold spans
-    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    const parts = withoutHtml.split(/(\*\*[^*]+\*\*)/g);
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         const content = part.slice(2, -2);

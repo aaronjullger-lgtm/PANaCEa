@@ -1,6 +1,8 @@
 import React, { useState, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart3, Target, User, Layers } from 'lucide-react';
+import { BackLink } from '@/components/navigation/BackLink';
+import { ROUTES } from '@/config/routes';
 import { HighContrastDataToggle } from '@/components/ui/HighContrastDataToggle';
 import { SkeletonLoader } from '@/components/loading';
 import {
@@ -40,9 +42,16 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Progress & Analytics</h1>
-        <p className="text-[var(--color-text-muted)]">Track your learning journey and identify areas for improvement</p>
+      <div className="mb-6 space-y-3">
+        <BackLink to={ROUTES.STUDY} />
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+            Progress & Analytics
+          </h1>
+          <p className="text-[var(--color-text-muted)]">
+            Track your learning journey and identify areas for improvement
+          </p>
+        </div>
       </div>
 
       {/* Research-Backed User-Friendly Stats */}

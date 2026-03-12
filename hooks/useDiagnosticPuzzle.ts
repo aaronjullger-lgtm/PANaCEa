@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { useResponseTelemetry } from './useResponseTelemetry';
 import type { DiagnosticPuzzleDailyPayload } from '@/services/core/diagnosticPuzzleService';
 
 interface DiagnosticPuzzleHookReturn {
@@ -38,8 +37,6 @@ export function useDiagnosticPuzzle(): DiagnosticPuzzleHookReturn {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { startTelemetry, endTelemetry } = useResponseTelemetry();
-
   const fetchDailyPuzzle = useCallback(async (date?: string) => {
     if (!clerkUserId) {
       setError('User not authenticated');
@@ -47,7 +44,6 @@ export function useDiagnosticPuzzle(): DiagnosticPuzzleHookReturn {
     }
     setIsLoading(true);
     setError(null);
-    const telemetryId = startTelemetry('fetch_diagnostic_puzzle');
 
     try {
       const token = await getToken();
@@ -74,9 +70,8 @@ export function useDiagnosticPuzzle(): DiagnosticPuzzleHookReturn {
       console.error('Failed to fetch diagnostic puzzle:', err);
     } finally {
       setIsLoading(false);
-      endTelemetry(telemetryId);
     }
-  }, [clerkUserId, getToken, startTelemetry, endTelemetry]);
+  }, [clerkUserId, getToken]);
 
   const submitGuess = useCallback(async (guess: string) => {
     if (!clerkUserId || !puzzle) {
@@ -85,7 +80,6 @@ export function useDiagnosticPuzzle(): DiagnosticPuzzleHookReturn {
     }
     setIsSubmitting(true);
     setError(null);
-    const telemetryId = startTelemetry('submit_diagnostic_guess');
 
     try {
       const token = await getToken();
@@ -111,9 +105,8 @@ export function useDiagnosticPuzzle(): DiagnosticPuzzleHookReturn {
       console.error('Failed to submit guess:', err);
     } finally {
       setIsSubmitting(false);
-      endTelemetry(telemetryId);
     }
-  }, [clerkUserId, puzzle, getToken, startTelemetry, endTelemetry]);
+  }, [clerkUserId, puzzle, getToken]);
 
   const fetchStats = useCallback(async () => {
     if (!clerkUserId) return;

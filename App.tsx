@@ -1069,6 +1069,13 @@ const App: React.FC = () => {
   // Handler for navigating to drill modes with dedicated routes
   // Memoized to prevent unnecessary child re-renders
   const handleNavigateToDrillMode = useCallback((modeId: string) => {
+    // First, try dedicated route navigation so /practice cards actually change page
+    const modeConfig = TRAINING_MODES.find((m) => m.id === modeId);
+    if (modeConfig?.route && modeConfig.route.startsWith('/')) {
+      navigate(modeConfig.route);
+      return;
+    }
+
     setInitialDrillSystem(null);
     const modeViewMap: Record<string, View> = {
       [DRILL_MODE_PHOTO]: 'photo_drill',
@@ -1107,15 +1114,18 @@ const App: React.FC = () => {
     if (targetView) setView(targetView);
   }, []);
 
-  const handleNavigateToModeRoute = useCallback((route: string, modeId: string) => {
-    // If route is a dedicated path (starts with '/'), navigate using React Router
-    if (route.startsWith('/')) {
-      navigate(route);
-      return;
-    }
-    // Otherwise fall back to view-based navigation
-    handleNavigateToDrillMode(modeId);
-  }, [navigate, handleNavigateToDrillMode]);
+  const handleNavigateToModeRoute = useCallback(
+    (route: string, modeId: string) => {
+      // If route is a dedicated path (starts with '/'), navigate using React Router
+      if (route.startsWith('/')) {
+        navigate(route);
+        return;
+      }
+      // Otherwise fall back to view-based navigation
+      handleNavigateToDrillMode(modeId);
+    },
+    [navigate, handleNavigateToDrillMode]
+  );
 
   const _handleNavigateToDrillWithSystem = useCallback((modeId: string, system: string) => {
     setInitialDrillSystem(system);

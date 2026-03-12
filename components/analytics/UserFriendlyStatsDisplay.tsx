@@ -611,7 +611,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
     <div className="space-y-6">
       {/* Segmented control: light track + white pill for active tab */}
       <div
-        className="inline-flex p-1 rounded-xl bg-[var(--color-text-muted)] dark:bg-surface-tertiary border border-border-subtle"
+        className="inline-flex p-1 rounded-xl bg-surface-secondary border border-border-subtle"
         role="tablist"
         aria-label="Analytics view"
       >

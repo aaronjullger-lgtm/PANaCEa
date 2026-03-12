@@ -9,7 +9,16 @@
  * - Keyboard navigation support
  */
 
-import React, { Suspense, useEffect, useLayoutEffect, useMemo, useState, useCallback, useRef } from 'react';
+import React, {
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  useCallback,
+  useRef,
+  lazy,
+} from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -29,7 +38,6 @@ import { LibraryBreadcrumb } from './LibraryBreadcrumb';
 import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 import { EnhancedConditionCard } from './EnhancedConditionCard';
 import { VirtualizedConditionList } from './VirtualizedConditionList';
-import { SmartConditionView } from '@/config/lazyComponents';
 import { computeConditionRetrievability } from '@/lib/fsrs/retrievability';
 import { defaultParameters } from '@/lib/fsrs';
 import { LoadingOverlay } from '@/components/ui/layouts';
@@ -42,6 +50,11 @@ import { useConditionBookmarks } from './hooks/useConditionBookmarks';
 import { useRecentConditions } from './hooks/useRecentConditions';
 import { useDebounce } from './MasteryRing';
 import type { MedicalContentDisplay } from '@/types/medical-content';
+
+// Lazy-load SmartConditionView locally to avoid circular dependency with config/lazyComponents
+const SmartConditionView = lazy(() =>
+  import('./SmartConditionView').then((m) => ({ default: m.SmartConditionView }))
+);
 
 const LIBRARY_SEARCH_DEBOUNCE_MS = 350;
 

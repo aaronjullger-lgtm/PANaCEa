@@ -308,7 +308,7 @@ export const CalculatorHeader: React.FC<CalculatorHeaderProps> = ({
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <h2 className="text-4xl font-bold text-[var(--color-text-primary)] tracking-wide mb-1 font-teko">
+        <h2 className="text-4xl font-bold text-[var(--color-text-primary)] tracking-wide mb-1">
           {title}
         </h2>
         <p className="text-[var(--color-text-muted)]">{subtitle}</p>
