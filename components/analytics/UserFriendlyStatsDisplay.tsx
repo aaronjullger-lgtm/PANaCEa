@@ -625,10 +625,6 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             <button
               key={tab.id}
               type="button"
-              role="tab"
-              aria-selected={isActive ? 'true' : 'false'}
-              aria-controls={`panel-${tab.id}`}
-              id={`tab-${tab.id}`}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive

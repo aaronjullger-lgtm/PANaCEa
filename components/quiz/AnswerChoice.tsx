@@ -114,7 +114,6 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
         className={`${buttonClasses} ${animationClass}`}
         style={{ fontSize: `calc(1rem + ${fontSizeAdjustment * 0.1}rem)` }}
         aria-label={`Option ${index + 1}: ${displayText}${isEliminated ? ' (eliminated)' : ''}`}
-        aria-pressed={isSelected}
       >
         <span
           className={`flex items-center justify-between ${

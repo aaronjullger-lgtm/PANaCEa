@@ -69,6 +69,7 @@ export const ClinicalInput: React.FC<ClinicalInputProps> = ({
         </div>
       ) : (
         <select
+          aria-label={label}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] text-lg font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all appearance-none cursor-pointer"

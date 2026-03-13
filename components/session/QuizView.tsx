@@ -142,6 +142,12 @@ const BR_TAG_REGEX = /<br\s*\/?>/gi;
 
 const LOG_SCOPE = 'QuizView';
 
+// Strip basic HTML tags from question text while preserving table HTML rendered separately
+function stripSimpleHtmlTags(text: string): string {
+  if (!text) return text;
+  return text.replace(/<[^>]+>/g, '');
+}
+
 export interface QuizViewProps {
   initialQueue: Question[];
   setParentQueue: React.Dispatch<React.SetStateAction<Question[]>>;
@@ -232,15 +238,19 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
       .replace(/\n{2,}/g, '\n')
       .trim();
 
-    const [beforeTable = '', afterTableRaw = ''] = normalized.split('|||TABLE|||');
+    const [beforeTableRaw = '', afterTableRaw = ''] = normalized.split('|||TABLE|||');
 
     // 4) Pull out the last sentence (the actual question) after the table
     const lastSentenceMatch = afterTableRaw.match(/[^.!?]+[.!?]+\s*$/);
-    const lastSentence = lastSentenceMatch ? lastSentenceMatch[0].trim() : '';
+    const lastSentenceRaw = lastSentenceMatch ? lastSentenceMatch[0].trim() : '';
 
-    const vignetteAfterTable = lastSentence
+    const vignetteAfterTableRaw = lastSentenceRaw
       ? afterTableRaw.replace(lastSentenceMatch![0], '').trim()
       : afterTableRaw.trim();
+
+    const beforeTable = stripSimpleHtmlTags(beforeTableRaw);
+    const vignetteAfterTable = stripSimpleHtmlTags(vignetteAfterTableRaw);
+    const lastSentence = stripSimpleHtmlTags(lastSentenceRaw);
 
     return (
       <div
@@ -269,7 +279,9 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
   }
 
   // ---------- NON-TABLE BRANCH ----------
-  const normalizedText = text.replace(/&lt;br\s*\/?&gt;/gi, '\n').replace(BR_TAG_REGEX, '\n');
+  const normalizedText = stripSimpleHtmlTags(
+    text.replace(/&lt;br\s*\/?&gt;/gi, '\n').replace(BR_TAG_REGEX, '\n')
+  );
 
   const lastSentenceMatch = normalizedText.match(/[^.!?]+[.!?]+\s*$/);
 
@@ -1563,7 +1575,6 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   : 'bg-surface-card text-muted border-border-subtle hover:bg-surface-tertiary hover:border-action-primary'
               }`}
               aria-label="Toggle Normal Labs reference"
-              aria-expanded={showNormalLabsPanel ? 'true' : 'false'}
             >
               <Beaker className="w-5 h-5" />
             </button>
