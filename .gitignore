@@ -203,3 +203,10 @@ heapdump-*.heapsnapshot
 *_backup*
 .roomodes.*
 
+# Prevent AI-generated status files from accumulating in root
+/AUDIT_*.md
+/SPRINT_*.md
+/*_COMPLETE*.md
+/*_SUMMARY*.md
+/*_STATUS*.md
+
