@@ -1,15 +1,28 @@
 /**
  * Error Components Index
  *
- * Centralized error handling components for the application.
+ * All error boundary functionality is consolidated in ErrorBoundary.tsx.
  */
 
-// Re-export from parent components folder
-export { GeminiErrorBoundary, parseGeminiError, useGeminiRetry } from './GeminiErrorBoundary';
-export type { GeminiErrorInfo } from './GeminiErrorBoundary';
-
-// Specialized drill error boundary
-export { DrillErrorBoundary, useDrillError } from './DrillErrorBoundary';
+// Canonical error boundary and all utilities
+export {
+  ErrorBoundary,
+  withErrorBoundary,
+  WithGeminiErrorBoundary,
+  withGeminiErrorBoundary,
+  useErrorHandler,
+  useGeminiRetry,
+  parseGeminiError,
+  AI_DEPENDENT_VIEWS,
+  isAIDependentView,
+} from './ErrorBoundary';
+export type {
+  ErrorBoundaryVariant,
+  ErrorBoundaryFallbackProps,
+  ErrorBoundaryProps,
+  GeminiErrorInfo,
+  AIDependentView,
+} from './ErrorBoundary';
 
 // Config/maintenance error page
 export { MaintenancePage } from './MaintenancePage';

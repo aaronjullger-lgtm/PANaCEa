@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { EnhancedErrorBoundary } from '@/components/error/EnhancedErrorBoundary';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import QuizView, { type QuizViewProps } from './QuizView';
 
 /**
@@ -75,20 +75,17 @@ const QuizViewErrorFallback: React.FC<{
  */
 export const QuizViewWithErrorBoundary: React.FC<QuizViewProps> = (props) => {
   return (
-    <EnhancedErrorBoundary
-      fallback={QuizViewErrorFallback}
+    <ErrorBoundary
+      variant="page"
+      fallback={({ error, resetError }) => (
+        <QuizViewErrorFallback error={error} resetErrorBoundary={resetError} />
+      )}
       onError={(error) => {
-        // Log session errors for analytics
         console.error('[QuizViewErrorBoundary] Session error:', error);
-
-        // You could add error reporting here:
-        // if (typeof window !== 'undefined' && (window as any).Sentry) {
-        //   (window as any).Sentry.captureException(error);
-        // }
       }}
     >
       <QuizView {...props} />
-    </EnhancedErrorBoundary>
+    </ErrorBoundary>
   );
 };
 

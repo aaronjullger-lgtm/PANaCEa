@@ -110,7 +110,7 @@ import { preloadData } from './lib/utils/dataLoader';
 import { useAccessibleTransition } from './hooks/useReducedMotion';
 import { useViewTransition } from './hooks/useViewTransition';
 import { flushPendingToLocalStorage } from './lib/services/sync/offlineSync';
-import { WithGeminiErrorBoundary } from './components/hoc/withGeminiErrorBoundary';
+import { WithGeminiErrorBoundary } from './components/error/ErrorBoundary';
 import { useInitialLoadOptimization } from './services/initialLoadOptimizer';
 import type {
   Question as QuizQuestion,
