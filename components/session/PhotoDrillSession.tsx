@@ -7,7 +7,7 @@ import {
 } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
-import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
+import { QuestionSkeleton } from '@/components/loading';
 import {
   Flame,
   X,

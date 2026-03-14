@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { ClinicalSkeleton } from '@/components/ui/ClinicalSkeleton';
+import { ClinicalSkeleton } from '@/components/loading';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 
 interface PastMistakeItem {

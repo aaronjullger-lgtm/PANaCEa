@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { GitCompare } from 'lucide-react';
-import { ClinicalSkeleton } from '@/components/ui/ClinicalSkeleton';
+import { ClinicalSkeleton } from '@/components/loading';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { CONFUSION_PAIRS } from '@/lib/metacognition';
 

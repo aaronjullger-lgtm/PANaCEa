@@ -15,7 +15,7 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react';
-import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
+import { QuestionSkeleton } from '@/components/loading';
 
 // ============================================================================
 // Types

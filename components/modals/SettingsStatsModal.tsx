@@ -70,7 +70,7 @@ import {
   saveWidgetPreferences as saveWidgetPrefs,
 } from '@/lib/dashboardUtils';
 import { getAccuracyBarClassSemantic } from '@/lib/accuracyColorUtils';
-import { Skeleton } from '@/components/loading/SkeletonLoader';
+import { Skeleton } from '@/components/loading';
 // Lazy-load heavy analytics components — only rendered in specific tabs
 const ActivityHeatmap = lazy(() => import('@/components/analytics/ActivityHeatmap'));
 const DecisionTimeAnalysis = lazy(() => import('@/components/analytics/DecisionTimeAnalysis'));

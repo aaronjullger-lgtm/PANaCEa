@@ -25,7 +25,7 @@ import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 import { parseListField, parseTextField, normalizeMedicalContent } from '@/lib/utils/normalization';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
 import { SmartConditionView } from '@/config/lazyComponents';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Skeleton } from '@/components/loading';
 import type { MedicalContentDisplay } from '@/types/medical-content';
 
 interface ConditionMasterProps {

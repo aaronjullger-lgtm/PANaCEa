@@ -53,7 +53,7 @@ import { useMicroKinetics } from '@/hooks/useMicroKinetics';
 import { useFatigueTracking } from '@/hooks/useFatigueTracking';
 import { QuizLabCalcModal } from '@/components/quiz/QuizLabCalcModal';
 import ErrorTagger from '@/components/quiz/ErrorTagger';
-import Loader from '@/components/loading/Loader';
+import { Loader, ClinicalSkeleton, DrillLoadingState } from '@/components/loading';
 import WellnessCheckModal from '@/components/wellness/WellnessCheckModal';
 
 // Sprint 4: Enhanced session components (streamlined - removed janky popups)
@@ -65,7 +65,6 @@ import {
   MomentumBadge,
   StreakBadge,
 } from '@/components/quiz';
-import { ClinicalSkeleton } from '@/components/ui/ClinicalSkeleton';
 import { sanitizeForRationale } from '@/lib/sanitizeHtml';
 import { getAccuracyBarClass } from '@/lib/accuracyColorUtils';
 
@@ -74,7 +73,6 @@ import { TrustBadge } from '@/components/ui/TrustBadge';
 import { Progress } from '@/components/ui/progress';
 import { OpenStaxAttributionFooter } from '@/components/ui/OpenStaxAttributionFooter';
 import { SplitPaneDrillLayout } from '@/components/drill/SplitPaneDrillLayout';
-import { DrillLoadingState } from '@/components/drill/DrillLoadingState';
 import { NormalLabsPanel } from '@/components/session/NormalLabsPanel';
 
 // Icons

@@ -2,14 +2,14 @@
  * QuizViewWithErrorBoundary - Wraps QuizView with enhanced error handling
  *
  * This component provides:
- * 1. EnhancedErrorBoundary for React error catching
+ * 1. ErrorBoundary for React error catching
  * 2. AppError integration for consistent error handling
  * 3. Recovery actions for different error types
  * 4. Mobile-responsive error UI
  */
 
 import React from 'react';
-import { EnhancedErrorBoundary } from '@/components/error/EnhancedErrorBoundary';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import QuizView, { type QuizViewProps } from './QuizView';
 
 /**
@@ -71,12 +71,12 @@ const QuizViewErrorFallback: React.FC<{
 };
 
 /**
- * QuizView wrapped with EnhancedErrorBoundary
+ * QuizView wrapped with ErrorBoundary
  */
 export const QuizViewWithErrorBoundary: React.FC<QuizViewProps> = (props) => {
   return (
-    <EnhancedErrorBoundary
-      fallback={QuizViewErrorFallback}
+    <ErrorBoundary
+      variant="page"
       onError={(error) => {
         // Log session errors for analytics
         console.error('[QuizViewErrorBoundary] Session error:', error);
@@ -88,7 +88,7 @@ export const QuizViewWithErrorBoundary: React.FC<QuizViewProps> = (props) => {
       }}
     >
       <QuizView {...props} />
-    </EnhancedErrorBoundary>
+    </ErrorBoundary>
   );
 };
 

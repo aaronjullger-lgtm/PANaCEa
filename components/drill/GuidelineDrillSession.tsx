@@ -15,7 +15,7 @@ import {
 import { useGuidelineDrill } from '@/hooks/game/use-guideline-drill';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
-import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
+import { QuestionSkeleton } from '@/components/loading';
 import { useAuth } from '@clerk/clerk-react';
 
 interface GuidelineDrillSessionProps {

@@ -21,7 +21,7 @@ import {
   BarChart3,
   Loader2,
 } from 'lucide-react';
-import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
+import { QuestionSkeleton } from '@/components/loading';
 import { useAuth } from '@clerk/clerk-react';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { getDrillLandingStats, getCategoryBreakdown } from '@/services/analytics';

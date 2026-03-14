@@ -15,7 +15,7 @@ import {
 import { useFirstLineDrill, type FirstLineCategory } from '@/hooks/game/use-first-line-drill';
 import MiniDrillLayout, { QuestionCard, AnswerOption, CategoryCard } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
-import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
+import { QuestionSkeleton } from '@/components/loading';
 
 interface FirstLineDrillSessionProps {
   onExit?: () => void;

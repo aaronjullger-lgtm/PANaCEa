@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import type { SessionSettings, Question, PerformanceRecord } from '@/types';
 import { QuizViewWithErrorBoundary } from '@/components/session/QuizViewWithErrorBoundary';
-import Loader from '@/components/loading/Loader';
+import { Loader } from '@/components/loading';
 import { EnhancedErrorMessage } from '@/components/shared/EnhancedErrorMessage';
 
 interface SessionRunnerProps {

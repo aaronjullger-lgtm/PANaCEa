@@ -5,8 +5,8 @@
  */
 
 import React, { lazy, Suspense, ComponentType } from 'react';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import Loader from '@/components/loading/Loader';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { Loader } from '@/components/loading';
 
 /**
  * Enhanced lazy loading with preload capability

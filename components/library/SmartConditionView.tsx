@@ -33,7 +33,7 @@ import { Badge } from '@/components/ui/Badge';
 import { YieldBadge } from '@/components/ui/badges/YieldBadge';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
 import { useSmartCondition } from './hooks/useSmartCondition';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Skeleton } from '@/components/loading';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { ImageGallery } from './SmartImage';

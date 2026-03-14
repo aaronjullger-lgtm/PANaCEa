@@ -14,7 +14,7 @@ import { usePharmDrill, type PharmCategory } from '@/hooks/game/use-pharm-drill'
 import MiniDrillLayout, { QuestionCard, AnswerOption, CategoryCard } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
-import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
+import { QuestionSkeleton } from '@/components/loading';
 
 interface PharmDrillSessionProps {
   onExit?: () => void;

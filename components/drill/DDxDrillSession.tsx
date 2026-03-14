@@ -10,7 +10,7 @@ import { Stethoscope, AlertTriangle, Activity, Target, Trophy } from 'lucide-rea
 import MiniDrillLayout, { QuestionCard, AnswerOption } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from './DrillLandingPage';
-import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
+import { QuestionSkeleton } from '@/components/loading';
 import { useDifferentialDrill } from '@/hooks/game/use-ddx-drill';
 import { getDrillLandingStats, DrillType } from '@/services/analytics';
 

@@ -28,7 +28,7 @@ import { highYieldPackage } from '@/lib/services/explanationCompression';
 import { ErrorTagger } from '@/components/quiz';
 import type { ErrorTag } from '@/types';
 import { getConditionByIdSync, loadConditions } from '@/lib/loadConditions';
-import { ClinicalSkeleton } from '@/components/ui/ClinicalSkeleton';
+import { ClinicalSkeleton } from '@/components/loading';
 import { ClinicalPearlHighlight } from '@/components/ui/ClinicalPearlHighlight';
 import { OpenStaxAttributionFooter } from '@/components/ui/OpenStaxAttributionFooter';
 import { usePreferences } from '@/hooks/usePreferences';

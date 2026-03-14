@@ -10,7 +10,7 @@ import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { EnhancedFeedbackPanel } from '@/components/drill/EnhancedFeedbackPanel';
-import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
+import { QuestionSkeleton } from '@/components/loading';
 import {
   X,
   ArrowRight,

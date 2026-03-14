@@ -17,7 +17,7 @@
  */
 
 import React, { ComponentType, ReactNode } from 'react';
-import { GeminiErrorBoundary } from '@/components/error/GeminiErrorBoundary';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 
 /**
  * List of AI-dependent views that should have error boundaries
@@ -59,7 +59,7 @@ export const WithGeminiErrorBoundary: React.FC<WithGeminiErrorBoundaryProps> = (
   viewName,
   onRetry,
 }) => {
-  return <GeminiErrorBoundary key={viewName} onRetry={onRetry}>{children}</GeminiErrorBoundary>;
+  return <ErrorBoundary key={viewName} variant="ai" onRetry={onRetry}>{children}</ErrorBoundary>;
 };
 
 /**
@@ -84,9 +84,9 @@ export function withGeminiErrorBoundary<P extends object>(
       });
 
     return (
-      <GeminiErrorBoundary onRetry={handleRetry}>
+      <ErrorBoundary variant="ai" onRetry={handleRetry}>
         <WrappedComponent {...(rest as P)} />
-      </GeminiErrorBoundary>
+      </ErrorBoundary>
     );
   };
 

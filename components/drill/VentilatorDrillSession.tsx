@@ -10,7 +10,7 @@ import { Wind, X, ArrowRight, RotateCcw, Activity, Droplets, Gauge } from 'lucid
 import { useVentilatorDrill, type VentCase } from '@/hooks/game/use-ventilator-drill';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
-import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
+import { QuestionSkeleton } from '@/components/loading';
 import { getDrillLandingStats } from '@/services/analytics';
 import { ErrorState } from '@/components/ui/ErrorState';
 

@@ -9,7 +9,7 @@ import { queryClient, persister } from './lib/queryClient';
 import App from './App';
 import './index.css';
 import { AuthProvider } from './components/auth/AuthProvider';
-import GlobalErrorBoundary from './components/error/GlobalErrorBoundary';
+import { ErrorBoundary } from './components/error/ErrorBoundary';
 import { ShortcutProvider } from './contexts/ShortcutContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { MasteryHeatmapProvider } from './contexts/MasteryHeatmapContext';
@@ -32,7 +32,7 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <GlobalErrorBoundary>
+    <ErrorBoundary variant="global">
       <ThemeProvider>
         <AuthProvider>
           <PersistQueryClientProvider
@@ -52,6 +52,6 @@ root.render(
           </PersistQueryClientProvider>
         </AuthProvider>
       </ThemeProvider>
-    </GlobalErrorBoundary>
+    </ErrorBoundary>
   </React.StrictMode>
 );

@@ -83,7 +83,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { Sparkline } from '@/components/ui/Sparkline';
-import { ChatSkeleton } from '@/components/loading/SkeletonLoader';
+import { ChatSkeleton } from '@/components/loading';
 import { useVitalsEngine } from '@/hooks/useVitalsEngine';
 import { formatPatientAge, formatPatientAgeShort, parsePatientAge } from '@/lib/utils/ageFormatter';
 

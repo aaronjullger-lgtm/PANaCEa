@@ -41,7 +41,7 @@ import { VirtualizedConditionList } from './VirtualizedConditionList';
 import { computeConditionRetrievability } from '@/lib/fsrs/retrievability';
 import { defaultParameters } from '@/lib/fsrs';
 import { LoadingOverlay } from '@/components/ui/layouts';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Skeleton } from '@/components/loading';
 import { Badge } from '@/components/ui/Badge';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { toast } from '@/lib/toast';

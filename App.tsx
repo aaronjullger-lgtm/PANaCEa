@@ -91,17 +91,13 @@ import { setGeminiAuthProvider } from '@/services/ai/geminiService';
 import { useFSRSOptimizationCheck } from './hooks/useFSRSOptimizationCheck';
 import { useEnhancedAuth } from './hooks/useEnhancedAuth';
 import { Toaster } from 'sonner';
-import EnhancedLoader from './components/loading/EnhancedLoader';
-import Loader from './components/loading/Loader';
-import { CommandCenterSkeleton } from './components/loading';
-import { DrillLoadingState } from './components/drill/DrillLoadingState';
+import { Loader, CommandCenterSkeleton, DrillLoadingState, LoadingProgress } from './components/loading';
 import { EnhancedErrorMessage } from './components/shared/EnhancedErrorMessage';
 import { NotFoundPage } from './components/error/NotFoundPage';
 import ThemeToggleButton from './components/ui/ThemeToggleButton';
 import { MasteryHeatmapToggle } from './components/ui/MasteryHeatmapToggle';
 import { useTheme } from './hooks/useTheme';
 import { LandingPage } from './pages/LandingPage';
-import { LoadingProgress } from './components/loading/LoadingProgress';
 import { getQuestionBatch } from './services/questionService';
 import { initializeSession, fetchSessionQuestions, prefetchQuestions } from './services/core';
 import { inferTaskType } from './lib/taskTypes';
@@ -1172,9 +1168,9 @@ const App: React.FC = () => {
     ease: [0.32, 0.72, 0, 1] as const, // Snappy ease-out
   });
 
-  // Show enhanced loading state while checking auth (with timeout and guest mode)
+  // Show loading state while checking auth (with timeout and guest mode)
   if (authIsLoading || (!authLoaded && !isGuestMode)) {
-    return <EnhancedLoader isAuthLoading={true} />;
+    return <Loader message="Authenticating..." />;
   }
 
   // Show landing page for unauthenticated users (not in guest mode)
