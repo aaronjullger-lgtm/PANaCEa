@@ -203,3 +203,48 @@ heapdump-*.heapsnapshot
 *_backup*
 .roomodes.*
 
+# Large generated repo-export artifacts (never commit these)
+codebase.md
+repomix-output.xml
+architecture_context.md
+panacea_notebooklm.txt
+
+# Dev/AI artifact data exports
+enrichment-log.json
+content-priority-report.csv
+missing-progress-*.csv
+mode_master_mapping.csv
+formatting_audit_diff.txt
+formatting_update_summary.txt
+
+# Typecheck log outputs (artifacts of local dev, not source)
+typecheck-full.log
+typecheck-errors.txt
+
+# SSL/TLS certs that should not be in repo
+*.crt
+
+# Session SQL files (Supabase/pgAdmin sessions)
+*.session.sql
+
+# Roo mode backup files
+.roomodes.backup*
+.roomodes.bak
+.roomodes.before*
+.roomodes.converted
+.roomodes.corrected
+.roomodes.fixed*
+.roomodes.fixednested*
+.roomodes.literal*
+.roomodes.new.tmp
+.roomodes.quoted
+.roomodes.single*
+
+# Dev environment/deploy tracking files
+.deploy-timestamp
+.deployrc
+.env.production.local
+
+
+# Claude worktrees (local IDE state)
+.claude/worktrees/

@@ -1,4 +1,0 @@
-# Deployment triggered by debug session
-# Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
-# Environment variables rotated and validated.
-# Health endpoint: 200 OK

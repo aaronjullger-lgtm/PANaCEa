@@ -1,5 +1,0 @@
-{
-  "name": "PANCE AI",
-  "description": "A continuous PANCE (Physician Assistant National Certifying Examination) practice quiz application powered by Gemini. Features performance tracking, strength/weakness analysis, and AI-generated study materials.",
-  "requestFramePermissions": []
-}
