@@ -28,6 +28,7 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 | POST | `/api/questions/generate` | Required | Generate (or cache-hit) question by query text/type/system/difficulty. |
 | POST | `/api/questions/attempt` | Required | Record attempt telemetry and update stats/SRS/Rolling 360. |
 | POST | `/api/recommendations/generate` | Required | Generate personalized recommendation list for user. |
+| POST | `/api/srs/submit` | Required | Submit FSRS review, update scheduling, optionally queue a variant and trigger visual regeneration hint. |
 | GET | `/api/reference/normal-labs` | Required | Fetch normal lab reference records (optional category filter). |
 | GET | `/api/user/daily-performance` | Required | Daily attempt/accuracy trend for configurable lookback window. |
 | GET | `/api/user/goals` | Required | List goals with optional status/type filters. |
@@ -334,6 +335,54 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
   "recommendations": [/* recommendation objects */]
 }
 ```
+
+### `POST /api/srs/submit`
+
+- **Auth:** Required.
+- **Request body:**
+
+```json
+{
+  "body": {
+    "questionId": "uuid",
+    "rating": 1,
+    "isCorrect": false,
+    "gradeContinuous": 1.7,
+    "topicProgressId": "optional uuid",
+    "srsItemId": "optional uuid",
+    "variantId": "optional uuid",
+    "attemptId": "optional string",
+    "telemetry": {
+      "timeToFirstClickMs": 950,
+      "answerChanges": 2
+    },
+    "timeSpent": 4200,
+    "userAnswer": "optional string"
+  }
+}
+```
+
+- **Rating semantics:** Endpoint accepts 1–4, but deprecated values are normalized internally:
+  - `2 (Hard) -> 1 (Again)`
+  - `4 (Easy) -> 3 (Good)`
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "nextReviewDate": "2026-03-15T16:05:20.123Z",
+  "queuedVariantId": "optional uuid or null",
+  "triggerVisualRegeneration": true,
+  "questionId": "optional uuid",
+  "conditionId": "optional string",
+  "topicProgressId": "optional uuid",
+  "visualRegenerationHint": "Call POST /api/srs/generate-visual ..."
+}
+```
+
+- `triggerVisualRegeneration` and hint fields are included only when user rating is `Again (1)`.
+- If telemetry (or `attemptId` with stored telemetry) is provided, Ghost Grader may adjust effective FSRS rating before scheduling.
+- **Errors:** `400` validation failure, `401` unauthenticated, `404` user not found, `429` rate-limited, `500` internal error.
 
 ### `GET /api/reference/normal-labs`
 

@@ -25,20 +25,22 @@ Visual Semantic Anchoring for flashcards: generate mnemonic images via Adobe Fir
 
 If `structureReferenceId` (AnatomyStructure.id or MediaAsset.id) or `structureReferenceUrl` is provided, Firefly uses it as a structure reference so anatomy stays correct while the AI "paints" the finding (e.g. rash on an arm).
 
-## Scheduling (Hard trigger)
+## Scheduling (Again trigger)
 
-When the user rates a card **Hard (1)** in `POST /api/srs/submit`, the response includes:
+When the user rates a card **Again (1)** in `POST /api/srs/submit`, the response can include:
 
 - `triggerVisualRegeneration: true`
 - `questionId`, `conditionId`, `topicProgressId` (when available)
 - `visualRegenerationHint`: frontend should call `POST /api/srs/generate-visual` with front/back and `style: "exaggerated"`, then display the new image.
+
+`/api/srs/submit` accepts ratings 1–4 for compatibility, but currently normalizes deprecated values (`2 -> 1`, `4 -> 3`) before FSRS scheduling.
 
 ## Frontend display
 
 - **Canonical:** Main session = `QuizView` (MC only). Due items are loaded via focus "Due" and `/api/questions/due-siblings` and shown as MC variants in the same view; Ghost Grader and optimistic UI are wired there.
 - **Legacy / hidden:** `SrsFlashcardView` (view `srs_flashcards`) is no longer linked from the app nav. It used **Study Tools → Resources → SRS Flashcards**; that entry point has been removed so the product has a single FSRS path (QuizView MC). The component and `/api/srs/next`, `/api/srs/submit`, `/api/srs/generate-visual` remain in code for possible future use. `SrsFlashcardView` uses `fetchNextVariantCard()` and `submitVariantReview()`; on `triggerVisualRegeneration` it would call `requestMnemonicImage()` and show the image with a flip animation.
 - **Flashcard component:** When a mnemonic image is available (from generate-visual or cached), show it on the card (e.g. front or back). Add a **Flip** animation (e.g. CSS transform rotateY or Framer Motion) so the user can flip between front text and back image.
-- **Flow:** On submit with rating 1, if `data.triggerVisualRegeneration` is true, call generate-visual with the card’s front/back and `style: "exaggerated"`, store or display the returned image, and optionally replace the card’s visual for the next review.
+- **Flow:** On submit with rating 1, if `triggerVisualRegeneration` is true, call generate-visual with the card’s front/back and `style: "exaggerated"`, store or display the returned image, and optionally replace the card’s visual for the next review.
 
 ## Auth (Bearer token)
 

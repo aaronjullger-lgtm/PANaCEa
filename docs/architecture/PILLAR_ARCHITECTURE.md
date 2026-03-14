@@ -332,7 +332,7 @@ components/
 
 ### Command Center
 
-- GET `/api/srs/due-count` - SRS items due today
+- GET `/api/srs/due` - SRS items due for review (count/list)
 - GET `/api/performance/benchmarks` - Trending deltas
 - GET `/api/activity/recent` - Recent sessions
 
@@ -340,7 +340,7 @@ components/
 
 - GET `/api/questions/next` - Next question in stream
 - POST `/api/performance/record` - Submit answer
-- PUT `/api/srs/update` - Update SRS schedule
+- POST `/api/srs/submit` - Submit SRS review and update schedule
 
 ### Intelligence Hub
 
