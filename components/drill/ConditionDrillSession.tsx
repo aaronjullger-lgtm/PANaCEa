@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Stethoscope, Search, Layers, AlertCircle, Shuffle, Lightbulb } from 'lucide-react';
+import { X, Stethoscope, Search, Layers, AlertCircle, Shuffle, Lightbulb, CheckCircle2 } from 'lucide-react';
 import { useConditionDrill, type ConditionCategory } from '@/hooks/game/use-condition-drill';
 import MiniDrillLayout, {
   QuestionCard,
@@ -270,6 +270,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
                 correctAnswer={currentQuestion.options[currentQuestion.correctAnswerIndex]}
                 explanation={currentQuestion.explanation}
                 onNext={nextQuestion}
+                isRapidGuess={isRapidGuess}
+                nextReview={nextReview}
               />
             ) : undefined
           }
@@ -352,6 +354,88 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
           )}
         </MiniDrillLayout>
       </>
+    );
+  }
+
+  // =========================================================================
+  // COMPLETION VIEW
+  // =========================================================================
+  if (status === 'completed') {
+    return (
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
+        {/* Header */}
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
+          <button
+            onClick={handleExit}
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+            aria-label="Exit"
+          >
+            <X className="w-5 h-5" />
+            <span className="text-sm font-medium hidden sm:inline">Exit</span>
+          </button>
+          <div className="flex items-center gap-2">
+            <Layers className="w-5 h-5 text-[var(--color-accent)]" />
+            <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">
+              {drillTitle}
+            </h1>
+          </div>
+          <div className="w-12 sm:w-16" />
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="text-center"
+          >
+            <div className="mb-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-[var(--color-accent)]/20 to-[var(--color-accent)]/5 mb-4">
+                <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-[var(--color-accent)]" />
+              </div>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-2">
+              Session Complete!
+            </h2>
+            <p className="text-sm sm:text-base text-[var(--color-text-muted)] mb-8">
+              Great effort! You've completed this drill session.
+            </p>
+
+            {/* Stats Summary */}
+            <div className="grid grid-cols-3 gap-4 sm:gap-6 mb-8 max-w-md">
+              <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3 sm:p-4">
+                <div className="text-xs text-[var(--color-text-muted)] mb-1">Score</div>
+                <div className="text-xl sm:text-2xl font-bold text-[var(--color-accent)]">{score}</div>
+              </div>
+              <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3 sm:p-4">
+                <div className="text-xs text-[var(--color-text-muted)] mb-1">Streak</div>
+                <div className="text-xl sm:text-2xl font-bold text-[var(--color-accent)]">{streak}</div>
+              </div>
+              <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3 sm:p-4">
+                <div className="text-xs text-[var(--color-text-muted)] mb-1">Attempts</div>
+                <div className="text-xl sm:text-2xl font-bold text-[var(--color-accent)]">{totalAttempts}</div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={reset}
+                className="px-6 py-2 sm:py-3 rounded-lg bg-[var(--color-accent)] text-white font-medium hover:opacity-90 transition-opacity"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={handleExit}
+                className="px-6 py-2 sm:py-3 rounded-lg border border-[var(--color-border)] text-[var(--color-text-primary)] font-medium hover:bg-[var(--color-bg-secondary)] transition-colors"
+              >
+                Exit
+              </button>
+            </div>
+          </motion.div>
+        </main>
+      </div>
     );
   }
 

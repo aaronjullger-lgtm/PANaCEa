@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Flame, ArrowRight, RotateCcw, CheckCircle, XCircle, Award } from 'lucide-react';
+import { X, Flame, ArrowRight, RotateCcw, CheckCircle, XCircle, Award, Zap, Clock } from 'lucide-react';
 import { useIsMobile } from '../../lib/utils/responsive';
 
 interface MiniDrillLayoutProps {
@@ -265,6 +265,14 @@ interface FeedbackPanelProps {
   pearl?: string;
   onNext: () => void;
   nextLabel?: string;
+  // DEV-003 Item 5: Feedback data from API
+  isRapidGuess?: boolean;
+  nextReview?: {
+    intervalDays: number;
+    nextDueDate: string;
+    stability: number;
+    difficulty: number;
+  } | null;
 }
 
 /**
@@ -278,6 +286,8 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
   pearl,
   onNext,
   nextLabel = 'Next Question',
+  isRapidGuess,
+  nextReview,
 }) => {
   const feedbackVariants = {
     initial: { opacity: 0, y: 20 },
@@ -341,6 +351,60 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
               {pearl}
             </span>
           </div>
+        )}
+
+        {/* DEV-003 Item 5: Rapid Guess Indicator */}
+        {isRapidGuess && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex items-center gap-2 p-2.5 mt-2 bg-data-provisional/10 border border-data-provisional/30 rounded-lg text-sm"
+          >
+            <Zap className="w-4 h-4 text-data-provisional flex-shrink-0" />
+            <span className="text-data-provisional font-medium">
+              Rapid Guess — Answer submitted very quickly
+            </span>
+          </motion.div>
+        )}
+
+        {/* DEV-003 Item 5: Next Review Information */}
+        {nextReview && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: 0.1 }}
+            className="flex items-start gap-3 p-3 mt-2 bg-data-pass/5 border border-data-pass/30 rounded-lg"
+          >
+            <Clock className="w-5 h-5 text-data-pass flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                Next Review in{' '}
+                <span className="text-data-pass">
+                  {nextReview.intervalDays === 0
+                    ? 'Today'
+                    : `${nextReview.intervalDays} day${nextReview.intervalDays !== 1 ? 's' : ''}`}
+                </span>
+              </div>
+              <div className="text-xs text-[var(--color-text-muted)] mt-1">
+                Due: {new Date(nextReview.nextDueDate).toLocaleDateString()}
+              </div>
+              <div className="flex items-center gap-4 mt-2 text-xs">
+                <div className="flex items-center gap-1">
+                  <span className="text-[var(--color-text-muted)]">Stability:</span>
+                  <span className="font-medium text-[var(--color-text-primary)]">
+                    {nextReview.stability.toFixed(1)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[var(--color-text-muted)]">Difficulty:</span>
+                  <span className="font-medium text-[var(--color-text-primary)]">
+                    {nextReview.difficulty.toFixed(1)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         )}
       </div>
     </motion.div>

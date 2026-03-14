@@ -20,7 +20,8 @@ export type ConditionDrillStatus =
   | 'coaching'
   | 'feedback'
   | 'metacognition'
-  | 'summary';
+  | 'summary'
+  | 'completed';
 
 export type ConditionCategory =
   | 'presentation'
@@ -78,6 +79,14 @@ export interface UseConditionDrillReturn {
   metacognitionPrompt: MetacognitionPrompt | null;
   // Implicit metrics for debugging/display
   currentImplicitMetrics: ImplicitMetrics;
+  // DEV-003 Item 5: Feedback data from API response
+  isRapidGuess: boolean;
+  nextReview: {
+    intervalDays: number;
+    nextDueDate: string;
+    stability: number;
+    difficulty: number;
+  } | null;
   // Actions
   submitAnswer: (answerIndex: number) => void;
   recordAnswerSelection: (answerIndex: number) => void;
@@ -174,11 +183,21 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
   const [metacognitionPrompt, setMetacognitionPrompt] = useState<MetacognitionPrompt | null>(null);
   const metacognitionTrackerRef = useRef<SessionMissTracker>(initSessionTracker());
 
+  // DEV-003 Item 5: Feedback data from API response
+  const [isRapidGuess, setIsRapidGuess] = useState(false);
+  const [nextReview, setNextReview] = useState<{
+    intervalDays: number;
+    nextDueDate: string;
+    stability: number;
+    difficulty: number;
+  } | null>(null);
+
   // Implicit behavior metrics tracking
   const [currentImplicitMetrics, setCurrentImplicitMetrics] = useState<ImplicitMetrics>(
     createInitialImplicitMetrics
   );
   const questionStartTimeRef = useRef<number>(Date.now());
+  const questionDisplayedAtRef = useRef<string>(new Date().toISOString());
   const previousSelectedAnswerRef = useRef<number | null>(null);
 
   // Track recently used conditions to avoid repetition
@@ -191,6 +210,7 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
    */
   const startImplicitTracking = useCallback(() => {
     questionStartTimeRef.current = Date.now();
+    questionDisplayedAtRef.current = new Date().toISOString();
     previousSelectedAnswerRef.current = null;
     setCurrentImplicitMetrics(createInitialImplicitMetrics());
   }, []);
@@ -357,6 +377,21 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
         // Get auth token for authenticated request
         const token = isSignedIn ? await getToken() : null;
 
+        // Build telemetry object with full client metrics
+        const now = Date.now();
+        const durationMs = finalMetrics.totalDwellTime;
+        const isRapidGuess = durationMs < 500;
+        
+        // Map ConditionQuestionType to API question_type enum
+        const questionTypeMap: Record<string, 'vignette' | 'recall' | 'image' | 'rapid_recall' | 'unknown'> = {
+          presentation: 'vignette',
+          diagnosis: 'recall',
+          treatment: 'recall',
+          etiology: 'recall',
+          complication: 'recall',
+        };
+        const questionType = questionTypeMap[currentQuestion.type] || 'recall';
+
         // Submit to correct FSRS endpoint with implicit metrics
         const response = await fetch('/api/drills/submit-review', {
           method: 'POST',
@@ -367,12 +402,24 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
           body: JSON.stringify({
             questionId: currentQuestion.id,
             selectedAnswer,
-            timeSpentMs: finalMetrics.totalDwellTime,
+            timeSpentMs: durationMs,
             // Implicit behavior metrics for FSRS rating derivation
             timeToFirstClick: finalMetrics.timeToFirstClick,
             answerSwitches: finalMetrics.answerSwitches,
-            totalDwellTime: finalMetrics.totalDwellTime,
+            totalDwellTime: durationMs,
             timezone: finalMetrics.timezone,
+            // Full telemetry object for server-side analytics
+            telemetry: {
+              duration_ms: durationMs,
+              time_to_first_interaction_ms: finalMetrics.timeToFirstClick,
+              rapid_guess: isRapidGuess,
+              question_type: questionType,
+              mvrt_threshold_ms: 500,
+              question_displayed_at: questionDisplayedAtRef.current,
+              answer_submitted_at: new Date(now).toISOString(),
+              answer_changes: finalMetrics.answerSwitches,
+              hint_viewed: attemptNumber === 2,
+            },
           }),
         });
 
@@ -384,8 +431,19 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
         const result = (await response.json()) as {
           isCorrect?: boolean;
           implicitMetrics?: { rating?: number; confidence?: number };
+          isRapidGuess?: boolean;
+          nextReview?: {
+            intervalDays: number;
+            nextDueDate: string;
+            stability: number;
+            difficulty: number;
+          } | null;
         };
         setIsCorrect(result.isCorrect ?? null);
+        
+        // DEV-003 Item 5: Extract feedback data from API response
+        setIsRapidGuess(result.isRapidGuess ?? false);
+        setNextReview(result.nextReview ?? null);
 
         // Check metacognition trigger (only for incorrect answers on first attempt)
         const isCorrect = result.isCorrect === true;
@@ -539,6 +597,7 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
     setUserAnswerIndex(null);
     setStatus('playing');
     // Keep tracking time but reset first click for second attempt
+    questionStartTimeRef.current = Date.now();
     setCurrentImplicitMetrics((prev) => ({
       ...prev,
       timeToFirstClick: null,
@@ -553,17 +612,19 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
     if (newQuestions.length > 0 && newQuestions[0]) {
       const newQuestion = newQuestions[0];
       setQueue((prev) => [...prev, newQuestion]);
+      setCurrentIndex((prev) => prev + 1);
+      setUserAnswerIndex(null);
+      setIsCorrect(null);
+      setSocraticHint(null);
+      setAttemptNumber(1);
+      setFirstAttemptAnswer(null);
+      setMetacognitionPrompt(null);
+      setStatus('playing');
+      startImplicitTracking();
+    } else {
+      // No more questions available - session is complete
+      setStatus('completed');
     }
-
-    setCurrentIndex((prev) => prev + 1);
-    setUserAnswerIndex(null);
-    setIsCorrect(null);
-    setSocraticHint(null);
-    setAttemptNumber(1);
-    setFirstAttemptAnswer(null);
-    setMetacognitionPrompt(null);
-    setStatus('playing');
-    startImplicitTracking();
   }, [fetchQuestionsFromAPI, startImplicitTracking, currentFilters]);
 
   const reset = useCallback(async () => {
@@ -609,6 +670,8 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
     attemptNumber,
     metacognitionPrompt,
     currentImplicitMetrics,
+    isRapidGuess,
+    nextReview,
     submitAnswer,
     recordAnswerSelection,
     retryAfterHint,

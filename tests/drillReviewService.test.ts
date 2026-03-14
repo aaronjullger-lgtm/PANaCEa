@@ -15,7 +15,7 @@ import { updateReviewOutcome } from '../lib/services/srsService';
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn(function() {
     return {
-      questionAttempt: { create: vi.fn() },
+      questionAttempt: { create: vi.fn(), findFirst: vi.fn() },
       reviewLog: { create: vi.fn() },
       userProgress: { findUnique: vi.fn(), update: vi.fn() },
       medicalContent: { findFirst: vi.fn() },
@@ -26,12 +26,16 @@ vi.mock('@prisma/client', () => ({
   }),
 }));
 
+// Track current FSRS instance for tests
+let currentFsrsInstance: any;
+
 vi.mock('../lib/fsrs', () => ({
   FSRS: vi.fn(function() {
-    return {
-      next: vi.fn(),
-      calculateRetrievability: vi.fn(),
+    currentFsrsInstance = {
+      next: vi.fn().mockReturnValue({ card: { stability: 0, difficulty: 0, state: 0 } }),
+      calculateRetrievability: vi.fn().mockReturnValue(0),
     };
+    return currentFsrsInstance;
   }),
   Rating: {
     Again: 1,
@@ -143,6 +147,7 @@ describe('submitDrillReview', () => {
         return Promise.resolve({ fsrsCard });
       });
       (prisma.medicalContent.findFirst as Mock).mockResolvedValue({ conditionId, system: 'CV' });
+      (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null); // No existing attempt
       (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_123' });
       (prisma.reviewLog.create as Mock).mockImplementation((args) => {
         console.log('reviewLog.create called with', args);
@@ -223,6 +228,7 @@ describe('submitDrillReview', () => {
         // Mock dependencies
         (prisma.userProgress.findUnique as Mock).mockResolvedValue({ fsrsCard: null });
         (prisma.medicalContent.findFirst as Mock).mockResolvedValue({ conditionId, system: 'CV' });
+        (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null); // No existing attempt
         (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_123' });
         (prisma.reviewLog.create as Mock).mockResolvedValue({});
         vi.mocked(FSRS).mockImplementation(() => ({
@@ -280,6 +286,7 @@ describe('submitDrillReview', () => {
         // Mock dependencies (same as above)
         (prisma.userProgress.findUnique as Mock).mockResolvedValue({ fsrsCard: null });
         (prisma.medicalContent.findFirst as Mock).mockResolvedValue({ conditionId, system: 'CV' });
+        (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null); // No existing attempt
         (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_123' });
         (prisma.reviewLog.create as Mock).mockResolvedValue({});
         vi.mocked(FSRS).mockImplementation(() => ({
@@ -346,7 +353,30 @@ describe('submitDrillReview', () => {
 
       await submitDrillReview(prisma, userId, input, question);
 
-      expect(prisma.reviewLog.create).not.toHaveBeenCalled();
+      // DEV-001: Rapid guess should create ReviewLog but skip FSRS state updates
+      expect(prisma.reviewLog.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            grade: 1, // Rating.Again
+            grade_continuous: 1.0,
+            review_type: 'rapid_guess',
+            state: 0,
+            stability: 0,
+            difficulty: 0,
+            retrievability: 0,
+            telemetry: expect.objectContaining({
+              server_computed: expect.objectContaining({
+                rapid_guess: true,
+                implicit_confidence: expect.any(Number),
+              }),
+            }),
+          }),
+        })
+      );
+
+      // Verify FSRS state update was NOT called for rapid guess
+      expect(updateUserProgressWithHistory).not.toHaveBeenCalled();
+
       expect(prisma.questionAttempt.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -356,6 +386,27 @@ describe('submitDrillReview', () => {
           }),
         })
       );
+    });
+
+    it('should not call FSRS.next() for rapid guesses', async () => {
+      const input: SubmitDrillReviewInput = {
+        questionId,
+        selectedAnswer: 'Answer',
+        timeSpentMs: 250,
+        telemetry: { duration_ms: 250, rapid_guess: true },
+      };
+      const question = { id: questionId, conditionId, questionData: {} };
+
+      // Set up mocks
+      (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null); // No existing attempt
+      (prisma.reviewLog.create as Mock).mockResolvedValue({});
+      (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_123' });
+
+      const fsrsBeforeCount = (FSRS as Mock).mock.calls.length;
+      await submitDrillReview(prisma, userId, input, question);
+
+      // Verify FSRS was never instantiated for rapid guess
+      expect((FSRS as Mock).mock.calls.length).toBe(fsrsBeforeCount);
     });
 
     it('should skip FSRS when conditionId is missing', async () => {
@@ -605,6 +656,7 @@ describe('submitDrillReview', () => {
       });
       fsrsInstance.calculateRetrievability.mockReturnValue(0.85);
       // Mock questionAttempt creation
+      (prisma.questionAttempt.findFirst as Mock).mockResolvedValue(null); // No existing attempt
       (prisma.questionAttempt.create as Mock).mockResolvedValue({ id: 'attempt_123' });
 
       await submitDrillReview(prisma, userId, input, question);

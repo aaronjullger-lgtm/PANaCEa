@@ -490,60 +490,36 @@ export async function submitDrillReview(
     | { intervalDays: number; nextDueDate: string; stability: number; difficulty: number }
     | undefined;
 
+  const logSessionType = (sessionType ? sessionType.toUpperCase() : 'MAIN') as 'MAIN' | 'CRAM' | 'RAPID_RECALL';
+
+  // Helper function to create full telemetry object with server_computed key
+  const buildReviewLogTelemetry = (
+    currentCard?: Record<string, number | Date> | null
+  ) => ({
+    ...(telemetry ?? {}),
+    server_computed: {
+      par_time_ms: parTimeMs,
+      latency_ratio: effectiveDurationMs / parTimeMs,
+      implicit_confidence: implicitConfidence,
+      grade_continuous: gradeContinuous,
+      answer_changes: (telemetry?.answer_changes as number | undefined) ?? switches,
+      circadian_phase: circadianContext.circadianPhase,
+      rapid_guess: isRapidGuess,
+      ...(currentCard && {
+        state: currentCard.state as number,
+        stability: currentCard.stability as number,
+        difficulty: currentCard.difficulty as number,
+        elapsed_days: currentCard.elapsed_days as number,
+      }),
+    },
+  });
+
+  // DEV-001 FIX: Split rapid-guess ReviewLog from FSRS block
   if (question.conditionId && shouldLogReview) {
     console.log('[DEBUG] Processing review', { conditionId: question.conditionId, countForFSRS, isRapidGuess });
-    try {
-      const fsrs = new FSRS();
-      const existingProgress = await prisma.userProgress.findUnique({
-        where: {
-          userId_conditionId: {
-            userId,
-            conditionId: question.conditionId,
-          },
-        },
-      });
-
-      const fsrsCardData = (existingProgress?.fsrsCard as Record<string, unknown>) || {};
-      const currentCard = {
-        stability: typeof fsrsCardData.stability === 'number' ? fsrsCardData.stability : 0,
-        difficulty: typeof fsrsCardData.difficulty === 'number' ? fsrsCardData.difficulty : 0,
-        state: typeof fsrsCardData.state === 'number' ? fsrsCardData.state : 0,
-        elapsed_days: typeof fsrsCardData.elapsed_days === 'number' ? fsrsCardData.elapsed_days : 0,
-        scheduled_days:
-          typeof fsrsCardData.scheduled_days === 'number' ? fsrsCardData.scheduled_days : 0,
-        reps: typeof fsrsCardData.reps === 'number' ? fsrsCardData.reps : 0,
-        lapses: typeof fsrsCardData.lapses === 'number' ? fsrsCardData.lapses : 0,
-        last_review:
-          typeof fsrsCardData.last_review === 'string'
-            ? new Date(fsrsCardData.last_review)
-            : new Date(),
-      };
-
-      const { card: rawCard } = fsrs.next(currentCard, new Date(), gradeContinuous);
-      let modifiedStability = rawCard.stability;
-      modifiedStability = applyCircadianModifier(modifiedStability, circadianContext);
-      // implicitConfidence is floored at 0.5 → implicitDifficulty maxes at 0.5.
-      // Using >= instead of > so the modifier can actually fire at the boundary.
-      const implicitDifficulty = 1 - implicitConfidence;
-      if (implicitDifficulty >= 0.5) {
-        modifiedStability *= 1 - implicitDifficulty * 0.5;
-      }
-      const updatedCard = { ...rawCard, stability: Math.max(0.01, modifiedStability) };
-
-      const rawNextDue = new Date(Date.now() + updatedCard.scheduled_days * 86400000);
-      const { due: clampedNextDue } = applyEorClampIfNeeded(rawNextDue, eorRotationEnd ?? null);
-
-      // Capture real FSRS schedule for the API response (use clamped date when in EOR mode)
-      fsrsSchedule = {
-        intervalDays: updatedCard.scheduled_days,
-        nextDueDate: clampedNextDue.toISOString(),
-        stability: updatedCard.stability,
-        difficulty: updatedCard.difficulty,
-      };
-
-      // Write to ReviewLog for FSRS v6 optimizer (MAIN/real sessions only)
-      console.log('[DEBUG] Entering ReviewLog creation inner try block');
-      const logSessionType = (sessionType ? sessionType.toUpperCase() : 'MAIN') as 'MAIN' | 'CRAM' | 'RAPID_RECALL';
+    
+    // For rapid guesses: create ReviewLog only, skip FSRS calculation
+    if (isRapidGuess) {
       try {
         const reviewDate = new Date();
         const hoverOscillations =
@@ -555,7 +531,7 @@ export async function submitDrillReview(
           timeToFirstClick ??
           undefined;
 
-        console.log('[DEBUG] About to create ReviewLog', { userId, questionId, conditionId: question.conditionId, isRapidGuess });
+        console.log('[DEBUG] Creating rapid-guess ReviewLog', { userId, questionId, conditionId: question.conditionId });
         await prisma.reviewLog.create({
           data: {
             userId,
@@ -563,20 +539,18 @@ export async function submitDrillReview(
             medicalContentId: question.medicalContentId ?? undefined,
             questionId,
             questionType: 'pre_generated',
-            grade: rating,
-            grade_continuous: gradeContinuous,
-            state: currentCard.state,
-            stability: currentCard.stability,
-            difficulty: currentCard.difficulty,
-            retrievability: fsrs.calculateRetrievability(currentCard.elapsed_days, currentCard.stability),
+            grade: Rating.Again, // Force grade to 1 (Again) for rapid guesses
+            grade_continuous: 1.0,
+            state: 0, // New card state - no FSRS calculation
+            stability: 0,
+            difficulty: 0,
+            retrievability: 0,
             implicit_confidence: implicitConfidence,
-            scheduledAt: new Date(
-              currentCard.last_review.getTime() + currentCard.scheduled_days * 86400000
-            ),
+            scheduledAt: new Date(), // Placeholder - not used for rapid guesses
             reviewedAt: reviewDate,
             responseTimeMs: effectiveDurationMs,
-            review_type: isRapidGuess ? 'rapid_guess' : 'real',
-            elapsedDays: currentCard.elapsed_days,
+            review_type: 'rapid_guess',
+            elapsedDays: 0,
             wasCorrect: isCorrect,
             sessionType: logSessionType,
             attemptId,
@@ -585,30 +559,120 @@ export async function submitDrillReview(
             vignette_regressions: vignetteRegressions,
             time_to_first_interaction: timeToFirstInteraction,
             circadian_phase: toCircadianPhaseEnum(circadianContext.circadianPhase),
-            telemetry: {
-              par_time_ms: parTimeMs,
-              latency_ratio: effectiveDurationMs / parTimeMs,
-              implicit_confidence: implicitConfidence,
-              grade_continuous: gradeContinuous,
-              answer_changes: (telemetry?.answer_changes as number | undefined) ?? switches,
-              circadian_phase: circadianContext.circadianPhase,
-              time_of_day: (telemetry?.circadian_phase as string) ?? undefined,
-              selection_drift_ms: telemetry?.selection_drift_ms as number | undefined,
-              cursor_entropy: telemetry?.cursor_entropy as number | undefined,
-              tremor_score: telemetry?.tremor_score as number | undefined,
-              rapid_guess: isRapidGuess,
-            },
+            telemetry: buildReviewLogTelemetry(),
           },
         });
       } catch (reviewLogError) {
-        console.error('[DEBUG] ReviewLog creation failed:', reviewLogError);
-        logger?.warn?.('Failed to write ReviewLog (non-fatal)', {
+        console.error('[DEBUG] Rapid-guess ReviewLog creation failed:', reviewLogError);
+        logger?.warn?.('Failed to write rapid-guess ReviewLog (non-fatal)', {
           error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
         });
       }
+    } else {
+      // For normal reviews: run FSRS calculation, create ReviewLog, update UserProgress
+      try {
+        const fsrs = new FSRS();
+        const existingProgress = await prisma.userProgress.findUnique({
+          where: {
+            userId_conditionId: {
+              userId,
+              conditionId: question.conditionId,
+            },
+          },
+        });
 
-      // Only update FSRS state for non-rapid-guess reviews
-      if (!isRapidGuess) {
+        const fsrsCardData = (existingProgress?.fsrsCard as Record<string, unknown>) || {};
+        const currentCard = {
+          stability: typeof fsrsCardData.stability === 'number' ? fsrsCardData.stability : 0,
+          difficulty: typeof fsrsCardData.difficulty === 'number' ? fsrsCardData.difficulty : 0,
+          state: typeof fsrsCardData.state === 'number' ? fsrsCardData.state : 0,
+          elapsed_days: typeof fsrsCardData.elapsed_days === 'number' ? fsrsCardData.elapsed_days : 0,
+          scheduled_days:
+            typeof fsrsCardData.scheduled_days === 'number' ? fsrsCardData.scheduled_days : 0,
+          reps: typeof fsrsCardData.reps === 'number' ? fsrsCardData.reps : 0,
+          lapses: typeof fsrsCardData.lapses === 'number' ? fsrsCardData.lapses : 0,
+          last_review:
+            typeof fsrsCardData.last_review === 'string'
+              ? new Date(fsrsCardData.last_review)
+              : new Date(),
+        };
+
+        const { card: rawCard } = fsrs.next(currentCard, new Date(), gradeContinuous);
+        let modifiedStability = rawCard.stability;
+        modifiedStability = applyCircadianModifier(modifiedStability, circadianContext);
+        // implicitConfidence is floored at 0.5 → implicitDifficulty maxes at 0.5.
+        // Using >= instead of > so the modifier can actually fire at the boundary.
+        const implicitDifficulty = 1 - implicitConfidence;
+        if (implicitDifficulty >= 0.5) {
+          modifiedStability *= 1 - implicitDifficulty * 0.5;
+        }
+        const updatedCard = { ...rawCard, stability: Math.max(0.01, modifiedStability) };
+
+        const rawNextDue = new Date(Date.now() + updatedCard.scheduled_days * 86400000);
+        const { due: clampedNextDue } = applyEorClampIfNeeded(rawNextDue, eorRotationEnd ?? null);
+
+        // Capture real FSRS schedule for the API response (use clamped date when in EOR mode)
+        fsrsSchedule = {
+          intervalDays: updatedCard.scheduled_days,
+          nextDueDate: clampedNextDue.toISOString(),
+          stability: updatedCard.stability,
+          difficulty: updatedCard.difficulty,
+        };
+
+        // DEV-002 FIX: Store full telemetry with server_computed key
+        console.log('[DEBUG] Creating normal ReviewLog with full telemetry');
+        try {
+          const reviewDate = new Date();
+          const hoverOscillations =
+            (telemetry?.hover_oscillations as number | undefined) ?? undefined;
+          const vignetteRegressions =
+            (telemetry?.vignette_regressions as number | undefined) ?? undefined;
+          const timeToFirstInteraction =
+            (telemetry?.time_to_first_interaction_ms as number | undefined) ??
+            timeToFirstClick ??
+            undefined;
+
+          console.log('[DEBUG] About to create ReviewLog', { userId, questionId, conditionId: question.conditionId });
+          await prisma.reviewLog.create({
+            data: {
+              userId,
+              conditionId: question.conditionId,
+              medicalContentId: question.medicalContentId ?? undefined,
+              questionId,
+              questionType: 'pre_generated',
+              grade: rating,
+              grade_continuous: gradeContinuous,
+              state: currentCard.state,
+              stability: currentCard.stability,
+              difficulty: currentCard.difficulty,
+              retrievability: fsrs.calculateRetrievability(currentCard.elapsed_days, currentCard.stability),
+              implicit_confidence: implicitConfidence,
+              scheduledAt: new Date(
+                currentCard.last_review.getTime() + currentCard.scheduled_days * 86400000
+              ),
+              reviewedAt: reviewDate,
+              responseTimeMs: effectiveDurationMs,
+              review_type: 'real',
+              elapsedDays: currentCard.elapsed_days,
+              wasCorrect: isCorrect,
+              sessionType: logSessionType,
+              attemptId,
+              system: question.system ?? undefined,
+              hover_oscillations: hoverOscillations,
+              vignette_regressions: vignetteRegressions,
+              time_to_first_interaction: timeToFirstInteraction,
+              circadian_phase: toCircadianPhaseEnum(circadianContext.circadianPhase),
+              telemetry: buildReviewLogTelemetry(currentCard),
+            },
+          });
+        } catch (reviewLogError) {
+          console.error('[DEBUG] ReviewLog creation failed:', reviewLogError);
+          logger?.warn?.('Failed to write ReviewLog (non-fatal)', {
+            error: reviewLogError instanceof Error ? reviewLogError.message : String(reviewLogError),
+          });
+        }
+
+        // Update UserProgress and sibling propagation for normal reviews only
         await updateUserProgressWithHistory(prisma, {
           userId,
           conditionId: question.conditionId,
@@ -631,12 +695,12 @@ export async function submitDrillReview(
             error: siblingError instanceof Error ? siblingError.message : String(siblingError),
           });
         }
+      } catch (progressError) {
+        console.error('[DEBUG] Failed to update UserProgress', progressError);
+        logger?.warn?.('Failed to update UserProgress', {
+          error: progressError instanceof Error ? progressError.message : String(progressError),
+        });
       }
-    } catch (progressError) {
-      console.error('[DEBUG] Failed to update UserProgress', progressError);
-      logger?.warn?.('Failed to update UserProgress', {
-        error: progressError instanceof Error ? progressError.message : String(progressError),
-      });
     }
   }
 

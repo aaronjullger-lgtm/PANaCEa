@@ -207,7 +207,24 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       }
     }
 
-    return { data: result };
+    // Extract frontend feedback: rapid_guess and nextReview from result
+    const isRapidGuess = telemetry?.rapid_guess ?? false;
+    const nextReview = result.fsrsSchedule
+      ? {
+          intervalDays: result.fsrsSchedule.intervalDays,
+          nextDueDate: result.fsrsSchedule.nextDueDate,
+          stability: result.fsrsSchedule.stability,
+          difficulty: result.fsrsSchedule.difficulty,
+        }
+      : null;
+
+    return {
+      data: {
+        ...result,
+        isRapidGuess,
+        nextReview,
+      },
+    };
   } catch (error: unknown) {
     logger.error('submit-review error:', error);
     return {
