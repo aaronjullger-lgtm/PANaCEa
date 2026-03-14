@@ -484,3 +484,62 @@ export default {
   QuestionSkeleton,
   ChatSkeleton,
 };
+
+// Skeleton aliases for backwards compatibility
+export const UserStatsOverviewSkeleton: React.FC = () => (
+  <div className="space-y-4">
+    <Skeleton className="h-20 w-full rounded-xl" />
+    <div className="grid grid-cols-3 gap-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <Skeleton key={i} className="h-16 w-full rounded-xl" />
+      ))}
+    </div>
+  </div>
+);
+
+export const StatCardSkeleton: React.FC = () => (
+  <Skeleton className="h-24 w-full rounded-xl" />
+);
+
+export const SkeletonWidget: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <Skeleton className={`h-32 w-full rounded-xl ${className}`.trim()} />
+);
+
+export const SkeletonDrillCard: React.FC = () => (
+  <Skeleton className="h-48 w-full rounded-xl" />
+);
+
+export const SkeletonQuizQuestion: React.FC = () => (
+  <div className="space-y-4">
+    <Skeleton className="h-6 w-full rounded" />
+    <Skeleton className="h-4 w-3/4 rounded" />
+    {Array.from({ length: 4 }).map((_, i) => (
+      <Skeleton key={i} className="h-12 w-full rounded-lg" />
+    ))}
+  </div>
+);
+
+export const TableSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => (
+  <div className="space-y-2">
+    <Skeleton className="h-10 w-full rounded" />
+    {Array.from({ length: rows }).map((_, i) => (
+      <Skeleton key={i} className="h-12 w-full rounded" />
+    ))}
+  </div>
+);
+
+// SkeletonLoader — alias for backwards compatibility (imported by some components from @/components/loading)
+export const SkeletonLoader: React.FC<{ height?: string; width?: string; className?: string }> = ({
+  height,
+  width,
+  className = '',
+}) => (
+  <Skeleton
+    className={`${height ? `h-[${height}]` : ''} ${width ? `w-[${width}]` : 'w-full'} ${className}`.trim()}
+  />
+);
+
+// SkeletonCard — alias for backwards compatibility
+export const SkeletonCard: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <Skeleton className={`h-32 w-full rounded-xl ${className}`.trim()} />
+);

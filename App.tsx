@@ -1,4 +1,5 @@
-// App.tsx
+// App.tsx — layout shell, provider composition, and view orchestration.
+// Decomposition roadmap: see docs/architecture/APP_DECOMPOSITION.md
 import React, { useEffect, useMemo, useState, useCallback, useRef, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +11,7 @@ import { NavRail } from './components/layout/NavRail';
 import { AppBrand } from './components/layout/AppBrand';
 import { type View, pageVariants, DRILL_MODE_IDS } from './config/appViews';
 import { TRAINING_MODES } from './config/training-modes';
+import { useAppNavigation } from './hooks/useAppNavigation';
 import { KeyboardAccessibilityAudit } from './components/shared/KeyboardAccessibilityAudit';
 import { ContrastRatioAudit } from './components/shared/ContrastRatioAudit';
 import PerformanceMonitor from './components/shared/PerformanceMonitor';
@@ -155,24 +157,9 @@ const DRILL_MODE_COMMUTER = DRILL_MODE_IDS.COMMUTER;
 /** Commuter Mode: buffer for trains/buses/basements — prefetch 50 cards on Start Session */
 const INITIAL_QUEUE_SIZE = 50;
 
-// ---- helpers: localStorage ----
-function _safeParse<T>(raw: string | null, fallback: T): T {
-  if (!raw) return fallback;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-// very small SRS schedule: 1d → 3d → 7d → 14d
+/** Minimal SRS schedule for manual review items: 1d → 3d → 7d → 14d */
 function scheduleNextReview(level: number): string {
-  let days: number;
-  if (level <= 1) days = 1;
-  else if (level === 2) days = 3;
-  else if (level === 3) days = 7;
-  else days = 14;
-
+  const days = level <= 1 ? 1 : level === 2 ? 3 : level === 3 ? 7 : 14;
   const d = new Date();
   d.setDate(d.getDate() + days);
   return d.toISOString().split('T')[0] ?? '';
@@ -214,8 +201,7 @@ const App: React.FC = () => {
   // Theme state for passing to child components
   const [theme, setTheme] = useTheme();
 
-  const [view, setView] = useState<View>('command_center');
-  const [showNotFound, setShowNotFound] = useState(false);
+  const { view, setView, showNotFound } = useAppNavigation();
   const startViewTransition = useViewTransition();
 
   // One-time migration from legacy panacea_* keys to panceai_* (see storageRegistry)
@@ -223,117 +209,8 @@ const App: React.FC = () => {
     runStorageKeyMigration();
   }, []);
 
-  // Sync URL to view: single source of truth so NavRail and direct URLs always show correct content
-  useEffect(() => {
-    const path = location.pathname;
-
-    // Known paths that map to views or are handled by explicit routes
-    const knownPaths = [
-      '/',
-      '/menu',
-      '/study',
-      '/study/',
-      '/study/path',
-      '/practice',
-      '/progress',
-      '/study/main-session',
-      '/study/main-session/',
-      '/admin',
-      '/clinical-eye',
-      '/visualizer',
-      '/medical-database',
-      '/live-collaboration',
-      '/explorer',
-    ];
-
-    const isKnownPath =
-      knownPaths.includes(path) ||
-      path.startsWith('/study/knowledge') ||
-      path.startsWith('/study/utilities') ||
-      path.startsWith('/study/reference') ||
-      path.startsWith('/study/toolkit') ||
-      path.startsWith('/study/path') ||
-      path.startsWith('/gap-analysis') ||
-      path.startsWith('/clinical-profile') ||
-      path.startsWith('/modes/') ||
-      path === '/core-adaptive' ||
-      path.startsWith('/medical-database') ||
-      path.startsWith('/live-collaboration') ||
-      path.startsWith('/explorer') ||
-      path.startsWith('/session/');
-
-    if (!isKnownPath) {
-      setShowNotFound(true);
-      return;
-    }
-
-    setShowNotFound(false);
-
-    // Redirects for legacy paths (bookmarks/links)
-    if (path.startsWith('/study/reference')) {
-      navigate('/study/knowledge', { replace: true });
-      return;
-    }
-    if (path.startsWith('/study/toolkit')) {
-      navigate('/study/utilities', { replace: true });
-      return;
-    }
-    if (path === '/study/main-session' || path === '/study/main-session/') {
-      navigate('/study', { replace: true });
-      return;
-    }
-
-    if (path.startsWith('/session/')) {
-      setView('session_runner');
-      return;
-    }
-
-    // Route-to-view map for training mode deep links (e.g. /modes/ecg-drill -> ecg_drill)
-    const routeToViewMap: Record<string, View> = {};
-    for (const mode of TRAINING_MODES) {
-      routeToViewMap[mode.route] = mode.id as View;
-    }
-    if (path.startsWith('/modes/') || path === '/core-adaptive') {
-      const view = routeToViewMap[path];
-      if (view) {
-        setView(view);
-        return;
-      }
-    }
-
-    if (path === '/' || path === '') {
-      setView('command_center');
-    } else if (path === '/menu') {
-      setView('menu');
-    } else if (path === '/study' || path === '/study/') {
-      setView('command_center');
-    } else if (path.startsWith('/study/knowledge')) {
-      setView('reference_library');
-    } else if (path.startsWith('/study/utilities')) {
-      setView('toolkit');
-    } else if (path.startsWith('/study/path')) {
-      setView('study_path_dashboard');
-    } else if (path === '/gap-analysis' || path.startsWith('/gap-analysis')) {
-      setView('gap_analysis');
-    } else if (path === '/clinical-profile' || path.startsWith('/clinical-profile')) {
-      setView('clinical_profile');
-    } else if (path === '/medical-database' || path.startsWith('/medical-database')) {
-      setView('medical_database');
-    } else if (path === '/live-collaboration' || path.startsWith('/live-collaboration')) {
-      setView('live_collaboration');
-    } else if (path.startsWith('/explorer')) {
-      setView('cross_system_explorer');
-    }
-  }, [location.pathname]);
-
-  // Focus main content after client-side navigation for screen reader and keyboard users
-  useEffect(() => {
-    const mainContent = document.getElementById('main-content');
-    if (mainContent) {
-      mainContent.setAttribute('tabindex', '-1');
-      mainContent.focus({ preventScroll: true });
-    }
-  }, [location.pathname]);
+  // URL-to-view routing, notFound detection, and accessibility focus
+  // are handled by useAppNavigation (imported above).
 
   // NavRail Reference/Progress: sync ?tab= to CommandCenterHub Study Tools tab
   const commandCenterInitialTab = useMemo(():

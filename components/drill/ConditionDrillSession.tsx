@@ -8,7 +8,7 @@ import MiniDrillLayout, {
   FeedbackPanel,
   CategoryCard,
 } from './MiniDrillLayout';
-import { QuestionSkeleton } from '../loading/SkeletonLoader';
+import { QuestionSkeleton } from '../loading';
 import MetacognitionPromptModal from './MetacognitionPromptModal';
 
 interface ConditionDrillSessionProps {
