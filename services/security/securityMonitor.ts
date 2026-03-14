@@ -483,8 +483,8 @@ export class SecurityMonitor {
             (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
           );
           const timeDiff =
-            sortedLocations[sortedLocations.length - 1].timestamp.getTime() -
-            sortedLocations[0].timestamp.getTime();
+            sortedLocations[sortedLocations.length - 1]!.timestamp.getTime() -
+            sortedLocations[0]!.timestamp.getTime();
 
           // If multiple countries in less than 12 hours, flag as suspicious
           if (timeDiff < 12 * 60 * 60 * 1000) {
@@ -606,11 +606,7 @@ export class SecurityMonitor {
         return 'PDF export not implemented in this version';
 
       default:
-        throw new AppError(
-          `Unsupported export format: ${format}`,
-          ErrorCategory.CLIENT,
-          ErrorCode.INVALID_INPUT
-        );
+        throw new Error(`Unsupported export format: ${format}`);
     }
   }
 

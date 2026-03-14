@@ -400,14 +400,14 @@ export class SOAPNoteService {
 
     // Latest vitals
     if (generator.vitalsHistory.length > 0) {
-      const latestVitals = generator.vitalsHistory[generator.vitalsHistory.length - 1];
+      const latestVitals = generator.vitalsHistory[generator.vitalsHistory.length - 1]!;
       context += `Vital Signs: ${JSON.stringify(latestVitals.vitals)}\n\n`;
     }
 
     // Latest physical findings
     if (generator.physicalFindingsHistory.length > 0) {
       const latestFindings =
-        generator.physicalFindingsHistory[generator.physicalFindingsHistory.length - 1];
+        generator.physicalFindingsHistory[generator.physicalFindingsHistory.length - 1]!;
       context += `Physical Findings: ${JSON.stringify(latestFindings.findings)}\n\n`;
     }
 

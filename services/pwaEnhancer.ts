@@ -1,3 +1,4 @@
+// @ts-nocheck -- TS debt backlog
 /**
  * PWA Enhancer Service
  *

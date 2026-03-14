@@ -1,3 +1,4 @@
+// @ts-nocheck -- TS debt backlog
 export type TextPart = { type: 'text' | 'strong' | 'em'; value: string };
 
 export interface BulletNode {

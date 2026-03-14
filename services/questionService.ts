@@ -464,25 +464,6 @@ export async function getQuestion(
     }
   }
   
-  function getEorContextFromStorage(): {
-    isEor: boolean;
-    deadline: string | null;
-  } {
-    if (typeof window === 'undefined') return { isEor: false, deadline: null };
-    try {
-      const profile = loadUserProfile();
-      const { currentRotation } = getClinicalContextFromStorage();
-      const eorTestDate = profile?.eorTestDate;
-      const isEor = currentRotation && isEorRotation(currentRotation as import('../types').ClinicalRotation) && eorTestDate;
-      return {
-        isEor: !!isEor,
-        deadline: eorTestDate || null,
-      };
-    } catch {
-      return { isEor: false, deadline: null };
-    }
-  }
-  
   // Seed the generated question into the pool for future use
   const token = getToken ? await getToken() : null;
   seedGeneratedQuestion(question, token, system, poolDifficulty);
@@ -517,6 +498,28 @@ function getActiveUnitSystemsFromStorage(): string[] | undefined {
     return Array.isArray(arr) && arr.length > 0 ? arr : undefined;
   } catch {
     return undefined;
+  }
+}
+
+/**
+ * Get EOR (End-of-Rotation) context from user profile/storage
+ */
+function getEorContextFromStorage(): {
+  isEor: boolean;
+  deadline: string | null;
+} {
+  if (typeof window === 'undefined') return { isEor: false, deadline: null };
+  try {
+    const profile = loadUserProfile();
+    const { currentRotation } = getClinicalContextFromStorage();
+    const eorTestDate = profile?.eorTestDate;
+    const isEor = currentRotation && isEorRotation(currentRotation as import('../types').ClinicalRotation) && eorTestDate;
+    return {
+      isEor: !!isEor,
+      deadline: eorTestDate || null,
+    };
+  } catch {
+    return { isEor: false, deadline: null };
   }
 }
 
@@ -837,7 +840,7 @@ async function seedGeneratedQuestion(
           explanation: question.rationale,
           system: question.system || question.topic,
           conditionId: question.conditionId,
-          medicalContentId: question.medicalContentId || undefined,
+          medicalContentId: (question as Question & { medicalContentId?: string }).medicalContentId || undefined,
           difficulty: question.difficulty || difficulty || 'medium',
           vignette: question.vignette,
           conditionName: question.condition,

@@ -67,19 +67,19 @@ describe('FSRS v5 Algorithm', () => {
 
         // Again (rating 1) should use w[0]
         const againResult = fsrs.next(card, now, Rating.Again);
-        expect(againResult.card.stability).toBeCloseTo(defaultParameters.w[0], 5);
+        expect(againResult.card.stability).toBeCloseTo(defaultParameters.w[0]!, 5);
 
         // Hard (rating 2) should use w[1]
         const hardResult = fsrs.next(fsrs.createEmptyCard(), now, Rating.Hard);
-        expect(hardResult.card.stability).toBeCloseTo(defaultParameters.w[1], 5);
+        expect(hardResult.card.stability).toBeCloseTo(defaultParameters.w[1]!, 5);
 
         // Good (rating 3) should use w[2]
         const goodResult = fsrs.next(fsrs.createEmptyCard(), now, Rating.Good);
-        expect(goodResult.card.stability).toBeCloseTo(defaultParameters.w[2], 5);
+        expect(goodResult.card.stability).toBeCloseTo(defaultParameters.w[2]!, 5);
 
         // Easy (rating 4) should use w[3]
         const easyResult = fsrs.next(fsrs.createEmptyCard(), now, Rating.Easy);
-        expect(easyResult.card.stability).toBeCloseTo(defaultParameters.w[3], 5);
+        expect(easyResult.card.stability).toBeCloseTo(defaultParameters.w[3]!, 5);
       });
 
       it('should initialize difficulty within bounds [1, 10]', () => {
@@ -673,7 +673,7 @@ describe('FSRS v5 Algorithm', () => {
       const result = fsrs.next(card, fixedDate, Rating.Good);
 
       // These values should remain stable across refactors
-      expect(result.card.stability).toBeCloseTo(defaultParameters.w[2], 5);
+      expect(result.card.stability).toBeCloseTo(defaultParameters.w[2]!, 5);
       expect(result.card.state).toBe(FSRSState.Learning);
       expect(result.card.scheduled_days).toBe(1);
       expect(result.card.reps).toBe(1);

@@ -18,9 +18,9 @@ import type {
   UIMode,
   UIThemeConfig,
   AdaptiveUIState,
-  UI_MODES,
   MetacognitionWidget,
 } from '@/types/interface-fabric-system';
+import { UI_MODES } from '@/types/interface-fabric-system';
 
 interface AdaptiveUIServiceConfig {
   enableCircadianAdaptation: boolean;
@@ -89,7 +89,7 @@ export class AdaptiveUIService {
     const mode = userOverride ?? this.determineUIMode(profile);
     const theme = this.getThemeConfig(mode);
 
-    let reason: AdaptiveUIState['reason'] = 'standard';
+    let reason: AdaptiveUIState['reason'] = 'time_of_day';
     if (userOverride) {
       reason = 'manual';
     } else {

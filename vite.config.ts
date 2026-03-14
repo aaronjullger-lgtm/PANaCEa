@@ -422,6 +422,7 @@ export default defineConfig(({ mode }) => {
                 return `component-${componentName?.toLowerCase()}`;
               }
             }
+            return undefined;
           },
           // Safety net polyfill for CommonJS remnants and Node.js globals
           intro: '',

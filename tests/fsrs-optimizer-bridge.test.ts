@@ -106,7 +106,7 @@ describe('FSRS Optimizer Bridge', () => {
         expect(results.every(r => r.grade === bucket.grade)).toBe(true);
         // weights should increase monotonically
         for (let i = 1; i < results.length; i++) {
-          expect(results[i].weight).toBeGreaterThanOrEqual(results[i - 1].weight);
+          expect(results[i]!.weight).toBeGreaterThanOrEqual(results[i - 1]!.weight);
         }
       }
     });

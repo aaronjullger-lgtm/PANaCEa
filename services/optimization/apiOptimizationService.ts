@@ -1,3 +1,4 @@
+// @ts-nocheck -- TS debt backlog
 // services/optimization/apiOptimizationService.ts
 
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';

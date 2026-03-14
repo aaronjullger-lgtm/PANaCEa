@@ -65,7 +65,7 @@ export function scheduleEorBatch(
 ): Array<{ card: FSRSCard; due: Date }> {
   const window = deriveRotationWindow(eorTestDate, blockDays);
   return cards.map((card, i) =>
-    scheduleEorReview(card, now, ratings[i], window)
+    scheduleEorReview(card, now, ratings[i]!, window)
   );
 }
 

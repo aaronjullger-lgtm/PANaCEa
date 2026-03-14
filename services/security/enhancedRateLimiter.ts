@@ -318,14 +318,15 @@ export class EnhancedRateLimiter {
     }
 
     // Calculate cost for this request
+    const configWithTokens = config as { maxTokens?: number; costPerToken?: number };
     const estimatedTokens = options.estimatedTokens || 0;
-    const cost = estimatedTokens * (config.costPerToken || 0);
+    const cost = estimatedTokens * (configWithTokens.costPerToken || 0);
     const newTokenCount = costEntry.tokens + estimatedTokens;
     const newRequestCount = windowEntry.count + 1;
 
     // Check limits
     const exceededRequests = newRequestCount > effectiveMaxRequests;
-    const exceededTokens = config.maxTokens && newTokenCount > config.maxTokens;
+    const exceededTokens = configWithTokens.maxTokens != null && newTokenCount > configWithTokens.maxTokens;
     const exceededBurst = !burstAllowed;
 
     const exceeded = exceededRequests || exceededTokens || exceededBurst;
@@ -356,7 +357,7 @@ export class EnhancedRateLimiter {
     if (exceeded) {
       if (exceededRequests) {
         retryAfter = Math.ceil((windowEntry.resetAt - now) / 1000);
-      } else if (exceededTokens && config.maxTokens) {
+      } else if (exceededTokens && configWithTokens.maxTokens) {
         retryAfter = Math.ceil((costEntry.resetAt - now) / 1000);
       } else if (exceededBurst) {
         retryAfter = Math.ceil(bucket.getTimeToNextToken() / 1000);
@@ -369,7 +370,7 @@ export class EnhancedRateLimiter {
       resetAt: windowEntry.resetAt,
       retryAfter,
       costUsed: cost,
-      budgetRemaining: config.maxTokens ? Math.max(0, config.maxTokens - newTokenCount) : undefined,
+      budgetRemaining: configWithTokens.maxTokens != null ? Math.max(0, configWithTokens.maxTokens - newTokenCount) : undefined,
       burstTokensRemaining,
       trustScoreMultiplier: trustMultiplier,
       geographicMultiplier: geoMultiplier,

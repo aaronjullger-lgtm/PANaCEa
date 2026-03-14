@@ -821,7 +821,7 @@ export interface ConsultRequest {
 /**
  * Example consultant personas.
  */
-export const CONSULTANT_PERSONAS: Record<ConsultantType, ConsultantPersona> = {
+export const CONSULTANT_PERSONAS: Partial<Record<ConsultantType, ConsultantPersona>> = {
   cardiologist: {
     id: 'cardio-dr-johnson',
     name: 'Dr. Johnson',

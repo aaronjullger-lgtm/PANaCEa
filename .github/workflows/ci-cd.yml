@@ -12,23 +12,6 @@ env:
 
 jobs:
   # ============================================================================
-  # 0. DIAGNOSE DEPLOY TRIGGER (debug: why pushes may not trigger deploys)
-  # ============================================================================
-  diagnose-deploy-trigger:
-    name: Diagnose Deploy Trigger
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    steps:
-      - name: Emit deploy-trigger diagnostics
-        run: |
-          echo "## Deploy trigger diagnostics (hypotheses)"
-          echo "H1 (branch): ref=${{ github.ref }} | branch=${GITHUB_REF#refs/heads/} | is_main=$([ '${{ github.ref }}' = 'refs/heads/main' ] && echo 'true' || echo 'false')"
-          echo "H2 (deploy job runs only on main): deploy_would_run=$([ '${{ github.ref }}' = 'refs/heads/main' ] && echo 'true' || echo 'false')"
-          echo "H3 (project name in workflow): project_name=panacea (verify this matches Cloudflare Dashboard → Workers & Pages)"
-          echo "H4 (secret set): CLOUDFLARE_API_TOKEN_set=$([ -n '${{ secrets.CLOUDFLARE_API_TOKEN }}' ] && echo 'yes' || echo 'no')"
-          echo "H5 (upstream): deploy-production needs deployment-prep → security-audit → e2e; if any prior job fails, deploy is skipped."
-
-  # ============================================================================
   # 1. CODE QUALITY CHECKS
   # ============================================================================
   code-quality:
@@ -53,7 +36,6 @@ jobs:
 
       - name: Run TypeScript type checking
         run: npm run typecheck:ci
-        continue-on-error: true  # TODO: Fix remaining type errors across codebase
 
       - name: Run ESLint
         run: npm run lint

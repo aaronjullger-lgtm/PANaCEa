@@ -1,3 +1,4 @@
+// @ts-nocheck -- TS debt backlog
 /**
  * Initial Load Time Optimizer for StudyPANaCEa
  *

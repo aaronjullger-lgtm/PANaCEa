@@ -407,8 +407,6 @@ export const NATURAL_FLOW_TRANSITIONS: Record<string, ModuleTransition> = {
     type: 'natural_flow',
     contextCarryOver: {
       clinicalScenario: { preserved: true },
-      workingDiagnosis: { preserved: true },
-      orderedTests: { preserved: true },
     },
     animation: {
       type: 'medical_scan',
@@ -424,7 +422,6 @@ export const NATURAL_FLOW_TRANSITIONS: Record<string, ModuleTransition> = {
     type: 'natural_flow',
     contextCarryOver: {
       clinicalScenario: { preserved: true },
-      workingDiagnosis: { preserved: true },
     },
     animation: {
       type: 'zoom',

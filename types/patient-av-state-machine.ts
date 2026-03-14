@@ -614,7 +614,7 @@ export const EXAMPLE_COPD_STATE_MACHINE: PatientAVStateMachine = {
   globalTransitions: [
     {
       toState: 'severe_hypoxia',
-      triggers: [CLINICAL_TRIGGERS_LIBRARY.hypoxia_severe],
+      triggers: [CLINICAL_TRIGGERS_LIBRARY.hypoxia_severe!],
       cooldown: 0,
       reversible: true,
       reversionCondition: {
