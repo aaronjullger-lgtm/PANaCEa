@@ -246,7 +246,8 @@ function createNewSRSItem(userId: string, questionId: string): SRSItem {
 }
 
 /**
- * Map quality rating (0-5) to FSRS Rating enum
+ * Map quality rating (0-5) to FSRS Rating enum.
+ * Note: Hard (2) and Easy (4) are deprecated; UI only sends Again (1) or Good (3).
  */
 function mapQualityToRating(quality: number): Rating {
   if (quality <= 1) return Rating.Again;
@@ -1214,7 +1215,7 @@ export interface VariantSubmitPayload {
   topicProgressId?: string;
   questionId: string;
   variantId?: string;
-  rating: number; // 1=Again, 2=Hard, 3=Good, 4=Easy
+  rating: number; // 1=Again, 2=Hard (deprecated), 3=Good, 4=Easy (deprecated)
   isCorrect: boolean;
   userAnswer?: string;
   timeSpent?: number;
@@ -1224,7 +1225,7 @@ export interface VariantSubmitResponse {
   success: boolean;
   nextReviewDate?: string;
   queuedVariantId?: string | null;
-  /** When user rates Hard (1), backend suggests re-generating mnemonic with style "exaggerated" */
+  /** When user rates Again (1), backend suggests re-generating mnemonic with style "exaggerated" */
   triggerVisualRegeneration?: boolean;
   questionId?: string;
   conditionId?: string;
@@ -1334,7 +1335,7 @@ export interface GenerateVisualResponse {
 
 /**
  * Request a generative mnemonic image for a flashcard (Pillar 4: FSRS Visual).
- * Call when submit returns triggerVisualRegeneration (user rated Hard/1) to get an exaggerated mnemonic.
+ * Call when submit returns triggerVisualRegeneration (user rated Again/1) to get an exaggerated mnemonic.
  * Pass getToken in options to send Authorization when the backend requires Bearer auth.
  */
 export async function requestMnemonicImage(
