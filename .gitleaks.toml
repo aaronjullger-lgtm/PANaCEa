@@ -1,0 +1,25 @@
+# Gitleaks configuration for PANaCEa
+# Allowlist known-safe public keys that are intentionally committed.
+# These are client-side public keys that are safe to be in source code.
+
+title = "PANaCEa Gitleaks Config"
+
+[allowlist]
+description = "Allowlist of known-safe public/publishable keys"
+regexes = [
+  # Clerk publishable key (pk_live_ / pk_test_) - intentionally public
+  "pk_live_[A-Za-z0-9+/=]+",
+  "pk_test_[A-Za-z0-9+/=]+",
+  # Supabase anon key in wrangler.toml (public-facing JWT, safe in client code)
+  # Note: the service role key must NEVER be committed
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmVzY2RycGV6empoZ3Zlb3R6Iiwicm9sZSI6ImFub24i[A-Za-z0-9._-]+",
+  # Sentry DSN (public error reporting endpoint)
+  "https://[a-f0-9]+@o[0-9]+\\.ingest\\.(us\\.)?sentry\\.io/[0-9]+",
+  # Supabase project URL (public endpoint)
+  "https://[a-z]+\\.supabase\\.co",
+]
+
+paths = [
+  # Ignore docs that reference example keys
+  "docs/",
+]

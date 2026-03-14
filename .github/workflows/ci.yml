@@ -72,7 +72,7 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
+          GITLEAKS_CONFIG: .gitleaks.toml
 
   e2e-smoke:
     name: E2E Smoke

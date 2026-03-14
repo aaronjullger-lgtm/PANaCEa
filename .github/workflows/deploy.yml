@@ -1,6 +1,6 @@
 # Deploy to Cloudflare Pages on push to main or manual trigger.
 # Requires secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
-# Project name: panacea (Workers & Pages)
+# Project name: panacea (Workers & Pages) — matches wrangler.toml
 name: Deploy to Cloudflare Pages
 
 on:
@@ -15,6 +15,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       deployments: write
@@ -32,14 +33,39 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Core type check
+        run: npm run typecheck:ci
+
       - name: Build
         run: npm run build
 
       - name: Verify build output
-        run: ls -la dist/ && ls dist/assets/ 2>/dev/null | head -5
+        run: |
+          echo "=== dist/ contents ==="
+          ls -la dist/
+          echo "=== asset count ==="
+          ls dist/assets/ | wc -l
+          test -f dist/index.html || (echo "ERROR: dist/index.html missing" && exit 1)
+
+      - name: Verify Pages Functions
+        run: |
+          echo "=== functions/api/ structure ==="
+          ls -la functions/api/ | head -20
+          FUNC_COUNT=$(find functions/api -name "*.ts" | wc -l | tr -d ' ')
+          echo "Functions found: $FUNC_COUNT"
+          if [ "$FUNC_COUNT" -lt "5" ]; then
+            echo "ERROR: Expected at least 5 function files, found $FUNC_COUNT"
+            exit 1
+          fi
 
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy dist --project-name=panacea
+        run: npx wrangler pages deploy dist --project-name=panacea --commit-dirty=true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
