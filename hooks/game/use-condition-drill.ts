@@ -373,6 +373,17 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
         setFirstAttemptAnswer(answerIndex);
       }
 
+      // Option A: Coaching skew fix - post-hint attempt (attempt 2)
+      // Grade locally only, skip API/FSRS to preserve data integrity
+      if (attemptNumber === 2) {
+        setIsCorrect(isCorrectAnswer);
+        if (isCorrectAnswer) setScore((prev) => prev + 0.5);
+        setStreak(isCorrectAnswer ? streak + 1 : 0);
+        setStatus('feedback');
+        setIsSubmitting(false);
+        return;
+      }
+
       try {
         // Get auth token for authenticated request
         const token = isSignedIn ? await getToken() : null;
