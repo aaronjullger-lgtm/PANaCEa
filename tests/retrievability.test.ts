@@ -141,7 +141,7 @@ describe('computeConditionRetrievability', () => {
     const lastReviewAt = new Date(Date.now() - 10 * 86400 * 1000);
     const r = computeConditionRetrievability(stability, lastReviewAt);
     expect(r).toBeCloseTo(
-      computeConditionRetrievability(stability, lastReviewAt, 0.0658, 0.1542),
+      computeConditionRetrievability(stability, lastReviewAt, 0.0658, 0.1542)!,
       4
     );
   });

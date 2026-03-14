@@ -30,7 +30,7 @@ const SRSSubmitSchema = z.object({
     srsItemId: z.string().uuid().optional(),
     topicProgressId: z.string().uuid().optional(),
     questionId: z.string().uuid(),
-    rating: z.number().int().min(1).max(4), // FSRS Rating: 1=Again, 2=Hard, 3=Good, 4=Easy
+    rating: z.number().int().min(1).max(4), // FSRS Rating: 1=Again, 3=Good (Hard/Easy deprecated)
     gradeContinuous: z.number().min(1).max(4).optional(),
     isCorrect: z.boolean(),
     userAnswer: z.string().optional(),
@@ -64,7 +64,13 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       telemetry,
     } = validated.body;
 
-    let effectiveRating = gradeContinuous !== undefined ? gradeContinuous : rating;
+    // Normalize deprecated ratings: Hard (2) → Again (1), Easy (4) → Good (3)
+    const normalizedRating = rating === 2 ? 1 : rating === 4 ? 3 : rating;
+
+    let effectiveRating = gradeContinuous !== undefined ? gradeContinuous : normalizedRating;
+    // If effectiveRating is a discrete rating (integer) and deprecated, normalize
+    if (effectiveRating === 2) effectiveRating = 1;
+    if (effectiveRating === 4) effectiveRating = 3;
     let implicitDifficulty: number | null = null;
 
     if (telemetry != null || attemptId != null) {
@@ -286,7 +292,7 @@ export const onRequestPost = authenticatedEndpoint(SRSSubmitSchema, async (conte
       queuedVariant: !!queuedVariantId,
     });
 
-    // Pillar 4: When user rates "Hard" (1), suggest re-generation with exaggerated mnemonic (frontend calls POST /api/srs/generate-visual with style: "exaggerated").
+    // Pillar 4: When user rates "Again" (1), suggest re-generation with exaggerated mnemonic (frontend calls POST /api/srs/generate-visual with style: "exaggerated").
     const triggerVisualRegeneration = rating === 1 && (conditionId != null || questionId != null);
 
     return {

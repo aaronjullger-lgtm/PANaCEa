@@ -11,6 +11,8 @@
     "lib/fsrsQuestionLinking.ts",
     "tests/fsrs.test.ts",
     "tests/fsrs-optimizer-bridge.test.ts",
+    "tests/fsrs-eor-scheduler.test.ts",
+    "tests/retrievability.test.ts",
     "vitest.setup.ts"
   ],
   "exclude": [
