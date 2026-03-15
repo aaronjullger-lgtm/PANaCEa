@@ -241,7 +241,7 @@ const GrandRoundsBanner: React.FC<{
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h3>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-category-specialty)]/10 text-[var(--color-category-specialty)] border border-[var(--color-category-specialty)]/20">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)] border border-[var(--color-data-provisional)]/30">
                 Daily Challenge • {dateStr}
               </span>
             </div>
@@ -522,10 +522,10 @@ const QuickStatsBar: React.FC<{
   const prefersReducedMotion = useReducedMotion();
   const stats = [
     {
-      label: 'Study Continuity',
-      value: streak,
-      icon: Zap,
-      color: 'text-[var(--color-data-pass)]',
+      label: 'Day Streak',
+      value: streak > 0 ? streak : '—',
+      icon: Flame,
+      color: streak > 0 ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-text-muted)]',
     },
     {
       label: dueLabel,
@@ -1463,7 +1463,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onNavigateToStudyPathDashboard}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-slate-100 hover:bg-slate-500 active:bg-slate-400 font-medium rounded-lg transition-colors"
               >
                 Open Dashboard
                 <ChevronRight className="w-4 h-4" />

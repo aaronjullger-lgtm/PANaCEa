@@ -167,8 +167,8 @@ export function DailyChallengesHub() {
   };
 
   const handleStartWordle = () => {
-    // Navigate to Medical Wordle mode
-    window.location.href = '/medical-wordle';
+    // [DISABLED] Medical Wordle API not implemented - redirect to /drills
+    window.location.href = '/drills';
   };
 
   return (

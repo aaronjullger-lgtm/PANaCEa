@@ -286,12 +286,12 @@ const ReadinessGauge: React.FC<{
                   {safePassProb}%
                 </span>
               </div>
-              <div className="h-2 bg-surface-primary rounded-full overflow-hidden">
+              <div className="h-2 bg-[var(--color-border)] rounded-full overflow-hidden border border-[var(--color-border)]">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${safePassProb}%` }}
                   transition={{ duration: 0.8, ease: 'easeOut' }}
-                  className="h-full rounded-full"
+                  className="h-full rounded-full min-w-[4px]"
                   style={{ backgroundColor: getColor(safePassProb) }}
                 />
               </div>
@@ -321,12 +321,12 @@ const SystemStrengthBar: React.FC<{
       <div className="w-20 text-xs font-medium text-action-primary truncate">
         {system}
       </div>
-      <div className="flex-1 h-2 bg-surface-primary rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-[var(--color-border)] rounded-full overflow-hidden border border-[var(--color-border)]">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${mastery}%` }}
           transition={{ duration: 0.5 }}
-          className={`h-full rounded-full ${getBarColor(mastery)}`}
+          className={`h-full rounded-full min-w-[4px] ${getBarColor(mastery)}`}
         />
       </div>
       <div className="w-10 text-xs font-medium text-right text-action-primary">

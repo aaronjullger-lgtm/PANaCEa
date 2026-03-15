@@ -149,7 +149,7 @@ const UnifiedDashboard = () => {
             <div>
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] truncate max-w-full">
                 {getGreeting()},{' '}
-                <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] bg-clip-text text-transparent">
+                <span className="bg-[var(--color-accent)] bg-clip-text text-transparent">
                   {user?.firstName || 'Student'}
                 </span>
               </h1>

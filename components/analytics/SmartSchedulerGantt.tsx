@@ -90,7 +90,7 @@ export const SmartSchedulerGantt: React.FC<SmartSchedulerGanttProps> = ({
           return (
             <div
               key={dateStr}
-              className="flex-shrink-0 w-24 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-2 min-h-[80px]"
+              className="flex-shrink-0 w-28 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-2 min-h-[80px]"
             >
               <div
                 className={`text-xs font-medium mb-2 ${isToday ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}
@@ -104,7 +104,7 @@ export const SmartSchedulerGantt: React.FC<SmartSchedulerGanttProps> = ({
                     type="button"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="w-full text-left px-2 py-1.5 rounded text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/30 transition-colors truncate"
+                    className="w-full text-left px-2 py-1.5 rounded text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/30 transition-colors line-clamp-2 break-words"
                     onClick={() => onBlockClick?.(block)}
                     title={block.label}
                   >

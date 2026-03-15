@@ -1,7 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import useSWR from 'swr';
+import { calculateDayStreak } from '@/lib/dashboardUtils';
+import { useUserStats } from '@/hooks/useUserStats';
 import {
   Brain,
   TrendingUp,
@@ -36,14 +39,14 @@ const DASHBOARD_VIEWS: Array<{
 }> = [
   {
     id: 'pilot',
-    label: 'Daily Pilot',
+    label: 'Today',
     shortLabel: 'Pilot',
     icon: Zap,
     subtitle: 'Action — Streak, due reviews, daily goal',
   },
   {
     id: 'data',
-    label: 'Data Scientist',
+    label: 'Analytics',
     shortLabel: 'Data',
     icon: BarChart3,
     subtitle: 'Analysis — Radars, heatmaps, trends',
@@ -180,9 +183,17 @@ interface DashboardPageProps {
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
+  const navigate = useNavigate();
   const { user } = useUser();
   const { getToken } = useAuth();
-  const retentionFetcher = useCallback(createRetentionFetcher(getToken), [getToken]);
+  const { performanceData } = useUserStats();
+  const retentionFetcher = useCallback(
+    async (url: string) => {
+      const token = await getToken();
+      return createRetentionFetcher(() => Promise.resolve(token))(url);
+    },
+    [getToken]
+  );
   const { data, error, isLoading } = useSWR<RetentionData>(
     user ? '/api/stats/retention' : null,
     retentionFetcher
@@ -213,7 +224,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     if (onNavigate) {
       onNavigate(path);
     } else {
-      window.location.href = path;
+      navigate(path);
     }
   };
 
@@ -241,6 +252,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
   if (error || !data) {
     const isOffline = !navigator.onLine;
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[DashboardPage] Data fetch error:', errorMessage);
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] flex items-center justify-center px-4">
@@ -258,7 +270,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           <p className="text-[var(--color-text-secondary)] text-sm mb-4">
             {isOffline
               ? 'Check your connection and try again'
-              : `Unable to retrieve your study data${errorMessage !== 'Unknown error' ? `: ${errorMessage}` : ''}`}
+              : 'Unable to retrieve your study data. Please try refreshing the page.'}
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -271,9 +283,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     );
   }
 
-  // Streak data comes from separate streaks API, not retention API
-  // For now, use a static value or fetch separately if needed
-  const currentStreak = 0; // TODO: Fetch from /api/streaks/[userId] if displaying streak
+  const currentStreak = useMemo(() => {
+    const { current } = calculateDayStreak(performanceData ?? []);
+    return current;
+  }, [performanceData]);
   const totalCardsLearned = data.totalCards || 0;
 
   return (
@@ -293,12 +306,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             <div>
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] truncate max-w-full">
                 {getGreeting()},{' '}
-                <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)] bg-clip-text text-transparent">
+                <span className="bg-[var(--color-accent)] bg-clip-text text-transparent">
                   {user?.firstName || 'Student'}
                 </span>
               </h1>
               <p className="text-[var(--color-text-secondary)] text-sm md:text-base">
-                Your cognitive command center — let's make progress today.
+                Here's where you left off.
               </p>
             </div>
           </div>
@@ -352,7 +365,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                   icon={<Brain className="w-5 h-5 text-[var(--color-accent)]" />}
                   label="Due Reviews"
                   value={data.dueCount || 0}
-                  accentColor="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]"
+                  accentColor="bg-[var(--color-accent)]"
                   delay={0.05}
                 />
                 <QuickStat
