@@ -984,6 +984,21 @@ const App: React.FC = () => {
   const [simulationInitialFocus, setSimulationInitialFocus] = useState<SimulationFocus>('all');
   const [initialDrillSystem, setInitialDrillSystem] = useState<string | null>(null);
 
+  // Consume cross-page system drill intent stored by ProgressPage "Practice Now" buttons
+  useEffect(() => {
+    try {
+      const pendingSystem = sessionStorage.getItem('panceai_pending_system_drill');
+      if (pendingSystem) {
+        sessionStorage.removeItem('panceai_pending_system_drill');
+        setInitialDrillSystem(pendingSystem);
+        setView('system_drill');
+      }
+    } catch {
+      /* ignore storage errors */
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleNavigateToSimulation = useCallback(
     (settings?: { initialFocus?: SimulationFocus }) => {
       if (settings?.initialFocus) {

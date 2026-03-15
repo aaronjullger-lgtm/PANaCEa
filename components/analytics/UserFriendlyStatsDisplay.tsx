@@ -34,6 +34,7 @@ import {
   RefreshCw,
   Coffee,
   Minus,
+  Info,
 } from 'lucide-react';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { UserStatsOverviewSkeleton } from '@/components/loading';
@@ -109,6 +110,11 @@ interface UserStatsResponse {
 // Types - Component Props
 // ============================================================================
 
+interface UserFriendlyStatsDisplayProps {
+  /** Optional callback to launch a system-specific drill from insight cards */
+  onPracticeSystem?: (system: string) => void;
+}
+
 interface StatCardProps {
   label: string;
   value: string | number;
@@ -181,16 +187,65 @@ const StatCard: React.FC<StatCardProps> = ({
   );
 };
 
-const InsightCard: React.FC<{ insight: string; index: number }> = ({ insight, index }) => {
+/**
+ * Extract the actionable system name (if any) and a CTA label from an insight string.
+ *
+ * Handled patterns (from /api/user/stats recommendations):
+ *   "Focus on Gastrointestinal - currently at 17% accuracy"  → { system: "Gastrointestinal", label: "Practice Gastrointestinal" }
+ *   "Try more questions in: Cardiovascular, Pulmonary, Gastrointestinal" → { system: "Cardiovascular", label: "Start drill" }
+ *
+ * Returns null when there is no specific system to act on.
+ */
+function extractInsightCTA(insight: string): { system: string; label: string } | null {
+  // Pattern 1: "Focus on <System> - ..."
+  const focusMatch = insight.match(/^Focus on ([^-–]+?)(?:\s*[-–]|$)/);
+  if (focusMatch) {
+    const system = focusMatch[1].trim();
+    return { system, label: `Practice ${system}` };
+  }
+
+  // Pattern 2: "Try more questions in: <System1>, <System2>, ..."
+  const tryMoreMatch = insight.match(/^Try more questions in:\s*(.+)$/);
+  if (tryMoreMatch) {
+    // Use the first listed system as the drill target
+    const firstSystem = tryMoreMatch[1].split(',')[0].trim();
+    if (firstSystem) {
+      return { system: firstSystem, label: 'Start drill' };
+    }
+  }
+
+  return null;
+}
+
+const InsightCard: React.FC<{
+  insight: string;
+  index: number;
+  onPracticeSystem?: (system: string) => void;
+}> = ({ insight, index, onPracticeSystem }) => {
+  const cta = onPracticeSystem ? extractInsightCTA(insight) : null;
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="flex items-start gap-3 p-3 bg-surface-secondary rounded-lg border border-border-subtle"
+      className="flex flex-col gap-2 p-3 bg-surface-secondary rounded-lg border border-border-subtle"
     >
-      <Lightbulb className="w-5 h-5 text-action-primary flex-shrink-0 mt-0.5" aria-hidden />
-      <p className="text-sm text-action-primary leading-relaxed">{insight}</p>
+      <div className="flex items-start gap-3">
+        <Lightbulb className="w-5 h-5 text-action-primary flex-shrink-0 mt-0.5" aria-hidden />
+        <p className="text-sm text-action-primary leading-relaxed">{insight}</p>
+      </div>
+      {cta && (
+        <div className="pl-8">
+          <button
+            type="button"
+            onClick={() => onPracticeSystem!(cta.system)}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20 hover:bg-[var(--color-accent)]/20 transition-colors"
+          >
+            {cta.label}
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 };
@@ -200,6 +255,7 @@ const ReadinessGauge: React.FC<{
   passProbability: number;
   hasData?: boolean;
 }> = ({ score, passProbability, hasData = true }) => {
+  const [showInfo, setShowInfo] = useState(false);
   const safeScore = isNaN(score) || !isFinite(score) ? 0 : Math.min(100, Math.max(0, score));
   const safePassProb =
     isNaN(passProbability) || !isFinite(passProbability)
@@ -224,7 +280,31 @@ const ReadinessGauge: React.FC<{
     <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
       <h3 className="text-sm font-medium text-muted mb-4 flex items-center gap-2">
         <Target className="w-4 h-4" />
-        Exam Readiness
+        <div className="relative inline-flex items-center gap-1">
+          <span>Exam Readiness</span>
+          <button
+            type="button"
+            onClick={() => setShowInfo(v => !v)}
+            className="w-4 h-4 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none"
+            aria-label="About this score"
+          >
+            <Info className="w-4 h-4" />
+          </button>
+          {showInfo && (
+            <div className="absolute bottom-full left-0 z-50 mb-2 w-64 p-3 rounded-xl bg-[var(--color-bg-primary)] border border-[var(--color-border)] shadow-lg text-xs text-[var(--color-text-secondary)]">
+              <p className="font-semibold text-[var(--color-text-primary)] mb-1">How is this calculated?</p>
+              <p className="mb-2">Your Exam Readiness index (0–100) combines your recent accuracy, total questions answered, and answer recency using an adaptive weighting model.</p>
+              <p className="font-medium text-[var(--color-text-primary)] mb-1">Score levels:</p>
+              <ul className="space-y-0.5">
+                <li>0–29: Getting Started</li>
+                <li>30–49: Building</li>
+                <li>50–64: Progressing</li>
+                <li>65–79: Almost Ready</li>
+                <li>80–100: Ready</li>
+              </ul>
+            </div>
+          )}
+        </div>
       </h3>
 
       <div className="flex items-center gap-6">
@@ -379,7 +459,9 @@ const RecommendationCard: React.FC<{ recommendation: string; index: number }> = 
 // Main Component
 // ============================================================================
 
-export const UserFriendlyStatsDisplay: React.FC = () => {
+export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> = ({
+  onPracticeSystem,
+}) => {
   const { getToken } = useAuth();
   const [userStats, setUserStats] = useState<UserStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -776,7 +858,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                 return (
                   <div className="space-y-3">
                     {validInsights.map((insight, i) => (
-                      <InsightCard key={i} insight={insight} index={i} />
+                      <InsightCard key={i} insight={insight} index={i} onPracticeSystem={onPracticeSystem} />
                     ))}
                   </div>
                 );

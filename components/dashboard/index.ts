@@ -9,7 +9,6 @@ export { default as AlgorithmStatusWidget } from './AlgorithmStatusWidget';
 export { default as DailyTriad } from './DailyTriad';
 export { default as DecayCurve } from './charts/DecayCurve';
 export { default as StabilityPyramid } from './charts/StabilityPyramid';
-export { default as NeuralLinkLog } from './NeuralLinkLog';
 
 // New UX-enhanced components (Phase 14)
 export { GrandRoundsHero } from './GrandRoundsHero';
