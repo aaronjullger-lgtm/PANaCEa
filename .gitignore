@@ -248,3 +248,15 @@ typecheck-errors.txt
 
 # Claude worktrees (local IDE state)
 .claude/worktrees/
+
+# AI agent configuration - developer tooling, not source code
+.clinerules
+.cursorrules
+.qrules
+.roomodes
+.amazonq/
+.cline/
+.cursor/
+.kiro/
+.roo/
+mcp_config.json
