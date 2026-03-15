@@ -258,36 +258,6 @@ export const PracticePage: React.FC<PracticePageProps> = ({
         </div>
       </div>
 
-      {/* Start here — recommended modes when not searching */}
-      {!searchQuery && recommendedModes.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[var(--color-accent)]" />
-            Start here
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {recommendedModes.map((mode) => (
-              <ModeCard key={mode.id} mode={mode} onSelect={() => handleModeSelect(mode)} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Recently used — same storage as Command Palette */}
-      {!searchQuery && recentModes.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-[var(--color-text-muted)]" />
-            Recently used
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {recentModes.map((mode) => (
-              <ModeCard key={mode.id} mode={mode} onSelect={() => handleModeSelect(mode)} />
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Search & Filters */}
       <div className="mb-6 space-y-3">
         <div className="relative">
@@ -330,6 +300,36 @@ export const PracticePage: React.FC<PracticePageProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Start here — recommended modes when not searching */}
+      {!searchQuery && recommendedModes.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-[var(--color-accent)]" />
+            Start here
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {recommendedModes.map((mode) => (
+              <ModeCard key={mode.id} mode={mode} onSelect={() => handleModeSelect(mode)} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Recently used — same storage as Command Palette */}
+      {!searchQuery && recentModes.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-[var(--color-text-muted)]" />
+            Recently used
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {recentModes.map((mode) => (
+              <ModeCard key={mode.id} mode={mode} onSelect={() => handleModeSelect(mode)} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Training Mode Categories */}
       <CategorySection category="visual_diagnostics" modes={filteredModes.visual} onSelectMode={handleModeSelect} />
