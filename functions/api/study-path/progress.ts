@@ -333,10 +333,7 @@ export const onRequestGet = authenticatedEndpoint(
     } catch (error) {
       console.error('Study‑path progress endpoint error:', error);
       return new Response(
-        JSON.stringify({
-          error: 'Internal server error',
-          details: error instanceof Error ? error.message : String(error),
-        }),
+        JSON.stringify({ error: 'Unable to load progress data. Please try again.' }),
         {
           status: 500,
           headers: jsonHeaders,

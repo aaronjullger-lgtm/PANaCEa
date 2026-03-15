@@ -20,9 +20,23 @@ export enum FSRSState {
 
 export enum Rating {
   Again = 1,
+  /** @deprecated Hard rating (2) is no longer used in binary rating system. Treat as Again. */
   Hard = 2,
   Good = 3,
+  /** @deprecated Easy rating (4) is no longer used in binary rating system. Treat as Good. */
   Easy = 4,
+}
+
+/** Normalize deprecated ratings to binary rating system */
+export function normalizeRating(rating: Rating): Rating {
+  switch (rating) {
+    case Rating.Hard:
+      return Rating.Again;
+    case Rating.Easy:
+      return Rating.Good;
+    default:
+      return rating;
+  }
 }
 
 export interface FSRSCard {
@@ -182,6 +196,7 @@ export class FSRS {
       Rating,
       { card: FSRSCard; due: Date }
     >;
+    // Note: Hard (2) and Easy (4) are deprecated; binary rating uses only Again (1) and Good (3).
     for (const rating of [Rating.Again, Rating.Hard, Rating.Good, Rating.Easy]) {
       scheduled[rating] = this.next(card, now, rating);
     }
@@ -337,6 +352,7 @@ export class FSRS {
     // FSRS v6 formula: sinc = S^(-w19) * e^(w17 * (G - 3 + w18))
     const sinc = Math.pow(stability, -w19) * Math.exp(w17 * (rating - 3 + w18));
 
+    // Hard rating (2) is deprecated; binary rating uses only Again/Good.
     // For Hard or better ratings, ensure stability doesn't decrease
     const maskedSinc = rating >= Rating.Hard ? Math.max(sinc, 1.0) : sinc;
 
@@ -380,7 +396,7 @@ export class FSRS {
   private next_ds(card: FSRSCard, rating: number): void {
     const delta_d = -(this.p.w[6] ?? 0) * (rating - 3);
     const next_d = card.difficulty + this.linear_damping(delta_d, card.difficulty);
-    // Mean reversion targets init_difficulty(Easy) per official ts-fsrs
+    // Mean reversion targets init_difficulty(Easy) per official ts-fsrs (Easy rating is deprecated)
     card.difficulty = this.constrain_difficulty(
       this.mean_reversion(this.init_difficulty(Rating.Easy), next_d)
     );
@@ -425,7 +441,7 @@ export class FSRS {
     const w15 = this.p.w[15] ?? 0.6014;
     const w16 = this.p.w[16] ?? 1.8729;
     
-    // Hard penalty interpolation between w15 (rating <= 2) and 1 (rating >= 3)
+    // Hard penalty interpolation between w15 (rating <= 2) and 1 (rating >= 3) (Hard rating deprecated)
     let hard_penalty = 1;
     if (rating <= 2) {
       hard_penalty = w15;
@@ -433,7 +449,7 @@ export class FSRS {
       hard_penalty = this.lerp(w15, 1, rating - 2);
     }
     
-    // Easy bonus interpolation between 1 (rating <= 3) and max(1.08, w16) (rating >= 4)
+    // Easy bonus interpolation between 1 (rating <= 3) and max(1.08, w16) (rating >= 4) (Easy rating deprecated)
     let easy_bonus = 1;
     if (rating >= 4) {
       easy_bonus = Math.max(1.08, w16);

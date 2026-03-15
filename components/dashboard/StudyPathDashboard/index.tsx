@@ -22,8 +22,13 @@ function createStudyPathFetcher(getToken: () => Promise<string | null>) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Failed to fetch study path: ${res.status} ${errorText}`);
+      const safeMessages: Record<number, string> = {
+        401: 'Your session has expired. Please sign in again.',
+        403: 'You do not have permission to access this study plan.',
+        404: 'No study plan found. Try regenerating one.',
+        429: 'Too many requests. Please wait a moment and try again.',
+      };
+      throw new Error(safeMessages[res.status] ?? 'Unable to load your study plan. Please try again.');
     }
     const data = await res.json();
     return data as RecommendationResponse;
@@ -107,14 +112,13 @@ const StudyPathDashboard = () => {
           message: 'Study plan regenerated successfully!',
         });
       } else {
-        const errorText = await res.text();
-        throw new Error(`Regeneration failed: ${res.status} ${errorText}`);
+        throw new Error('Unable to regenerate study plan. Please try again.');
       }
     } catch (err) {
       console.error('Regeneration error:', err);
       showToast({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Failed to regenerate plan',
+        message: 'Unable to regenerate study plan. Please try again.',
       });
     } finally {
       setIsRegenerating(false);
@@ -133,20 +137,28 @@ const StudyPathDashboard = () => {
   }
 
   if (error) {
+    const safeMessage =
+      error.message &&
+      !error.message.includes('prisma') &&
+      !error.message.includes('Argument') &&
+      !error.message.includes('Invalid') &&
+      error.message.length < 200
+        ? error.message
+        : 'Unable to load your study plan. Please try again.';
     return (
-      <div className="rounded-lg bg-[var(--color-bg-error)] p-6 text-center">
-        <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-[var(--color-error)]" />
+      <div className="rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 text-center">
+        <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-[var(--color-warning)]" />
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-          Failed to load study plan
+          Study plan unavailable
         </h3>
         <p className="text-[var(--color-text-secondary)] mb-4">
-          {error.message || 'Unknown error'}
+          {safeMessage}
         </p>
         <button
           onClick={() => mutate()}
           className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
         >
-          Retry
+          Try Again
         </button>
       </div>
     );

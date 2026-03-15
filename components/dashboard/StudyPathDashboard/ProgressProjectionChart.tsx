@@ -26,8 +26,7 @@ function createProgressFetcher(getToken: () => Promise<string | null>) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`Failed to fetch progress: ${res.status} ${errorText}`);
+      throw new Error('Unable to load progress projection. Please try again.');
     }
     const data = await res.json();
     return data as ProgressResponse;
@@ -94,9 +93,11 @@ const ProgressProjectionChart: React.FC<ProgressProjectionChartProps> = ({
 
   if (error) {
     return (
-      <div className="rounded-lg bg-[var(--color-bg-error)]/20 p-6 text-center">
-        <p className="text-[var(--color-error)] mb-2">Failed to load progress projection</p>
-        <p className="text-sm text-[var(--color-text-secondary)]">{error.message}</p>
+      <div className="rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 text-center">
+        <p className="text-[var(--color-text-primary)] font-medium mb-2">Progress projection unavailable</p>
+        <p className="text-sm text-[var(--color-text-secondary)]">
+          Unable to load progress data. Please try again later.
+        </p>
       </div>
     );
   }

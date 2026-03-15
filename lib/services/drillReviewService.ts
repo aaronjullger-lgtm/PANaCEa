@@ -288,6 +288,7 @@ export async function submitDrillReview(
 
   // Implicit FSRS "Truth Engine": Override user-derived rating using behavioral honesty heuristics
   // Rule 1: If responseTime > (parTime * 1.5) AND rating == Easy → downgrade to Good
+  // Note: Easy rating is deprecated; binary rating uses only Again/Good.
   if (isCorrect && rating === Rating.Easy && numericTime > parTimeMs * 1.5) {
     rating = Rating.Good;
     logger?.info?.('Behavioral override: Easy→Good (slow response)', {
@@ -297,6 +298,7 @@ export async function submitDrillReview(
     });
   }
   // Rule 2: If answerChanges > 2 (indecision) → max rating is Hard
+  // Hard rating is deprecated; treat as Again.
   const switches = answerSwitches ?? 0;
   if (switches > 2 && rating > Rating.Hard) {
     rating = Rating.Hard;
@@ -320,11 +322,13 @@ export async function submitDrillReview(
   });
 
   let gradeContinuous = continuousResult.grade;
+  // Hard rating deprecated; treat as Again.
   if (rating === Rating.Hard && gradeContinuous > 2.0) {
     gradeContinuous = 2.0;
   }
   const implicitConfidence = continuousResult.confidence;
 
+  // Hard and Easy ratings are deprecated; mapping remains for historical data.
   const quality =
     rating === Rating.Again ? 1 : rating === Rating.Hard ? 2 : rating === Rating.Easy ? 5 : 4;
 

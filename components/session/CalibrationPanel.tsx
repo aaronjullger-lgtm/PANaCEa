@@ -245,24 +245,24 @@ function InsufficientDataState({
 }) {
   return (
     <div className="text-center py-4">
-      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-data-neutral dark:bg-data-neutral mb-3">
-        <Brain className="w-6 h-6 text-data-neutral" />
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-bg-tertiary)] mb-3">
+        <Brain className="w-6 h-6 text-[var(--color-text-muted)]" />
       </div>
-      <h4 className="text-sm font-medium text-data-neutral dark:text-data-neutral mb-1">
+      <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-1">
         Building Your Profile
       </h4>
-      <p className="text-xs text-data-neutral dark:text-data-neutral mb-3">
+      <p className="text-xs text-[var(--color-text-muted)] mb-3">
         {progress.required - progress.current} more questions needed for calibration insights
       </p>
-      <div className="w-full bg-data-neutral dark:bg-data-neutral rounded-full h-2">
+      <div className="w-full bg-[var(--color-border)] rounded-full h-2">
         <motion.div
-          className="bg-deep-plum-500 h-2 rounded-full"
+          className="h-2 rounded-full bg-[var(--color-accent)]"
           initial={{ width: 0 }}
           animate={{ width: `${progress.percentage}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
         />
       </div>
-      <span className="text-xs text-data-neutral mt-1 block">
+      <span className="text-xs text-[var(--color-text-muted)] mt-1 block">
         {progress.current}/{progress.required} observations
       </span>
     </div>

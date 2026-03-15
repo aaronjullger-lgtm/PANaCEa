@@ -103,17 +103,17 @@ const CognitiveLoadGauge: React.FC<{ load: CognitiveLoadProfile }> = ({ load }) 
   };
 
   return (
-    <div className="bg-white dark:bg-data-neutral-bg rounded-2xl p-5 border border-data-neutral dark:border-data-neutral">
+    <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-5 border border-[var(--color-border)]">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-purple-500" />
-          <h3 className="font-semibold text-data-neutral dark:text-data-neutral">Cognitive Load</h3>
+          <Brain className="w-5 h-5 text-[var(--color-accent)]" />
+          <h3 className="font-semibold text-[var(--color-text-primary)]">Cognitive Load</h3>
         </div>
         {getBatteryIcon()}
       </div>
 
       {/* Load meter */}
-      <div className="relative h-4 bg-data-neutral dark:bg-data-neutral rounded-full overflow-hidden mb-4">
+      <div className="relative h-4 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden mb-4">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${Math.min(100, load.totalLoad)}%` }}
@@ -121,26 +121,26 @@ const CognitiveLoadGauge: React.FC<{ load: CognitiveLoadProfile }> = ({ load }) 
           className={`h-full bg-gradient-to-r ${getLoadColor()} rounded-full`}
         />
         {/* Optimal zone indicator */}
-        <div className="absolute top-0 bottom-0 left-[60%] right-[30%] bg-data-pass/20 dark:bg-data-pass/10" />
+        <div className="absolute top-0 bottom-0 left-[60%] right-[30%] bg-[var(--color-data-pass)]/20" />
       </div>
 
       {/* Load breakdown */}
       <div className="grid grid-cols-3 gap-2 text-center text-xs">
-        <div className="p-2 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg">
-          <div className="text-[var(--color-category-practice)] text-[var(--color-category-practice)] font-medium">Intrinsic</div>
-          <div className="text-lg font-bold text-data-neutral dark:text-data-neutral">
+        <div className="p-2 bg-[var(--color-category-practice)]/20 rounded-lg">
+          <div className="text-[var(--color-category-practice)] font-medium">Intrinsic</div>
+          <div className="text-lg font-bold text-[var(--color-text-primary)]">
             {Math.round(load.intrinsicLoad)}%
           </div>
         </div>
-        <div className="p-2 bg-data-fail dark:bg-data-fail/20 rounded-lg">
-          <div className="text-data-fail dark:text-data-fail font-medium">Extraneous</div>
-          <div className="text-lg font-bold text-data-neutral dark:text-data-neutral">
+        <div className="p-2 bg-[var(--color-data-fail)]/20 rounded-lg">
+          <div className="text-[var(--color-data-fail)] font-medium">Extraneous</div>
+          <div className="text-lg font-bold text-[var(--color-text-primary)]">
             {Math.round(load.extraneousLoad)}%
           </div>
         </div>
-        <div className="p-2 bg-data-pass dark:bg-data-pass/20 rounded-lg">
-          <div className="text-data-pass dark:text-data-pass font-medium">Germane</div>
-          <div className="text-lg font-bold text-data-neutral dark:text-data-neutral">
+        <div className="p-2 bg-[var(--color-data-pass)]/20 rounded-lg">
+          <div className="text-[var(--color-data-pass)] font-medium">Germane</div>
+          <div className="text-lg font-bold text-[var(--color-text-primary)]">
             {Math.round(load.germaneLoad)}%
           </div>
         </div>
@@ -150,10 +150,10 @@ const CognitiveLoadGauge: React.FC<{ load: CognitiveLoadProfile }> = ({ load }) 
       <div
         className={`mt-4 p-3 rounded-lg text-sm ${
           load.isOverloaded
-            ? 'bg-data-fail dark:bg-data-fail/30 text-data-fail dark:text-data-fail'
+            ? 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)]'
             : load.optimalBreakTime
-              ? 'bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional'
-              : 'bg-data-pass dark:bg-data-pass/30 text-data-pass dark:text-data-pass'
+              ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
+              : 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)]'
         }`}
       >
         {load.isOverloaded
@@ -185,31 +185,31 @@ const ChronotypeCard: React.FC<{ chronotype: ChronotypeProfile }> = ({ chronotyp
   };
 
   return (
-    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-5 text-white">
+    <div className="bg-[var(--color-bg-accent-subtle)] rounded-2xl p-5 border border-[var(--color-accent)]/30">
       <div className="flex items-center gap-3 mb-4">
         {getIcon()}
         <div>
-          <h3 className="font-semibold">Your Chronotype</h3>
-          <p className="text-sm text-white/80">{getTypeLabel()}</p>
+          <h3 className="font-semibold text-[var(--color-text-primary)]">Your Chronotype</h3>
+          <p className="text-sm text-[var(--color-text-muted)]">{getTypeLabel()}</p>
         </div>
       </div>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-white/70">Peak Cognitive Hour</span>
-          <span className="font-medium">
+          <span className="text-[var(--color-text-muted)]">Peak Cognitive Hour</span>
+          <span className="font-medium text-[var(--color-text-primary)]">
             {chronotype.peakCognitiveHour}:00 {chronotype.peakCognitiveHour < 12 ? 'AM' : 'PM'}
           </span>
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-white/70">Optimal Sleep</span>
-          <span className="font-medium">
+          <span className="text-[var(--color-text-muted)]">Optimal Sleep</span>
+          <span className="font-medium text-[var(--color-text-primary)]">
             {chronotype.sleepSchedule.bedtime}:00 - {chronotype.sleepSchedule.wakeTime}:00
           </span>
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-white/70">Best Study Window</span>
-          <span className="font-medium">
+          <span className="text-[var(--color-text-muted)]">Best Study Window</span>
+          <span className="font-medium text-[var(--color-text-primary)]">
             {chronotype.optimalStudyWindows[0]?.start}:00 - {chronotype.optimalStudyWindows[0]?.end}
             :00
           </span>
@@ -223,42 +223,42 @@ const SleepImpactCard: React.FC<{ assessment: SleepImpactAssessment }> = ({ asse
   const impactPercent = Math.round(assessment.cognitiveImpact * 100);
 
   return (
-    <div className="bg-white dark:bg-data-neutral-bg rounded-2xl p-5 border border-data-neutral dark:border-data-neutral">
+    <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-5 border border-[var(--color-border)]">
       <div className="flex items-center gap-2 mb-4">
-        <Moon className="w-5 h-5 text-indigo-500" />
-        <h3 className="font-semibold text-data-neutral dark:text-data-neutral">Sleep Impact</h3>
+        <Moon className="w-5 h-5 text-[var(--color-accent)]" />
+        <h3 className="font-semibold text-[var(--color-text-primary)]">Sleep Impact</h3>
       </div>
 
       <div className="flex items-center gap-4 mb-4">
-        <div className="text-4xl font-bold text-data-neutral dark:text-data-neutral">
+        <div className="text-4xl font-bold text-[var(--color-text-primary)]">
           {assessment.hoursSlept}h
         </div>
         <div className="flex-1">
-          <div className="text-sm text-data-neutral dark:text-data-neutral">Sleep Quality</div>
-          <div className="font-medium capitalize text-data-neutral dark:text-data-neutral">
+          <div className="text-sm text-[var(--color-text-muted)]">Sleep Quality</div>
+          <div className="font-medium capitalize text-[var(--color-text-primary)]">
             {assessment.sleepQuality}
           </div>
         </div>
         <div
           className={`text-2xl font-bold ${
             impactPercent >= 90
-              ? 'text-data-pass'
+              ? 'text-[var(--color-data-pass)]'
               : impactPercent >= 70
-                ? 'text-data-provisional'
-                : 'text-data-fail'
+                ? 'text-[var(--color-data-provisional)]'
+                : 'text-[var(--color-data-fail)]'
           }`}
         >
           {impactPercent}%
         </div>
       </div>
 
-      <div className="text-sm text-data-neutral dark:text-data-neutral mb-3">
+      <div className="text-sm text-[var(--color-text-muted)] mb-3">
         Today's Study Capacity:{' '}
-        <span className="font-medium">{assessment.adjustedStudyCapacity} min</span>
+        <span className="font-medium text-[var(--color-text-primary)]">{assessment.adjustedStudyCapacity} min</span>
       </div>
 
       {assessment.recommendations.length > 0 && (
-        <div className="text-xs text-data-neutral dark:text-data-neutral bg-data-neutral dark:bg-data-neutral/50 p-3 rounded-lg">
+        <div className="text-xs text-[var(--color-text-primary)] bg-[var(--color-bg-tertiary)] p-3 rounded-lg">
           {assessment.recommendations[0]}
         </div>
       )}
@@ -294,25 +294,25 @@ const ExamCountdownCard: React.FC<{ plan: ExamCountdownPlan }> = ({ plan }) => {
   };
 
   return (
-    <div className={`bg-gradient-to-br ${getPhaseColor()} rounded-2xl p-5 text-white`}>
+    <div className="bg-[var(--color-bg-accent-subtle)] rounded-2xl p-5 border border-[var(--color-accent)]/30">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          <h3 className="font-semibold">Exam Countdown</h3>
+          <Calendar className="w-5 h-5 text-[var(--color-text-primary)]" />
+          <h3 className="font-semibold text-[var(--color-text-primary)]">Exam Countdown</h3>
         </div>
-        <div className="text-3xl font-bold">{plan.daysRemaining}</div>
+        <div className="text-3xl font-bold text-[var(--color-text-primary)]">{plan.daysRemaining}</div>
       </div>
 
-      <div className="text-sm text-white/80 mb-3">days remaining</div>
+      <div className="text-sm text-[var(--color-text-muted)] mb-3">days remaining</div>
 
-      <div className="bg-white/20 rounded-lg p-3 mb-3">
-        <div className="text-xs text-white/70 mb-1">Current Phase</div>
-        <div className="font-medium">{getPhaseLabel()}</div>
+      <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-3 mb-3">
+        <div className="text-xs text-[var(--color-text-muted)] mb-1">Current Phase</div>
+        <div className="font-medium text-[var(--color-text-primary)]">{getPhaseLabel()}</div>
       </div>
 
       <div className="flex items-center justify-between text-sm">
-        <span className="text-white/70">Daily Target</span>
-        <span className="font-medium">{plan.dailyTargetMinutes} min</span>
+        <span className="text-[var(--color-text-muted)]">Daily Target</span>
+        <span className="font-medium text-[var(--color-text-primary)]">{plan.dailyTargetMinutes} min</span>
       </div>
     </div>
   );
@@ -326,38 +326,38 @@ const DifficultyOptimizer: React.FC<{
   };
 
   return (
-    <div className="bg-white dark:bg-data-neutral-bg rounded-2xl p-5 border border-data-neutral dark:border-data-neutral">
+    <div className="bg-[var(--color-bg-secondary)] rounded-2xl p-5 border border-[var(--color-border)]">
       <div className="flex items-center gap-2 mb-4">
-        <Target className="w-5 h-5 text-rose-500" />
-        <h3 className="font-semibold text-data-neutral dark:text-data-neutral">Optimal Difficulty</h3>
+        <Target className="w-5 h-5 text-[var(--color-accent)]" />
+        <h3 className="font-semibold text-[var(--color-text-primary)]">Optimal Difficulty</h3>
       </div>
 
       {/* Goldilocks zone visualization */}
-      <div className="relative h-8 bg-gradient-to-r from-green-400 via-amber-400 to-red-400 rounded-full mb-4 overflow-hidden">
+      <div className="relative h-8 bg-gradient-to-r from-[var(--color-data-success)] via-[var(--color-data-provisional)] to-[var(--color-data-fail)] rounded-full mb-4 overflow-hidden">
         {/* Optimal zone highlight */}
-        <div className="absolute inset-y-0 left-[30%] right-[30%] bg-data-pass/50 border-x-2 border-data-pass" />
+        <div className="absolute inset-y-0 left-[30%] right-[30%] bg-[var(--color-data-pass)]/50 border-x-2 border-[var(--color-data-pass)]" />
         {/* Current position marker */}
         <motion.div
           initial={{ left: '50%' }}
           animate={{ left: `${getZonePosition()}%` }}
           transition={{ duration: 0.5 }}
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-data-neutral"
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-[var(--color-bg-primary)] rounded-full shadow-lg border-2 border-[var(--color-text-primary)]"
         />
       </div>
 
-      <div className="flex justify-between text-xs text-data-neutral dark:text-data-neutral mb-4">
+      <div className="flex justify-between text-xs text-[var(--color-text-muted)] mb-4">
         <span>Too Easy</span>
-        <span className="text-data-pass dark:text-data-pass font-medium">Optimal (85%)</span>
+        <span className="text-[var(--color-data-pass)] font-medium">Optimal (85%)</span>
         <span>Too Hard</span>
       </div>
 
       <div
         className={`p-3 rounded-lg text-sm ${
           difficulty.recommendedAdjustment === 'increase'
-            ? 'bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional'
+            ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
             : difficulty.recommendedAdjustment === 'decrease'
-              ? 'bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)]'
-              : 'bg-data-pass dark:bg-data-pass/30 text-data-pass dark:text-data-pass'
+              ? 'bg-[var(--color-category-practice)]/20 text-[var(--color-category-practice)]'
+              : 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)]'
         }`}
       >
         {difficulty.explanation}
@@ -377,10 +377,10 @@ const TipsCarousel: React.FC<{ tips: string[] }> = ({ tips }) => {
   }, [tips.length]);
 
   return (
-    <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-5 text-white">
+    <div className="bg-[var(--color-bg-accent-subtle)] rounded-2xl p-5 border border-[var(--color-accent)]/30">
       <div className="flex items-center gap-2 mb-4">
-        <Lightbulb className="w-5 h-5 text-data-provisional" />
-        <h3 className="font-semibold">Science-Backed Tips</h3>
+        <Lightbulb className="w-5 h-5 text-[var(--color-accent)]" />
+        <h3 className="font-semibold text-[var(--color-text-primary)]">Science-Backed Tips</h3>
       </div>
 
       <AnimatePresence mode="wait">
@@ -389,7 +389,7 @@ const TipsCarousel: React.FC<{ tips: string[] }> = ({ tips }) => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="text-sm text-data-neutral leading-relaxed min-h-[60px]"
+          className="text-sm text-[var(--color-text-primary)] leading-relaxed min-h-[60px]"
         >
           {tips[currentTip]}
         </motion.p>
@@ -401,7 +401,7 @@ const TipsCarousel: React.FC<{ tips: string[] }> = ({ tips }) => {
             key={i}
             onClick={() => setCurrentTip(i)}
             className={`h-1.5 rounded-full transition-all ${
-              i === currentTip ? 'w-6 bg-data-provisional' : 'w-1.5 bg-data-neutral'
+              i === currentTip ? 'w-6 bg-[var(--color-accent)]' : 'w-1.5 bg-[var(--color-bg-tertiary)]'
             }`}
           />
         ))}
@@ -419,12 +419,12 @@ const StartSessionButton: React.FC<{
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-2xl p-5 shadow-lg shadow-[color-mix(in_srgb,var(--color-category-practice)_25%,transparent)]"
+      className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] rounded-2xl p-5 shadow-lg shadow-[var(--color-accent)]/25"
     >
       <div className="flex items-center justify-between">
         <div className="text-left">
           <div className="font-semibold text-lg mb-1">Start Optimized Session</div>
-          <div className="text-sm text-white/80">
+          <div className="text-sm opacity-80">
             {plan.totalDurationMinutes} min • {plan.blocks.length} blocks •{' '}
             {Math.round(plan.estimatedRetentionGain * 100)}% retention boost
           </div>
@@ -497,17 +497,17 @@ export const SmartStudyDashboard: React.FC<SmartStudyDashboardProps> = ({
   };
 
   return (
-    <div className={`p-6 bg-slate-50 dark:bg-slate-900 min-h-screen ${className}`}>
+    <div className={`p-6 bg-[var(--color-bg-primary)] min-h-screen ${className}`}>
       {/* Header */}
       <div className="mb-8">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold text-data-neutral dark:text-data-neutral mb-2"
+          className="text-3xl font-bold text-[var(--color-text-primary)] mb-2"
         >
           Smart Study Dashboard
         </motion.h1>
-        <p className="text-data-neutral dark:text-data-neutral">
+        <p className="text-[var(--color-text-muted)]">
           AI-powered study optimization based on cognitive science research
         </p>
       </div>
@@ -576,25 +576,25 @@ export const SmartStudyDashboard: React.FC<SmartStudyDashboardProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
-        className="mb-8 p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl"
+        className="mb-8 p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]"
       >
         <div className="flex items-center gap-2 mb-3">
-          <BookOpen className="w-4 h-4 text-data-neutral" />
-          <span className="text-sm font-medium text-data-neutral dark:text-data-neutral">
+          <BookOpen className="w-4 h-4 text-[var(--color-text-primary)]" />
+          <span className="text-sm font-medium text-[var(--color-text-primary)]">
             Powered by Research
           </span>
         </div>
-        <div className="flex flex-wrap gap-2 text-xs text-data-neutral dark:text-data-neutral">
-          <span className="px-2 py-1 bg-white dark:bg-data-neutral-bg rounded">
+        <div className="flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
+          <span className="px-2 py-1 bg-[var(--color-bg-tertiary)] rounded">
             Bjork (2011) - Desirable Difficulties
           </span>
-          <span className="px-2 py-1 bg-white dark:bg-data-neutral-bg rounded">
+          <span className="px-2 py-1 bg-[var(--color-bg-tertiary)] rounded">
             Sweller (1988) - Cognitive Load Theory
           </span>
-          <span className="px-2 py-1 bg-white dark:bg-data-neutral-bg rounded">
+          <span className="px-2 py-1 bg-[var(--color-bg-tertiary)] rounded">
             Walker (2008) - Sleep & Memory
           </span>
-          <span className="px-2 py-1 bg-white dark:bg-data-neutral-bg rounded">
+          <span className="px-2 py-1 bg-[var(--color-bg-tertiary)] rounded">
             Roediger & Karpicke (2006) - Testing Effect
           </span>
         </div>

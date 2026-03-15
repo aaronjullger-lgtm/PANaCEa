@@ -105,10 +105,7 @@ export const onRequestPut = authenticatedEndpoint(
     } catch (error) {
       console.error('Study‑path accept endpoint error:', error);
       return new Response(
-        JSON.stringify({
-          error: 'Internal server error',
-          details: error instanceof Error ? error.message : String(error),
-        }),
+        JSON.stringify({ error: 'Unable to accept study plan. Please try again.' }),
         {
           status: 500,
           headers: jsonHeaders,

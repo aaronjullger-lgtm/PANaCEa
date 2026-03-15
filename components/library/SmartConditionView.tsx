@@ -1153,20 +1153,22 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
 
       {/* Tab Content - min-h-0 so overflow-y-auto can scroll when embedded */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 md:p-6">
-        {/* Details-fetch error banner — only for real load failures (network/5xx/4xx), not for empty sections */}
-        {errorDetails && (
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-[var(--color-data-fail)]/40 bg-[var(--color-data-fail)]/10 px-4 py-3 text-sm text-[var(--color-text-secondary)]">
-            <span>
-              We couldn&apos;t load full details. The High Yield tab is still available. Try again if the problem persists.
-            </span>
-            {onRetryDetails && (
-              <button
-                onClick={onRetryDetails}
-                className="flex-shrink-0 rounded-md px-3 py-1 font-medium text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10"
-              >
-                Retry
-              </button>
-            )}
+        {/* Details-fetch error banner — only shown on tabs that require details data */}
+        {errorDetails && activeTab !== 'highyield' && (
+          <div className="mb-4 rounded-lg border border-[var(--color-data-fail)]/40 bg-[var(--color-data-fail)]/10 px-4 py-3 text-sm text-[var(--color-text-secondary)]">
+            <div className="flex items-center justify-between gap-3">
+              <span>
+                Unable to load full details. The High Yield tab is still available.
+              </span>
+              {onRetryDetails && (
+                <button
+                  onClick={onRetryDetails}
+                  className="flex-shrink-0 rounded-md px-3 py-1 font-medium text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10"
+                >
+                  Try Again
+                </button>
+              )}
+            </div>
           </div>
         )}
 

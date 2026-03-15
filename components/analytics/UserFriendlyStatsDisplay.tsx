@@ -133,18 +133,18 @@ const StatCard: React.FC<StatCardProps> = ({
   color = 'blue',
 }) => {
   const colorClasses = {
-    blue: 'bg-action-muted text-action-primary border-action-primary/20',
-    green: 'bg-success-muted text-success-primary border-success-primary/20',
-    amber: 'bg-warning-muted text-warning-primary border-warning-primary/20',
-    red: 'bg-error-muted text-error-primary border-error-primary/20',
-    purple: 'bg-action-muted text-action-primary border-action-primary/20',
+    blue: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]',
+    green: 'bg-[var(--color-data-pass)]/10 text-[var(--color-data-pass)]',
+    amber: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    red: 'bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]',
+    purple: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]',
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-surface-card border border-border-subtle rounded-xl p-4"
+      className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
     >
       <div className="flex items-start justify-between">
         <div className={`p-2 rounded-lg ${colorClasses[color]}`}>{icon}</div>
@@ -152,10 +152,10 @@ const StatCard: React.FC<StatCardProps> = ({
           <div
             className={`flex items-center gap-1 text-xs font-medium ${
               trend === 'up'
-                ? 'text-success-primary'
+                ? 'text-[var(--color-data-pass)]'
                 : trend === 'down'
-                  ? 'text-error-primary'
-                  : 'text-muted'
+                  ? 'text-[var(--color-data-fail)]'
+                  : 'text-[var(--color-text-secondary)]'
             }`}
           >
             {trend === 'up' ? (
@@ -173,9 +173,9 @@ const StatCard: React.FC<StatCardProps> = ({
         )}
       </div>
       <div className="mt-3">
-        <p className="text-xl sm:text-2xl font-bold text-action-primary">{value}</p>
-        <p className="text-sm text-muted">{label}</p>
-        {subtext && <p className="text-xs text-text-secondary mt-1">{subtext}</p>}
+        <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)]">{value}</p>
+        <p className="text-sm font-medium text-[var(--color-text-secondary)]">{label}</p>
+        {subtext && <p className="text-xs text-[var(--color-text-secondary)] mt-1">{subtext}</p>}
       </div>
     </motion.div>
   );
@@ -187,10 +187,10 @@ const InsightCard: React.FC<{ insight: string; index: number }> = ({ insight, in
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="flex items-start gap-3 p-3 bg-surface-secondary rounded-lg border border-border-subtle"
+      className="flex items-start gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
     >
-      <Lightbulb className="w-5 h-5 text-action-primary flex-shrink-0 mt-0.5" aria-hidden />
-      <p className="text-sm text-action-primary leading-relaxed">{insight}</p>
+      <Lightbulb className="w-5 h-5 text-[var(--color-text-primary)] flex-shrink-0 mt-0.5" aria-hidden />
+      <p className="text-sm text-[var(--color-text-primary)] leading-relaxed">{insight}</p>
     </motion.div>
   );
 };
@@ -199,12 +199,16 @@ const ReadinessGauge: React.FC<{
   score: number;
   passProbability: number;
   hasData?: boolean;
-}> = ({ score, passProbability, hasData = true }) => {
+  totalQuestions?: number;
+}> = ({ score, passProbability, hasData = true, totalQuestions = 0 }) => {
   const safeScore = isNaN(score) || !isFinite(score) ? 0 : Math.min(100, Math.max(0, score));
   const safePassProb =
     isNaN(passProbability) || !isFinite(passProbability)
       ? 0
       : Math.min(100, Math.max(0, passProbability));
+  // Only show numeric pass probability after a meaningful sample size
+  const MIN_QUESTIONS_FOR_PROBABILITY = 50;
+  const hasSufficientData = hasData && totalQuestions >= MIN_QUESTIONS_FOR_PROBABILITY;
 
   const getColor = (s: number) => {
     if (s >= 80) return 'var(--color-data-pass)';
@@ -221,8 +225,8 @@ const ReadinessGauge: React.FC<{
   };
 
   return (
-    <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-      <h3 className="text-sm font-medium text-muted mb-4 flex items-center gap-2">
+    <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-5">
+      <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
         <Target className="w-4 h-4" />
         Exam Readiness
       </h3>
@@ -235,7 +239,7 @@ const ReadinessGauge: React.FC<{
               cy="48"
               r="40"
               fill="none"
-              stroke="var(--color-surface-primary)"
+              stroke="var(--color-border)"
               strokeWidth="8"
             />
             <motion.circle
@@ -255,38 +259,40 @@ const ReadinessGauge: React.FC<{
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {hasData ? (
               <>
-                <span className="text-xl sm:text-2xl font-bold text-action-primary">
+                <span className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)]">
                   {safeScore}
                 </span>
-                <span className="text-xs text-muted">/ 100</span>
+                <span className="text-xs text-[var(--color-text-muted)]">/ 100</span>
               </>
             ) : (
-              <span className="text-xl font-bold text-muted">—</span>
+              <span className="text-xl font-bold text-[var(--color-text-muted)]">—</span>
             )}
           </div>
         </div>
 
         <div className="flex-1">
           <p
-            className="text-lg font-semibold text-action-primary"
+            className="text-lg font-semibold text-[var(--color-text-primary)]"
             style={{ color: hasData ? getColor(safeScore) : undefined }}
           >
             {hasData ? getLabel(safeScore) : 'Waiting for first session'}
           </p>
-          <p className="text-sm text-muted mt-1">
-            {hasData
+          <p className="text-sm text-[var(--color-text-muted)] mt-1">
+            {hasSufficientData
               ? `${safePassProb}% estimated pass probability`
-              : 'Complete questions to see readiness'}
+              : hasData
+                ? 'Keep practicing — probability estimate requires 50+ questions'
+                : 'Complete questions to see readiness'}
           </p>
-          {hasData && (
+          {hasSufficientData && (
             <div className="mt-3">
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-muted">Pass Probability</span>
-                <span className="font-medium text-action-primary">
+                <span className="text-[var(--color-text-muted)]">Pass Probability</span>
+                <span className="font-medium text-[var(--color-text-primary)]">
                   {safePassProb}%
                 </span>
               </div>
-              <div className="h-2 bg-surface-primary rounded-full overflow-hidden">
+              <div className="h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${safePassProb}%` }}
@@ -295,6 +301,18 @@ const ReadinessGauge: React.FC<{
                   style={{ backgroundColor: getColor(safePassProb) }}
                 />
               </div>
+              {safePassProb < 50 && (
+                <div className="mt-2 p-2.5 bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 rounded-lg">
+                  <p className="text-xs text-[var(--color-text-primary)] font-medium">
+                    {safePassProb < 30 ? 'Significant focus needed' : 'Additional practice recommended'}
+                  </p>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                    {safePassProb < 30
+                      ? 'Prioritize reviewing fundamentals and weak topic areas identified below.'
+                      : 'Focus on high-yield topics and your weaker systems to improve odds.'}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -311,14 +329,14 @@ const SystemStrengthBar: React.FC<{
 }> = ({ system, mastery, trend, isStrength }) => {
   const getBarColor = (m: number) => {
     if (m >= 80) return 'bg-success-primary';
-    if (m >= 60) return 'bg-action-primary';
+    if (m >= 60) return 'bg-[var(--color-accent)]';
     if (m >= 40) return 'bg-warning-primary';
     return 'bg-error-primary';
   };
 
   return (
     <div className="flex items-center gap-3">
-      <div className="w-20 text-xs font-medium text-action-primary truncate">
+      <div className="w-20 text-xs font-medium text-[var(--color-text-primary)] truncate">
         {system}
       </div>
       <div className="flex-1 h-2 bg-surface-primary rounded-full overflow-hidden">
@@ -329,15 +347,15 @@ const SystemStrengthBar: React.FC<{
           className={`h-full rounded-full ${getBarColor(mastery)}`}
         />
       </div>
-      <div className="w-10 text-xs font-medium text-right text-action-primary">
+      <div className="w-10 text-xs font-medium text-right text-[var(--color-text-primary)]">
         {mastery}%
       </div>
       <div
         className={`w-4 ${
           trend === 'improving'
-            ? 'text-success-primary'
+            ? 'text-[var(--color-data-pass)]'
             : trend === 'declining'
-              ? 'text-error-primary'
+              ? 'text-[var(--color-data-fail)]'
               : 'text-muted'
         }`}
       >
@@ -366,10 +384,10 @@ const RecommendationCard: React.FC<{ recommendation: string; index: number }> = 
     >
       <div className="flex items-start gap-3">
         <Lightbulb
-          className="w-5 h-5 text-action-primary flex-shrink-0 mt-0.5"
+          className="w-5 h-5 text-[var(--color-text-primary)] flex-shrink-0 mt-0.5"
           aria-hidden
         />
-        <p className="font-medium text-action-primary text-sm">{recommendation}</p>
+        <p className="font-medium text-[var(--color-text-primary)] text-sm">{recommendation}</p>
       </div>
     </motion.div>
   );
@@ -574,13 +592,13 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-border-subtle bg-surface-secondary p-6 text-center">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 text-center">
         <AlertCircle className="w-12 h-12 mx-auto text-data-fail mb-3" aria-hidden />
-        <p className="font-medium text-action-primary">Failed to load analytics</p>
+        <p className="font-medium text-[var(--color-text-primary)]">Failed to load analytics</p>
         <p className="text-sm text-muted mt-1">{error}</p>
         <button
           onClick={loadData}
-          className="mt-4 px-4 py-2 rounded-lg font-medium bg-action-primary text-action-primary hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-action-primary focus-visible:ring-offset-2"
+          className="mt-4 px-4 py-2 rounded-lg font-medium bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2"
         >
           Try Again
         </button>
@@ -592,14 +610,14 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
     return (
       <div className="text-center py-12 px-4">
         <BookOpen className="w-12 h-12 mx-auto text-muted mb-3" />
-        <p className="text-action-primary font-medium">Not yet assessed</p>
+        <p className="text-[var(--color-text-primary)] font-medium">Not yet assessed</p>
         <p className="text-sm text-muted mt-1 mb-4 max-w-sm mx-auto">
           Your personalized analytics will appear here after you answer questions.
         </p>
         <button
           type="button"
           onClick={() => window.location.assign('/study')}
-          className="px-4 py-2.5 rounded-xl bg-action-primary text-action-primary text-sm font-medium hover:opacity-90 transition-opacity"
+          className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
         >
           Take a 10-question diagnostic quiz to unlock your analytics
         </button>
@@ -609,9 +627,8 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Segmented control: light track + white pill for active tab */}
       <div
-        className="inline-flex p-1 rounded-xl bg-surface-secondary border border-border-subtle"
+        className="inline-flex p-1 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]"
         role="tablist"
         aria-label="Analytics view"
       >
@@ -628,8 +645,8 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive
-                  ? 'bg-white dark:bg-surface-secondary text-action-primary shadow-sm border border-border-subtle'
-                  : 'text-muted hover:text-action-secondary'
+                  ? 'bg-[var(--color-bg-secondary)] text-[var(--color-accent)] shadow-sm border border-[var(--color-border)]'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
               }`}
             >
               <tab.icon className="w-4 h-4 shrink-0" aria-hidden />
@@ -653,6 +670,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
               score={displayData.readinessScore}
               passProbability={displayData.passProbability}
               hasData={displayData.hasData}
+              totalQuestions={displayData.totalQuestionsLifetime}
             />
 
             {/* Key Stats Grid - stretch so cards match height and reduce vertical gap */}
@@ -725,7 +743,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             <div className="grid grid-cols-3 gap-4 items-stretch">
               <div className="bg-surface-card border border-border-subtle rounded-xl p-4 text-center">
                 <Clock className="w-5 h-5 mx-auto text-muted mb-2" />
-                <p className="text-lg font-bold text-action-primary">
+                <p className="text-lg font-bold text-[var(--color-text-primary)]">
                   {userStats?.stats?.overall?.avgTimeMs
                     ? getSpeedBenchmarkLabel(userStats.stats.overall.avgTimeMs).primary
                     : '—'}
@@ -740,7 +758,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
 
               <div className="bg-surface-card border border-border-subtle rounded-xl p-4 text-center">
                 <Timer className="w-5 h-5 mx-auto text-muted mb-2" />
-                <p className="text-lg font-bold text-action-primary">
+                <p className="text-lg font-bold text-[var(--color-text-primary)]">
                   {displayData.totalStudyHours}h
                 </p>
                 <p className="text-xs text-muted">total study time</p>
@@ -748,7 +766,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
 
               <div className="bg-surface-card border border-border-subtle rounded-xl p-4 text-center">
                 <Zap className="w-5 h-5 mx-auto text-muted mb-2" />
-                <p className="text-lg font-bold text-action-primary">
+                <p className="text-lg font-bold text-[var(--color-text-primary)]">
                   {displayData.questionsPerHour === 0 ? '--' : displayData.questionsPerHour}
                 </p>
                 <p className="text-xs text-muted">questions/hour</p>
@@ -758,7 +776,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             {/* Top Insights */}
             <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
               <h3 className="text-sm font-medium text-muted mb-4 flex items-center gap-2">
-                <Lightbulb className="w-4 h-4 text-action-primary" aria-hidden />
+                <Lightbulb className="w-4 h-4 text-[var(--color-text-primary)]" aria-hidden />
                 Key Insights
               </h3>
               {(() => {
@@ -794,17 +812,17 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-text-secondary">Questions Completed</span>
-                      <span className="font-medium text-action-primary">
+                      <span className="font-medium text-[var(--color-text-primary)]">
                         {displayData.totalQuestionsLifetime}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-text-secondary">Study Days</span>
-                      <span className="font-medium text-action-primary">
+                      <span className="font-medium text-[var(--color-text-primary)]">
                         {userStats.stats.overall.totalStudyDays}
                       </span>
                     </div>
-                    <div className="p-3 rounded-lg bg-action-muted text-action-primary text-sm flex items-center gap-2">
+                    <div className="p-3 rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] text-sm flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 flex-shrink-0" />
                       <span>Great progress! Keep building your knowledge base.</span>
                     </div>
@@ -819,13 +837,13 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-text-secondary">Last 7 Days</span>
-                      <span className="font-medium text-action-primary">
+                      <span className="font-medium text-[var(--color-text-primary)]">
                         {displayData.last7DaysQuestions} questions
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-text-secondary">Recent Accuracy</span>
-                      <span className="font-medium text-action-primary">
+                      <span className="font-medium text-[var(--color-text-primary)]">
                         {formatPercentForDisplay(
                           userStats.stats.recentPerformance.last7Days.accuracy ??
                             displayData.accuracyLifetime
@@ -836,10 +854,10 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                       <div
                         className={`p-3 rounded-lg text-sm flex items-center gap-2 ${
                           userStats.stats.recentPerformance.trend === 'improving'
-                            ? 'bg-success-muted text-success-primary'
+                            ? 'bg-success-muted text-[var(--color-data-pass)]'
                             : userStats.stats.recentPerformance.trend === 'declining'
-                              ? 'bg-warning-muted text-warning-primary'
-                              : 'bg-action-muted text-action-primary'
+                              ? 'bg-warning-muted text-amber-600'
+                              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]'
                         }`}
                       >
                         <Activity className="w-4 h-4 flex-shrink-0" />
@@ -856,18 +874,31 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="bg-surface-card border border-border-subtle rounded-xl p-6 text-center">
-                <Brain className="w-8 h-8 mx-auto text-muted mb-3" />
-                <h3 className="text-sm font-medium text-action-primary mb-2">
+              <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 text-center">
+                <Brain className="w-8 h-8 mx-auto text-[var(--color-text-muted)] mb-3" />
+                <h3 className="text-sm font-medium text-[var(--color-text-primary)] mb-2">
                   Building Your Profile
                 </h3>
-                <p className="text-sm text-muted">
+                <p className="text-sm text-[var(--color-text-muted)]">
                   Complete at least 50 questions to unlock personalized insights about your
                   test-taking patterns, optimal study times, and break recommendations.
                 </p>
-                <p className="text-xs text-text-secondary mt-2">
-                  {displayData.totalQuestionsLifetime} / 50 questions completed
-                </p>
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-xs mb-2">
+                    <span className="text-[var(--color-text-muted)]">Progress</span>
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      {displayData.totalQuestionsLifetime} / 50
+                    </span>
+                  </div>
+                  <div className="h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, (displayData.totalQuestionsLifetime / 50) * 100)}%` }}
+                      transition={{ duration: 0.6, ease: 'easeOut' }}
+                      className="h-full rounded-full bg-[var(--color-accent)]"
+                    />
+                  </div>
+                </div>
               </div>
             )}
           </motion.div>
@@ -921,7 +952,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   {displayData.weakAreas.map((area) => (
                     <span
                       key={area}
-                      className="px-3 py-1.5 bg-warning-muted text-warning-primary rounded-full text-sm font-medium"
+                      className="px-3 py-1.5 bg-warning-muted text-amber-600 rounded-full text-sm font-medium"
                     >
                       {area}
                     </span>
@@ -941,7 +972,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                   {displayData.strongAreas.map((strength) => (
                     <span
                       key={strength}
-                      className="px-3 py-1.5 bg-success-muted text-success-primary rounded-full text-sm font-medium"
+                      className="px-3 py-1.5 bg-success-muted text-[var(--color-data-pass)] rounded-full text-sm font-medium"
                     >
                       {strength}
                     </span>
@@ -951,13 +982,13 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             )}
 
             {/* Readiness Timeline */}
-            <div className="bg-surface-secondary border border-border-subtle rounded-xl p-5">
+            <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-5">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-surface-tertiary rounded-xl">
                   <Calendar className="w-6 h-6 text-muted" />
                 </div>
                 <div>
-                  <p className="text-xl sm:text-2xl font-bold text-action-primary">
+                  <p className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)]">
                     {displayData.readinessScore >= 80
                       ? "You're Ready!"
                       : `${Math.ceil((80 - displayData.readinessScore) / 2)} days`}
@@ -984,7 +1015,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
             {/* Strengths */}
             {displayData.systems.strengths.length > 0 && (
               <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-                <h3 className="text-sm font-medium text-action-primary mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
                   Your Strengths ({displayData.systems.strengths.length})
                 </h3>
@@ -1072,7 +1103,7 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
       <div className="flex justify-center">
         <button
           onClick={loadData}
-          className="flex items-center gap-2 px-4 py-2 text-sm text-muted hover:text-action-primary transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-sm text-muted hover:text-[var(--color-text-primary)] transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Refresh Analytics

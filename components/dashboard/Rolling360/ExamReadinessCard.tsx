@@ -165,10 +165,9 @@ function CollectingState({
               cx="64"
               cy="64"
               r="56"
-              stroke="currentColor"
+              stroke="var(--color-accent)"
               strokeWidth="8"
               fill="none"
-              className="text-[var(--color-data-provisional)]"
               strokeLinecap="round"
               initial={{ strokeDasharray: '0 352' }}
               animate={{ strokeDasharray: `${progress * 3.52} 352` }}
@@ -285,7 +284,7 @@ function ProvisionalState({
         </div>
         <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]"
+            className="h-full bg-gradient-to-r from-amber-500 to-orange-400"
             initial={{ width: 0 }}
             animate={{ width: `${(stats.totalInWindow / 180) * 100}%` }}
             transition={{ duration: 0.8 }}
@@ -415,6 +414,18 @@ function ConfidentState({
             transition={{ duration: 1, ease: 'easeOut' }}
           />
         </div>
+        {passLikelihood < 50 && (
+          <div className="mt-2 p-2.5 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-lg">
+            <p className="text-xs text-[var(--color-text-primary)] font-medium">
+              {passLikelihood < 30 ? 'Significant preparation needed' : 'Additional focused study recommended'}
+            </p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">
+              {passLikelihood < 30
+                ? 'Prioritize reviewing weak topics and fundamentals to improve your pass chance.'
+                : 'Focus on your weak areas and high-yield topics to increase your odds.'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Blueprint Adherence */}

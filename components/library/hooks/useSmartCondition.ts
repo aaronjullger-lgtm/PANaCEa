@@ -159,21 +159,25 @@ export function useSmartCondition(conditionId: string | null | undefined): UseSm
       });
       const json = (await res.json()) as { data?: Record<string, unknown>; error?: string };
       if (!res.ok) {
-        const errMsg =
-          (json?.data?.error as string) ?? json?.error ?? `Failed to load (${res.status})`;
-        setErrorSummary(errMsg);
+        const safeMsg = res.status === 404
+          ? 'Condition information not found.'
+          : res.status === 401
+            ? 'Your session has expired. Please sign in again.'
+            : 'Unable to load condition summary. Please try again.';
+        setErrorSummary(safeMsg);
         setSummary(null);
         return;
       }
       const data = json?.data ?? json;
       if (data && typeof data === 'object' && 'error' in data) {
-        setErrorSummary(String((data as { error: unknown }).error));
+        setErrorSummary('Unable to load condition summary. Please try again.');
         setSummary(null);
         return;
       }
       setSummary(data as unknown as ConditionSummary);
     } catch (err) {
-      setErrorSummary(err instanceof Error ? err.message : 'Failed to fetch summary');
+      void err;
+      setErrorSummary('Unable to load condition summary. Please try again.');
       setSummary(null);
     } finally {
       setIsLoadingSummary(false);
@@ -194,21 +198,25 @@ export function useSmartCondition(conditionId: string | null | undefined): UseSm
       });
       const json = (await res.json()) as { data?: Record<string, unknown>; error?: string };
       if (!res.ok) {
-        const errMsg =
-          (json?.data?.error as string) ?? json?.error ?? `Failed to load (${res.status})`;
-        setErrorDetails(errMsg);
+        const safeMsg = res.status === 404
+          ? 'Condition details not found.'
+          : res.status === 401
+            ? 'Your session has expired. Please sign in again.'
+            : 'Unable to load full condition details. Please try again.';
+        setErrorDetails(safeMsg);
         setDetails(null);
         return;
       }
       const data = json?.data ?? json;
       if (data && typeof data === 'object' && 'error' in data) {
-        setErrorDetails(String((data as { error: unknown }).error));
+        setErrorDetails('Unable to load full condition details. Please try again.');
         setDetails(null);
         return;
       }
       setDetails(data as unknown as ConditionDetails);
     } catch (err) {
-      setErrorDetails(err instanceof Error ? err.message : 'Failed to fetch details');
+      void err;
+      setErrorDetails('Unable to load full condition details. Please try again.');
       setDetails(null);
     } finally {
       setIsLoadingDetails(false);

@@ -23,13 +23,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-slate-100 text-slate-900 hover:bg-slate-200 active:bg-slate-300',
-  secondary: 'bg-slate-800 text-slate-300 hover:bg-slate-700 active:bg-slate-600 border border-slate-700',
-  danger: 'bg-red-900/30 text-red-300 hover:bg-red-900/40 border border-red-800',
-  ghost: 'bg-transparent text-slate-300 hover:bg-slate-800/50',
-  outline: 'bg-transparent text-slate-300 hover:bg-slate-800/50 border border-slate-700',
-  warning: 'bg-yellow-900/30 text-yellow-300 hover:bg-yellow-900/40 border border-yellow-800',
-  accent: 'bg-slate-600 text-slate-100 hover:bg-slate-500 active:bg-slate-400',
+  primary: 'bg-[var(--color-accent)] text-white hover:opacity-90 active:opacity-80',
+  secondary: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]',
+  danger: 'bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/40 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
+  ghost: 'bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
+  outline: 'bg-transparent text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)]',
+  warning: 'bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 border border-yellow-500/40 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
+  accent: 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/30 border border-[var(--color-accent)]/30',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

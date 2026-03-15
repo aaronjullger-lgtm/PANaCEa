@@ -83,44 +83,51 @@ export const SmartSchedulerGantt: React.FC<SmartSchedulerGanttProps> = ({
         <Calendar className="w-5 h-5 text-[var(--color-accent)]" />
         <h3 className="font-semibold">Spaced repetition schedule</h3>
       </div>
-      <div className="flex gap-1 overflow-x-auto pb-2">
-        {dayLabels.map((dateStr) => {
-          const dayBlocks = blocksByDay.get(dateStr) ?? [];
-          const isToday = dateStr === new Date().toISOString().slice(0, 10);
-          return (
-            <div
-              key={dateStr}
-              className="flex-shrink-0 w-24 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-2 min-h-[80px]"
-            >
+      {blocks.length === 0 ? (
+        <div className="flex items-center justify-center gap-2 py-8 text-[var(--color-text-muted)] text-sm">
+          <Clock className="w-4 h-4 flex-shrink-0" />
+          <span>No reviews scheduled yet. Answer questions to build your spaced repetition schedule.</span>
+        </div>
+      ) : (
+        <div className="flex gap-1 overflow-x-auto pb-2">
+          {dayLabels.map((dateStr) => {
+            const dayBlocks = blocksByDay.get(dateStr) ?? [];
+            const isToday = dateStr === new Date().toISOString().slice(0, 10);
+            return (
               <div
-                className={`text-xs font-medium mb-2 ${isToday ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}
+                key={dateStr}
+                className="flex-shrink-0 w-24 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-2 min-h-[80px]"
               >
-                {formatDayLabel(dateStr)}
+                <div
+                  className={`text-xs font-medium mb-2 truncate ${isToday ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}
+                >
+                  {formatDayLabel(dateStr)}
+                </div>
+                <div className="space-y-1">
+                  {dayBlocks.length > 0 ? (
+                    dayBlocks.map((block) => (
+                      <motion.button
+                        key={block.id}
+                        type="button"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="w-full text-left px-2 py-1.5 rounded text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/30 transition-colors truncate"
+                        onClick={() => onBlockClick?.(block)}
+                        title={block.label}
+                      >
+                        {block.system ?? block.label}
+                        {block.count != null && block.count > 1 ? ` (${block.count})` : ''}
+                      </motion.button>
+                    ))
+                  ) : (
+                    <span className="text-[10px] text-[var(--color-text-muted)]/50 leading-tight block mt-1">
+                      Free
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="space-y-1">
-                {dayBlocks.map((block) => (
-                  <motion.button
-                    key={block.id}
-                    type="button"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="w-full text-left px-2 py-1.5 rounded text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/30 transition-colors truncate"
-                    onClick={() => onBlockClick?.(block)}
-                    title={block.label}
-                  >
-                    {block.system ?? block.label}
-                    {block.count != null && block.count > 1 ? ` (${block.count})` : ''}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      {blocks.length === 0 && (
-        <div className="flex items-center justify-center gap-2 py-6 text-[var(--color-text-muted)] text-sm">
-          <Clock className="w-4 h-4" />
-          <span>No scheduled reviews in this window. Complete questions to see FSRS schedule.</span>
+            );
+          })}
         </div>
       )}
     </div>

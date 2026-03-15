@@ -69,11 +69,9 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       </section>
 
       {/* Spaced Repetition Schedule */}
-      {schedulerBlocks.length > 0 && (
-        <section className="mb-8">
-          <SmartSchedulerGantt blocks={schedulerBlocks} daysToShow={14} />
-        </section>
-      )}
+      <section className="mb-8">
+        <SmartSchedulerGantt blocks={schedulerBlocks} daysToShow={14} />
+      </section>
 
       {/* Learning Profile */}
       <section className="mb-8">

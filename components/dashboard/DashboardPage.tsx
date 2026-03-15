@@ -240,7 +240,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
 
   if (error || !data) {
     const isOffline = !navigator.onLine;
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] flex items-center justify-center px-4">
@@ -253,12 +252,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
             <Zap className="w-8 h-8 text-[var(--color-data-fail)]" />
           </div>
           <p className="text-[var(--color-text-primary)] font-semibold mb-2">
-            {isOffline ? 'No Internet Connection' : 'Failed to Load Dashboard'}
+            {isOffline ? 'No Internet Connection' : 'Dashboard Unavailable'}
           </p>
           <p className="text-[var(--color-text-secondary)] text-sm mb-4">
             {isOffline
-              ? 'Check your connection and try again'
-              : `Unable to retrieve your study data${errorMessage !== 'Unknown error' ? `: ${errorMessage}` : ''}`}
+              ? 'Check your connection and try again.'
+              : 'Unable to load your study data. Please try again.'}
           </p>
           <button
             onClick={() => window.location.reload()}

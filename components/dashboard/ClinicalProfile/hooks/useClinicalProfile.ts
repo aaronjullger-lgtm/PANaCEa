@@ -35,16 +35,23 @@ export function useClinicalProfile() {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       if (!res.ok) {
-        const msg = await res.text();
-        throw new Error(msg || 'Failed to load profile');
+        const safeMessages: Record<number, string> = {
+          401: 'Your session has expired. Please sign in again.',
+          403: 'You do not have permission to view this profile.',
+          404: 'Clinical profile not found.',
+          429: 'Too many requests. Please wait a moment and try again.',
+        };
+        throw new Error(safeMessages[res.status] ?? 'Unable to load your clinical profile. Please try again.');
       }
       const payload = (await res.json()) as { data?: ClinicalProfileData };
       setState({ data: payload.data ?? null, isLoading: false, error: null });
     } catch (error) {
+      const msg = error instanceof Error ? error.message : '';
+      const isSafe = msg.length > 0 && msg.length < 200 && !msg.includes('prisma') && !msg.includes('Invalid');
       setState({
         data: null,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to load profile',
+        error: isSafe ? msg : 'Unable to load your clinical profile. Please try again.',
       });
     }
   }, [getToken]);

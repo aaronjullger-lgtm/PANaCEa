@@ -249,10 +249,7 @@ export const onRequestGet = authenticatedEndpoint(
     } catch (error) {
       console.error('Study‑path recommendation endpoint error:', error);
       return new Response(
-        JSON.stringify({
-          error: 'Internal server error',
-          details: error instanceof Error ? error.message : String(error),
-        }),
+        JSON.stringify({ error: 'Unable to generate study plan. Please try again.' }),
         {
           status: 500,
           headers: jsonHeaders,

@@ -379,7 +379,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         <button
           onClick={() => exportUserAnalytics(performanceData ?? [], 'csv')}
           disabled={!performanceData?.length}
-          className="text-sm text-action-primary hover:underline flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-sm text-[var(--color-text-primary)] hover:underline flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Backup your data as CSV"
         >
           <Download className="w-4 h-4" />
@@ -389,12 +389,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Context Banner for Students */}
       {hasData && (
-        <div className="p-4 rounded-xl bg-surface-card border border-border-subtle">
+        <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
           <div className="flex items-start gap-3">
-            <Sparkles className="w-5 h-5 text-action-primary mt-0.5" />
+            <Sparkles className="w-5 h-5 text-[var(--color-text-primary)] mt-0.5" />
             <div>
-              <h4 className="font-semibold text-action-primary mb-1">PANCE Readiness Overview</h4>
-              <p className="text-sm text-action-muted">
+              <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">PANCE Readiness Overview</h4>
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Track your progress across all organ systems. Focus on your weakest areas for
                 maximum improvement.
               </p>
@@ -405,21 +405,21 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Empty State - With CTA to prevent dead ends */}
       {!hasData && (
-        <div className="flex flex-col items-center justify-center py-12 px-6 bg-surface-card rounded-xl border border-border-subtle">
-          <div className="mb-4 p-4 rounded-full bg-action-muted">
-            <BarChart3 className="w-12 h-12 text-action-muted" />
+        <div className="flex flex-col items-center justify-center py-12 px-6 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
+          <div className="mb-4 p-4 rounded-full bg-[var(--color-bg-tertiary)]">
+            <BarChart3 className="w-12 h-12 text-[var(--color-text-muted)]" />
           </div>
-          <h3 className="text-xl font-semibold text-action-primary mb-2">
+          <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
             Start Building Your Profile
           </h3>
-          <p className="text-sm text-action-muted text-center max-w-md mb-6">
+          <p className="text-sm text-[var(--color-text-muted)] text-center max-w-md mb-6">
             Complete your first 20-question session to unlock personalized analytics, track your
             progress across organ systems, and identify your focus areas.
           </p>
           <PrimaryButton size="md" icon={Play} onClick={handleStartSession}>
             Start Calibration Session
           </PrimaryButton>
-          <p className="text-xs text-action-muted mt-3">
+          <p className="text-xs text-[var(--color-text-muted)] mt-3">
             ~15 minutes • Interleaved across 3+ organ systems
           </p>
         </div>
@@ -429,41 +429,41 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {hasData && userStats && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-6 rounded-xl bg-surface-secondary shadow-sm transition-colors">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
+            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <Gauge className="w-4 h-4" />
                 <span className="font-medium">Exam Readiness</span>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <div className="text-4xl font-bold text-action-primary">
+                <div className="text-4xl font-bold text-[var(--color-text-primary)]">
                   {formatPercentForDisplay(readinessScore)}
                 </div>
-                <TrendingUp className="w-5 h-5 text-action-primary" />
+                <TrendingUp className="w-5 h-5 text-[var(--color-text-primary)]" />
               </div>
-              <p className="text-xs text-action-muted">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Based on accuracy ({formatPercentForDisplay(userStats.stats.overall.accuracy)}) +
                 coverage
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-surface-secondary shadow-sm transition-colors">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
+            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <TrendingUp className="w-4 h-4" />
                 <span className="font-medium">Recent Performance</span>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <div className="text-4xl font-bold text-action-primary">
+                <div className="text-4xl font-bold text-[var(--color-text-primary)]">
                   {formatPercentForDisplay(userStats.stats.recentPerformance.last7Days.accuracy)}
                 </div>
-                <Activity className="w-5 h-5 text-action-primary" />
+                <Activity className="w-5 h-5 text-[var(--color-text-primary)]" />
               </div>
-              <p className="text-xs text-action-muted">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Last 7 days ({userStats.stats.recentPerformance.last7Days.attempts} questions)
               </p>
             </div>
 
-            <div className="p-6 rounded-xl bg-surface-secondary shadow-sm transition-colors">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
+            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <Clock className="w-4 h-4" />
                 <span className="font-medium">Decision Speed</span>
               </div>
@@ -481,13 +481,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                             ? 'text-data-provisional'
                             : status === 'below_target'
                               ? 'text-data-pass'
-                              : 'text-action-primary'
+                              : 'text-[var(--color-text-primary)]'
                         }`}
                       >
                         {primary}
                       </div>
                     </div>
-                    <p className="text-xs text-action-muted">
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       {benchmark ? `${benchmark} · Avg per question` : 'Average per question'}
                     </p>
                   </>
@@ -498,12 +498,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
           {/* Confidence vs. Accuracy (Calibration) - Illusion of Competence */}
           {calibrationData?.calibration && calibrationData.calibration.total > 0 && (
-            <div className="p-6 rounded-xl bg-surface-secondary shadow-sm">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
+            <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
                 <Brain className="w-4 h-4" />
                 <span className="font-medium">Confidence vs. Accuracy</span>
               </div>
-              <p className="text-xs text-action-muted mb-4">
+              <p className="text-xs text-[var(--color-text-muted)] mb-4">
                 How well your confidence (from behavior) matches correctness. Lucky guesses and
                 dangerous misconceptions need different follow-up.
               </p>
@@ -536,7 +536,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     icon: XCircle,
                     label: getQuadrantLabel('unconfident_wrong').short,
                     count: calibrationData.calibration.unconfidentWrong,
-                    className: 'bg-surface-tertiary text-muted',
+                    className: 'bg-[var(--color-bg-tertiary)] text-muted',
                   },
                 ].map(({ key, icon: Icon, label, count, className }) => (
                   <div
@@ -564,26 +564,26 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {userStats.stats.speedByType &&
             (userStats.stats.speedByType.recall.count > 0 ||
               userStats.stats.speedByType.clinicalReasoning.count > 0) && (
-              <div className="p-6 rounded-xl bg-surface-secondary shadow-sm">
-                <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
+              <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm">
+                <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
                   <Clock className="w-4 h-4" />
                   <span className="font-medium">Speed by question type</span>
                 </div>
-                <p className="text-xs text-action-muted mb-4">
+                <p className="text-xs text-[var(--color-text-muted)] mb-4">
                   Recall (first-order) vs clinical reasoning (vignettes). Targets: recall &lt;60s,
                   clinical &lt;90s.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {userStats.stats.speedByType.recall.count > 0 && (
-                    <div className="rounded-xl p-4 bg-surface-tertiary">
-                      <div className="text-sm font-medium text-action-primary mb-1">
+                    <div className="rounded-xl p-4 bg-[var(--color-bg-tertiary)]">
+                      <div className="text-sm font-medium text-[var(--color-text-primary)] mb-1">
                         Recall speed
                       </div>
                       <div className="flex items-baseline gap-2 flex-wrap">
-                        <span className="text-2xl font-bold text-action-primary">
+                        <span className="text-2xl font-bold text-[var(--color-text-primary)]">
                           {Math.round((userStats.stats.speedByType.recall.avgTimeMs ?? 0) / 1000)}s
                         </span>
-                        <span className="text-xs text-action-muted">
+                        <span className="text-xs text-[var(--color-text-muted)]">
                           (Target: &lt;{RECALL_TARGET_SEC}s)
                           {getSpeedBenchmarkStatus(
                             userStats.stats.speedByType.recall.avgTimeMs,
@@ -595,25 +595,25 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                           ) === 'above_target' && ' · Slow for recall'}
                         </span>
                       </div>
-                      <p className="text-xs text-action-muted mt-1">
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
                         {userStats.stats.speedByType.recall.count} rapid-recall question
                         {userStats.stats.speedByType.recall.count !== 1 ? 's' : ''}
                       </p>
                     </div>
                   )}
                   {userStats.stats.speedByType.clinicalReasoning.count > 0 && (
-                    <div className="rounded-xl p-4 bg-surface-tertiary">
-                      <div className="text-sm font-medium text-action-primary mb-1">
+                    <div className="rounded-xl p-4 bg-[var(--color-bg-tertiary)]">
+                      <div className="text-sm font-medium text-[var(--color-text-primary)] mb-1">
                         Clinical reasoning speed
                       </div>
                       <div className="flex items-baseline gap-2 flex-wrap">
-                        <span className="text-2xl font-bold text-action-primary">
+                        <span className="text-2xl font-bold text-[var(--color-text-primary)]">
                           {Math.round(
                             (userStats.stats.speedByType.clinicalReasoning.avgTimeMs ?? 0) / 1000
                           )}
                           s
                         </span>
-                        <span className="text-xs text-action-muted">
+                        <span className="text-xs text-[var(--color-text-muted)]">
                           (Target: &lt;{CLINICAL_REASONING_TARGET_SEC}s)
                           {getSpeedBenchmarkStatus(
                             userStats.stats.speedByType.clinicalReasoning.avgTimeMs,
@@ -625,7 +625,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                           ) === 'above_target' && ' · Consider pacing'}
                         </span>
                       </div>
-                      <p className="text-xs text-action-muted mt-1">
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
                         {userStats.stats.speedByType.clinicalReasoning.count} vignette/clinical
                         question
                         {userStats.stats.speedByType.clinicalReasoning.count !== 1 ? 's' : ''}
@@ -651,7 +651,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             if (focusAreasWithData.length === 0) return null;
 
             return (
-              <div className="p-6 rounded-xl border-2 border-data-provisional/30 bg-surface-secondary">
+              <div className="p-6 rounded-xl border-2 border-data-provisional/30 bg-[var(--color-bg-secondary)]">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="p-2 rounded-lg bg-data-provisional/10">
                     <AlertCircle className="w-5 h-5 text-data-provisional" />
@@ -662,16 +662,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   {focusAreasWithData.slice(0, 3).map((area) => (
                     <div
                       key={area.system}
-                      className="p-4 rounded-lg bg-surface-primary border border-data-provisional/30"
+                      className="p-4 rounded-lg bg-[var(--color-bg-primary)] border border-data-provisional/30"
                     >
-                      <div className="text-sm font-semibold text-action-primary mb-1">
+                      <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
                         {area.system}
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-2xl font-bold text-data-provisional">
                           {formatPercentForDisplay(area.accuracy)}
                         </span>
-                        <span className="text-xs text-action-muted">{area.attempts} Q's</span>
+                        <span className="text-xs text-[var(--color-text-muted)]">{area.attempts} Q's</span>
                       </div>
                     </div>
                   ))}
@@ -691,21 +691,21 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
           {/* System Performance: horizontal bar (best to worst), bottom 3 = red zone */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="p-6 rounded-xl border border-border-subtle bg-surface-primary">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
+            <div className="p-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <BarChart3 className="w-4 h-4" /> System Performance (Best → Worst)
               </div>
-              <p className="text-xs text-action-muted mb-3">
+              <p className="text-xs text-[var(--color-text-muted)] mb-3">
                 Bottom 3 bars = focus areas. What should I study today?
               </p>
               {systemPerformanceBarData.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-[320px] text-center px-4">
-                  <Activity className="w-10 h-10 text-action-muted/50 mb-2" />
-                  <p className="text-sm text-action-muted mb-4">Not yet assessed</p>
+                  <Activity className="w-10 h-10 text-[var(--color-text-muted)]/50 mb-2" />
+                  <p className="text-sm text-[var(--color-text-muted)] mb-4">Not yet assessed</p>
                   <button
                     type="button"
                     onClick={handleStartSession}
-                    className="px-4 py-2.5 rounded-xl bg-action-primary text-action-primary text-sm font-medium hover:opacity-90 transition-opacity"
+                    className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
                   >
                     Take a 10-question diagnostic quiz to unlock this graph
                   </button>
@@ -761,17 +761,17 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               )}
             </div>
 
-            <div className="p-6 rounded-xl border border-border-subtle bg-surface-primary">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
+            <div className="p-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
                 <TrendingUp className="w-4 h-4" /> Performance Trend
               </div>
               {userStats.stats.recentPerformance.trend === 'insufficient_data' ? (
                 <div className="flex flex-col items-center justify-center h-[320px] gap-4">
-                  <p className="text-sm text-action-muted">Not yet assessed</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Not yet assessed</p>
                   <button
                     type="button"
                     onClick={handleStartSession}
-                    className="px-4 py-2.5 rounded-xl bg-action-primary text-action-primary text-sm font-medium hover:opacity-90 transition-opacity"
+                    className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
                   >
                     Take a 10-question diagnostic quiz to unlock this graph
                   </button>
@@ -780,16 +780,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <div className="flex flex-col items-center justify-center h-[320px]">
                   <div className="mb-4">
                     {userStats.stats.recentPerformance.trend === 'improving' && (
-                      <TrendingUp className="w-16 h-16 text-action-primary" />
+                      <TrendingUp className="w-16 h-16 text-[var(--color-text-primary)]" />
                     )}
                     {userStats.stats.recentPerformance.trend === 'declining' && (
-                      <TrendingDown className="w-16 h-16 text-action-primary" />
+                      <TrendingDown className="w-16 h-16 text-[var(--color-text-primary)]" />
                     )}
                     {userStats.stats.recentPerformance.trend === 'stable' && (
-                      <Minus className="w-16 h-16 text-action-primary" />
+                      <Minus className="w-16 h-16 text-[var(--color-text-primary)]" />
                     )}
                   </div>
-                  <p className="text-lg font-semibold text-action-primary mb-2">
+                  <p className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
                     {userStats.stats.recentPerformance.trend === 'improving' && 'Trending Upward'}
                     {userStats.stats.recentPerformance.trend === 'declining' && 'Needs Focus'}
                     {userStats.stats.recentPerformance.trend === 'stable' &&
@@ -804,7 +804,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                         return deltaStr;
                       })()}
                   </p>
-                  <p className="text-sm text-action-muted text-center max-w-xs">
+                  <p className="text-sm text-[var(--color-text-muted)] text-center max-w-xs">
                     Last 7 days:{' '}
                     {formatPercentForDisplay(userStats.stats.recentPerformance.last7Days.accuracy)}{' '}
                     ({userStats.stats.recentPerformance.last7Days.attempts} questions)
@@ -821,15 +821,15 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
 
           {/* FSRS Stability Growth Trend */}
-          <div className="p-6 rounded-xl border border-border-subtle bg-surface-primary">
+          <div className="p-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-action-muted text-sm">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
                 <Brain className="w-4 h-4" /> Memory Stability Growth (Last 30 Days)
               </div>
               {stabilityLoading && (
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 border-2 border-action-primary border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-xs text-action-muted">Fetching data...</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">Fetching data...</span>
                 </div>
               )}
             </div>
@@ -888,8 +888,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartContainer>
-                <div className="mt-3 p-3 bg-surface-card rounded-lg border border-border-subtle">
-                  <p className="text-xs text-action-muted">
+                <div className="mt-3 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+                  <p className="text-xs text-[var(--color-text-muted)]">
                     <strong>What is Stability?</strong> Stability measures how long you'll remember
                     information. Higher stability means longer retention and fewer reviews needed.
                     {stabilityTrendData.length > 1 && (
@@ -916,9 +916,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
 
           {/* Learning Curve */}
-          <div className="p-6 rounded-xl border border-border-subtle bg-surface-primary">
+          <div className="p-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-action-muted text-sm">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
                 <TrendingUp className="w-4 h-4" /> Learning Curve
               </div>
             </div>
@@ -926,20 +926,20 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
 
           {/* Decision Time by System */}
-          <div className="p-6 rounded-xl border border-border-subtle bg-surface-primary">
+          <div className="p-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-action-muted text-sm">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
                 <Clock className="w-4 h-4" /> Decision Time by System
               </div>
               {timeData.some((d) => d.count < MIN_SYSTEM_REVIEWS) && (
-                <div className="flex items-center gap-1 text-xs text-action-muted">
+                <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
                   <Info className="w-3 h-3" />
                   <span>Faded bars = &lt;{MIN_SYSTEM_REVIEWS} reviews</span>
                 </div>
               )}
             </div>
             {timeData.length === 0 ? (
-              <p className="text-sm text-action-muted">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Time tracking will appear once you complete timed sessions.
               </p>
             ) : (

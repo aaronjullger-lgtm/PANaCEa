@@ -328,7 +328,7 @@ export function CalibrationProtocolUI({
 
       {/* Overall progress bar */}
       <div className="space-y-2">
-        <div className="h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
+        <div className="h-3 bg-[var(--color-border)] rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-teal-500"
             initial={{ width: 0 }}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Rating } from '@/lib/fsrs';
+import { Rating } from '@/lib/fsrs'; // Hard and Easy ratings are deprecated; binary rating uses Again/Good.
 import {
   deriveDiscreteFSRSGrade,
   translateContinuousToDiscrete,

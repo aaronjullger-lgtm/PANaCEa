@@ -100,12 +100,12 @@ function StatCard({
   return (
     <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
       <div className="flex items-center justify-between mb-2">
-        <Icon className="w-5 h-5 text-[var(--color-text-muted)]" />
+        <Icon className="w-5 h-5 text-[var(--color-text-secondary)]" />
         {trend && <TrendIcon trend={trend} />}
       </div>
       <div className="text-2xl font-bold text-[var(--color-text-primary)]">{value}</div>
-      <div className="text-sm text-[var(--color-text-muted)]">{label}</div>
-      {subValue && <div className="text-xs text-[var(--color-text-muted)] mt-1">{subValue}</div>}
+      <div className="text-sm text-[var(--color-text-secondary)]">{label}</div>
+      {subValue && <div className="text-xs text-[var(--color-text-secondary)] mt-1">{subValue}</div>}
     </div>
   );
 }

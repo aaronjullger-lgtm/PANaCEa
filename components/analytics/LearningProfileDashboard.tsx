@@ -556,10 +556,10 @@ const StatCard: React.FC<{
   <div className="bg-[var(--color-bg-primary)] rounded-xl p-4 border border-[var(--color-border)]">
     <div className="flex items-center gap-2 mb-2">
       {icon}
-      <span className="text-xs font-medium text-[var(--color-text-muted)]">{label}</span>
+      <span className="text-xs font-medium text-[var(--color-text-secondary)]">{label}</span>
     </div>
     <p className="text-2xl font-bold text-[var(--color-text-primary)]">{value}</p>
-    {sublabel && <p className="text-xs text-[var(--color-text-muted)] mt-1">{sublabel}</p>}
+    {sublabel && <p className="text-xs text-[var(--color-text-secondary)] mt-1">{sublabel}</p>}
   </div>
 );
 
