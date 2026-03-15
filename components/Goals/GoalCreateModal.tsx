@@ -215,7 +215,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 ${
+                className={`w-full px-3 py-2 border rounded-lg bg-[var(--color-bg-primary)] ${
                   messages.some((m) => m.fieldId === 'goal-title' && m.severity === 'error')
                     ? 'border-[var(--color-data-fail)] focus:border-[var(--color-data-fail)] focus:ring-[var(--color-data-fail)]'
                     : 'border-data-neutral dark:border-data-neutral focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
@@ -245,7 +245,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 id="goal-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-white dark:bg-data-neutral-bg"
+                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
                 rows={2}
                 placeholder="Optional details about this goal"
               />
@@ -263,7 +263,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 id="goal-type"
                 value={formData.goalType}
                 onChange={(e) => setFormData({ ...formData, goalType: e.target.value as any })}
-                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-white dark:bg-data-neutral-bg focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)] focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                 title="Select goal type"
               >
                 <option value="daily">Daily - Recurring daily target</option>
@@ -290,7 +290,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                     onChange={(e) =>
                       setFormData({ ...formData, targetValue: parseInt(e.target.value) })
                     }
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 ${
+                    className={`w-full px-3 py-2 border rounded-lg bg-[var(--color-bg-primary)] ${
                       messages.some(
                         (m) => m.fieldId === 'goal-target-value' && m.severity === 'error'
                       )
@@ -326,7 +326,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                     onChange={(e) =>
                       setFormData({ ...formData, targetUnit: e.target.value as any })
                     }
-                    className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-white dark:bg-data-neutral-bg focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                    className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)] focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                     title="Select target unit"
                   >
                     <option value="questions">Questions</option>
@@ -352,7 +352,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                   type="date"
                   value={formData.targetDate}
                   onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 ${
+                  className={`w-full px-3 py-2 border rounded-lg bg-[var(--color-bg-primary)] ${
                     messages.some((m) => m.fieldId === 'goal-target-date' && m.severity === 'error')
                       ? 'border-[var(--color-data-fail)] focus:border-[var(--color-data-fail)] focus:ring-[var(--color-data-fail)]'
                       : 'border-data-neutral dark:border-data-neutral focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]'
@@ -387,7 +387,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                     type="text"
                     value={formData.targetSystem}
                     onChange={(e) => setFormData({ ...formData, targetSystem: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-700 ${
+                    className={`w-full px-3 py-2 border rounded-lg bg-[var(--color-bg-primary)] ${
                       messages.some(
                         (m) => m.fieldId === 'goal-target-system' && m.severity === 'error'
                       )
@@ -421,7 +421,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                     onChange={(e) =>
                       setFormData({ ...formData, targetStability: parseFloat(e.target.value) })
                     }
-                    className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-white dark:bg-data-neutral-bg"
+                    className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
                     min="0"
                     max="1"
                     step="0.1"
@@ -455,7 +455,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 type="text"
                 value={formData.motivationNotes}
                 onChange={(e) => setFormData({ ...formData, motivationNotes: e.target.value })}
-                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-white dark:bg-data-neutral-bg"
+                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
                 placeholder="Why is this goal important to you?"
               />
             </div>
@@ -469,7 +469,7 @@ export const GoalCreateModal: React.FC<GoalCreateModalProps> = ({ onClose, onCre
                 type="text"
                 value={formData.rewardMessage}
                 onChange={(e) => setFormData({ ...formData, rewardMessage: e.target.value })}
-                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-white dark:bg-data-neutral-bg"
+                className="w-full px-3 py-2 border border-data-neutral dark:border-data-neutral rounded-lg bg-[var(--color-bg-primary)]"
                 placeholder="Message to show when goal is completed"
               />
             </div>

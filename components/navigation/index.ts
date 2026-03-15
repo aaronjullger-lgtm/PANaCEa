@@ -5,7 +5,6 @@
  */
 
 export { default as BackLink } from './BackLink';
-export { default as CommandCenter } from './CommandCenter';
 export { CommandCenterHub } from './CommandCenterHub';
 export { default as CommandPalette } from './CommandPalette';
 export { default as MenuView } from './MenuView';

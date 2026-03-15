@@ -166,7 +166,7 @@ export function BlueprintComplianceAuditorMode() {
           {Math.round(score)}%
         </text>
       </svg>
-      <div className="text-center mt-2 text-sm text-gray-600">Compliance Score</div>
+      <div className="text-center mt-2 text-sm text-[var(--color-text-secondary)]">Compliance Score</div>
     </div>
   );
 
@@ -194,7 +194,7 @@ export function BlueprintComplianceAuditorMode() {
           </span>
         </div>
       </TableCell>
-      <TableCell className="text-sm text-gray-600">{sys.recommendation}</TableCell>
+      <TableCell className="text-sm text-[var(--color-text-secondary)]">{sys.recommendation}</TableCell>
     </TableRow>
   );
 
@@ -211,7 +211,7 @@ export function BlueprintComplianceAuditorMode() {
               <Target className="w-8 h-8 text-[var(--color-accent)]" />
               Blueprint Compliance Auditor
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-[var(--color-text-secondary)] mt-2">
               Analyze NCCPA blueprint distribution across content and question pools.
               Identify deviations and receive actionable recommendations.
             </p>
@@ -268,7 +268,7 @@ export function BlueprintComplianceAuditorMode() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-semibold text-gray-700">
+                      <CardTitle className="text-lg font-semibold text-[var(--color-text-secondary)]">
                         Compliance Score
                       </CardTitle>
                     </CardHeader>
@@ -278,7 +278,7 @@ export function BlueprintComplianceAuditorMode() {
                   </Card>
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-semibold text-gray-700">
+                      <CardTitle className="text-lg font-semibold text-[var(--color-text-secondary)]">
                         Systems Met
                       </CardTitle>
                     </CardHeader>
@@ -286,12 +286,12 @@ export function BlueprintComplianceAuditorMode() {
                       <div className="text-4xl font-bold text-green-600">
                         {currentData.systemsMet}
                       </div>
-                      <p className="text-sm text-gray-500 mt-1">out of {currentData.systems.length}</p>
+                      <p className="text-sm text-[var(--color-text-muted)] mt-1">out of {currentData.systems.length}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-semibold text-gray-700">
+                      <CardTitle className="text-lg font-semibold text-[var(--color-text-secondary)]">
                         Under Target
                       </CardTitle>
                     </CardHeader>
@@ -299,12 +299,12 @@ export function BlueprintComplianceAuditorMode() {
                       <div className="text-4xl font-bold text-yellow-600">
                         {currentData.systemsUnder}
                       </div>
-                      <p className="text-sm text-gray-500 mt-1">need more content</p>
+                      <p className="text-sm text-[var(--color-text-muted)] mt-1">need more content</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-semibold text-gray-700">
+                      <CardTitle className="text-lg font-semibold text-[var(--color-text-secondary)]">
                         Over Target
                       </CardTitle>
                     </CardHeader>
@@ -312,7 +312,7 @@ export function BlueprintComplianceAuditorMode() {
                       <div className="text-4xl font-bold text-red-600">
                         {currentData.systemsOver}
                       </div>
-                      <p className="text-sm text-gray-500 mt-1">reduce focus</p>
+                      <p className="text-sm text-[var(--color-text-muted)] mt-1">reduce focus</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -331,8 +331,8 @@ export function BlueprintComplianceAuditorMode() {
                   <CardContent>
                     <div className="h-80">
                       {/* In a real implementation, integrate with a charting library like Recharts */}
-                      <div className="flex items-center justify-center h-full border border-dashed border-gray-300 rounded-lg p-8">
-                        <p className="text-gray-500 text-center">
+                      <div className="flex items-center justify-center h-full border border-dashed border-[var(--color-border)] rounded-lg p-8">
+                        <p className="text-[var(--color-text-muted)] text-center">
                           Chart visualization would be implemented with Recharts or similar.
                           <br />
                           <span className="text-sm">Data available for {currentData.systems.length} systems.</span>
@@ -411,11 +411,11 @@ export function BlueprintComplianceAuditorMode() {
                       {currentData.recommendations.map((rec, idx) => (
                         <li key={idx} className="flex items-start gap-3 p-3 bg-[var(--color-accent)]/10 rounded-lg">
                           <AlertTriangle className="w-5 h-5 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-800">{rec}</span>
+                          <span className="text-[var(--color-text-primary)]">{rec}</span>
                         </li>
                       ))}
                       {currentData.recommendations.length === 0 && (
-                        <li className="text-gray-500 italic">No recommendations — compliance is optimal.</li>
+                        <li className="text-[var(--color-text-muted)] italic">No recommendations — compliance is optimal.</li>
                       )}
                     </ul>
                   </CardContent>
@@ -470,9 +470,9 @@ export function BlueprintComplianceAuditorMode() {
               </>
             ) : (
               <div className="text-center py-12">
-                <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <AlertTriangle className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-[var(--color-text-primary)]">No data available</h3>
-                <p className="text-gray-600 mt-2">
+                <p className="text-[var(--color-text-secondary)] mt-2">
                   {error ? 'Failed to load compliance data.' : 'Run a compliance analysis to see results.'}
                 </p>
                 <Button onClick={handleRefresh} className="mt-4">
