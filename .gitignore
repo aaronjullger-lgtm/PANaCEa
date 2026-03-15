@@ -248,3 +248,9 @@ typecheck-errors.txt
 
 # Claude worktrees (local IDE state)
 .claude/worktrees/
+
+# Defunct deployment configs (superseded by wrangler.toml / Cloudflare Pages)
+# ecosystem.config.js — PM2 config for a prior Node.js server deployment (not used)
+# docker-compose.yml — local dev Docker setup; production uses Cloudflare Pages + Supabase (not used)
+ecosystem.config.js
+docker-compose.yml

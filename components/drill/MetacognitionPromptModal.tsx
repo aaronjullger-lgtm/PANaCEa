@@ -207,7 +207,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
           {/* Footer tip */}
           <div className="px-5 pb-5">
             <p className="text-xs text-center text-[var(--color-text-muted)]">
-              🧠 Metacognitive reflection improves long-term retention
+              <Brain className="w-3.5 h-3.5 inline-block mr-1 text-[var(--color-text-muted)]" aria-hidden />Metacognitive reflection improves long-term retention
             </p>
           </div>
         </motion.div>

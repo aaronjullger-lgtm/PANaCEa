@@ -1,7 +1,7 @@
 // src/lib/drugSearch.ts
 // Search functionality for pharmacological agents and treatments
 
-import type { DrugEntry, DrugSearchResult, DrugSearchFilters } from '../../pharm/drugTypes';
+import type { DrugEntry, DrugSearchResult, DrugSearchFilters } from '@/types/pharm';
 import { BRAND_NAME_MAP } from '../../lib/drugBrandNames';
 import { drugService } from '@/services/domain';
 

@@ -3,6 +3,7 @@
  * Integrates with the GRAPH_NODE endpoint to fetch taxonomy, edges, and metadata.
  */
 import React, { useState, useEffect } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { GraphNodeDetailResponse, GraphEdgeResponse } from '@/lib/types/graph';
 import { normalizeSystemName, getSystemWeight as blueprintGetSystemWeight } from '@/lib/constants/blueprint';
@@ -185,7 +186,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
     return (
       <div className="h-full flex items-center justify-center p-8">
         <div className="text-center max-w-md">
-          <div className="text-4xl mb-4">⚠️</div>
+          <div className="mb-4 flex justify-center"><AlertTriangle className="w-10 h-10 text-[var(--color-text-muted)]" /></div>
           <h3 className="text-lg font-semibold text-foreground mb-2">Could not load node</h3>
           <p className="text-muted-foreground mb-4">{error}</p>
           <button

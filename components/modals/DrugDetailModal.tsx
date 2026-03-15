@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { DrugEntry, DrugInteraction } from '@/pharm/drugTypes';
+import type { DrugEntry, DrugInteraction } from '@/types/pharm';
 import { formatDrugName } from '@/lib/drugBrandNames';
 import { toTitleCase } from '@/lib/textUtils';
 
