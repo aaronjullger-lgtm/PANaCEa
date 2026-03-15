@@ -495,7 +495,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                 } else if (isSelected && !isCorrect) {
                   buttonClass += 'border-red-500 bg-red-50 dark:bg-red-900/20';
                 } else {
-                  buttonClass += 'border-gray-300 dark:border-gray-600 opacity-50';
+                  buttonClass += 'border-[var(--color-border)] opacity-50';
                 }
 
                 return (

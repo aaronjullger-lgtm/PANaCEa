@@ -52,7 +52,7 @@ const StatisticsPreferences: React.FC<StatisticsPreferencesProps> = ({
           className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
             isEnabled
               ? 'bg-data-neutral dark:bg-data-neutral border-data-neutral dark:border-data-neutral text-data-neutral dark:text-data-neutral'
-              : 'bg-white dark:bg-data-neutral-bg border-data-neutral dark:border-data-neutral text-data-neutral dark:text-data-neutral'
+              : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-muted)]'
           }`}
         >
           <div className="flex items-center gap-3">
@@ -85,7 +85,7 @@ const StatisticsPreferences: React.FC<StatisticsPreferencesProps> = ({
             role="tooltip"
             aria-hidden
           >
-            <div className="rounded-lg border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg shadow-lg overflow-hidden">
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shadow-lg overflow-hidden">
               <div className="p-2.5 border-b border-data-neutral dark:border-data-neutral flex items-center gap-2 bg-data-neutral dark:bg-data-neutral/80">
                 <span className="text-data-neutral dark:text-data-neutral shrink-0">{widget.icon}</span>
                 <span className="text-xs font-medium text-data-neutral dark:text-data-neutral truncate">

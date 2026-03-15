@@ -225,7 +225,7 @@ export function ExamHistoryList({
               p-4 rounded-xl border-2 transition-all
               ${
                 attempt.status === 'completed'
-                  ? 'bg-white dark:bg-data-neutral-bg border-data-neutral dark:border-data-neutral'
+                  ? 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
                   : 'bg-data-provisional dark:bg-data-provisional/20 border-data-provisional dark:border-data-provisional'
               }
               ${onSelectAttempt ? 'cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-600' : ''}

@@ -98,7 +98,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-white dark:bg-data-neutral-bg rounded-xl border border-data-neutral dark:border-data-neutral p-5 hover:shadow-lg transition-shadow"
+      className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg transition-shadow"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">

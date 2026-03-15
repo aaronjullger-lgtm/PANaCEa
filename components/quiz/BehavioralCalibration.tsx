@@ -104,7 +104,7 @@ export const BehavioralCalibration: React.FC<BehavioralCalibrationProps> = ({
   }
 
   return (
-    <div className="bg-white dark:bg-data-neutral-bg rounded-lg border border-data-neutral dark:border-data-neutral overflow-hidden">
+    <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] overflow-hidden">
       {/* Header */}
       <button
         onClick={onToggle}

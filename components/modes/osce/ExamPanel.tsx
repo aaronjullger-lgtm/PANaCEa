@@ -121,7 +121,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
     };
 
     return (
-      <div className="bg-white dark:bg-data-neutral-bg rounded-xl border border-data-neutral dark:border-data-neutral overflow-hidden">
+      <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-data-neutral dark:border-data-neutral flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -303,7 +303,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
         {/* Loading Overlay */}
         {isPerformingExam && (
           <div className="absolute inset-0 bg-[var(--color-overlay)] flex items-center justify-center">
-            <div className="bg-white dark:bg-data-neutral-bg rounded-lg p-4 shadow-xl">
+            <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 shadow-xl">
               <div className="animate-pulse flex items-center gap-2 text-data-neutral dark:text-data-neutral">
                 <Stethoscope className="w-5 h-5 animate-bounce" />
                 <span>Performing exam...</span>

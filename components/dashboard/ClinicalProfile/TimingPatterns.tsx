@@ -8,7 +8,7 @@ interface Props {
 export const TimingPatterns: React.FC<Props> = ({ patterns }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg/80 p-4">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
         <p className="text-xs uppercase tracking-wide text-data-neutral mb-2">Rushing</p>
         {patterns.rushedSystems.length ? (
           <ul className="space-y-1 text-sm text-data-neutral dark:text-data-neutral">
@@ -23,7 +23,7 @@ export const TimingPatterns: React.FC<Props> = ({ patterns }) => {
           <p className="text-sm text-data-neutral">No rushing detected.</p>
         )}
       </div>
-      <div className="rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg/80 p-4">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
         <p className="text-xs uppercase tracking-wide text-data-neutral mb-2">Overthinking</p>
         {patterns.overthinkingSystems.length ? (
           <ul className="space-y-1 text-sm text-data-neutral dark:text-data-neutral">

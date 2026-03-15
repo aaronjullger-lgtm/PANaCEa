@@ -286,7 +286,7 @@ export function CalibrationPanel({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg p-4"
+          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
         >
           <InsufficientDataState progress={progress} />
         </motion.div>
@@ -329,7 +329,7 @@ export function CalibrationPanel({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg overflow-hidden"
+      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] overflow-hidden"
     >
       {/* Header */}
       <div className={`px-4 py-3 border-b ${colors.border} ${colors.bg}`}>
