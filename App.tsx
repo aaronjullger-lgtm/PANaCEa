@@ -1154,10 +1154,95 @@ const App: React.FC = () => {
                 path="/visualizer"
                 element={
                   <Suspense fallback={<Loader message="Loading visualizer…" />}>
-                    <VisualizerPage onBack={() => navigate('/')} />
+                    <VisualizerPage onBack={() => navigate('/study')} />
                   </Suspense>
                 }
               />
+              {/* View-state pages migrated to React Router routes */}
+              <Route
+                path="/gap-analysis"
+                element={
+                  <Suspense fallback={<Loader />}>
+                    <GapAnalysisDashboard
+                      onStudySystem={(systemName: string) => {
+                        navigate('/study');
+                        handleConfirmSession({
+                          focus: 'topic',
+                          topic: systemName,
+                          count: INITIAL_QUEUE_SIZE,
+                        });
+                      }}
+                    />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/clinical-profile"
+                element={
+                  <Suspense fallback={<Loader />}>
+                    <ClinicalProfileDashboard />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/study/knowledge"
+                element={
+                  <Suspense fallback={<Loader message="Loading knowledge base…" />}>
+                    <KnowledgeBaseHub
+                      onClose={() => {
+                        navigate('/study');
+                      }}
+                    />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/study/utilities"
+                element={
+                  <Suspense fallback={<Loader message="Loading toolkit…" />}>
+                    <ToolkitHub
+                      onClose={() => {
+                        navigate('/study');
+                      }}
+                      onNavigateToItem={handleNavigateToDrillMode}
+                    />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/study/path"
+                element={
+                  <Suspense fallback={<Loader />}>
+                    <StudyPathDashboard />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/medical-database"
+                element={
+                  <Suspense fallback={<Loader />}>
+                    <MedicalDatabaseSearch onClose={() => navigate('/study')} />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/live-collaboration"
+                element={
+                  <Suspense fallback={<Loader />}>
+                    <LiveStudySession onClose={() => navigate('/study')} />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/explorer"
+                element={
+                  <Suspense fallback={<Loader />}>
+                    <CrossSystemExplorer onClose={() => navigate('/study')} />
+                  </Suspense>
+                }
+              />
+              {/* Training mode routes are handled via view-state in the catch-all route below */}
+              {/* This maintains backward compatibility while we incrementally migrate */}
               <Route
                 path="*"
                 element={
@@ -1320,47 +1405,8 @@ const App: React.FC = () => {
                           </div>
                         )}
 
-                        {/* Full-screen views that break out of max-w-4xl constraint */}
-                        {view === 'reference_library' && (
-                          <div
-                            className="w-full min-w-0 overflow-hidden flex-1"
-                            style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
-                          >
-                            <Suspense fallback={<Loader message="Loading knowledge base…" />}>
-                              <KnowledgeBaseHub
-                                onClose={() => {
-                                  setView('command_center');
-                                  navigate('/study');
-                                }}
-                              />
-                            </Suspense>
-                          </div>
-                        )}
-
-                        {view === 'my_library' && (
-                          <div
-                            className="w-full min-w-0 overflow-hidden flex-1"
-                            style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
-                          >
-                            <Suspense fallback={<Loader message="Loading library…" />}>
-                              <MyLibraryPage onExit={() => setView('command_center')} />
-                            </Suspense>
-                          </div>
-                        )}
-
-                        {view === 'pearl_deck' && (
-                          <div
-                            className="w-full min-w-0 overflow-hidden flex-1"
-                            style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
-                          >
-                            <Suspense fallback={<Loader message="Loading pearl deck…" />}>
-                              <MyPearlsPanel
-                                onClose={() => setView('command_center')}
-                                initialFilter="saved"
-                              />
-                            </Suspense>
-                          </div>
-                        )}
+                        {/* Full-screen views that break out of max-w-4xl constraint - migrated to routes */}
+                        {/* These are now handled by React Router routes above */}
 
                         {/* Glassmorphism quick-actions rail (persists across study views) */}
                         <NavRail />
@@ -1431,17 +1477,17 @@ const App: React.FC = () => {
                                           onNavigateToDrillWithSystem={
                                             _handleNavigateToDrillWithSystem
                                           }
-                                          onNavigateToToolkit={() => navigate(ROUTES.STUDY_TOOLKIT)}
+                                          onNavigateToToolkit={() => navigate('/study/utilities')}
                                           onNavigateToGapAnalysis={() =>
-                                            startViewTransition(() => setView('gap_analysis'))
+                                            startViewTransition(() => navigate('/gap-analysis'))
                                           }
                                           onNavigateToClinicalProfile={() =>
-                                            setView('clinical_profile')
+                                            navigate('/clinical-profile')
                                           }
                                           onNavigateToIntegrations={() => setView('integrations')}
                                           onNavigateToSimulation={handleNavigateToSimulation}
                                           onNavigateToReference={() =>
-                                            navigate(ROUTES.STUDY_REFERENCE)
+                                            navigate('/study/knowledge')
                                           }
                                           onNavigateToMyLibrary={() => setView('my_library')}
                                           onNavigateToCustomStudy={handleNavigateToCustomStudy}
@@ -1451,7 +1497,7 @@ const App: React.FC = () => {
                                           }
                                           // Canonical FSRS flow is main session (QuizView) MC only; due = variants in same session. SRS Flashcards view hidden.
                                           onNavigateToPearlDeck={() => setView('pearl_deck')}
-                                          onNavigateToStudyPathDashboard={handleNavigateToStudyPathDashboard}
+                                          onNavigateToStudyPathDashboard={() => navigate('/study/path')}
                                           growthAreas={growthAreas}
                                           examLabel={examLabel ?? 'PANCE'}
                                           hasActiveSession={hasActiveSession}
@@ -1502,9 +1548,9 @@ const App: React.FC = () => {
                                           onNavigateToIntegrations={() => setView('integrations')}
                                           // HIDDEN: Social feature disabled until API implemented
                                           // onNavigateToSocial={() => setView('social_dashboard')}
-                                          onNavigateToToolkit={() => navigate(ROUTES.STUDY_TOOLKIT)}
+                                          onNavigateToToolkit={() => navigate('/study/utilities')}
                                           onNavigateToGapAnalysis={() =>
-                                            startViewTransition(() => setView('gap_analysis'))
+                                            startViewTransition(() => navigate('/gap-analysis'))
                                           }
                                           onNavigateToSimulation={handleNavigateToSimulation}
                                           isSyncing={isSyncing}
@@ -1609,80 +1655,7 @@ const App: React.FC = () => {
                                     missedQuestions={missedQuestions}
                                   />
 
-                                  {view === 'toolkit' && (
-                                    <motion.div
-                                      key="toolkit"
-                                      variants={pageVariants}
-                                      initial="initial"
-                                      animate="animate"
-                                      exit="exit"
-                                      transition={pageTransition}
-                                    >
-                                      <WithGeminiErrorBoundary
-                                        viewName="toolkit"
-                                        onRetry={() => setView('toolkit')}
-                                      >
-                                        <Suspense fallback={<Loader message="Loading toolkit…" />}>
-                                          <ToolkitHub
-                                            onClose={() => {
-                                              navigate(ROUTES.STUDY);
-                                              setView('command_center');
-                                            }}
-                                            onNavigateToItem={handleNavigateToDrillMode}
-                                          />
-                                        </Suspense>
-                                      </WithGeminiErrorBoundary>
-                                    </motion.div>
-                                  )}
-
-                                  {view === 'gap_analysis' && (
-                                    <motion.div
-                                      key="gap_analysis"
-                                      variants={pageVariants}
-                                      initial="initial"
-                                      animate="animate"
-                                      exit="exit"
-                                      transition={pageTransition}
-                                    >
-                                      <WithGeminiErrorBoundary
-                                        viewName="gap_analysis"
-                                        onRetry={() => setView('gap_analysis')}
-                                      >
-                                        <Suspense fallback={<Loader />}>
-                                          <GapAnalysisDashboard
-                                            onStudySystem={(systemName: string) => {
-                                              setView('command_center');
-                                              handleConfirmSession({
-                                                focus: 'topic',
-                                                topic: systemName,
-                                                count: INITIAL_QUEUE_SIZE,
-                                              });
-                                            }}
-                                          />
-                                        </Suspense>
-                                      </WithGeminiErrorBoundary>
-                                    </motion.div>
-                                  )}
-
-                                  {view === 'clinical_profile' && (
-                                    <motion.div
-                                      key="clinical_profile"
-                                      variants={pageVariants}
-                                      initial="initial"
-                                      animate="animate"
-                                      exit="exit"
-                                      transition={pageTransition}
-                                    >
-                                      <WithGeminiErrorBoundary
-                                        viewName="clinical_profile"
-                                        onRetry={() => setView('clinical_profile')}
-                                      >
-                                        <Suspense fallback={<Loader />}>
-                                          <ClinicalProfileDashboard />
-                                        </Suspense>
-                                      </WithGeminiErrorBoundary>
-                                    </motion.div>
-                                  )}
+                                  {/* View-state pages migrated to React Router routes above */}
 
                                   {view === 'training_menu' && (
                                     <motion.div
@@ -1768,11 +1741,11 @@ const App: React.FC = () => {
                                               navigate(ROUTES.STUDY_TOOLKIT)
                                             }
                                             onNavigateToGapAnalysis={() =>
-                                              startViewTransition(() => setView('gap_analysis'))
+                                              startViewTransition(() => navigate('/gap-analysis'))
                                             }
                                             onNavigateToIntegrations={() => setView('integrations')}
                                             onNavigateToReference={() =>
-                                              navigate(ROUTES.STUDY_REFERENCE)
+                                              navigate('/study/knowledge')
                                             }
                                             onNavigateToMyLibrary={() => setView('my_library')}
                                             onNavigateToStudyCompanion={() =>
@@ -1808,25 +1781,7 @@ const App: React.FC = () => {
                                     </motion.div>
                                   )}
 
-                                  {view === 'study_path_dashboard' && (
-                                    <motion.div
-                                      key="study_path_dashboard"
-                                      variants={pageVariants}
-                                      initial="initial"
-                                      animate="animate"
-                                      exit="exit"
-                                      transition={pageTransition}
-                                    >
-                                      <WithGeminiErrorBoundary
-                                        viewName="study_path_dashboard"
-                                        onRetry={() => setView('study_path_dashboard')}
-                                      >
-                                        <Suspense fallback={<Loader />}>
-                                          <StudyPathDashboard />
-                                        </Suspense>
-                                      </WithGeminiErrorBoundary>
-                                    </motion.div>
-                                  )}
+                                  {/* study_path_dashboard migrated to /study/path route */}
 
                                   {view === 'tutor_chat' && (
                                     <motion.div
