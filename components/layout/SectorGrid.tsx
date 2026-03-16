@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
 import { ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export interface SectorItem {
   id: string;
@@ -26,11 +27,12 @@ interface SectorGridProps {
  * - Responsive grid (1 → 2 → 3 columns)
  */
 export const SectorGrid: React.FC<SectorGridProps> = ({ items, onNavigate }) => {
+  const navigate = useNavigate();
   const handleNavigate = (path: string) => {
     if (onNavigate) {
       onNavigate(path);
     } else {
-      window.location.href = path;
+      navigate(path);
     }
   };
 

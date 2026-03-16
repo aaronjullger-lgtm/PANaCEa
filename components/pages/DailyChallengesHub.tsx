@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Trophy, Puzzle, SpellCheck } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS, buildApiUrl } from '@/lib/utils/apiConfig';
 import { useDiagnosticPuzzle } from '@/hooks/useDiagnosticPuzzle';
 import { useWordleGame } from '@/src/hooks/useWordleGame';
@@ -97,6 +98,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
 
 export function DailyChallengesHub() {
   const { getToken } = useAuth();
+  const navigate = useNavigate();
   const [grandRoundsCompleted, setGrandRoundsCompleted] = useState<boolean>(false);
   const [grandRoundsLoading, setGrandRoundsLoading] = useState(true);
   const [grandRoundsError, setGrandRoundsError] = useState<string | null>(null);
@@ -159,18 +161,16 @@ export function DailyChallengesHub() {
   const resetTime = '6 hours'; // TODO: calculate from midnight UTC
 
   const handleStartGrandRounds = () => {
-    // Navigate to Grand Rounds mode
-    window.location.href = '/grand-rounds';
+    navigate(ROUTES.STUDY);
   };
 
   const handleStartDiagnosticPuzzle = () => {
-    // Navigate to Diagnostic Puzzle mode
-    window.location.href = '/diagnostic-puzzle';
+    navigate(ROUTES.STUDY);
   };
 
   const handleStartWordle = () => {
-    // [DISABLED] Medical Wordle API not implemented - redirect to /drills
-    window.location.href = '/drills';
+    // [DISABLED] Medical Wordle API not implemented - go to practice
+    navigate(ROUTES.PRACTICE);
   };
 
   return (

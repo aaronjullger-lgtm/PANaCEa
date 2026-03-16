@@ -331,7 +331,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
               <motion.button
                 onClick={handleStart}
                 disabled={(viewState as string) === 'loading'}
-                className="px-10 py-4 bg-data-neutral text-data-neutral dark:bg-data-neutral dark:text-data-neutral hover:bg-data-neutral dark:hover:bg-white
+                className="px-10 py-4 bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] hover:opacity-90
                          disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-semibold text-lg
                          transition-all flex items-center justify-center gap-3 mx-auto shadow-lg hover:shadow-xl"
                 whileHover={{ scale: 1.02 }}
@@ -645,8 +645,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                 ) : (
                   <button
                     onClick={handleNext}
-                    className="flex-1 bg-data-neutral hover:bg-data-neutral dark:bg-data-neutral dark:hover:bg-white 
-                             text-data-neutral dark:text-data-neutral py-3 rounded-lg font-semibold
+                    className="flex-1 bg-[var(--color-accent)] text-[var(--color-btn-primary-text)] hover:opacity-90 py-3 rounded-lg font-semibold
                              transition-colors flex items-center justify-center gap-2 shadow-md"
                   >
                     Next Case
