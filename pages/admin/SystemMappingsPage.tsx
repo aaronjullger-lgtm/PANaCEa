@@ -241,7 +241,7 @@ export function SystemMappingsPage() {
       <div className="max-w-4xl mx-auto p-8 text-center">
         <Shield className="w-16 h-16 mx-auto text-red-500 mb-4" />
         <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-        <p className="text-slate-600 mb-6">You must be an administrator to view this page.</p>
+        <p className="text-[var(--color-text-secondary)] mb-6">You must be an administrator to view this page.</p>
         <button
           onClick={() => navigate(ROUTES.HOME)}
           className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
@@ -258,14 +258,14 @@ export function SystemMappingsPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(ROUTES.ADMIN)}
-            className="p-2 rounded-full bg-slate-100 hover:bg-slate-200"
+            className="p-2 rounded-full bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]"
             aria-label="Back to Admin Dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <h1 className="text-3xl font-bold">System Mappings</h1>
-            <p className="text-slate-600">Link taxonomy codes to subcategories, canonical names, and search keywords</p>
+            <p className="text-[var(--color-text-secondary)]">Link taxonomy codes to subcategories, canonical names, and search keywords</p>
           </div>
         </div>
         <button
@@ -291,36 +291,36 @@ export function SystemMappingsPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
         <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
             <tr>
-              <th className="py-3 px-4 text-left font-semibold text-slate-700">Taxonomy</th>
-              <th className="py-3 px-4 text-left font-semibold text-slate-700">Subcategory</th>
-              <th className="py-3 px-4 text-left font-semibold text-slate-700">Canonical Name</th>
-              <th className="py-3 px-4 text-left font-semibold text-slate-700">Aliases</th>
-              <th className="py-3 px-4 text-left font-semibold text-slate-700">Actions</th>
+              <th className="py-3 px-4 text-left font-semibold text-[var(--color-text-primary)]">Taxonomy</th>
+              <th className="py-3 px-4 text-left font-semibold text-[var(--color-text-primary)]">Subcategory</th>
+              <th className="py-3 px-4 text-left font-semibold text-[var(--color-text-primary)]">Canonical Name</th>
+              <th className="py-3 px-4 text-left font-semibold text-[var(--color-text-primary)]">Aliases</th>
+              <th className="py-3 px-4 text-left font-semibold text-[var(--color-text-primary)]">Actions</th>
             </tr>
           </thead>
           <tbody>
             {mappings.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-8 px-4 text-center text-slate-500">
+                <td colSpan={5} className="py-8 px-4 text-center text-[var(--color-text-muted)]">
                   No system mappings found. Create the first one.
                 </td>
               </tr>
             ) : (
               mappings.map((map) => (
-                <tr key={`${map.taxonomyCode}-${map.subcategory}`} className="border-b border-slate-100 hover:bg-slate-50">
+                <tr key={`${map.taxonomyCode}-${map.subcategory}`} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)]">
                   <td className="py-3 px-4">
                     <div className="font-mono font-bold">{map.taxonomyCode}</div>
-                    <div className="text-sm text-slate-500">{getTaxonomyName(map.taxonomyCode)}</div>
+                    <div className="text-sm text-[var(--color-text-muted)]">{getTaxonomyName(map.taxonomyCode)}</div>
                   </td>
                   <td className="py-3 px-4 font-medium">{map.subcategory}</td>
                   <td className="py-3 px-4">
                     <div className="font-semibold">{map.canonicalName}</div>
                     {map.parentCategory && (
-                      <div className="text-sm text-slate-500">Parent: {map.parentCategory}</div>
+                      <div className="text-sm text-[var(--color-text-muted)]">Parent: {map.parentCategory}</div>
                     )}
                   </td>
                   <td className="py-3 px-4">
@@ -329,28 +329,28 @@ export function SystemMappingsPage() {
                         {map.aliases.map((alias, idx) => (
                           <span
                             key={idx}
-                            className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-800 rounded-full text-xs"
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-full text-xs"
                           >
                             <Tag className="w-3 h-3" /> {alias}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-[var(--color-text-muted)]">—</span>
                     )}
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openEditModal(map)}
-                        className="p-1.5 text-slate-600 hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 rounded"
+                        className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 rounded"
                         aria-label="Edit"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(map.taxonomyCode, map.subcategory)}
-                        className="p-1.5 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded"
+                        className="p-1.5 text-[var(--color-text-secondary)] hover:text-red-600 hover:bg-red-50 rounded"
                         aria-label="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -370,7 +370,7 @@ export function SystemMappingsPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl"
+            className="bg-[var(--color-bg-primary)] rounded-2xl p-6 max-w-md w-full shadow-xl"
           >
             <h2 className="text-xl font-bold mb-4">
               {editingMapping ? 'Edit System Mapping' : 'Create New System Mapping'}
@@ -381,7 +381,7 @@ export function SystemMappingsPage() {
                 <select
                   value={formData.taxonomyCode}
                   onChange={(e) => setFormData({ ...formData, taxonomyCode: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                   disabled={!!editingMapping}
                 >
                   <option value="">Select a taxonomy</option>
@@ -398,7 +398,7 @@ export function SystemMappingsPage() {
                   type="text"
                   value={formData.subcategory}
                   onChange={(e) => setFormData({ ...formData, subcategory: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                   placeholder="e.g., Hypertension"
                   disabled={!!editingMapping}
                 />
@@ -409,7 +409,7 @@ export function SystemMappingsPage() {
                   type="text"
                   value={formData.canonicalName}
                   onChange={(e) => setFormData({ ...formData, canonicalName: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                   placeholder="e.g., Essential Hypertension"
                 />
               </div>
@@ -419,7 +419,7 @@ export function SystemMappingsPage() {
                   type="text"
                   value={formData.aliases}
                   onChange={(e) => setFormData({ ...formData, aliases: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                   placeholder="e.g., HTN, high blood pressure"
                 />
               </div>
@@ -429,7 +429,7 @@ export function SystemMappingsPage() {
                   type="text"
                   value={formData.searchKeywords}
                   onChange={(e) => setFormData({ ...formData, searchKeywords: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                   placeholder="e.g., systolic, diastolic, antihypertensive"
                 />
               </div>
@@ -439,7 +439,7 @@ export function SystemMappingsPage() {
                   type="text"
                   value={formData.parentCategory}
                   onChange={(e) => setFormData({ ...formData, parentCategory: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                   placeholder="e.g., Cardiovascular Diseases"
                 />
               </div>
@@ -449,7 +449,7 @@ export function SystemMappingsPage() {
                   type="text"
                   value={formData.blueprintTags}
                   onChange={(e) => setFormData({ ...formData, blueprintTags: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                   placeholder="e.g., NCCPA, critical, high-yield"
                 />
               </div>
@@ -457,7 +457,7 @@ export function SystemMappingsPage() {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={closeModals}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                className="px-4 py-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg"
                 disabled={submitting}
               >
                 Cancel
