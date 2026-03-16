@@ -19,7 +19,7 @@ PANaCEa now supports user authentication and cloud synchronization, allowing you
 
 ### For Developers
 
-See the [Authentication Setup Guide](./AUTHENTICATION_SETUP.md) for detailed setup instructions.
+See the [Authentication Setup Guide](../guides/AUTHENTICATION_SETUP.md) for detailed setup instructions.
 
 ## Features
 
@@ -72,9 +72,9 @@ App.tsx
 
 ```
 /functions/api/
-  ├── auth/verify.ts → Token verification
+  ├── _shared/auth.ts → Clerk token verification middleware
   ├── sync.ts → GET/POST data sync
-  └── stats/ → User statistics
+  └── user/ → User statistics/profile endpoints
 ```
 
 ### Database (PostgreSQL + Prisma)
@@ -97,15 +97,6 @@ prisma/schema.prisma
 
 ## API Endpoints
 
-### `POST /api/auth/verify`
-
-Verify Clerk authentication token
-
-```typescript
-Request: { Authorization: "Bearer <token>" }
-Response: { valid: boolean, userId: string, email: string }
-```
-
 ### `GET /api/sync`
 
 Fetch user's cloud data
@@ -115,8 +106,14 @@ Request: {
   Authorization: 'Bearer <token>';
 }
 Response: {
-  (performanceRecords, srsItems, savedQuestions);
-}
+  success: true;
+  message: 'Data retrieved successfully';
+  data: {
+    performanceRecords: PerformanceRecord[];
+    srsItems: SRSItem[];
+    savedQuestions: SavedQuestion[];
+  };
+};
 ```
 
 ### `POST /api/sync`
@@ -125,13 +122,27 @@ Upload/merge local data to cloud
 
 ```typescript
 Request: {
-  userId: string,
-  performanceRecords: [],
-  srsItems: [],
-  savedQuestions: []
+  userId: string; // Must match authenticated Clerk user ID
+  performanceRecords?: SyncPerformanceRecord[]; // max 1000
+  srsItems?: SyncSRSItem[]; // max 1000
+  savedQuestions?: SyncSavedQuestion[]; // max 500; type: 'saved' | 'flagged' | 'missed'
 }
-Response: { success: boolean, message: string }
+Response: {
+  success: true;
+  message: 'Data synced successfully';
+  data: {
+    performanceRecords: PerformanceRecord[];
+    srsItems: SRSItem[];
+    savedQuestions: SavedQuestion[];
+  };
+}
 ```
+
+Validation/status notes:
+- `403` if `request.userId !== auth.userId`.
+- `400` for schema validation failures.
+- `401` for missing/invalid auth token.
+- `500` for server sync failures.
 
 ## Development
 

@@ -61,11 +61,10 @@ The codebase contains **three distinct synchronization systems**:
   - Performance records
   - SRS items
   - Saved questions
-  - User achievements
-  - Daily streaks
+  - (No achievements/streak payload on this endpoint currently)
 
 #### **Secondary Endpoints:**
-- `GET /api/sync` - Download cloud data
+- `GET /api/sync` - Download cloud data (returns `{ success, message, data }`)
 - Various operation-specific endpoints for direct sync
 
 ## 2. Strengths Identified

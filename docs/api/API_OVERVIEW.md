@@ -34,6 +34,8 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 | POST | `/api/user/goals` | Required | Create new goal. |
 | PATCH | `/api/user/goals/:id` | Required | Update goal progress/status/metadata. |
 | DELETE | `/api/user/goals/:id` | Required | Delete goal by ID. |
+| GET | `/api/sync` | Required | Download the authenticated user's cloud-synced records (performance, SRS, saved questions). |
+| POST | `/api/sync` | Required | Upload and merge local user data into cloud state, then return merged server state. |
 | POST | `/api/user/session` | Required | Start study session. |
 | PATCH | `/api/user/session` | Required | Update or end study session. |
 | GET | `/api/admin/enrich-condition` | Admin | Endpoint usage contract + enrichable field list. |
@@ -379,6 +381,110 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 - **PATCH body:** `{ "body": { title?, currentValue?, status?, targetDate?, ... } }` against `/api/user/goals/:id`.
 - **DELETE:** `/api/user/goals/:id`.
 - **Success pattern:** `{ "success": true, "goal": { ... }, "message": "..." }` (or list payload for GET).
+
+### `GET /api/sync`
+
+- **Auth:** Required (`Authorization: Bearer <Clerk token>`).
+- **Request:** No body; query-validated with an empty schema.
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "message": "Data retrieved successfully",
+  "data": {
+    "performanceRecords": [
+      {
+        "id": "uuid",
+        "topic": "Cardiology",
+        "focus": "all",
+        "isCorrect": true,
+        "timestamp": 1738022400000
+      }
+    ],
+    "srsItems": [],
+    "savedQuestions": []
+  }
+}
+```
+
+- **Notes:**
+  - `performanceRecords[].timestamp` is returned as a number (converted from DB bigint).
+  - If the Clerk user does not exist in `User`, the endpoint creates a placeholder user record and then returns empty/new data.
+- **Errors:** `401` (auth required), `429` (rate limit), `500` (sync retrieval failure).
+
+### `POST /api/sync`
+
+- **Auth:** Required (`Authorization: Bearer <Clerk token>`).
+- **Request body (top-level JSON):**
+
+```json
+{
+  "userId": "clerk_user_id",
+  "performanceRecords": [
+    {
+      "id": "optional uuid",
+      "topic": "Cardiology",
+      "system": "Cardiology",
+      "focus": "all",
+      "difficulty": "medium",
+      "isCorrect": true,
+      "timestamp": 1738022400000,
+      "questionWordCount": 88,
+      "errorTag": null,
+      "subcategoryName": "Arrhythmias",
+      "conditionName": "Atrial fibrillation"
+    }
+  ],
+  "srsItems": [
+    {
+      "questionId": "q_123",
+      "interval": 3,
+      "repetition": 4,
+      "easiness": 2.45,
+      "dueDate": "2026-03-16T00:00:00.000Z",
+      "lastReviewed": "2026-03-14T10:30:00.000Z",
+      "quality": 4,
+      "difficulty": "2.2",
+      "stabilityScore": 0.78,
+      "updatedAt": "2026-03-14T10:30:00.000Z"
+    }
+  ],
+  "savedQuestions": [
+    {
+      "questionId": "q_123",
+      "questionText": "Which rhythm is most likely?",
+      "type": "missed",
+      "updatedAt": "2026-03-14T10:30:00.000Z"
+    }
+  ]
+}
+```
+
+- **Validation constraints:**
+  - `userId`: required string.
+  - `performanceRecords`: optional, max `1000`.
+  - `srsItems`: optional, max `1000`.
+  - `savedQuestions`: optional, max `500`, `type` is one of `saved | flagged | missed`.
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "message": "Data synced successfully",
+  "data": {
+    "performanceRecords": [],
+    "srsItems": [],
+    "savedQuestions": []
+  }
+}
+```
+
+- **Behavior notes:**
+  - `userId` must match the authenticated Clerk user ID, otherwise request is rejected.
+  - Endpoint uses batched upserts/replace patterns and retries transient Accelerate/network failures.
+  - Response always returns the latest server state after merge.
+- **Errors:** `400` (validation), `401` (auth required), `403` (`userId` mismatch), `429` (rate limit), `500` (sync failure).
 
 ### `POST /api/user/session`
 
