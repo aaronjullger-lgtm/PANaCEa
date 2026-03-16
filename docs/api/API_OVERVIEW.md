@@ -28,6 +28,10 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 | POST | `/api/questions/generate` | Required | Generate (or cache-hit) question by query text/type/system/difficulty. |
 | POST | `/api/questions/attempt` | Required | Record attempt telemetry and update stats/SRS/Rolling 360. |
 | POST | `/api/recommendations/generate` | Required | Generate personalized recommendation list for user. |
+| GET | `/api/study-path/recommendation` | Required | Generate or return cached personalized study path recommendation. |
+| GET | `/api/study-path/progress` | Required | Return projected retention/accuracy/coverage timeline for a recommended plan. |
+| PUT | `/api/study-path/accept` | Required | Mark a recommended plan as accepted, optionally recording feedback. |
+| POST | `/api/study-path/regenerate` | Required | Regenerate a plan with optional constraints and cache invalidation. |
 | GET | `/api/reference/normal-labs` | Required | Fetch normal lab reference records (optional category filter). |
 | GET | `/api/user/daily-performance` | Required | Daily attempt/accuracy trend for configurable lookback window. |
 | GET | `/api/user/goals` | Required | List goals with optional status/type filters. |
@@ -334,6 +338,151 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
   "recommendations": [/* recommendation objects */]
 }
 ```
+
+### `GET /api/study-path/recommendation`
+
+- **Auth:** Required.
+- **Query params (all optional):**
+  - `dailyMinutesLimit` (positive integer)
+  - `examDate` (ISO datetime string)
+  - `targetRetention` (number between `0.5` and `1`)
+  - `focusAreas` (comma-separated taxonomy codes)
+  - `excludeAreas` (comma-separated taxonomy codes)
+  - `preferredDays` (comma-separated weekday integers, `0` = Sunday)
+  - `maxSessionsPerDay` (positive integer)
+- **Success (`200`):**
+
+```json
+{
+  "plan": {
+    "id": "plan_...",
+    "userId": "user_...",
+    "generatedAt": "2026-03-16T12:00:00.000Z",
+    "validUntil": "2026-03-16T13:00:00.000Z",
+    "sessions": [
+      {
+        "id": "session_1",
+        "date": "2026-03-17T00:00:00.000Z",
+        "topics": [
+          {
+            "taxonomyCode": "CARDIO",
+            "subcategory": "Arrhythmias",
+            "recommendedAction": "REVIEW",
+            "estimatedMinutes": 20,
+            "urgencyScore": 0.81,
+            "contentIds": ["..."]
+          }
+        ],
+        "notes": "optional"
+      }
+    ],
+    "totalEstimatedMinutes": 360,
+    "confidence": 0.82,
+    "metadata": {
+      "blueprintCoverage": { "Cardiology": 0.22 },
+      "projectedRetentionIncrease": 0.09,
+      "fatigueRisk": "LOW",
+      "gapsProcessed": 24,
+      "constraintsUsed": {}
+    }
+  },
+  "alternatives": [/* StudyPlan[] */],
+  "rationale": "string",
+  "confidence": 0.88,
+  "canRegenerate": true,
+  "cached": false,
+  "generatedAt": "2026-03-16T12:00:00.000Z"
+}
+```
+
+- **Errors:** `400` (validation), `401` (auth), `429` (rate limit), `500` (`{ "error": "Unable to generate study plan. Please try again." }`).
+
+### `GET /api/study-path/progress`
+
+- **Auth:** Required.
+- **Query params:** Same optional constraint params as `/api/study-path/recommendation`.
+  - Current frontend may also send `planId`; the endpoint currently ignores it because it is not part of the validated schema.
+- **Success (`200`):**
+
+```json
+{
+  "projections": [
+    {
+      "date": "2026-03-17T00:00:00.000Z",
+      "projectedRetention": 0.81,
+      "projectedAccuracy": 0.81,
+      "projectedCoverage": 0.14,
+      "cumulativeStudyMinutes": 45
+    }
+  ],
+  "currentPlanId": "plan_...",
+  "metrics": {
+    "totalStudyDays": 8,
+    "averageDailyMinutes": 42.5,
+    "estimatedRetentionIncrease": 0.09
+  }
+}
+```
+
+- **Errors:** `400`, `401`, `429`, `500` (`{ "error": "Unable to load progress data. Please try again." }`).
+
+### `PUT /api/study-path/accept`
+
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "planId": "plan_...",
+  "feedback": "TOO_LONG",
+  "feedbackNotes": "Optional free-text"
+}
+```
+
+- **Validation notes:**
+  - `planId` is required, non-empty string.
+  - `feedback` is optional enum: `TOO_LONG | TOO_SHORT | WRONG_FOCUS | OTHER`.
+  - `feedbackNotes` is optional string.
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "message": "Plan accepted successfully",
+  "planId": "plan_...",
+  "acceptedAt": "2026-03-16T12:00:00.000Z"
+}
+```
+
+- **Operational note:** When Cloudflare KV is available, acceptance is persisted under `accepted_plan:<userId>` with a 30-day TTL.
+- **Errors:** `400`, `401`, `429`, `500` (`{ "error": "Unable to accept study plan. Please try again." }`).
+
+### `POST /api/study-path/regenerate`
+
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "constraints": {
+    "dailyMinutesLimit": 60,
+    "examDate": "2026-06-01T00:00:00.000Z",
+    "targetRetention": 0.9,
+    "focusAreas": ["CARDIO"],
+    "excludeAreas": ["DERM"],
+    "preferredDays": [1, 3, 5],
+    "maxSessionsPerDay": 2
+  },
+  "forceRegenerate": true
+}
+```
+
+- **Behavior:**
+  - `forceRegenerate` defaults to `false`.
+  - If `forceRegenerate` is `true` and KV is available, cached study-path data for the user/constraint key is deleted before recomputing.
+  - If `forceRegenerate` is `false`, cached recommendation may be returned with `"cached": true`.
+- **Success (`200`):** Same payload contract as `GET /api/study-path/recommendation`.
+- **Errors:** `400`, `401`, `429`, `500` (`{ "error": "Unable to regenerate study plan. Please try again." }`).
 
 ### `GET /api/reference/normal-labs`
 
