@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { RecommendationFeed } from '@/components/dashboard/RecommendationFeed';
 import { useUser } from '@clerk/clerk-react';
 import {
-  Target,
   Brain,
   Stethoscope,
   BarChart3,
@@ -32,35 +31,15 @@ import { loadUserProfile } from '@/services/analytics';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { getSystemsForRotation, isEorRotation, DEFAULT_SYSTEM_PROGRESS_TOTAL } from '@/config/rotation-systems';
 import { RotationSelector } from '@/components/onboarding/RotationSelector';
-import {
-  AnalyticsDashboard,
-  DatabaseAnalyticsDashboard,
-  LearningProfileDashboard,
-  AdvancedLearningProfileDashboard,
-  UserFriendlyStatsDisplay,
-} from '@/config/lazyComponents';
-import {
-  VISUAL_DIAGNOSTICS_MODES,
-  CLINICAL_SIMULATION_MODES,
-  QUESTION_PRACTICE_MODES,
-  SPECIALTY_DRILL_MODES,
-  type TrainingModeConfig,
-} from '@/config/training-modes';
 import { TO_REVIEW_LABEL } from '@/config/labels';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useRolling360Stats } from '@/hooks/useRolling360Stats';
 import { useUnifiedStats } from '@/hooks/useUnifiedStats';
-import UnifiedDashboard from '@/components/dashboard/UnifiedDashboard';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { calculateDayStreak } from '@/lib/dashboardUtils';
 import { QuickStatsBarSkeleton } from '@/components/loading';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { CurriculumGrid } from '@/components/dashboard/CurriculumGrid';
-import { HighContrastDataToggle } from '@/components/ui/HighContrastDataToggle';
-import {
-  SmartSchedulerGantt,
-  type ScheduleBlock,
-} from '@/components/analytics/SmartSchedulerGantt';
 import { getLastSession, clearLastSession, type LastSessionData } from '@/lib/utils/sessionStorage';
 import { WelcomeBackCard } from '@/components/dashboard/WelcomeBackCard';
 import { ExamCountdownCard } from '@/components/dashboard/ExamCountdownCard';
@@ -68,16 +47,11 @@ import { EorCountdownCard } from '@/components/dashboard/EorCountdownCard';
 import { CircadianInsightCard } from '@/components/dashboard/CircadianInsightCard';
 import { TimeBoxButtons } from '@/components/dashboard/TimeBoxButtons';
 import { ProgressRingWidget } from '@/components/dashboard/ProgressRingWidget';
-import { RecommendedActionCard } from '@/components/dashboard/RecommendedActionCard';
 import { usePullToRefresh } from '@/hooks/useSwipeGestures';
 import {
   GrandRoundsBanner,
   CoreAdaptiveHero,
   QuickStatsBar,
-  ModeCard,
-  ICON_MAP,
-  CategorySection,
-  ResidencyCockpitSection,
 } from './hub';
 
 // ============================================================================
@@ -431,14 +405,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     }));
   }, [apiProfile?.eorTestDate, apiProfile?.rotationStartDate, apiProfile?.rotationEndDate, apiProfile?.currentRotation, apiProfile?.yearInProgram]);
 
-  // Study Tools tab state
-  const [activeTab, setActiveTab] = useState<'training' | 'resources' | 'analytics'>(
-    initialStudyToolsTab || 'training'
-  );
-  const [studyFocusStep, setStudyFocusStep] = useState<'idle' | 'choose_focus'>('idle');
-  const [showAllTools, setShowAllTools] = useState(false);
-  const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
-
   useEffect(() => {
     const sync = () => setUserProfile(loadUserProfile() || { hasCompletedOnboarding: false });
     sync();
@@ -577,20 +543,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     return { streak, dueCount, accuracy, questionsToday: todayRecords.length };
   }, [performanceData, flaggedQuestions, missedQuestions, propDueCount, unifiedStats, unifiedStatsLoading]);
 
-  // FSRS / spaced repetition schedule blocks for Gantt (today when dueCount > 0)
-  const schedulerBlocks: ScheduleBlock[] = useMemo(() => {
-    if (stats.dueCount <= 0) return [];
-    const today = new Date().toISOString().slice(0, 10);
-    return [
-      {
-        id: 'today-due',
-        label: 'Review due',
-        date: today,
-        count: stats.dueCount,
-      },
-    ];
-  }, [stats.dueCount]);
-
   // For Didactic users: sub-label showing enabled systems (e.g. "Testing: CV, PULM, GI Only")
   const enabledSystemsLabel = useMemo(() => {
     if (careerStage !== 'student') return null;
@@ -599,39 +551,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     if (enabled.length === 0 || enabled.length === all.length) return null;
     return `Testing: ${enabled.slice(0, 5).join(', ')}${enabled.length > 5 ? '…' : ''} Only`;
   }, [careerStage, enabledSystems]);
-
-  // Filter modes based on user context (PANCE vs PANRE; hide didactic-only for Practicing PAs)
-  const filteredModes = useMemo(() => {
-    const filterForContext = (modes: TrainingModeConfig[]) =>
-      modes.filter((m) => {
-        if (m.panreOnly && !showPANREContent) return false;
-        if (m.didacticOnly && showPANREContent) return false;
-        return true;
-      });
-
-    return {
-      visual: filterForContext(VISUAL_DIAGNOSTICS_MODES),
-      clinical: filterForContext(CLINICAL_SIMULATION_MODES),
-      questions: filterForContext(QUESTION_PRACTICE_MODES),
-      specialty: filterForContext(SPECIALTY_DRILL_MODES),
-    };
-  }, [showPANREContent]);
-
-  const handleModeSelect = useCallback(
-    (mode: TrainingModeConfig) => {
-      if (mode.id === 'core_adaptive') {
-        // Navigate to dedicated simulation page instead of opening modal
-        if (onNavigateToSimulation) {
-          onNavigateToSimulation();
-        } else {
-          onStartSession({ focus: 'all' });
-        }
-      } else {
-        onNavigateToDrillMode(mode.id);
-      }
-    },
-    [onNavigateToDrillMode, onStartSession, onNavigateToSimulation]
-  );
 
   const handleNavigateToDrillModeWithSettings = (modeId: string, settings?: any) => {
     if (modeId === 'core_adaptive' || modeId === 'custom_practice') {

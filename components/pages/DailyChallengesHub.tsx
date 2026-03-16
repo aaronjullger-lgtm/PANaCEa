@@ -11,6 +11,8 @@ import { useAuth } from '@clerk/clerk-react';
 import { API_ENDPOINTS, buildApiUrl } from '@/lib/utils/apiConfig';
 import { useDiagnosticPuzzle } from '@/hooks/useDiagnosticPuzzle';
 import { useWordleGame } from '@/src/hooks/useWordleGame';
+import { BackLink } from '@/components/navigation/BackLink';
+import { ROUTES } from '@/config/routes';
 
 interface ChallengeCardProps {
   title: string;
@@ -174,6 +176,7 @@ export function DailyChallengesHub() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-10">
+        <BackLink to={ROUTES.STUDY} className="mb-4" />
         <h1 className="text-3xl font-bold text-action-primary mb-2">Daily Challenges</h1>
         <p className="text-text-secondary">
           Engage with daily challenges to test your knowledge, compete with peers, and maintain your streak.

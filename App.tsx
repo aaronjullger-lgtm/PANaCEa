@@ -1,74 +1,21 @@
 // App.tsx — layout shell, provider composition, and view orchestration.
 // Decomposition roadmap: see docs/architecture/APP_DECOMPOSITION.md
-import React, { useEffect, useMemo, useState, useCallback, useRef, Suspense } from 'react';
-import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, X, Shield, User, HelpCircle } from 'lucide-react';
-import { ROUTES } from './config/routes';
-import { CANONICAL_PATHS } from './config/navigation';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { User } from 'lucide-react';
 import { runStorageKeyMigration } from './lib/storage/storageRegistry';
-import { NavRail } from './components/layout/NavRail';
-import { AppBrand } from './components/layout/AppBrand';
-import { type View, pageVariants, DRILL_MODE_IDS } from './config/appViews';
+import { type View, DRILL_MODE_IDS } from './config/appViews';
 import { TRAINING_MODES } from './config/training-modes';
 import { useAppNavigation } from './hooks/useAppNavigation';
-import { DrillViewRouter } from './components/layout/DrillViewRouter';
 import { KeyboardAccessibilityAudit } from './components/shared/KeyboardAccessibilityAudit';
 import { ContrastRatioAudit } from './components/shared/ContrastRatioAudit';
 import PerformanceMonitor from './components/shared/PerformanceMonitor';
 import PWAInstallPrompt from './components/shared/PWAInstallPrompt';
-import {
-  QuizViewWithErrorBoundary,
-  SessionRunner,
-  MenuView,
-  SettingsStatsModal,
-  KeyboardShortcutsModal,
-  PANRELASimulator,
-  CommandPalette,
-  UserProfileModal,
-  BaselineAssessment,
-  OnboardingYourPlan,
-  MediaApproval,
-  ToolkitHub,
-  GapAnalysisDashboard,
-  StudyPathDashboard,
-  CommandCenterHub,
-  TrainingMenu,
-  SimulationPage,
-  CommandCenterPage,
-  KnowledgeBaseHub,
-  MyLibraryPage,
-  TutorChatPage,
-  StudyCompanionPage,
-  SrsFlashcardView,
-  CustomStudyMode,
-  ClinicalProfileDashboard,
-  AdminDashboard,
-  TaxonomiesPage,
-  SystemMappingsPage,
-  QuestionGeneratorPage,
-  RefineryPage,
-  MyPearlsPanel,
-  ClinicalEyePage,
-  VisualizerPage,
-  CrossSystemExplorer,
-  MedicalDatabaseSearch,
-  LiveStudySession,
-  PracticePage,
-  ProgressPage,
-  DailyChallengesHub,
-} from './config/lazyComponents';
-import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { setGeminiAuthProvider } from '@/services/ai/geminiService';
 import { useFSRSOptimizationCheck } from './hooks/useFSRSOptimizationCheck';
 import { useEnhancedAuth } from './hooks/useEnhancedAuth';
-import { Toaster } from 'sonner';
-import { Loader, CommandCenterSkeleton, DrillLoadingState, LoadingProgress } from './components/loading';
-import { EnhancedErrorMessage } from './components/shared/EnhancedErrorMessage';
-import { NotFoundPage } from './components/error/NotFoundPage';
-import ThemeToggleButton from './components/ui/ThemeToggleButton';
-import { MasteryHeatmapToggle } from './components/ui/MasteryHeatmapToggle';
+import { Loader, LoadingProgress } from './components/loading';
 import { useTheme } from './hooks/useTheme';
 import { LandingPage } from './pages/LandingPage';
 import { getQuestionBatch } from './services/questionService';
@@ -79,7 +26,6 @@ import { preloadData } from './lib/utils/dataLoader';
 import { useAccessibleTransition } from './hooks/useReducedMotion';
 import { useViewTransition } from './hooks/useViewTransition';
 import { flushPendingToLocalStorage } from './lib/services/sync/offlineSync';
-import { WithGeminiErrorBoundary } from './components/hoc/withGeminiErrorBoundary';
 import { useInitialLoadOptimization } from './services/initialLoadOptimizer';
 import type {
   Question as QuizQuestion,
@@ -89,14 +35,11 @@ import type {
   UserProfile,
 } from './types';
 import { hasCompletedOnboarding, saveUserProfile, getExamLabel } from './services/analytics';
-import { CommuterProvider } from './contexts/CommuterContext';
-import { ToastProvider } from './contexts/ToastContext';
-import { SystemIntegrationProvider } from './contexts/SystemIntegrationContext';
-import { OfflineSyncIndicator } from './components/offline/OfflineSyncIndicator';
-import { ProductTour, useProductTourShouldShow } from './components/onboarding/ProductTour';
+import { useProductTourShouldShow } from './components/onboarding/ProductTour';
+import { AppProviders } from './components/layout/AppProviders';
+import { AppRoutes, type SimulationFocus } from './config/AppRoutes';
 
-/** Session focus options for simulation / training menu */
-type SimulationFocus = 'all' | 'growth' | 'flagged' | 'due';
+/** Session focus options for simulation / training menu — defined in AppRoutes, re-exported here for handler type safety */
 
 // Aliases for backward compatibility in this file
 const DRILL_MODE_PHOTO = DRILL_MODE_IDS.PHOTO;
