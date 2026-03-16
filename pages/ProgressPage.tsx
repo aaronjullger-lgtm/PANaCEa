@@ -72,7 +72,7 @@ export const ProgressPage: React.FC = () => {
   }, [user?.id]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="mx-auto px-4 py-6" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
       <div className="mb-6 space-y-3">
         <BackLink to={ROUTES.STUDY} />
         <div>

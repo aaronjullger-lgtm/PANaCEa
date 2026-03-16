@@ -251,7 +251,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
   const systemsWithData = Object.entries(rolling360Stats?.systemStats ?? {}).filter(([, s]) => s.total >= 2);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="mx-auto px-4 py-6" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <BackLink to={ROUTES.STUDY} className="mb-2" />
