@@ -21,7 +21,7 @@ const SkeletonBase: React.FC<{ className?: string; style?: React.CSSProperties }
   style,
 }) => (
   <div
-    className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded-xl ${className}`}
+    className={`animate-pulse bg-[var(--color-bg-tertiary)] rounded-xl ${className}`}
     style={style}
   />
 );

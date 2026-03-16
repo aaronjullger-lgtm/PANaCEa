@@ -135,7 +135,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative overflow-hidden bg-slate-100 dark:bg-slate-800 ${containerClassName}`}
+      className={`relative overflow-hidden bg-[var(--color-bg-secondary)] ${containerClassName}`}
       style={aspectRatioStyle}
     >
       <AnimatePresence mode="wait">

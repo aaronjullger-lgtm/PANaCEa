@@ -205,7 +205,7 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
       <div className="relative group" style={{ opacity }}>
         {/* Background track */}
         <div
-          className={`w-full ${sizeClasses[size].gauge} bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden`}
+          className={`w-full ${sizeClasses[size].gauge} bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden`}
         >
           {/* Filled portion */}
           <motion.div
