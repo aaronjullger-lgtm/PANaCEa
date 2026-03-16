@@ -161,8 +161,9 @@ export const ProgressPage: React.FC = () => {
         </section>
       </Suspense>
 
-        {/* Navigation to detailed views */}
-        <div className="grid md:grid-cols-2 gap-4 mt-6">
+      {/* Navigation to detailed views */}
+      <section className="mb-8">
+        <div className="grid md:grid-cols-2 gap-4">
           <button
             onClick={() => navigate('/gap-analysis')}
             className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group"
