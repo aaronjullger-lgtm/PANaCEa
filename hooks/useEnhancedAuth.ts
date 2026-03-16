@@ -125,10 +125,9 @@ export function useEnhancedAuth(): EnhancedAuthResult {
           return;
         }
 
-        // Check for console errors (simplified - in real app would use error boundary)
-        const originalConsoleError = console.error;
-        console.error = function (...args) {
-          const errorStr = args.join(' ');
+        // Use error event listener instead of monkey-patching console.error
+        const handleError = (event: ErrorEvent) => {
+          const errorStr = event.message || String(event.error || '');
           if (
             errorStr.includes('Clerk') ||
             errorStr.includes('authentication') ||
@@ -137,11 +136,11 @@ export function useEnhancedAuth(): EnhancedAuthResult {
             setError(`Authentication error: ${errorStr.substring(0, 100)}...`);
             recordAuthFailure();
           }
-          originalConsoleError.apply(console, args);
         };
 
+        window.addEventListener('error', handleError);
         return () => {
-          console.error = originalConsoleError;
+          window.removeEventListener('error', handleError);
         };
       };
 
@@ -234,7 +233,10 @@ export function useAuthToken(): string | null {
 
   useEffect(() => {
     if (isGuestMode) {
-      setToken('guest-mode-token');
+      // Generate a unique guest session token instead of hardcoded string
+      // This prevents authentication bypass if any endpoint accepts the hardcoded token
+      const guestSessionId = `guest-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      setToken(guestSessionId);
       return;
     }
 

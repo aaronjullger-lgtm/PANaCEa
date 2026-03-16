@@ -58,12 +58,12 @@ const RAIL_WIDTH_EXPANDED = 208;
 function isPathActive(href: string, pathname: string, search: string): boolean {
   const fullPath = pathname + search;
   if (href.includes('?')) return fullPath === href;
-  if (href === '/study')
-    return (
-      (pathname === '/' || pathname === '' || pathname === '/study' || pathname === '/study/') &&
-      !search
-    );
-  return pathname === href || pathname.startsWith(href + '/');
+  // Normalize / and /study to both match /study
+  const normalizedPath = pathname === '/' || pathname === '' ? '/study' : pathname;
+  if (href === '/study') {
+    return (normalizedPath === '/study' || normalizedPath === '/study/') && !search;
+  }
+  return normalizedPath === href || normalizedPath.startsWith(href + '/');
 }
 
 function useIsMobile() {

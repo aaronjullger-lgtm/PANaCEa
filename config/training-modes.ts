@@ -62,7 +62,8 @@ export type TrainingCategory =
   | 'specialty_drills';
 
 // Modes that count toward ranked stats/FSRS pipelines
-export const RANKED_MODES = ['GRAND_ROUNDS', 'SMART_REVIEW', 'PANCE_SIMULATOR'] as const;
+// SMART_REVIEW removed - it doesn't exist as a mode ID. Use core_adaptive or other existing modes.
+export const RANKED_MODES = ['GRAND_ROUNDS', 'CORE_ADAPTIVE', 'PANCE_SIMULATOR'] as const;
 
 export function isRankedMode(mode?: string | null): boolean {
   if (!mode) return false;
@@ -464,7 +465,7 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
   },
 
   // --- ADDITIONAL MODES FOR COVERAGE ---
-  // cram_mode removed – merged into rapid_recall (see training-modes.test.ts)
+  // Note: cram_mode is still available as a separate mode (not merged into rapid_recall)
   {
     id: 'polypharmacy_puzzle',
     label: 'Polypharmacy Puzzle',

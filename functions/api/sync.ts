@@ -133,7 +133,11 @@ async function withRetry<T>(
         throw error;
       }
 
-      const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+      // Exponential backoff with jitter to prevent thundering herd
+      const baseDelay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+      const jitter = Math.random() * baseDelay * 0.3; // 0-30% jitter
+      const delay = Math.floor(baseDelay + jitter);
+      
       log.warn(
         `${operationName} failed (attempt ${attempt}/${MAX_RETRIES}), retrying in ${delay}ms`,
         {

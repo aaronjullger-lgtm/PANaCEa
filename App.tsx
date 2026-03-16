@@ -1,7 +1,7 @@
 // App.tsx — layout shell, provider composition, and view orchestration.
 // Decomposition roadmap: see docs/architecture/APP_DECOMPOSITION.md
 import React, { useEffect, useMemo, useState, useCallback, useRef, Suspense } from 'react';
-import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Link, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, X, Shield, User, HelpCircle } from 'lucide-react';
 import { ROUTES } from './config/routes';
@@ -158,8 +158,9 @@ const App: React.FC = () => {
     if (getToken && !isGuestMode) {
       setGeminiAuthProvider(getToken);
     } else if (isGuestMode) {
-      // Set a mock auth provider for guest mode
-      setGeminiAuthProvider(async () => 'guest-mode-token');
+      // Set a mock auth provider for guest mode with unique session token
+      const guestSessionId = `guest-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      setGeminiAuthProvider(async () => guestSessionId);
     }
   }, [getToken, isGuestMode]);
 
@@ -1069,6 +1070,8 @@ const App: React.FC = () => {
             <LoadingProgress isLoading={isLoading} />
 
             <Routes>
+              {/* Redirect root to /study */}
+              <Route path="/" element={<Navigate to="/study" replace />} />
               <Route
                 path="/practice"
                 element={
@@ -1192,13 +1195,15 @@ const App: React.FC = () => {
                               }}
                             >
                               <OfflineSyncIndicator />
-                              <Link
-                                to={ROUTES.ADMIN}
-                                className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-700 hover:text-slate-900 bg-[var(--color-bg-secondary)] hover:bg-slate-100 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
-                                aria-label="Admin Dashboard"
-                              >
-                                <Shield className="w-5 h-5" />
-                              </Link>
+                              {user?.publicMetadata?.role === 'admin' && (
+                                <Link
+                                  to={ROUTES.ADMIN}
+                                  className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-700 hover:text-slate-900 bg-[var(--color-bg-secondary)] hover:bg-slate-100 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
+                                  aria-label="Admin Dashboard"
+                                >
+                                  <Shield className="w-5 h-5" />
+                                </Link>
+                              )}
                               <motion.button
                                 ref={settingsButtonRef}
                                 onClick={() => setIsSettingsModalOpen(true)}
