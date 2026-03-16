@@ -989,42 +989,30 @@ const App: React.FC = () => {
 
   // Main authenticated app (or guest mode)
   return (
-    <SystemIntegrationProvider>
-      <ToastProvider>
-        <CommuterProvider>
-          {/* Sonner toast notifications */}
-          <Toaster
-            position="top-right"
-            richColors
-            closeButton
-            toastOptions={{
-              duration: 4000,
-              className: 'sonner-toast',
-            }}
-          />
-          <div className="min-h-screen bg-[var(--color-canvas,#F8FAFC)] dark:bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
-            {/* Guest mode banner */}
-            {showGuestModeBanner && (
-              <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
-                <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <User className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                    <span className="text-sm text-amber-800 dark:text-amber-300">
-                      You're in <strong>Guest Mode</strong>. Some features are limited.
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 underline"
-                  >
-                    Try signing in again
-                  </button>
-                </div>
+    <AppProviders>
+      <div className="min-h-screen bg-[var(--color-canvas,#F8FAFC)] dark:bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+        {/* Guest mode banner */}
+        {showGuestModeBanner && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
+            <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <User className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span className="text-sm text-amber-800 dark:text-amber-300">
+                  You're in <strong>Guest Mode</strong>. Some features are limited.
+                </span>
               </div>
-            )}
+              <button
+                onClick={() => window.location.reload()}
+                className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 underline"
+              >
+                Try signing in again
+              </button>
+            </div>
+          </div>
+        )}
 
-            {/* Loading Progress Bar */}
-            <LoadingProgress isLoading={isLoading} />
+        {/* Loading Progress Bar */}
+        <LoadingProgress isLoading={isLoading} />
 
             <Routes>
               <Route
@@ -2024,29 +2012,25 @@ const App: React.FC = () => {
                   </>
                 }
               />
-            </Routes>
+        {/* Accessibility Audit Components (Development Tools) */}
+        {process.env.NODE_ENV === 'development' && (
+          <>
+            <KeyboardAccessibilityAudit defaultOpen={false} />
+            <ContrastRatioAudit defaultOpen={false} />
+            <PerformanceMonitor defaultOpen={false} />
+          </>
+        )}
 
-            {/* Accessibility Audit Components (Development Tools) */}
-            {process.env.NODE_ENV === 'development' && (
-              <>
-                <KeyboardAccessibilityAudit defaultOpen={false} />
-                <ContrastRatioAudit defaultOpen={false} />
-                <PerformanceMonitor defaultOpen={false} />
-              </>
-            )}
-
-            {/* PWA Install Prompt (Shows in production too) */}
-            <PWAInstallPrompt
-              delay={15000}
-              minSessionDuration={30000}
-              showOfflineFeatures={true}
-              onInstall={() => import.meta.env.DEV && console.log('PWA installed successfully')}
-              onDismiss={() => import.meta.env.DEV && console.log('PWA prompt dismissed')}
-            />
-          </div>
-        </CommuterProvider>
-      </ToastProvider>
-    </SystemIntegrationProvider>
+        {/* PWA Install Prompt (Shows in production too) */}
+        <PWAInstallPrompt
+          delay={15000}
+          minSessionDuration={30000}
+          showOfflineFeatures={true}
+          onInstall={() => import.meta.env.DEV && console.log('PWA installed successfully')}
+          onDismiss={() => import.meta.env.DEV && console.log('PWA prompt dismissed')}
+        />
+      </div>
+    </AppProviders>
   );
 };
 
