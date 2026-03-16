@@ -93,7 +93,7 @@ const STATUS_CONFIG = {
   },
   IGNORED: {
     label: 'Ignored',
-    color: 'text-text-muted',
+    color: 'text-text-[var(--color-text-muted)]',
     bgColor: 'bg-bg-tertiary',
     icon: EyeOff,
   },
@@ -267,7 +267,7 @@ export function SuggestionTable({
 
   if (loading && suggestions.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-[400px] bg-surface-primary rounded-xl border border-border-subtle">
+      <div className="flex items-center justify-center min-h-[400px] bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)]">
         <div className="text-center">
           <RefreshCw className="w-8 h-8 animate-spin text-action-muted mx-auto mb-4" />
           <p className="text-text-secondary">Loading mapping suggestions...</p>
@@ -278,7 +278,7 @@ export function SuggestionTable({
 
   if (error) {
     return (
-      <div className="bg-surface-primary rounded-xl border border-border-subtle p-8 text-center">
+      <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-8 text-center">
         <AlertCircle className="w-12 h-12 text-data-fail mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-text-primary mb-2">Failed to load suggestions</h3>
         <p className="text-text-secondary mb-4">{error}</p>
@@ -293,17 +293,17 @@ export function SuggestionTable({
   }
 
   return (
-    <div className="bg-surface-primary rounded-xl border border-border-subtle overflow-hidden">
+    <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       {/* Header with filters */}
       {showFilters && (
-        <div className="p-4 border-b border-border-subtle bg-surface-card">
+        <div className="p-4 border-b border-[var(--color-border)] bg-surface-card">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex-1 min-w-[200px]">
               <label className="block text-sm font-medium text-text-secondary mb-1">
                 Status
               </label>
               <select
-                className="w-full bg-surface-primary border border-border-subtle rounded-lg px-3 py-2 text-text-primary"
+                className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-text-primary"
                 value={filters.status}
                 onChange={e => setFilters(prev => ({ ...prev, status: e.target.value as typeof filters.status }))}
               >
@@ -327,18 +327,18 @@ export function SuggestionTable({
                 onChange={e => setFilters(prev => ({ ...prev, confidenceMin: parseFloat(e.target.value) }))}
                 className="w-full"
               />
-              <div className="text-xs text-text-muted mt-1">{formatConfidence(filters.confidenceMin)}</div>
+              <div className="text-xs text-text-[var(--color-text-muted)] mt-1">{formatConfidence(filters.confidenceMin)}</div>
             </div>
             <div className="flex-1 min-w-[200px]">
               <label className="block text-sm font-medium text-text-secondary mb-1">
                 Search Taxonomy
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-muted" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-[var(--color-text-muted)]" />
                 <input
                   type="text"
                   placeholder="Taxonomy code or name..."
-                  className="w-full bg-surface-primary border border-border-subtle rounded-lg pl-10 pr-3 py-2 text-text-primary"
+                  className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg pl-10 pr-3 py-2 text-text-primary"
                   value={filters.taxonomySearch}
                   onChange={e => setFilters(prev => ({ ...prev, taxonomySearch: e.target.value }))}
                 />
@@ -360,20 +360,20 @@ export function SuggestionTable({
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-surface-card border-b border-border-subtle">
+          <thead className="bg-surface-card border-b border-[var(--color-border)]">
             <tr>
               {selectable && (
                 <th className="py-3 px-4 text-left">
                   <input
                     type="checkbox"
-                    className="rounded border-border-subtle"
+                    className="rounded border-[var(--color-border)]"
                     checked={selectedIds.size === suggestions.length && suggestions.length > 0}
                     onChange={e => handleSelectAll(e.target.checked)}
                   />
                 </th>
               )}
               <th
-                className="py-3 px-4 text-left cursor-pointer hover:bg-surface-primary transition-colors"
+                className="py-3 px-4 text-left cursor-pointer hover:bg-[var(--color-bg-primary)] transition-colors"
                 onClick={() => handleSort('taxonomyName')}
               >
                 <div className="flex items-center gap-2">
@@ -383,7 +383,7 @@ export function SuggestionTable({
                 </div>
               </th>
               <th
-                className="py-3 px-4 text-left cursor-pointer hover:bg-surface-primary transition-colors"
+                className="py-3 px-4 text-left cursor-pointer hover:bg-[var(--color-bg-primary)] transition-colors"
                 onClick={() => handleSort('suggestedSystemCode')}
               >
                 <div className="flex items-center gap-2">
@@ -393,7 +393,7 @@ export function SuggestionTable({
                 </div>
               </th>
               <th
-                className="py-3 px-4 text-left cursor-pointer hover:bg-surface-primary transition-colors"
+                className="py-3 px-4 text-left cursor-pointer hover:bg-[var(--color-bg-primary)] transition-colors"
                 onClick={() => handleSort('confidence')}
               >
                 <div className="flex items-center gap-2">
@@ -403,7 +403,7 @@ export function SuggestionTable({
                 </div>
               </th>
               <th
-                className="py-3 px-4 text-left cursor-pointer hover:bg-surface-primary transition-colors"
+                className="py-3 px-4 text-left cursor-pointer hover:bg-[var(--color-bg-primary)] transition-colors"
                 onClick={() => handleSort('status')}
               >
                 <div className="flex items-center gap-2">
@@ -439,7 +439,7 @@ export function SuggestionTable({
                       <td className="py-3 px-4">
                         <input
                           type="checkbox"
-                          className="rounded border-border-subtle"
+                          className="rounded border-[var(--color-border)]"
                           checked={selectedIds.has(suggestion.id)}
                           onChange={e => handleSelect(suggestion.id, e.target.checked)}
                         />
@@ -450,7 +450,7 @@ export function SuggestionTable({
                         <span className="font-medium text-text-primary">
                           {suggestion.taxonomyName}
                         </span>
-                        <span className="text-xs text-text-muted">
+                        <span className="text-xs text-text-[var(--color-text-muted)]">
                           {suggestion.taxonomyCode}
                         </span>
                         {suggestion.taxonomyDescription && (
@@ -466,7 +466,7 @@ export function SuggestionTable({
                           {suggestion.suggestedSystemCode}
                         </span>
                         {suggestion.alternativeSystems.length > 0 && (
-                          <div className="text-xs text-text-muted">
+                          <div className="text-xs text-text-[var(--color-text-muted)]">
                             Alternatives: {suggestion.alternativeSystems.slice(0, 2).map(a => a.systemCode).join(', ')}
                             {suggestion.alternativeSystems.length > 2 && '...'}
                           </div>
@@ -510,17 +510,17 @@ export function SuggestionTable({
                             </button>
                             <button
                               onClick={() => handleUpdateStatus(suggestion.id, 'IGNORED')}
-                              className="px-3 py-1 bg-bg-tertiary text-text-muted rounded-lg hover:bg-bg-tertiary/80 transition-colors text-sm font-medium"
+                              className="px-3 py-1 bg-bg-tertiary text-text-[var(--color-text-muted)] rounded-lg hover:bg-bg-tertiary/80 transition-colors text-sm font-medium"
                             >
                               Ignore
                             </button>
                           </>
                         )}
                         {suggestion.status !== 'PENDING' && (
-                          <span className="text-text-muted text-sm">Reviewed</span>
+                          <span className="text-text-[var(--color-text-muted)] text-sm">Reviewed</span>
                         )}
                         <button
-                          className="p-1 hover:bg-surface-primary rounded"
+                          className="p-1 hover:bg-[var(--color-bg-primary)] rounded"
                           title="View details"
                         >
                           <ExternalLink className="w-4 h-4" />
@@ -537,7 +537,7 @@ export function SuggestionTable({
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div className="p-4 border-t border-border-subtle flex items-center justify-between">
+        <div className="p-4 border-t border-[var(--color-border)] flex items-center justify-between">
           <div className="text-sm text-text-secondary">
             Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span>–
             <span className="font-medium">
@@ -549,7 +549,7 @@ export function SuggestionTable({
             <button
               onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
               disabled={pagination.page === 1}
-              className="px-3 py-1 bg-surface-card border border-border-subtle rounded-lg disabled:opacity-50"
+              className="px-3 py-1 bg-surface-card border border-[var(--color-border)] rounded-lg disabled:opacity-50"
             >
               Previous
             </button>
@@ -559,7 +559,7 @@ export function SuggestionTable({
             <button
               onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
               disabled={pagination.page === pagination.totalPages}
-              className="px-3 py-1 bg-surface-card border border-border-subtle rounded-lg disabled:opacity-50"
+              className="px-3 py-1 bg-surface-card border border-[var(--color-border)] rounded-lg disabled:opacity-50"
             >
               Next
             </button>

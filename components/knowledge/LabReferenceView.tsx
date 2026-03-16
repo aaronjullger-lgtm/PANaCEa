@@ -135,7 +135,7 @@ export const LabReferenceView: React.FC = () => {
           placeholder="Search labs (e.g., 'sodium', 'troponin', 'CBC')"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-12 pr-4 py-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 transition-all"
+          className="w-full pl-12 pr-4 py-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])] focus:outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 transition-all"
         />
         {searchQuery && (
           <button
@@ -183,7 +183,7 @@ export const LabReferenceView: React.FC = () => {
                       {lab.siUnits && ` ${lab.siUnits}`}
                     </div>
                   </div>
-                  <span className="text-xs px-2 py-1 bg-bg-tertiary rounded text-text-muted flex-shrink-0">
+                  <span className="text-xs px-2 py-1 bg-bg-tertiary rounded text-text-[var(--color-text-muted)] flex-shrink-0">
                     {lab.category}
                   </span>
                 </button>

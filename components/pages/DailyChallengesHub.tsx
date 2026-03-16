@@ -43,7 +43,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
   onAction,
 }) => {
   return (
-    <div className="bg-surface-card border border-border-subtle rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-surface-card border border-[var(--color-border)] rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-action-muted rounded-lg text-action-primary">
@@ -51,7 +51,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-action-primary">{title}</h3>
-            <p className="text-sm text-text-muted">{subtitle}</p>
+            <p className="text-sm text-text-[var(--color-text-muted)]">{subtitle}</p>
           </div>
         </div>
         {completed && (
@@ -226,7 +226,7 @@ export function DailyChallengesHub() {
       </div>
 
       {/* Optional aggregated streak */}
-      <div className="mt-12 p-6 bg-surface-primary border border-border-subtle rounded-2xl">
+      <div className="mt-12 p-6 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl">
         <h2 className="text-xl font-semibold text-action-primary mb-2">Daily Completion Streak</h2>
         <p className="text-text-secondary mb-4">
           Complete all three challenges each day to maximize your streak. Coming soon.

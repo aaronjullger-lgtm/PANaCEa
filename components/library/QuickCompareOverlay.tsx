@@ -38,7 +38,7 @@ export const QuickCompareOverlay: React.FC<QuickCompareOverlayProps> = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
-      className="absolute bottom-full mb-2 w-full max-w-sm p-4 bg-[var(--color-text-muted)] border border-[var(--color-text-muted)] rounded-lg shadow-lg z-10"
+      className="absolute bottom-full mb-2 w-full max-w-sm p-4 bg-[var(--color-text-[var(--color-text-muted)])] border border-[var(--color-text-[var(--color-text-muted)])] rounded-lg shadow-lg z-10"
     >
       <h3 className="text-lg font-bold text-white mb-4">Quick Compare</h3>
       <div className="grid grid-cols-2 gap-4">

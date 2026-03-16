@@ -269,7 +269,7 @@ const AccessibilitySettings: React.FC = () => {
           type="checkbox"
           checked={isCommuterMode}
           onChange={toggleCommuterMode}
-          className="w-5 h-5 rounded border-[var(--color-text-muted)] text-sage-600 focus:ring-sage-500"
+          className="w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-sage-600 focus:ring-sage-500"
         />
       </label>
 
@@ -286,7 +286,7 @@ const AccessibilitySettings: React.FC = () => {
               type="checkbox"
               checked={settings.autoReadQuestions}
               onChange={() => updateSettings({ autoReadQuestions: !settings.autoReadQuestions })}
-              className="w-4 h-4 rounded border-[var(--color-text-muted)] text-sage-600 focus:ring-sage-500"
+              className="w-4 h-4 rounded border-[var(--color-text-[var(--color-text-muted)])] text-sage-600 focus:ring-sage-500"
             />
           </label>
 
@@ -300,7 +300,7 @@ const AccessibilitySettings: React.FC = () => {
               type="checkbox"
               checked={settings.voiceEnabled}
               onChange={() => updateSettings({ voiceEnabled: !settings.voiceEnabled })}
-              className="w-4 h-4 rounded border-[var(--color-text-muted)] text-sage-600 focus:ring-sage-500"
+              className="w-4 h-4 rounded border-[var(--color-text-[var(--color-text-muted)])] text-sage-600 focus:ring-sage-500"
             />
           </label>
 
@@ -314,7 +314,7 @@ const AccessibilitySettings: React.FC = () => {
               type="checkbox"
               checked={settings.highContrastMode}
               onChange={() => updateSettings({ highContrastMode: !settings.highContrastMode })}
-              className="w-4 h-4 rounded border-[var(--color-text-muted)] text-sage-600 focus:ring-sage-500"
+              className="w-4 h-4 rounded border-[var(--color-text-[var(--color-text-muted)])] text-sage-600 focus:ring-sage-500"
             />
           </label>
 
@@ -1580,7 +1580,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.contentDifficulty.coreOnly}
                         onChange={() => handleToggleContentDifficulty('coreOnly')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1597,7 +1597,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.contentDifficulty.advancedContent}
                         onChange={() => handleToggleContentDifficulty('advancedContent')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1614,7 +1614,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.contentDifficulty.highYieldOnly}
                         onChange={() => handleToggleContentDifficulty('highYieldOnly')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1631,7 +1631,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.contentDifficulty.firstLineOnly}
                         onChange={() => handleToggleContentDifficulty('firstLineOnly')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
                   </div>
@@ -1704,7 +1704,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.questionFormat.imageIntegration}
                         onChange={() => handleToggleQuestionFormat('imageIntegration')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1765,7 +1765,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.questionFormat.showVitals}
                         onChange={() => handleToggleQuestionFormat('showVitals')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1782,7 +1782,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.questionFormat.multimediaEnabled}
                         onChange={() => handleToggleQuestionFormat('multimediaEnabled')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
                   </div>
@@ -1813,7 +1813,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.feedback.immediateFeedback}
                         onChange={() => handleToggleFeedback('immediateFeedback')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1874,7 +1874,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.feedback.spacedRepetition}
                         onChange={() => handleToggleFeedback('spacedRepetition')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1891,7 +1891,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.feedback.autoAdvance}
                         onChange={() => handleToggleFeedback('autoAdvance')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1908,7 +1908,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.feedback.showPearls}
                         onChange={() => handleToggleFeedback('showPearls')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1925,7 +1925,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.feedback.showRelatedConcepts}
                         onChange={() => handleToggleFeedback('showRelatedConcepts')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
                   </div>
@@ -1956,7 +1956,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.performanceTracking.streakTracking}
                         onChange={() => handleTogglePerformanceTracking('streakTracking')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1973,7 +1973,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.performanceTracking.detailedAnalytics}
                         onChange={() => handleTogglePerformanceTracking('detailedAnalytics')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -1990,7 +1990,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.performanceTracking.progressNotifications}
                         onChange={() => handleTogglePerformanceTracking('progressNotifications')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -2007,7 +2007,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.performanceTracking.realtimeTrends}
                         onChange={() => handleTogglePerformanceTracking('realtimeTrends')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -2024,7 +2024,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.performanceTracking.systemBreakdown}
                         onChange={() => handleTogglePerformanceTracking('systemBreakdown')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -2041,7 +2041,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={toggleSettings.performanceTracking.longitudinalView}
                         onChange={() => handleTogglePerformanceTracking('longitudinalView')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
                   </div>
@@ -2543,7 +2543,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={clinicalFidelitySettings.emrInterface}
                         onChange={() => handleToggleClinicalFidelity('emrInterface' as const)}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -2562,7 +2562,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={clinicalFidelitySettings.writeOrders}
                         onChange={() => handleToggleClinicalFidelity('writeOrders')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -2581,7 +2581,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={clinicalFidelitySettings.rawLabValues}
                         onChange={() => handleToggleClinicalFidelity('rawLabValues')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
 
@@ -2600,7 +2600,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         type="checkbox"
                         checked={clinicalFidelitySettings.multimediaAuscultation}
                         onChange={() => handleToggleClinicalFidelity('multimediaAuscultation')}
-                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-muted)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                        className="ml-3 w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                       />
                     </label>
                   </div>

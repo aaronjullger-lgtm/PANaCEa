@@ -244,7 +244,7 @@ export const DifficultyIndicator: React.FC<DifficultyIndicatorProps> = ({
         >
           {reasoning.map((reason, i) => (
             <div key={i} className="flex items-center gap-1.5">
-              <span className="w-1 h-1 rounded-full bg-[var(--color-text-muted)]" />
+              <span className="w-1 h-1 rounded-full bg-[var(--color-text-[var(--color-text-muted)])]" />
               <span>{reason}</span>
             </div>
           ))}

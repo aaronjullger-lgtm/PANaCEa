@@ -217,7 +217,7 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
             {onSkip && (
               <button
                 onClick={onSkip}
-                className="px-6 py-3 border border-[var(--color-border)] text-[var(--color-text-muted)] rounded-lg hover:text-[var(--color-text-primary)] hover:border-[var(--color-text-muted)] transition-colors"
+                className="px-6 py-3 border border-[var(--color-border)] text-[var(--color-text-muted)] rounded-lg hover:text-[var(--color-text-primary)] hover:border-[var(--color-text-[var(--color-text-muted)])] transition-colors"
               >
                 Skip for now
               </button>

@@ -73,9 +73,9 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       size: 'normal',
     },
     {
-      foreground: '#64748b', // --color-text-muted
+      foreground: '#64748b', // --color-text-[var(--color-text-muted)]
       background: '#F8FAFC', // --color-bg-primary
-      foregroundName: 'text-muted',
+      foregroundName: 'text-[var(--color-text-muted)]',
       backgroundName: 'bg-primary',
       usage: 'Muted text on canvas',
       standard: 'AA',
@@ -128,9 +128,9 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       size: 'normal',
     },
     {
-      foreground: '#94a3b8', // --color-text-muted (dark)
+      foreground: '#94a3b8', // --color-text-[var(--color-text-muted)] (dark)
       background: '#0f172a', // --color-bg-primary (dark)
-      foregroundName: 'text-muted (dark)',
+      foregroundName: 'text-[var(--color-text-muted)] (dark)',
       backgroundName: 'bg-primary (dark)',
       usage: 'Muted text on dark canvas',
       standard: 'AA',
@@ -184,9 +184,9 @@ export const ContrastAudit: React.FC<ContrastAuditProps> = ({
       size: 'large',
     },
     {
-      foreground: '#64748b', // --color-text-muted
+      foreground: '#64748b', // --color-text-[var(--color-text-muted)]
       background: '#F8FAFC', // --color-bg-primary
-      foregroundName: 'text-muted',
+      foregroundName: 'text-[var(--color-text-muted)]',
       backgroundName: 'bg-primary',
       usage: 'Large muted text',
       standard: 'AA',

@@ -131,7 +131,7 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-muted" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-[var(--color-text-muted)]" />
         <input
           ref={inputRef}
           type="text"
@@ -140,11 +140,11 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
           placeholder={placeholder}
-          className="w-full pl-10 pr-10 py-2 border border-border rounded-lg bg-surface-card text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-action-primary focus:border-transparent"
+          className="w-full pl-10 pr-10 py-2 border border-border rounded-lg bg-surface-card text-text-primary placeholder-text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-action-primary focus:border-transparent"
           aria-label="Search graph nodes"
         />
         {loading && (
-          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-muted animate-spin" />
+          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-[var(--color-text-muted)] animate-spin" />
         )}
       </div>
 

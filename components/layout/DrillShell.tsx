@@ -110,7 +110,7 @@ export const DrillShell: React.FC<DrillShellProps> = ({
     ? 'fixed inset-0 z-50 flex flex-col'
     : 'min-h-screen flex flex-col';
 
-  const bgColor = backgroundColor || 'bg-surface-primary';
+  const bgColor = backgroundColor || 'bg-[var(--color-bg-primary)]';
 
   return (
     <div
@@ -118,7 +118,7 @@ export const DrillShell: React.FC<DrillShellProps> = ({
     >
       {/* Premium Glass Header - Matches App.tsx styling */}
       <header
-        className="sticky z-30 bg-surface-primary/85 backdrop-blur-xl border-b border-border-subtle transition-all duration-300 shadow-sm"
+        className="sticky z-30 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm"
         style={fullScreen ? {} : { top: 0 }}
       >
         <div
@@ -129,12 +129,12 @@ export const DrillShell: React.FC<DrillShellProps> = ({
             <BackLink
               to={backTo}
               label={backTo === ROUTES.STUDY ? 'Back to Dashboard' : 'Back to Practice'}
-              className="text-muted hover:text-action-primary"
+              className="text-[var(--color-text-muted)] hover:text-action-primary"
             />
           ) : (
             <motion.button
               onClick={onExit}
-              className="flex items-center gap-1.5 sm:gap-2 text-muted hover:text-action-primary transition-colors p-2 rounded-lg hover:bg-surface-secondary min-h-[44px] group"
+              className="flex items-center gap-1.5 sm:gap-2 text-[var(--color-text-muted)] hover:text-action-primary transition-colors p-2 rounded-lg hover:bg-surface-secondary min-h-[44px] group"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               aria-label="Back to Dashboard"
@@ -150,7 +150,7 @@ export const DrillShell: React.FC<DrillShellProps> = ({
               {title}
             </h1>
             {subtitle && (
-              <p className="text-xs sm:text-sm text-muted truncate">
+              <p className="text-xs sm:text-sm text-[var(--color-text-muted)] truncate">
                 {subtitle}
               </p>
             )}

@@ -372,7 +372,7 @@ function renderVisualization(effect: SideEffect, theme: 'light' | 'dark'): React
             className="w-full h-20"
             style={{
               filter:
-                'drop-shadow(0 2px 4px color-mix(in srgb, var(--color-text-muted) 20%, transparent))',
+                'drop-shadow(0 2px 4px color-mix(in srgb, var(--color-text-[var(--color-text-muted)]) 20%, transparent))',
             }}
           >
             {/* Baseline */}
@@ -381,7 +381,7 @@ function renderVisualization(effect: SideEffect, theme: 'light' | 'dark'): React
               y1="50"
               x2="400"
               y2="50"
-              stroke="var(--color-text-muted)"
+              stroke="var(--color-text-[var(--color-text-muted)])"
               strokeWidth="1"
             />
 

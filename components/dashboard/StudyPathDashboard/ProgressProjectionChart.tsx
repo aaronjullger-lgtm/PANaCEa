@@ -135,14 +135,14 @@ const ProgressProjectionChart: React.FC<ProgressProjectionChartProps> = ({
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
           <XAxis
             dataKey="date"
-            stroke="var(--color-text-muted)"
+            stroke="var(--color-text-[var(--color-text-muted)])"
             fontSize={12}
             tickLine={false}
             axisLine={{ stroke: 'var(--color-border)' }}
           />
           <YAxis
             yAxisId="left"
-            stroke="var(--color-text-muted)"
+            stroke="var(--color-text-[var(--color-text-muted)])"
             fontSize={12}
             tickLine={false}
             axisLine={{ stroke: 'var(--color-border)' }}
@@ -151,14 +151,14 @@ const ProgressProjectionChart: React.FC<ProgressProjectionChartProps> = ({
               angle: -90,
               position: 'insideLeft',
               offset: 10,
-              style: { fill: 'var(--color-text-muted)', fontSize: 12 },
+              style: { fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 12 },
             }}
             tickFormatter={(value) => `${Math.round(value)}%`}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
-            stroke="var(--color-text-muted)"
+            stroke="var(--color-text-[var(--color-text-muted)])"
             fontSize={12}
             tickLine={false}
             axisLine={{ stroke: 'var(--color-border)' }}
@@ -167,7 +167,7 @@ const ProgressProjectionChart: React.FC<ProgressProjectionChartProps> = ({
               angle: 90,
               position: 'insideRight',
               offset: 10,
-              style: { fill: 'var(--color-text-muted)', fontSize: 12 },
+              style: { fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 12 },
             }}
             tickFormatter={(value) => `${Math.round(value)}%`}
           />

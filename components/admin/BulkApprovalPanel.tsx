@@ -56,7 +56,7 @@ const ACTION_CONFIG: Record<BulkAction, { label: string; icon: React.ElementType
   IGNORE: {
     label: 'Ignore Selected',
     icon: EyeOff,
-    color: 'text-text-muted',
+    color: 'text-text-[var(--color-text-muted)]',
     bgColor: 'bg-bg-tertiary hover:bg-bg-tertiary/80',
   },
 };
@@ -130,7 +130,7 @@ export function BulkApprovalPanel({
   const isLoading = externalLoading || loading;
 
   return (
-    <div className="bg-surface-card rounded-xl border border-border-subtle p-4 mb-6">
+    <div className="bg-surface-card rounded-xl border border-[var(--color-border)] p-4 mb-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Selection summary */}
         <div className="flex items-center gap-4">
@@ -159,7 +159,7 @@ export function BulkApprovalPanel({
           {selectedIds.length > 0 && (
             <button
               onClick={onClearSelection}
-              className="text-sm text-text-muted hover:text-text-primary transition-colors"
+              className="text-sm text-text-[var(--color-text-muted)] hover:text-text-primary transition-colors"
               disabled={isLoading}
             >
               Clear selection
@@ -186,7 +186,7 @@ export function BulkApprovalPanel({
 
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-surface-primary transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--color-border)] text-text-secondary hover:text-text-primary hover:bg-[var(--color-bg-primary)] transition-colors"
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
             Advanced
@@ -201,10 +201,10 @@ export function BulkApprovalPanel({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden mt-4 pt-4 border-t border-border-subtle"
+            className="overflow-hidden mt-4 pt-4 border-t border-[var(--color-border)]"
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-3 bg-surface-primary rounded-lg border border-border-subtle">
+              <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-4 h-4 text-data-provisional" />
                   <h4 className="font-medium text-text-primary">High-confidence approve</h4>
@@ -220,7 +220,7 @@ export function BulkApprovalPanel({
                   Run auto-approval
                 </button>
               </div>
-              <div className="p-3 bg-surface-primary rounded-lg border border-border-subtle">
+              <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className="w-4 h-4 text-data-fail" />
                   <h4 className="font-medium text-text-primary">Batch reject low confidence</h4>
@@ -236,16 +236,16 @@ export function BulkApprovalPanel({
                   Reject low confidence
                 </button>
               </div>
-              <div className="p-3 bg-surface-primary rounded-lg border border-border-subtle">
+              <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-2">
-                  <EyeOff className="w-4 h-4 text-text-muted" />
+                  <EyeOff className="w-4 h-4 text-text-[var(--color-text-muted)]" />
                   <h4 className="font-medium text-text-primary">Ignore duplicates</h4>
                 </div>
                 <p className="text-sm text-text-secondary mb-3">
                   Ignore suggestions where taxonomy already has a mapping
                 </p>
                 <button
-                  className="w-full px-3 py-2 bg-bg-tertiary text-text-muted rounded-lg hover:bg-bg-tertiary/80 transition-colors text-sm font-medium"
+                  className="w-full px-3 py-2 bg-bg-tertiary text-text-[var(--color-text-muted)] rounded-lg hover:bg-bg-tertiary/80 transition-colors text-sm font-medium"
                   disabled={isLoading}
                   onClick={() => alert('Ignore duplicates not yet implemented')}
                 >
@@ -273,7 +273,7 @@ export function BulkApprovalPanel({
                   <p className="font-medium text-data-fail">Bulk action failed</p>
                   <p className="text-sm text-text-secondary">{error}</p>
                 </div>
-                <button onClick={() => setError(null)} className="text-text-muted hover:text-text-primary">
+                <button onClick={() => setError(null)} className="text-text-[var(--color-text-muted)] hover:text-text-primary">
                   ✕
                 </button>
               </div>
@@ -285,7 +285,7 @@ export function BulkApprovalPanel({
                   <p className="font-medium text-data-pass">Success</p>
                   <p className="text-sm text-text-secondary">{success}</p>
                 </div>
-                <button onClick={() => setSuccess(null)} className="text-text-muted hover:text-text-primary">
+                <button onClick={() => setSuccess(null)} className="text-text-[var(--color-text-muted)] hover:text-text-primary">
                   ✕
                 </button>
               </div>

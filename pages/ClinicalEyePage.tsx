@@ -163,7 +163,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="e.g. Calculate the ST elevation in Lead V2 in millimeters."
-              className="w-full h-28 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] resize-none focus:ring-2 focus:ring-[var(--color-accent)]"
+              className="w-full h-28 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])] resize-none focus:ring-2 focus:ring-[var(--color-accent)]"
               maxLength={4096}
             />
             <button

@@ -100,7 +100,7 @@ const TIER_COLORS = {
     border: 'border-[var(--color-border)]',
     text: 'text-[var(--color-text-secondary)]',
     ring: 'ring-[var(--color-accent)]',
-    gradient: 'from-[var(--color-text-muted)] to-[var(--color-text-secondary)]',
+    gradient: 'from-[var(--color-text-[var(--color-text-muted)])] to-[var(--color-text-secondary)]',
   },
   gold: {
     bg: 'bg-[var(--color-bg-secondary)]',

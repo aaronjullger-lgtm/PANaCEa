@@ -234,7 +234,7 @@ export function UserProfileModal({
                 <button
                   onClick={() => setStep(1)}
                   className="px-6 py-3 border border-[var(--color-border)] text-[var(--color-text-muted)] 
-                    rounded-lg hover:text-[var(--color-text-primary)] hover:border-[var(--color-text-muted)] 
+                    rounded-lg hover:text-[var(--color-text-primary)] hover:border-[var(--color-text-[var(--color-text-muted)])] 
                     transition-colors"
                 >
                   Back

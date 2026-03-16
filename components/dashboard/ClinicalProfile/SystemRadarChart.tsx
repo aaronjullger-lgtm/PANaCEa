@@ -39,12 +39,12 @@ export const SystemRadarChart: React.FC<Props> = ({ systems }) => {
             <PolarGrid stroke="var(--chart-grid-stroke)" strokeOpacity={0.4} />
             <PolarAngleAxis
               dataKey="system"
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+              tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 11 }}
             />
             <PolarRadiusAxis
               angle={30}
               domain={[0, 100]}
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+              tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 10 }}
             />
             <Radar
               name="Accuracy"

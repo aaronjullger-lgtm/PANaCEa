@@ -112,7 +112,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
   const renderComplianceTable = (summary: any, title: string) => {
     const systems = summary?.systems || [];
     return (
-      <div className="bg-surface-card rounded-lg border border-border-subtle p-4">
+      <div className="bg-surface-card rounded-lg border border-[var(--color-border)] p-4">
         <h4 className="font-semibold text-action-primary mb-3 flex items-center gap-2">
           <BarChart3 className="w-4 h-4" />
           {title}
@@ -120,7 +120,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border-subtle">
+              <tr className="border-b border-[var(--color-border)]">
                 <th className="text-left py-2 font-medium text-text-secondary">System</th>
                 <th className="text-left py-2 font-medium text-text-secondary">Target</th>
                 <th className="text-left py-2 font-medium text-text-secondary">Actual</th>
@@ -130,7 +130,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
             </thead>
             <tbody>
               {systems.map((sys: any) => (
-                <tr key={sys.system} className="border-b border-border-subtle last:border-0">
+                <tr key={sys.system} className="border-b border-[var(--color-border)] last:border-0">
                   <td className="py-2 font-medium text-text-primary">{sys.system}</td>
                   <td className="py-2 text-text-secondary">{sys.targetPercent?.toFixed(1) ?? '0.0'}%</td>
                   <td className="py-2 text-text-secondary">{sys.actualPercent?.toFixed(1) ?? '0.0'}%</td>
@@ -174,10 +174,10 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="bg-surface-primary w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-2xl border border-border-subtle shadow-2xl"
+            className="bg-[var(--color-bg-primary)] w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-2xl border border-[var(--color-border)] shadow-2xl"
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-border-subtle bg-surface-primary rounded-t-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] rounded-t-2xl">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-action-muted rounded-lg">
                   <BarChart3 className="w-6 h-6 text-action-primary" />
@@ -227,7 +227,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                 <>
                   {/* Summary Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-surface-card rounded-xl border border-border-subtle p-5">
+                    <div className="bg-surface-card rounded-xl border border-[var(--color-border)] p-5">
                       <h3 className="font-semibold text-lg text-text-primary mb-2">Before</h3>
                       <p className="text-text-secondary mb-4">Current taxonomy mapping distribution</p>
                       <div className="space-y-2">
@@ -245,7 +245,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                         </div>
                       </div>
                     </div>
-                    <div className="bg-surface-card rounded-xl border border-border-subtle p-5 border-l-4 border-l-data-positive">
+                    <div className="bg-surface-card rounded-xl border border-[var(--color-border)] p-5 border-l-4 border-l-data-positive">
                       <h3 className="font-semibold text-lg text-text-primary mb-2">After</h3>
                       <p className="text-text-secondary mb-4">Projected distribution after applying changes</p>
                       <div className="space-y-2">
@@ -273,7 +273,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
 
                   {/* Recommendations */}
                   {previewResult.after.recommendations && previewResult.after.recommendations.length > 0 && (
-                    <div className="bg-surface-card rounded-lg border border-border-subtle p-5">
+                    <div className="bg-surface-card rounded-lg border border-[var(--color-border)] p-5">
                       <h4 className="font-semibold text-action-primary mb-3">Recommendations</h4>
                       <ul className="space-y-2">
                         {previewResult.after.recommendations.map((rec, idx) => (
@@ -287,12 +287,12 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                   )}
 
                   {/* Changes List */}
-                  <div className="bg-surface-card rounded-lg border border-border-subtle p-5">
+                  <div className="bg-surface-card rounded-lg border border-[var(--color-border)] p-5">
                     <h4 className="font-semibold text-action-primary mb-3">Proposed Changes</h4>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-border-subtle">
+                          <tr className="border-b border-[var(--color-border)]">
                             <th className="text-left py-2 font-medium text-text-secondary">Taxonomy</th>
                             <th className="text-left py-2 font-medium text-text-secondary">Current System</th>
                             <th className="text-left py-2 font-medium text-text-secondary">Proposed System</th>
@@ -301,7 +301,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                         </thead>
                         <tbody>
                           {selectedSuggestions.map((s) => (
-                            <tr key={s.id} className="border-b border-border-subtle last:border-0">
+                            <tr key={s.id} className="border-b border-[var(--color-border)] last:border-0">
                               <td className="py-2">
                                 <div className="font-medium text-text-primary">{s.taxonomyName}</div>
                                 <div className="text-xs text-text-secondary">{s.taxonomyCode}</div>
@@ -336,14 +336,14 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 border-t border-border-subtle bg-surface-primary p-6 rounded-b-2xl flex justify-between items-center">
+            <div className="sticky bottom-0 border-t border-[var(--color-border)] bg-[var(--color-bg-primary)] p-6 rounded-b-2xl flex justify-between items-center">
               <div className="text-sm text-text-secondary">
                 This preview is for planning purposes only. No changes have been saved.
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={handleClose}
-                  className="px-5 py-2 border border-border-subtle text-text-secondary hover:bg-action-muted rounded-lg transition-colors"
+                  className="px-5 py-2 border border-[var(--color-border)] text-text-secondary hover:bg-action-muted rounded-lg transition-colors"
                 >
                   Cancel
                 </button>

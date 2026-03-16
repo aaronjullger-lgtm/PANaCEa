@@ -126,7 +126,7 @@ export function LectureConverter({
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
           placeholder="e.g. Cardiovascular Physiology"
-          className="w-full px-4 py-2 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+          className="w-full px-4 py-2 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
           aria-label="Lecture topic"
         />
       </div>
@@ -143,7 +143,7 @@ export function LectureConverter({
           onChange={(e) => setText(e.target.value)}
           placeholder="Paste your lecture slides, textbook excerpt, or notes here..."
           rows={8}
-          className="w-full px-4 py-2 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] resize-y font-sans text-sm"
+          className="w-full px-4 py-2 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] resize-y font-sans text-sm"
           aria-label="Lecture content"
         />
         <p className="mt-1 text-xs text-[var(--color-text-muted)]">

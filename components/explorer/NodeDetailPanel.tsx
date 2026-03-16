@@ -207,7 +207,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
   const { label, nodeType, description, sourceType, sourceId, taxonomyCode, systemCodes, metadata, outgoingEdges, incomingEdges } = nodeData;
 
   return (
-    <div className="h-full overflow-y-auto p-6 bg-surface-primary">
+    <div className="h-full overflow-y-auto p-6 bg-[var(--color-bg-primary)]">
       <div className="flex justify-between items-start mb-6">
         <div>
           <h2 className="text-2xl font-bold text-foreground">{label}</h2>

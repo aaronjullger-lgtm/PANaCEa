@@ -71,7 +71,7 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
       intermediate:
         'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/30',
       advanced:
-        'bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)] border-[var(--color-text-muted)]/30',
+        'bg-[var(--color-text-[var(--color-text-muted)])]/20 text-[var(--color-text-muted)] border-[var(--color-text-[var(--color-text-muted)])]/30',
       expert:
         'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/30',
     };

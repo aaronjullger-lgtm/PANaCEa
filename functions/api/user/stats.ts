@@ -614,20 +614,6 @@ export const onRequestGet = authenticatedEndpoint(UserStatsSchema, async (contex
     });
     // Log full error for Cloudflare real-time logs (Workers & Pages > Logs)
     console.error('[user/stats] 500:', errMsg, errStack || '');
-    // #region agent log
-    fetch('http://127.0.0.1:7257/ingest/56c80278-898b-4f8d-b762-6ccf49c3f612', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '721a9f' },
-      body: JSON.stringify({
-        sessionId: '721a9f',
-        location: 'functions/api/user/stats.ts:catch',
-        message: 'user/stats 500',
-        data: { error: errMsg, userId: auth.userId },
-        timestamp: Date.now(),
-        hypothesisId: 'A',
-      }),
-    }).catch(() => {});
-    // #endregion
     return {
       data: {
         success: false,

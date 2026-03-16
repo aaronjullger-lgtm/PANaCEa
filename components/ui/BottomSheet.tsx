@@ -162,7 +162,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
             >
               {/* Drag Handle */}
               <div className="flex items-center justify-center py-3 px-4 cursor-grab active:cursor-grabbing">
-                <div className="w-12 h-1.5 bg-[var(--color-text-muted)]/30 rounded-full" />
+                <div className="w-12 h-1.5 bg-[var(--color-text-[var(--color-text-muted)])]/30 rounded-full" />
               </div>
 
               {/* Header */}

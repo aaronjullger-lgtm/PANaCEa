@@ -150,7 +150,7 @@ const StatCard: React.FC<StatCardProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-surface-card border border-border-subtle rounded-xl p-4"
+      className="bg-surface-card border border-[var(--color-border)] rounded-xl p-4"
     >
       <div className="flex items-start justify-between">
         <div className={`p-2 rounded-lg ${colorClasses[color]}`}>{icon}</div>
@@ -161,7 +161,7 @@ const StatCard: React.FC<StatCardProps> = ({
                 ? 'text-success-primary'
                 : trend === 'down'
                   ? 'text-error-primary'
-                  : 'text-muted'
+                  : 'text-[var(--color-text-muted)]'
             }`}
           >
             {trend === 'up' ? (
@@ -180,7 +180,7 @@ const StatCard: React.FC<StatCardProps> = ({
       </div>
       <div className="mt-3">
         <p className="text-xl sm:text-2xl font-bold text-action-primary">{value}</p>
-        <p className="text-sm text-muted">{label}</p>
+        <p className="text-sm text-[var(--color-text-muted)]">{label}</p>
         {subtext && <p className="text-xs text-text-secondary mt-1">{subtext}</p>}
       </div>
     </motion.div>
@@ -229,7 +229,7 @@ const InsightCard: React.FC<{
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="flex flex-col gap-2 p-3 bg-surface-secondary rounded-lg border border-border-subtle"
+      className="flex flex-col gap-2 p-3 bg-surface-secondary rounded-lg border border-[var(--color-border)]"
     >
       <div className="flex items-start gap-3">
         <Lightbulb className="w-5 h-5 text-action-primary flex-shrink-0 mt-0.5" aria-hidden />
@@ -277,8 +277,8 @@ const ReadinessGauge: React.FC<{
   };
 
   return (
-    <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-      <h3 className="text-sm font-medium text-muted mb-4 flex items-center gap-2">
+    <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-5">
+      <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
         <Target className="w-4 h-4" />
         <div className="relative inline-flex items-center gap-1">
           <span>Exam Readiness</span>
@@ -338,10 +338,10 @@ const ReadinessGauge: React.FC<{
                 <span className="text-xl sm:text-2xl font-bold text-action-primary">
                   {safeScore}
                 </span>
-                <span className="text-xs text-muted">/ 100</span>
+                <span className="text-xs text-[var(--color-text-muted)]">/ 100</span>
               </>
             ) : (
-              <span className="text-xl font-bold text-muted">—</span>
+              <span className="text-xl font-bold text-[var(--color-text-muted)]">—</span>
             )}
           </div>
         </div>
@@ -353,7 +353,7 @@ const ReadinessGauge: React.FC<{
           >
             {hasData ? getLabel(safeScore) : 'Waiting for first session'}
           </p>
-          <p className="text-sm text-muted mt-1">
+          <p className="text-sm text-[var(--color-text-muted)] mt-1">
             {hasData
               ? `${safePassProb}% estimated pass probability`
               : 'Complete questions to see readiness'}
@@ -361,7 +361,7 @@ const ReadinessGauge: React.FC<{
           {hasData && (
             <div className="mt-3">
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-muted">Pass Probability</span>
+                <span className="text-[var(--color-text-muted)]">Pass Probability</span>
                 <span className="font-medium text-action-primary">
                   {safePassProb}%
                 </span>
@@ -418,7 +418,7 @@ const SystemStrengthBar: React.FC<{
             ? 'text-success-primary'
             : trend === 'declining'
               ? 'text-error-primary'
-              : 'text-muted'
+              : 'text-[var(--color-text-muted)]'
         }`}
       >
         {trend === 'improving' ? (
@@ -442,7 +442,7 @@ const RecommendationCard: React.FC<{ recommendation: string; index: number }> = 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="border border-border-subtle bg-surface-tertiary rounded-xl p-4"
+      className="border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] rounded-xl p-4"
     >
       <div className="flex items-start gap-3">
         <Lightbulb
@@ -656,10 +656,10 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
 
   if (error) {
     return (
-      <div className="rounded-xl border border-border-subtle bg-surface-secondary p-6 text-center">
+      <div className="rounded-xl border border-[var(--color-border)] bg-surface-secondary p-6 text-center">
         <AlertCircle className="w-12 h-12 mx-auto text-data-fail mb-3" aria-hidden />
         <p className="font-medium text-action-primary">Failed to load analytics</p>
-        <p className="text-sm text-muted mt-1">{error}</p>
+        <p className="text-sm text-[var(--color-text-muted)] mt-1">{error}</p>
         <button
           onClick={loadData}
           className="mt-4 px-4 py-2 rounded-lg font-medium bg-action-primary text-action-primary hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-action-primary focus-visible:ring-offset-2"
@@ -673,9 +673,9 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
   if (!displayData || !userStats) {
     return (
       <div className="text-center py-12 px-4">
-        <BookOpen className="w-12 h-12 mx-auto text-muted mb-3" />
+        <BookOpen className="w-12 h-12 mx-auto text-[var(--color-text-muted)] mb-3" />
         <p className="text-action-primary font-medium">Not yet assessed</p>
-        <p className="text-sm text-muted mt-1 mb-4 max-w-sm mx-auto">
+        <p className="text-sm text-[var(--color-text-muted)] mt-1 mb-4 max-w-sm mx-auto">
           Your personalized analytics will appear here after you answer questions.
         </p>
         <button
@@ -693,7 +693,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
     <div className="space-y-6">
       {/* Segmented control: light track + white pill for active tab */}
       <div
-        className="inline-flex p-1 rounded-xl bg-surface-secondary border border-border-subtle"
+        className="inline-flex p-1 rounded-xl bg-surface-secondary border border-[var(--color-border)]"
         role="tablist"
         aria-label="Analytics view"
       >
@@ -711,7 +711,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
               className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive
                   ? 'bg-[var(--color-bg-secondary)] text-[var(--color-accent)] shadow-sm border border-[var(--color-border)]'
-                  : 'text-muted hover:text-action-secondary'
+                  : 'text-[var(--color-text-muted)] hover:text-action-secondary'
               }`}
             >
               <tab.icon className="w-4 h-4 shrink-0" aria-hidden />
@@ -805,14 +805,14 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
 
             {/* Quick Stats Row - stretch to match Key Stats row height */}
             <div className="grid grid-cols-3 gap-4 items-stretch">
-              <div className="bg-surface-card border border-border-subtle rounded-xl p-4 text-center">
-                <Clock className="w-5 h-5 mx-auto text-muted mb-2" />
+              <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-4 text-center">
+                <Clock className="w-5 h-5 mx-auto text-[var(--color-text-muted)] mb-2" />
                 <p className="text-lg font-bold text-action-primary">
                   {userStats?.stats?.overall?.avgTimeMs
                     ? getSpeedBenchmarkLabel(userStats.stats.overall.avgTimeMs).primary
                     : '—'}
                 </p>
-                <p className="text-xs text-muted">
+                <p className="text-xs text-[var(--color-text-muted)]">
                   {userStats?.stats?.overall?.avgTimeMs
                     ? getSpeedBenchmarkLabel(userStats.stats.overall.avgTimeMs).benchmark ||
                       'avg per question'
@@ -820,26 +820,26 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                 </p>
               </div>
 
-              <div className="bg-surface-card border border-border-subtle rounded-xl p-4 text-center">
-                <Timer className="w-5 h-5 mx-auto text-muted mb-2" />
+              <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-4 text-center">
+                <Timer className="w-5 h-5 mx-auto text-[var(--color-text-muted)] mb-2" />
                 <p className="text-lg font-bold text-action-primary">
                   {displayData.totalStudyHours}h
                 </p>
-                <p className="text-xs text-muted">total study time</p>
+                <p className="text-xs text-[var(--color-text-muted)]">total study time</p>
               </div>
 
-              <div className="bg-surface-card border border-border-subtle rounded-xl p-4 text-center">
-                <Zap className="w-5 h-5 mx-auto text-muted mb-2" />
+              <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-4 text-center">
+                <Zap className="w-5 h-5 mx-auto text-[var(--color-text-muted)] mb-2" />
                 <p className="text-lg font-bold text-action-primary">
                   {displayData.questionsPerHour === 0 ? '--' : displayData.questionsPerHour}
                 </p>
-                <p className="text-xs text-muted">questions/hour</p>
+                <p className="text-xs text-[var(--color-text-muted)]">questions/hour</p>
               </div>
             </div>
 
             {/* Top Insights */}
-            <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-              <h3 className="text-sm font-medium text-muted mb-4 flex items-center gap-2">
+            <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-5">
+              <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
                 <Lightbulb className="w-4 h-4 text-action-primary" aria-hidden />
                 Key Insights
               </h3>
@@ -849,7 +849,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                 );
                 if (validInsights.length === 0) {
                   return (
-                    <p className="text-sm text-muted py-4 text-center">
+                    <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">
                       Not enough data yet. Complete more questions to see personalized insights
                       here.
                     </p>
@@ -868,8 +868,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
             {/* Behavioral Patterns */}
             {displayData.hasEnoughDataForInsights ? (
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-                  <h3 className="text-sm font-medium text-muted mb-4 flex items-center gap-2">
+                <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-5">
+                  <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
                     <Brain className="w-4 h-4" />
                     Study Progress
                   </h3>
@@ -893,8 +893,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                   </div>
                 </div>
 
-                <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-                  <h3 className="text-sm font-medium text-muted mb-4 flex items-center gap-2">
+                <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-5">
+                  <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
                     <Clock className="w-4 h-4" />
                     Performance Trend
                   </h3>
@@ -938,12 +938,12 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                 </div>
               </div>
             ) : (
-              <div className="bg-surface-card border border-border-subtle rounded-xl p-6 text-center">
-                <Brain className="w-8 h-8 mx-auto text-muted mb-3" />
+              <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-6 text-center">
+                <Brain className="w-8 h-8 mx-auto text-[var(--color-text-muted)] mb-3" />
                 <h3 className="text-sm font-medium text-action-primary mb-2">
                   Building Your Profile
                 </h3>
-                <p className="text-sm text-muted">
+                <p className="text-sm text-[var(--color-text-muted)]">
                   Complete at least 50 questions to unlock personalized insights about your
                   test-taking patterns, optimal study times, and break recommendations.
                 </p>
@@ -963,11 +963,11 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
           >
-            <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-              <h3 className="text-sm font-medium text-muted mb-2">
+            <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-5">
+              <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-2">
                 Personalized Recommendations
               </h3>
-              <p className="text-xs text-muted mb-4">
+              <p className="text-xs text-[var(--color-text-muted)] mb-4">
                 Based on your study patterns and performance
               </p>
               {(() => {
@@ -976,7 +976,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                 );
                 if (validRecs.length === 0) {
                   return (
-                    <p className="text-sm text-muted py-4 text-center">
+                    <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">
                       Not enough data yet. Complete more questions to see personalized
                       recommendations.
                     </p>
@@ -994,8 +994,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
 
             {/* Priority Areas */}
             {displayData.weakAreas.length > 0 && (
-              <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-                <h3 className="text-sm font-medium text-muted mb-4 flex items-center gap-2">
+              <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-5">
+                <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" />
                   Priority Study Areas
                 </h3>
@@ -1014,8 +1014,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
 
             {/* Strengths */}
             {displayData.strongAreas.length > 0 && (
-              <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-                <h3 className="text-sm font-medium text-muted mb-4 flex items-center gap-2">
+              <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-5">
+                <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
                   Strengths to Maintain
                 </h3>
@@ -1033,10 +1033,10 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
             )}
 
             {/* Readiness Timeline */}
-            <div className="bg-surface-secondary border border-border-subtle rounded-xl p-5">
+            <div className="bg-surface-secondary border border-[var(--color-border)] rounded-xl p-5">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-surface-tertiary rounded-xl">
-                  <Calendar className="w-6 h-6 text-muted" />
+                <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-xl">
+                  <Calendar className="w-6 h-6 text-[var(--color-text-muted)]" />
                 </div>
                 <div>
                   <p className="text-xl sm:text-2xl font-bold text-action-primary">
@@ -1044,7 +1044,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                       ? "You're Ready!"
                       : `${Math.ceil((80 - displayData.readinessScore) / 2)} days`}
                   </p>
-                  <p className="text-sm text-muted">
+                  <p className="text-sm text-[var(--color-text-muted)]">
                     {displayData.readinessScore >= 80
                       ? "You've reached your target readiness level"
                       : 'estimated to reach readiness'}
@@ -1065,7 +1065,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
           >
             {/* Strengths */}
             {displayData.systems.strengths.length > 0 && (
-              <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
+              <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-5">
                 <h3 className="text-sm font-medium text-action-primary mb-4 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
                   Your Strengths ({displayData.systems.strengths.length})
@@ -1086,8 +1086,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
 
             {/* Weaknesses */}
             {displayData.systems.weaknesses.length > 0 && (
-              <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-                <h3 className="text-sm font-medium text-muted mb-4 flex items-center gap-2">
+              <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-5">
+                <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" />
                   Areas to Improve ({displayData.systems.weaknesses.length})
                 </h3>
@@ -1107,8 +1107,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
 
             {/* Improving */}
             {displayData.systems.improving.length > 0 && (
-              <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-                <h3 className="text-sm font-medium text-muted mb-4 flex items-center gap-2">
+              <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-5">
+                <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4" />
                   Rapidly Improving ({displayData.systems.improving.length})
                 </h3>
@@ -1128,8 +1128,8 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
 
             {/* Declining */}
             {displayData.systems.declining.length > 0 && (
-              <div className="bg-surface-card border border-border-subtle rounded-xl p-5">
-                <h3 className="text-sm font-medium text-muted mb-4 flex items-center gap-2">
+              <div className="bg-surface-card border border-[var(--color-border)] rounded-xl p-5">
+                <h3 className="text-sm font-medium text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
                   <TrendingDown className="w-4 h-4" />
                   Needs Review ({displayData.systems.declining.length})
                 </h3>
@@ -1154,7 +1154,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
       <div className="flex justify-center">
         <button
           onClick={loadData}
-          className="flex items-center gap-2 px-4 py-2 text-sm text-muted hover:text-action-primary transition-colors"
+          className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--color-text-muted)] hover:text-action-primary transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Refresh Analytics

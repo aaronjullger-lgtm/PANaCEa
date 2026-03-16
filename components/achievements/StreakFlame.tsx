@@ -134,7 +134,7 @@ export function StreakFlame({
       <div className={`text-center ${textSizes[size]}`}>
         <div
           className="font-medium"
-          style={{ color: isActiveToday ? flameColor : 'var(--color-text-muted)' }}
+          style={{ color: isActiveToday ? flameColor : 'var(--color-text-[var(--color-text-muted)])' }}
         >
           {streak === 0 ? 'Start' : streak}
         </div>
@@ -153,7 +153,7 @@ export function StreakFlame({
                 streak >= milestone ? '' : 'opacity-30'
               }`}
               style={{
-                backgroundColor: streak >= milestone ? flameColor : 'var(--color-text-muted)',
+                backgroundColor: streak >= milestone ? flameColor : 'var(--color-text-[var(--color-text-muted)])',
               }}
             />
           ))}

@@ -127,7 +127,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
 
     const getAnswerClass = (index: number): string => {
       if (selectedAnswer === null) {
-        return 'border-[var(--color-text-muted)] border-[var(--color-text-muted)] hover:border-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]';
+        return 'border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])] hover:border-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]';
       }
       if (index === correctAnswerIndex) {
         return 'border-data-pass bg-data-pass dark:bg-data-pass/20';
@@ -135,7 +135,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
       if (index === selectedAnswer) {
         return 'border-data-fail bg-data-fail dark:bg-data-fail/20';
       }
-      return 'border-[var(--color-text-muted)] border-[var(--color-text-muted)] opacity-50';
+      return 'border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])] opacity-50';
     };
 
     return (

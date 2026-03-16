@@ -118,7 +118,7 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
   }, []);
 
   return (
-    <div className="flex h-screen bg-surface-primary overflow-hidden">
+    <div className="flex h-screen bg-[var(--color-bg-primary)] overflow-hidden">
       {/* Left Sidebar – Filters */}
       <FilterSidebar
         filter={filter}
@@ -152,7 +152,7 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
               className="p-2 rounded-md hover:bg-surface-hover transition-colors"
               aria-label="Close explorer"
             >
-              <X className="w-5 h-5 text-text-muted" />
+              <X className="w-5 h-5 text-text-[var(--color-text-muted)]" />
             </button>
           )}
         </div>
@@ -184,7 +184,7 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
             Clear
           </button>
           {highlightedPath.length > 0 && (
-            <span className="text-sm text-text-muted">
+            <span className="text-sm text-text-[var(--color-text-muted)]">
               Path: {highlightedPath.length} nodes
             </span>
           )}
