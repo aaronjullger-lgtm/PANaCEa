@@ -973,9 +973,12 @@ const App: React.FC = () => {
     ease: [0.32, 0.72, 0, 1] as const, // Snappy ease-out
   });
 
-  // Show loading state while checking auth (with timeout and guest mode)
+  // While Clerk is initializing, show the landing page immediately so FCP fires
+  // on real content rather than a blank spinner. Signed-in users will see a
+  // brief flash before transitioning to the dashboard (~1-3s) — acceptable
+  // trade-off vs. 15s blank screen for unauthenticated/cold-start users.
   if (authIsLoading || (!authLoaded && !isGuestMode)) {
-    return <Loader message="Authenticating..." />;
+    return <LandingPage />;
   }
 
   // Show landing page for unauthenticated users (not in guest mode)

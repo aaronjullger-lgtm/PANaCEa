@@ -40,7 +40,7 @@ interface EnhancedAuthResult {
   shouldOfferGuestMode: boolean;
 }
 
-const AUTH_TIMEOUT_MS = 15000; // 15 seconds
+const AUTH_TIMEOUT_MS = 8000; // 8 seconds — Clerk should load in <3s; 8s gives headroom on slow connections
 const AUTH_RETRY_COUNT_KEY = 'pance-auth-retry-count';
 const MAX_RETRIES = 3;
 
