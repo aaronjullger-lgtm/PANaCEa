@@ -51,22 +51,20 @@ The codebase contains **three distinct synchronization systems**:
 ### 1.3. API Endpoints
 
 #### **Primary Sync Endpoint (`functions/api/sync.ts`)**
-- **Method:** POST `/api/sync`
+- **Methods:** `GET /api/sync`, `POST /api/sync`
 - **Features:**
   - Batch processing with Cloudflare limits (25 items per batch)
-  - Conflict detection and resolution
+  - Conflict-safe merge strategy (insert-only performance + replace-by-key for SRS/saved)
   - Transient error retry logic
   - Comprehensive data validation with Zod schemas
 - **Data Types Supported:**
   - Performance records
   - SRS items
   - Saved questions
-  - User achievements
-  - Daily streaks
 
 #### **Secondary Endpoints:**
-- `GET /api/sync` - Download cloud data
-- Various operation-specific endpoints for direct sync
+- `GET /api/sync` - Download cloud data (performance, SRS, saved)
+- Other feature APIs may persist adjacent metrics (streaks/achievements), but those are not part of `/api/sync` payload validation
 
 ## 2. Strengths Identified
 

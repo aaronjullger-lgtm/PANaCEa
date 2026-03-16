@@ -115,7 +115,33 @@ Request: {
   Authorization: 'Bearer <token>';
 }
 Response: {
-  (performanceRecords, srsItems, savedQuestions);
+  success: true;
+  message: 'Data retrieved successfully';
+  data: {
+    performanceRecords: Array<{
+      id?: string;
+      topic: string;
+      focus: string;
+      isCorrect: boolean;
+      timestamp: number; // epoch ms
+    }>;
+    srsItems: Array<{
+      questionId: string;
+      interval: number;
+      repetition: number;
+      easiness: number;
+      dueDate: string;
+      lastReviewed: string;
+      quality: number;
+      difficulty?: string | number;
+      stabilityScore?: number;
+    }>;
+    savedQuestions: Array<{
+      questionId?: string;
+      type: 'saved' | 'flagged' | 'missed';
+      updatedAt?: string;
+    }>;
+  };
 }
 ```
 
@@ -125,12 +151,46 @@ Upload/merge local data to cloud
 
 ```typescript
 Request: {
-  userId: string,
-  performanceRecords: [],
-  srsItems: [],
-  savedQuestions: []
+  Authorization: 'Bearer <token>';
+  body: {
+    userId: string; // must match authenticated Clerk userId
+    performanceRecords?: Array<{
+      topic: string;
+      focus: string;
+      isCorrect: boolean;
+      timestamp: number;
+      // max 1000 records per request
+    }>;
+    srsItems?: Array<{
+      questionId: string;
+      interval: number;
+      repetition: number;
+      easiness: number;
+      dueDate: string;
+      lastReviewed: string;
+      quality: number;
+      difficulty?: string | number;
+      // max 1000 items per request
+    }>;
+    savedQuestions?: Array<{
+      questionId?: string;
+      type: 'saved' | 'flagged' | 'missed';
+      updatedAt?: string;
+      // max 500 items per request
+    }>;
+  };
 }
-Response: { success: boolean, message: string }
+Success Response: {
+  success: true;
+  message: 'Data synced successfully';
+  data: {
+    performanceRecords: unknown[];
+    srsItems: unknown[];
+    savedQuestions: unknown[];
+  };
+}
+Error Responses:
+  400 (validation / bad JSON), 401 (auth), 403 (userId mismatch), 500 (server error)
 ```
 
 ## Development

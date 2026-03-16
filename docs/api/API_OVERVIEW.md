@@ -27,13 +27,18 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 | POST | `/api/osce/analysis/grade` | Required | Grade completed OSCE session transcript, persist result/concept gap. |
 | POST | `/api/questions/generate` | Required | Generate (or cache-hit) question by query text/type/system/difficulty. |
 | POST | `/api/questions/attempt` | Required | Record attempt telemetry and update stats/SRS/Rolling 360. |
+| POST | `/api/questions/due-siblings` | Required | Return sibling variants for due/flagged concept review (never returns original question ID). |
 | POST | `/api/recommendations/generate` | Required | Generate personalized recommendation list for user. |
 | GET | `/api/reference/normal-labs` | Required | Fetch normal lab reference records (optional category filter). |
+| GET | `/api/sync` | Required | Download cloud-synced `performanceRecords`, `srsItems`, and `savedQuestions` for current user. |
+| POST | `/api/sync` | Required | Upload local study data and merge/refresh cloud state (batched for Cloudflare limits). |
 | GET | `/api/user/daily-performance` | Required | Daily attempt/accuracy trend for configurable lookback window. |
+| GET | `/api/user/profile` | Required | Fetch authenticated user profile (including onboarding/baseline flags and schedule dates). |
 | GET | `/api/user/goals` | Required | List goals with optional status/type filters. |
 | POST | `/api/user/goals` | Required | Create new goal. |
 | PATCH | `/api/user/goals/:id` | Required | Update goal progress/status/metadata. |
 | DELETE | `/api/user/goals/:id` | Required | Delete goal by ID. |
+| PUT | `/api/user/profile` | Required | Partially update user profile fields; at least one field is required. |
 | POST | `/api/user/session` | Required | Start study session. |
 | PATCH | `/api/user/session` | Required | Update or end study session. |
 | GET | `/api/admin/enrich-condition` | Admin | Endpoint usage contract + enrichable field list. |
@@ -322,6 +327,57 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 }
 ```
 
+### `POST /api/questions/due-siblings`
+
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "dueItems": [
+    {
+      "conditionId": "string",
+      "taskType": "string | null",
+      "originalQuestionId": "string"
+    }
+  ]
+}
+```
+
+- **Validation constraints:** `dueItems` length `1..50`; each item must include `conditionId` and `originalQuestionId`.
+- **Success (`200`):**
+
+```json
+{
+  "results": [
+    {
+      "question": {
+        "id": "string",
+        "question": "string",
+        "vignette": "optional string",
+        "options": ["A", "B", "C", "D"],
+        "correctAnswerIndex": 0,
+        "rationale": "string",
+        "system": "string",
+        "subcategory": "optional string",
+        "conditionId": "string",
+        "condition": "optional string",
+        "difficulty": "easy | medium | hard",
+        "source": "pool",
+        "metadata": {}
+      },
+      "dueConceptKey": {
+        "conditionId": "string",
+        "taskType": "string | null"
+      }
+    }
+  ]
+}
+```
+
+- `question` can be `null` when no sibling/variant is currently available for an item.
+- **Errors:** `400` validation error, `404` user not found, `500` fetch/generation failure.
+
 ### `POST /api/recommendations/generate`
 
 - **Request:** Empty object `{}`.
@@ -350,6 +406,61 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 }
 ```
 
+### `GET /api/sync`
+
+- **Auth:** Required.
+- **Request:** No body.
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "message": "Data retrieved successfully",
+  "data": {
+    "performanceRecords": [/* PerformanceRecord[] with numeric timestamp */],
+    "srsItems": [/* SRSItem[] */],
+    "savedQuestions": [/* SavedQuestion[] */]
+  }
+}
+```
+
+- **Errors:** `401` unauthorized, `500` internal sync fetch failure.
+
+### `POST /api/sync`
+
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "userId": "clerk_user_id",
+  "performanceRecords": [/* optional, max 1000 */],
+  "srsItems": [/* optional, max 1000 */],
+  "savedQuestions": [/* optional, max 500 */]
+}
+```
+
+- **Validation notes:**
+  - `userId` must match the authenticated Clerk user (`403` on mismatch).
+  - `performanceRecords[].timestamp` is numeric epoch millis and persisted as BigInt.
+  - `srsItems[].difficulty` accepts string or number (coerced to string/number internally).
+  - `savedQuestions[].type` must be one of `saved | flagged | missed`.
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "message": "Data synced successfully",
+  "data": {
+    "performanceRecords": [/* merged records; timestamp normalized to number */],
+    "srsItems": [/* refreshed SRS state */],
+    "savedQuestions": [/* refreshed saved/missed/flagged state */]
+  }
+}
+```
+
+- **Errors:** `400` validation/JSON errors, `401` unauthorized, `403` user mismatch, `500` sync failure.
+
 ### `GET /api/user/daily-performance`
 
 - **Query params:** `days` (1-90, default 30).
@@ -371,6 +482,72 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
   }
 }
 ```
+
+### `GET /api/user/profile`
+
+- **Auth:** Required.
+- **Request:** No body.
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "profile": {
+    "id": "string",
+    "clerkId": "string",
+    "email": "user@example.com",
+    "firstName": "optional string",
+    "lastName": "optional string",
+    "examDate": "ISO string | null",
+    "graduationDate": "ISO string | null",
+    "school": "string | null",
+    "currentRotation": "string | null",
+    "yearInProgram": "string | null",
+    "eorTestDate": "ISO string | null",
+    "rotationStartDate": "ISO string | null",
+    "rotationEndDate": "ISO string | null",
+    "hasCompletedBaseline": false,
+    "hasCompletedOnboarding": false,
+    "updatedAt": "ISO string"
+  }
+}
+```
+
+- **Errors:** `401` unauthorized, `404` user not found, `500` fetch failure.
+
+### `PUT /api/user/profile`
+
+- **Auth:** Required.
+- **Request body:** top-level partial profile payload. At least one field is required.
+
+```json
+{
+  "firstName": "optional",
+  "lastName": "optional",
+  "examDate": "ISO string | null",
+  "graduationDate": "ISO string | null",
+  "school": "string | null",
+  "currentRotation": "string | null",
+  "yearInProgram": "string | null",
+  "eorTestDate": "ISO string | null",
+  "rotationStartDate": "ISO string | null",
+  "rotationEndDate": "ISO string | null",
+  "hasCompletedBaseline": true,
+  "hasCompletedOnboarding": true
+}
+```
+
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "profile": { /* same shape as GET */ },
+  "message": "Profile updated successfully"
+}
+```
+
+- **Errors:** `400` validation failure, `401` unauthorized, `404` user not found, `500` update failure.
 
 ### `GET/POST/PATCH/DELETE /api/user/goals`
 

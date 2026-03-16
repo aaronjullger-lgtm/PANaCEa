@@ -57,7 +57,7 @@ Use this checklist with **browser DevTools**, **Console Ninja** (or equivalent),
 | Step | Action | Expectation |
 |------|--------|-------------|
 | 4.1 | Start session with "Due" (review) focus (when due items exist) | **POST `/api/questions/due-siblings`** → 200; QuizView shows variant questions |
-| 4.2 | Start with "Flagged" focus (when flagged list non-empty) | QuizView shows flagged questions (no extra load API) |
+| 4.2 | Start with "Flagged" focus (when flagged list non-empty) | Usually calls **POST `/api/questions/due-siblings`** (if token + concept IDs exist) to swap in sibling variants; falls back to original flagged questions when variants are unavailable |
 
 ---
 
@@ -96,7 +96,7 @@ Use this checklist with **browser DevTools**, **Console Ninja** (or equivalent),
 **Session & questions**
 
 - `GET /api/questions/session` – fetch session questions
-- `POST /api/questions/due-siblings` – due review variants
+- `POST /api/questions/due-siblings` – due/flagged concept sibling variants
 - `POST /api/questions/attempt` – record each answer
 
 **FSRS / SRS**
