@@ -249,25 +249,19 @@ For high-traffic scenarios:
 5. **Monitor API usage** and set up alerts
 6. **Implement rate limiting** on sync endpoints
 
-### ⚠️ Important Security Note
+### ✅ Security Verification Status
 
-The current JWT verification in `/functions/api/sync.ts` is simplified for demonstration. Before deploying to production, you MUST implement proper JWT signature verification using:
+JWT verification is implemented in shared API auth middleware:
 
-- **Option 1 (Recommended)**: Use `@clerk/backend` SDK
+- **Location:** `functions/api/_shared/auth.ts`
+- **Method:** `verifyToken(...)` from `@clerk/backend`
+- **Applied via:** `authenticateRequest` used by `withAuth()` in `functions/api/_shared/middleware.ts`
 
-  ```bash
-  npm install @clerk/backend
-  ```
+Operational checklist:
 
-  Then use `clerkClient.verifyToken()` in your API functions
-
-- **Option 2**: Use `jsonwebtoken` library with proper key verification
-  ```bash
-  npm install jsonwebtoken
-  ```
-  Configure with your Clerk JWT public key
-
-Without proper verification, authentication tokens can be forged, compromising user data security.
+1. Ensure `CLERK_SECRET_KEY` is configured in every deployed environment.
+2. Keep shared middleware in the endpoint stack (`authenticatedEndpoint`, `adminEndpoint`, etc.).
+3. If you customize auth behavior, update shared auth middleware (not individual endpoints) so `/api/sync` and all protected routes remain consistent.
 
 ## Support
 

@@ -112,10 +112,16 @@ Fetch user's cloud data
 
 ```typescript
 Request: {
-  Authorization: 'Bearer <token>';
+  headers: { Authorization: 'Bearer <token>' }
 }
 Response: {
-  (performanceRecords, srsItems, savedQuestions);
+  success: true,
+  message: "Data retrieved successfully",
+  data: {
+    performanceRecords: PerformanceRecord[],
+    srsItems: SRSItem[],
+    savedQuestions: SavedQuestion[]
+  }
 }
 ```
 
@@ -126,12 +132,24 @@ Upload/merge local data to cloud
 ```typescript
 Request: {
   userId: string,
-  performanceRecords: [],
-  srsItems: [],
-  savedQuestions: []
+  performanceRecords?: PerformanceRecord[], // max 1000
+  srsItems?: SRSItem[],                     // max 1000
+  savedQuestions?: SavedQuestion[]          // max 500
 }
-Response: { success: boolean, message: string }
+Response: {
+  success: true,
+  message: "Data synced successfully",
+  data: {
+    performanceRecords: PerformanceRecord[],
+    srsItems: SRSItem[],
+    savedQuestions: SavedQuestion[]
+  }
+}
 ```
+
+**Notes:**
+- `userId` must match the authenticated Clerk user (`403` on mismatch).
+- Endpoint-level middleware can also return `401` (auth required), `429` (rate limit), and `400` (schema validation).
 
 ## Development
 

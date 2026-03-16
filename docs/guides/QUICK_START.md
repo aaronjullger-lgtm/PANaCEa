@@ -153,10 +153,10 @@ That's it! 🎉
 
 ⚠️ **Before Production Deployment:**
 
-The current implementation uses simplified JWT verification for development. Before deploying to production:
+JWT verification is handled in shared middleware using Clerk token verification (`@clerk/backend`):
 
-1. Install `@clerk/backend`: `npm install @clerk/backend`
-2. Update JWT verification in `functions/api/sync.ts`
+1. Review `functions/api/_shared/auth.ts` (`verifyToken(...)` with secret key + clock skew tolerance)
+2. Keep `CLERK_SECRET_KEY` configured in each environment (Preview + Production)
 3. See detailed security notes in `AUTHENTICATION_SETUP.md`
 
 **For local development and testing, the current setup is fine!**

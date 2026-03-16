@@ -28,6 +28,8 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 | POST | `/api/questions/generate` | Required | Generate (or cache-hit) question by query text/type/system/difficulty. |
 | POST | `/api/questions/attempt` | Required | Record attempt telemetry and update stats/SRS/Rolling 360. |
 | POST | `/api/recommendations/generate` | Required | Generate personalized recommendation list for user. |
+| GET | `/api/sync` | Required | Download the authenticated user's synced performance/SRS/saved-question data. |
+| POST | `/api/sync` | Required | Upload and merge local performance/SRS/saved-question data in batched writes. |
 | GET | `/api/reference/normal-labs` | Required | Fetch normal lab reference records (optional category filter). |
 | GET | `/api/user/daily-performance` | Required | Daily attempt/accuracy trend for configurable lookback window. |
 | GET | `/api/user/goals` | Required | List goals with optional status/type filters. |
@@ -335,6 +337,56 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 }
 ```
 
+### `GET /api/sync`
+
+- **Auth:** Required (`Authorization: Bearer <Clerk JWT>`).
+- **Request body:** None.
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "message": "Data retrieved successfully",
+  "data": {
+    "performanceRecords": [
+      {
+        "id": "uuid",
+        "topic": "Cardiology",
+        "focus": "all",
+        "isCorrect": true,
+        "timestamp": 1763510400000
+      }
+    ],
+    "srsItems": [/* SRSItem records for user */],
+    "savedQuestions": [/* SavedQuestion records for user */]
+  }
+}
+```
+
+- **Errors:** `401` (missing/invalid auth), `429` (rate limit), `500` (server/database failure).
+
+### `POST /api/sync`
+
+- **Auth:** Required (`Authorization: Bearer <Clerk JWT>`).
+- **Request body (top-level JSON):**
+
+```json
+{
+  "userId": "clerk_user_id",
+  "performanceRecords": [/* optional, max 1000 */],
+  "srsItems": [/* optional, max 1000 */],
+  "savedQuestions": [/* optional, max 500 */]
+}
+```
+
+- **Important validation rules:**
+  - `userId` must match the authenticated Clerk user ID.
+  - `performanceRecords[].topic` and `performanceRecords[].focus` are required strings.
+  - `srsItems[].quality` must be an integer in `0..5`.
+  - `savedQuestions[].type` must be one of `saved | flagged | missed`.
+- **Success (`200`):** Same envelope shape as GET with merged server state and `message: "Data synced successfully"`.
+- **Errors:** `400` (schema validation), `401` (auth), `403` (`userId` mismatch), `429` (rate limit), `500` (server/database failure).
+
 ### `GET /api/reference/normal-labs`
 
 - **Query params:** `category` (optional), `limit` (1-500, default 200).
@@ -462,3 +514,4 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 - `POST /api/osce/analysis/grade` updates existing `OsceResult` when re-grading a session (`sessionId` uniqueness), and deduplicates `ConceptGap` by `(userId, system, sourceType, sourceId)`.
 - `GET /api/content/library` uses FTS (`search_vector`) first and falls back to ILIKE matching if FTS errors or returns zero rows.
 - `GET /api/admin/library-enrichment-logs` and `/api/admin/library-enrichment-priority` currently read local JSON files under `data/` (filesystem-backed behavior).
+- `/api/sync` uses batched writes (`BATCH_SIZE=25`) to stay under Cloudflare subrequest limits; SRS and saved-question sync paths use delete+reinsert for incoming keys before returning full updated user state.

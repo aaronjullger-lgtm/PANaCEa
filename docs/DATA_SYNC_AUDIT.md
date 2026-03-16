@@ -51,22 +51,21 @@ The codebase contains **three distinct synchronization systems**:
 ### 1.3. API Endpoints
 
 #### **Primary Sync Endpoint (`functions/api/sync.ts`)**
-- **Method:** POST `/api/sync`
+- **Methods:** `GET /api/sync`, `POST /api/sync`
 - **Features:**
   - Batch processing with Cloudflare limits (25 items per batch)
-  - Conflict detection and resolution
+  - Clerk-authenticated access via shared middleware
+  - User ID ownership check (`POST` returns `403` on mismatch)
   - Transient error retry logic
   - Comprehensive data validation with Zod schemas
 - **Data Types Supported:**
   - Performance records
   - SRS items
   - Saved questions
-  - User achievements
-  - Daily streaks
+- **Response shape:** `{ success, message, data: { performanceRecords, srsItems, savedQuestions } }`
 
 #### **Secondary Endpoints:**
-- `GET /api/sync` - Download cloud data
-- Various operation-specific endpoints for direct sync
+- Operation-specific endpoints (`/api/questions/attempt`, drill submit endpoints, etc.) also contribute server-side performance/SRS state outside direct sync calls
 
 ## 2. Strengths Identified
 
