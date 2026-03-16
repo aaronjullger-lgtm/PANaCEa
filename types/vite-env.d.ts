@@ -2,6 +2,10 @@
 
 interface ImportMetaEnv {
   readonly VITE_CLERK_PUBLISHABLE_KEY: string;
+  /** Optional: dev override for localhost to bypass pk_live domain restrictions */
+  readonly VITE_CLERK_PUBLISHABLE_KEY_DEV?: string;
+  /** Optional: local dev override (same as DEV but for local network) */
+  readonly VITE_CLERK_PUBLISHABLE_KEY_LOCAL?: string;
   readonly VITE_SENTRY_DSN?: string;
   readonly VITE_SENTRY_ENABLE_DEV?: string;
   readonly VITE_CLERK_DEBUG?: string;
