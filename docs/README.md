@@ -45,7 +45,7 @@ Learn about PANaCEa's system design:
 
 Backend endpoint contracts and API behavior docs:
 
-- **[API Overview](api/API_OVERVIEW.md)** - Updated OSCE endpoint contracts (`/api/osce/complete`, `/api/osce/analysis/grade`)
+- **[API Overview](api/API_OVERVIEW.md)** - Updated endpoint contracts for gamification, question pipelines, streaks, telemetry, and tutor/session APIs
 
 ---
 

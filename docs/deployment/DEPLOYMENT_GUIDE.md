@@ -172,6 +172,7 @@ curl https://panacea-staging.pages.dev/api/osce/session \
 **Test Week 3 Features:**
 - [ ] Fetch phantom patient (GET /api/gamification/phantom-patient)
 - [ ] Verify health calculation
+- [ ] Heal phantom patient after session (POST /api/gamification/phantom-patient)
 - [ ] Fetch avatar (GET /api/gamification/avatar)
 - [ ] Award XP (POST /api/gamification/avatar)
 - [ ] Test circadian UI mode switching

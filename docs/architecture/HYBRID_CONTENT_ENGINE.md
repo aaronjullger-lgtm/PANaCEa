@@ -172,7 +172,7 @@ for (const question of result.questions) {
 ```bash
 # Create question seed
 POST /api/questions/seeds
-Body: { seedData: { conditionId, variables, template, ... } }
+Body: { conditionId, questionType, corePathology, variables, template, correctAnswer, explanation, distractors, difficulty, system? }
 
 # Assemble question from seed
 GET /api/questions/seeds/:id/assemble
