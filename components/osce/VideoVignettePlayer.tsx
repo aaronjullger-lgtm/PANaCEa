@@ -127,7 +127,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
 
     const getAnswerClass = (index: number): string => {
       if (selectedAnswer === null) {
-        return 'border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])] hover:border-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]';
+        return 'border-[var(--color-border)] hover:border-[var(--color-category-practice)] hover:bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]';
       }
       if (index === correctAnswerIndex) {
         return 'border-data-pass bg-data-pass dark:bg-data-pass/20';
@@ -135,13 +135,13 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
       if (index === selectedAnswer) {
         return 'border-data-fail bg-data-fail dark:bg-data-fail/20';
       }
-      return 'border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])] opacity-50';
+      return 'border-[var(--color-border)] opacity-50';
     };
 
     return (
       <div className="max-w-5xl mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl p-6 text-white">
+        <div className="bg-[var(--color-accent)] rounded-xl p-6 text-[var(--color-text-inverse)]">
           <h2 className="text-2xl font-bold mb-2">Visual Diagnostic Challenge</h2>
           <p className="text-white/90">Watch carefully and identify the clinical finding</p>
         </div>
@@ -170,7 +170,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
                     className="absolute inset-0 flex items-center justify-center bg-[var(--color-overlay)] hover:opacity-90 transition-opacity group"
                   >
                     <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Play className="w-10 h-10 text-purple-600 ml-1" />
+                      <Play className="w-10 h-10 text-[var(--color-accent)] ml-1" />
                     </div>
                   </motion.button>
                 )}
@@ -196,7 +196,7 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
                   <div className="flex items-center gap-3">
                     <button
                       onClick={togglePlay}
-                      className="p-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors"
+                      className="p-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-full hover:bg-[var(--color-accent)]/80 transition-colors"
                     >
                       {isPlaying ? (
                         <Pause className="w-5 h-5" />
@@ -229,9 +229,9 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = React.mem
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] rounded-lg p-4"
+                className="bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] rounded-lg p-4"
               >
-                <p className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)] flex items-center gap-2">
+                <p className="text-sm text-[var(--color-category-practice)] flex items-center gap-2">
                   <Lightbulb className="w-4 h-4 text-data-provisional flex-shrink-0" />
                   <span>Watch the full video at least once before answering</span>
                 </p>

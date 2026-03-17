@@ -97,15 +97,15 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
 
   const getScoreColor = (score: number): string => {
     if (score >= 90) return 'text-data-pass dark:text-data-pass';
-    if (score >= 75) return 'text-[var(--color-category-practice)] text-[var(--color-category-practice)]';
-    if (score >= 60) return 'text-yellow-600 dark:text-yellow-400';
+    if (score >= 75) return 'text-[var(--color-category-practice)] dark:text-[var(--color-category-practice)]';
+    if (score >= 60) return 'text-[var(--color-data-provisional)]';
     return 'text-data-fail dark:text-data-fail';
   };
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white">
+      <div className="bg-[var(--color-accent)] rounded-xl p-6 text-[var(--color-text-inverse)]">
         <h2 className="text-2xl font-bold mb-2">Differential Diagnosis Challenge</h2>
         <p className="text-white/90">Rank diagnoses from most likely to least likely</p>
       </div>
@@ -140,9 +140,9 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
           </div>
 
           {/* Instructions */}
-          <div className="bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] rounded-lg p-4">
-            <h4 className="font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-2">Instructions</h4>
-            <ul className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)] space-y-2">
+          <div className="bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] rounded-lg p-4">
+            <h4 className="font-semibold text-[var(--color-category-practice)] mb-2">Instructions</h4>
+            <ul className="text-sm text-[var(--color-category-practice)] space-y-2">
               <li>• Drag diagnoses to reorder them</li>
               <li>• Place most likely diagnosis at the top</li>
               <li>• Consider vitals and clinical presentation</li>
@@ -173,7 +173,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                   >
                     <motion.div
                       layout
-                      className="flex items-start gap-3 p-4 bg-gradient-to-r from-[var(--color-bg-tertiary)] to-[var(--color-bg-secondary)] rounded-lg border-2 border-[var(--color-border)] hover:border-indigo-400 dark:hover:border-indigo-600 
+                      className="flex items-start gap-3 p-4 bg-gradient-to-r from-[var(--color-bg-tertiary)] to-[var(--color-bg-secondary)] rounded-lg border-2 border-[var(--color-border)] hover:border-[var(--color-accent)]
                         transition-colors"
                     >
                       <GripVertical className="w-5 h-5 text-[var(--color-text-muted)] mt-1 flex-shrink-0" />
@@ -184,8 +184,8 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                             {diagnosis.name}
                           </h4>
                           <span
-                            className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 
-                            bg-indigo-100 dark:bg-indigo-900/30 px-2 py-1 rounded"
+                            className="text-xs font-semibold text-[var(--color-text-inverse)]
+                            bg-[var(--color-accent)] px-2 py-1 rounded"
                           >
                             {getRankLabel(index)}
                           </span>
@@ -209,14 +209,14 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                     className={`p-4 rounded-lg border-2 ${
                       result.isCorrectPosition
                         ? 'bg-data-pass dark:bg-data-pass/20 border-data-pass'
-                        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500'
+                        : 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       {result.isCorrectPosition ? (
                         <CheckCircle className="w-5 h-5 text-data-pass dark:text-data-pass mt-1 flex-shrink-0" />
                       ) : (
-                        <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-1 flex-shrink-0" />
+                        <AlertCircle className="w-5 h-5 text-[var(--color-data-provisional)] mt-1 flex-shrink-0" />
                       )}
 
                       <div className="flex-1">
@@ -229,7 +229,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                               className={`text-xs font-semibold px-2 py-1 rounded ${
                                 result.isCorrectPosition
                                   ? 'bg-data-pass text-white'
-                                  : 'bg-yellow-600 text-white'
+                                  : 'bg-[var(--color-data-provisional)] text-[var(--color-text-inverse)]'
                               }`}
                             >
                               Your: #{result.userRank + 1}
@@ -255,8 +255,8 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                 <>
                   <button
                     onClick={handleSubmit}
-                    className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white 
-                      rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105"
+                    className="flex-1 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)]
+                      rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105 hover:bg-[var(--color-accent)]/80"
                   >
                     Submit Ranking
                   </button>
@@ -270,8 +270,8 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
               ) : (
                 <button
                   onClick={handleReset}
-                  className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white 
-                    rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105"
+                  className="flex-1 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)]
+                    rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105 hover:bg-[var(--color-accent)]/80"
                 >
                   Try Again
                 </button>
@@ -288,7 +288,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 
+            className="bg-[var(--color-bg-secondary)]
               rounded-xl p-8 shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
           >
             <div className="flex items-center justify-between">

@@ -21,8 +21,8 @@ const OSCECompleteBodySchema = z.object({
     diagnosis: z.string().max(2000).optional(),
     treatmentPlan: z.string().max(5000).optional(),
     // NEW: Optional analytics data from Module 4
-    soapComparison: z.any().optional(),
-    timingAnalytics: z.any().optional(),
+    soapComparison: z.record(z.string(), z.unknown()).optional(),
+    timingAnalytics: z.record(z.string(), z.unknown()).optional(),
     infographics: z.array(z.string()).optional(),
   }),
 });
@@ -63,8 +63,8 @@ export const onRequestPost = authenticatedEndpoint(
         return { data: { success: true, alreadyCompleted: true } };
       }
 
-      const updated = await prisma.patientEncounterSession.updateMany({
-        where: { id: sessionId, userId: user.id },
+      await prisma.patientEncounterSession.update({
+        where: { id: sessionId },
         data: {
           status: 'completed',
           diagnosis,
@@ -73,13 +73,6 @@ export const onRequestPost = authenticatedEndpoint(
           updatedAt: new Date(),
         },
       });
-
-      // Since we already checked the session exists and is active, count should be 1
-      if (updated.count === 0) {
-        // This should not happen, but guard against race conditions
-        log.error('Race condition: session not updated after status check', { sessionId });
-        return { status: 500, error: 'Internal server error' };
-      }
 
       // NEW: Create CaseFile if analytics provided (Module 4)
       if (soapComparison || timingAnalytics) {
@@ -95,7 +88,10 @@ export const onRequestPost = authenticatedEndpoint(
           log.info('CaseFile created', { sessionId });
         } catch (caseFileError) {
           // Non-blocking: log but don't fail the request
-          log.warn('Failed to create CaseFile', { error: caseFileError });
+          log.warn('Failed to create CaseFile', {
+            error: caseFileError instanceof Error ? caseFileError.message : String(caseFileError),
+            sessionId
+          });
         }
       }
 

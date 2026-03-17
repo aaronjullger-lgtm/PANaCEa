@@ -77,7 +77,7 @@ export function EchoPathVisualization({ echoPath, className = '' }: EchoPathVisu
                   {isOptimal ? (
                     <CheckCircle className="w-4 h-4 text-data-pass flex-shrink-0 mt-0.5" />
                   ) : isRabbitHole ? (
-                    <AlertTriangle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                    <AlertTriangle className="w-4 h-4 text-data-fail flex-shrink-0 mt-0.5" />
                   ) : (
                     <div className="w-4 h-4 rounded-full bg-[var(--color-accent)]/30 flex-shrink-0 mt-0.5" />
                   )}
@@ -89,7 +89,7 @@ export function EchoPathVisualization({ echoPath, className = '' }: EchoPathVisu
                       <span>{node.type}</span>
                       <span>Relevance: {Math.round(node.relevanceScore * 100)}%</span>
                       {isRabbitHole && (
-                        <span className="text-rose-500 font-medium">Rabbit hole</span>
+                        <span className="text-data-fail font-medium">Rabbit hole</span>
                       )}
                       {isOptimal && (
                         <span className="text-data-pass font-medium">Optimal path</span>
@@ -105,8 +105,8 @@ export function EchoPathVisualization({ echoPath, className = '' }: EchoPathVisu
 
       {/* Rabbit Holes */}
       {echoPath.rabbitHoles.length > 0 && (
-        <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-6">
-          <h3 className="text-lg font-semibold text-rose-500 mb-3 flex items-center gap-2">
+        <div className="rounded-xl border border-data-fail/30 bg-data-fail/5 p-6">
+          <h3 className="text-lg font-semibold text-data-fail mb-3 flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" />
             Rabbit Holes Detected
           </h3>
@@ -146,8 +146,8 @@ export function EchoPathVisualization({ echoPath, className = '' }: EchoPathVisu
 
         {/* Missed */}
         {echoPath.criticalPathsMissed.length > 0 && (
-          <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-4">
-            <h4 className="text-sm font-semibold text-rose-500 mb-2">✗ Critical Paths Missed</h4>
+          <div className="rounded-xl border border-data-fail/30 bg-data-fail/5 p-4">
+            <h4 className="text-sm font-semibold text-data-fail mb-2">✗ Critical Paths Missed</h4>
             <ul className="space-y-1">
               {echoPath.criticalPathsMissed.map((path, i) => (
                 <li key={i} className="text-xs text-[var(--color-text-secondary)]">
@@ -163,7 +163,7 @@ export function EchoPathVisualization({ echoPath, className = '' }: EchoPathVisu
 }
 
 // Helper function to calculate node level in tree
-function calculateLevel(node: any, allNodes: any[]): number {
+function calculateLevel(node: Record<string, any>, allNodes: Record<string, any>[]): number {
   let level = 0;
   let current = node;
 

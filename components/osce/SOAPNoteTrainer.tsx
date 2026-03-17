@@ -74,9 +74,9 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return 'text-data-pass dark:text-data-pass';
-    if (score >= 80) return 'text-[var(--color-category-practice)] text-[var(--color-category-practice)]';
-    if (score >= 70) return 'text-yellow-600 dark:text-yellow-400';
-    if (score >= 60) return 'text-orange-600 dark:text-orange-400';
+    if (score >= 80) return 'text-[var(--color-category-practice)]';
+    if (score >= 70) return 'text-[var(--color-warning)]';
+    if (score >= 60) return 'text-[var(--color-warning-secondary)]';
     return 'text-data-fail dark:text-data-fail';
   };
 
@@ -93,7 +93,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
+      <div className="bg-[var(--color-accent)] rounded-xl p-6 text-[var(--color-text-inverse)]">
         <div className="flex items-center gap-3 mb-4">
           <FileText className="w-8 h-8" />
           <div>
@@ -156,9 +156,9 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
           </div>
 
           {/* Guidance Card */}
-          <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-4">
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
             <div className="flex items-start gap-3">
-              <Lightbulb className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-1 flex-shrink-0" />
+              <Lightbulb className="w-5 h-5 text-[var(--color-accent)] mt-1 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">
                   {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)} Guidance
@@ -262,8 +262,8 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                 !soapNote.assessment ||
                 !soapNote.plan
               }
-              className="w-full mt-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white
-                rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105
+              className="w-full mt-6 py-3 bg-[var(--color-accent)] text-[var(--color-text-inverse)]
+                rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105 hover:bg-[var(--color-accent)]/80
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
             >
               {isGrading ? (
@@ -311,7 +311,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
             className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
           >
             {/* Overall Score */}
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 mb-6">
+            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 mb-6">
               <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-6">
                 <div className="flex-1">
                   <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
@@ -445,7 +445,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
             {gradingResult.feedback.suggestions.length > 0 && (
               <div className="mt-6 border-t border-[var(--color-border)] pt-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <Lightbulb className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <Lightbulb className="w-5 h-5 text-[var(--color-accent)]" />
                   <h4 className="font-bold text-[var(--color-text-primary)]">
                     Style & Phrasing Suggestions
                   </h4>
@@ -456,7 +456,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
                       key={i}
                       className="text-sm text-[var(--color-text-secondary)] flex items-start gap-2"
                     >
-                      <span className="text-purple-600 dark:text-purple-400 mt-1">→</span>
+                      <span className="text-[var(--color-accent)] mt-1">→</span>
                       {item}
                     </li>
                   ))}
