@@ -55,7 +55,7 @@ import ThemeToggleButton from '../components/ui/ThemeToggleButton';
 import { MasteryHeatmapToggle } from '../components/ui/MasteryHeatmapToggle';
 import { OfflineSyncIndicator } from '../components/offline/OfflineSyncIndicator';
 import { ProductTour } from '../components/onboarding/ProductTour';
-import { WithGeminiErrorBoundary } from '../components/hoc/withGeminiErrorBoundary';
+import { WithGeminiErrorBoundary } from '../components/error/ErrorBoundary';
 import type {
   Question as QuizQuestion,
   PerformanceRecord,

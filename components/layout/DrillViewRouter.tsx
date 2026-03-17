@@ -10,7 +10,7 @@
 import React, { Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader } from '@/components/loading';
-import { WithGeminiErrorBoundary } from '@/components/hoc/withGeminiErrorBoundary';
+import { WithGeminiErrorBoundary } from '@/components/error/ErrorBoundary';
 import {
   PhotoDrillSession,
   RapidRecallDrill,
