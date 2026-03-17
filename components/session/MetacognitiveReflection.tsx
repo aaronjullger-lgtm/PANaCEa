@@ -182,12 +182,12 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
 
                   return (
                     <>
-                      <div className="flex items-center gap-3 text-deep-plum-400">
+                      <div className="flex items-center gap-3 text-[var(--color-accent)]">
                         <Icon className="w-6 h-6" />
                         <h3 className="text-lg font-semibold">{prompt.title}</h3>
                       </div>
 
-                      <p className="text-white text-lg">{prompt.question}</p>
+                      <p className="text-[var(--color-text-primary)] text-lg">{prompt.question}</p>
 
                       {currentStep === 2 ? (
                         /* Confidence Rating Slider */
