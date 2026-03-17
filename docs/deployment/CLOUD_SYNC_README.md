@@ -97,9 +97,12 @@ prisma/schema.prisma
 
 ## API Endpoints
 
+Canonical API contracts for these routes live in [`docs/api/API_OVERVIEW.md`](../api/API_OVERVIEW.md).  
+This section is a sync-focused summary.
+
 ### `GET /api/sync`
 
-Fetch user's cloud data
+Fetch authenticated user's cloud data.
 
 ```typescript
 Request: {
@@ -116,9 +119,13 @@ Response: {
 }
 ```
 
+Possible errors:
+
+- `500` → `{"error":"Sync GET failed: ..."}`
+
 ### `POST /api/sync`
 
-Upload/merge local data to cloud
+Upload/merge local data to cloud, then return merged cloud state.
 
 ```typescript
 Request: {
@@ -137,6 +144,17 @@ Response: {
   };
 }
 ```
+
+Validation/behavior notes:
+
+- `userId` must match the authenticated Clerk user ID (otherwise `403 User ID mismatch`).
+- Payload limits: `performanceRecords` ≤ 1000, `srsItems` ≤ 1000, `savedQuestions` ≤ 500.
+
+Possible errors:
+
+- `400` validation failure
+- `403` user mismatch
+- `500` sync failure
 
 ### `GET /api/user/profile`
 
