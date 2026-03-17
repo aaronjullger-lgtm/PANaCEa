@@ -31,7 +31,7 @@
 ### Naming and structure
 
 - **Functions:** New routes follow existing layout: `functions/api/<area>/<action>.ts` or `functions/api/<area>/<resource>/[id].ts`. Knowledge uses `cache/[id].ts`, `cache/[name].ts`, `cache/student-context.ts` — consistent with other areas.
-- **Auth pattern:** Most new endpoints use `authenticatedEndpoint` from `_shared/middleware`; **exception:** `functions/api/knowledge/cache/[name].ts` uses `authenticateRequest` + manual CORS/response from `_shared/auth`. **Exception:** `functions/api/podcast/generate.ts` uses **no auth** (see Critical Fixes).
+- **Auth pattern:** Most new endpoints use `authenticatedEndpoint` from `_shared/middleware`; `functions/api/knowledge/cache/[name].ts` uses `authenticateRequest` + manual CORS/response from `_shared/auth`. `functions/api/podcast/generate.ts` now enforces auth via `withAuth()`.
 - **Prisma:** New code uses `createEdgePrismaClient(env.DATABASE_URL)` and `safePrismaDisconnect` in `finally` — matches repo.
 - **Env:** New code uses `context.env` / `env.GEMINI_API_KEY` etc., not `process.env` — correct for Edge.
 
@@ -53,8 +53,8 @@
 1. **GEMINI_API_KEY exposed to client (live-config)** — **FIXED.**  
    `GET /api/osce/live-config` now requests a **short-lived ephemeral token** from Gemini’s `v1alpha/auth_tokens` API (server-side, using `GEMINI_API_KEY`) and returns only that token name to the client. The long-lived key never leaves the server. Client still uses the returned value as `apiKey` for `GoogleGenAI` and `live.connect()`; the SDK accepts the token name for Live API. Token: 1 min to start new session, 30 min to send messages (Gemini defaults).
 
-2. **Podcast proxy has no authentication**  
-   `functions/api/podcast/generate.ts` exports `onRequestPost` that proxies to the Node service without calling `authenticatedEndpoint` or `withAuth()`. **Risk:** Unauthenticated callers can hit the podcast service (and thus Gemini + TTS) at will. **Fix:** Wrap the handler with the same auth middleware used by other POST endpoints (e.g. `authenticatedEndpoint` with a body schema that allows optional `pdfUrl` and multipart).
+2. **Podcast proxy authentication** — **FIXED.**  
+   `functions/api/podcast/generate.ts` now wraps the handler with `withAuth()` (via `withMiddleware`). Unauthenticated callers receive `401` and cannot invoke the Node podcast service.
 
 3. **Knowledge cache delete by name: param encoding**  
    Client sends DELETE to `/api/knowledge/cache/${encodeURIComponent(name)}` (e.g. `cachedContents%2Fxyz`). In `cache/[name].ts`, `params.name` may be the raw segment. If it is not decoded, `name.startsWith('cachedContents/')` fails and valid deletes return 400. **Fix:** Use `const name = decodeURIComponent(params.name ?? '')` before validation and DB/Gemini calls.
@@ -113,7 +113,7 @@
 | Priority | Issue | Location | Recommendation |
 |---------|--------|----------|----------------|
 | High | GEMINI_API_KEY returned to client | `functions/api/osce/live-config.ts` | Use short-lived token or backend WebSocket proxy; avoid exposing main key. |
-| High | Podcast proxy unauthenticated | `functions/api/podcast/generate.ts` | Add auth (e.g. `authenticatedEndpoint` with schema) so only logged-in users can call. |
+| Resolved | Podcast proxy authentication | `functions/api/podcast/generate.ts` | `withAuth()` middleware is now enforced for POST calls. |
 | Medium | Delete-by-name may get encoded param | `functions/api/knowledge/cache/[name].ts` | Use `decodeURIComponent(params.name ?? '')` before validation and DB/Gemini. |
 
 ### Logical Omissions
@@ -135,7 +135,7 @@
 
 1. **Auth and security**
    - Call `GET /api/osce/live-config` without `Authorization` → expect 401.
-   - Call `POST /api/podcast/generate` without auth → currently 200/502 (proxy); after fix, expect 401 when unauthenticated.
+   - Call `POST /api/podcast/generate` without auth → expect `401` unauthenticated.
    - Call `GET /api/osce/session/:sessionId/vitals` with another user’s sessionId → expect 404 (vitals already scoped to `userId`).
 
 2. **Knowledge cache**

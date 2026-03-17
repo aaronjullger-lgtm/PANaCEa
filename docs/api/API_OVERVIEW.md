@@ -34,14 +34,241 @@ Current API surface for recently changed Cloudflare Pages Functions routes.
 | POST | `/api/user/goals` | Required | Create new goal. |
 | PATCH | `/api/user/goals/:id` | Required | Update goal progress/status/metadata. |
 | DELETE | `/api/user/goals/:id` | Required | Delete goal by ID. |
+| GET | `/api/user/profile` | Required | Read authenticated user profile and onboarding flags. |
+| PUT | `/api/user/profile` | Required | Partial profile update (exam/program/rotation/onboarding fields). |
 | POST | `/api/user/session` | Required | Start study session. |
 | PATCH | `/api/user/session` | Required | Update or end study session. |
+| GET | `/api/sync` | Required | Download synced user cloud state (performance, SRS, saved questions). |
+| POST | `/api/sync` | Required | Upload/merge local cloud state with batched writes and retry logic. |
+| POST | `/api/questions/due-siblings` | Required | Fetch concept sibling/variant questions for Due review queues. |
+| POST | `/api/clinical-eye/analyze` | Required | Analyze medical images with Gemini (+ optional code-exec reasoning and bbox). |
+| POST | `/api/podcast/generate` | Required | Authenticated proxy to external Node podcast generator service. |
+| POST | `/api/technique-check/analyze` | Required | Analyze uploaded exam-technique video and return critique/bounding boxes. |
+| POST | `/api/visualizer/generate` | Required | Generate anatomy visual + segmentation masks (Firefly + Gemini pipeline). |
 | GET | `/api/admin/enrich-condition` | Admin | Endpoint usage contract + enrichable field list. |
 | POST | `/api/admin/enrich-condition` | Admin | AI-enrich missing `MedicalContent` fields for a condition. |
 | GET | `/api/admin/library-enrichment-logs` | Required + admin role check in handler | Read enrichment run logs with filters/pagination. |
 | GET | `/api/admin/library-enrichment-priority` | Required + admin role check in handler | Read prioritized enrichment queue payload. |
 
 ## Request/Response Contracts
+
+### `GET /api/user/profile`
+
+- **Auth:** Required (Clerk bearer token via shared middleware).
+- **Request:** No body required.
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "profile": {
+    "id": "string",
+    "clerkId": "string",
+    "email": "user@example.com",
+    "firstName": "string | null",
+    "lastName": "string | null",
+    "examDate": "ISO string | null",
+    "graduationDate": "ISO string | null",
+    "eorTestDate": "ISO string | null",
+    "rotationStartDate": "ISO string | null",
+    "rotationEndDate": "ISO string | null",
+    "school": "string | null",
+    "currentRotation": "string | null",
+    "yearInProgram": "string | null",
+    "hasCompletedBaseline": false,
+    "hasCompletedOnboarding": false,
+    "updatedAt": "ISO string"
+  }
+}
+```
+
+- **Errors:** `401`, `404` (user not found), `500`.
+
+### `PUT /api/user/profile`
+
+- **Auth:** Required.
+- **Request body:** Top-level partial object (no `body` wrapper) with at least one field.
+  - Allowed fields include: `firstName`, `lastName`, `examDate`, `graduationDate`, `school`, `currentRotation`, `yearInProgram`, `eorTestDate`, `rotationStartDate`, `rotationEndDate`, `hasCompletedBaseline`, `hasCompletedOnboarding`.
+- **Success (`200`):** `{ "success": true, "profile": { ... }, "message": "Profile updated successfully" }`
+- **Errors:** `400` validation (including empty payload), `401`, `404`, `500`.
+
+### `GET /api/sync`
+
+- **Auth:** Required.
+- **Request:** No body required.
+- **Success (`200`):**
+
+```json
+{
+  "success": true,
+  "message": "Data retrieved successfully",
+  "data": {
+    "performanceRecords": [{ "id": "uuid", "timestamp": 1731680000000 }],
+    "srsItems": [],
+    "savedQuestions": []
+  }
+}
+```
+
+- **Notes:** `performanceRecords[].timestamp` is normalized to number.
+- **Errors:** `401`, `500`.
+
+### `POST /api/sync`
+
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "userId": "clerk_user_id",
+  "performanceRecords": [],
+  "srsItems": [],
+  "savedQuestions": []
+}
+```
+
+- **Behavior:** Validates payload with Zod, enforces authenticated `userId` match, processes batched writes (performance/SRS/saved) with retry logic for transient DB/Accelerate failures.
+- **Success (`200`):** `{ "success": true, "message": "Data synced successfully", "data": { ... } }`
+- **Errors:** `400` validation, `401`, `403` user mismatch, `500`.
+
+### `POST /api/questions/due-siblings`
+
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "dueItems": [
+    {
+      "conditionId": "string",
+      "taskType": "optional string | null",
+      "originalQuestionId": "string"
+    }
+  ]
+}
+```
+
+- **Success (`200`):**
+
+```json
+{
+  "results": [
+    {
+      "question": {
+        "id": "string",
+        "question": "string",
+        "vignette": "optional string",
+        "options": ["..."],
+        "correctAnswerIndex": 0,
+        "rationale": "string",
+        "system": "string",
+        "conditionId": "optional string",
+        "condition": "optional string",
+        "difficulty": "string",
+        "source": "pool",
+        "metadata": {}
+      },
+      "dueConceptKey": { "conditionId": "string", "taskType": "string | null" }
+    }
+  ]
+}
+```
+
+- **Notes:** If no sibling exists and `GEMINI_API_KEY` is configured, the endpoint attempts on-demand variant generation before returning `question: null`.
+- **Errors:** `400`, `401`, `404` user not found, `500`.
+
+### `POST /api/clinical-eye/analyze`
+
+- **Auth:** Required.
+- **Request body (top-level JSON):**
+
+```json
+{
+  "imageBase64": "base64-no-prefix",
+  "mimeType": "image/png",
+  "prompt": "Analyze ST elevation in V2",
+  "thinkingBudget": 2048
+}
+```
+
+- **Success (`200`):**
+
+```json
+{
+  "data": {
+    "text": "analysis text",
+    "reasoning": ["optional trace"],
+    "boundingBox": { "box_2d": [100, 200, 500, 700], "label": "ST segment" },
+    "usageMetadata": { "totalTokenCount": 1234 }
+  }
+}
+```
+
+- **Errors:** `400` invalid/oversize payload, `401`, `429`, `500`, `502`.
+
+### `POST /api/podcast/generate`
+
+- **Auth:** Required (`withAuth()` middleware).
+- **Request body:** Either:
+  - `multipart/form-data` (PDF `file`, optional `mode`/`topic`), or
+  - JSON payload forwarded to Node service (e.g. `{ "pdfUrl": "https://..." }`).
+- **Behavior:** Proxies to `${PODCAST_SERVICE_URL}/generate`.
+- **Success:** Transparent proxy of Node service JSON (e.g. script/audio or async job status).
+- **Errors:** `400` invalid JSON, `401`, `501` when `PODCAST_SERVICE_URL` is unset, `502` when upstream is unavailable.
+
+### `POST /api/technique-check/analyze`
+
+- **Auth:** Required (`withAuth()` middleware).
+- **Request body:** `multipart/form-data` with:
+  - `video` (required, max 20MB)
+  - `query` (required string)
+- **Success (`200`):**
+
+```json
+{
+  "critique": "brief actionable feedback",
+  "boundingBoxes": [{ "label": "hand position", "x": 0.12, "y": 0.34, "w": 0.2, "h": 0.18 }]
+}
+```
+
+- **Errors:** `400` invalid multipart/missing fields/oversize, `401`, upstream Gemini errors (status passthrough), `500` if API key missing.
+
+### `POST /api/visualizer/generate`
+
+- **Auth:** Required.
+- **Request body shape:** Wrapped body object (required):
+
+```json
+{
+  "body": {
+    "prompt": "optional string",
+    "segmentationPrompt": "optional string",
+    "structureReferenceImageId": "optional string",
+    "structureReferenceUrl": "optional URL",
+    "referenceAnatomyId": "optional string",
+    "contentClass": "art | photo",
+    "conditionId": "optional string"
+  }
+}
+```
+
+- **Success (`200`):**
+
+```json
+{
+  "data": {
+    "imageBase64": "data:image/png;base64,...",
+    "imageMime": "image/png",
+    "masks": [{ "mask": "base64-or-data-url", "label": "string" }],
+    "conditionId": "optional string",
+    "contentClass": "art",
+    "storageUrl": "optional public URL",
+    "storagePath": "optional bucket path"
+  }
+}
+```
+
+- **Errors:** `400` no image generated / invalid body, `401`, `500` missing Gemini env, `502` Adobe/Gemini upstream failure.
 
 ### `GET /api/health`
 
