@@ -421,10 +421,8 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
 
         if (result.success) {
           setSyncStatus('synced');
-          console.log('[SessionEndSummary] Analytics synced:', result.sessionId);
         } else {
           setSyncStatus('failed');
-          console.warn('[SessionEndSummary] Sync failed:', result.error);
         }
       } catch (error) {
         setSyncStatus('failed');

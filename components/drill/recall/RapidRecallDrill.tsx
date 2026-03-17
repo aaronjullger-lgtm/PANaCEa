@@ -262,21 +262,12 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
           wasSemantic = result.viaModel && result.isEquivalent;
         } catch (error) {
           console.error('Semantic validation failed', error);
-        } finally {
-          setIsValidating(false);
-        }
+      } finally {
+        setIsValidating(false);
       }
+    }
 
-      // Log telemetry for debugging (remove in production)
-      if (telemetryData) {
-        console.log('[RapidRecallDrill] Telemetry:', {
-          duration_ms: telemetryData.duration_ms,
-          rapid_guess: telemetryData.rapid_guess,
-          threshold_ms: telemetryData.mvrt_threshold_ms,
-        });
-      }
-
-      setAcceptedSynonym(wasSemantic);
+    setAcceptedSynonym(wasSemantic);
       setUserAnswer(answer);
       setIsCorrect(isAnswerCorrect);
       setTotalAttempts((prev) => prev + 1);

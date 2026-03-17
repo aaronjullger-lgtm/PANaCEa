@@ -27,8 +27,6 @@ export const onRequestGet = authenticatedEndpoint(
       // Decode in case it was URL encoded
       const conditionId = decodeURIComponent(validated.conditionId);
 
-      console.log('[pearls] Fetching pearls for conditionId:', conditionId);
-
       // Try to find by ID first, then by slug/identifier
       let medicalContent = await prisma.medicalContent.findUnique({
         where: { id: conditionId },
@@ -50,7 +48,6 @@ export const onRequestGet = authenticatedEndpoint(
       }
 
       if (!medicalContent) {
-        console.log('[pearls] No medical content found for:', conditionId);
         return { data: { pearls: [] } };
       }
 
@@ -63,7 +60,6 @@ export const onRequestGet = authenticatedEndpoint(
             ? (content.pearls as string[])
             : [];
 
-      console.log('[pearls] Found', pearls.length, 'pearls');
       return { data: { pearls } };
     } catch (error) {
       console.error('[pearls] Error fetching pearls:', error);
