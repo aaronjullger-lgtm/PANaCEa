@@ -128,7 +128,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
   };
 
   const renderFilterBar = () => (
-    <div className="mb-6 bg-surface-card rounded-xl border border-[var(--color-border)] p-4">
+    <div className="mb-6 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -297,10 +297,10 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
       )}
 
       {/* Table */}
-      <div className="bg-surface-card rounded-xl border border-[var(--color-border)] overflow-hidden">
+      <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-surface-card border-b border-[var(--color-border)]">
+            <thead className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
               <tr>
                 <th className="py-3 px-4 text-left text-sm font-semibold text-[var(--color-text-primary)]">Timestamp</th>
                 <th className="py-3 px-4 text-left text-sm font-semibold text-[var(--color-text-primary)]">Taxonomy</th>

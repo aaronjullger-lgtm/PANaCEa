@@ -150,7 +150,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
         <h3 className="text-sm font-semibold text-text-secondary mb-2">Your Guesses</h3>
         <div className="space-y-2">
           {userState.guesses.map((guess, idx) => (
-            <div key={idx} className="flex items-center gap-3 p-3 bg-surface-card border border-[var(--color-border)] rounded-lg">
+            <div key={idx} className="flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg">
               <div className="w-8 h-8 rounded-full bg-data-neutral/30 flex items-center justify-center">
                 <span className="text-sm font-bold text-text-primary">{idx + 1}</span>
               </div>
@@ -210,7 +210,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
                   setGuessInput(suggestion.condition);
                   setShowSuggestions(false);
                 }}
-                className="w-full text-left px-4 py-3 hover:bg-surface-card transition-colors border-b border-[var(--color-border)] last:border-b-0"
+                className="w-full text-left px-4 py-3 hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
                 title={`Select ${suggestion.condition}`}
                 aria-label={`Select ${suggestion.condition}`}
               >
@@ -240,7 +240,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
   const renderStats = () => {
     if (!stats) return null;
     return (
-      <div className="max-w-2xl mx-auto mt-8 p-6 bg-surface-card border border-[var(--color-border)] rounded-xl">
+      <div className="max-w-2xl mx-auto mt-8 p-6 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl">
         <h3 className="text-lg font-bold text-text-primary mb-4">Your Diagnostic Puzzle Stats</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
@@ -293,7 +293,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}
-          className="absolute inset-x-4 bottom-32 sm:bottom-40 mx-auto max-w-md bg-surface-card rounded-xl p-6 shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
+          className="absolute inset-x-4 bottom-32 sm:bottom-40 mx-auto max-w-md bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
         >
           <div className="text-center space-y-4">
             {isWon ? (

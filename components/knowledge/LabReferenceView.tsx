@@ -189,7 +189,7 @@ export const LabReferenceView: React.FC = () => {
                 </button>
 
                 {isExpanded && (
-                  <div className="px-4 pb-4 pt-0 space-y-4 border-t border-border animate-fade-in">
+                  <div className="px-4 pb-4 pt-0 space-y-4 border-t border-[var(--color-border)] animate-fade-in">
                     {/* Clinical Differentials */}
                     {lab.increaseIndicates.length > 0 && (
                       <div>

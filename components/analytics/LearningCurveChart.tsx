@@ -123,8 +123,8 @@ export const LearningCurveChart: React.FC = () => {
               type="button"
               className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
                 selectedRange.days === range.days
-                  ? 'bg-action-primary text-white border-action-primary'
-                  : 'bg-surface-secondary border-border hover:bg-[var(--color-bg-tertiary)]'
+                  ? 'bg-[var(--color-accent)] text-white border-action-primary'
+                  : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
               onClick={() => handleRangeChange(range)}
             >
@@ -240,25 +240,25 @@ export const LearningCurveChart: React.FC = () => {
       {/* Summary stats */}
       {data?.summary && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-surface-secondary rounded-lg p-3">
+          <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
             <p className="text-xs text-text-[var(--color-text-muted)] font-medium">Total Questions</p>
             <p className="text-xl font-bold text-text-primary">{data.summary.totalAttempts}</p>
           </div>
-          <div className="bg-surface-secondary rounded-lg p-3">
+          <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
             <p className="text-xs text-text-[var(--color-text-muted)] font-medium">Avg Accuracy</p>
             <p className="text-xl font-bold text-text-primary">
               {data.summary.avgAccuracy.toFixed(1)}%
             </p>
           </div>
           {data.summary.avgStability && (
-            <div className="bg-surface-secondary rounded-lg p-3">
+            <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
               <p className="text-xs text-text-[var(--color-text-muted)] font-medium">Avg Stability</p>
               <p className="text-xl font-bold text-text-primary">
                 {data.summary.avgStability.toFixed(1)}
               </p>
             </div>
           )}
-          <div className="bg-surface-secondary rounded-lg p-3">
+          <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
             <p className="text-xs text-text-[var(--color-text-muted)] font-medium">Active Days</p>
             <p className="text-xl font-bold text-text-primary">{chartData.length}</p>
           </div>

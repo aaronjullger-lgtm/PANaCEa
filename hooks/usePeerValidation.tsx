@@ -60,7 +60,7 @@ export function PeerValidationBadge({
   if (totalAttempts < 5) return null;
 
   return (
-    <div className="bg-surface-card border border-border rounded-lg p-3 mt-4">
+    <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-3 mt-4">
       <p className="text-sm text-text-secondary">
         <span className="font-semibold text-text-primary">{percentageMissed}%</span> of users also missed this question
         <span className="text-xs text-text-muted ml-2">({totalAttempts} total attempts)</span>

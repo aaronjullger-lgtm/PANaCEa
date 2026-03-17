@@ -118,7 +118,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
   if (collapsed) {
     return (
-      <div className="h-full w-12 bg-[var(--color-bg-primary)] border-r border-border flex flex-col items-center py-4">
+      <div className="h-full w-12 bg-[var(--color-bg-primary)] border-r border-[var(--color-border)] flex flex-col items-center py-4">
         <button
           onClick={onToggleCollapse}
           className="p-2 rounded-md hover:bg-surface-hover transition-colors"
@@ -131,14 +131,14 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   }
 
   return (
-    <div className="h-full w-80 bg-[var(--color-bg-primary)] border-r border-border overflow-y-auto p-6">
+    <div className="h-full w-80 bg-[var(--color-bg-primary)] border-r border-[var(--color-border)] overflow-y-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-foreground">Graph Filters</h2>
         <div className="flex items-center gap-2">
           {onApply && (
             <button
               onClick={onApply}
-              className="px-3 py-1.5 bg-action-primary text-white text-sm rounded-md hover:bg-action-primary-hover transition-colors"
+              className="px-3 py-1.5 bg-[var(--color-accent)] text-white text-sm rounded-md hover:bg-[var(--color-accent)]-hover transition-colors"
             >
               Apply
             </button>
@@ -186,7 +186,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                   type="checkbox"
                   checked={filter.systemCodes.includes(system)}
                   onChange={() => handleSystemToggle(system)}
-                  className="rounded border-border text-action-primary focus:ring-action-primary"
+                  className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-action-primary"
                 />
                 <span className="flex-1 text-foreground">{system}</span>
                 <span className="text-xs text-muted-foreground">
@@ -227,7 +227,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 type="checkbox"
                 checked={filter.edgeTypes.includes(edgeType)}
                 onChange={() => handleEdgeTypeToggle(edgeType)}
-                className="rounded border-border text-action-primary focus:ring-action-primary"
+                className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-action-primary"
               />
               <span className="flex-1 text-foreground">{edgeType.replace(/_/g, ' ')}</span>
               <div
@@ -270,7 +270,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 type="checkbox"
                 checked={filter.nodeTypes.includes(nodeType)}
                 onChange={() => handleNodeTypeToggle(nodeType)}
-                className="rounded border-border text-action-primary focus:ring-action-primary"
+                className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-action-primary"
               />
               <span className="flex-1 text-foreground">{nodeType.replace(/_/g, ' ')}</span>
             </label>
@@ -334,7 +334,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             minWeight: 0,
             maxDepth: 3,
           })}
-          className="w-full py-2 px-4 border border-border rounded-md text-foreground hover:bg-surface-hover transition-colors"
+          className="w-full py-2 px-4 border border-[var(--color-border)] rounded-md text-foreground hover:bg-surface-hover transition-colors"
         >
           Reset All Filters
         </button>

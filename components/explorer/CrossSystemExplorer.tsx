@@ -130,7 +130,7 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
       {/* Main Graph Canvas */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header with title, search, and close button */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-surface-card">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
           <h2 className="text-lg font-semibold text-text-primary">Cross‑System Integration Explorer</h2>
           <div className="flex-1 max-w-xl mx-4">
             <GraphSearchBar onNodeSelect={handleSearchSelect} />
@@ -139,8 +139,8 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
             onClick={() => setShowPerformanceOverlay(prev => !prev)}
             className={`px-3 py-1.5 rounded-md border transition-colors ${
               showPerformanceOverlay
-                ? 'bg-action-primary text-white border-action-primary'
-                : 'bg-surface-card text-text-primary border-border hover:bg-surface-hover'
+                ? 'bg-[var(--color-accent)] text-white border-action-primary'
+                : 'bg-[var(--color-bg-secondary)] text-text-primary border-[var(--color-border)] hover:bg-surface-hover'
             }`}
             aria-label={showPerformanceOverlay ? 'Hide performance overlay' : 'Show performance overlay'}
           >
@@ -157,7 +157,7 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
           )}
         </div>
         {/* Path finding toolbar */}
-        <div className="flex items-center gap-4 px-4 py-2 border-b border-border bg-surface-card">
+        <div className="flex items-center gap-4 px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
           <div className="flex-1 max-w-xs">
             <GraphSearchBar
               placeholder="Start node..."
@@ -173,13 +173,13 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
           <button
             onClick={handleFindPath}
             disabled={pathFinding || !startNodeId || !endNodeId}
-            className="px-4 py-2 bg-action-primary text-white rounded-md hover:bg-action-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-md hover:bg-[var(--color-accent)]-hover disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {pathFinding ? 'Finding...' : 'Find Path'}
           </button>
           <button
             onClick={handleClearPath}
-            className="px-4 py-2 bg-surface-card border border-border rounded-md hover:bg-surface-hover"
+            className="px-4 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-md hover:bg-surface-hover"
           >
             Clear
           </button>
@@ -199,7 +199,7 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
         </div>
         {/* Selected Node Details (if any) */}
         {selectedNodeId && (
-          <div className="border-t border-border bg-surface-card">
+          <div className="border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
             <NodeDetailPanel nodeId={selectedNodeId} />
           </div>
         )}

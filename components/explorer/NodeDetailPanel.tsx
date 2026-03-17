@@ -94,7 +94,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
           return (
             <span
               key={code}
-              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-surface-card border border-border"
+              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)]"
               title={`${canonical} ${weight ? `(${weight * 100}%)` : ''}`}
             >
               {code}
@@ -122,7 +122,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
           {edges.slice(0, 10).map((edge) => (
             <li
               key={edge.id}
-              className="flex items-center justify-between p-2 rounded-md bg-surface-card border border-border hover:bg-surface-hover transition-colors"
+              className="flex items-center justify-between p-2 rounded-md bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:bg-surface-hover transition-colors"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -191,7 +191,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
           <p className="text-muted-foreground mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-action-primary text-white rounded-md hover:bg-action-primary-hover transition-colors"
+            className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-md hover:bg-[var(--color-accent)]-hover transition-colors"
           >
             Retry
           </button>
@@ -212,7 +212,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
         <div>
           <h2 className="text-2xl font-bold text-foreground">{label}</h2>
           <div className="flex items-center gap-3 mt-2">
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-surface-card border border-border">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
               {nodeType}
             </span>
             <span className="text-sm text-muted-foreground">
@@ -236,7 +236,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
         {description && (
           <section>
             <h3 className="text-lg font-semibold text-foreground mb-2">Description</h3>
-            <p className="text-foreground bg-surface-card p-4 rounded-lg border border-border">
+            <p className="text-foreground bg-[var(--color-bg-secondary)] p-4 rounded-lg border border-[var(--color-border)]">
               {description}
             </p>
           </section>
@@ -246,7 +246,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
         {taxonomyCode && (
           <section>
             <h3 className="text-lg font-semibold text-foreground mb-2">Taxonomy</h3>
-            <div className="bg-surface-card p-4 rounded-lg border border-border">
+            <div className="bg-[var(--color-bg-secondary)] p-4 rounded-lg border border-[var(--color-border)]">
               <code className="font-mono text-sm bg-action-muted px-2 py-1 rounded">
                 {taxonomyCode}
               </code>
@@ -272,7 +272,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
         {metadata && Object.keys(metadata).length > 0 && (
           <section>
             <h3 className="text-lg font-semibold text-foreground mb-2">Metadata</h3>
-            <div className="bg-surface-card p-4 rounded-lg border border-border">
+            <div className="bg-[var(--color-bg-secondary)] p-4 rounded-lg border border-[var(--color-border)]">
               <pre className="text-xs text-foreground overflow-x-auto">
                 {JSON.stringify(metadata, null, 2)}
               </pre>
@@ -287,7 +287,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
         </div>
 
         {/* Footer note */}
-        <div className="pt-4 border-t border-border text-xs text-muted-foreground">
+        <div className="pt-4 border-t border-[var(--color-border)] text-xs text-muted-foreground">
           Node ID: <code className="bg-action-muted px-1 py-0.5 rounded">{nodeData.id}</code>
           <span className="mx-2">•</span>
           Last updated: {new Date().toLocaleDateString()}

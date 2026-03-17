@@ -526,7 +526,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
       <div
         ref={containerRef}
         style={{ width, height }}
-        className="bg-surface-card rounded-lg border border-[var(--color-border)]"
+        className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
       />
 
       {/* Zoom/pan controls */}

@@ -69,8 +69,8 @@ html, body {
   --color-surface-secondary: var(--color-bg-secondary);
   --color-surface-card: var(--color-bg-secondary);
   --color-surface-overlay: var(--color-overlay);
-  --color-text-action-primary: var(--color-text-primary);
-  --color-text-action-secondary: var(--color-text-secondary);
+  --color-text-[var(--color-accent)]: var(--color-text-primary);
+  --color-text-[var(--color-text-secondary)]: var(--color-text-secondary);
   --color-border-action: var(--color-border);
 }
 

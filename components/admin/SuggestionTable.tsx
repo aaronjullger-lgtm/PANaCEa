@@ -258,7 +258,7 @@ export function SuggestionTable({
   };
 
   const getSystemColor = (systemCode: SystemCode) => {
-    return SYSTEM_COLORS[systemCode] || 'bg-surface-card text-text-primary';
+    return SYSTEM_COLORS[systemCode] || 'bg-[var(--color-bg-secondary)] text-text-primary';
   };
 
   const getStatusConfig = (status: MappingSuggestion['status']) => {
@@ -284,7 +284,7 @@ export function SuggestionTable({
         <p className="text-text-secondary mb-4">{error}</p>
         <button
           onClick={fetchSuggestions}
-          className="px-4 py-2 bg-action-primary text-white rounded-lg hover:bg-action-primary-hover transition-colors"
+          className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]-hover transition-colors"
         >
           Retry
         </button>
@@ -296,7 +296,7 @@ export function SuggestionTable({
     <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       {/* Header with filters */}
       {showFilters && (
-        <div className="p-4 border-b border-[var(--color-border)] bg-surface-card">
+        <div className="p-4 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex-1 min-w-[200px]">
               <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -347,7 +347,7 @@ export function SuggestionTable({
             <div className="flex items-end">
               <button
                 onClick={fetchSuggestions}
-                className="px-4 py-2 bg-action-primary text-white rounded-lg hover:bg-action-primary-hover transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]-hover transition-colors flex items-center gap-2"
               >
                 <RefreshCw className="w-4 h-4" />
                 Refresh
@@ -360,7 +360,7 @@ export function SuggestionTable({
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-surface-card border-b border-[var(--color-border)]">
+          <thead className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
             <tr>
               {selectable && (
                 <th className="py-3 px-4 text-left">
@@ -433,7 +433,7 @@ export function SuggestionTable({
                 return (
                   <tr
                     key={suggestion.id}
-                    className="hover:bg-surface-card transition-colors"
+                    className="hover:bg-[var(--color-bg-secondary)] transition-colors"
                   >
                     {selectable && (
                       <td className="py-3 px-4">
@@ -475,7 +475,7 @@ export function SuggestionTable({
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-full bg-surface-card rounded-full h-2 overflow-hidden">
+                        <div className="w-full bg-[var(--color-bg-secondary)] rounded-full h-2 overflow-hidden">
                           <div
                             className="bg-data-provisional h-full"
                             style={{ width: `${suggestion.confidence * 100}%` }}
@@ -549,7 +549,7 @@ export function SuggestionTable({
             <button
               onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
               disabled={pagination.page === 1}
-              className="px-3 py-1 bg-surface-card border border-[var(--color-border)] rounded-lg disabled:opacity-50"
+              className="px-3 py-1 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg disabled:opacity-50"
             >
               Previous
             </button>
@@ -559,7 +559,7 @@ export function SuggestionTable({
             <button
               onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
               disabled={pagination.page === pagination.totalPages}
-              className="px-3 py-1 bg-surface-card border border-[var(--color-border)] rounded-lg disabled:opacity-50"
+              className="px-3 py-1 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg disabled:opacity-50"
             >
               Next
             </button>

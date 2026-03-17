@@ -78,7 +78,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
               ) : (
                 <button
                   onClick={onBackToHub}
-                  className="flex items-center gap-1 hover:text-action-primary transition-colors group"
+                  className="flex items-center gap-1 hover:text-[var(--color-accent)] transition-colors group"
                   aria-label="Back to hub"
                 >
                   <Home className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
@@ -91,7 +91,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
                   <span
                     className={
                       index === breadcrumb.length - 1
-                        ? 'text-action-primary font-medium'
+                        ? 'text-[var(--color-accent)] font-medium'
                         : ''
                     }
                   >
@@ -107,13 +107,13 @@ const DrillShell: React.FC<DrillShellProps> = ({
                 {onBack && (
                   <button
                     onClick={onBack}
-                    className="p-2 hover:bg-surface-secondary rounded-lg transition-colors group"
+                    className="p-2 hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors group"
                     aria-label="Go back"
                   >
-                    <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-action-primary group-hover:-translate-x-1 transition-all" />
+                    <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] group-hover:-translate-x-1 transition-all" />
                   </button>
                 )}
-                <h1 className="text-2xl sm:text-3xl font-bold text-action-primary">
+                <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-accent)]">
                   {title}
                 </h1>
               </div>

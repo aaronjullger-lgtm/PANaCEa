@@ -27,12 +27,12 @@ const PresetCard = ({ preset, onClick }: { preset: StudyPreset; onClick: () => v
   return (
     <button
       onClick={onClick}
-      className="w-full text-left p-4 rounded-lg border bg-surface-card hover:bg-action-muted dark:border-data-neutral transition-colors"
+      className="w-full text-left p-4 rounded-lg border bg-[var(--color-bg-secondary)] hover:bg-action-muted dark:border-data-neutral transition-colors"
     >
       <div className="flex items-center gap-4">
-        <Icon className="w-6 h-6 text-action-primary" />
+        <Icon className="w-6 h-6 text-[var(--color-accent)]" />
         <div>
-          <h4 className="font-bold text-action-primary">{preset.label}</h4>
+          <h4 className="font-bold text-[var(--color-accent)]">{preset.label}</h4>
           <p className="text-sm text-data-neutral dark:text-data-neutral">{preset.description}</p>
         </div>
       </div>
@@ -91,7 +91,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
         className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] p-8 w-full max-w-md max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="session-setup-title" className="text-2xl font-bold text-action-primary mb-2">
+        <h2 id="session-setup-title" className="text-2xl font-bold text-[var(--color-accent)] mb-2">
           New Study Session
         </h2>
 
@@ -112,7 +112,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
             <div className="mt-6 text-center">
               <button
                 onClick={() => setIsCustomizing(true)}
-                className="text-sm font-semibold text-action-primary hover:underline"
+                className="text-sm font-semibold text-[var(--color-accent)] hover:underline"
               >
                 Or create a custom session
               </button>
@@ -124,14 +124,14 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
 
             {/* System Selection */}
             <div className="mb-6">
-              <label className="flex items-center gap-2 text-sm font-semibold text-action-primary mb-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-accent)] mb-2">
                 <Stethoscope className="w-4 h-4" />
                 Focus on Organ System (Optional)
               </label>
               <select
                 value={selectedSystem}
                 onChange={(e) => setSelectedSystem(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border bg-surface-card text-action-primary dark:border-data-neutral focus:ring-2 focus:ring-action-primary focus:border-transparent transition-all"
+                className="w-full px-4 py-2 rounded-lg border bg-[var(--color-bg-secondary)] text-[var(--color-accent)] dark:border-data-neutral focus:ring-2 focus:ring-action-primary focus:border-transparent transition-all"
               >
                 <option value="">All Systems (NCCPA Blueprint Weights)</option>
                 {organSystems.map((system) => (
