@@ -245,7 +245,6 @@ typecheck-errors.txt
 .deployrc
 .env.production.local
 
-
 # Claude worktrees (local IDE state)
 .claude/worktrees/
 
@@ -264,3 +263,10 @@ mcp_config.json
 # Defunct deployment configs (superseded by wrangler.toml / Cloudflare Pages)
 ecosystem.config.js
 docker-compose.yml
+
+# Prevent AI-generated status files from accumulating in root
+/AUDIT_*.md
+/SPRINT_*.md
+/*_COMPLETE*.md
+/*_SUMMARY*.md
+/*_STATUS*.md

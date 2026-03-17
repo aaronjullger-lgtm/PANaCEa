@@ -1,12 +1,34 @@
 # PANaCEa Deployment Guide
 
 ## Multi-Modal Simulation Platform Deployment
-**Branch:** `cursor/patient-encounter-state-machine-7530`  
-**Status:** ✅ Ready for Staging Deployment
+**Status:** ✅ Ready for Deployment
 
 ---
 
-## 🎯 Deployment Checklist
+## Quick Deploy
+
+```bash
+# 1. Backup database
+pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# 2. Run migration
+npx prisma migrate deploy
+
+# 3. Build project
+npm run build
+
+# 4. Deploy to Cloudflare
+npx wrangler pages publish dist --project-name panacea
+
+# 5. Verify
+curl https://panacea.app/api/health
+```
+
+Or use the deployment script: `./deployment/DEPLOY_NOW.sh`
+
+---
+
+## Deployment Checklist
 
 ### **Pre-Deployment**
 
@@ -316,22 +338,6 @@ export const FEATURE_FLAGS = {
 
 ## 🎊 Deployment Status
 
-**Current Branch:** `cursor/patient-encounter-state-machine-7530`  
-**Commits:** 27  
-**Status:** ✅ Ready for staging deployment
-
-**What's Ready:**
-- ✅ Code committed and pushed
-- ✅ Database schema prepared
-- ✅ API endpoints functional
-- ✅ Components tested locally
-- ⏳ Database migration pending (run on deployment)
-- ⏳ API keys needed for full features
-
-**Next:** Apply database migration and deploy to staging
-
----
-
-**Prepared by:** A/V Systems Architect  
-**Date:** February 5, 2026  
-**Status:** ✅ **Ready for Deployment**
+**Status:** ✅ Ready for deployment
+**Deployment script:** `deployment/DEPLOY_NOW.sh`
+**Grading utility:** `scripts/check-grade.js`

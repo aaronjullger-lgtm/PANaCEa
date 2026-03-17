@@ -14,7 +14,7 @@ Adaptive learning meets medical education excellence for Physician Assistant stu
 
 </div>
 
-> **🚨 DEPLOYMENT FIX REQUIRED:** Cloudflare deployments failing due to API token permissions. **Solution:** Update `CLOUDFLARE_API_TOKEN` secret with "Account → Cloudflare Pages: Edit" permission. See [CLOUDFLARE_API_TOKEN_FIX.md](./CLOUDFLARE_API_TOKEN_FIX.md) for step-by-step instructions. Local development is unaffected.
+> **🚨 DEPLOYMENT FIX REQUIRED:** Cloudflare deployments failing due to API token permissions. **Solution:** Update `CLOUDFLARE_API_TOKEN` secret with "Account → Cloudflare Pages: Edit" permission. See [docs/archive/CLOUDFLARE_API_TOKEN_FIX.md](./docs/archive/CLOUDFLARE_API_TOKEN_FIX.md) for step-by-step instructions. Local development is unaffected.
 
 ---
 
@@ -22,7 +22,7 @@ Adaptive learning meets medical education excellence for Physician Assistant stu
 
 PANaCEa is a comprehensive medical education platform designed specifically for PA students preparing for their PANCE/PANRE board exams. It combines cutting-edge AI with proven spaced repetition algorithms (FSRS v5) to create a personalized learning experience.
 
-**📚 For comprehensive documentation, architecture details, and developer guides, see [MASTER_DOCUMENTATION.md](./MASTER_DOCUMENTATION.md)**  
+**📚 For comprehensive documentation, architecture details, and developer guides, see [docs/archive/MASTER_DOCUMENTATION.md](./docs/archive/MASTER_DOCUMENTATION.md)**
 **🤖 For the Intelligence Layer (Gemini Live, Clinical Eye, Knowledge Cache, Visualizer, Podcast), see [docs/INTELLIGENCE_LAYER.md](./docs/INTELLIGENCE_LAYER.md).**
 
 ### ✨ Key Features
@@ -153,12 +153,12 @@ For production deployment to Cloudflare Pages:
 
 1. Set production `DATABASE_URL` in Cloudflare environment variables
 2. Run database migrations: `npm run migrate:production`
-3. Follow the detailed guide: [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md)
+3. Follow the detailed guide: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
 
 📖 **Deployment Resources:**
 
-- [Production Deployment Checklist](PRODUCTION_DEPLOYMENT_CHECKLIST.md)
-- [Database Migration Guide](DATABASE_MIGRATION.md)
+- [Deployment Guide](DEPLOYMENT_GUIDE.md)
+- [Environment Setup Guide](ENV_SETUP_GUIDE.md)
 
 ---
 
@@ -229,11 +229,11 @@ PANaCEa/
 
 ## 📚 Documentation
 
-- [Developer Guide](DEVELOPER_GUIDE.md) - Architecture deep dive
-- [Database Implementation](DATABASE_IMPLEMENTATION.md) - Schema and no-repeat logic
-- [Deployment Guide](CLOUDFLARE_DEPLOYMENT.md) - Production deployment
-- [Authentication Setup](AUTHENTICATION_SETUP.md) - Clerk configuration
+- [Deployment Guide](DEPLOYMENT_GUIDE.md) - Production deployment
+- [Environment Setup](ENV_SETUP_GUIDE.md) - Environment variables and configuration
+- [API Overview](docs/api/API_OVERVIEW.md) - Endpoint contracts
 - [Copilot Instructions](.github/copilot-instructions.md) - AI coding assistant guide
+- [Archived Documentation](docs/archive/INDEX.md) - Historical audit reports and status docs
 
 ---
 
@@ -316,7 +316,7 @@ PANaCEa features an advanced **Hybrid Content Engine** that solves the latency, 
 - **Quality Control**: All questions validated before reaching users
 - **Asset Building**: Growing library of 50,000+ vetted medical education questions
 
-📖 **[Read the Full Documentation →](HYBRID_CONTENT_ENGINE.md)**
+📖 **Read the Full Documentation** in the docs/ directory.
 
 ### Quick Start with Hybrid Content Engine:
 

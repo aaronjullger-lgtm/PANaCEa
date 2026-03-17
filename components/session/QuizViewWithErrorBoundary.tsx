@@ -77,14 +77,11 @@ export const QuizViewWithErrorBoundary: React.FC<QuizViewProps> = (props) => {
   return (
     <ErrorBoundary
       variant="page"
+      fallback={({ error, resetError }) => (
+        <QuizViewErrorFallback error={error} resetErrorBoundary={resetError} />
+      )}
       onError={(error) => {
-        // Log session errors for analytics
         console.error('[QuizViewErrorBoundary] Session error:', error);
-
-        // You could add error reporting here:
-        // if (typeof window !== 'undefined' && (window as any).Sentry) {
-        //   (window as any).Sentry.captureException(error);
-        // }
       }}
     >
       <QuizView {...props} />
