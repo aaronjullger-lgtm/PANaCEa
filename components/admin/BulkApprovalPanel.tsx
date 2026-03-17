@@ -130,13 +130,13 @@ export function BulkApprovalPanel({
   const isLoading = externalLoading || loading;
 
   return (
-    <div className="bg-surface-card rounded-xl border border-[var(--color-border)] p-4 mb-6">
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4 mb-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Selection summary */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-action-primary/10 flex items-center justify-center">
-              <CheckSquare className="w-5 h-5 text-action-primary" />
+            <div className="w-8 h-8 rounded-lg bg-[var(--color-accent)]/10 flex items-center justify-center">
+              <CheckSquare className="w-5 h-5 text-[var(--color-accent)]" />
             </div>
             <div>
               <h3 className="font-semibold text-text-primary">Bulk Actions</h3>
@@ -145,7 +145,7 @@ export function BulkApprovalPanel({
                 {enableSelectAllFiltered && filteredCount && filteredCount > selectedIds.length && (
                   <span className="ml-2">
                     (<button
-                      className="text-action-primary hover:underline"
+                      className="text-[var(--color-accent)] hover:underline"
                       onClick={handleSelectAllFiltered}
                       disabled={isLoading}
                     >

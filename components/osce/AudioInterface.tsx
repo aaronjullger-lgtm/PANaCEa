@@ -193,7 +193,7 @@ export function AudioInterface({
             <button
               type="button"
               onClick={() => setMicMuted((m) => !m)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg ${micMuted ? 'bg-rose-500/20 text-rose-500' : 'bg-emerald-500/20 text-emerald-500'}`}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg ${micMuted ? 'bg-data-fail/20 text-data-fail' : 'bg-data-pass/20 text-data-pass'}`}
               aria-label={micMuted ? 'Unmute' : 'Mute'}
             >
               {micMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
@@ -226,7 +226,7 @@ export function AudioInterface({
 
       {status === 'error' && (
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-rose-500">
+          <div className="flex items-center gap-2 text-data-fail">
             <AlertCircle className="w-5 h-5" />
             {errorMessage}
           </div>

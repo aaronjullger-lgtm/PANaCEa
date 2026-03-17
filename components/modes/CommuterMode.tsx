@@ -84,7 +84,7 @@ const CommuterMode: React.FC<CommuterModeProps> = ({ onExit }) => {
         <div className="p-8 text-center">
           {error && <p className="text-error">{error}</p>}
           <button
-            className="mt-4 rounded-lg bg-action-primary px-4 py-2 text-white"
+            className="mt-4 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-white"
             onClick={() => {
               setError(null);
               setIsLoading(true);

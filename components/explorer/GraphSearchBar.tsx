@@ -140,7 +140,7 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
           placeholder={placeholder}
-          className="w-full pl-10 pr-10 py-2 border border-border rounded-lg bg-surface-card text-text-primary placeholder-text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-action-primary focus:border-transparent"
+          className="w-full pl-10 pr-10 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-text-primary placeholder-text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-action-primary focus:border-transparent"
           aria-label="Search graph nodes"
         />
         {loading && (
@@ -150,13 +150,13 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
 
       {/* Dropdown with suggestions */}
       {showDropdown && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-surface-card border border-border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
           {suggestions.map((suggestion, index) => (
             <button
               key={suggestion.id}
               className={`w-full text-left px-4 py-3 hover:bg-surface-hover transition-colors ${
                 index === selectedIndex ? 'bg-surface-hover' : ''
-              } ${index > 0 ? 'border-t border-border' : ''}`}
+              } ${index > 0 ? 'border-t border-[var(--color-border)]' : ''}`}
               onClick={() => handleSuggestionClick(suggestion)}
               onMouseEnter={() => setSelectedIndex(index)}
             >
@@ -176,7 +176,7 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
 
       {/* No results */}
       {showDropdown && query.trim() && !loading && suggestions.length === 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-surface-card border border-border rounded-lg shadow-lg z-50 px-4 py-3 text-text-secondary">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 px-4 py-3 text-text-secondary">
           No matching nodes found.
         </div>
       )}

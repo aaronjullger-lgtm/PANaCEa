@@ -32,13 +32,31 @@ export const onRequestGet = authenticatedEndpoint(Schema, async (context) => {
 
     const sessions = await prisma.patientEncounterSession.findMany({
       where: { userId: user.id, status: 'completed' },
-      include: { OsceResult: true },
+      select: {
+        id: true,
+        startTime: true,
+        OsceResult: {
+          select: { score: true, clinicalReasoningScore: true }
+        }
+      },
       orderBy: { startTime: 'asc' },
     });
 
-    const withScores = sessions.filter((s) => Boolean(s.OsceResult));
+    const withScores = sessions.filter((s) => {
+      if (!s.OsceResult) {
+        log.debug('Session missing OsceResult', { sessionId: s.id });
+        return false;
+      }
+      return true;
+    });
     const total = withScores.length;
-    const passed = withScores.filter((s) => (s.OsceResult?.score ?? 0) >= PASS_THRESHOLD).length;
+    const passed = withScores.filter((s) => {
+      const score = s.OsceResult?.score ?? 0;
+      if (score === 0 && !s.OsceResult?.score) {
+        log.debug('Session has null score', { sessionId: s.id });
+      }
+      return score >= PASS_THRESHOLD;
+    }).length;
     const avgScore =
       total > 0 ? withScores.reduce((sum, s) => sum + (s.OsceResult?.score ?? 0), 0) / total : null;
     const avgClinicalReasoning =

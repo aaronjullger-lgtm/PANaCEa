@@ -16,13 +16,13 @@ export const ContextNavRail = () => {
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="fixed top-0 right-0 h-full bg-[var(--color-bg-primary)] border-l border-border w-72 z-40"
+      className="fixed top-0 right-0 h-full bg-[var(--color-bg-primary)] border-l border-[var(--color-border)] w-72 z-40"
       style={{ top: 'var(--header-height)', height: 'calc(100vh - var(--header-height))' }}
     >
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-[var(--color-border)]">
         <div className="flex justify-between items-center">
           <h3 className="font-bold">{currentContext.name}</h3>
-          <button onClick={clearContext} className="p-1 rounded-full hover:bg-surface-secondary">
+          <button onClick={clearContext} className="p-1 rounded-full hover:bg-[var(--color-bg-secondary)]">
             <X size={16} />
           </button>
         </div>
@@ -33,7 +33,7 @@ export const ContextNavRail = () => {
         <ul>
           {relatedModules.map((module) => (
             <li key={module.id} className="mb-2">
-              <a href={module.href} className="flex items-center p-2 rounded-md hover:bg-surface-secondary">
+              <a href={module.href} className="flex items-center p-2 rounded-md hover:bg-[var(--color-bg-secondary)]">
                 {module.type === 'drug' && <Pill size={16} className="mr-2" />}
                 {module.type === 'lab' && <Beaker size={16} className="mr-2" />}
                 {module.type === 'condition' && <BookOpen size={16} className="mr-2" />}

@@ -43,14 +43,14 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
   onAction,
 }) => {
   return (
-    <div className="bg-surface-card border border-[var(--color-border)] rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-action-muted rounded-lg text-action-primary">
+          <div className="p-2 bg-action-muted rounded-lg text-[var(--color-accent)]">
             {icon}
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-action-primary">{title}</h3>
+            <h3 className="text-lg font-semibold text-[var(--color-accent)]">{title}</h3>
             <p className="text-sm text-text-[var(--color-text-muted)]">{subtitle}</p>
           </div>
         </div>
@@ -68,7 +68,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
           {streak !== undefined && (
             <div className="flex items-center space-x-2">
               <Calendar className="w-4 h-4 text-text-tertiary" />
-              <span className="text-sm font-medium text-action-primary">{streak} day streak</span>
+              <span className="text-sm font-medium text-[var(--color-accent)]">{streak} day streak</span>
             </div>
           )}
           {resetTime && (
@@ -87,7 +87,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
 
       <button
         onClick={onAction}
-        className="w-full py-2.5 px-4 bg-action-primary text-surface-primary font-medium rounded-lg hover:bg-action-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full py-2.5 px-4 bg-[var(--color-accent)] text-surface-primary font-medium rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={loading}
       >
         {buttonText}
@@ -177,7 +177,7 @@ export function DailyChallengesHub() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-10">
         <BackLink to={ROUTES.STUDY} className="mb-4" />
-        <h1 className="text-3xl font-bold text-action-primary mb-2">Daily Challenges</h1>
+        <h1 className="text-3xl font-bold text-[var(--color-accent)] mb-2">Daily Challenges</h1>
         <p className="text-text-secondary">
           Engage with daily challenges to test your knowledge, compete with peers, and maintain your streak.
         </p>
@@ -227,7 +227,7 @@ export function DailyChallengesHub() {
 
       {/* Optional aggregated streak */}
       <div className="mt-12 p-6 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl">
-        <h2 className="text-xl font-semibold text-action-primary mb-2">Daily Completion Streak</h2>
+        <h2 className="text-xl font-semibold text-[var(--color-accent)] mb-2">Daily Completion Streak</h2>
         <p className="text-text-secondary mb-4">
           Complete all three challenges each day to maximize your streak. Coming soon.
         </p>

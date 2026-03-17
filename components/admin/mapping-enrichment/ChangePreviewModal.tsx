@@ -112,8 +112,8 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
   const renderComplianceTable = (summary: any, title: string) => {
     const systems = summary?.systems || [];
     return (
-      <div className="bg-surface-card rounded-lg border border-[var(--color-border)] p-4">
-        <h4 className="font-semibold text-action-primary mb-3 flex items-center gap-2">
+      <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-4">
+        <h4 className="font-semibold text-[var(--color-accent)] mb-3 flex items-center gap-2">
           <BarChart3 className="w-4 h-4" />
           {title}
         </h4>
@@ -180,7 +180,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
             <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] rounded-t-2xl">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-action-muted rounded-lg">
-                  <BarChart3 className="w-6 h-6 text-action-primary" />
+                  <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-text-primary">Mapping Change Preview</h2>
@@ -202,7 +202,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
             <div className="p-6 space-y-6">
               {loading && (
                 <div className="flex items-center justify-center py-12" role="status" aria-label="Loading preview">
-                  <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
+                  <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
                   <span className="ml-3 text-text-secondary">Computing preview…</span>
                 </div>
               )}
@@ -216,7 +216,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                   <p className="mt-2 text-sm text-text-secondary">{error}</p>
                   <button
                     onClick={fetchPreview}
-                    className="mt-3 px-4 py-2 bg-action-primary text-white rounded-lg hover:bg-action-primary/90 transition-colors"
+                    className="mt-3 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors"
                   >
                     Retry
                   </button>
@@ -227,7 +227,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                 <>
                   {/* Summary Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-surface-card rounded-xl border border-[var(--color-border)] p-5">
+                    <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
                       <h3 className="font-semibold text-lg text-text-primary mb-2">Before</h3>
                       <p className="text-text-secondary mb-4">Current taxonomy mapping distribution</p>
                       <div className="space-y-2">
@@ -245,7 +245,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                         </div>
                       </div>
                     </div>
-                    <div className="bg-surface-card rounded-xl border border-[var(--color-border)] p-5 border-l-4 border-l-data-positive">
+                    <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 border-l-4 border-l-data-positive">
                       <h3 className="font-semibold text-lg text-text-primary mb-2">After</h3>
                       <p className="text-text-secondary mb-4">Projected distribution after applying changes</p>
                       <div className="space-y-2">
@@ -273,8 +273,8 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
 
                   {/* Recommendations */}
                   {previewResult.after.recommendations && previewResult.after.recommendations.length > 0 && (
-                    <div className="bg-surface-card rounded-lg border border-[var(--color-border)] p-5">
-                      <h4 className="font-semibold text-action-primary mb-3">Recommendations</h4>
+                    <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-5">
+                      <h4 className="font-semibold text-[var(--color-accent)] mb-3">Recommendations</h4>
                       <ul className="space-y-2">
                         {previewResult.after.recommendations.map((rec, idx) => (
                           <li key={idx} className="flex items-start gap-2 text-sm text-text-secondary">
@@ -287,8 +287,8 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                   )}
 
                   {/* Changes List */}
-                  <div className="bg-surface-card rounded-lg border border-[var(--color-border)] p-5">
-                    <h4 className="font-semibold text-action-primary mb-3">Proposed Changes</h4>
+                  <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-5">
+                    <h4 className="font-semibold text-[var(--color-accent)] mb-3">Proposed Changes</h4>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
@@ -350,7 +350,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                 <button
                   onClick={handleApprovePreview}
                   disabled={!previewResult || loading}
-                  className="px-5 py-2 bg-action-primary text-white rounded-lg hover:bg-action-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-5 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Proceed to Approval
                 </button>

@@ -1024,9 +1024,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       case 'unnecessary':
         return 'text-muted-amber-700 bg-muted-amber-50 border-muted-amber-200 dark:text-muted-amber-300 dark:bg-muted-amber-950/30 dark:border-muted-amber-900';
       case 'redundant':
-        return 'text-muted-foreground bg-muted border-border';
+        return 'text-muted-foreground bg-muted border-[var(--color-border)]';
       default:
-        return 'text-muted-foreground bg-muted border-border';
+        return 'text-muted-foreground bg-muted border-[var(--color-border)]';
     }
   };
 
@@ -3013,7 +3013,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </div>
 
             {diagnosisFeedback?.feedback && (
-              <div className="mb-4 p-4 bg-card/50 rounded-lg border border-border/50">
+              <div className="mb-4 p-4 bg-card/50 rounded-lg border border-[var(--color-border)]/50">
                 <p className="text-sm font-semibold mb-1 opacity-75">AI Feedback:</p>
                 <p className="text-muted-foreground italic">"{diagnosisFeedback.feedback}"</p>
               </div>
@@ -3044,7 +3044,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-card rounded-xl p-6 border border-border text-center shadow-sm"
+              className="bg-card rounded-xl p-6 border border-[var(--color-border)] text-center shadow-sm"
             >
               <CheckCircle className="w-8 h-8 text-data-pass mx-auto mb-2" />
               <p className="text-sm text-muted-foreground mb-1">Thoroughness</p>
@@ -3057,7 +3057,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-card rounded-xl p-6 border border-border text-center shadow-sm"
+              className="bg-card rounded-xl p-6 border border-[var(--color-border)] text-center shadow-sm"
             >
               <Clock className="w-8 h-8 text-[var(--color-accent)] mx-auto mb-2" />
               <p className="text-sm text-muted-foreground mb-1">Efficiency</p>

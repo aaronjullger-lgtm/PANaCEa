@@ -32,7 +32,7 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
   const getSeverityColor = (severity: 'critical' | 'important' | 'minor') => {
     switch (severity) {
       case 'critical':
-        return 'text-rose-500';
+        return 'text-data-fail';
       case 'important':
         return 'text-data-provisional';
       case 'minor':
@@ -45,11 +45,11 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
       case 'present':
         return <CheckCircle className="w-4 h-4 text-data-pass" />;
       case 'missing':
-        return <XCircle className="w-4 h-4 text-rose-500" />;
+        return <XCircle className="w-4 h-4 text-data-fail" />;
       case 'incomplete':
         return <AlertCircle className="w-4 h-4 text-data-provisional" />;
       case 'incorrect':
-        return <XCircle className="w-4 h-4 text-rose-500" />;
+        return <XCircle className="w-4 h-4 text-data-fail" />;
     }
   };
 
@@ -154,7 +154,7 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
                       <span
                         className={`text-xs px-2 py-0.5 rounded-full ${
                           element.severity === 'critical'
-                            ? 'bg-rose-500/20 text-rose-500'
+                            ? 'bg-data-fail/20 text-data-fail'
                             : element.severity === 'important'
                               ? 'bg-data-provisional/20 text-data-provisional'
                               : 'bg-data-neutral/20 text-data-neutral'
@@ -241,7 +241,7 @@ export function SOAPComparisonView({ comparison, className = '' }: SOAPCompariso
 }
 
 // Helper function to format SOAP note
-function formatSOAPNote(note: any): React.JSX.Element {
+function formatSOAPNote(note: Record<string, unknown>): React.JSX.Element {
   return (
     <div className="space-y-4 text-sm">
       {/* Subjective */}

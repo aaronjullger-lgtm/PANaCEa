@@ -76,8 +76,12 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const [accessError, setAccessError] = useState<string | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
-  const fetchStats = useCallback(async (token: string | null) => {
+  // Exponential backoff: 1s, 2s, 4s, 8s, etc. (capped at 30s)
+  const getBackoffDelay = (count: number) => Math.min(1000 * Math.pow(2, count), 30000);
+
+  const fetchStats = useCallback(async (token: string | null, retries = 0) => {
     if (!token) return;
     setStatsError(null);
     setStatsLoading(true);
@@ -85,6 +89,16 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       const statsResponse = await fetch('/api/admin/stats', {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Handle rate limiting with exponential backoff
+      if (statsResponse.status === 429 && retries < 3) {
+        const backoffDelay = getBackoffDelay(retries);
+        setStatsError(`Rate limited. Retrying in ${Math.round(backoffDelay / 1000)}s...`);
+        await new Promise((resolve) => setTimeout(resolve, backoffDelay));
+        setRetryCount(retries + 1);
+        return fetchStats(token, retries + 1);
+      }
+
       const res = (await statsResponse.json()) as {
         data?: {
           totalUsers?: number;
@@ -93,7 +107,17 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
           averageAccuracy?: number;
           pendingFlags?: number;
         };
+        error?: string;
       };
+
+      // Check for API error response
+      if (!statsResponse.ok) {
+        const errorMsg = res?.error || `Server error: ${statsResponse.status}`;
+        setStatsError(errorMsg);
+        setStatsLoading(false);
+        return;
+      }
+
       // API returns { success, data: { totalUsers, activeUsersToday, ... } }
       const statsData = res?.data ?? {};
       setStats({
@@ -103,6 +127,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         avgAccuracy: statsData.averageAccuracy ?? 0,
         pendingFlags: statsData.pendingFlags ?? 0,
       });
+      setRetryCount(0);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load stats';
       setStatsError(message);
@@ -119,7 +144,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   fetchStatsRef.current = fetchStats;
 
   useEffect(() => {
-    const checkAccess = async () => {
+    const checkAccess = async (retries = 0) => {
       setAccessError(null);
       if (!isSignedIn || !userId) {
         setHasAccess(false);
@@ -133,6 +158,14 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         const accessResponse = await fetch('/api/admin/check-access', {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        // Handle rate limiting with exponential backoff
+        if (accessResponse.status === 429 && retries < 3) {
+          const backoffDelay = getBackoffDelay(retries);
+          setAccessError(`Rate limited. Retrying in ${Math.round(backoffDelay / 1000)}s...`);
+          await new Promise((resolve) => setTimeout(resolve, backoffDelay));
+          return checkAccess(retries + 1);
+        }
 
         if (accessResponse.ok) {
           const accessJson = (await accessResponse.json()) as {
@@ -353,7 +386,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      getToken().then(fetchStats);
+                      setRetryCount(0);
+                      getToken().then((token) => fetchStats(token, 0));
                     }}
                     disabled={statsLoading}
                     aria-label="Retry loading stats"

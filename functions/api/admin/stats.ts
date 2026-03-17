@@ -147,7 +147,10 @@ export const onRequestGet = adminAuthenticatedEndpoint(AdminStatsSchema, async (
       error: error instanceof Error ? error.message : String(error),
       userId: auth.userId,
     });
-    throw new Error('Failed to fetch admin stats');
+    return {
+      data: { error: 'Failed to fetch admin stats' },
+      status: 500,
+    };
   } finally {
     await safePrismaDisconnect(prisma);
   }

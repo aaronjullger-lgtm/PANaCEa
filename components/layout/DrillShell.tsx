@@ -114,7 +114,7 @@ export const DrillShell: React.FC<DrillShellProps> = ({
 
   return (
     <div
-      className={`${containerClasses} ${bgColor} text-action-primary transition-colors duration-300`}
+      className={`${containerClasses} ${bgColor} text-[var(--color-accent)] transition-colors duration-300`}
     >
       {/* Premium Glass Header - Matches App.tsx styling */}
       <header
@@ -129,12 +129,12 @@ export const DrillShell: React.FC<DrillShellProps> = ({
             <BackLink
               to={backTo}
               label={backTo === ROUTES.STUDY ? 'Back to Dashboard' : 'Back to Practice'}
-              className="text-[var(--color-text-muted)] hover:text-action-primary"
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
             />
           ) : (
             <motion.button
               onClick={onExit}
-              className="flex items-center gap-1.5 sm:gap-2 text-[var(--color-text-muted)] hover:text-action-primary transition-colors p-2 rounded-lg hover:bg-surface-secondary min-h-[44px] group"
+              className="flex items-center gap-1.5 sm:gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] min-h-[44px] group"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               aria-label="Back to Dashboard"
@@ -146,7 +146,7 @@ export const DrillShell: React.FC<DrillShellProps> = ({
 
           {/* Center: Title & Subtitle */}
           <div className="flex-1 flex flex-col items-start sm:items-center min-w-0">
-            <h1 className="text-base sm:text-lg font-bold text-action-primary truncate">
+            <h1 className="text-base sm:text-lg font-bold text-[var(--color-accent)] truncate">
               {title}
             </h1>
             {subtitle && (
