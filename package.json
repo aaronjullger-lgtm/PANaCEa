@@ -192,7 +192,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "express-rate-limit": "^8.2.2",
+    "express-rate-limit": "^8.3.1",
     "fflate": "^0.8.2",
     "framer-motion": "^12.23.24",
     "fsrs-browser": "^5.2.0",
