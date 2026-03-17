@@ -349,30 +349,164 @@ model UserProgress {
 
 Keep `MedicalTaxonomy`, `SystemMapping`, `MappingSuggestion` unchanged – they already follow a normalized design.
 
+### 5.7 Content Authoring (Phase 3C Models)
+
+#### Table `ContentAuthor` (Phase 3C)
+```prisma
+model ContentAuthor {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  role            ContentAuthorRole @default(CONTRIBUTOR)
+
+  // Impact tracking
+  questionsCreated      Int @default(0)
+  questionsApproved     Int @default(0)
+  questionsDemoted      Int @default(0)
+  avgContentHealthScore Float?
+
+  // Author profile
+  specialty       String?
+  institution     String?
+  bio             String?
+
+  // Quality metrics
+  approvalRate    Float?
+  healthScoreTrend Float?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  Submissions     QuestionSubmission[]
+  Reviews         ContentReviewer[]
+}
+
+enum ContentAuthorRole {
+  CONTRIBUTOR
+  REVIEWER
+  EDITOR
+  ADMIN
+}
+```
+
+#### Table `QuestionSubmission` (Phase 3C)
+```prisma
+model QuestionSubmission {
+  id                String    @id @default(cuid())
+  contentAuthorId   String
+  ContentAuthor     ContentAuthor @relation(fields: [contentAuthorId], references: [id], onDelete: Cascade)
+
+  questionId        String?   // null until approved
+
+  // Submission data
+  vignette          String?
+  question          String
+  options           Json      // string[] – validated as 4-5 items
+  correctAnswer     Int       // 0-based index
+  explanation       String
+  system            String    // NCCPA system
+  conditionId       String?
+  Condition         Condition? @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+
+  // Validation results
+  status            SubmissionStatus @default(submitted)
+  passedDuplicateCheck Boolean
+  matchesBlueprintGap Boolean
+  estimatedDifficulty Float?
+  estimatedHealthScore Float?
+
+  // Review tracking
+  reviewComments    String?
+  reviewedAt        DateTime?
+  reviewedBy        String?   // ContentAuthor.id who reviewed
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([contentAuthorId])
+  @@index([conditionId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum SubmissionStatus {
+  submitted       // Initial submission
+  validated       // Passed duplicate/quality checks
+  reviewed        // Reviewer has examined
+  approved        // Ready for publication
+  rejected        // Did not meet quality standards
+  published       // Published as Question
+}
+```
+
+#### Table `ContentReviewer` (Phase 3C)
+```prisma
+model ContentReviewer {
+  id              String   @id @default(cuid())
+  contentAuthorId String
+  ContentAuthor   ContentAuthor @relation(fields: [contentAuthorId], references: [id], onDelete: Cascade)
+
+  // Review metrics
+  submissionsReviewed Int @default(0)
+  approvalRate    Float?
+  avgReviewTime   Int?      // milliseconds
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([contentAuthorId])
+  @@index([contentAuthorId])
+}
+```
+
 ---
 
 ## 6. Migration Strategy
 
 ### Phase 1: Additive Changes (Zero Downtime)
-1. Create new tables (`MedicalContentStructured`, `DrugSideEffect`, `AnatomyModel`, `Alias`) with no foreign‑key constraints.
+1. Create new tables:
+   - `MedicalContentStructured`, `DrugSideEffect`, `AnatomyModel`, `Alias`
+   - `ContentAuthor`, `QuestionSubmission`, `ContentReviewer` (Phase 3C models)
+   - All created with no foreign‑key constraints initially
 2. Add new nullable columns to existing tables (`sideEffectsJsonb`, `interactionsJsonb`, `anatomyModelId`, etc.).
-3. Deploy application code that writes to both old and new fields (dual‑write).
+3. Extend `Condition` with v2 fields (`canonicalName`, `panceYield`, `isHighYield`, parent hierarchy).
+4. Deploy application code that writes to both old and new fields (dual‑write).
 
 ### Phase 2: Data Migration
-1. Backfill `Alias` from existing `aliases` arrays.
-2. Run Gemini parsing job to populate `MedicalContentStructured`.
-3. Convert `Drug.sideEffects` strings to `DrugSideEffect` records (using heuristic rules for severity/system).
-4. Populate `AnatomyModel` from existing 3D‑model metadata (if any).
+1. **Medical Content Backfill:**
+   - Backfill `Alias` from existing `aliases` arrays.
+   - Run Gemini parsing job to populate `MedicalContentStructured`.
+   - Convert `Drug.sideEffects` strings to `DrugSideEffect` records.
+   - Populate `AnatomyModel` from existing 3D‑model metadata.
+
+2. **Phase 3C Backfill (Critical for Cohort Integration):**
+   - Migrate existing author data to `ContentAuthor` (if any legacy author tables exist).
+   - Backfill `QuestionSubmission` status from legacy `Question.qaStatus` and `Question.lifecycleStatus`.
+   - Populate `questionsCreated`, `questionsApproved` counters by counting existing `Question` records per author.
+   - Initialize `ContentReviewer` for users with reviewer role.
 
 ### Phase 3: Switch Reads & Drop Legacy
 1. Update frontend to read from new structured fields.
-2. Once verification passes, drop legacy columns (`sideEffects`, `interactions`, `aliases` arrays) **or** keep them as derived views for backward compatibility.
-3. Add foreign‑key constraints (e.g., `MedicalContent.conditionId → Condition.id`).
+2. Update backend endpoints to read from v2 tables (dual‑read for safety).
+3. Once verification passes, drop legacy columns or keep as derived views for backward compatibility.
+4. **Add foreign‑key constraints:**
+   - `MedicalContent.conditionId → Condition.id` (@unique)
+   - `QuestionSubmission.contentAuthorId → ContentAuthor.id`
+   - `QuestionSubmission.conditionId → Condition.id` (optional with SetNull)
+   - `ContentReviewer.contentAuthorId → ContentAuthor.id` (@unique)
 
-### Phase 4: Validation & Cleanup
-1. Run data‑quality scripts to ensure no missing required fields.
-2. Update Prisma schema and regenerate client.
-3. Update all API endpoints to use the new schema.
+### Phase 4: Validation & Cleanup (Phase 3C Specific)
+1. **Data Quality for Phase 3C:**
+   - Verify all `QuestionSubmission.contentAuthorId` FKs are resolvable.
+   - Validate `SubmissionStatus` enum alignment with legacy lifecycle states.
+   - Check that counter increments in `questionsCreated` are accurate.
+   - Verify no orphaned submissions exist.
+
+2. **General Cleanup:**
+   - Run data‑quality scripts to ensure no missing required fields.
+   - Update Prisma schema and regenerate client.
+   - Update all API endpoints to use the new schema.
+   - Add indexes on high-query columns (`status`, `contentAuthorId`, `createdAt`).
 
 ---
 
@@ -395,17 +529,79 @@ Update `types/medical‑content.ts`, `types/drugs.ts`, `types/anatomy‑model.ts
 
 ## 8. Implementation Roadmap
 
-| Step | Tasks | Estimated Effort |
-|------|-------|------------------|
-| **1. Schema Design** | Finalize this proposal, review with team. | 1 day |
-| **2. Prisma Migration** | Generate migration files for additive changes. | 2 days |
-| **3. Backfill Scripts** | Write and test data‑migration scripts. | 3 days |
-| **4. Dual‑Write API** | Modify backend to write to both old/new fields. | 2 days |
-| **5. Frontend Adoption** | Update components to read from new fields. | 3 days |
-| **6. Cut‑over** | Switch reads, drop legacy columns, add constraints. | 1 day |
-| **7. Validation** | Run full test suite, data‑quality checks. | 2 days |
+| Step | Tasks | Estimated Effort | Phase 3C Additions |
+|------|-------|------------------|--------------------|
+| **1. Schema Design** | Finalize proposal with Phase 3C models. | 1 day | Include ContentAuthor, QuestionSubmission, ContentReviewer |
+| **2. Prisma Migration** | Generate migration files (medical + authoring). | 2 days | Add Phase 3C table creation; extend Condition |
+| **3. Backfill Scripts** | Write medical & authoring data migration. | 3 days | Backfill author profiles, questionsCreated counters, submission status |
+| **4. Dual‑Write API** | Modify backend to write to both old/new fields. | 2 days | Update submit-question, dashboard, review endpoints |
+| **5. Frontend Adoption** | Update components to read from new fields. | 3 days | Wire Phase 3C dashboard, submission UI to v2 tables |
+| **6. Cut‑over** | Switch reads, drop legacy columns, add FK constraints. | 1 day | Add Phase 3C FK constraints; drop legacy author fields |
+| **7. Phase 3C Validation** | Test atomicity, counter increments, status transitions. | 1 day | Run Phase 3C test suite; verify submission lifecycle |
+| **8. Full Validation** | Run full test suite, data‑quality checks. | 2 days | Integration tests; end-to-end author workflow |
 
-**Total**: ~14 developer‑days (excluding QA and deployment overhead).
+**Total**: ~15 developer‑days (14 base + 1 day Phase 3C validation; excluding QA and deployment overhead).
+
+**Critical Path Note**: Phase 3D (Cohorts) should **not** begin until Phase 3C migration is complete and FK constraints are enforced. This ensures Cohort→QuestionSubmission relationships are built on a stable schema.
+
+---
+
+## 9. Phase 3C/3D Integration Boundary (CRITICAL)
+
+### Blocking Issue Resolution
+
+This proposal resolves a critical blocking issue for Phase 3D (Cohorts) implementation:
+
+**Problem**: Phase 3C (Authoring Ecosystem) was implemented without accounting for the v2 schema migration. Phase 3D depends on stable relationships between Cohort→QuestionSubmission→Condition.
+
+**Solution**: This updated v2 proposal explicitly includes Phase 3C models (`ContentAuthor`, `QuestionSubmission`, `ContentReviewer`) in the migration strategy. This ensures:
+
+1. **FK Constraint Stability**: `QuestionSubmission.conditionId` will have an explicit FK to `Condition` with v2 semantics (non-nullable, with onDelete behavior).
+2. **Counter Atomicity**: `ContentAuthor.questionsCreated` will be migrated correctly and protected by transaction atomicity in Phase 3C endpoints.
+3. **Status Enum Alignment**: `SubmissionStatus` enum provides a single source of truth for submission lifecycle.
+
+### Phase 3D Prerequisites
+
+Before Phase 3D implementation begins, the following **MUST** be completed:
+
+1. ✅ **Phase 3C Test Coverage**: Comprehensive unit tests for submit-question, dashboard, and review endpoints (COMPLETE - see functions/api/authors/*.test.ts).
+2. ✅ **v2 Proposal Updated**: This document now includes Phase 3C models with migration strategy (COMPLETE).
+3. ⏳ **v2 Migration Execution**: Execute Phase 1–4 migration strategy (PENDING - coordinated with Phase 3 release cycle).
+
+### Phase 3D Safe Schema Choices
+
+When implementing Cohorts in Phase 3D, follow these patterns:
+
+```prisma
+// GOOD: Uses stable FK to QuestionSubmission
+model CohortQuestionAssignment {
+  id                    String  @id @default(cuid())
+  cohortId              String
+  Cohort                Cohort  @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+
+  questionSubmissionId   String  // FK added AFTER v2 migration (Phase 6)
+  QuestionSubmission    QuestionSubmission @relation(fields: [questionSubmissionId], references: [id])
+
+  assignedAt            DateTime @default(now())
+
+  @@unique([cohortId, questionSubmissionId])
+  @@index([cohortId])
+}
+
+// GOOD: Uses stable FK to Condition
+model CohortCoverageGoal {
+  id          String  @id @default(cuid())
+  cohortId    String
+  Cohort      Cohort  @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+
+  conditionId String  // Safe: FK already enforced in v2 Phase 6
+  Condition   Condition @relation(fields: [conditionId], references: [id])
+
+  targetCount Int
+
+  @@unique([cohortId, conditionId])
+}
+```
 
 ---
 
@@ -417,14 +613,27 @@ Update `types/medical‑content.ts`, `types/drugs.ts`, `types/anatomy‑model.ts
 | Frontend breaking changes | Feature‑flag new UI paths; fallback to old fields. |
 | Increased storage size | JSONB columns are GIN‑indexed; archive old text fields after cut‑over. |
 | Schema‑change conflicts with active development | Communicate timeline; branch migrations. |
+| Phase 3C atomicity during dual‑write period | Use Prisma transactions; validate questionsCreated increments post-migration. |
+| Phase 3D FK constraint violations | Hold Phase 3D work until Phase 3C migration Phase 6 (FK constraints added). |
 
 ---
 
 ## 10. Conclusion
 
-The proposed V2 schema eliminates the identified knots and loose ends, providing a solid foundation for the next phase of PANaCEa’s growth. By storing structured data natively, we reduce runtime parsing, improve query capabilities, and align the database with the frontend’s type system. The migration is designed to be incremental and low‑risk, with clear rollback points.
+The proposed V2 schema eliminates the identified knots and loose ends, providing a solid foundation for PANaCEa’s growth. By storing structured data natively, we reduce runtime parsing, improve query capabilities, and align the database with the frontend’s type system.
 
-**Next Action**: Review this proposal with the engineering team, then proceed to Phase 1 implementation.
+**Phase 3C Integration**: This updated proposal explicitly integrates Phase 3C (Authoring Ecosystem) into the v2 migration, resolving the blocking issue for Phase 3D (Cohorts). Phase 3C models are now accounted for in the migration strategy, ensuring atomicity, FK stability, and status consistency.
+
+**Phase 3D Clearance**: Phase 3D can proceed safely only after v2 migration Phase 6 (FK constraints enforcement). This ensures Cohort relationships to QuestionSubmission and Condition are built on stable, constraint-enforced tables.
+
+The migration is designed to be incremental and low‑risk, with clear rollback points and explicit coordination between Phase 3C test coverage, v2 migration, and Phase 3D implementation.
+
+**Next Actions**:
+1. ✅ Review Phase 3C test coverage (submit-question.test.ts, aiQuestionService.test.ts) — COMPLETE
+2. ✅ Review updated v2 proposal with Phase 3C integration — COMPLETE
+3. ⏳ Schedule v2 migration (estimated 15 developer-days)
+4. ⏳ Hold Phase 3D implementation until Phase 3C migration Phase 6 completes
+5. ⏳ Integrate Phase 3D with stable Cohort→QuestionSubmission FKs
 
 ---
 
