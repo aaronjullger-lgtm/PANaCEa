@@ -62,17 +62,17 @@ const DrillShell: React.FC<DrillShellProps> = ({
 }) => {
   const hubTarget = backTo ?? ROUTES.PRACTICE;
   return (
-    <div className={`min-h-screen bg-surface-primary flex flex-col ${className}`}>
+    <div className={`min-h-screen bg-[var(--color-bg-primary)] flex flex-col ${className}`}>
       {/* Header with Breadcrumb */}
       {!hideBreadcrumb && (
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="sticky top-0 z-40 bg-surface-primary/95 backdrop-blur-sm border-b border-border-subtle"
+          className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border-b border-[var(--color-border)]"
         >
           <div className="max-w-7xl mx-auto px-4 py-3">
             {/* Breadcrumb Navigation */}
-            <div className="flex items-center gap-2 text-sm text-muted mb-2">
+            <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] mb-2">
               {backTo !== undefined ? (
                 <BackLink to={hubTarget} label="Back to Practice" className="text-sm" />
               ) : (
@@ -110,7 +110,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
                     className="p-2 hover:bg-surface-secondary rounded-lg transition-colors group"
                     aria-label="Go back"
                   >
-                    <ArrowLeft className="w-5 h-5 text-muted group-hover:text-action-primary group-hover:-translate-x-1 transition-all" />
+                    <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-action-primary group-hover:-translate-x-1 transition-all" />
                   </button>
                 )}
                 <h1 className="text-2xl sm:text-3xl font-bold text-action-primary">

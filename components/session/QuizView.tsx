@@ -255,7 +255,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         ref={containerRef}
         id="question-container"
         tabIndex={-1}
-        className="text-xl md:text-2xl leading-relaxed text-text-primary bg-surface-card border border-border-subtle rounded-xl p-6 shadow-sm space-y-4"
+        className="text-xl md:text-2xl leading-relaxed text-text-primary bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm space-y-4"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
         {/* Text before the table */}
@@ -289,7 +289,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         ref={containerRef}
         id="question-container"
         tabIndex={-1}
-        className="text-xl md:text-2xl font-semibold text-text-primary whitespace-pre-wrap bg-surface-card border border-border-subtle rounded-xl p-6 shadow-sm"
+        className="text-xl md:text-2xl font-semibold text-text-primary whitespace-pre-wrap bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
         {normalizedText}
@@ -306,7 +306,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
       ref={containerRef}
       id="question-container"
       tabIndex={-1}
-      className="text-xl md:text-2xl leading-relaxed text-text-primary bg-surface-card border border-border-subtle rounded-xl p-6 shadow-sm"
+      className="text-xl md:text-2xl leading-relaxed text-text-primary bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm"
       style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
     >
       <p className="whitespace-pre-wrap">{vignette}</p>
@@ -1442,7 +1442,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         return (
           <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
             <h2 className="text-2xl font-bold mb-2">Unable to Load Questions</h2>
-            <p className="text-action-secondary">
+            <p className="text-[var(--color-text-secondary)]">
               {replenishmentError || 'The question service is currently unavailable. Please try again later.'}
             </p>
             <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
@@ -1472,7 +1472,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
         <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
-        <p className="text-action-secondary">
+        <p className="text-[var(--color-text-secondary)]">
           You've reached the end of this set of questions.
         </p>
         <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
@@ -1497,7 +1497,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           <div className="flex items-center space-x-3 min-w-0">
             {/* Back to Practice */}
             {!isFullSitDownTest && (
-              <BackLink to={ROUTES.PRACTICE} label="Back to Practice" className="rounded-full bg-surface-secondary hover:bg-surface-tertiary border border-border-subtle flex-shrink-0" />
+              <BackLink to={ROUTES.PRACTICE} label="Back to Practice" className="rounded-full bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] flex-shrink-0" />
             )}
             {modeLabel && (
               <span className="text-sm text-[var(--color-text-muted)] truncate hidden sm:inline" aria-hidden>
@@ -1505,7 +1505,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               </span>
             )}
             <div className="flex items-center gap-3">
-              <p className="text-sm font-medium text-muted truncate">
+              <p className="text-sm font-medium text-[var(--color-text-muted)] truncate">
                 Question {questionNumber}
               </p>
               {/* Sprint 4: Momentum Badge (compact) */}
@@ -1524,7 +1524,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               )}
               {/* Quick Wins: Time-box session timer — hidden in Commuter Mode */}
               {!commuter?.isCommuterMode && timeRemainingMs !== null && timeRemainingMs > 0 && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-action-primary/10 border border-action-primary/20">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20">
                   <Clock className="w-3.5 h-3.5 text-text-primary" />
                   <span className="text-xs font-semibold text-text-primary">
                     {Math.ceil(timeRemainingMs / 60000)} min
@@ -1543,8 +1543,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               title="Toggle session stats (S)"
               className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                 showStatsOverlay
-                  ? 'bg-action-primary/10 text-text-primary border-action-primary'
-                  : 'bg-surface-card text-muted border-border-subtle hover:bg-action-primary/10 hover:text-text-primary hover:border-action-primary'
+                  ? 'bg-[var(--color-accent)]/10 text-text-primary border-[var(--color-accent)]'
+                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-accent)]/10 hover:text-text-primary hover:border-[var(--color-accent)]'
               }`}
             >
               <BarChart3 className="w-5 h-5" />
@@ -1557,7 +1557,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                 isFlagged
                   ? 'bg-data-provisional/10 text-data-provisional border-data-provisional'
-                  : 'bg-surface-card text-muted border-border-subtle hover:bg-surface-tertiary hover:border-action-primary'
+                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
               }`}
             >
               <FlagIcon className="w-5 h-5" />
@@ -1569,8 +1569,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               title="Normal Labs reference"
               className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                 showNormalLabsPanel
-                  ? 'bg-action-primary/10 text-text-primary border-action-primary'
-                  : 'bg-surface-card text-muted border-border-subtle hover:bg-surface-tertiary hover:border-action-primary'
+                  ? 'bg-[var(--color-accent)]/10 text-text-primary border-[var(--color-accent)]'
+                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
               }`}
               aria-label="Toggle Normal Labs reference"
             >
@@ -1584,21 +1584,21 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 title="More actions"
                 className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                   showOverflowMenu
-                    ? 'bg-action-primary/10 text-text-primary border-action-primary'
-                    : 'bg-surface-card text-muted border-border-subtle hover:bg-surface-tertiary hover:border-action-primary'
+                    ? 'bg-[var(--color-accent)]/10 text-text-primary border-[var(--color-accent)]'
+                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
                 }`}
               >
                 <MoreHorizontal className="w-5 h-5" />
               </button>
               {showOverflowMenu && (
-                <div className="absolute right-0 top-full mt-1 w-56 bg-surface-card border border-border-subtle rounded-lg shadow-lg z-50 py-1 animate-fade-in">
+                <div className="absolute right-0 top-full mt-1 w-56 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 py-1 animate-fade-in">
                   {/* Report Issue */}
                   <button
                     onClick={() => {
                       setShowReportModal(true);
                       setShowOverflowMenu(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-action-secondary hover:bg-surface-tertiary transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                   >
                     <AlertTriangle className="w-4 h-4 text-data-fail" />
                     Report Issue
@@ -1619,7 +1619,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                       });
                       setShowOverflowMenu(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-action-secondary hover:bg-surface-tertiary transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                   >
                     <ClearHighlightIcon className="w-4 h-4" />
                     Clear Highlights
@@ -1630,18 +1630,18 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                       setShowLabCalcModal(true);
                       setShowOverflowMenu(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-action-secondary hover:bg-surface-tertiary transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                   >
                     <Calculator className="w-4 h-4 text-text-primary" />
                     Lab Calculators
                   </button>
                   {/* Font size controls */}
-                  <div className="flex items-center gap-3 px-4 py-3 text-sm text-action-secondary">
-                    <span className="text-muted">Font Size</span>
-                    <div className="ml-auto flex items-center border border-border-subtle rounded-md bg-surface-secondary">
+                  <div className="flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)]">
+                    <span className="text-[var(--color-text-muted)]">Font Size</span>
+                    <div className="ml-auto flex items-center border border-[var(--color-border)] rounded-md bg-[var(--color-bg-secondary)]">
                       <button
                         onClick={() => setFontSizeAdjustment((prev) => prev - 1)}
-                        className="min-h-[44px] min-w-[44px] flex items-center justify-center text-action-secondary hover:bg-surface-tertiary rounded-l-md text-sm font-medium"
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-l-md text-sm font-medium"
                         aria-label="Decrease font size"
                       >
                         A−
@@ -1649,7 +1649,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                       <div className="w-px h-5 bg-border-subtle"></div>
                       <button
                         onClick={() => setFontSizeAdjustment((prev) => prev + 1)}
-                        className="min-h-[44px] min-w-[44px] flex items-center justify-center text-action-secondary hover:bg-surface-tertiary rounded-r-md text-sm font-medium"
+                        className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-r-md text-sm font-medium"
                         aria-label="Increase font size"
                       >
                         A+
@@ -1665,7 +1665,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               <button
                 onClick={handleEndSession}
                 title="End Session"
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-surface-card border border-border-subtle text-muted hover:bg-data-fail/10 hover:border-data-fail hover:text-data-fail transition-colors"
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-data-fail/10 hover:border-data-fail hover:text-data-fail transition-colors"
               >
                 <CloseIcon className="w-5 h-5" />
               </button>
@@ -1675,14 +1675,14 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
         {isFullSitDownTest && (
           <div className="mt-4 mb-4">
             <Progress value={((questionNumber - 1) / (totalQuestions || 300)) * 100} />
-            <div className="flex justify-between text-sm text-muted mt-1">
+            <div className="flex justify-between text-sm text-[var(--color-text-muted)] mt-1">
               <span>Question {questionNumber} of {totalQuestions || 300}</span>
               <span>{Math.round(((questionNumber - 1) / (totalQuestions || 300)) * 100)}%</span>
             </div>
           </div>
         )}
         {replenishmentError && (
-          <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-data-provisional/50 bg-data-provisional/10 px-3 py-2 text-sm text-action-secondary">
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-data-provisional/50 bg-data-provisional/10 px-3 py-2 text-sm text-[var(--color-text-secondary)]">
             <span>{replenishmentError}</span>
             <button
               type="button"
@@ -1691,7 +1691,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 setError(null);
                 void replenishQueue();
               }}
-              className="flex-shrink-0 rounded-md px-3 py-1 font-medium text-text-primary hover:bg-action-primary/10"
+              className="flex-shrink-0 rounded-md px-3 py-1 font-medium text-text-primary hover:bg-[var(--color-accent)]/10"
             >
               Retry
             </button>
@@ -1725,7 +1725,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   />
                 )}
                 {currentQuestion.imageUrl && (
-                  <div className="mb-4 rounded-xl overflow-hidden border border-border-subtle bg-surface-secondary">
+                  <div className="mb-4 rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
                     <img
                       src={currentQuestion.imageUrl}
                       alt="Clinical image for question"
@@ -1783,7 +1783,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
           {/* SUBMIT BUTTON - Sticky on mobile so it doesn't scroll off-screen */}
           {!isAnswered && selectedAnswerIndex !== null && (
-            <div className="sticky bottom-0 z-10 bg-surface-primary border-t border-border-subtle mt-6 -mx-4 px-4 py-4 text-center animate-fade-in space-y-2 md:static md:border-t-0 md:bg-transparent md:mx-0 md:px-0 md:py-0 md:mt-6 md:space-y-4">
+            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)] border-t border-[var(--color-border)] mt-6 -mx-4 px-4 py-4 text-center animate-fade-in space-y-2 md:static md:border-t-0 md:bg-transparent md:mx-0 md:px-0 md:py-0 md:mt-6 md:space-y-4">
               <button
                 type="button"
                 onClick={handleSubmitAnswer}
@@ -1818,9 +1818,9 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   'Submit Answer'
                 )}
               </button>
-              <p className="mt-2 text-sm text-muted hidden md:block">
+              <p className="mt-2 text-sm text-[var(--color-text-muted)] hidden md:block">
                 Press{' '}
-                <kbd className="px-2 py-1 bg-surface-card border border-border-subtle rounded text-xs font-mono">
+                <kbd className="px-2 py-1 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded text-xs font-mono">
                   Enter
                 </kbd>{' '}
                 to submit
@@ -1832,16 +1832,16 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           {isAnswered && !isExamSimulator && (
             <div className="mt-6 animate-fade-in space-y-4">
               {topicStats && (
-                <div className="p-4 bg-surface-card border border-border-subtle rounded-lg">
+                <div className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg">
                   <div className="flex justify-between items-center mb-1 text-sm">
-                    <span className="font-semibold text-action-secondary">
+                    <span className="font-semibold text-[var(--color-text-secondary)]">
                       {currentQuestion.topic}
                     </span>
-                    <span className="font-medium text-muted">
+                    <span className="font-medium text-[var(--color-text-muted)]">
                       {topicStats.score.toFixed(0)}% ({topicStats.correct}/{topicStats.total})
                     </span>
                   </div>
-                  <div className="w-full bg-surface-secondary rounded-full h-2.5">
+                  <div className="w-full bg-[var(--color-bg-secondary)] rounded-full h-2.5">
                     <div
                       className={`h-2.5 rounded-full ${getBarColor(
                         topicStats.score
@@ -1852,10 +1852,10 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 </div>
               )}
 
-              <div className="p-4 bg-surface-card border border-border-subtle rounded-lg feedback-content">
+              <div className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg feedback-content">
                 {/* Error Tagger - Only show when incorrect */}
                 {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
-                  <div className="mb-4 pb-4 border-b border-border-subtle">
+                  <div className="mb-4 pb-4 border-b border-[var(--color-border)]">
                     <ErrorTagger onTagError={updateLastPerformanceErrorTag} />
                   </div>
                 )}
@@ -1868,8 +1868,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     const entry = answerDistribution.find((d) => d.optionLetter === letter);
                     if (!entry || entry.count === 0) return null;
                     return (
-                      <p className="mb-4 text-sm text-muted bg-surface-secondary border border-border-subtle rounded-lg px-3 py-2">
-                        <span className="font-medium text-action-secondary">
+                      <p className="mb-4 text-sm text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-2">
+                        <span className="font-medium text-[var(--color-text-secondary)]">
                           {entry.percent}% of students also chose {letter}.
                         </span>
                         {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
@@ -1927,7 +1927,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     <button
                       type="button"
                       onClick={() => setShowSocraticTutor(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-action-primary/10 text-text-primary font-medium text-sm hover:bg-action-primary/20 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)]/10 text-text-primary font-medium text-sm hover:bg-[var(--color-accent)]/20 transition-colors"
                     >
                       <MessageCircle className="h-4 w-4" aria-hidden />
                       Tutor Me
@@ -1936,14 +1936,14 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 )}
 
                 {isExplainerLoading && (
-                  <div className="mt-4 flex items-center space-x-2 text-action-secondary">
-                    <div className="w-2 h-2 bg-surface-tertiary rounded-full animate-pulse"></div>
+                  <div className="mt-4 flex items-center space-x-2 text-[var(--color-text-secondary)]">
+                    <div className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"></div>
                     <div
-                      className="w-2 h-2 bg-surface-tertiary rounded-full animate-pulse"
+                      className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"
                       style={{ animationDelay: '0.2s' }}
                     ></div>
                     <div
-                      className="w-2 h-2 bg-surface-tertiary rounded-full animate-pulse"
+                      className="w-2 h-2 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse"
                       style={{ animationDelay: '0.4s' }}
                     ></div>
                     <span className="text-sm">Generating new explanation...</span>
@@ -1951,11 +1951,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 )}
 
                 {alternateRationale && !isExplainerLoading && (
-                  <div className="mt-4 pt-4 border-t border-border-subtle animate-fade-in">
+                  <div className="mt-4 pt-4 border-t border-[var(--color-border)] animate-fade-in">
                     <h4 className="font-bold text-md mb-2 text-text-primary">
                       Alternate Explanation
                     </h4>
-                    <p className="text-action-secondary leading-relaxed whitespace-pre-wrap">
+                    <p className="text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
                       {alternateRationale}
                     </p>
                   </div>
@@ -1963,11 +1963,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
                 {/* Clinical Pearls Section */}
                 {currentQuestion.pearls && currentQuestion.pearls.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-border-subtle">
+                  <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
                     <h3 className="font-bold text-lg mb-2 text-text-primary">
                       Key Pearls: {currentQuestion.condition}
                     </h3>
-                    <ul className="list-disc list-inside space-y-1 text-action-secondary">
+                    <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
                       {currentQuestion.pearls.map((pearl, index) => (
                         <li
                           key={index}
@@ -1978,11 +1978,11 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   </div>
                 )}
 
-                <div className="mt-4 pt-4 border-t border-border-subtle">
+                <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
                   {!showNotes && !localNote ? (
                     <button
                       onClick={() => setShowNotes(true)}
-                      className="flex items-center gap-2 text-sm font-medium text-muted hover:text-text-primary transition-colors py-1"
+                      className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-text-primary transition-colors py-1"
                     >
                       <PenLine className="w-4 h-4" />
                       Add Note
@@ -1996,7 +1996,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                         value={localNote}
                         onChange={handleNoteChange}
                         placeholder="Type your notes here... They will be saved automatically."
-                        className="w-full p-2 border border-border-subtle bg-surface-secondary text-text-primary rounded-md text-sm focus:ring-2 focus:ring-action-primary focus:border-transparent"
+                        className="w-full p-2 border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-text-primary rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
                         rows={3}
                         autoFocus={showNotes && !localNote}
                       />
@@ -2008,7 +2008,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
           )}
 
           {isAnswered && (
-            <div className="sticky bottom-0 z-10 bg-surface-primary border-t border-border-subtle mt-4 -mx-4 px-4 py-4 text-center md:static md:border-t-0 md:bg-transparent md:mx-0 md:px-0 md:py-0 md:mt-4">
+            <div className="sticky bottom-0 z-10 bg-[var(--color-bg-primary)] border-t border-[var(--color-border)] mt-4 -mx-4 px-4 py-4 text-center md:static md:border-t-0 md:bg-transparent md:mx-0 md:px-0 md:py-0 md:mt-4">
               <button
                 ref={nextButtonRef}
                 onClick={() => {

@@ -15,7 +15,7 @@
  * Client-side checks prevent unnecessary API calls but do NOT provide security.
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -109,7 +109,14 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     } finally {
       setStatsLoading(false);
     }
-  }, [setStats, setStatsError, setStatsLoading]);
+  }, []);
+
+  // Keep stable refs to callbacks that are recreated on every render by useAuth()
+  // so the effect below can call them without triggering re-runs.
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+  const fetchStatsRef = useRef(fetchStats);
+  fetchStatsRef.current = fetchStats;
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -121,7 +128,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       }
 
       try {
-        const token = await getToken();
+        const token = await getTokenRef.current();
 
         const accessResponse = await fetch('/api/admin/check-access', {
           headers: { Authorization: `Bearer ${token}` },
@@ -135,7 +142,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
           const role = accessJson?.data?.role ?? accessJson?.role;
           setHasAccess(true);
           setUserRole(role === 'superadmin' ? 'superadmin' : 'admin');
-          await fetchStats(token);
+          await fetchStatsRef.current(token);
         } else {
           setHasAccess(false);
           const errBody = (await accessResponse.json().catch(() => ({}))) as {
@@ -154,7 +161,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     };
 
     checkAccess();
-  }, [isSignedIn, userId, getToken, fetchStats]);
+  }, [isSignedIn, userId]); // Only re-run when auth state actually changes
 
   if (isLoading) {
     return (

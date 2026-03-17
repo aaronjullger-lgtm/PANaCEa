@@ -8,7 +8,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Brain, Target, Flag, TrendingUp, ChevronLeft, Zap, Clock, Award } from 'lucide-react';
+import { Brain, Target, Flag, TrendingUp, Zap, Clock, Award } from 'lucide-react';
 import type { SessionSettings, PerformanceRecord, Question, SystemCode } from '../types';
 import { useUserContext } from '../hooks/useUserContext';
 import { ABBREVIATION_TO_TOPIC_MAP } from '../src/constants';
@@ -27,7 +27,7 @@ type FocusOption = 'all' | 'growth' | 'flagged' | 'due';
 
 export const SimulationPage: React.FC<SimulationPageProps> = ({
   onStartSession,
-  onBack,
+  onBack: _onBack,
   performanceData,
   flaggedQuestions,
   growthAreas,
@@ -195,16 +195,6 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <button
-            type="button"
-            onClick={onBack}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mb-4 transition-colors min-h-[44px]"
-            aria-label="Back to Dashboard"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Dashboard
-          </button>
-
           <div className="flex items-center gap-4 mb-3">
             <div className="p-4 rounded-2xl bg-gradient-to-br from-[var(--color-accent)]/10 to-[var(--color-accent)]/5 border border-[var(--color-accent)]/30">
               <Brain className="w-10 h-10 text-[var(--color-accent)]" />

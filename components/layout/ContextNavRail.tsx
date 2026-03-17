@@ -16,7 +16,7 @@ export const ContextNavRail = () => {
       animate={{ x: 0 }}
       exit={{ x: '100%' }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="fixed top-0 right-0 h-full bg-surface-primary border-l border-border w-72 z-40"
+      className="fixed top-0 right-0 h-full bg-[var(--color-bg-primary)] border-l border-border w-72 z-40"
       style={{ top: 'var(--header-height)', height: 'calc(100vh - var(--header-height))' }}
     >
       <div className="p-4 border-b border-border">
@@ -26,7 +26,7 @@ export const ContextNavRail = () => {
             <X size={16} />
           </button>
         </div>
-        <p className="text-sm text-text-muted capitalize">{currentContext.type} Context</p>
+        <p className="text-sm text-text-[var(--color-text-muted)] capitalize">{currentContext.type} Context</p>
       </div>
       <div className="p-4">
         <h4 className="font-semibold text-sm mb-2">Related Modules</h4>

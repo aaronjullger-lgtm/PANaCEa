@@ -79,7 +79,7 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
           <XAxis
             type="number"
             stroke="var(--color-border)"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 11 }}
             tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
           />
 
@@ -87,7 +87,7 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
             type="category"
             dataKey="bucket"
             stroke="var(--color-border)"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 11 }}
             tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
             width={60}
           />

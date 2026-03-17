@@ -218,7 +218,7 @@ function generateSimplifiedCheatsheet(performanceData: PerformanceRecord[], days
     'currentColor'
   );
   const exportMuted = resolveToken(
-    rootStyles.getPropertyValue('--color-text-muted').trim(),
+    rootStyles.getPropertyValue('--color-text-[var(--color-text-muted)]').trim(),
     'currentColor'
   );
   const exportInverse = resolveToken(

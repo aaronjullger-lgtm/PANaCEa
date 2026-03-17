@@ -281,7 +281,7 @@ export function useDDxIntelligence(
       case 'medium':
         return 'text-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)]';
       case 'low':
-        return 'text-[var(--color-text-muted)] bg-[color-mix(in_srgb,var(--color-text-muted)_10%,transparent)]';
+        return 'text-[var(--color-text-muted)] bg-[color-mix(in_srgb,var(--color-text-[var(--color-text-muted)])_10%,transparent)]';
     }
   }, []);
 

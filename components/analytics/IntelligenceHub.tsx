@@ -457,7 +457,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                         <text
                           x={radarChartData.centerX + circle.radius + 8}
                           y={radarChartData.centerY + 4}
-                          className="text-xs fill-[var(--color-text-muted)]"
+                          className="text-xs fill-[var(--color-text-[var(--color-text-muted)])]"
                         >
                           {circle.label}
                         </text>
@@ -514,7 +514,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                           x={axis.labelX}
                           y={axis.labelY + 12}
                           textAnchor="middle"
-                          className="text-xs fill-[var(--color-text-muted)]"
+                          className="text-xs fill-[var(--color-text-[var(--color-text-muted)])]"
                         >
                           {point.accuracy}%
                         </text>

@@ -5,8 +5,10 @@
 
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Upload, Loader2, Eye } from 'lucide-react';
+import { Upload, Loader2, Eye } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { BackLink } from '@/components/navigation/BackLink';
+import { ROUTES } from '@/config/routes';
 
 interface AnalyzeResponse {
   data: {
@@ -89,13 +91,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-6 px-4">
       <div className="max-w-4xl mx-auto">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mb-6 transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back
-        </button>
+        <BackLink to={ROUTES.STUDY} className="mb-6" />
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
@@ -167,7 +163,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="e.g. Calculate the ST elevation in Lead V2 in millimeters."
-              className="w-full h-28 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] resize-none focus:ring-2 focus:ring-[var(--color-accent)]"
+              className="w-full h-28 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])] resize-none focus:ring-2 focus:ring-[var(--color-accent)]"
               maxLength={4096}
             />
             <button

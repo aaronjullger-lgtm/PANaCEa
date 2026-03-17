@@ -91,7 +91,7 @@ export function AchievementMedal({
         {/* Icon */}
         <Icon
           className={`${iconSizes[size]} ${isUnlocked ? '' : 'opacity-40'}`}
-          style={{ color: isUnlocked ? rarityColor : 'var(--color-text-muted)' }}
+          style={{ color: isUnlocked ? rarityColor : 'var(--color-text-[var(--color-text-muted)])' }}
           strokeWidth={2}
         />
 

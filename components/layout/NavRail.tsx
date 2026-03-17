@@ -140,7 +140,7 @@ function BottomTabBar({
               <li key={item.id} className="flex-1 relative">
                 <Link
                   to={item.href}
-                  className="flex items-center justify-center h-full w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-accent)]"
+                  className="flex items-center justify-center h-full w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-accent)] active:scale-[0.98] transition-transform"
                   aria-current={isActive ? 'page' : undefined}
                 >
                   {inner}
@@ -153,7 +153,7 @@ function BottomTabBar({
               <button
                 type="button"
                 onClick={item.onClick}
-                className="flex items-center justify-center h-full w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-accent)]"
+                className="flex items-center justify-center h-full w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-accent)] active:scale-[0.98] transition-transform"
               >
                 {inner}
               </button>

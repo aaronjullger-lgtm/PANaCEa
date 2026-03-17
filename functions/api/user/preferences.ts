@@ -138,16 +138,25 @@ export const onRequestGet = authenticatedEndpoint<Record<string, never>>(
     try {
       logger.addContext({ userId: auth.userId });
 
+      // Resolve internal user ID from Clerk sub
+      const user = await prisma.user.findUnique({
+        where: { clerkId: auth.userId },
+        select: { id: true },
+      });
+      if (!user) {
+        return { status: 404, error: 'User not found' };
+      }
+
       // Fetch preferences
       let preferences = await prisma.userPreferences.findUnique({
-        where: { userId: auth.userId },
+        where: { userId: user.id },
       });
 
       // If no preferences exist, create default ones
       if (!preferences) {
         preferences = await prisma.userPreferences.create({
           data: {
-            userId: auth.userId,
+            userId: user.id,
             // All other fields will use their default values from schema
           },
         });
@@ -325,9 +334,18 @@ export const onRequestDelete = authenticatedEndpoint(EmptySchema, async (context
   try {
     logger.addContext({ userId: auth.userId });
 
+    // Resolve internal user ID from Clerk sub
+    const user = await prisma.user.findUnique({
+      where: { clerkId: auth.userId },
+      select: { id: true },
+    });
+    if (!user) {
+      return { status: 404, error: 'User not found' };
+    }
+
     // Delete preferences
     await prisma.userPreferences.delete({
-      where: { userId: auth.userId },
+      where: { userId: user.id },
     });
 
     logger.info('Preferences deleted successfully');

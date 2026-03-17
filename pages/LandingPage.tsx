@@ -399,7 +399,7 @@ export function LandingPage() {
                             'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 hover:shadow-lg text-[var(--color-text-inverse)]',
                           formFieldLabel: 'text-[var(--color-text-primary)]',
                           formFieldInput:
-                            'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]',
+                            'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])]',
                           footerActionLink:
                             'text-[var(--color-text-muted)] hover:text-[var(--color-accent)]',
                         },
@@ -420,7 +420,7 @@ export function LandingPage() {
                             'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 hover:shadow-lg text-[var(--color-text-inverse)]',
                           formFieldLabel: 'text-[var(--color-text-primary)]',
                           formFieldInput:
-                            'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]',
+                            'bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])]',
                           footerActionLink:
                             'text-[var(--color-text-muted)] hover:text-[var(--color-accent)]',
                         },

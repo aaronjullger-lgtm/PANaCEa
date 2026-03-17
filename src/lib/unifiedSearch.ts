@@ -5,7 +5,7 @@
 import { searchConditions } from './conditionSearch';
 import type { ConditionSearchResult } from './conditionSearch';
 import { searchDrugs } from './drugSearch';
-import type { DrugSearchResult } from '@/pharm/drugTypes';
+import type { DrugSearchResult } from '@/types/pharm';
 import { SPECIAL_TEST_REGISTRY, type SpecialTestMeta } from '../registries/specialTestRegistry';
 import {
   PHYSIOLOGY_CONCEPT_REGISTRY,

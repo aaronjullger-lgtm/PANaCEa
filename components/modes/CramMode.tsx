@@ -489,13 +489,13 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
 
                 if (!showResult) {
                   buttonClass +=
-                    'border-[var(--color-text-muted)] border-[var(--color-text-muted)] hover:border-orange-500 dark:hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20';
+                    'border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])] hover:border-orange-500 dark:hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20';
                 } else if (isCorrect) {
                   buttonClass += 'border-green-500 bg-green-50 dark:bg-green-900/20';
                 } else if (isSelected && !isCorrect) {
                   buttonClass += 'border-red-500 bg-red-50 dark:bg-red-900/20';
                 } else {
-                  buttonClass += 'border-gray-300 dark:border-gray-600 opacity-50';
+                  buttonClass += 'border-[var(--color-border)] opacity-50';
                 }
 
                 return (

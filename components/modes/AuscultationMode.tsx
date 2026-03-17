@@ -353,7 +353,7 @@ export function AuscultationMode({
             flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors
             ${
               activeTab === 'heart'
-                ? 'bg-white dark:bg-data-neutral-bg text-data-fail dark:text-data-fail shadow-sm'
+                ? 'bg-[var(--color-bg-primary)] text-data-fail dark:text-data-fail shadow-sm'
                 : 'text-data-neutral dark:text-data-neutral hover:text-data-neutral dark:hover:text-white'
             }
           `}
@@ -367,7 +367,7 @@ export function AuscultationMode({
             flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors
             ${
               activeTab === 'lung'
-                ? 'bg-white dark:bg-data-neutral-bg text-[var(--color-category-practice)] text-[var(--color-category-practice)] shadow-sm'
+                ? 'bg-[var(--color-bg-primary)] text-[var(--color-category-practice)] text-[var(--color-category-practice)] shadow-sm'
                 : 'text-data-neutral dark:text-data-neutral hover:text-data-neutral dark:hover:text-white'
             }
           `}
@@ -385,7 +385,7 @@ export function AuscultationMode({
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-1.5 text-sm rounded-lg bg-white dark:bg-data-neutral-bg border border-data-neutral dark:border-data-neutral"
+              className="px-3 py-1.5 text-sm rounded-lg bg-[var(--color-bg-primary)] border border-data-neutral dark:border-data-neutral"
               aria-label="Filter by category"
             >
               <option value="all">All Categories</option>
@@ -402,7 +402,7 @@ export function AuscultationMode({
           <select
             value={difficultyFilter}
             onChange={(e) => setDifficultyFilter(e.target.value)}
-            className="px-3 py-1.5 text-sm rounded-lg bg-white dark:bg-data-neutral-bg border border-data-neutral dark:border-data-neutral"
+            className="px-3 py-1.5 text-sm rounded-lg bg-[var(--color-bg-primary)] border border-data-neutral dark:border-data-neutral"
             aria-label="Filter by difficulty level"
           >
             <option value="all">All Levels</option>
@@ -418,7 +418,7 @@ export function AuscultationMode({
         <div className="lg:col-span-1">
           {quizState ? (
             // Quiz Mode
-            <div className="bg-white dark:bg-data-neutral-bg rounded-2xl border border-data-neutral dark:border-data-neutral p-6">
+            <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-data-neutral dark:border-data-neutral p-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-data-neutral">
                   Question {quizState.currentIndex + 1} of {quizSounds.length}
@@ -492,7 +492,7 @@ export function AuscultationMode({
             </div>
           ) : (
             // Learn Mode - Sound List
-            <div className="bg-white dark:bg-data-neutral-bg rounded-2xl border border-data-neutral dark:border-data-neutral p-4 max-h-[500px] overflow-y-auto">
+            <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-data-neutral dark:border-data-neutral p-4 max-h-[500px] overflow-y-auto">
               <h3 className="font-medium text-[var(--color-text-primary)] mb-4">
                 {activeTab === 'heart' ? 'Heart' : 'Lung'} Sounds ({filteredSounds.length})
               </h3>
@@ -550,7 +550,7 @@ export function AuscultationMode({
           {selectedSound ? (
             <>
               {/* Audio Player */}
-              <div className="bg-white dark:bg-data-neutral-bg rounded-2xl border border-data-neutral dark:border-data-neutral p-6">
+              <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-data-neutral dark:border-data-neutral p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-[var(--color-text-primary)]">
                     {selectedSound.name}
@@ -676,7 +676,7 @@ export function AuscultationMode({
 
               {/* Sound Info (Learn Mode) */}
               {mode === 'learn' && (
-                <div className="bg-white dark:bg-data-neutral-bg rounded-2xl border border-data-neutral dark:border-data-neutral p-6">
+                <div className="bg-[var(--color-bg-primary)] rounded-2xl border border-data-neutral dark:border-data-neutral p-6">
                   <h4 className="font-semibold text-[var(--color-text-primary)] mb-3">
                     Description
                   </h4>

@@ -371,10 +371,10 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                         ? 'border-data-pass bg-data-pass dark:bg-data-pass/20'
                         : index === selectedAnswer
                           ? 'border-data-fail bg-data-fail dark:bg-data-fail/20'
-                          : 'border-[var(--color-text-muted)] border-[var(--color-text-muted)] opacity-50'
+                          : 'border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])] opacity-50'
                       : selectedAnswer === index
                         ? 'border-[var(--color-category-practice)] bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]'
-                        : 'border-[var(--color-text-muted)] border-[var(--color-text-muted)] hover:border-[var(--color-category-practice)]'
+                        : 'border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])] hover:border-[var(--color-category-practice)]'
                   } disabled:cursor-not-allowed`}
                 >
                   <div className="flex items-start gap-3">
@@ -384,7 +384,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                           ? 'border-data-pass bg-data-pass'
                           : selectedAnswer === index
                             ? 'border-current'
-                            : 'border-[var(--color-text-muted)]'
+                            : 'border-[var(--color-text-[var(--color-text-muted)])]'
                       }`}
                     >
                       {selectedAnswer === index && !showFeedback && (

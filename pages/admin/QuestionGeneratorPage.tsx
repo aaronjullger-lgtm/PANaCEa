@@ -176,7 +176,7 @@ export function QuestionGeneratorPage() {
       <div className="max-w-4xl mx-auto p-8 text-center">
         <Shield className="w-16 h-16 mx-auto text-red-500 mb-4" />
         <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-        <p className="text-slate-600 mb-6">You must be an administrator to view this page.</p>
+        <p className="text-[var(--color-text-secondary)] mb-6">You must be an administrator to view this page.</p>
         <button
           onClick={() => navigate(ROUTES.HOME)}
           className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
@@ -193,21 +193,21 @@ export function QuestionGeneratorPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(ROUTES.ADMIN)}
-            className="p-2 rounded-full bg-slate-100 hover:bg-slate-200"
+            className="p-2 rounded-full bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]"
             aria-label="Back to Admin Dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <h1 className="text-3xl font-bold">Question Generator</h1>
-            <p className="text-slate-600">
+            <p className="text-[var(--color-text-secondary)]">
               Generate PANCE‑style questions balanced by NCCPA blueprint weights
             </p>
           </div>
         </div>
         <button
           onClick={handleRegenerate}
-          className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg flex items-center gap-2 hover:bg-slate-200"
+          className="px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-lg flex items-center gap-2 hover:bg-[var(--color-bg-tertiary)]"
           disabled={generatedQuestions.length === 0}
         >
           <RefreshCw className="w-4 h-4" /> Reset
@@ -232,7 +232,7 @@ export function QuestionGeneratorPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left panel: controls */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] shadow-sm p-6">
             <h2 className="text-xl font-bold mb-4">Generation Parameters</h2>
             <div className="space-y-5">
               <div>
@@ -240,7 +240,7 @@ export function QuestionGeneratorPage() {
                 <select
                   value={selectedTaxonomy}
                   onChange={(e) => setSelectedTaxonomy(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                 >
                   <option value="">Select a taxonomy</option>
                   {taxonomies.filter(t => t.isActive).map(tax => (
@@ -250,7 +250,7 @@ export function QuestionGeneratorPage() {
                   ))}
                 </select>
                 {selectedTaxonomy && (
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                     {getTaxonomyName(selectedTaxonomy)}
                   </p>
                 )}
@@ -261,7 +261,7 @@ export function QuestionGeneratorPage() {
                 <select
                   value={selectedSubcategory}
                   onChange={(e) => setSelectedSubcategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                   disabled={mappings.length === 0}
                 >
                   <option value="">Any subcategory</option>
@@ -272,7 +272,7 @@ export function QuestionGeneratorPage() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-[var(--color-text-muted)]">
                   {selectedSubcategory
                     ? `Selected: ${selectedSubcategory}`
                     : 'If left empty, a random subcategory will be chosen.'}
@@ -284,7 +284,7 @@ export function QuestionGeneratorPage() {
                 <select
                   value={questionType}
                   onChange={(e) => setQuestionType(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                 >
                   <option value="vignette">Clinical Vignette (Third‑Order)</option>
                   <option value="mcq">Multiple Choice</option>
@@ -303,7 +303,7 @@ export function QuestionGeneratorPage() {
                   onChange={(e) => setCount(parseInt(e.target.value, 10))}
                   className="w-full"
                 />
-                <div className="flex justify-between text-sm text-slate-600">
+                <div className="flex justify-between text-sm text-[var(--color-text-secondary)]">
                   <span>1</span>
                   <span className="font-semibold">{count}</span>
                   <span>10</span>
@@ -347,12 +347,12 @@ export function QuestionGeneratorPage() {
         {/* Right panel: preview */}
         <div className="lg:col-span-2">
           {generatedQuestions.length === 0 ? (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
-              <div className="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                <RefreshCw className="w-8 h-8 text-slate-400" />
+            <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] shadow-sm p-12 text-center">
+              <div className="mx-auto w-16 h-16 bg-[var(--color-bg-tertiary)] rounded-full flex items-center justify-center mb-4">
+                <RefreshCw className="w-8 h-8 text-[var(--color-text-muted)]" />
               </div>
               <h3 className="text-xl font-bold mb-2">No questions yet</h3>
-              <p className="text-slate-600 mb-6">
+              <p className="text-[var(--color-text-secondary)] mb-6">
                 Configure the parameters on the left and click “Generate Questions” to start.
               </p>
               <button
@@ -368,7 +368,7 @@ export function QuestionGeneratorPage() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold">Generated Questions</h2>
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-600">
+                  <span className="text-[var(--color-text-secondary)]">
                     {previewIndex + 1} of {generatedQuestions.length}
                   </span>
                   <button
@@ -394,7 +394,7 @@ export function QuestionGeneratorPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: idx === previewIndex ? 1 : 0, y: 0 }}
                   style={{ display: idx === previewIndex ? 'block' : 'none' }}
-                  className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6"
+                  className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 mb-6"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -426,7 +426,7 @@ export function QuestionGeneratorPage() {
                         {q.options.map((opt, optIdx) => (
                           <div
                             key={optIdx}
-                            className={`p-3 border rounded-lg ${opt === q.correctAnswer ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200'}`}
+                            className={`p-3 border rounded-lg ${opt === q.correctAnswer ? 'border-emerald-500 bg-emerald-50' : 'border-[var(--color-border)]'}`}
                           >
                             <div className="flex items-center gap-2">
                               <span className="font-mono font-bold">{String.fromCharCode(65 + optIdx)}.</span>
@@ -444,11 +444,11 @@ export function QuestionGeneratorPage() {
                   {q.explanation && (
                     <div className="border-t pt-6">
                       <h4 className="font-semibold mb-2">Explanation</h4>
-                      <p className="text-slate-700 mb-3">{q.explanation.rationale}</p>
+                      <p className="text-[var(--color-text-primary)] mb-3">{q.explanation.rationale}</p>
                       {q.explanation.incorrect && Object.keys(q.explanation.incorrect).length > 0 && (
                         <div>
                           <h5 className="font-medium mb-1">Why other options are incorrect:</h5>
-                          <ul className="list-disc pl-5 text-slate-700">
+                          <ul className="list-disc pl-5 text-[var(--color-text-primary)]">
                             {Object.entries(q.explanation.incorrect).map(([key, reason]) => (
                               <li key={key}>
                                 <span className="font-mono">{key}:</span> {reason}
@@ -460,7 +460,7 @@ export function QuestionGeneratorPage() {
                     </div>
                   )}
 
-                  <div className="mt-6 flex justify-between items-center text-sm text-slate-500">
+                  <div className="mt-6 flex justify-between items-center text-sm text-[var(--color-text-muted)]">
                     <div>
                       <span className="font-medium">Taxonomy:</span> {selectedTaxonomy} – {getTaxonomyName(selectedTaxonomy)}
                     </div>
@@ -473,7 +473,7 @@ export function QuestionGeneratorPage() {
                       </button>
                       <button
                         onClick={() => alert('Edit functionality not yet implemented')}
-                        className="text-slate-600 hover:text-slate-800"
+                        className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                       >
                         Edit
                       </button>
@@ -492,7 +492,7 @@ export function QuestionGeneratorPage() {
                 <button
                   onClick={() => setPreviewIndex(0)}
                   disabled={previewIndex === 0}
-                  className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg disabled:opacity-30"
+                  className="px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-lg disabled:opacity-30"
                 >
                   First
                 </button>
@@ -501,7 +501,7 @@ export function QuestionGeneratorPage() {
                     <button
                       key={idx}
                       onClick={() => setPreviewIndex(idx)}
-                      className={`w-2 h-2 rounded-full ${idx === previewIndex ? 'bg-[var(--color-accent)]' : 'bg-slate-300'}`}
+                      className={`w-2 h-2 rounded-full ${idx === previewIndex ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]'}`}
                       aria-label={`Go to question ${idx + 1}`}
                     />
                   ))}
@@ -509,7 +509,7 @@ export function QuestionGeneratorPage() {
                 <button
                   onClick={() => setPreviewIndex(generatedQuestions.length - 1)}
                   disabled={previewIndex === generatedQuestions.length - 1}
-                  className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg disabled:opacity-30"
+                  className="px-4 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] rounded-lg disabled:opacity-30"
                 >
                   Last
                 </button>

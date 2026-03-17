@@ -223,19 +223,17 @@ export const PracticePage: React.FC<PracticePageProps> = ({
     [onNavigateToDrillMode]
   );
 
-  const recommendedModeIds = ['core_adaptive', 'grand_rounds', 'diagnostic_puzzle'] as const;
-
   const recentModeIds = getRecentModeIds();
   const recentModes = useMemo(
     () =>
       recentModeIds
         .map((id) => MODE_REGISTRY.find((m) => m.id === id))
         .filter((m): m is TrainingModeConfig => !!m && !m.isComingSoon)
-        .filter((m) => !(recommendedModeIds as readonly string[]).includes(m.id))
         .slice(0, 6),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [recentModeIds]
   );
+
+  const recommendedModeIds = ['core_adaptive', 'grand_rounds', 'diagnostic_puzzle'] as const;
   const recommendedModes = useMemo(
     () =>
       recommendedModeIds
@@ -260,8 +258,8 @@ export const PracticePage: React.FC<PracticePageProps> = ({
         </div>
       </div>
 
-      {/* Search & Filters — moved to top for better UX */}
-      <div className="mb-8 space-y-3">
+      {/* Search & Filters */}
+      <div className="mb-6 space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
           <input

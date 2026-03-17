@@ -18,6 +18,7 @@ import {
   Bone,
   Pill,
   Sparkles,
+  Check,
 } from 'lucide-react';
 import type { ClinicalRotation } from '@/types';
 
@@ -71,10 +72,10 @@ export function RotationSelector({
               onClick={() => onChange(option.value)}
               type="button"
               className={`
-                p-3 rounded-lg border-2 transition-all text-left
+                p-3 rounded-lg border-2 transition-all text-left relative
                 ${
                   isSelected
-                    ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                    ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/15 shadow-md shadow-[var(--color-accent)]/20'
                     : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)] bg-[var(--color-bg-secondary)]'
                 }
               `}
@@ -88,7 +89,7 @@ export function RotationSelector({
                   }`}
                 />
                 <span
-                  className={`text-sm font-medium ${
+                  className={`text-sm font-medium flex-1 ${
                     isSelected
                       ? 'text-[var(--color-text-primary)]'
                       : 'text-[var(--color-text-muted)]'
@@ -96,6 +97,16 @@ export function RotationSelector({
                 >
                   {option.label}
                 </span>
+                {isSelected && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                    className="ml-auto"
+                  >
+                    <Check className="w-4 h-4 text-[var(--color-accent)]" />
+                  </motion.div>
+                )}
               </div>
             </motion.button>
           );

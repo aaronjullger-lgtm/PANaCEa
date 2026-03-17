@@ -76,13 +76,24 @@ function SidebarItemContent({
   if (collapsed && Icon != null) {
     return (
       <span
-        className={`inline-flex w-10 h-10 shrink-0 items-center justify-center rounded-lg transition-colors [&_svg]:block [&_svg]:m-0 [&_svg]:shrink-0 ${
+        className={`inline-flex flex-col w-10 shrink-0 items-center justify-center gap-1 transition-colors ${
           active
-            ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
-            : 'text-[var(--color-text-muted)] group-hover:bg-[var(--color-bg-tertiary)] group-hover:text-[var(--color-text-primary)]'
+            ? 'text-[var(--color-accent)]'
+            : 'text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)]'
         }`}
       >
-        <Icon className="h-5 w-5" aria-hidden />
+        <span
+          className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors [&_svg]:block [&_svg]:m-0 [&_svg]:shrink-0 ${
+            active
+              ? 'bg-[var(--color-accent)]/15'
+              : 'group-hover:bg-[var(--color-bg-tertiary)]'
+          }`}
+        >
+          <Icon className="h-5 w-5" aria-hidden />
+        </span>
+        <span className="text-[10px] leading-none font-medium text-center line-clamp-2 px-1">
+          {label}
+        </span>
       </span>
     );
   }

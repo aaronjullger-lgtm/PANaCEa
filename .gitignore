@@ -260,3 +260,7 @@ typecheck-errors.txt
 .kiro/
 .roo/
 mcp_config.json
+
+# Defunct deployment configs (superseded by wrangler.toml / Cloudflare Pages)
+ecosystem.config.js
+docker-compose.yml

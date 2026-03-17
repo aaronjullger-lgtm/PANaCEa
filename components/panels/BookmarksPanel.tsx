@@ -207,7 +207,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -100 }}
                     transition={{ delay: index * 0.05 }}
-                    className="bg-white dark:bg-data-neutral-bg rounded-lg border border-data-neutral dark:border-data-neutral p-4 hover:shadow-md transition-shadow"
+                    className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-4 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start gap-3">
                       <BookmarkCheck className="w-5 h-5 text-data-provisional flex-shrink-0 mt-1" />

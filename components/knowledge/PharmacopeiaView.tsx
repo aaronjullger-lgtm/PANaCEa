@@ -60,12 +60,12 @@ export const PharmacopeiaView: React.FC = () => {
               <span className="font-medium text-text-primary">
                 {drug.genericName}
                 {drug.brandName && (
-                  <span className="text-text-muted font-normal ml-2">
+                  <span className="text-text-[var(--color-text-muted)] font-normal ml-2">
                     ({drug.brandName})
                   </span>
                 )}
               </span>
-              <span className="text-xs text-text-muted">
+              <span className="text-xs text-text-[var(--color-text-muted)]">
                 {drug.drugClass.slice(0, 2).join(', ')}
               </span>
             </CardContent>

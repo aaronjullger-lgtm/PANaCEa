@@ -48,41 +48,44 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
       transition={{ duration: 0.3 }}
       className={`eor-accent relative overflow-hidden rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-sm ${className}`}
     >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-[var(--color-accent)]/15 rounded-lg">
-            <Stethoscope className="w-5 h-5 text-[var(--color-accent)]" />
-          </div>
-          <h3 className="font-bold text-[var(--color-text-primary)]">EOR Countdown</h3>
+      {/* Primary: Title */}
+      <div className="flex items-center gap-2 mb-4">
+        <div className="p-2 bg-[var(--color-accent)]/15 rounded-lg">
+          <Stethoscope className="w-5 h-5 text-[var(--color-accent)]" />
         </div>
-        <div className="text-right">
-          <div className="text-3xl font-bold text-[var(--color-accent)] leading-none">
+        <h3 className="text-lg font-bold text-[var(--color-text-primary)]">EOR Countdown</h3>
+      </div>
+
+      {/* Secondary: Days remaining and rotation */}
+      <div className="flex items-end justify-between mb-4">
+        <div>
+          <div className="text-2xl font-bold text-[var(--color-accent)] leading-none">
             {daysRemaining}
           </div>
           <div className="text-xs text-[var(--color-text-muted)] mt-1">{daysLabel}</div>
         </div>
+        <div className="flex items-center gap-1 text-sm text-[var(--color-text-secondary)]">
+          <Calendar className="w-4 h-4 text-[var(--color-accent)]/80" />
+          <span className="font-medium">{rotation}</span>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-        <Calendar className="w-4 h-4 text-[var(--color-accent)]/80" />
-        <span className="font-medium text-[var(--color-text-secondary)]">{rotation}</span>
-      </div>
-
+      {/* Supporting: Daily target */}
       {daysRemaining > 0 && dailyTarget > 0 && (
-        <p className="mt-3 text-xs text-[var(--color-text-muted)]">
-          Aim for{' '}
+        <p className="text-xs text-[var(--color-text-muted)] mb-3">
           <span className="font-semibold text-[var(--color-text-secondary)]">
-            ~{dailyTarget} questions/day
+            {dailyTarget} questions/day
           </span>{' '}
-          this rotation
+          to stay on track
         </p>
       )}
 
+      {/* Contextual: Final stretch */}
       {daysRemaining <= 14 && daysRemaining > 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="mt-4 p-3 bg-[var(--color-accent)]/10 rounded-lg"
+          className="p-3 bg-[var(--color-accent)]/10 rounded-lg"
         >
           <p className="text-xs text-[var(--color-text-secondary)]">
             <span className="font-semibold">Final stretch:</span> Focus on rotation-relevant content

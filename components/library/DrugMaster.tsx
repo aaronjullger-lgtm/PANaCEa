@@ -438,7 +438,7 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                 <div className="flex items-center gap-2 mb-3">
                   <AlertTriangle className="w-5 h-5 text-dusty-rose" />
                   <h4 className="text-sm font-semibold text-dusty-rose uppercase tracking-wide">
-                    ⚠️ Black Box Warnings
+                    Black Box Warnings
                   </h4>
                 </div>
                 <ul className="space-y-2">

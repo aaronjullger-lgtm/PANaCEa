@@ -142,13 +142,13 @@ const DecayCurve: React.FC<{
       />
 
       {/* Labels */}
-      <text x="0" y={height + 12} fontSize="8" fill="var(--color-text-muted)">
+      <text x="0" y={height + 12} fontSize="8" fill="var(--color-text-[var(--color-text-muted)])">
         Now
       </text>
-      <text x={width - 20} y={height + 12} fontSize="8" fill="var(--color-text-muted)">
+      <text x={width - 20} y={height + 12} fontSize="8" fill="var(--color-text-[var(--color-text-muted)])">
         {Math.round(maxDays)}d
       </text>
-      <text x={width + 4} y={thresholdY + 3} fontSize="8" fill="var(--color-text-muted)">
+      <text x={width + 4} y={thresholdY + 3} fontSize="8" fill="var(--color-text-[var(--color-text-muted)])">
         70%
       </text>
     </svg>
@@ -298,7 +298,7 @@ const PredictiveAlert: React.FC<{
       <div className="flex items-center gap-3">
         <AlertTriangle className="w-6 h-6 text-[var(--color-data-provisional)]" />
         <div>
-          <h3 className="font-semibold text-[var(--color-text-primary)]">⚠️ Memory Decay Alert</h3>
+          <h3 className="font-semibold text-[var(--color-text-primary)]">Memory Decay Alert</h3>
           <p className="text-sm text-[var(--color-text-muted)]">
             {criticalCount > 0 && (
               <span className="text-[var(--color-data-fail)] font-medium">

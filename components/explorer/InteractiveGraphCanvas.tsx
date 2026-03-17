@@ -526,16 +526,16 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
       <div
         ref={containerRef}
         style={{ width, height }}
-        className="bg-surface-card rounded-lg border border-gray-300"
+        className="bg-surface-card rounded-lg border border-[var(--color-border)]"
       />
 
       {/* Zoom/pan controls */}
       {enableZoomPan && (
-        <div className="absolute top-4 right-4 flex flex-col gap-2 p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-md">
+        <div className="absolute top-4 right-4 flex flex-col gap-2 p-2 bg-[var(--color-bg-primary)]/90 backdrop-blur-sm rounded-lg shadow-md">
           <button
             type="button"
             onClick={handleZoomIn}
-            className="p-2 hover:bg-gray-100 rounded"
+            className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded"
             aria-label="Zoom in"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -545,7 +545,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
           <button
             type="button"
             onClick={handleZoomOut}
-            className="p-2 hover:bg-gray-100 rounded"
+            className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded"
             aria-label="Zoom out"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -555,7 +555,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
           <button
             type="button"
             onClick={handleFit}
-            className="p-2 hover:bg-gray-100 rounded"
+            className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded"
             aria-label="Fit to view"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -565,7 +565,7 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
           <button
             type="button"
             onClick={handleReset}
-            className="p-2 hover:bg-gray-100 rounded"
+            className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded"
             aria-label="Reset view"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -591,13 +591,13 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
 
       {/* Selected node/edge info */}
       {(selectedNode || selectedEdge) && (
-        <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg max-w-md">
+        <div className="absolute bottom-4 left-4 right-4 bg-[var(--color-bg-primary)]/90 backdrop-blur-sm p-4 rounded-lg shadow-lg max-w-md">
           {selectedNode && (
             <div>
               <h3 className="font-bold text-lg">{selectedNode.label}</h3>
-              <p className="text-sm text-gray-600">{selectedNode.nodeType}</p>
+              <p className="text-sm text-[var(--color-text-secondary)]">{selectedNode.nodeType}</p>
               {selectedNode.description && (
-                <p className="mt-2 text-gray-800">{selectedNode.description}</p>
+                <p className="mt-2 text-[var(--color-text-primary)]">{selectedNode.description}</p>
               )}
               <div className="mt-2 flex flex-wrap gap-1">
                 {selectedNode.systemCodes.map(code => (
@@ -611,9 +611,9 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
           {selectedEdge && (
             <div>
               <h3 className="font-bold text-lg">Edge</h3>
-              <p className="text-sm text-gray-600">{selectedEdge.edgeType}</p>
+              <p className="text-sm text-[var(--color-text-secondary)]">{selectedEdge.edgeType}</p>
               {selectedEdge.description && (
-                <p className="mt-2 text-gray-800">{selectedEdge.description}</p>
+                <p className="mt-2 text-[var(--color-text-primary)]">{selectedEdge.description}</p>
               )}
               <div className="mt-2 text-sm">
                 <span className="font-semibold">Weight:</span> {selectedEdge.weight ?? 'N/A'}

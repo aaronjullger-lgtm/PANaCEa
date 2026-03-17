@@ -643,6 +643,11 @@ a,
   --color-edge-manifests: #ec4899;
   --color-edge-differential: #14b8a6;
   --color-edge-complicates: #b91c1c;
+
+  /* Scrollbar styling for dark mode */
+  color-scheme: dark;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(71, 85, 105, 0.6) var(--color-bg-primary);
 }
 
 /* ===== COMMUTER MODE / VOICE-FIRST ACCESSIBILITY ===== */
@@ -733,6 +738,8 @@ a,
   background-color: var(--color-card-bg) !important;
   width: 100% !important;
   border-collapse: collapse !important;
+  border-radius: 10px !important;
+  overflow: hidden;
 }
 
 /* Table header + cells */
@@ -748,17 +755,6 @@ a,
 #question-container tr:nth-child(odd),
 #question-container tr:nth-child(even) {
   background-color: var(--color-card-bg) !important;
-}
-
-/* Round the outer border radius */
-#question-container table {
-  border-radius: 10px !important;
-  overflow: hidden;
-}
-#question-container table th,
-#question-container table td {
-  border: 1px solid var(--color-border) !important;
-  padding: 6px 10px;
 }
 /* Make the final sentence of the question bold */
 #question-container p:last-of-type {
@@ -909,14 +905,14 @@ a,
 
 .section-nav-button.active {
   background: var(--color-accent);
-  color: #ffffff;
+  color: var(--color-text-inverse);
   font-weight: 700;
   border-color: var(--color-accent);
 }
 
 .dark .section-nav-button.active {
   background: var(--color-accent);
-  color: #0f172a;
+  color: var(--color-navy);
   font-weight: 700;
   border-color: var(--color-accent);
 }
@@ -1435,7 +1431,7 @@ a,
   border-radius: 10px;
   border: 1px solid var(--color-accent);
   background: var(--color-accent);
-  color: #ffffff;
+  color: var(--color-text-inverse);
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
@@ -1443,7 +1439,7 @@ a,
 }
 
 .dark .condition-drill {
-  color: #0f172a;
+  color: var(--color-navy);
 }
 
 .condition-drill:hover {
@@ -1659,15 +1655,10 @@ a,
 }
 
 /* ===============================================
-   SCROLLBAR STYLING FOR DARK MODE
+   SCROLLBAR STYLING
    =============================================== */
 
-/* Ensure scrollbars respect dark mode color scheme */
-.dark {
-  color-scheme: dark;
-}
-
-/* Custom scrollbar styling for better dark mode experience */
+/* Scoped scrollable containers */
 .scrollable-area {
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
@@ -1699,12 +1690,7 @@ a,
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Global scrollbar in dark mode: track = brand dark blue, thumb = slate (no default black/white) */
-.dark {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(71, 85, 105, 0.6) var(--color-bg-primary);
-}
-
+/* Global dark-mode scrollbar: track = brand dark blue, thumb = slate */
 .dark::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -1807,7 +1793,7 @@ a,
 [class*='bg-indigo-50'],
 [class*='from-blue-50'],
 [class*='from-indigo-50'] {
-  color: #0f172a !important; /* Force dark text on light backgrounds */
+  color: var(--color-navy) !important; /* Force dark text on light backgrounds */
 }
 
 /* Safety: Override nested elements within light backgrounds */
@@ -1836,7 +1822,7 @@ a,
 [class*='from-blue-50'] h2,
 [class*='from-blue-50'] h3,
 [class*='from-blue-50'] h4 {
-  color: #0f172a !important;
+  color: var(--color-navy) !important;
 }
 
 /* Safety: Ensure paragraphs in light cards have proper contrast */
@@ -1845,7 +1831,7 @@ a,
 [class*='bg-blue-50'] p,
 [class*='from-blue-50'] p,
 [class*='from-indigo-50'] p {
-  color: #475569 !important; /* slate-600 */
+  color: var(--color-label-secondary) !important; /* slate-600 */
 }
 
 /* Dark mode: Only override when element has a dark: variant (theme-aware card).

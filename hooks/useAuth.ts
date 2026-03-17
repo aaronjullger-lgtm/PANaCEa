@@ -3,6 +3,7 @@
  * Provides authentication state and user information
  */
 
+import { useCallback } from 'react';
 import { useUser, useClerk, useAuth as useClerkAuth } from '@clerk/clerk-react';
 
 export interface AuthUser {
@@ -26,8 +27,8 @@ export interface UseAuthResult {
  */
 export function useAuth(): UseAuthResult {
   const { user, isLoaded: userLoaded } = useUser();
-  const { getToken } = useClerkAuth();
-  const { signOut } = useClerk();
+  const { getToken: clerkGetToken } = useClerkAuth();
+  const { signOut: clerkSignOut } = useClerk();
 
   const isSignedIn = !!user && userLoaded;
   const isLoading = !userLoaded;
@@ -42,15 +43,16 @@ export function useAuth(): UseAuthResult {
       }
     : null;
 
+  // Stable references — useCallback with no deps so the function identity
+  // doesn't change on every render (prevents infinite loops in useEffect deps).
+  const getToken = useCallback(() => clerkGetToken(), [clerkGetToken]);
+  const signOut = useCallback(() => clerkSignOut(), [clerkSignOut]);
+
   return {
     isSignedIn,
     isLoading,
     user: authUser,
-    signOut: async () => {
-      await signOut();
-    },
-    getToken: async () => {
-      return await getToken();
-    },
+    signOut,
+    getToken,
   };
 }

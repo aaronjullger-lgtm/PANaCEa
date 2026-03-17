@@ -47,7 +47,7 @@ const ClinicalProfileDashboard: React.FC = () => {
         </div>
         <button
           onClick={refetch}
-          className="px-3 py-1.5 text-sm font-medium rounded-lg border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg hover:border-[var(--color-category-practice)] text-data-neutral dark:text-data-neutral"
+          className="px-3 py-1.5 text-sm font-medium rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:border-[var(--color-category-practice)] text-[var(--color-text-muted)]"
         >
           Refresh
         </button>

@@ -136,7 +136,7 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
                   placeholder="e.g. Cardiovascular percentage allocation changes"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]"
+                  className="mt-1 block w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-primary)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])]"
                 />
               </label>
             )}

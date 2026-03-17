@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft } from 'lucide-react';
+// ChevronLeft removed — back navigation handled by NavRail home icon in this view
 import { CommandCenterHub } from '../components/navigation/CommandCenterHub';
 import type { PerformanceRecord, Question, SessionSettings } from '../types';
 
@@ -46,7 +46,7 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
   onNavigateToMyLibrary,
   onNavigateToStudyCompanion,
   onNavigateToSrsFlashcards,
-  onBack,
+  onBack: _onBack,
 }) => {
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-6 px-4">
@@ -57,14 +57,6 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mb-4 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Dashboard
-          </button>
-
           <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
             Training Command Center
           </h1>

@@ -9,7 +9,7 @@ interface Props {
 export const StrengthsWeaknesses: React.FC<Props> = ({ strengths, weaknesses }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg/80 p-4">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
         <p className="text-xs uppercase tracking-wide text-data-neutral mb-2">Strengths</p>
         {strengths.length ? (
           <ul className="space-y-1 text-sm text-data-neutral dark:text-data-neutral">
@@ -24,7 +24,7 @@ export const StrengthsWeaknesses: React.FC<Props> = ({ strengths, weaknesses }) 
           <p className="text-sm text-data-neutral">Need more data.</p>
         )}
       </div>
-      <div className="rounded-xl border border-data-neutral dark:border-data-neutral bg-white dark:bg-data-neutral-bg/80 p-4">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
         <p className="text-xs uppercase tracking-wide text-data-neutral mb-2">Needs Work</p>
         {weaknesses.length ? (
           <ul className="space-y-1 text-sm text-data-neutral dark:text-data-neutral">

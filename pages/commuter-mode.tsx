@@ -16,7 +16,7 @@ const CommuterModePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-primary">
+    <div className="min-h-screen bg-[var(--color-bg-primary)]">
       <CommuterMode onExit={handleExit} />
     </div>
   );

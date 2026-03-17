@@ -211,7 +211,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
-          className="bg-white dark:bg-data-neutral-bg rounded-2xl shadow-lg p-6"
+          className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-lg p-6"
         >
           {currentStep === 'content' && (
             <ContentStep

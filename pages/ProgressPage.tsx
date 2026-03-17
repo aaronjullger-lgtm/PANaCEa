@@ -64,7 +64,16 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
           <HighContrastDataToggle compact className="shrink-0" />
         </div>
         <Suspense fallback={<SkeletonLoader />}>
-          <UserFriendlyStatsDisplay />
+          <UserFriendlyStatsDisplay
+            onPracticeSystem={(system) => {
+              try {
+                sessionStorage.setItem('panceai_pending_system_drill', system);
+              } catch {
+                /* ignore */
+              }
+              navigate(ROUTES.STUDY);
+            }}
+          />
         </Suspense>
       </section>
 

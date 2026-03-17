@@ -104,7 +104,7 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
         : 'text-[var(--color-data-fail)] dark:text-[var(--color-data-fail)]/90';
 
   return (
-    <div className="bg-white dark:bg-data-neutral-bg rounded-xl border border-data-neutral dark:border-data-neutral overflow-hidden">
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-data-neutral dark:border-data-neutral">
         <div className="flex items-center justify-between">

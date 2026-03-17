@@ -5,7 +5,7 @@
  * conditionId is available. Falls back to legacy layout for content without conditionId.
  */
 
-import React, { useMemo, Suspense } from 'react';
+import React, { useMemo, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import {
@@ -24,7 +24,11 @@ import {
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 import { parseListField, parseTextField, normalizeMedicalContent } from '@/lib/utils/normalization';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
-import { SmartConditionView } from '@/config/lazyComponents';
+// Lazy-load SmartConditionView locally to avoid circular dependency with config/lazyComponents
+// (same pattern used in ClinicalReferenceLibrary.tsx)
+const SmartConditionView = lazy(() =>
+  import('./SmartConditionView').then((m) => ({ default: m.SmartConditionView }))
+);
 import { Skeleton } from '@/components/loading';
 import type { MedicalContentDisplay } from '@/types/medical-content';
 

@@ -56,14 +56,14 @@ export const DecayCurve: React.FC<DecayCurveProps> = ({ data }) => {
           <XAxis
             dataKey="day"
             stroke="var(--color-border)"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 11 }}
             tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
             ticks={[0, 7, 14, 21, 30]}
           />
 
           <YAxis
             stroke="var(--color-border)"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 11 }}
             tickLine={{ stroke: 'var(--chart-grid-stroke)' }}
             domain={[0, 100]}
           />

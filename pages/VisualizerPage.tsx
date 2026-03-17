@@ -4,8 +4,10 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Loader2, ImageIcon } from 'lucide-react';
+import { Loader2, ImageIcon } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { BackLink } from '@/components/navigation/BackLink';
+import { ROUTES } from '@/config/routes';
 
 interface MaskItem {
   mask?: string;
@@ -100,13 +102,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-6 px-4">
       <div className="max-w-4xl mx-auto">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mb-6 transition-colors"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back
-        </button>
+        <BackLink to={ROUTES.STUDY} className="mb-6" />
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">

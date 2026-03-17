@@ -1,52 +1,25 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { RecommendationFeed } from '@/components/dashboard/RecommendationFeed';
 import { useUser } from '@clerk/clerk-react';
 import {
-  Zap,
-  Target,
   Brain,
   Stethoscope,
   BarChart3,
   Calculator,
-  BookOpen,
-  Pill,
-  Activity,
-  Clock,
-  Trophy,
   TrendingUp,
   ChevronRight,
   Play,
-  Flame,
-  AlertCircle,
-  CheckCircle,
   Timer,
   GraduationCap,
-  Beaker,
   Layers,
-  LucideIcon,
-  User,
-  FileImage,
-  Shield,
-  Droplets,
-  GitCompare,
-  FileCheck,
-  Siren,
-  Hash,
-  Heart,
-  Wind,
-  Eye,
   MessageSquare,
-  Image,
-  Scan,
-  FlaskConical,
-  Headphones,
-  FolderTree,
+  Trophy,
   Sparkles,
   MoreHorizontal,
   RotateCcw,
@@ -58,41 +31,15 @@ import { loadUserProfile } from '@/services/analytics';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { getSystemsForRotation, isEorRotation, DEFAULT_SYSTEM_PROGRESS_TOTAL } from '@/config/rotation-systems';
 import { RotationSelector } from '@/components/onboarding/RotationSelector';
-import {
-  AnalyticsDashboard,
-  DatabaseAnalyticsDashboard,
-  LearningProfileDashboard,
-  AdvancedLearningProfileDashboard,
-  UserFriendlyStatsDisplay,
-} from '@/config/lazyComponents';
-import {
-  VISUAL_DIAGNOSTICS_MODES,
-  CLINICAL_SIMULATION_MODES,
-  QUESTION_PRACTICE_MODES,
-  SPECIALTY_DRILL_MODES,
-  CATEGORY_INFO,
-  STUDY_OUTCOME_GROUPS,
-  getModeById,
-  type TrainingModeConfig,
-  type TrainingCategory,
-} from '@/config/training-modes';
 import { TO_REVIEW_LABEL } from '@/config/labels';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useRolling360Stats } from '@/hooks/useRolling360Stats';
 import { useUnifiedStats } from '@/hooks/useUnifiedStats';
-import UnifiedDashboard from '@/components/dashboard/UnifiedDashboard';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { calculateDayStreak } from '@/lib/dashboardUtils';
-import { QuickStatsBarSkeleton, SkeletonLoader } from '@/components/loading';
+import { QuickStatsBarSkeleton } from '@/components/loading';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { CurriculumGrid } from '@/components/dashboard/CurriculumGrid';
-import { BodyMapWidget } from '@/components/dashboard/BodyMapWidget';
-import { RoundsButton } from '@/components/dashboard/RoundsButton';
-import { HighContrastDataToggle } from '@/components/ui/HighContrastDataToggle';
-import {
-  SmartSchedulerGantt,
-  type ScheduleBlock,
-} from '@/components/analytics/SmartSchedulerGantt';
 import { getLastSession, clearLastSession, type LastSessionData } from '@/lib/utils/sessionStorage';
 import { WelcomeBackCard } from '@/components/dashboard/WelcomeBackCard';
 import { ExamCountdownCard } from '@/components/dashboard/ExamCountdownCard';
@@ -100,8 +47,12 @@ import { EorCountdownCard } from '@/components/dashboard/EorCountdownCard';
 import { CircadianInsightCard } from '@/components/dashboard/CircadianInsightCard';
 import { TimeBoxButtons } from '@/components/dashboard/TimeBoxButtons';
 import { ProgressRingWidget } from '@/components/dashboard/ProgressRingWidget';
-import { RecommendedActionCard } from '@/components/dashboard/RecommendedActionCard';
 import { usePullToRefresh } from '@/hooks/useSwipeGestures';
+import {
+  GrandRoundsBanner,
+  CoreAdaptiveHero,
+  QuickStatsBar,
+} from './hub';
 
 // ============================================================================
 // Types
@@ -157,188 +108,9 @@ interface CommandCenterHubProps {
   initialStudyToolsTab?: 'training' | 'resources' | 'analytics';
 }
 
-// Icon mapping
-const ICON_MAP: Record<string, LucideIcon> = {
-  Brain,
-  Zap,
-  Target,
-  Stethoscope,
-  BookOpen,
-  Pill,
-  Activity,
-  Clock,
-  Trophy,
-  Flame,
-  AlertCircle,
-  CheckCircle,
-  Timer,
-  GraduationCap,
-  Beaker,
-  FileImage,
-  Shield,
-  Layers,
-  Droplets,
-  GitCompare,
-  FileCheck,
-  Siren,
-  Hash,
-  Heart,
-  Wind,
-  Eye,
-  MessageSquare,
-  Image,
-  Scan,
-  FlaskConical,
-  Headphones,
-  FolderTree,
-  Calculator,
-  BarChart3,
-  TrendingUp,
-  Sparkles,
-};
-
 // ============================================================================
 // Subcomponents
 // ============================================================================
-
-// Grand Rounds Banner (Standalone Daily Challenge)
-// Didactic: "Targeted Daily Question" from enabled systems only; Clinical/Pro: Global Grand Rounds
-const GrandRoundsBanner: React.FC<{
-  onStart: () => void;
-  /** When true, show "Targeted Daily Question" and pass targeted flag so mode fetches by enabled systems */
-  isDidactic?: boolean;
-}> = ({ onStart, isDidactic }) => {
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-  });
-
-  const title = isDidactic ? 'Targeted Daily Question' : 'Grand Rounds';
-  const subtitle = isDidactic
-    ? 'One question from your current curriculum.'
-    : 'Same questions for everyone — daily standardized assessment.';
-
-  const handleStart = () => {
-    if (isDidactic) {
-      try {
-        sessionStorage.setItem('panceai_grand_rounds_targeted', '1');
-      } catch {
-        /* ignore */
-      }
-    }
-    onStart();
-  };
-
-  return (
-    <GlassCard variant="warning" hoverable className="mb-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-start gap-4 flex-1">
-          <div className="p-3 rounded-xl bg-[var(--color-category-specialty)]/20 backdrop-blur-sm">
-            <Trophy className="w-6 h-6 text-[var(--color-category-specialty)]" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h3>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-category-specialty)]/10 text-[var(--color-category-specialty)] border border-[var(--color-category-specialty)]/20">
-                Daily Challenge • {dateStr}
-              </span>
-            </div>
-            <p className="text-sm text-[var(--color-text-muted)]">{subtitle}</p>
-          </div>
-        </div>
-
-        <PrimaryButton variant="warning" size="md" icon={Play} onClick={handleStart}>
-          Start
-        </PrimaryButton>
-      </div>
-    </GlassCard>
-  );
-};
-
-// Core Adaptive Hero (Main Event)
-const CoreAdaptiveHero: React.FC<{
-  onStart: () => void;
-  accuracy: number | null;
-  questionsToday: number;
-  examLabel: string;
-  /** When true, show "Knowledge Maintenance" / "PANRE-LA Check-in" instead of Core PANCE */
-  isPracticing?: boolean;
-  /** Sub-label for Start Session (e.g. "Testing: CV, PULM, GI Only") - shown for Didactic users */
-  enabledSystemsLabel?: string | null;
-  /** Optional label for accuracy (e.g. "Module Accuracy") */
-  accuracyLabel?: string;
-  /** Weak areas from analytics; when present, show "Focusing on your weak areas: X, Y" */
-  growthAreas?: string[];
-}> = ({
-  onStart,
-  accuracy,
-  questionsToday,
-  examLabel,
-  isPracticing,
-  enabledSystemsLabel,
-  accuracyLabel,
-  growthAreas = [],
-}) => {
-  const mainTitle = isPracticing ? 'Knowledge Maintenance' : 'Core PANCE Simulation';
-  const badgeLabel = isPracticing ? 'PANRE-LA Check-in' : `${examLabel} Prep`;
-  // Core PANCE Simulation: no weak-area copy — strict NCCIPA blueprint only
-  const subtitle = isPracticing
-    ? growthAreas.length > 0
-      ? `Focusing on your weak areas: ${growthAreas.slice(0, 3).join(', ')}.`
-      : 'Maintain your certification knowledge with adaptive questions.'
-    : 'Strict NCCPA blueprint weighting. Exam-representative mix — no adaptive bias.';
-  return (
-    <GlassCard variant="primary" hoverable className="mb-6">
-      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-        <div className="flex-1 flex flex-col justify-between">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-[var(--color-accent)]/20 backdrop-blur-sm">
-              <Brain className="w-7 h-7 text-[var(--color-accent)]" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{mainTitle}</h3>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20">
-                  {badgeLabel}
-                </span>
-              </div>
-              <p className="text-base text-[var(--color-text-secondary)]">{subtitle}</p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center gap-4 text-[var(--color-text-muted)]">
-            <span className="inline-flex items-center gap-1.5 text-sm">
-              <Target className="w-4 h-4 text-[var(--color-accent)]" aria-hidden />
-              {accuracy !== null ? `${accuracy}%` : 'Waiting for first session'}{' '}
-              {accuracyLabel ?? 'accuracy'}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-sm">
-              <CheckCircle className="w-4 h-4 text-[var(--color-accent)]" aria-hidden />
-              {questionsToday} today
-            </span>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-end gap-1">
-          <PrimaryButton
-            variant="secondary"
-            size="lg"
-            icon={Play}
-            iconRight={ChevronRight}
-            onClick={onStart}
-          >
-            Start Session
-          </PrimaryButton>
-          {enabledSystemsLabel && (
-            <span className="text-xs text-[var(--color-text-muted)]">{enabledSystemsLabel}</span>
-          )}
-        </div>
-      </div>
-    </GlassCard>
-  );
-};
 
 // OSCE Section (Standalone Feature)
 const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
@@ -501,309 +273,6 @@ const HeroTriple: React.FC<{
   );
 };
 
-// Quick Stats Bar (respects prefers-reduced-motion)
-const QuickStatsBar: React.FC<{
-  streak: number;
-  dueCount: number;
-  accuracy: number | null;
-  questionsToday: number;
-  /** "Module Accuracy" when Didactic with filtered systems, "Global Accuracy" otherwise */
-  accuracyLabel?: string;
-  /** "To Review" for students, "Maintenance Due" for Practicing PAs */
-  dueLabel?: string;
-}> = ({
-  streak,
-  dueCount,
-  accuracy,
-  questionsToday,
-  accuracyLabel = 'Global Accuracy',
-  dueLabel = 'To Review',
-}) => {
-  const prefersReducedMotion = useReducedMotion();
-  const stats = [
-    {
-      label: 'Study Continuity',
-      value: streak,
-      icon: Zap,
-      color: 'text-[var(--color-data-pass)]',
-    },
-    {
-      label: dueLabel,
-      value: dueCount,
-      icon: AlertCircle,
-      color: dueCount > 0 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-text-muted)]',
-    },
-    {
-      label: accuracyLabel,
-      value: accuracy !== null ? `${accuracy}%` : 'Waiting for first session',
-      icon: Target,
-      color: 'text-[var(--color-accent)]',
-    },
-    { label: 'Today', value: questionsToday, icon: CheckCircle, color: 'text-[var(--color-accent)]' },
-  ];
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-      {stats.map((stat, i) => {
-        const isDueCard = stat.label === dueLabel;
-        const hasDueItems = isDueCard && dueCount > 0;
-
-        const animate = prefersReducedMotion
-          ? { opacity: 1, y: 0 }
-          : hasDueItems
-            ? {
-                opacity: 1,
-                y: 0,
-                scale: [1, 1.02, 1],
-                borderColor: [
-                  'var(--color-border)',
-                  'rgba(20, 184, 166, 0.4)',
-                  'var(--color-border)',
-                ],
-              }
-            : { opacity: 1, y: 0 };
-        const transition = prefersReducedMotion
-          ? { duration: 0 }
-          : hasDueItems
-            ? {
-                opacity: { delay: i * 0.05, duration: 0.3, ease: 'easeOut' as const },
-                y: { delay: i * 0.05, duration: 0.3, ease: 'easeOut' as const },
-                scale: {
-                  delay: i * 0.05 + 0.3,
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: 'loop' as const,
-                  ease: 'easeInOut',
-                },
-                borderColor: {
-                  delay: i * 0.05 + 0.3,
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: 'loop' as const,
-                  ease: 'easeInOut',
-                },
-              }
-            : { delay: i * 0.05, duration: 0.3, ease: 'easeOut' as const };
-
-        return (
-          <motion.div
-            key={stat.label}
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
-            animate={animate}
-            transition={transition}
-            className={`flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] rounded-xl border transition-colors ${
-              hasDueItems
-                ? 'border-data-provisional/30 hover:border-data-provisional/40'
-                : 'border-[var(--color-border)] hover:border-[var(--color-border)]/60'
-            }`}
-          >
-            <div className="p-2 rounded-xl bg-[var(--color-bg-primary)]">
-              <stat.icon className={`w-5 h-5 ${stat.color}`} />
-            </div>
-            <div>
-              <div className="text-lg font-bold text-[var(--color-text-primary)] data-nums">
-                {stat.value}
-              </div>
-              <div className="kpi-label">{stat.label}</div>
-            </div>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-};
-
-// Mode Card (respects prefers-reduced-motion; reflow-friendly for text scaling)
-const ModeCard: React.FC<{
-  mode: TrainingModeConfig;
-  onSelect: () => void;
-}> = ({ mode, onSelect }) => {
-  const Icon = ICON_MAP[mode.iconName] || Target;
-  const prefersReducedMotion = useReducedMotion();
-
-  return (
-    <motion.button
-      variants={{
-        initial: { opacity: 0, y: 10 },
-        animate: { opacity: 1, y: 0 },
-      }}
-      transition={
-        prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 28 }
-      }
-      whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.01 }}
-      whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-      onClick={onSelect}
-      disabled={mode.isComingSoon}
-      title={
-        mode.isComingSoon
-          ? `${mode.label} - Feature in development, available soon`
-          : mode.description
-      }
-      aria-label={mode.isComingSoon ? `${mode.label} - Coming soon` : mode.label}
-      className={`
-        w-full text-left p-4 rounded-xl border transition-all duration-200 group min-h-0
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
-        ${
-          mode.isComingSoon
-            ? 'opacity-50 cursor-not-allowed bg-[var(--color-bg-tertiary)] border-dashed border-[var(--color-border)]'
-            : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg shadow-md shadow-[var(--color-shadow-soft)]'
-        }
-      `}
-    >
-      <div className="flex items-start gap-3">
-        <div className="p-2 rounded-xl bg-[var(--color-bg-secondary)] group-hover:bg-[var(--color-accent)]/10 transition-colors duration-200 flex-shrink-0">
-          <Icon className="w-5 h-5 text-[var(--color-text-secondary)] group-hover:text-[var(--color-accent)] transition-colors" />
-        </div>
-        <div className="flex-1 min-w-0 max-w-xl">
-          <div className="flex items-center justify-between gap-2 mb-0.5">
-            <h4 className="font-semibold text-[var(--color-text-primary)] break-words">
-              {mode.label}
-            </h4>
-            {mode.isComingSoon && (
-              <span className="text-xs text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] px-2 py-0.5 rounded-full flex-shrink-0">
-                Soon
-              </span>
-            )}
-          </div>
-          <p className="text-[15px] text-[var(--color-text-secondary)] line-clamp-3">
-            {mode.description}
-          </p>
-          {mode.estimatedMinutes && (
-            <div className="flex items-center gap-1.5 mt-2 text-xs text-[var(--color-text-muted)]">
-              <Timer className="w-3 h-3" />
-              <span>~{mode.estimatedMinutes} min</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </motion.button>
-  );
-};
-
-// Category Section
-const CategorySection: React.FC<{
-  category: TrainingCategory;
-  modes: TrainingModeConfig[];
-  onSelectMode: (mode: TrainingModeConfig) => void;
-}> = ({ category, modes, onSelectMode }) => {
-  const info = CATEGORY_INFO[category];
-  const Icon = ICON_MAP[info.iconName] || Target;
-
-  if (modes.length === 0) return null;
-
-  return (
-    <section className="mb-8">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-xl bg-[var(--color-bg-secondary)]">
-          <Icon className="w-5 h-5 text-[var(--color-text-secondary)]" />
-        </div>
-        <div>
-          <h3 className="text-lg font-bold text-[var(--color-text-primary)]">{info.label}</h3>
-          <p className="text-sm text-[var(--color-text-muted)]">{info.description}</p>
-        </div>
-      </div>
-
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
-        variants={{
-          animate: { transition: { staggerChildren: 0.04, delayChildren: 0.02 } },
-        }}
-        initial="initial"
-        animate="animate"
-      >
-        {modes.map((mode) => (
-          <ModeCard key={mode.id} mode={mode} onSelect={() => onSelectMode(mode)} />
-        ))}
-      </motion.div>
-    </section>
-  );
-};
-
-// ============================================================================
-// Residency Cockpit: Study by System (body map / system grid from Rolling 360)
-// ============================================================================
-
-function ResidencyCockpitSection({
-  onNavigateToDrillWithSystem,
-}: {
-  onNavigateToDrillWithSystem: (modeId: string, system: string) => void;
-}) {
-  const { stats, isLoading } = useRolling360Stats();
-  const weakestSet = useMemo(() => new Set(stats?.weakestSystems ?? []), [stats?.weakestSystems]);
-  const weakestSystem = stats?.weakestSystems?.[0] ?? null;
-  const hasData = (stats?.totalInWindow ?? 0) >= 5;
-  const systemsWithData = Object.entries(stats?.systemStats ?? {}).filter(([, s]) => s.total >= 2);
-
-  if (isLoading) return null;
-
-  return (
-    <section className="mb-6">
-      <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-        <Target className="w-5 h-5 text-[var(--color-text-muted)]" />
-        Residency Cockpit
-      </h3>
-
-      <div className="flex flex-col lg:flex-row gap-6">
-        {hasData && systemsWithData.length > 0 && stats?.systemStats && (
-          <div className="flex-shrink-0">
-            <BodyMapWidget
-              systemStats={stats.systemStats}
-              weakestSystems={stats.weakestSystems ?? []}
-              onSystemClick={(s) => onNavigateToDrillWithSystem('system_drill', s)}
-            />
-          </div>
-        )}
-        <div className="flex-1 flex flex-col gap-4">
-          <RoundsButton
-            weakestSystem={weakestSystem}
-            hasData={hasData}
-            onStartRounds={(system) => {
-              if (system) {
-                onNavigateToDrillWithSystem('system_drill', system);
-              } else {
-                onNavigateToDrillWithSystem('system_drill', '');
-              }
-            }}
-          />
-          {systemsWithData.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {systemsWithData.slice(0, 12).map(([system, sysStats]) => {
-                const isWeak = weakestSet.has(system);
-                return (
-                  <button
-                    key={system}
-                    type="button"
-                    onClick={() => onNavigateToDrillWithSystem('system_drill', system)}
-                    className={`
-                      text-left p-4 rounded-xl border transition-all min-h-[44px]
-                      bg-[var(--color-bg-primary)] border-[var(--color-border)]
-                      hover:border-[var(--color-accent)]/50 hover:shadow-lg
-                      ${isWeak ? 'ring-1 ring-[var(--color-accent)]/30' : ''}
-                    `}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-[var(--color-text-primary)] truncate">
-                        {system}
-                      </span>
-                      {isWeak && (
-                        <span className="px-1.5 py-0.5 bg-[var(--color-accent)]/20 text-[var(--color-accent)] text-xs rounded">
-                          Weak
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-[var(--color-text-muted)]">
-                      {sysStats.accuracy.toFixed(0)}% · {sysStats.total} q
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ============================================================================
 // Main Component
 // ============================================================================
@@ -935,14 +404,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       yearInProgram: apiProfile.yearInProgram ?? prev?.yearInProgram,
     }));
   }, [apiProfile?.eorTestDate, apiProfile?.rotationStartDate, apiProfile?.rotationEndDate, apiProfile?.currentRotation, apiProfile?.yearInProgram]);
-
-  // Study Tools tab state
-  const [activeTab, setActiveTab] = useState<'training' | 'resources' | 'analytics'>(
-    initialStudyToolsTab || 'training'
-  );
-  const [studyFocusStep, setStudyFocusStep] = useState<'idle' | 'choose_focus'>('idle');
-  const [showAllTools, setShowAllTools] = useState(false);
-  const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
 
   useEffect(() => {
     const sync = () => setUserProfile(loadUserProfile() || { hasCompletedOnboarding: false });
@@ -1082,20 +543,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     return { streak, dueCount, accuracy, questionsToday: todayRecords.length };
   }, [performanceData, flaggedQuestions, missedQuestions, propDueCount, unifiedStats, unifiedStatsLoading]);
 
-  // FSRS / spaced repetition schedule blocks for Gantt (today when dueCount > 0)
-  const schedulerBlocks: ScheduleBlock[] = useMemo(() => {
-    if (stats.dueCount <= 0) return [];
-    const today = new Date().toISOString().slice(0, 10);
-    return [
-      {
-        id: 'today-due',
-        label: 'Review due',
-        date: today,
-        count: stats.dueCount,
-      },
-    ];
-  }, [stats.dueCount]);
-
   // For Didactic users: sub-label showing enabled systems (e.g. "Testing: CV, PULM, GI Only")
   const enabledSystemsLabel = useMemo(() => {
     if (careerStage !== 'student') return null;
@@ -1104,39 +551,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     if (enabled.length === 0 || enabled.length === all.length) return null;
     return `Testing: ${enabled.slice(0, 5).join(', ')}${enabled.length > 5 ? '…' : ''} Only`;
   }, [careerStage, enabledSystems]);
-
-  // Filter modes based on user context (PANCE vs PANRE; hide didactic-only for Practicing PAs)
-  const filteredModes = useMemo(() => {
-    const filterForContext = (modes: TrainingModeConfig[]) =>
-      modes.filter((m) => {
-        if (m.panreOnly && !showPANREContent) return false;
-        if (m.didacticOnly && showPANREContent) return false;
-        return true;
-      });
-
-    return {
-      visual: filterForContext(VISUAL_DIAGNOSTICS_MODES),
-      clinical: filterForContext(CLINICAL_SIMULATION_MODES),
-      questions: filterForContext(QUESTION_PRACTICE_MODES),
-      specialty: filterForContext(SPECIALTY_DRILL_MODES),
-    };
-  }, [showPANREContent]);
-
-  const handleModeSelect = useCallback(
-    (mode: TrainingModeConfig) => {
-      if (mode.id === 'core_adaptive') {
-        // Navigate to dedicated simulation page instead of opening modal
-        if (onNavigateToSimulation) {
-          onNavigateToSimulation();
-        } else {
-          onStartSession({ focus: 'all' });
-        }
-      } else {
-        onNavigateToDrillMode(mode.id);
-      }
-    },
-    [onNavigateToDrillMode, onStartSession, onNavigateToSimulation]
-  );
 
   const handleNavigateToDrillModeWithSettings = (modeId: string, settings?: any) => {
     if (modeId === 'core_adaptive' || modeId === 'custom_practice') {
@@ -1463,7 +877,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onNavigateToStudyPathDashboard}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:opacity-90 text-[var(--color-text-inverse)] font-medium rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-slate-100 hover:bg-slate-500 active:bg-slate-400 font-medium rounded-lg transition-colors"
               >
                 Open Dashboard
                 <ChevronRight className="w-4 h-4" />

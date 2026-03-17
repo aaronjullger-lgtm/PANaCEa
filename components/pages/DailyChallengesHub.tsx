@@ -8,9 +8,12 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Trophy, Puzzle, SpellCheck } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS, buildApiUrl } from '@/lib/utils/apiConfig';
 import { useDiagnosticPuzzle } from '@/hooks/useDiagnosticPuzzle';
 import { useWordleGame } from '@/src/hooks/useWordleGame';
+import { BackLink } from '@/components/navigation/BackLink';
+import { ROUTES } from '@/config/routes';
 
 interface ChallengeCardProps {
   title: string;
@@ -40,7 +43,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
   onAction,
 }) => {
   return (
-    <div className="bg-surface-card border border-border-subtle rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-surface-card border border-[var(--color-border)] rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-action-muted rounded-lg text-action-primary">
@@ -48,7 +51,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-action-primary">{title}</h3>
-            <p className="text-sm text-text-muted">{subtitle}</p>
+            <p className="text-sm text-text-[var(--color-text-muted)]">{subtitle}</p>
           </div>
         </div>
         {completed && (
@@ -95,6 +98,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
 
 export function DailyChallengesHub() {
   const { getToken } = useAuth();
+  const navigate = useNavigate();
   const [grandRoundsCompleted, setGrandRoundsCompleted] = useState<boolean>(false);
   const [grandRoundsLoading, setGrandRoundsLoading] = useState(true);
   const [grandRoundsError, setGrandRoundsError] = useState<string | null>(null);
@@ -157,23 +161,22 @@ export function DailyChallengesHub() {
   const resetTime = '6 hours'; // TODO: calculate from midnight UTC
 
   const handleStartGrandRounds = () => {
-    // Navigate to Grand Rounds mode
-    window.location.href = '/grand-rounds';
+    navigate(ROUTES.STUDY);
   };
 
   const handleStartDiagnosticPuzzle = () => {
-    // Navigate to Diagnostic Puzzle mode
-    window.location.href = '/diagnostic-puzzle';
+    navigate(ROUTES.STUDY);
   };
 
   const handleStartWordle = () => {
-    // Navigate to Medical Wordle mode
-    window.location.href = '/medical-wordle';
+    // [DISABLED] Medical Wordle API not implemented - go to practice
+    navigate(ROUTES.PRACTICE);
   };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-10">
+        <BackLink to={ROUTES.STUDY} className="mb-4" />
         <h1 className="text-3xl font-bold text-action-primary mb-2">Daily Challenges</h1>
         <p className="text-text-secondary">
           Engage with daily challenges to test your knowledge, compete with peers, and maintain your streak.
@@ -223,7 +226,7 @@ export function DailyChallengesHub() {
       </div>
 
       {/* Optional aggregated streak */}
-      <div className="mt-12 p-6 bg-surface-primary border border-border-subtle rounded-2xl">
+      <div className="mt-12 p-6 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl">
         <h2 className="text-xl font-semibold text-action-primary mb-2">Daily Completion Streak</h2>
         <p className="text-text-secondary mb-4">
           Complete all three challenges each day to maximize your streak. Coming soon.

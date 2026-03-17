@@ -51,7 +51,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white dark:bg-data-neutral-bg rounded-2xl shadow-lg overflow-hidden"
+        className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-lg overflow-hidden"
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center text-white">

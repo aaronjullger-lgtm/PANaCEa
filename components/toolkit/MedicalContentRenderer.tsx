@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   AlertCircle,
+  AlertTriangle,
   Lightbulb,
   Target,
   Stethoscope,
@@ -200,7 +201,7 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({
             )}
             {content.rx_side_effects && (
               <div className="flex items-start gap-2">
-                <span className="text-lg">⚠️</span>
+                <AlertTriangle className="w-4 h-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden />
                 <div className="flex-1">
                   <span className="font-medium text-[var(--color-text-primary)]">Key Risks: </span>
                   <MarkdownContent content={content.rx_side_effects} />

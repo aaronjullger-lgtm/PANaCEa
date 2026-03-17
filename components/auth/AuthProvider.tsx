@@ -32,14 +32,12 @@ interface AuthProviderProps {
 }
 
 // Get publishable key from environment variable
-// @ts-ignore - import.meta.env is available in Vite but may not be typed
-const BASE_CLERK_PUBLISHABLE_KEY = (import.meta as any).env?.VITE_CLERK_PUBLISHABLE_KEY || '';
+const BASE_CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
 
 // Optional dev override for localhost (avoids pk_live domain restrictions during local development)
-// @ts-ignore
 const DEV_CLERK_PUBLISHABLE_KEY =
-  (import.meta as any).env?.VITE_CLERK_PUBLISHABLE_KEY_DEV ||
-  (import.meta as any).env?.VITE_CLERK_PUBLISHABLE_KEY_LOCAL ||
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY_DEV ||
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY_LOCAL ||
   '';
 
 // Error message when Clerk publishable key is missing
@@ -88,8 +86,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // CRITICAL: Call all hooks BEFORE any conditional returns
   const themeContext = useThemeContext();
   
-  // @ts-ignore - import.meta.env is set at build time by Vite (from .env, wrangler inject script, or Cloudflare build env)
-  const isDevelopment = import.meta.env?.DEV;
+  const isDevelopment = import.meta.env.DEV;
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   const isLocalhost =
     hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
@@ -122,8 +119,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   // Enable debug mode only when explicitly enabled (not auto-enabled in dev to reduce console noise)
-  // @ts-ignore - import.meta.env is available in Vite but may not be typed
-  const debugEnabled = import.meta.env?.VITE_CLERK_DEBUG === 'true';
+  const debugEnabled = import.meta.env.VITE_CLERK_DEBUG === 'true';
 
   if (debugEnabled) {
     console.log('[Clerk] Debug mode enabled');
@@ -143,7 +139,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           colorPrimary: 'var(--color-accent)',
           colorPrimaryForeground: 'var(--color-text-inverse)',
           colorMuted: 'var(--color-bg-secondary)',
-          colorMutedForeground: 'var(--color-text-muted)',
+          colorMutedForeground: 'var(--color-text-[var(--color-text-muted)])',
           colorInput: 'var(--color-bg-secondary)',
           colorInputForeground: 'var(--color-text-primary)',
           colorBorder: 'var(--color-border)',
@@ -162,7 +158,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           formButtonPrimary:
             'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)]',
           formFieldInput:
-            'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]',
+            'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])]',
           formFieldLabel: 'text-[var(--color-text-primary)]',
           formFieldInputShowPasswordButton:
             'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',

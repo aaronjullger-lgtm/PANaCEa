@@ -188,7 +188,7 @@ export function TaxonomiesPage() {
       <div className="max-w-4xl mx-auto p-8 text-center">
         <Shield className="w-16 h-16 mx-auto text-red-500 mb-4" />
         <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-        <p className="text-slate-600 mb-6">You must be an administrator to view this page.</p>
+        <p className="text-[var(--color-text-secondary)] mb-6">You must be an administrator to view this page.</p>
         <button
           onClick={() => navigate(ROUTES.HOME)}
           className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90"
@@ -205,14 +205,14 @@ export function TaxonomiesPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(ROUTES.ADMIN)}
-            className="p-2 rounded-full bg-slate-100 hover:bg-slate-200"
+            className="p-2 rounded-full bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]"
             aria-label="Back to Admin Dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <h1 className="text-3xl font-bold">Medical Taxonomies</h1>
-            <p className="text-slate-600">Manage system codes, names, and blueprint weights</p>
+            <p className="text-[var(--color-text-secondary)]">Manage system codes, names, and blueprint weights</p>
           </div>
         </div>
         <button
@@ -238,32 +238,32 @@ export function TaxonomiesPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] shadow-sm overflow-hidden">
         <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
             <tr>
-              <th className="py-3 px-4 text-left font-semibold text-slate-700">Code</th>
-              <th className="py-3 px-4 text-left font-semibold text-slate-700">Name</th>
-              <th className="py-3 px-4 text-left font-semibold text-slate-700">Weight</th>
-              <th className="py-3 px-4 text-left font-semibold text-slate-700">Status</th>
-              <th className="py-3 px-4 text-left font-semibold text-slate-700">Actions</th>
+              <th className="py-3 px-4 text-left font-semibold text-[var(--color-text-primary)]">Code</th>
+              <th className="py-3 px-4 text-left font-semibold text-[var(--color-text-primary)]">Name</th>
+              <th className="py-3 px-4 text-left font-semibold text-[var(--color-text-primary)]">Weight</th>
+              <th className="py-3 px-4 text-left font-semibold text-[var(--color-text-primary)]">Status</th>
+              <th className="py-3 px-4 text-left font-semibold text-[var(--color-text-primary)]">Actions</th>
             </tr>
           </thead>
           <tbody>
             {taxonomies.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-8 px-4 text-center text-slate-500">
+                <td colSpan={5} className="py-8 px-4 text-center text-[var(--color-text-muted)]">
                   No taxonomies found. Create the first one.
                 </td>
               </tr>
             ) : (
               taxonomies.map((tax) => (
-                <tr key={tax.code} className="border-b border-slate-100 hover:bg-slate-50">
+                <tr key={tax.code} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)]">
                   <td className="py-3 px-4 font-mono">{tax.code}</td>
                   <td className="py-3 px-4">
                     <div className="font-medium">{tax.name}</div>
                     {tax.description && (
-                      <div className="text-sm text-slate-500">{tax.description}</div>
+                      <div className="text-sm text-[var(--color-text-muted)]">{tax.description}</div>
                     )}
                   </td>
                   <td className="py-3 px-4">{(tax.weight * 100).toFixed(1)}%</td>
@@ -290,14 +290,14 @@ export function TaxonomiesPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openEditModal(tax)}
-                        className="p-1.5 text-slate-600 hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 rounded"
+                        className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 rounded"
                         aria-label="Edit"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(tax.code, false)}
-                        className="p-1.5 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded"
+                        className="p-1.5 text-[var(--color-text-secondary)] hover:text-red-600 hover:bg-red-50 rounded"
                         aria-label="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -317,7 +317,7 @@ export function TaxonomiesPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl"
+            className="bg-[var(--color-bg-primary)] rounded-2xl p-6 max-w-md w-full shadow-xl"
           >
             <h2 className="text-xl font-bold mb-4">
               {editingTaxonomy ? 'Edit Taxonomy' : 'Create New Taxonomy'}
@@ -329,7 +329,7 @@ export function TaxonomiesPage() {
                   type="text"
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                   placeholder="e.g., CV"
                   disabled={!!editingTaxonomy}
                 />
@@ -340,7 +340,7 @@ export function TaxonomiesPage() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                   placeholder="e.g., Cardiovascular System"
                 />
               </div>
@@ -349,7 +349,7 @@ export function TaxonomiesPage() {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                   rows={2}
                 />
               </div>
@@ -362,7 +362,7 @@ export function TaxonomiesPage() {
                   max="1"
                   value={formData.weight}
                   onChange={(e) => setFormData({ ...formData, weight: parseFloat(e.target.value) })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -381,7 +381,7 @@ export function TaxonomiesPage() {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={closeModals}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                className="px-4 py-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg"
                 disabled={submitting}
               >
                 Cancel

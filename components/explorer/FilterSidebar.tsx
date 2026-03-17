@@ -118,7 +118,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
 
   if (collapsed) {
     return (
-      <div className="h-full w-12 bg-surface-primary border-r border-border flex flex-col items-center py-4">
+      <div className="h-full w-12 bg-[var(--color-bg-primary)] border-r border-border flex flex-col items-center py-4">
         <button
           onClick={onToggleCollapse}
           className="p-2 rounded-md hover:bg-surface-hover transition-colors"
@@ -131,7 +131,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   }
 
   return (
-    <div className="h-full w-80 bg-surface-primary border-r border-border overflow-y-auto p-6">
+    <div className="h-full w-80 bg-[var(--color-bg-primary)] border-r border-border overflow-y-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-foreground">Graph Filters</h2>
         <div className="flex items-center gap-2">

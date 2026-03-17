@@ -25,6 +25,7 @@ import {
   ArrowRight,
   BarChart3,
   Loader2,
+  AlertTriangle,
 } from 'lucide-react';
 import { QuestionSkeleton } from '@/components/loading';
 import { useAuth } from '@clerk/clerk-react';
@@ -364,7 +365,7 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
       return (
         <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
           <div className="text-center max-w-md mx-auto p-6">
-            <div className="text-data-fail mb-4">⚠️</div>
+            <div className="mb-4 flex justify-center"><AlertTriangle className="w-10 h-10 text-data-fail" /></div>
             <h2 className="text-xl font-bold mb-2 text-[var(--color-text-primary)]">
               Error Loading Questions
             </h2>

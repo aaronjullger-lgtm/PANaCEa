@@ -1,4 +1,4 @@
-// pharm/drugTypes.ts
+// types/pharm.ts
 // Type definitions for pharmacological data
 
 export interface DrugPharmacokinetics {
