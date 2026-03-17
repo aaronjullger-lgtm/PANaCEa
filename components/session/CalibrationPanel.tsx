@@ -52,15 +52,15 @@ function CalibrationIcon({ state }: { state: string }) {
 
   switch (state) {
     case 'well_calibrated':
-      return <CheckCircle className={`${iconClass} text-sage-500`} />;
+      return <CheckCircle className={`${iconClass} text-[var(--color-data-pass)]`} />;
     case 'overconfident':
-      return <TrendingUp className={`${iconClass} text-muted-amber-500`} />;
+      return <TrendingUp className={`${iconClass} text-[var(--color-warning)]`} />;
     case 'underconfident':
-      return <TrendingDown className={`${iconClass} text-steel-blue-500`} />;
+      return <TrendingDown className={`${iconClass} text-[var(--color-accent)]`} />;
     case 'fluctuating':
-      return <AlertTriangle className={`${iconClass} text-muted-amber-500`} />;
+      return <AlertTriangle className={`${iconClass} text-[var(--color-warning)]`} />;
     default:
-      return <HelpCircle className={`${iconClass} text-slate-400`} />;
+      return <HelpCircle className={`${iconClass} text-[var(--color-text-muted)]`} />;
   }
 }
 
@@ -76,34 +76,34 @@ function getStateColors(state: string): {
   switch (state) {
     case 'well_calibrated':
       return {
-        bg: 'bg-sage-50 dark:bg-sage-900/20',
-        border: 'border-sage-200 dark:border-sage-800',
-        text: 'text-sage-700 dark:text-sage-300',
-        badge: 'bg-sage-100 text-sage-800 dark:bg-sage-800 dark:text-sage-200',
+        bg: 'bg-[var(--color-bg-secondary)]',
+        border: 'border-[var(--color-border)]',
+        text: 'text-[var(--color-text-primary)]',
+        badge: 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]',
       };
     case 'overconfident':
       return {
-        bg: 'bg-muted-amber-50 dark:bg-muted-amber-900/20',
-        border: 'border-muted-amber-200 dark:border-muted-amber-800',
-        text: 'text-muted-amber-700 dark:text-muted-amber-300',
+        bg: 'bg-[var(--color-bg-secondary)]',
+        border: 'border-[var(--color-border)]',
+        text: 'text-[var(--color-warning)]',
         badge:
-          'bg-muted-amber-100 text-muted-amber-800 dark:bg-muted-amber-800 dark:text-muted-amber-200',
+          'bg-[var(--color-bg-tertiary)] text-[var(--color-warning)]',
       };
     case 'underconfident':
       return {
-        bg: 'bg-steel-blue-50 dark:bg-steel-blue-900/20',
-        border: 'border-steel-blue-200 dark:border-steel-blue-800',
-        text: 'text-steel-blue-700 dark:text-steel-blue-300',
+        bg: 'bg-[var(--color-bg-secondary)]',
+        border: 'border-[var(--color-border)]',
+        text: 'text-[var(--color-accent)]',
         badge:
-          'bg-steel-blue-100 text-steel-blue-800 dark:bg-steel-blue-800 dark:text-steel-blue-200',
+          'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)]',
       };
     case 'fluctuating':
       return {
-        bg: 'bg-muted-amber-50 dark:bg-muted-amber-900/20',
-        border: 'border-muted-amber-200 dark:border-muted-amber-800',
-        text: 'text-muted-amber-700 dark:text-muted-amber-300',
+        bg: 'bg-[var(--color-bg-secondary)]',
+        border: 'border-[var(--color-border)]',
+        text: 'text-[var(--color-warning)]',
         badge:
-          'bg-muted-amber-100 text-muted-amber-800 dark:bg-muted-amber-800 dark:text-muted-amber-200',
+          'bg-[var(--color-bg-tertiary)] text-[var(--color-warning)]',
       };
     default:
       return {
@@ -146,10 +146,10 @@ function BrierScoreGauge({ score }: { score: number }) {
             fill="none"
             className={
               quality >= 60
-                ? 'stroke-sage-500'
+                ? 'stroke-[var(--color-data-pass)]'
                 : quality >= 40
-                  ? 'stroke-muted-amber-500'
-                  : 'stroke-dusty-rose-500'
+                  ? 'stroke-[var(--color-warning)]'
+                  : 'stroke-[var(--color-data-fail)]'
             }
             strokeWidth="3"
             strokeLinecap="round"
@@ -204,10 +204,10 @@ function CalibrationCurve({ curve }: { curve: CalibrationSummary['calibrationCur
                     <div
                       className={`w-2 rounded-t transition-all ${
                         calibrationError > 0.1
-                          ? 'bg-muted-amber-500'
+                          ? 'bg-[var(--color-warning)]'
                           : calibrationError < -0.1
-                            ? 'bg-steel-blue-500'
-                            : 'bg-sage-500'
+                            ? 'bg-[var(--color-accent)]'
+                            : 'bg-[var(--color-data-pass)]'
                       }`}
                       style={{ height: `${height}%` }}
                       title={`Actual: ${Math.round(bin.actualAccuracy * 100)}%`}
@@ -227,7 +227,7 @@ function CalibrationCurve({ curve }: { curve: CalibrationSummary['calibrationCur
           Expected
         </span>
         <span className="flex items-center gap-1">
-          <div className="w-2 h-2 bg-sage-500 rounded" />
+          <div className="w-2 h-2 bg-[var(--color-data-pass)] rounded" />
           Actual
         </span>
       </div>
@@ -245,24 +245,24 @@ function InsufficientDataState({
 }) {
   return (
     <div className="text-center py-4">
-      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-bg-tertiary)] mb-3">
-        <Brain className="w-6 h-6 text-[var(--color-text-muted)]" />
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-data-neutral mb-3">
+        <Brain className="w-6 h-6 text-data-neutral" />
       </div>
-      <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-1">
+      <h4 className="text-sm font-medium text-data-neutral mb-1">
         Building Your Profile
       </h4>
-      <p className="text-xs text-[var(--color-text-muted)] mb-3">
+      <p className="text-xs text-data-neutral mb-3">
         {progress.required - progress.current} more questions needed for calibration insights
       </p>
-      <div className="w-full bg-[var(--color-border)] rounded-full h-2">
+      <div className="w-full bg-data-neutral rounded-full h-2">
         <motion.div
-          className="h-2 rounded-full bg-[var(--color-accent)]"
+          className="bg-[var(--color-accent)] h-2 rounded-full"
           initial={{ width: 0 }}
           animate={{ width: `${progress.percentage}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
         />
       </div>
-      <span className="text-xs text-[var(--color-text-muted)] mt-1 block">
+      <span className="text-xs text-data-neutral mt-1 block">
         {progress.current}/{progress.required} observations
       </span>
     </div>
@@ -360,14 +360,14 @@ export function CalibrationPanel({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="flex items-start gap-2 p-3 rounded-lg bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border border-dusty-rose-200 dark:border-dusty-rose-800"
+              className="flex items-start gap-2 p-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]"
             >
-              <AlertTriangle className="w-4 h-4 text-dusty-rose-500 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="w-4 h-4 text-[var(--color-data-fail)] flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-dusty-rose-700 dark:text-dusty-rose-300">
+                <p className="text-sm font-medium text-[var(--color-text-primary)]">
                   Illusion of Competence Detected
                 </p>
-                <p className="text-xs text-dusty-rose-600 dark:text-dusty-rose-400 mt-0.5">
+                <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
                   Fast responses are often incorrect. Consider slowing down to engage more deeply.
                 </p>
               </div>
@@ -387,11 +387,11 @@ export function CalibrationPanel({
           <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-data-neutral dark:bg-data-neutral/50">
             <div className="flex items-center gap-1">
               {summary.overconfidenceBias > 0 ? (
-                <TrendingUp className="w-4 h-4 text-muted-amber-500" />
+                <TrendingUp className="w-4 h-4 text-[var(--color-warning)]" />
               ) : summary.overconfidenceBias < 0 ? (
-                <TrendingDown className="w-4 h-4 text-steel-blue-500" />
+                <TrendingDown className="w-4 h-4 text-[var(--color-accent)]" />
               ) : (
-                <Target className="w-4 h-4 text-sage-500" />
+                <Target className="w-4 h-4 text-[var(--color-data-pass)]" />
               )}
               <span className="text-2xl font-bold text-[var(--color-text-primary)]">
                 {summary.overconfidenceBias > 0 ? '+' : ''}
@@ -424,9 +424,9 @@ export function CalibrationPanel({
         )}
 
         {/* Recommendation */}
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-deep-plum-50 dark:bg-deep-plum-900/20 border border-deep-plum-200 dark:border-deep-plum-800">
-          <Info className="w-4 h-4 text-deep-plum-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-deep-plum-700 dark:text-deep-plum-300">
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+          <Info className="w-4 h-4 text-[var(--color-accent)] flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-[var(--color-text-primary)]">
             {summary.recommendation}
           </p>
         </div>

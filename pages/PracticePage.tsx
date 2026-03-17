@@ -308,7 +308,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
             <Sparkles className="w-5 h-5 text-[var(--color-accent)]" />
             Start here
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {recommendedModes.map((mode) => (
               <ModeCard key={mode.id} mode={mode} onSelect={() => handleModeSelect(mode)} />
             ))}

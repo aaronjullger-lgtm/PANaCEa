@@ -238,7 +238,7 @@ export const QuickReviewMode: React.FC<QuickReviewModeProps> = ({
               ].map((option) => (
                 <button
                   key={option.value}
-                  onClick={() => setSelectedTimeframe(option.value as any)}
+                  onClick={() => setSelectedTimeframe(option.value as 'today' | 'week' | 'all')}
                   className={`
                     p-3 rounded-lg border-2 transition-all duration-200
                     ${

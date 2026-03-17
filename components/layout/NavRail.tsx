@@ -112,7 +112,7 @@ function BottomTabBar({
                 className={`h-5 w-5 transition-colors ${
                   isActive
                     ? 'text-[var(--color-accent)]'
-                    : 'text-secondary dark:text-[var(--color-text-muted)]'
+                    : 'text-[var(--color-text-muted)]'
                 }`}
                 aria-hidden
               />
@@ -120,7 +120,7 @@ function BottomTabBar({
                 className={`text-[10px] leading-none font-medium transition-colors ${
                   isActive
                     ? 'text-[var(--color-accent)]'
-                    : 'text-secondary dark:text-[var(--color-text-muted)]'
+                    : 'text-[var(--color-text-muted)]'
                 }`}
               >
                 {item.label}

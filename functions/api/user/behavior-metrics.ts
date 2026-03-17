@@ -32,8 +32,8 @@ const BehaviorMetricsPostSchema = z.object({
   confidenceLevel: z.number().min(0).max(1).optional(),
   derivedRating: z.number().min(1).max(4).optional(),
   ratingConfidence: z.number().min(0).max(1).optional(),
-  trajectoryData: z.any().optional(),
-  typingRhythm: z.any().optional(),
+  trajectoryData: z.record(z.string(), z.number()).optional(),
+  typingRhythm: z.record(z.string(), z.number().or(z.string())).optional(),
 });
 
 const BehaviorMetricsGetSchema = z.object({

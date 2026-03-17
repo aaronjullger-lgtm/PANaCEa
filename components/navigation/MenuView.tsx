@@ -811,7 +811,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <Link2 className="w-8 h-8 mb-2 text-indigo-500" />
+                      <Link2 className="w-8 h-8 mb-2 text-[var(--color-accent)]" />
                       <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                         Integrations
                       </div>
@@ -827,7 +827,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <Users className="w-8 h-8 mb-2 text-pink-500" />
+                      <Users className="w-8 h-8 mb-2 text-[var(--color-accent)]" />
                       <div className="font-semibold text-sm text-[var(--color-text-primary)]">
                         Social
                       </div>
@@ -1064,7 +1064,7 @@ const MenuView: React.FC<MenuViewProps> = ({
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <Trophy className="w-8 h-8 text-yellow-500" />
+                <Trophy className="w-8 h-8 text-[var(--color-accent)]" />
                 <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
                   Grand Rounds
                 </h2>
@@ -1085,7 +1085,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 setShowLeaderboard(false);
                 onNavigateToDrillMode?.('grand_rounds');
               }}
-              className="w-full px-6 py-3 bg-muted-amber-500 hover:bg-muted-amber-600 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-colors"
+              className="w-full px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-[var(--color-text-inverse)] rounded-lg font-semibold transition-colors"
             >
               Go to Grand Rounds
             </button>

@@ -36,7 +36,7 @@ interface TrelloExportPanelProps {
 export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({ userExamDate }) => {
   const { showToast } = useToast();
   const [showInstructions, setShowInstructions] = useState(false);
-  const [examDate, setExamDate] = useState<string>(userExamDate?.toISOString().split('T')[0] || '');
+  const [examDate, setExamDate] = useState<string>(userExamDate?.toISOString()?.split('T')?.[0] || '');
 
   // Generate board structure
   const board = useMemo<TrelloBoardExport | null>(() => {

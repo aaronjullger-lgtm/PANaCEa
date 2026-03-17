@@ -151,7 +151,7 @@ export const NormalLabsPanel: React.FC<NormalLabsPanelProps> = ({ isOpen, onClos
             </div>
           )}
           {error && !loading && (
-            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4 text-sm text-[var(--color-text-muted)]">
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-tertiary)]/50 p-4 text-sm text-[var(--color-text-muted)]">
               {error}
               <button
                 type="button"
@@ -201,7 +201,7 @@ export const NormalLabsPanel: React.FC<NormalLabsPanelProps> = ({ isOpen, onClos
                     </p>
                   )}
                   {entry.commonCauses && entry.commonCauses.length > 0 && (
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                       {entry.commonCauses.slice(0, 3).join('; ')}
                     </p>
                   )}

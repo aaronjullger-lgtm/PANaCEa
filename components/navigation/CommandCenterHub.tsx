@@ -877,7 +877,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onNavigateToStudyPathDashboard}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-slate-100 hover:bg-slate-500 active:bg-slate-400 font-medium rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-accent)] active:bg-[var(--color-accent)]/80 font-medium rounded-lg transition-colors"
               >
                 Open Dashboard
                 <ChevronRight className="w-4 h-4" />

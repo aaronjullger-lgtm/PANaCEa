@@ -32,7 +32,7 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
   const { showToast } = useToast();
   const [exportMode, setExportMode] = useState<ExportMode>('study-plan');
   const [showInstructions, setShowInstructions] = useState(false);
-  const [examDate, setExamDate] = useState<string>(userExamDate?.toISOString().split('T')[0] || '');
+  const [examDate, setExamDate] = useState<string>(userExamDate?.toISOString()?.split('T')?.[0] || '');
 
   // Generate tasks based on export mode
   const tasks = useMemo<TodoistTask[]>(() => {

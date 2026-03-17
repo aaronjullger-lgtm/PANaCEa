@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 // Schema for staging question data
 const StagingQuestionSchema = z.object({
-  questionData: z.record(z.string(), z.any()),
+  questionData: z.record(z.string(), z.unknown()),
 });
 
 export const onRequestPost = adminEndpoint(StagingQuestionSchema, async ({ env, validated }) => {

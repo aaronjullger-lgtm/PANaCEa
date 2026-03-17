@@ -757,7 +757,9 @@ export class MainSessionQuestionSelector {
     }
 
     const now = Date.now();
-    const lastReview = new Date(fsrsCard.last_review).getTime();
+    const parsedTime = new Date(fsrsCard.last_review).getTime();
+    // Handle invalid dates (NaN) to prevent propagation in retrievability calculation
+    const lastReview = !isNaN(parsedTime) ? parsedTime : now;
     const elapsedDays = (now - lastReview) / (1000 * 60 * 60 * 24);
 
     const stability = Math.max(fsrsCard.stability || 1, 0.1);

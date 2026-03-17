@@ -26,7 +26,7 @@ export const ContextNavRail = () => {
             <X size={16} />
           </button>
         </div>
-        <p className="text-sm text-text-[var(--color-text-muted)] capitalize">{currentContext.type} Context</p>
+        <p className="text-sm text-[var(--color-text-muted)] capitalize">{currentContext.type} Context</p>
       </div>
       <div className="p-4">
         <h4 className="font-semibold text-sm mb-2">Related Modules</h4>

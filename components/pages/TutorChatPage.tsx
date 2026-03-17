@@ -274,7 +274,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
 
       {profileLoadFailed && !isLoadingContext && (
         <div
-          className="mb-4 px-3 py-2 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400 dark:border-amber-400/30 dark:bg-amber-400/10 flex items-center justify-between gap-3"
+          className="mb-4 px-3 py-2 rounded-lg border border-[var(--color-data-provisional)]/40 bg-[var(--color-data-provisional)]/10 text-[var(--color-data-provisional)] flex items-center justify-between gap-3"
           aria-live="polite"
         >
           <span className="text-xs">
@@ -284,7 +284,7 @@ export const TutorChatPage: React.FC<TutorChatPageProps> = ({ onExit }) => {
             type="button"
             onClick={() => void fetchProfile()}
             disabled={isLoadingContext}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-500/20 hover:bg-amber-500/30 dark:bg-amber-400/20 dark:hover:bg-amber-400/30 disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[var(--color-data-provisional)]/20 hover:bg-[var(--color-data-provisional)]/30 disabled:opacity-50 transition-colors"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoadingContext ? 'animate-spin' : ''}`} aria-hidden />
             Retry

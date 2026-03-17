@@ -629,6 +629,11 @@ export class SessionService {
 
       let question = seed.template;
       for (const [key, values] of Object.entries(variables)) {
+        // Skip empty values arrays to avoid replacing with "undefined"
+        if (!Array.isArray(values) || values.length === 0) {
+          console.warn(`[Session] Seed ${seed.id} has empty values for variable ${key}`);
+          continue;
+        }
         const randomValue = values[Math.floor(Math.random() * values.length)];
         question = question.replace(new RegExp(`\\{${key}\\}`, 'g'), randomValue);
       }
