@@ -50,7 +50,7 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
 }) => {
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-6 px-4">
-      <div className="max-w-7xl mx-auto">
+      <div className="mx-auto" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

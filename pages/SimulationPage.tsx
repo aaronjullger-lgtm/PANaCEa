@@ -188,7 +188,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-8 px-4">
-      <div className="max-w-5xl mx-auto">
+      <div className="mx-auto" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

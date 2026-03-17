@@ -10,6 +10,7 @@ import { getAllSRSItems, loadSRSItemsFromCloud } from '../lib/services/srsServic
 import { createDebouncedFunction } from '../lib/utils/debounce';
 import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
 import { logger } from '@/src/lib/logger';
+import { getSyncCircuitBreaker } from '../lib/utils/circuitBreaker';
 
 const PERFORMANCE_KEY = 'panceai_performance_v2';
 const MISSED_KEY = 'panceai_missed_v2';
@@ -140,27 +141,31 @@ export function useUserStats(): UseUserStatsResult {
       // Get SRS items from srsService
       const srsItems = getAllSRSItems(user.clerkId);
 
-      const response = await fetch(getApiEndpoint(API_ENDPOINTS.SYNC), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          userId: user.clerkId,
-          performanceRecords: currentPerformanceData,
-          srsItems,
-          savedQuestions: [...currentMissedQuestions, ...currentFlaggedQuestions].map((q) => {
-            const questionId = q.questionId || q.id || '';
-            return {
-              ...q,
-              type: missedQuestionIds.has(questionId) ? 'missed' : 'flagged',
-              // Ensure updatedAt is present for conflict resolution
-              updatedAt: q.lastReviewedAt ? new Date(q.lastReviewedAt) : new Date(),
-            };
+      // Use circuit breaker to prevent cascading failures
+      const circuitBreaker = getSyncCircuitBreaker();
+      const response = await circuitBreaker.execute(() =>
+        fetch(getApiEndpoint(API_ENDPOINTS.SYNC), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: user.clerkId,
+            performanceRecords: currentPerformanceData,
+            srsItems,
+            savedQuestions: [...currentMissedQuestions, ...currentFlaggedQuestions].map((q) => {
+              const questionId = q.questionId || q.id || '';
+              return {
+                ...q,
+                type: missedQuestionIds.has(questionId) ? 'missed' : 'flagged',
+                // Ensure updatedAt is present for conflict resolution
+                updatedAt: q.lastReviewedAt ? new Date(q.lastReviewedAt) : new Date(),
+              };
+            }),
           }),
-        }),
-      });
+        })
+      );
 
       // Handle 401 Unauthorized - abort sync immediately without retry
       if (response.status === 401) {
@@ -270,12 +275,16 @@ export function useUserStats(): UseUserStatsResult {
         throw new Error('Failed to get authentication token');
       }
 
-      const response = await fetch(getApiEndpoint(API_ENDPOINTS.SYNC), {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // Use circuit breaker to prevent cascading failures
+      const circuitBreaker = getSyncCircuitBreaker();
+      const response = await circuitBreaker.execute(() =>
+        fetch(getApiEndpoint(API_ENDPOINTS.SYNC), {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+      );
 
       // Handle 401 Unauthorized - abort sync immediately without retry
       if (response.status === 401) {

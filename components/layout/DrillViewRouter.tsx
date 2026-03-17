@@ -315,6 +315,14 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
         </WithGeminiErrorBoundary>
       )}
 
+      {view === 'pance_simulator' && (
+        <WithGeminiErrorBoundary viewName="pance_simulator" onRetry={() => setView('pance_simulator')}>
+          <Suspense fallback={<Loader />}>
+            <FullSitDownTestMode onExit={exit} {...sharedQuizProps} />
+          </Suspense>
+        </WithGeminiErrorBoundary>
+      )}
+
       {view === 'code_blue_speed' && (
         <WithGeminiErrorBoundary
           viewName="code_blue_speed"

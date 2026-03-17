@@ -88,7 +88,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-6 px-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mb-6 transition-colors"

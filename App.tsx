@@ -9,6 +9,7 @@ import { CANONICAL_PATHS } from './config/navigation';
 import { runStorageKeyMigration } from './lib/storage/storageRegistry';
 import { NavRail } from './components/layout/NavRail';
 import { AppBrand } from './components/layout/AppBrand';
+import { AppLayout } from './components/layout/AppLayout';
 import { type View, pageVariants, DRILL_MODE_IDS } from './config/appViews';
 import { TRAINING_MODES } from './config/training-modes';
 import { useAppNavigation } from './hooks/useAppNavigation';
@@ -1162,83 +1163,168 @@ const App: React.FC = () => {
               <Route
                 path="/gap-analysis"
                 element={
-                  <Suspense fallback={<Loader />}>
-                    <GapAnalysisDashboard
-                      onStudySystem={(systemName: string) => {
-                        navigate('/study');
-                        handleConfirmSession({
-                          focus: 'topic',
-                          topic: systemName,
-                          count: INITIAL_QUEUE_SIZE,
-                        });
-                      }}
-                    />
-                  </Suspense>
+                  <AppLayout onSettingsClick={() => setIsSettingsModalOpen(true)} onHelpClick={() => setIsHelpModalOpen(true)}>
+                    <Suspense fallback={<Loader />}>
+                      <GapAnalysisDashboard
+                        onStudySystem={(systemName: string) => {
+                          navigate('/study');
+                          handleConfirmSession({
+                            focus: 'topic',
+                            topic: systemName,
+                            count: INITIAL_QUEUE_SIZE,
+                          });
+                        }}
+                      />
+                    </Suspense>
+                  </AppLayout>
                 }
               />
               <Route
                 path="/clinical-profile"
                 element={
-                  <Suspense fallback={<Loader />}>
-                    <ClinicalProfileDashboard />
-                  </Suspense>
+                  <AppLayout onSettingsClick={() => setIsSettingsModalOpen(true)} onHelpClick={() => setIsHelpModalOpen(true)}>
+                    <Suspense fallback={<Loader />}>
+                      <ClinicalProfileDashboard />
+                    </Suspense>
+                  </AppLayout>
                 }
               />
               <Route
                 path="/study/knowledge"
                 element={
-                  <Suspense fallback={<Loader message="Loading knowledge base…" />}>
-                    <KnowledgeBaseHub
-                      onClose={() => {
-                        navigate('/study');
-                      }}
-                    />
-                  </Suspense>
+                  <AppLayout showNavRail={false}>
+                    <div
+                      className="w-full min-w-0 overflow-hidden flex-1"
+                      style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
+                    >
+                      <Suspense fallback={<Loader message="Loading knowledge base…" />}>
+                        <KnowledgeBaseHub
+                          onClose={() => {
+                            navigate('/study');
+                          }}
+                        />
+                      </Suspense>
+                    </div>
+                  </AppLayout>
                 }
               />
               <Route
                 path="/study/utilities"
                 element={
-                  <Suspense fallback={<Loader message="Loading toolkit…" />}>
-                    <ToolkitHub
-                      onClose={() => {
-                        navigate('/study');
-                      }}
-                      onNavigateToItem={handleNavigateToDrillMode}
-                    />
-                  </Suspense>
+                  <AppLayout onSettingsClick={() => setIsSettingsModalOpen(true)} onHelpClick={() => setIsHelpModalOpen(true)}>
+                    <Suspense fallback={<Loader message="Loading toolkit…" />}>
+                      <ToolkitHub
+                        onClose={() => {
+                          navigate('/study');
+                        }}
+                        onNavigateToItem={handleNavigateToDrillMode}
+                      />
+                    </Suspense>
+                  </AppLayout>
                 }
               />
               <Route
                 path="/study/path"
                 element={
-                  <Suspense fallback={<Loader />}>
-                    <StudyPathDashboard />
-                  </Suspense>
+                  <AppLayout onSettingsClick={() => setIsSettingsModalOpen(true)} onHelpClick={() => setIsHelpModalOpen(true)}>
+                    <Suspense fallback={<Loader />}>
+                      <StudyPathDashboard />
+                    </Suspense>
+                  </AppLayout>
                 }
               />
               <Route
                 path="/medical-database"
                 element={
-                  <Suspense fallback={<Loader />}>
-                    <MedicalDatabaseSearch onClose={() => navigate('/study')} />
-                  </Suspense>
+                  <AppLayout onSettingsClick={() => setIsSettingsModalOpen(true)} onHelpClick={() => setIsHelpModalOpen(true)}>
+                    <Suspense fallback={<Loader />}>
+                      <MedicalDatabaseSearch onClose={() => navigate('/study')} />
+                    </Suspense>
+                  </AppLayout>
                 }
               />
               <Route
                 path="/live-collaboration"
                 element={
-                  <Suspense fallback={<Loader />}>
-                    <LiveStudySession onClose={() => navigate('/study')} />
-                  </Suspense>
+                  <AppLayout onSettingsClick={() => setIsSettingsModalOpen(true)} onHelpClick={() => setIsHelpModalOpen(true)}>
+                    <Suspense fallback={<Loader />}>
+                      <LiveStudySession onClose={() => navigate('/study')} />
+                    </Suspense>
+                  </AppLayout>
                 }
               />
               <Route
                 path="/explorer"
                 element={
-                  <Suspense fallback={<Loader />}>
-                    <CrossSystemExplorer onClose={() => navigate('/study')} />
-                  </Suspense>
+                  <AppLayout onSettingsClick={() => setIsSettingsModalOpen(true)} onHelpClick={() => setIsHelpModalOpen(true)}>
+                    <Suspense fallback={<Loader />}>
+                      <CrossSystemExplorer onClose={() => navigate('/study')} />
+                    </Suspense>
+                  </AppLayout>
+                }
+              />
+              {/* Additional view-state pages migrated to routes */}
+              <Route
+                path="/study/library"
+                element={
+                  <AppLayout showNavRail={false} onSettingsClick={() => setIsSettingsModalOpen(true)} onHelpClick={() => setIsHelpModalOpen(true)}>
+                    <div
+                      className="w-full min-w-0 overflow-hidden flex-1"
+                      style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
+                    >
+                      <Suspense fallback={<Loader message="Loading library…" />}>
+                        <MyLibraryPage onExit={() => navigate('/study')} />
+                      </Suspense>
+                    </div>
+                  </AppLayout>
+                }
+              />
+              <Route
+                path="/study/tutor"
+                element={
+                  <AppLayout onSettingsClick={() => setIsSettingsModalOpen(true)} onHelpClick={() => setIsHelpModalOpen(true)}>
+                    <Suspense fallback={<Loader />}>
+                      <TutorChatPage onExit={() => navigate('/study')} />
+                    </Suspense>
+                  </AppLayout>
+                }
+              />
+              <Route
+                path="/study/companion"
+                element={
+                  <AppLayout onSettingsClick={() => setIsSettingsModalOpen(true)} onHelpClick={() => setIsHelpModalOpen(true)}>
+                    <Suspense fallback={<Loader />}>
+                      <StudyCompanionPage onExit={() => navigate('/study')} />
+                    </Suspense>
+                  </AppLayout>
+                }
+              />
+              <Route
+                path="/study/flashcards"
+                element={
+                  <AppLayout onSettingsClick={() => setIsSettingsModalOpen(true)} onHelpClick={() => setIsHelpModalOpen(true)}>
+                    <Suspense fallback={<Loader />}>
+                      <SrsFlashcardView onExit={() => navigate('/study')} />
+                    </Suspense>
+                  </AppLayout>
+                }
+              />
+              <Route
+                path="/study/pearls"
+                element={
+                  <AppLayout showNavRail={false} onSettingsClick={() => setIsSettingsModalOpen(true)} onHelpClick={() => setIsHelpModalOpen(true)}>
+                    <div
+                      className="w-full min-w-0 overflow-hidden flex-1"
+                      style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
+                    >
+                      <Suspense fallback={<Loader message="Loading pearl deck…" />}>
+                        <MyPearlsPanel
+                          onClose={() => navigate('/study')}
+                          initialFilter="saved"
+                        />
+                      </Suspense>
+                    </div>
+                  </AppLayout>
                 }
               />
               {/* Training mode routes are handled via view-state in the catch-all route below */}
@@ -1489,14 +1575,14 @@ const App: React.FC = () => {
                                           onNavigateToReference={() =>
                                             navigate('/study/knowledge')
                                           }
-                                          onNavigateToMyLibrary={() => setView('my_library')}
+                                          onNavigateToMyLibrary={() => navigate('/study/library')}
                                           onNavigateToCustomStudy={handleNavigateToCustomStudy}
-                                          onNavigateToTutorChat={() => setView('tutor_chat')}
+                                          onNavigateToTutorChat={() => navigate('/study/tutor')}
                                           onNavigateToStudyCompanion={() =>
-                                            setView('study_companion')
+                                            navigate('/study/companion')
                                           }
                                           // Canonical FSRS flow is main session (QuizView) MC only; due = variants in same session. SRS Flashcards view hidden.
-                                          onNavigateToPearlDeck={() => setView('pearl_deck')}
+                                          onNavigateToPearlDeck={() => navigate('/study/pearls')}
                                           onNavigateToStudyPathDashboard={() => navigate('/study/path')}
                                           growthAreas={growthAreas}
                                           examLabel={examLabel ?? 'PANCE'}
@@ -1747,9 +1833,9 @@ const App: React.FC = () => {
                                             onNavigateToReference={() =>
                                               navigate('/study/knowledge')
                                             }
-                                            onNavigateToMyLibrary={() => setView('my_library')}
+                                            onNavigateToMyLibrary={() => navigate('/study/library')}
                                             onNavigateToStudyCompanion={() =>
-                                              setView('study_companion')
+                                              navigate('/study/companion')
                                             }
                                             // Canonical FSRS flow is main session (QuizView) MC only; due = variants in same session. SRS Flashcards view hidden.
                                             onBack={() => setView('command_center')}
@@ -1783,127 +1869,9 @@ const App: React.FC = () => {
 
                                   {/* study_path_dashboard migrated to /study/path route */}
 
-                                  {view === 'tutor_chat' && (
-                                    <motion.div
-                                      key="tutor_chat"
-                                      variants={pageVariants}
-                                      initial="initial"
-                                      animate="animate"
-                                      exit="exit"
-                                      transition={pageTransition}
-                                    >
-                                      <WithGeminiErrorBoundary
-                                        viewName="tutor_chat"
-                                        onRetry={() => setView('tutor_chat')}
-                                      >
-                                        <Suspense fallback={<Loader />}>
-                                          <TutorChatPage onExit={() => setView('command_center')} />
-                                        </Suspense>
-                                      </WithGeminiErrorBoundary>
-                                    </motion.div>
-                                  )}
+                                  {/* tutor_chat, study_companion, srs_flashcards, medical_database, live_collaboration migrated to routes */}
 
-                                  {view === 'study_companion' && (
-                                    <motion.div
-                                      key="study_companion"
-                                      variants={pageVariants}
-                                      initial="initial"
-                                      animate="animate"
-                                      exit="exit"
-                                      transition={pageTransition}
-                                    >
-                                      <WithGeminiErrorBoundary
-                                        viewName="study_companion"
-                                        onRetry={() => setView('study_companion')}
-                                      >
-                                        <Suspense fallback={<Loader />}>
-                                          <StudyCompanionPage
-                                            onExit={() => setView('command_center')}
-                                          />
-                                        </Suspense>
-                                      </WithGeminiErrorBoundary>
-                                    </motion.div>
-                                  )}
-
-                                  {view === 'srs_flashcards' && (
-                                    <motion.div
-                                      key="srs_flashcards"
-                                      variants={pageVariants}
-                                      initial="initial"
-                                      animate="animate"
-                                      exit="exit"
-                                      transition={pageTransition}
-                                    >
-                                      <Suspense fallback={<Loader />}>
-                                        <SrsFlashcardView
-                                          onExit={() => setView('command_center')}
-                                        />
-                                      </Suspense>
-                                    </motion.div>
-                                  )}
-
-                                  {view === 'medical_database' && (
-                                    <motion.div
-                                      key="medical_database"
-                                      variants={pageVariants}
-                                      initial="initial"
-                                      animate="animate"
-                                      exit="exit"
-                                      transition={pageTransition}
-                                    >
-                                      <Suspense
-                                        fallback={
-                                          <Loader message="Loading medical database search..." />
-                                        }
-                                      >
-                                        <MedicalDatabaseSearch
-                                          onClose={() => setView('command_center')}
-                                        />
-                                      </Suspense>
-                                    </motion.div>
-                                  )}
-
-                                  {view === 'live_collaboration' && (
-                                    <motion.div
-                                      key="live_collaboration"
-                                      variants={pageVariants}
-                                      initial="initial"
-                                      animate="animate"
-                                      exit="exit"
-                                      transition={pageTransition}
-                                    >
-                                      <Suspense
-                                        fallback={
-                                          <Loader message="Loading live study session..." />
-                                        }
-                                      >
-                                        <LiveStudySession
-                                          onClose={() => setView('command_center')}
-                                        />
-                                      </Suspense>
-                                    </motion.div>
-                                  )}
-
-                                  {view === 'cross_system_explorer' && (
-                                    <motion.div
-                                      key="cross_system_explorer"
-                                      variants={pageVariants}
-                                      initial="initial"
-                                      animate="animate"
-                                      exit="exit"
-                                      transition={pageTransition}
-                                    >
-                                      <Suspense
-                                        fallback={
-                                          <Loader message="Loading cross‑system explorer..." />
-                                        }
-                                      >
-                                        <CrossSystemExplorer
-                                          onClose={() => setView('command_center')}
-                                        />
-                                      </Suspense>
-                                    </motion.div>
-                                  )}
+                                  {/* cross_system_explorer migrated to /explorer route */}
                                 </AnimatePresence>
                               </div>
                             </main>

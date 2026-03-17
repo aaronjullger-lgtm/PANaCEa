@@ -36,6 +36,11 @@ const KNOWN_EXACT_PATHS = new Set([
   '/medical-database',
   '/live-collaboration',
   '/explorer',
+  '/study/library',
+  '/study/tutor',
+  '/study/companion',
+  '/study/flashcards',
+  '/study/pearls',
 ]);
 
 function isKnownPath(path: string): boolean {
@@ -98,6 +103,11 @@ function pathToView(path: string, navigate: ReturnType<typeof useNavigate>): Vie
   if (path.startsWith('/study/knowledge')) return null; // Now a React Router route
   if (path.startsWith('/study/utilities')) return null; // Now a React Router route
   if (path.startsWith('/study/path')) return null; // Now a React Router route
+  if (path.startsWith('/study/library')) return null; // Now a React Router route
+  if (path.startsWith('/study/tutor')) return null; // Now a React Router route
+  if (path.startsWith('/study/companion')) return null; // Now a React Router route
+  if (path.startsWith('/study/flashcards')) return null; // Now a React Router route
+  if (path.startsWith('/study/pearls')) return null; // Now a React Router route
   if (path === '/gap-analysis' || path.startsWith('/gap-analysis')) return null; // Now a React Router route
   if (path === '/clinical-profile' || path.startsWith('/clinical-profile')) return null; // Now a React Router route
   if (path === '/medical-database' || path.startsWith('/medical-database')) return null; // Now a React Router route
