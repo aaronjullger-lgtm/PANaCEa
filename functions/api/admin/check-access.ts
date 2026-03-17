@@ -125,6 +125,9 @@ export const onRequestGet = authenticatedEndpoint(CheckAccessSchema, async (cont
       error: error instanceof Error ? error.message : String(error),
       userId: clerkId,
     });
-    throw new Error('Internal server error');
+    return {
+      data: { error: 'Internal server error', hasAccess: false },
+      status: 500,
+    };
   }
 });
