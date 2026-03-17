@@ -153,13 +153,14 @@ That's it! 🎉
 
 ⚠️ **Before Production Deployment:**
 
-The current implementation uses simplified JWT verification for development. Before deploying to production:
+Auth for sync/profile routes is enforced by shared middleware (`withAuth` / `authenticatedEndpoint`) and Clerk token validation.
 
-1. Install `@clerk/backend`: `npm install @clerk/backend`
-2. Update JWT verification in `functions/api/sync.ts`
-3. See detailed security notes in `AUTHENTICATION_SETUP.md`
+Before production, make sure:
 
-**For local development and testing, the current setup is fine!**
+1. `CLERK_SECRET_KEY` is set in your runtime environment
+2. `DATABASE_URL` is set and reachable from Cloudflare Functions
+3. CORS and allowed origins are configured for your deployed domain
+4. You review `AUTHENTICATION_SETUP.md` for operational hardening guidance
 
 ## What Gets Synced?
 

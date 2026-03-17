@@ -229,7 +229,7 @@ To use a different auth provider (Auth0, Firebase, etc.):
 
 1. Replace `@clerk/clerk-react` in `hooks/useAuth.ts`
 2. Update `AuthProvider.tsx` component
-3. Modify API auth verification in `functions/api/auth/verify.ts`
+3. Update shared API auth middleware in `functions/api/_shared/auth.ts` and `functions/api/_shared/middleware.ts`
 
 ### Scaling Considerations
 
@@ -251,23 +251,14 @@ For high-traffic scenarios:
 
 ### ⚠️ Important Security Note
 
-The current JWT verification in `/functions/api/sync.ts` is simplified for demonstration. Before deploying to production, you MUST implement proper JWT signature verification using:
+Authentication is handled centrally by shared middleware (`withAuth` / `authenticatedEndpoint`) and applies to `/api/sync`, `/api/user/profile`, and other protected endpoints.
 
-- **Option 1 (Recommended)**: Use `@clerk/backend` SDK
+Before production, verify:
 
-  ```bash
-  npm install @clerk/backend
-  ```
-
-  Then use `clerkClient.verifyToken()` in your API functions
-
-- **Option 2**: Use `jsonwebtoken` library with proper key verification
-  ```bash
-  npm install jsonwebtoken
-  ```
-  Configure with your Clerk JWT public key
-
-Without proper verification, authentication tokens can be forged, compromising user data security.
+- `CLERK_SECRET_KEY` is configured in Cloudflare Pages Functions env.
+- Protected endpoints return `401` when called without `Authorization: Bearer <token>`.
+- Runtime CORS settings only allow your deployed app origin(s).
+- Rate limiting is enabled for sensitive endpoints (`/api/sync`, AI-proxy routes, profile updates).
 
 ## Support
 
