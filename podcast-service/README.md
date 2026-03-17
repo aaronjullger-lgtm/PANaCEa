@@ -27,4 +27,4 @@ Build and deploy the container; set `GEMINI_API_KEY` and `GOOGLE_APPLICATION_CRE
 
 ## Optional: Cloudflare proxy
 
-When `PODCAST_SERVICE_URL` is set, `functions/api/podcast/generate.ts` forwards POST requests to the Node service. Add auth (e.g. `authenticatedEndpoint`) in production.
+When `PODCAST_SERVICE_URL` is set, `functions/api/podcast/generate.ts` forwards POST requests to the Node service. The Edge proxy is already protected by auth middleware (`withAuth()`), so callers must be signed in.

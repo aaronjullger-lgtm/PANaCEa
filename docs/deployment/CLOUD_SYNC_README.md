@@ -72,9 +72,9 @@ App.tsx
 
 ```
 /functions/api/
-  ├── auth/verify.ts → Token verification
   ├── sync.ts → GET/POST data sync
-  └── stats/ → User statistics
+  ├── user/profile.ts → GET/PUT profile + onboarding flags
+  └── user/stats.ts → User statistics aggregation
 ```
 
 ### Database (PostgreSQL + Prisma)
@@ -97,15 +97,6 @@ prisma/schema.prisma
 
 ## API Endpoints
 
-### `POST /api/auth/verify`
-
-Verify Clerk authentication token
-
-```typescript
-Request: { Authorization: "Bearer <token>" }
-Response: { valid: boolean, userId: string, email: string }
-```
-
 ### `GET /api/sync`
 
 Fetch user's cloud data
@@ -115,7 +106,13 @@ Request: {
   Authorization: 'Bearer <token>';
 }
 Response: {
-  (performanceRecords, srsItems, savedQuestions);
+  success: boolean;
+  message: string;
+  data: {
+    performanceRecords: PerformanceRecord[];
+    srsItems: SRSItem[];
+    savedQuestions: SavedQuestion[];
+  };
 }
 ```
 
@@ -125,12 +122,57 @@ Upload/merge local data to cloud
 
 ```typescript
 Request: {
-  userId: string,
-  performanceRecords: [],
-  srsItems: [],
-  savedQuestions: []
+  userId: string;
+  performanceRecords?: PerformanceRecord[];
+  srsItems?: SRSItem[];
+  savedQuestions?: SavedQuestion[];
 }
-Response: { success: boolean, message: string }
+Response: {
+  success: boolean;
+  message: string;
+  data: {
+    performanceRecords: PerformanceRecord[];
+    srsItems: SRSItem[];
+    savedQuestions: SavedQuestion[];
+  };
+}
+```
+
+### `GET /api/user/profile`
+
+Fetch authenticated user's profile metadata (including onboarding flags).
+
+```typescript
+Request: { Authorization: 'Bearer <token>' }
+Response: {
+  success: boolean;
+  profile: {
+    firstName: string | null;
+    lastName: string | null;
+    examDate: string | null;
+    eorTestDate: string | null;
+    hasCompletedOnboarding: boolean;
+    // ...other profile fields
+  };
+}
+```
+
+### `PUT /api/user/profile`
+
+Partially update profile and onboarding fields.
+
+```typescript
+Request: {
+  Authorization: 'Bearer <token>';
+  // JSON body (top-level, no wrapper):
+  firstName?: string;
+  lastName?: string;
+  examDate?: string | null;
+  eorTestDate?: string | null;
+  hasCompletedOnboarding?: boolean;
+  // ...other optional profile fields
+}
+Response: { success: boolean; profile: object; message: string }
 ```
 
 ## Development
