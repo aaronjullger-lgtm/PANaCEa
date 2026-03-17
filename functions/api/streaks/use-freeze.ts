@@ -31,6 +31,12 @@ export const onRequestPost = authenticatedEndpoint(UseFreezeSchema, async (conte
     prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     const activityDate = new Date(validated.body.date + 'T00:00:00.000Z');
+    // Validate that the date parsed correctly (invalid dates like 2025-99-99 would return NaN)
+    const activityTime = activityDate.getTime();
+    if (isNaN(activityTime)) {
+      return { status: 400, error: 'Invalid date format' };
+    }
+
     const today = new Date(
       Date.UTC(
         new Date().getUTCFullYear(),
@@ -42,7 +48,7 @@ export const onRequestPost = authenticatedEndpoint(UseFreezeSchema, async (conte
         0
       )
     );
-    if (activityDate.getTime() > today.getTime()) {
+    if (activityTime > today.getTime()) {
       return { status: 400, error: 'Cannot use a freeze for a future date' };
     }
 

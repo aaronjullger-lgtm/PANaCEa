@@ -6,7 +6,7 @@ const QuestionSeedSchema = z.object({
   conditionId: z.string().min(1).max(100),
   questionType: z.string().min(1).max(50),
   corePathology: z.string().min(1).max(500),
-  variables: z.record(z.string(), z.any()),
+  variables: z.record(z.string(), z.unknown()),
   template: z.string().min(1).max(2000),
   correctAnswer: z.string().min(1).max(500),
   explanation: z.string().min(1).max(2000),

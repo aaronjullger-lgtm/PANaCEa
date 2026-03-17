@@ -339,7 +339,12 @@ async function resolveConflict(
     case 'newest-wins': {
       // Compare timestamps
       const clientTime = clientOp.timestamp;
-      const serverTime = serverData.updatedAt ? new Date(serverData.updatedAt).getTime() : 0;
+      let serverTime = 0;
+      if (serverData.updatedAt) {
+        const parsedTime = new Date(serverData.updatedAt).getTime();
+        // Handle invalid dates (NaN)
+        serverTime = !isNaN(parsedTime) ? parsedTime : 0;
+      }
       return clientTime > serverTime ? clientOp.data : null;
     }
 

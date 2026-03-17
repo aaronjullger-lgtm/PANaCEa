@@ -43,8 +43,10 @@ export const onRequestGet = authenticatedEndpoint(z.object({}), async ({ env, au
     }
 
     // Calculate health decay based on last interaction
+    const lastInteractionTime = new Date(user.PhantomPatient.lastInteraction).getTime();
+    const validLastInteraction = !isNaN(lastInteractionTime) ? lastInteractionTime : Date.now();
     const daysSince = Math.floor(
-      (Date.now() - new Date(user.PhantomPatient.lastInteraction).getTime()) / (1000 * 60 * 60 * 24)
+      (Date.now() - validLastInteraction) / (1000 * 60 * 60 * 24)
     );
 
     const decayRate = 5; // -5 points per day
