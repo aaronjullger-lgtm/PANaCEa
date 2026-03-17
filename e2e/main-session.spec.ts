@@ -256,11 +256,43 @@ test.describe('Main Session End-to-End', () => {
     await page.goto(`${BASE_URL}/study/path`);
     await waitForAppReady(page);
 
-    // Should not show 404 page
     const notFound = page.locator('text=Page Not Found');
     await expect(notFound).not.toBeVisible({ timeout: 5000 });
-    // Should show study path content or loading/empty state
     const hasContent = await page.locator('text=/Study Path|Dynamic Study|plan|recommendation/i').first().isVisible({ timeout: 8000 });
     expect(hasContent).toBe(true);
+  });
+
+  test('should support keyboard submit and quiz overflow lab calculators', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await waitForAppReady(page);
+
+    const isAuth = await isAuthenticated(page);
+    if (!isAuth) {
+      console.log('⊘ Skipping keyboard/overflow test - authentication required');
+      test.skip();
+      return;
+    }
+
+    await startMainSession(page);
+
+    await page.keyboard.press('a');
+    await page.keyboard.press('Enter');
+
+    await expect(page.locator('button:has-text("Next Question")').first()).toBeVisible({
+      timeout: 10000,
+    });
+
+    const overflowButton = page.locator('button[title="More actions"]').first();
+    await expect(overflowButton).toBeVisible({ timeout: 5000 });
+    await overflowButton.click();
+
+    const labCalculatorsButton = page.locator('button:has-text("Lab Calculators")').first();
+    await expect(labCalculatorsButton).toBeVisible({ timeout: 5000 });
+    await labCalculatorsButton.click();
+
+    await expect(page.locator('text=Lab Calculators').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('button:has-text("Anion Gap")').first()).toBeVisible({
+      timeout: 5000,
+    });
   });
 });
