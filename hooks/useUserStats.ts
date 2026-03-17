@@ -10,6 +10,7 @@ import { getAllSRSItems, loadSRSItemsFromCloud } from '../lib/services/srsServic
 import { createDebouncedFunction } from '../lib/utils/debounce';
 import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
 import { logger } from '@/src/lib/logger';
+import { getSyncCircuitBreaker } from '../lib/utils/circuitBreaker';
 
 const PERFORMANCE_KEY = 'panceai_performance_v2';
 const MISSED_KEY = 'panceai_missed_v2';
@@ -129,27 +130,42 @@ export function useUserStats(): UseUserStatsResult {
         throw new Error('Failed to get authentication token. Please try signing in again.');
       }
 
+      // Capture current state at sync time to avoid stale closures
+      const currentPerformanceData = performanceData;
+      const currentMissedQuestions = missedQuestions;
+      const currentFlaggedQuestions = flaggedQuestions;
+
+      // Create Set for O(1) lookup instead of O(n) array.includes()
+      const missedQuestionIds = new Set(currentMissedQuestions.map((q) => q.questionId || q.id || ''));
+
       // Get SRS items from srsService
       const srsItems = getAllSRSItems(user.clerkId);
 
-      const response = await fetch(getApiEndpoint(API_ENDPOINTS.SYNC), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          userId: user.clerkId,
-          performanceRecords: performanceData,
-          srsItems,
-          savedQuestions: [...missedQuestions, ...flaggedQuestions].map((q) => ({
-            ...q,
-            type: missedQuestions.includes(q) ? 'missed' : 'flagged',
-            // Ensure updatedAt is present for conflict resolution
-            updatedAt: q.lastReviewedAt ? new Date(q.lastReviewedAt) : new Date(),
-          })),
-        }),
-      });
+      // Use circuit breaker to prevent cascading failures
+      const circuitBreaker = getSyncCircuitBreaker();
+      const response = await circuitBreaker.execute(() =>
+        fetch(getApiEndpoint(API_ENDPOINTS.SYNC), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId: user.clerkId,
+            performanceRecords: currentPerformanceData,
+            srsItems,
+            savedQuestions: [...currentMissedQuestions, ...currentFlaggedQuestions].map((q) => {
+              const questionId = q.questionId || q.id || '';
+              return {
+                ...q,
+                type: missedQuestionIds.has(questionId) ? 'missed' : 'flagged',
+                // Ensure updatedAt is present for conflict resolution
+                updatedAt: q.lastReviewedAt ? new Date(q.lastReviewedAt) : new Date(),
+              };
+            }),
+          }),
+        })
+      );
 
       // Handle 401 Unauthorized - abort sync immediately without retry
       if (response.status === 401) {
@@ -182,16 +198,51 @@ export function useUserStats(): UseUserStatsResult {
       // Process server response and update local state with merged data
       if (result.success && result.data) {
         const d = result.data;
+        // Merge instead of replace: preserve in-flight local changes
         if (d.performanceRecords?.length) {
-          setPerformanceDataState(d.performanceRecords);
+          setPerformanceDataState((prev) => {
+            // Merge by ID, keeping newer records
+            const merged = new Map<string, PerformanceRecord>();
+            prev.forEach((r) => merged.set(r.id || '', r));
+            d.performanceRecords.forEach((r) => {
+              const existing = merged.get(r.id || '');
+              if (!existing || r.timestamp > existing.timestamp) {
+                merged.set(r.id || '', r);
+              }
+            });
+            return Array.from(merged.values());
+          });
         }
         if (d.srsItems?.length) {
           loadSRSItemsFromCloud(d.srsItems);
         }
         if (d.savedQuestions?.length) {
           const { missed, flagged } = separateSavedQuestions(d.savedQuestions);
-          setMissedQuestionsState(missed);
-          setFlaggedQuestionsState(flagged);
+          // Merge saved questions by questionId
+          setMissedQuestionsState((prev) => {
+            const merged = new Map<string, Question>();
+            prev.forEach((q) => {
+              const id = q.questionId || q.id || '';
+              if (id) merged.set(id, q);
+            });
+            missed.forEach((q) => {
+              const id = q.questionId || q.id || '';
+              if (id) merged.set(id, q);
+            });
+            return Array.from(merged.values());
+          });
+          setFlaggedQuestionsState((prev) => {
+            const merged = new Map<string, Question>();
+            prev.forEach((q) => {
+              const id = q.questionId || q.id || '';
+              if (id) merged.set(id, q);
+            });
+            flagged.forEach((q) => {
+              const id = q.questionId || q.id || '';
+              if (id) merged.set(id, q);
+            });
+            return Array.from(merged.values());
+          });
         }
       }
 
@@ -204,7 +255,7 @@ export function useUserStats(): UseUserStatsResult {
       setIsSyncing(false);
       setIsLoading(false);
     }
-  }, [isSignedIn, user, getToken, performanceData, missedQuestions, flaggedQuestions]);
+  }, [isSignedIn, user, getToken]);
 
   /**
    * Download data from cloud
@@ -224,12 +275,16 @@ export function useUserStats(): UseUserStatsResult {
         throw new Error('Failed to get authentication token');
       }
 
-      const response = await fetch(getApiEndpoint(API_ENDPOINTS.SYNC), {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // Use circuit breaker to prevent cascading failures
+      const circuitBreaker = getSyncCircuitBreaker();
+      const response = await circuitBreaker.execute(() =>
+        fetch(getApiEndpoint(API_ENDPOINTS.SYNC), {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+      );
 
       // Handle 401 Unauthorized - abort sync immediately without retry
       if (response.status === 401) {
@@ -260,16 +315,51 @@ export function useUserStats(): UseUserStatsResult {
 
       if (result.success && result.data) {
         const d = result.data;
+        // Merge instead of replace: preserve in-flight local changes
         if (d.performanceRecords?.length) {
-          setPerformanceDataState(d.performanceRecords);
+          setPerformanceDataState((prev) => {
+            // Merge by ID, keeping newer records
+            const merged = new Map<string, PerformanceRecord>();
+            prev.forEach((r) => merged.set(r.id || '', r));
+            d.performanceRecords.forEach((r) => {
+              const existing = merged.get(r.id || '');
+              if (!existing || r.timestamp > existing.timestamp) {
+                merged.set(r.id || '', r);
+              }
+            });
+            return Array.from(merged.values());
+          });
         }
         if (d.srsItems?.length) {
           loadSRSItemsFromCloud(d.srsItems);
         }
         if (d.savedQuestions?.length) {
           const { missed, flagged } = separateSavedQuestions(d.savedQuestions);
-          setMissedQuestionsState(missed);
-          setFlaggedQuestionsState(flagged);
+          // Merge saved questions by questionId
+          setMissedQuestionsState((prev) => {
+            const merged = new Map<string, Question>();
+            prev.forEach((q) => {
+              const id = q.questionId || q.id || '';
+              if (id) merged.set(id, q);
+            });
+            missed.forEach((q) => {
+              const id = q.questionId || q.id || '';
+              if (id) merged.set(id, q);
+            });
+            return Array.from(merged.values());
+          });
+          setFlaggedQuestionsState((prev) => {
+            const merged = new Map<string, Question>();
+            prev.forEach((q) => {
+              const id = q.questionId || q.id || '';
+              if (id) merged.set(id, q);
+            });
+            flagged.forEach((q) => {
+              const id = q.questionId || q.id || '';
+              if (id) merged.set(id, q);
+            });
+            return Array.from(merged.values());
+          });
         }
 
         setLastSyncTime(Date.now());
@@ -336,12 +426,21 @@ export function useUserStats(): UseUserStatsResult {
     }
 
     setIsLoading(true);
-    if (hasLocalData) {
-      syncToCloud();
-    } else {
-      syncFromCloud();
-    }
-  }, [isSignedIn]); // Only trigger on sign-in state change, not on every clerkId change
+    
+    // Use refs to capture latest sync functions to avoid stale closures
+    const performSync = async () => {
+      if (hasLocalData) {
+        await syncToCloud();
+      } else {
+        await syncFromCloud();
+      }
+    };
+    
+    performSync().catch((error) => {
+      logger.warn('useUserStats', 'Initial sync failed', error);
+      setIsLoading(false);
+    });
+  }, [isSignedIn, syncToCloud, syncFromCloud]); // Include sync functions in deps
 
   // Listen for external updates (e.g. from performanceService)
   useEffect(() => {

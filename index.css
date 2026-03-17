@@ -344,6 +344,9 @@ a,
   /* Layout dimensions - header fixed height (h-16) so NavRail can sit below it */
   --header-height: 4rem; /* 64px = h-16 */
   --nav-rail-width: 56px;
+  
+  /* Content max-width - consistent across main content pages */
+  --content-max-width: 72rem; /* 1152px = max-w-6xl */
 
   /* ===== UNIFIED COLORWAY: COOLER GOLD + SLATE (same family, light-optimized) ===== */
   /* Gold: one family in both modes; light mode uses darker shade for contrast on white */

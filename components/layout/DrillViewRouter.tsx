@@ -47,6 +47,7 @@ import {
 } from '@/config/lazyComponents';
 import type { View } from '@/config/appViews';
 import type { Question as QuizQuestion, PerformanceRecord, ErrorTag } from '@/types';
+import { TRAINING_MODES } from '@/config/training-modes';
 
 interface DrillViewRouterProps {
   view: View;
@@ -69,7 +70,7 @@ interface DrillViewRouterProps {
   missedQuestions: QuizQuestion[];
 }
 
-const onExit = (setView: (v: View) => void) => () => setView('command_center');
+const onExit = (navigate: ReturnType<typeof useNavigate>) => () => navigate('/study');
 
 export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
   view,
@@ -89,7 +90,7 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
   missedQuestions,
 }) => {
   const navigate = useNavigate();
-  const exit = onExit(setView);
+  const exit = onExit(navigate);
 
   const sharedQuizProps = {
     addPerformanceRecord,
@@ -314,6 +315,14 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
         </WithGeminiErrorBoundary>
       )}
 
+      {view === 'pance_simulator' && (
+        <WithGeminiErrorBoundary viewName="pance_simulator" onRetry={() => setView('pance_simulator')}>
+          <Suspense fallback={<Loader />}>
+            <FullSitDownTestMode onExit={exit} {...sharedQuizProps} />
+          </Suspense>
+        </WithGeminiErrorBoundary>
+      )}
+
       {view === 'code_blue_speed' && (
         <WithGeminiErrorBoundary
           viewName="code_blue_speed"
@@ -369,7 +378,29 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
           onRetry={() => setView('polypharmacy_puzzle')}
         >
           <Suspense fallback={<Loader />}>
-            <PolypharmacyPuzzleMode onExit={exit} />
+            {(() => {
+              // Check if mode is coming soon
+              const mode = TRAINING_MODES.find((m) => m.id === 'polypharmacy_puzzle');
+              if (mode?.isComingSoon) {
+                return (
+                  <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
+                    <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+                      Coming Soon
+                    </h2>
+                    <p className="text-[var(--color-text-muted)] mb-6">
+                      {mode.label} is currently under development.
+                    </p>
+                    <button
+                      onClick={exit}
+                      className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:opacity-90 transition-opacity"
+                    >
+                      Return to Home
+                    </button>
+                  </div>
+                );
+              }
+              return <PolypharmacyPuzzleMode onExit={exit} />;
+            })()}
           </Suspense>
         </WithGeminiErrorBoundary>
       )}
@@ -399,7 +430,7 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
           onRetry={() => setView('diagnostic_puzzle')}
         >
           <Suspense fallback={<Loader />}>
-            <DiagnosticPuzzleMode onExit={() => navigate('/practice')} />
+            <DiagnosticPuzzleMode onExit={() => navigate('/study')} />
           </Suspense>
         </WithGeminiErrorBoundary>
       )}

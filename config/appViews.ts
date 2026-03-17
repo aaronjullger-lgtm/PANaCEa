@@ -42,7 +42,6 @@ export type View =
   | 'medical_wordle'
   | 'diagnostic_puzzle'
   | 'admin_media'
-  | 'social_dashboard'
   | 'toolkit'
   | 'gap_analysis'
   | 'clinical_profile'

@@ -586,7 +586,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         />
       )}
 
-      <div ref={pullToRefreshRef} className="max-w-6xl mx-auto">
+      <div ref={pullToRefreshRef} className="mx-auto" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
         {/* Refresh indicator */}
         {isRefreshing && (
           <motion.div

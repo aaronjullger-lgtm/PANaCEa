@@ -16,16 +16,31 @@ const KNOWN_EXACT_PATHS = new Set([
   '/study',
   '/study/',
   '/study/path',
+  '/study/knowledge',
+  '/study/utilities',
   '/practice',
   '/progress',
+  '/daily-challenges',
   '/study/main-session',
   '/study/main-session/',
   '/admin',
+  '/admin/curation',
+  '/admin/refinery',
+  '/admin/taxonomies',
+  '/admin/system-mappings',
+  '/admin/question-generator',
   '/clinical-eye',
   '/visualizer',
+  '/gap-analysis',
+  '/clinical-profile',
   '/medical-database',
   '/live-collaboration',
   '/explorer',
+  '/study/library',
+  '/study/tutor',
+  '/study/companion',
+  '/study/flashcards',
+  '/study/pearls',
 ]);
 
 function isKnownPath(path: string): boolean {
@@ -80,17 +95,24 @@ function pathToView(path: string, navigate: ReturnType<typeof useNavigate>): Vie
     return ROUTE_TO_VIEW[path] ?? null;
   }
 
+  // React Router routes - these are handled by <Route> components, not view-state
+  // Return null so useAppNavigation doesn't try to set view for them
   if (path === '/' || path === '') return 'command_center';
   if (path === '/menu') return 'menu';
   if (path === '/study' || path === '/study/') return 'command_center';
-  if (path.startsWith('/study/knowledge')) return 'reference_library';
-  if (path.startsWith('/study/utilities')) return 'toolkit';
-  if (path.startsWith('/study/path')) return 'study_path_dashboard';
-  if (path === '/gap-analysis' || path.startsWith('/gap-analysis')) return 'gap_analysis';
-  if (path === '/clinical-profile' || path.startsWith('/clinical-profile')) return 'clinical_profile';
-  if (path === '/medical-database' || path.startsWith('/medical-database')) return 'medical_database';
-  if (path === '/live-collaboration' || path.startsWith('/live-collaboration')) return 'live_collaboration';
-  if (path.startsWith('/explorer')) return 'cross_system_explorer';
+  if (path.startsWith('/study/knowledge')) return null; // Now a React Router route
+  if (path.startsWith('/study/utilities')) return null; // Now a React Router route
+  if (path.startsWith('/study/path')) return null; // Now a React Router route
+  if (path.startsWith('/study/library')) return null; // Now a React Router route
+  if (path.startsWith('/study/tutor')) return null; // Now a React Router route
+  if (path.startsWith('/study/companion')) return null; // Now a React Router route
+  if (path.startsWith('/study/flashcards')) return null; // Now a React Router route
+  if (path.startsWith('/study/pearls')) return null; // Now a React Router route
+  if (path === '/gap-analysis' || path.startsWith('/gap-analysis')) return null; // Now a React Router route
+  if (path === '/clinical-profile' || path.startsWith('/clinical-profile')) return null; // Now a React Router route
+  if (path === '/medical-database' || path.startsWith('/medical-database')) return null; // Now a React Router route
+  if (path === '/live-collaboration' || path.startsWith('/live-collaboration')) return null; // Now a React Router route
+  if (path.startsWith('/explorer')) return null; // Now a React Router route
 
   return null;
 }
@@ -109,6 +131,7 @@ export function useAppNavigation(): UseAppNavigationReturn {
   const [showNotFound, setShowNotFound] = useState(false);
 
   // Sync URL to view — single source of truth
+  // Note: React Router routes return null from pathToView and are handled by <Route> components
   useEffect(() => {
     const path = location.pathname;
 
@@ -120,7 +143,11 @@ export function useAppNavigation(): UseAppNavigationReturn {
     setShowNotFound(false);
 
     const resolvedView = pathToView(path, navigate);
-    if (resolvedView === 'redirect' || resolvedView === null) return;
+    if (resolvedView === 'redirect' || resolvedView === null) {
+      // null means it's a React Router route, handled by <Route> components
+      // Don't set view state for React Router routes
+      return;
+    }
 
     setView(resolvedView);
   }, [location.pathname, navigate]);
