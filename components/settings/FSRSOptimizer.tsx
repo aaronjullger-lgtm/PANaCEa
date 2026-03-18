@@ -40,7 +40,7 @@ export const FSRSOptimizer: React.FC = () => {
           setCanOptimize(status.canOptimize ?? true);
           setReviewsNeeded(status.reviewsNeeded ?? 0);
         })
-        .catch((err) => console.error('Failed to load optimization status:', err));
+        .catch(() => setError('Could not load optimization status.'));
     }
   }, [userId]);
 

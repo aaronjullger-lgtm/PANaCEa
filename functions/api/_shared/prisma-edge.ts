@@ -184,6 +184,40 @@ export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
 }
 
 /**
+ * Module-level prisma singleton for service files that need a direct import.
+ * Lazily initialized on first access using DATABASE_URL from the environment.
+ * In Cloudflare Workers, set DATABASE_URL as an env var in Pages settings.
+ */
+let _prismaInstance: EdgePrismaClient | null = null;
+
+function getPrismaInstance(): EdgePrismaClient {
+  if (!_prismaInstance) {
+    // Cloudflare Workers may expose env vars via process.env in some configurations,
+    // or the caller must ensure DATABASE_URL is set before first use.
+    const dbUrl = (typeof process !== 'undefined' && process.env?.DATABASE_URL) || '';
+    if (!dbUrl) {
+      throw new Error(
+        '[Prisma Edge] MODULE-LEVEL prisma singleton requires DATABASE_URL to be available at module init. ' +
+        'Use createEdgePrismaClient(env.DATABASE_URL) inside your handler instead.'
+      );
+    }
+    _prismaInstance = createEdgePrismaClient(dbUrl);
+  }
+  return _prismaInstance;
+}
+
+/**
+ * Module-level Prisma client singleton.
+ * NOTE: Prefer createEdgePrismaClient(env.DATABASE_URL) inside handlers for proper env access.
+ * This singleton is provided for service files that use the module-level import pattern.
+ */
+export const prisma: EdgePrismaClient = new Proxy({} as EdgePrismaClient, {
+  get(_target, prop) {
+    return (getPrismaInstance() as any)[prop];
+  },
+});
+
+/**
  * Safely disconnect Prisma client with error handling.
  * Skips disconnect for singleton clients (reused per isolate); non-singleton clients are disconnected.
  */

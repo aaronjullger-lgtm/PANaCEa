@@ -381,7 +381,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 <RetentionForecastCard
                   dueCount={data.dueCount}
                   decayCurveData={data.decayCurveData}
-                  onStartReview={() => handleNavigation('/study/smart-review')}
+                  onStartReview={() => handleNavigation('/study/main-session')}
                 />
               </div>
 
@@ -416,7 +416,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 </button>
                 */}
                 <button
-                  onClick={() => handleNavigation('/drills/rapid')}
+                  onClick={() => handleNavigation('/modes/rapid-recall')}
                   className="group relative bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm hover:bg-[var(--color-bg-tertiary)]/50 transition-all duration-300 w-full text-left overflow-hidden"
                 >
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-data-provisional)] to-[var(--color-data-provisional)] opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -482,7 +482,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
               <div className="flex justify-center pt-2">
                 <button
                   type="button"
-                  onClick={() => handleNavigation('/analytics')}
+                  onClick={() => handleNavigation('/progress')}
                   className="flex items-center gap-2 text-sm font-medium text-[var(--color-accent)] hover:underline"
                 >
                   <LayoutDashboard className="w-4 h-4" />

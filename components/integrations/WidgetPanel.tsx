@@ -58,7 +58,7 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({ performanceData, misse
   const embedCode = useMemo(() => {
     // Use server-hosted widget URLs instead of data URIs
     // This makes them compatible with Notion's security policies
-    const serverUrl = (import.meta as any).env.VITE_BACKEND_URL || 'http://localhost:3001';
+    const serverUrl = (import.meta as any).env.VITE_BACKEND_URL || window.location.origin;
 
     // Get actual userId from authentication context
     const userId = user?.id || 'YOUR_USER_ID';

@@ -385,6 +385,7 @@ class SyncManager {
             mode: 'session',
             isMainSession: answer.isMainSession ?? false,
             selectedAnswer: ['A', 'B', 'C', 'D'][answer.selectedAnswer],
+            ...(answer.rating != null && { rating: answer.rating }),
             ...(answer.telemetryJson && { telemetryJson: answer.telemetryJson }),
             ...(answer.answerChangedCount != null && {
               answerChangedCount: answer.answerChangedCount,

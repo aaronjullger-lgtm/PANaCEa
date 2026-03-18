@@ -368,9 +368,33 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                   const letter = String.fromCharCode(65 + index);
                   const key = `whyIncorrect${letter}` as keyof StructuredRationale;
                   const whyIncorrect = rationale[key];
-                  if (!whyIncorrect || typeof whyIncorrect !== 'string') return null;
-
                   const isUserChoice = index === userAnswerIndex;
+
+                  // Show explanation if available; show placeholder for user's wrong choice if missing
+                  if (!whyIncorrect || typeof whyIncorrect !== 'string') {
+                    if (!isUserChoice) return null;
+                    // Always show the user's incorrect choice, even without explanation
+                    return (
+                      <div
+                        key={`option-${letter}`}
+                        className="px-4 py-2 rounded-lg border bg-dusty-rose-50 dark:bg-dusty-rose-900/20 border-dusty-rose-300 dark:border-dusty-rose-700"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="font-semibold text-sm text-dusty-rose-600 dark:text-dusty-rose-400">
+                            {letter}.
+                          </span>
+                          <div className="flex-1">
+                            <span className="text-sm text-[var(--color-text-muted)] italic">
+                              This was not the best answer.
+                            </span>
+                            <span className="ml-2 text-xs text-dusty-rose-600 dark:text-dusty-rose-400 font-medium">
+                              (Your answer)
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
 
                   return (
                     <div

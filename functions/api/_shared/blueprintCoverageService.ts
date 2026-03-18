@@ -222,3 +222,18 @@ export async function getAvailableExamTypes(): Promise<string[]> {
 
   return results.map((r) => r.examType);
 }
+
+/**
+ * Namespace export for callers that use the service object pattern.
+ */
+export const blueprintCoverageService = {
+  getBlueprintTargets,
+  analyzeBlueprintCoverage,
+  getCriticalGapSystems,
+  getHighCoverageSystems,
+  getSystemsByCoverageNeed,
+  getSystemWeightsForSelection,
+  setSystemTarget,
+  setBlueprintTargets,
+  getAvailableExamTypes,
+};

@@ -290,6 +290,55 @@ export function withErrorHandler(
 }
 
 /**
+ * Centralized error handler for API endpoints.
+ * Converts thrown errors (including APIError subclasses) into JSON Responses.
+ *
+ * @param error - Any thrown value
+ * @returns A Response with appropriate status code and JSON body
+ */
+export function errorHandler(error: unknown): Response {
+  const timestamp = new Date().toISOString();
+
+  if (error instanceof APIError) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.code || error.name,
+        message: error.message,
+        timestamp,
+      }),
+      {
+        status: error.statusCode,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
+  // Handle plain objects with a status field (e.g., from requireAuth)
+  if (error && typeof error === 'object' && 'status' in error) {
+    const status = (error as any).status as number;
+    const message = error instanceof Error ? error.message : 'Request failed';
+    return new Response(
+      JSON.stringify({ success: false, error: 'ERROR', message, timestamp }),
+      {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
+  const message = error instanceof Error ? error.message : 'Internal server error';
+  console.error('[errorHandler] Unhandled error:', error);
+  return new Response(
+    JSON.stringify({ success: false, error: 'INTERNAL_ERROR', message, timestamp }),
+    {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
+}
+
+/**
  * Validate required environment variables
  */
 export function validateEnv(env: any, required: string[]): { valid: boolean; missing: string[] } {

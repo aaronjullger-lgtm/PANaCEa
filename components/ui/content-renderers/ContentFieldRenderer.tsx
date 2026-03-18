@@ -78,13 +78,18 @@ export const ContentFieldRenderer: React.FC<ContentFieldRendererProps> = ({
     case 'key-value':
       return <KeyValueRenderer data={value as Record<string, unknown>} className={className} />;
 
-    default:
-      // Fallback: try to render as string
-      console.warn('[ContentFieldRenderer] Unknown render type, falling back to string:', {
+    default: {
+      // Fallback: safely render without [object Object]
+      console.warn('[ContentFieldRenderer] Unknown render type, falling back:', {
         value,
         renderType,
       });
-      return <div className={`text-[var(--color-text-primary)] ${className}`}>{String(value)}</div>;
+      if (typeof value === 'object' && value !== null) {
+        // Route objects to KeyValueRenderer instead of String()
+        return <KeyValueRenderer data={value as Record<string, unknown>} className={className} />;
+      }
+      return <div className={`text-[var(--color-text-primary)] ${className}`}>{String(value ?? '')}</div>;
+    }
   }
 };
 

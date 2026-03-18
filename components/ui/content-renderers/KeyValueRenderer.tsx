@@ -84,29 +84,39 @@ function renderValue(value: unknown): React.ReactNode {
     return <span className="text-[var(--color-text-muted)] italic">Not specified</span>;
   }
 
-  // Array of strings
+  // Array values
   if (Array.isArray(value)) {
     return (
       <ul className="list-disc list-inside space-y-1">
         {value.map((item, idx) => (
           <li key={idx} className="text-[var(--color-text-primary)]">
-            {String(item)}
+            {typeof item === 'object' && item !== null
+              ? Object.entries(item as Record<string, unknown>)
+                  .map(([k, v]) => `${formatKey(k)}: ${v ?? ''}`)
+                  .join(', ')
+              : String(item ?? '')}
           </li>
         ))}
       </ul>
     );
   }
 
-  // Nested object
+  // Nested object - recursively render instead of String() which produces [object Object]
   if (typeof value === 'object') {
+    const nestedEntries = Object.entries(value as Record<string, unknown>).filter(
+      ([_, v]) => v !== null && v !== undefined && v !== ''
+    );
+    if (nestedEntries.length === 0) {
+      return <span className="text-[var(--color-text-muted)] italic">Not specified</span>;
+    }
     return (
       <div className="pl-4 border-l-2 border-[var(--color-border)] space-y-2 mt-2">
-        {Object.entries(value as Record<string, unknown>).map(([nestedKey, nestedValue]) => (
+        {nestedEntries.map(([nestedKey, nestedValue]) => (
           <div key={nestedKey} className="text-sm">
             <span className="font-medium text-[var(--color-text-muted)]">
               {formatKey(nestedKey)}:
             </span>{' '}
-            <span className="text-[var(--color-text-primary)]">{String(nestedValue)}</span>
+            <span className="text-[var(--color-text-primary)]">{renderValue(nestedValue)}</span>
           </div>
         ))}
       </div>

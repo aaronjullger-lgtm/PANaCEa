@@ -14,6 +14,9 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { scheduleConceptReview } from '../intelligence/profile';
 import { getRolling360Service } from '../../../lib/services/rolling360Service';
+import { FSRS, topicProgressToCard } from '../../../lib/fsrs';
+import { getEorRotationEnd, applyEorClampIfNeeded } from '../../../lib/fsrs/eorScheduler';
+import { getTaskTypeFromContent } from '../../../lib/taskTypes';
 
 const LETTERS = ['A', 'B', 'C', 'D'] as const;
 
@@ -37,6 +40,7 @@ const AttemptSchema = z.object({
     telemetryJson: z.record(z.string(), z.unknown()).optional(),
     durationMs: z.number().optional(),
     isMainSession: z.boolean().optional().default(false),
+    rating: z.number().int().min(1).max(4).optional(),
   }),
 });
 
@@ -75,6 +79,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       telemetryJson,
       durationMs,
       isMainSession = false,
+      rating: fsrsRatingRaw,
     } = validated.body;
 
     // Support both isCorrect and wasCorrect field names
@@ -223,7 +228,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
     // Get detailed system stats
     const detailedSystemStats = system ? await getUserSystemStats(prisma, userId, system) : null;
 
-    // SRS: Schedule concept review (Leitner-style: fail +1 day, pass +3 days)
+    // SRS: Schedule concept review (legacy Leitner fallback)
     if (typeof correctness === 'boolean' && (system || conditionId)) {
       try {
         const conceptKey = `${system || 'General'}|${conditionId || questionType || 'unknown'}`;
@@ -231,6 +236,111 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
       } catch (srsErr) {
         logger.warn('SRS scheduleConceptReview failed (non-fatal)', {
           error: srsErr instanceof Error ? srsErr.message : String(srsErr),
+        });
+      }
+    }
+
+    // FSRS v6: Apply spaced repetition scheduling via UserTopicProgress
+    // This is the primary scheduling mechanism - Leitner above is kept as legacy fallback
+    let nextReviewDate: Date | null = null;
+    if (typeof correctness === 'boolean' && fsrsRatingRaw != null) {
+      try {
+        // Normalize deprecated ratings: Hard(2)→Again(1), Easy(4)→Good(3)
+        const fsrsRating = fsrsRatingRaw === 2 ? 1 : fsrsRatingRaw === 4 ? 3 : fsrsRatingRaw;
+        const fsrs = new FSRS();
+        const now = new Date();
+
+        // Get user EOR context for time-blocked scheduling
+        const userForEor = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { yearInProgram: true, currentRotation: true, eorTestDate: true, rotationEndDate: true },
+        });
+        const eorRotationEnd = getEorRotationEnd({
+          yearInProgram: userForEor?.yearInProgram ?? null,
+          currentRotation: userForEor?.currentRotation ?? null,
+          eorTestDate: userForEor?.eorTestDate?.toISOString() ?? null,
+          rotationEndDate: userForEor?.rotationEndDate?.toISOString() ?? null,
+        });
+
+        // Determine condition and task type for topic progress
+        let effectiveConditionId = conditionId ?? null;
+        let taskType: string | null = null;
+
+        if (!effectiveConditionId && questionId) {
+          try {
+            const question = await prisma.question.findUnique({
+              where: { id: questionId },
+              select: { conditionId: true, question: true },
+            });
+            if (question) {
+              effectiveConditionId = question.conditionId;
+              taskType = getTaskTypeFromContent(question.question);
+            }
+          } catch {
+            // Question may not exist in main table
+          }
+        }
+        if (!taskType) {
+          taskType = questionType || 'diagnosis';
+        }
+
+        if (effectiveConditionId && taskType) {
+          // Look up existing topic progress
+          const topicProgress = await prisma.userTopicProgress.findUnique({
+            where: {
+              userId_conditionId_taskType: {
+                userId,
+                conditionId: effectiveConditionId,
+                taskType,
+              },
+            },
+          });
+
+          if (topicProgress) {
+            // Update existing progress with FSRS
+            const card = topicProgressToCard(topicProgress);
+            const scheduled = fsrs.next(card, now, fsrsRating);
+            const { due: clampedDue } = applyEorClampIfNeeded(scheduled.due, eorRotationEnd);
+            nextReviewDate = clampedDue;
+
+            await prisma.userTopicProgress.update({
+              where: { id: topicProgress.id },
+              data: {
+                stability: scheduled.card.stability,
+                difficulty: scheduled.card.difficulty,
+                state: scheduled.card.state,
+                reps: scheduled.card.reps,
+                lapses: scheduled.card.lapses,
+                lastReviewDate: now,
+                nextReviewDate: clampedDue,
+              },
+            });
+          } else {
+            // Create new topic progress entry
+            const emptyCard = fsrs.createEmptyCard();
+            const scheduled = fsrs.next(emptyCard, now, fsrsRating);
+            const { due: clampedDue } = applyEorClampIfNeeded(scheduled.due, eorRotationEnd);
+            nextReviewDate = clampedDue;
+
+            await prisma.userTopicProgress.create({
+              data: {
+                userId,
+                conditionId: effectiveConditionId,
+                taskType,
+                stability: scheduled.card.stability,
+                difficulty: scheduled.card.difficulty,
+                state: scheduled.card.state,
+                reps: scheduled.card.reps,
+                lapses: scheduled.card.lapses,
+                lastReviewDate: now,
+                nextReviewDate: clampedDue,
+              },
+            });
+          }
+        }
+      } catch (fsrsErr) {
+        logger.warn('FSRS scheduling failed (non-fatal)', {
+          error: fsrsErr instanceof Error ? fsrsErr.message : String(fsrsErr),
         });
       }
     }
@@ -262,6 +372,7 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
         attemptId: result.attemptId,
         stats: result.stats,
         systemStats: detailedSystemStats || result.systemStats,
+        ...(nextReviewDate && { nextReviewDate: nextReviewDate.toISOString() }),
       },
     };
   } catch (error) {

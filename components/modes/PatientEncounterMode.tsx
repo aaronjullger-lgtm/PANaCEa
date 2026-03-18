@@ -99,6 +99,8 @@ import { ContextBanner } from '@/components/shared/ContextBanner';
 import { PatientAVEngine } from '@/services/av/patientAVEngine';
 import type { PatientAVStateMachine, AVState } from '@/types/patient-av-state-machine';
 
+import { syncManager } from '@/lib/services/sync/syncManager';
+
 // Gemini API Key (from environment or config)
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
@@ -855,7 +857,29 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       );
       if (!completed) toast.error('Session could not be saved. Your results may not be recorded.');
       const rubricResult = await gradeOSCESession(sessionId, authToken);
-      if (rubricResult) setGradeResult(rubricResult);
+      if (rubricResult) {
+        setGradeResult(rubricResult);
+
+        // Sync OSCE performance to FSRS scheduling via attempt endpoint
+        // Derive correctness from rubric score (pass threshold: 60%)
+        const osceScore = rubricResult.overallScore ?? rubricResult.score ?? 0;
+        const maxScore = rubricResult.maxScore ?? 100;
+        const scorePct = maxScore > 0 ? osceScore / maxScore : 0;
+        const isPass = scorePct >= 0.6;
+
+        if (currentCase?.conditionId || currentCase?.condition) {
+          syncManager.queueAnswer({
+            questionId: sessionId,
+            selectedAnswer: 0,
+            isCorrect: isPass,
+            timeSpentMs: Date.now() - (session?.startTime || Date.now()),
+            system: currentCase?.system ?? undefined,
+            conditionId: currentCase?.conditionId ?? undefined,
+            isMainSession: false,
+            rating: isPass ? 3 : 1, // FSRS: Good(3) if pass, Again(1) if fail
+          });
+        }
+      }
     } catch (e) {
       console.error('Error completing or grading OSCE session:', e);
       toast.error('Could not save or grade session. Showing debrief only.');

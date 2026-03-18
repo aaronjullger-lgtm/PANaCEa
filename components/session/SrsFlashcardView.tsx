@@ -36,7 +36,7 @@ function getCardPayload(data: VariantNextResponse | null | undefined): CardData 
   const front = (q.question ?? q.stem ?? '') as string;
   const back = (q.rationale ?? q.correctOption ?? '') as string;
   if (!questionId || !front.trim()) return null;
-  const backText = back && String(back).trim();
+  const backText = back && (typeof back === 'object' ? JSON.stringify(back) : String(back)).trim();
   return {
     ...data,
     questionId,

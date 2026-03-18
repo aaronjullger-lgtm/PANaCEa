@@ -10,7 +10,9 @@ export const ROUTES = {
   ADMIN_CURATION: '/admin/curation',
   CLINICAL_EYE: '/clinical-eye',
   VISUALIZER: '/visualizer',
+  /** @deprecated Not yet routed in AppRoutes */
   LECTURE_CONVERTER: '/lecture-converter',
+  /** @deprecated Not yet routed in AppRoutes */
   TECHNIQUE_CHECK: '/technique-check',
   CROSS_SYSTEM_EXPLORER: '/explorer',
   /** Study hub; path→view sync in App.tsx */

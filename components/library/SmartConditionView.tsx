@@ -26,6 +26,7 @@ import {
   TestTube,
   TrendingUp,
   Zap,
+  Tag,
   Image as ImageIcon,
   User,
 } from 'lucide-react';
@@ -273,14 +274,19 @@ function HighYieldTab({ data }: Readonly<{ data: MedicalContent }>) {
   const triad = parseListField(data.classic_triad);
   const pearls = parseListField(data.clinical_pearls);
   const mnemonic = parseTextField(data.mnemonic);
+  const buzzwords = parseListField(data.buzzwords);
+  const goldStandard = parseTextField(data.gold_standard_dx);
+  const firstLineRx = parseTextField(data.first_line_rx);
+  const bestInitialTest = parseTextField(data.best_initial_test);
   const confusionPairs = data.ConfusionPair_ConfusionPair_correctConditionIdToMedicalContent ?? [];
 
-  const hasContent = triad.length > 0 || pearls.length > 0 || mnemonic || confusionPairs.length > 0;
+  const hasContent = triad.length > 0 || pearls.length > 0 || mnemonic || buzzwords.length > 0
+    || goldStandard || firstLineRx || bestInitialTest || confusionPairs.length > 0;
 
   if (!hasContent) {
     return (
       <div className="text-center py-12">
-        <p className="text-[var(--color-text-muted)] italic">No high-yield content available.</p>
+        <p className="text-[var(--color-text-muted)] italic">No high-yield content available yet for this condition.</p>
       </div>
     );
   }
@@ -361,6 +367,63 @@ function HighYieldTab({ data }: Readonly<{ data: MedicalContent }>) {
         </CollapsibleSection>
       )}
 
+      {/* Quick Reference — Gold Standard, First Line, Best Initial Test */}
+      {(goldStandard || firstLineRx || bestInitialTest) && (
+        <CollapsibleSection
+          title="Quick Reference"
+          icon={Zap}
+          iconColor="text-data-pass"
+          defaultOpen={sectionIndex++ === 0}
+        >
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {goldStandard && (
+              <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+                <h4 className="text-xs font-semibold text-[var(--color-text-muted)] mb-1 uppercase tracking-wide">
+                  Gold Standard Dx
+                </h4>
+                <p className="text-[var(--color-text-primary)] text-base font-medium">{goldStandard}</p>
+              </div>
+            )}
+            {bestInitialTest && (
+              <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+                <h4 className="text-xs font-semibold text-[var(--color-text-muted)] mb-1 uppercase tracking-wide">
+                  Best Initial Test
+                </h4>
+                <p className="text-[var(--color-text-primary)] text-base font-medium">{bestInitialTest}</p>
+              </div>
+            )}
+            {firstLineRx && (
+              <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+                <h4 className="text-xs font-semibold text-[var(--color-text-muted)] mb-1 uppercase tracking-wide">
+                  First-Line Treatment
+                </h4>
+                <p className="text-[var(--color-text-primary)] text-base font-medium">{firstLineRx}</p>
+              </div>
+            )}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* Buzzwords */}
+      {buzzwords.length > 0 && (
+        <CollapsibleSection
+          title="Buzzwords"
+          icon={Tag}
+          defaultOpen={sectionIndex++ === 0}
+        >
+          <div className="flex flex-wrap gap-2">
+            {buzzwords.map((word) => (
+              <span
+                key={word}
+                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20"
+              >
+                {word}
+              </span>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
       {/* Clinical Pearls */}
       {(pearls.length > 0 || mnemonic) && (
         <CollapsibleSection
@@ -434,6 +497,16 @@ function PresentationTab({
   const epidemiology = parseTextField(data.epidemiology);
   const findings = data.FindingConditionLink ?? [];
 
+  if (detailsLoadFailed) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-[var(--color-text-muted)] italic">
+          Details couldn&apos;t be loaded. Use the Retry button above to try again.
+        </p>
+      </div>
+    );
+  }
+
   const hasContent =
     demographicText ||
     classicPatient ||
@@ -448,9 +521,7 @@ function PresentationTab({
     return (
       <div className="text-center py-12">
         <p className="text-[var(--color-text-muted)] italic">
-          {detailsLoadFailed
-            ? "Details couldn't be loaded. Use the Retry button above to try again."
-            : "We're still enriching this section. High-yield cards remain available above."}
+          We&apos;re still enriching this section. High-yield cards remain available above.
         </p>
       </div>
     );
@@ -592,6 +663,16 @@ function DiagnosticsTab({
   const imaging = data.ImagingConditionLink ?? [];
   const ecg = data.ECGConditionLink ?? [];
 
+  if (detailsLoadFailed) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-[var(--color-text-muted)] italic">
+          Details couldn&apos;t be loaded. Use the Retry button above to try again.
+        </p>
+      </div>
+    );
+  }
+
   const hasContent =
     bestInitial ||
     goldStandard ||
@@ -604,9 +685,7 @@ function DiagnosticsTab({
     return (
       <div className="text-center py-12">
         <p className="text-[var(--color-text-muted)] italic">
-          {detailsLoadFailed
-            ? "Details couldn't be loaded. Use the Retry button above to try again."
-            : "We're still enriching this section. High-yield cards remain available above."}
+          We&apos;re still enriching this section. High-yield cards remain available above.
         </p>
       </div>
     );
@@ -854,6 +933,16 @@ function ManagementTab({
     ...treatments.filter((t) => !t.isFirstLine),
   ];
 
+  if (detailsLoadFailed) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-[var(--color-text-muted)] italic">
+          Details couldn&apos;t be loaded. Use the Retry button above to try again.
+        </p>
+      </div>
+    );
+  }
+
   const hasContent =
     firstLine ||
     firstLineFromLinks ||
@@ -869,9 +958,7 @@ function ManagementTab({
     return (
       <div className="text-center py-12">
         <p className="text-[var(--color-text-muted)] italic">
-          {detailsLoadFailed
-            ? "Details couldn't be loaded. Use the Retry button above to try again."
-            : "We're still enriching this section. High-yield cards remain available above."}
+          We&apos;re still enriching this section. High-yield cards remain available above.
         </p>
       </div>
     );

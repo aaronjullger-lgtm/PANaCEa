@@ -17,6 +17,25 @@ import { getCorsHeaders, getCorsConfig, handleCorsPreflightSecure } from './cors
  */
 export type Env = CloudflareEnv;
 
+/**
+ * Require authentication for an endpoint.
+ * Returns the authenticated userId or throws if not authenticated.
+ * NOTE: This variant reads CLERK_SECRET_KEY from process.env (for service files
+ * without direct env access). Prefer authenticateRequest(request, env) in handlers.
+ *
+ * @param request - Incoming request
+ * @param _role - Optional role requirement (not enforced in this variant; add RBAC as needed)
+ */
+export async function requireAuth(request: Request, _role?: string): Promise<string> {
+  const secretKey =
+    (typeof process !== 'undefined' && process.env?.CLERK_SECRET_KEY) || '';
+  const userId = await verifyAuthToken(request, secretKey);
+  if (!userId) {
+    throw Object.assign(new Error('Unauthorized'), { status: 401 });
+  }
+  return userId;
+}
+
 export interface AuthContext {
   userId: string;
   clerkId: string;

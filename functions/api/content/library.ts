@@ -14,6 +14,7 @@ import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-
 import { createEndpointLogger } from '../_shared/secureLogger';
 import { getCached, setCached } from '../_shared/kv-cache';
 import { LibraryResponseSchema } from '@/lib/schemas/medicalContent';
+import { normalizeMedicalContent } from '../../../lib/utils/normalization';
 
 const CACHE_TTL = 3600;
 
@@ -150,8 +151,14 @@ export const onRequestGet = authenticatedEndpoint(
         );
       }
 
-      logger.info('Library content fetched', { count: content.length, system, search });
-      const payload = { content, count: content.length };
+      // Normalize all JSONB fields so clients receive consistent types
+      // (arrays are arrays, not JSON strings; "null" strings become actual null)
+      const normalizedContent = content.map((item: Record<string, unknown>) =>
+        normalizeMedicalContent(item)
+      );
+
+      logger.info('Library content fetched', { count: normalizedContent.length, system, search });
+      const payload = { content: normalizedContent, count: normalizedContent.length };
       if (!search) {
         await setCached(env as { CACHE?: KVNamespace }, cacheKey, payload, CACHE_TTL);
       }

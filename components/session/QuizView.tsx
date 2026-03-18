@@ -131,6 +131,7 @@ import { inferQuestionType } from '@/hooks/useTelemetryCollector';
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
 import { syncManager } from '@/lib/services/sync/syncManager';
+import { deriveFsrsRating } from '@/lib/utils/fsrsImplicitRating';
 import { logger } from '@/src/lib/logger';
 
 /** Regex to strip HTML tags (defined outside JSX to avoid TS1382 parse errors) */
@@ -939,6 +940,9 @@ const QuizView: React.FC<QuizViewProps> = ({
           )
         : undefined;
 
+    // Derive FSRS rating from binary correctness (Again=1 for wrong, Good=3 for correct)
+    const fsrsRating = deriveFsrsRating(isCorrect, timeToAnswer);
+
     syncManager.queueAnswer({
       questionId,
       selectedAnswer: selectedAnswerIndex,
@@ -947,6 +951,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       system: currentQuestion.system ?? undefined,
       conditionId: currentQuestion.conditionId ?? undefined,
       isMainSession: sessionSettings.mode !== 'rapid_recall' && sessionSettings.mode !== 'cram_mode',
+      rating: fsrsRating,
       telemetryJson: (telemetryForApi ?? undefined) as Record<string, unknown> | undefined,
       answerChangedCount: behavioralPayload?.answer_change_count ?? answerChangeCountRef.current,
       durationMs: behavioralPayload?.duration_ms ?? timeToAnswer,
