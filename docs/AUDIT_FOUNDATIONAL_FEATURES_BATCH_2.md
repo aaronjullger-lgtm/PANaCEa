@@ -9,7 +9,7 @@
 
 **Status:** ✅ Functional
 
-- **Sync API:** `GET /api/sync` and `POST /api/sync` in `functions/api/sync.ts`. Authenticated. GET returns cloud state (performance records, SRS items, saved questions) for the user; POST accepts `performanceRecords`, `srsItems`, `savedQuestions` and merges with DB. Uses Prisma, `safePrismaDisconnect`. Client: `useUserStats` and sync manager call `/api/sync`.
+- **Sync API:** `GET /api/sync` and `POST /api/sync` in `functions/api/sync.ts`. Authenticated. GET returns cloud state (performance records, SRS items, saved questions) for the user; POST accepts `performanceRecords`, `srsItems`, `savedQuestions`, and optional `localDeletions` (deletion timestamp map). Merge behavior is timestamp-based 3-way conflict resolution (newest wins while respecting local deletions). Uses Prisma, retry logic for transient failures, and `safePrismaDisconnect`. Client: `useUserStats` and sync manager call `/api/sync`.
 - **Clerk webhook:** `POST /api/webhooks/clerk` in `functions/api/webhooks/clerk.ts`. Verifies Svix signature with `CLERK_WEBHOOK_SECRET`; handles `user.created`, `user.updated`, `user.deleted`. Upserts `User` by `clerkId` (email, firstName, lastName). No auth middleware (webhook secret only). Requires `CLERK_WEBHOOK_SECRET` and `DATABASE_URL`.
 - **Gap:** None. Ensure webhook URL is registered in Clerk dashboard.
 

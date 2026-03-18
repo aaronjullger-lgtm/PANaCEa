@@ -34,7 +34,7 @@ See the [Authentication Setup Guide](./AUTHENTICATION_SETUP.md) for detailed set
 
 - Automatic background sync
 - Real-time progress saving
-- Conflict resolution (latest data wins)
+- Timestamp-based 3-way conflict resolution with local deletion tracking
 - Offline support with queue-based sync
 
 ### 📊 Data Migration
@@ -126,6 +126,7 @@ Request: {
   performanceRecords?: PerformanceRecord[];
   srsItems?: SRSItem[];
   savedQuestions?: SavedQuestion[];
+  localDeletions?: Record<string, string>; // key -> ISO deletion timestamp
 }
 Response: {
   success: boolean;
@@ -137,6 +138,14 @@ Response: {
   };
 }
 ```
+
+`localDeletions` key format:
+- SRS items: `questionId`
+- Saved/flagged/missed items: `questionId:type`
+
+Merge behavior:
+- If both local and cloud versions exist, newer timestamp wins (`updatedAt`, fallback to `lastReviewed`/`createdAt`).
+- If item exists only in cloud but has a local deletion timestamp, cloud item is restored only when cloud timestamp is newer than deletion.
 
 ### `GET /api/user/profile`
 
@@ -312,6 +321,7 @@ Errors are logged but don't block studying:
 - Failed sync → Data stays in localStorage
 - Network error → Retry on next action
 - Auth error → Prompt to sign in again
+- Transient Accelerate/network failures → Automatic retry with backoff
 
 ## Troubleshooting
 
