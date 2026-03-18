@@ -5,6 +5,7 @@
  * Maps technical errors to human-readable messages with clear next steps.
  */
 
+import { toast } from 'sonner';
 import { AppError, NetworkError, ValidationError, AuthenticationError } from '@/lib/errors/types';
 
 export interface ActionableErrorMessage {
@@ -44,9 +45,9 @@ const errorPatterns = [
         label: 'Check Internet Connection',
         action: () => {
           if (!navigator.onLine) {
-            alert('You appear to be offline. Please check your internet connection.');
+            toast.warning('You appear to be offline. Please check your internet connection.');
           } else {
-            alert('Your internet connection appears to be working. The issue might be on our end.');
+            toast.info('Your internet connection appears to be working. The issue might be on our end.');
           }
         },
         priority: 'primary' as const,

@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, X, Smartphone, WifiOff, Bell, HardDrive, RefreshCw } from 'lucide-react';
 import { StandardButton, PrimaryButton, OutlineButton } from './StandardButton';
@@ -112,18 +113,18 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
   const handleCheckUpdates = async () => {
     const updated = await checkForUpdates();
     if (updated) {
-      alert('App updated successfully! Refresh to see changes.');
+      toast.success('App updated successfully! Refresh to see changes.');
     } else {
-      alert('App is up to date.');
+      toast.info('App is up to date.');
     }
   };
 
   const handleClearCache = async () => {
     const cleared = await clearCache();
     if (cleared) {
-      alert('Cache cleared successfully.');
+      toast.success('Cache cleared successfully.');
     } else {
-      alert('Failed to clear cache.');
+      toast.error('Failed to clear cache.');
     }
   };
 

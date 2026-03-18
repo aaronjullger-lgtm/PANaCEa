@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle,
@@ -171,7 +172,7 @@ const getDefaultActions = (
             if (navigator.onLine) {
               window.location.reload();
             } else {
-              alert('You appear to be offline. Please check your internet connection.');
+              toast.warning('You appear to be offline. Please check your internet connection.');
             }
           },
           variant: 'primary',
