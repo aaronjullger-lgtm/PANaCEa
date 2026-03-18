@@ -504,7 +504,7 @@ export const BodyMap: React.FC<BodyMapProps> = ({
             className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full mb-2 px-3 py-1.5 bg-data-neutral text-white text-sm rounded-lg shadow-lg whitespace-nowrap"
           >
             {REGION_PATHS[hoveredRegion]?.label || hoveredRegion}
-            {findingsMap[hoveredRegion] && <span className="ml-2 text-orange-300">• Finding</span>}
+            {findingsMap[hoveredRegion] && <span className="ml-2 text-[var(--color-data-provisional)]">• Finding</span>}
           </motion.div>
         )}
       </AnimatePresence>

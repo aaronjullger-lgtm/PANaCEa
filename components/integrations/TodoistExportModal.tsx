@@ -246,7 +246,7 @@ export default function TodoistExportModal({
                   ) : (
                     <>
                       <AlertCircle className="w-5 h-5 text-[var(--color-data-provisional)] mr-2" />
-                      <span className="text-orange-700 dark:text-orange-300">
+                      <span className="text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]">
                         Not connected to Todoist
                       </span>
                     </>

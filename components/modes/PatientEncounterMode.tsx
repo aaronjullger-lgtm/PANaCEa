@@ -1018,11 +1018,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const getRelevanceColor = (relevance: PatientQuestion['relevance']) => {
     switch (relevance) {
       case 'essential':
-        return 'text-sage-700 bg-sage-50 border-sage-200 dark:text-sage-300 dark:bg-sage-950/30 dark:border-sage-900';
+        return 'text-[var(--color-data-neutral)] bg-[var(--color-data-neutral)]/10 border-[var(--color-data-neutral)]/20 dark:text-[var(--color-data-neutral)] dark:bg-[var(--color-data-neutral)]/20 dark:border-[var(--color-data-neutral)]/40';
       case 'helpful':
         return 'text-[var(--color-accent)] bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/40';
       case 'unnecessary':
-        return 'text-muted-amber-700 bg-muted-amber-50 border-muted-amber-200 dark:text-muted-amber-300 dark:bg-muted-amber-950/30 dark:border-muted-amber-900';
+        return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/20 dark:text-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/20 dark:border-[var(--color-data-provisional)]/40';
       case 'redundant':
         return 'text-muted-foreground bg-muted border-[var(--color-border)]';
       default:
@@ -1418,7 +1418,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     </div>
                     {idx < phases.length - 1 && (
                       <div
-                        className={`w-8 h-0.5 ${isCompleted ? 'bg-slate-700' : 'bg-slate-700'}`}
+                        className={`w-8 h-0.5 ${isCompleted ? 'bg-data-pass' : 'bg-[var(--color-border)]'}`}
                       />
                     )}
                   </div>
@@ -2501,7 +2501,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-8 text-white shadow-xl text-center"
+              className="bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)]/80 rounded-2xl p-8 text-white shadow-xl text-center"
             >
               <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm mb-4">
                 <Award className="w-12 h-12" />
@@ -2986,8 +2986,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             animate={{ opacity: 1, y: 0 }}
             className={`rounded-xl p-6 border ${
               isCorrectDiagnosis
-                ? 'bg-sage-50 dark:bg-sage-900/20 border-sage-200 dark:border-sage-800'
-                : 'bg-muted-amber-50 dark:bg-muted-amber-900/20 border-muted-amber-200 dark:border-muted-amber-800'
+                ? 'bg-[var(--color-data-neutral)]/10 dark:bg-[var(--color-data-neutral)]/20 border-[var(--color-data-neutral)]/20 dark:border-[var(--color-data-neutral)]/40'
+                : 'bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/20 border-[var(--color-data-provisional)]/20 dark:border-[var(--color-data-provisional)]/40'
             }`}
           >
             <div className="flex items-center gap-3 mb-4">
@@ -3000,8 +3000,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <h2
                   className={`text-2xl font-bold ${
                     isCorrectDiagnosis
-                      ? 'text-sage-700 dark:text-sage-300'
-                      : 'text-muted-amber-700 dark:text-muted-amber-300'
+                      ? 'text-[var(--color-data-neutral)] dark:text-[var(--color-data-neutral)]'
+                      : 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]'
                   }`}
                 >
                   {isCorrectDiagnosis ? 'Correct Diagnosis!' : 'Diagnosis Review'}

@@ -131,7 +131,7 @@ export const CurriculumGrid: React.FC<CurriculumGridProps> = ({
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
-                    className={`h-full rounded-full ${progress > 80 ? 'bg-emerald-500' : 'bg-muted-amber-500'}`}
+                    className={`h-full rounded-full ${progress > 80 ? 'bg-[var(--color-data-pass)]' : 'bg-muted-amber-500'}`}
                   />
                 </div>
               </div>

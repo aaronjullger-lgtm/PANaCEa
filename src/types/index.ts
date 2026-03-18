@@ -62,6 +62,8 @@ export interface Question {
   /** Optional tags for organization */
   tags?: string[];
   lastReviewedAt?: string; // ISO timestamp
+  /** Timestamp when question data was last modified (for conflict resolution) */
+  updatedAt?: string | Date; // ISO timestamp or Date object
   /** Source of the question (pool, main table, generated) */
   source?: string;
   /** Content source attribution (e.g. 'openstax') */

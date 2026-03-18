@@ -201,14 +201,14 @@ const DDxTable: React.FC<DDxTableProps> = ({ comparison }) => {
           <h3 className="text-sm font-semibold text-data-neutral dark:text-data-neutral uppercase tracking-wide mb-3">
             Classic Triad
           </h3>
-          <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800">
+          <div className="p-4 rounded-xl bg-[var(--color-data-fail)]/10 dark:bg-[var(--color-data-fail)]/30 border border-[var(--color-data-fail)]/20 dark:border-[var(--color-data-fail)]">
             <ul className="space-y-1.5">
               {triadItems.map((item, idx) => (
                 <li
                   key={idx}
                   className="flex items-start gap-2 text-sm text-data-neutral dark:text-data-neutral"
                 >
-                  <span className="text-rose-500 mt-1">•</span>
+                  <span className="text-[var(--color-data-fail)] mt-1">•</span>
                   <span>{item}</span>
                 </li>
               ))}

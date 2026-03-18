@@ -98,7 +98,7 @@ const LabValueRow: React.FC<{ value: LabValue }> = ({ value }) => {
     }
     if (value.isAbnormal) {
       return value.abnormalDirection === 'high'
-        ? 'text-orange-500 font-semibold'
+        ? 'text-[var(--color-data-provisional)] font-semibold'
         : 'text-[var(--color-category-practice)] font-semibold';
     }
     return 'text-data-neutral';
@@ -110,7 +110,7 @@ const LabValueRow: React.FC<{ value: LabValue }> = ({ value }) => {
     }
     if (value.isAbnormal) {
       return value.abnormalDirection === 'high'
-        ? 'bg-orange-900/20 border-orange-700/50'
+        ? 'bg-[var(--color-data-provisional)]/20 border-[var(--color-data-provisional)]/50'
         : 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)]';
     }
     return 'bg-data-neutral/50 border-data-neutral/50';

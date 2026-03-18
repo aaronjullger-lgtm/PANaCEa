@@ -142,7 +142,7 @@ const StatisticsPreferences: React.FC<StatisticsPreferencesProps> = ({
           id="deep-insight-accordion-trigger"
         >
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-violet-500 flex-shrink-0" />
+            <Sparkles className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0" />
             <h3 className="font-medium text-data-neutral dark:text-data-neutral">Deep Insight Metrics</h3>
           </div>
           {advancedExpanded ? (

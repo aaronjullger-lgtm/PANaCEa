@@ -351,7 +351,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
               <div className="text-sm">
                 <span className="text-[var(--color-text-muted)]">Breaches:</span>
                 <span
-                  className={`font-bold ml-2 ${sterileBreaches > 0 ? 'text-rose-500' : 'text-emerald-500'}`}
+                  className={`font-bold ml-2 ${sterileBreaches > 0 ? 'text-[var(--color-data-fail)]' : 'text-[var(--color-data-pass)]'}`}
                 >
                   {sterileBreaches}
                 </span>
@@ -391,7 +391,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                       {isInSterileZone ? (
                         <span className="text-data-pass">✓ Sterile Zone</span>
                       ) : (
-                        <span className="text-rose-500">✗ Outside Sterile Field</span>
+                        <span className="text-[var(--color-data-fail)]">✗ Outside Sterile Field</span>
                       )}
                     </div>
                   </div>
@@ -512,8 +512,8 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
                 </p>
               </div>
             ) : (
-              <div className="p-6 rounded-xl bg-rose-500/10 border border-rose-500/30">
-                <div className="flex items-center gap-2 text-rose-500 mb-2">
+              <div className="p-6 rounded-xl bg-[var(--color-data-fail)]/100/10 border border-[var(--color-data-fail)]/30">
+                <div className="flex items-center gap-2 text-[var(--color-data-fail)] mb-2">
                   <AlertTriangle className="w-6 h-6" />
                   <h3 className="text-lg font-semibold">
                     Sterile Field Breaches: {sterileBreaches}

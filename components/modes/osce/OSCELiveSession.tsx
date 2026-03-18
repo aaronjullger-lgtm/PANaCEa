@@ -223,7 +223,7 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
             <button
               type="button"
               onClick={() => setMicMuted((m) => !m)}
-              className={`p-3 rounded-full ${micMuted ? 'bg-red-500/20' : 'bg-[var(--color-accent)]/20'}`}
+              className={`p-3 rounded-full ${micMuted ? 'bg-[var(--color-data-fail)]/20' : 'bg-[var(--color-accent)]/20'}`}
             >
               {micMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
             </button>

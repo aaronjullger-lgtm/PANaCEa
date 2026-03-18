@@ -113,7 +113,7 @@ const DrugCard: React.FC<{
               1st
             </span>
           )}
-          {drug.isHighYield && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
+          {drug.isHighYield && <Star className="w-4 h-4 text-[var(--color-data-provisional)] fill-yellow-400" />}
         </div>
       </div>
 
@@ -198,7 +198,7 @@ const DrugClassSidebar: React.FC<{
               className="w-4 h-4 rounded border-[var(--color-border)] bg-[var(--color-bg-primary)] checked:bg-[var(--color-accent)] checked:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/50"
             />
             <span className="text-sm text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">
-              <Star className="inline w-3.5 h-3.5 mr-1 text-yellow-400" />
+              <Star className="inline w-3.5 h-3.5 mr-1 text-[var(--color-data-provisional)]" />
               High Yield Only
             </span>
           </label>

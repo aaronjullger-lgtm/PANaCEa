@@ -38,7 +38,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
       case 'completed':
         return 'text-data-pass bg-data-pass dark:bg-data-pass/30';
       case 'paused':
-        return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30';
+        return 'text-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/20 dark:bg-[var(--color-data-provisional)]/30';
       case 'failed':
         return 'text-data-fail bg-data-fail dark:bg-data-fail/30';
       default:
@@ -172,7 +172,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
       <div className="flex items-center gap-4 flex-wrap text-sm">
         {/* Streak */}
         {goal.currentStreak > 0 && (
-          <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 font-medium">
+          <div className="flex items-center gap-1.5 text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)] font-medium">
             <Flame className="w-4 h-4" />
             <span>{goal.currentStreak} day streak</span>
             {goal.bestStreak > goal.currentStreak && (
@@ -209,7 +209,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
 
         {/* Recurring Badge */}
         {goal.isRecurring && (
-          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-accent)]/20 dark:bg-[var(--color-accent)]/30 text-[var(--color-accent)] dark:text-[var(--color-accent)]">
             Recurring
           </span>
         )}

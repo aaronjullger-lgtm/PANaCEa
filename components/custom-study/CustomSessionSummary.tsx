@@ -54,7 +54,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
         className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-lg overflow-hidden"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center text-white">
+        <div className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]/80 p-6 text-center text-white">
           <div className="mb-2">{getGradeIcon(summary.firstAttemptAccuracy)}</div>
           <h1 className="text-2xl font-bold mb-1">Session Complete!</h1>
           <p className="text-[var(--color-category-practice)]">Great work on your custom study session</p>
@@ -253,7 +253,7 @@ function StatCard({ icon, label, value, color }: StatCardProps) {
     green: 'text-data-pass dark:text-data-pass bg-data-pass dark:bg-data-pass/20',
     amber: 'text-data-provisional dark:text-data-provisional bg-data-provisional dark:bg-data-provisional/20',
     blue: 'text-[var(--color-category-practice)] text-[var(--color-category-practice)] bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]',
-    purple: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20',
+    purple: 'text-[var(--color-accent)] bg-[var(--color-accent)]/5 dark:bg-[var(--color-accent)]/20',
     red: 'text-data-fail dark:text-data-fail bg-data-fail dark:bg-data-fail/20',
   };
 

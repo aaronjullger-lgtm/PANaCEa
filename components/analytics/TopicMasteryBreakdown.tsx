@@ -59,9 +59,9 @@ const DEFAULT_MASTERY_COLORS = {
 const MASTERY_COLORS: Record<string, { bg: string; text: string; bar: string }> = {
   untested: { ...DEFAULT_MASTERY_COLORS },
   low: {
-    bg: 'bg-rose-50 dark:bg-rose-900/20',
-    text: 'text-rose-600 dark:text-rose-400',
-    bar: 'bg-rose-500',
+    bg: 'bg-[var(--color-data-fail)]/10',
+    text: 'text-[var(--color-data-fail)]',
+    bar: 'bg-[var(--color-data-fail)]',
   },
   medium: {
     bg: 'bg-data-provisional dark:bg-data-provisional/20',
@@ -113,7 +113,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
 
   if (error || !data) {
     return (
-      <div className="rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 p-4 text-rose-700 dark:text-rose-300">
+      <div className="rounded-xl border border-[var(--color-data-fail)]/20 bg-[var(--color-data-fail)]/5 p-4 text-[var(--color-data-fail)]">
         Unable to load topic progress
       </div>
     );
@@ -142,7 +142,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
           </p>
         </div>
         <div
-          className={`px-3 py-1.5 rounded-full text-sm font-medium ${MASTERY_COLORS[data.overallMastery]?.bg || 'bg-slate-100'} ${MASTERY_COLORS[data.overallMastery]?.text || 'text-slate-500'}`}
+          className={`px-3 py-1.5 rounded-full text-sm font-medium ${MASTERY_COLORS[data.overallMastery]?.bg || 'bg-[var(--color-bg-secondary)]'} ${MASTERY_COLORS[data.overallMastery]?.text || 'text-[var(--color-text-muted)]'}`}
         >
           {(() => {
             const labels: Record<string, string> = {
@@ -190,7 +190,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicProgr
           return (
             <div
               key={topic.taskType}
-              className={`rounded-lg border p-4 ${colors.bg} border-slate-200 dark:border-slate-700`}
+              className={`rounded-lg border p-4 ${colors.bg} border-[var(--color-border)]`}
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">

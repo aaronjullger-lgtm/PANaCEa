@@ -186,7 +186,10 @@ export function compressExplanation(longText: string): string[] {
   const sentences = longText
     .replace(/\n+/g, ' ')
     .split(/(?<=[.!?])\s+/)
-    .filter((s) => s.trim().length > 10);
+    .filter((s) => s.trim().length > 10)
+    // Filter out meta-text about the correct answer (avoid rendering "The correct answer is X" as a bullet)
+    // Matches: "The correct answer is...", "The answer is...", "Answer is...", etc.
+    .filter((s) => !/^\s*(?:the\s+)?(?:most\s+)?(?:medically\s+)?(?:correct\s+)?(?:answer|option|choice)\s+(?:is|are|should\s+be)/i.test(s.trim()));
 
   if (sentences.length === 0) {
     return ['[REVIEW REQUIRED]'];

@@ -33,17 +33,17 @@ const SYSTEM_COLORS: Record<string, string> = {
   CV: 'bg-data-fail', // Cardiovascular - critical system (11% blueprint)
   PULM: 'bg-[var(--color-accent)]', // Pulmonary - primary system (9% blueprint)
   GI: 'bg-data-provisional', // GI - developing focus
-  NEURO: 'bg-slate-violet-500', // Neurology
-  MSK: 'bg-muted-amber-500', // Musculoskeletal - needs work indicator
-  DERM: 'bg-slate-pink-500', // Dermatology
-  HEME: 'bg-slate-rose-500', // Hematology
-  ENDO: 'bg-slate-teal-500', // Endocrine
-  HEENT: 'bg-slate-indigo-500', // Head & Neck
+  NEURO: 'bg-[var(--color-accent)]/60', // Neurology
+  MSK: 'bg-data-provisional', // Musculoskeletal - needs work indicator
+  DERM: 'bg-[var(--color-accent)]', // Dermatology
+  HEME: 'bg-data-fail', // Hematology
+  ENDO: 'bg-[var(--color-accent)]', // Endocrine
+  HEENT: 'bg-[var(--color-accent)]', // Head & Neck
   RENAL: 'bg-[var(--color-accent)]/80', // Renal
-  REPRO: 'bg-slate-fuchsia-500', // Reproductive
-  PSYCH: 'bg-slate-violet-600', // Psychiatry
+  REPRO: 'bg-[var(--color-accent)]/60', // Reproductive
+  PSYCH: 'bg-[var(--color-accent)]/60', // Psychiatry
   ID: 'bg-data-pass', // Infectious Disease - mastered indicator
-  GU: 'bg-slate-cyan-500', // Genitourinary
+  GU: 'bg-[var(--color-accent)]', // Genitourinary
   PRO: 'bg-data-neutral', // Professional Practice
 };
 

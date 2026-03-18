@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -185,9 +185,40 @@ export const PracticePage: React.FC<PracticePageProps> = ({
 }) => {
   const { showPANREContent } = useUserContext();
   const { stats: rolling360Stats, isLoading } = useRolling360Stats();
-  
-  const [searchQuery, setSearchQuery] = useState('');
-  const [timeFilter, setTimeFilter] = useState<'all' | 'quick' | 'medium' | 'long'>('all');
+
+  // Load persisted filters from localStorage
+  const [searchQuery, setSearchQuery] = useState(() => {
+    try {
+      return localStorage.getItem('practice.search') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [timeFilter, setTimeFilter] = useState<'all' | 'quick' | 'medium' | 'long'>(() => {
+    try {
+      const saved = localStorage.getItem('practice.timeFilter') as 'all' | 'quick' | 'medium' | 'long' | null;
+      return saved || 'all';
+    } catch {
+      return 'all';
+    }
+  });
+
+  // Persist filters to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('practice.search', searchQuery);
+    } catch {
+      // Silently fail if localStorage is unavailable (e.g., private browsing)
+    }
+  }, [searchQuery]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('practice.timeFilter', timeFilter);
+    } catch {
+      // Silently fail if localStorage is unavailable
+    }
+  }, [timeFilter]);
 
   const filteredModes = useMemo(() => {
     const filterForContext = (modes: TrainingModeConfig[]) =>
@@ -336,6 +367,39 @@ export const PracticePage: React.FC<PracticePageProps> = ({
       <CategorySection category="clinical_simulation" modes={filteredModes.clinical} onSelectMode={handleModeSelect} />
       <CategorySection category="question_practice" modes={filteredModes.questions} onSelectMode={handleModeSelect} />
       <CategorySection category="specialty_drills" modes={filteredModes.specialty} onSelectMode={handleModeSelect} />
+
+      {/* Empty state when all filters result in no modes */}
+      {filteredModes.visual.length === 0 &&
+        filteredModes.clinical.length === 0 &&
+        filteredModes.questions.length === 0 &&
+        filteredModes.specialty.length === 0 && (
+          <div className="py-12 px-6 text-center">
+            <div className="mb-4 flex justify-center">
+              <AlertCircle className="w-12 h-12 text-[var(--color-text-muted)]" />
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
+              No modes match your filters
+            </h3>
+            <p className="text-[var(--color-text-muted)] mb-6">
+              {searchQuery && timeFilter !== 'all'
+                ? `Try adjusting your search term or time filter.`
+                : searchQuery
+                ? `Try using different search terms.`
+                : `Try selecting a different time range.`}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setTimeFilter('all');
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium hover:opacity-90 transition-opacity"
+            >
+              <X className="w-4 h-4" />
+              Reset filters
+            </button>
+          </div>
+        )}
 
       {/* Residency Cockpit */}
       {!isLoading && onNavigateToDrillWithSystem && (

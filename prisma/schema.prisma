@@ -476,6 +476,7 @@ model Condition {
   AnatomyStructure                                            AnatomyStructure[]           @relation("AnatomyStructureToCondition")
   SpecialTest                                                 SpecialTest[]                @relation("ConditionToSpecialTest")
   DiagnosticPuzzle                                            DiagnosticPuzzle[]
+  ExamBlueprintCondition                                      ExamBlueprintCondition[]
 
   @@index([displayName])
   @@index([name])
@@ -1756,6 +1757,35 @@ model NCCPABlueprintConfig {
   @@index([isActive])
 }
 
+/// Exam blueprint targets by system (e.g. PANCE/PANRE)
+model ExamBlueprintSystem {
+  id              String    @id @default(cuid())
+  examType        String    // "PANCE", "PANRE", etc.
+  system          String    // System name from Condition model
+  targetPercent   Float     // Target percentage for exam (0-1)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([examType, system])
+  @@index([examType])
+}
+
+/// Exam blueprint targets by condition (optional, for granular control)
+model ExamBlueprintCondition {
+  id              String    @id @default(cuid())
+  examType        String    // "PANCE", "PANRE", etc.
+  conditionId     String
+  targetWeight    Float     // Weight within the condition's system
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  Condition       Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  @@unique([examType, conditionId])
+  @@index([examType])
+  @@index([conditionId])
+}
+
 model NormalImagingFinding {
   id                String        @id
   imagingStudyId    String?
@@ -2304,6 +2334,10 @@ model Question {
   taskType         String?
   questionFormat   QuestionFormat?
   mediaAssetId     String?
+  contentHealthScore    Float?          @default(1.0) /// 0-1 score combining miss rate, FSRS difficulty, and QA status
+  lifecycleStatus       QuestionLifecycleStatus @default(DRAFT)
+  qaStatus              QAStatus        @default(UNREVIEWED)
+  lastHealthScoredAt    DateTime?       /// When the health score was last computed
   Condition        Condition?      @relation(fields: [conditionId], references: [id])
   MediaAsset       MediaAsset?     @relation(fields: [mediaAssetId], references: [id])
   MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id])
@@ -2319,6 +2353,9 @@ model Question {
   @@index([system])
   @@index([taskType])
   @@index([topic])
+  @@index([lifecycleStatus])
+  @@index([qaStatus])
+  @@index([contentHealthScore])
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -3070,6 +3107,10 @@ model User {
   WeaknessPattern           WeaknessPattern[]
   mappingSuggestions        MappingSuggestion[]
   mappingAuditLogs          MappingAuditLog[]
+  UserStudyPhenotype        UserStudyPhenotype?
+  DailyStudyPlan            DailyStudyPlan[]
+  ExamOutcome               ExamOutcome[]
+  ContentAuthor             ContentAuthor?
 
   @@index([clerkId])
   @@index([email])
@@ -3844,6 +3885,199 @@ enum CognitiveLevel {
   LEVEL_3_VIGNETTE
 }
 
+model UserStudyPhenotype {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+
+  // Behavior patterns
+  preferredSessionLength Int      @default(45) // minutes
+  preferredTimeOfDay    String    @default("morning") // "morning", "afternoon", "evening"
+  averageDailyLoad      Int       @default(20) // questions/day over last 30 days
+  preferredModeSequence String[]  @default(["quiz"]) // [quiz, drills, grand_rounds, ...]
+
+  // Learning style
+  preferredDifficulty   String    @default("adaptive") // "easy", "adaptive", "hard"
+  learningPace          String    @default("moderate") // "slow", "moderate", "fast"
+  retentionTarget       Float     @default(0.85) // 0.7-0.95 (FSRS retention goal)
+  mixNewAndReview       Float     @default(0.5) // 0.3-0.7 (ratio of new to review)
+
+  // Strength/weakness
+  strongSystems         String[]  @default([]) // systems where accuracy > 80%
+  weakSystems           String[]  @default([]) // systems where accuracy < 60%
+  improvingAreas        String[]  @default([]) // where accuracy improved last 7 days
+  stallingSystems       String[]  @default([]) // where accuracy flat for 14+ days
+
+  // Exam readiness
+  daysToExam            Int? // calculated from User.examDate
+  estimatedReadiness    Float? // 0-1 based on blueprint coverage + health
+  criticalGapsForExam   String[]  @default([]) // systems below exam blueprint targets
+
+  // Computed metrics
+  engagementScore       Float     @default(0.5) // 0-1 (consistency, streak, daily load)
+  consistencyScore      Float     @default(0.5) // 0-1 (how variable is daily usage)
+  burnoutRisk           Float     @default(0.0) // 0-1 (high load + declining accuracy = risk)
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  lastComputedAt        DateTime?
+
+  User                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([daysToExam])
+  @@index([burnoutRisk])
+}
+
+model DailyStudyPlan {
+  id                String    @id @default(cuid())
+  userId            String
+  planDate          DateTime  @db.Date
+
+  // Recommended sessions
+  recommendedSessions Json  // [{mode: "quiz", count: 20, systemFilter: ["Cardiology"], reason: "due-today"}, ...]
+  recommendedModes  String[] @default([]) // modes in suggested order
+
+  // Targets
+  targetQuestionsCount Int   @default(20) // personalized daily goal
+  targetSystemFocus String[] @default([]) // systems needing work
+  estimatedTimeMinutes Int   @default(45) // predicted duration
+
+  // Status
+  status            String   @default("pending") // pending, active, completed, skipped
+  actualQuestionsAnswered Int @default(0)
+  actualDurationMinutes Int?
+  actualAccuracy    Float?
+  completedAt       DateTime?
+
+  // Analysis
+  wasEffective      Boolean? // did plan match user's learning pattern?
+  feedbackReason    String?  // why was/wasn't it effective
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  User              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, planDate])
+  @@index([userId, planDate])
+  @@index([userId, status])
+}
+
+model ExamOutcome {
+  id               String    @id @default(cuid())
+  userId           String
+  examType         String    // "PANCE", "PANRE", "EOR", "block-exam", etc.
+  examDate         DateTime
+
+  // Results
+  score            Float     // 0-100 or percentile
+  percentile       Float?    // if available
+  passed           Boolean
+  timeLimit        Int?      // seconds allowed
+  timeUsed         Int?      // seconds spent
+
+  // Correlation data
+  studyDataSnapshot Json // {questionsAnsweredTotal, questionsAnsweredBySystem, accuracyBySystem, ...}
+
+  createdAt        DateTime  @default(now())
+  User             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, examType, examDate])
+  @@index([examType])
+}
+
+model SystemPredictiveness {
+  id                String    @id @default(cuid())
+  examType          String    // PANCE, etc.
+  system            String    // Cardiology, etc.
+
+  // Correlation metrics
+  correlation       Float     // -1 to 1 (how much does practice correlate with exam performance)
+  sampleSize        Int       @default(0) // number of users with both study + exam data
+  confidenceLevel   Float     @default(0.0) // 0-1 (statistical significance)
+
+  // Content effectiveness
+  highHealthQuestionsScore Float @default(0.0) // avg exam score of users who practiced high-health questions
+  lowHealthQuestionsScore  Float @default(0.0) // avg exam score of users who practiced low-health questions
+
+  lastComputedAt    DateTime  @default(now())
+
+  @@unique([examType, system])
+  @@index([examType])
+}
+
+model ContentAuthor {
+  id              String                @id @default(cuid())
+  userId          String
+  role            ContentAuthorRole     @default(CONTRIBUTOR)
+
+  // Impact tracking
+  questionsCreated      Int @default(0)
+  questionsApproved     Int @default(0)
+  questionsDemoted      Int @default(0) // demoted due to low health
+  avgContentHealthScore Float?
+
+  // Author profile
+  specialty       String? // e.g., "Cardiology", "Internal Medicine"
+  institution     String? // where they practice/teach
+  bio             String?
+
+  // Quality metrics
+  approvalRate    Float? // % of submitted questions that passed review
+  healthScoreTrend Float? // improving or declining (slope)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  User            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  QuestionSubmissions QuestionSubmission[]
+
+  @@unique([userId])
+  @@index([role])
+}
+
+model QuestionSubmission {
+  id                String    @id @default(cuid())
+  contentAuthorId   String
+  questionId        String?   // null until approved
+
+  // Submission data
+  vignette          String
+  question          String
+  options           Json
+  correctAnswer     String
+  explanation       String
+  system            String
+  conditionId       String?
+
+  // Review workflow
+  status            String    @default("submitted") // submitted, in-review, approved, rejected, published
+  reviewedBy        String?   // reviewer user ID
+  reviewComments    String?
+  rejectionReason   String?
+
+  // Quality checks
+  passedDuplicateCheck Boolean @default(false)
+  matchesBlueprintGap  Boolean @default(false)
+  estimatedDifficulty  Float?
+
+  createdAt         DateTime  @default(now())
+  approvedAt        DateTime?
+  publishedAt       DateTime?
+
+  ContentAuthor     ContentAuthor @relation(fields: [contentAuthorId], references: [id], onDelete: Cascade)
+
+  @@index([contentAuthorId, status])
+  @@index([status])
+}
+
+enum ContentAuthorRole {
+  CONTRIBUTOR  // Can submit new questions
+  REVIEWER     // Can approve/reject submissions
+  EDITOR       // Can edit existing questions
+  ADMIN        // Full control
+}
+
 enum CohortRole {
   ADMIN
   MEMBER
@@ -3879,4 +4113,19 @@ enum WordleStatus {
   playing
   won
   lost
+}
+
+enum QuestionLifecycleStatus {
+  DRAFT
+  REVIEWED
+  ACTIVE
+  DEPRECATED
+  RETIRED
+}
+
+enum QAStatus {
+  UNREVIEWED
+  APPROVED
+  PENDING_FIX
+  REMOVED
 }

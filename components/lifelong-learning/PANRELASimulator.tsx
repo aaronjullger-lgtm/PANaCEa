@@ -193,7 +193,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
 
   const getTimeColor = (): string => {
     if (timeRemaining > 180) return 'text-data-pass dark:text-data-pass';
-    if (timeRemaining > 60) return 'text-yellow-600 dark:text-yellow-400';
+    if (timeRemaining > 60) return 'text-[var(--color-data-provisional)]';
     return 'text-data-fail dark:text-data-fail';
   };
 
@@ -270,7 +270,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm text-[var(--color-text-muted)]">Quarter</div>
-                  <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                  <div className="text-2xl font-bold text-[var(--color-accent)]">
                     Q{quarterlyProgress.quarter}
                   </div>
                 </div>
@@ -341,8 +341,8 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <span
-                  className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 
-                  bg-indigo-100 dark:bg-indigo-900/30 px-3 py-1 rounded-full"
+                  className="text-sm font-semibold text-[var(--color-accent)] 
+                  bg-[var(--color-accent)]/10 px-3 py-1 rounded-full"
                 >
                   Open Book Question
                 </span>
@@ -510,13 +510,13 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                 </a>
                 <a
                   href="#"
-                  className="block p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg 
-                  hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                  className="block p-3 bg-[var(--color-accent)]/5 rounded-lg 
+                  hover:bg-[var(--color-accent)]/10 transition-colors"
                 >
-                  <div className="font-semibold text-purple-900 dark:text-purple-200 text-sm">
+                  <div className="font-semibold text-[var(--color-text-primary)] text-sm">
                     Drug Reference
                   </div>
-                  <div className="text-xs text-purple-700 dark:text-purple-300">
+                  <div className="text-xs text-[var(--color-text-muted)]">
                     Epocrates, Lexicomp
                   </div>
                 </a>
@@ -528,9 +528,9 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
             )}
           </div>
 
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg p-4">
+          <div className="bg-[var(--color-accent)]/5 rounded-lg p-4">
             <div className="flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="w-5 h-5 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
               <div className="text-sm text-[var(--color-text-secondary)]">
                 <strong>Tip:</strong> PANRE-LA is open book, but time is limited. Use resources
                 wisely to verify your clinical decision-making.

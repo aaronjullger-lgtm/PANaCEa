@@ -61,7 +61,7 @@ function getScoreColor(score: number): string {
   if (score >= 80) return 'text-[var(--color-category-practice)]';
   if (score >= 60) return 'text-data-pass';
   if (score >= 40) return 'text-data-provisional';
-  if (score >= 20) return 'text-orange-400';
+  if (score >= 20) return 'text-[var(--color-data-provisional)]';
   return 'text-data-fail';
 }
 

@@ -456,7 +456,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
           {/* Timer */}
           <div className="flex items-center justify-center gap-2">
             <Timer
-              className={`w-5 h-5 ${timeLeft <= 2 ? 'text-red-500' : 'text-[var(--color-text-muted)]'}`}
+              className={`w-5 h-5 ${timeLeft <= 2 ? 'text-[var(--color-data-fail)]' : 'text-[var(--color-text-muted)]'}`}
             />
             <motion.div
               animate={{
@@ -464,7 +464,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                 color: timeLeft <= 2 ? '#ef4444' : undefined,
               }}
               transition={{ repeat: timeLeft <= 2 ? Infinity : 0, duration: 0.5 }}
-              className={`text-2xl font-bold ${timeLeft <= 2 ? 'text-red-500' : ''}`}
+              className={`text-2xl font-bold ${timeLeft <= 2 ? 'text-[var(--color-data-fail)]' : ''}`}
             >
               {timeLeft}s
             </motion.div>
@@ -551,7 +551,7 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                   )}
                   <div className="flex-1">
                     <div
-                      className={`font-semibold mb-1 ${isCorrect ? 'text-green-500' : 'text-red-500'}`}
+                      className={`font-semibold mb-1 ${isCorrect ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}
                     >
                       {isTimeUp ? "Time's Up!" : isCorrect ? 'Correct!' : 'Incorrect'}
                     </div>

@@ -412,7 +412,7 @@ export function ClinicalMotionFlashcards({
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400"
+            className="p-3 rounded-lg bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 text-[var(--color-data-fail)]"
           >
             {errorMessage}
           </motion.div>
@@ -483,7 +483,7 @@ export function ClinicalMotionFlashcards({
               <div className="rounded-xl border border-[var(--color-border)] overflow-hidden bg-[var(--color-bg-secondary)]">
                 <div className="p-2 text-center text-xs font-medium bg-[var(--color-bg-tertiary)]">
                   {viewMode === 'guess' && showGuessReveal ? (
-                    <span className={guessCorrect ? 'text-data-pass' : 'text-rose-500'}>
+                    <span className={guessCorrect ? 'text-data-pass' : 'text-[var(--color-data-fail)]'}>
                       {guessCorrect
                         ? `✓ Correct: ${selectedLabel}`
                         : `Correct: ${selectedLabel} (you chose: ${guessAnswer})`}

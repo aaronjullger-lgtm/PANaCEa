@@ -220,7 +220,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
-                <Droplets className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+                <Droplets className="w-6 h-6 text-[var(--color-accent)]" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Hydro-Mode</h1>
@@ -296,30 +296,30 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                 ))}
               </div>
 
-              <div className="bg-cyan-50 dark:bg-cyan-950/30 rounded-xl p-6 border border-cyan-200 dark:border-cyan-900">
+              <div className="bg-[var(--color-accent)]/5 rounded-xl p-6 border border-[var(--color-accent)]/30">
                 <p className="text-sm text-data-neutral dark:text-data-neutral font-semibold mb-3 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                  <CheckCircle className="w-4 h-4 text-[var(--color-accent)]" />
                   Key Features
                 </p>
                 <ul className="text-sm text-data-neutral dark:text-data-neutral space-y-2">
                   <li className="flex items-start gap-2">
-                    <span className="text-cyan-600 dark:text-cyan-400 mt-0.5">•</span>
+                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Clinical vignettes with realistic lab values</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-cyan-600 dark:text-cyan-400 mt-0.5">•</span>
+                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Formula hints provided for each calculation</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-cyan-600 dark:text-cyan-400 mt-0.5">•</span>
+                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Comprehensive urine chemistry reference table</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-cyan-600 dark:text-cyan-400 mt-0.5">•</span>
+                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Reasonable margin of error for numeric answers</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-cyan-600 dark:text-cyan-400 mt-0.5">•</span>
+                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Detailed explanations and teaching points</span>
                   </li>
                 </ul>
@@ -361,7 +361,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral dark:text-data-neutral flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-cyan-200 dark:border-cyan-900 border-t-cyan-600 dark:border-t-cyan-400 rounded-full animate-spin mx-auto" />
+          <div className="w-16 h-16 border-4 border-[var(--color-accent)]/30 border-t-[var(--color-accent)] rounded-full animate-spin mx-auto" />
           <p className="text-lg font-medium text-data-neutral dark:text-data-neutral">Loading case...</p>
         </div>
       </div>
@@ -377,7 +377,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
-                <Droplets className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+                <Droplets className="w-6 h-6 text-[var(--color-accent)]" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Hydro-Mode</h1>
@@ -414,7 +414,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handleStart}
-                className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-semibold transition-colors"
+                className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white rounded-lg font-semibold transition-colors"
               >
                 Try Again
               </button>
@@ -444,7 +444,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
-              <Droplets className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+              <Droplets className="w-6 h-6 text-[var(--color-accent)]" />
             </div>
             <div>
               <h1 className="text-xl font-bold">Hydro-Mode</h1>
@@ -459,7 +459,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
               <p className="text-xl font-bold text-data-neutral dark:text-data-neutral">
                 {score.correct}/{score.total}
                 {score.total > 0 && (
-                  <span className="text-sm ml-2 text-cyan-600 dark:text-cyan-400">
+                  <span className="text-sm ml-2 text-[var(--color-accent)]">
                     ({Math.round((score.correct / score.total) * 100)}%)
                   </span>
                 )}
@@ -495,7 +495,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
           >
             {/* Clinical Vignette */}
             <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
-              <h2 className="text-xl font-semibold mb-3 text-cyan-600 dark:text-cyan-400">
+              <h2 className="text-xl font-semibold mb-3 text-[var(--color-accent)]">
                 {currentCase.title}
               </h2>
               <p className="text-data-neutral dark:text-data-neutral leading-relaxed">
@@ -505,7 +505,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
 
             {/* Labs */}
             <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
-              <h3 className="text-lg font-semibold mb-4 text-cyan-600 dark:text-cyan-400">
+              <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">
                 Laboratory Results
               </h3>
 
@@ -589,8 +589,8 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             </div>
 
             {/* Question */}
-            <div className="bg-cyan-50 dark:bg-cyan-950/30 rounded-xl p-6 border border-cyan-200 dark:border-cyan-900 shadow-md">
-              <h3 className="text-lg font-semibold mb-2 text-cyan-600 dark:text-cyan-400">
+            <div className="bg-[var(--color-accent)]/5 rounded-xl p-6 border border-[var(--color-accent)]/30 shadow-md">
+              <h3 className="text-lg font-semibold mb-2 text-[var(--color-accent)]">
                 Question
               </h3>
               <p className="text-data-neutral dark:text-data-neutral mb-4 font-medium">
@@ -635,7 +635,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                   <button
                     onClick={handleSubmit}
                     disabled={!userAnswer}
-                    className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-data-neutral dark:disabled:bg-data-neutral 
+                    className="flex-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 disabled:bg-data-neutral dark:disabled:bg-data-neutral 
                              disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
                              transition-colors flex items-center justify-center gap-2 shadow-md"
                   >
@@ -676,7 +676,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                     )}
                     <div className="flex-1">
                       <p
-                        className={`font-semibold mb-2 ${isCorrect ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}
+                        className={`font-semibold mb-2 ${isCorrect ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}
                       >
                         {feedback}
                       </p>
@@ -696,7 +696,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             animate={{ opacity: 1, x: 0 }}
             className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md"
           >
-            <h3 className="text-xl font-semibold mb-4 text-cyan-600 dark:text-cyan-400">
+            <h3 className="text-xl font-semibold mb-4 text-[var(--color-accent)]">
               Urine Chemistry Reference
             </h3>
             <div className="space-y-3">
@@ -709,7 +709,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                     <h4 className="font-semibold text-data-neutral dark:text-data-neutral">
                       {item.parameter}
                     </h4>
-                    <span className="text-cyan-600 dark:text-cyan-400 font-mono text-sm">
+                    <span className="text-[var(--color-accent)] font-mono text-sm">
                       {item.unit}
                     </span>
                   </div>
@@ -729,8 +729,8 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             </div>
 
             {/* Additional Calculation Tips */}
-            <div className="mt-6 p-4 bg-cyan-50 dark:bg-cyan-950/30 rounded-lg border border-cyan-200 dark:border-cyan-900">
-              <h4 className="font-semibold text-cyan-600 dark:text-cyan-400 mb-3">
+            <div className="mt-6 p-4 bg-[var(--color-accent)]/5 rounded-lg border border-[var(--color-accent)]/30">
+              <h4 className="font-semibold text-[var(--color-accent)] mb-3">
                 Common Calculations
               </h4>
               <div className="space-y-3 text-sm">

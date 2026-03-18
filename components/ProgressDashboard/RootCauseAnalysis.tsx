@@ -27,7 +27,7 @@ const ERROR_TAG_CONFIG: Record<
   knowledge_gap: {
     label: 'Knowledge Gap',
     color: '#9333ea', // purple-600
-    bgColor: 'bg-purple-500',
+    bgColor: 'bg-[var(--color-accent)]',
     icon: <Brain className="w-4 h-4" />,
   },
   misread_question: {
@@ -149,7 +149,7 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ errorCounts, tota
     >
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <PieChart className="w-5 h-5 text-indigo-500" />
+        <PieChart className="w-5 h-5 text-[var(--color-accent)]" />
         <span className="stat-label-sm">Root Cause Analysis</span>
       </div>
 

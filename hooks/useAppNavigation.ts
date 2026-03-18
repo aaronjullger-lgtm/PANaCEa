@@ -3,118 +3,37 @@
  *
  * Manages the URL-to-view mapping and notFound state for the main App shell.
  * Extracts routing logic from App.tsx so the component can focus on UI rendering.
+ *
+ * Route validation uses isKnownPath() from config/navigation.ts to ensure
+ * a single source of truth for all canonical routes.
  */
 
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { TRAINING_MODES } from '../config/training-modes';
+import { isValidRoute, getViewForPath } from '../lib/constants/routes';
 import type { View } from '../config/appViews';
 
-const KNOWN_EXACT_PATHS = new Set([
-  '/',
-  '/menu',
-  '/study',
-  '/study/',
-  '/study/path',
-  '/study/knowledge',
-  '/study/utilities',
-  '/practice',
-  '/progress',
-  '/daily-challenges',
-  '/study/main-session',
-  '/study/main-session/',
-  '/admin',
-  '/admin/curation',
-  '/admin/refinery',
-  '/admin/taxonomies',
-  '/admin/system-mappings',
-  '/admin/question-generator',
-  '/clinical-eye',
-  '/visualizer',
-  '/gap-analysis',
-  '/clinical-profile',
-  '/medical-database',
-  '/live-collaboration',
-  '/explorer',
-  '/study/library',
-  '/study/tutor',
-  '/study/companion',
-  '/study/flashcards',
-  '/study/pearls',
-]);
-
-function isKnownPath(path: string): boolean {
-  if (KNOWN_EXACT_PATHS.has(path)) return true;
-  return (
-    path.startsWith('/study/knowledge') ||
-    path.startsWith('/study/utilities') ||
-    path.startsWith('/study/reference') ||
-    path.startsWith('/study/toolkit') ||
-    path.startsWith('/study/path') ||
-    path.startsWith('/gap-analysis') ||
-    path.startsWith('/clinical-profile') ||
-    path.startsWith('/modes/') ||
-    path === '/core-adaptive' ||
-    path.startsWith('/medical-database') ||
-    path.startsWith('/live-collaboration') ||
-    path.startsWith('/explorer') ||
-    path.startsWith('/session/')
-  );
-}
-
-/** Build route→view map once (TRAINING_MODES is static) */
-const ROUTE_TO_VIEW: Record<string, View> = (() => {
-  const map: Record<string, View> = {};
-  for (const mode of TRAINING_MODES) {
-    map[mode.route] = mode.id as View;
-  }
-  return map;
-})();
-
 function pathToView(path: string, navigate: ReturnType<typeof useNavigate>): View | 'redirect' | null {
-  // Legacy redirect: /study/reference → /study/knowledge
+  // Handle legacy redirects
   if (path.startsWith('/study/reference')) {
     navigate('/study/knowledge', { replace: true });
     return 'redirect';
   }
-  // Legacy redirect: /study/toolkit → /study/utilities
   if (path.startsWith('/study/toolkit')) {
     navigate('/study/utilities', { replace: true });
     return 'redirect';
   }
-  // Legacy redirect: /study/main-session → /study
   if (path === '/study/main-session' || path === '/study/main-session/') {
     navigate('/study', { replace: true });
     return 'redirect';
   }
 
-  if (path.startsWith('/session/')) return 'session_runner';
+  // Use unified route registry to determine view
+  const view = getViewForPath(path);
 
-  // Training mode deep links: /modes/ecg-drill → ecg_drill
-  if (path.startsWith('/modes/') || path === '/core-adaptive') {
-    return ROUTE_TO_VIEW[path] ?? null;
-  }
-
-  // React Router routes - these are handled by <Route> components, not view-state
-  // Return null so useAppNavigation doesn't try to set view for them
-  if (path === '/' || path === '') return 'command_center';
-  if (path === '/menu') return 'menu';
-  if (path === '/study' || path === '/study/') return 'command_center';
-  if (path.startsWith('/study/knowledge')) return null; // Now a React Router route
-  if (path.startsWith('/study/utilities')) return null; // Now a React Router route
-  if (path.startsWith('/study/path')) return null; // Now a React Router route
-  if (path.startsWith('/study/library')) return null; // Now a React Router route
-  if (path.startsWith('/study/tutor')) return null; // Now a React Router route
-  if (path.startsWith('/study/companion')) return null; // Now a React Router route
-  if (path.startsWith('/study/flashcards')) return null; // Now a React Router route
-  if (path.startsWith('/study/pearls')) return null; // Now a React Router route
-  if (path === '/gap-analysis' || path.startsWith('/gap-analysis')) return null; // Now a React Router route
-  if (path === '/clinical-profile' || path.startsWith('/clinical-profile')) return null; // Now a React Router route
-  if (path === '/medical-database' || path.startsWith('/medical-database')) return null; // Now a React Router route
-  if (path === '/live-collaboration' || path.startsWith('/live-collaboration')) return null; // Now a React Router route
-  if (path.startsWith('/explorer')) return null; // Now a React Router route
-
-  return null;
+  // If view is null, it means the route is handled by React Router (not view-state)
+  // Return null so useAppNavigation doesn't try to set view for it
+  return view as View | null;
 }
 
 interface UseAppNavigationReturn {
@@ -135,7 +54,7 @@ export function useAppNavigation(): UseAppNavigationReturn {
   useEffect(() => {
     const path = location.pathname;
 
-    if (!isKnownPath(path)) {
+    if (!isValidRoute(path)) {
       setShowNotFound(true);
       return;
     }

@@ -545,7 +545,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
         <div className="space-y-6">
           {/* Organism Card */}
           <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
-            <h3 className="text-lg font-semibold mb-2 text-purple-600 dark:text-purple-400">
+            <h3 className="text-lg font-semibold mb-2 text-[var(--color-accent)]">
               Target Organism
             </h3>
             <div className="bg-data-neutral dark:bg-data-neutral rounded-lg p-4 border border-data-neutral dark:border-data-neutral">
@@ -553,7 +553,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                 {currentDrill.organism.name}
               </h4>
               <div className="flex items-center gap-2 text-sm">
-                <span className="px-3 py-1 bg-purple-50 dark:bg-purple-950/30 rounded-full text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900">
+                <span className="px-3 py-1 bg-[var(--color-accent)]/10 rounded-full text-[var(--color-accent)] border border-[var(--color-accent)]/30">
                   {currentDrill.organism.category.replace('_', ' ')}
                 </span>
               </div>
@@ -567,7 +567,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
 
           {/* Drug Selection */}
           <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
-            <h3 className="text-lg font-semibold mb-4 text-purple-600 dark:text-purple-400">
+            <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">
               Select Appropriate Antibiotics
             </h3>
             <p className="text-data-neutral dark:text-data-neutral text-sm mb-4">
@@ -581,8 +581,8 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                   disabled={isSubmitted}
                   className={`p-4 rounded-lg border-2 transition-all text-left shadow-sm ${
                     selectedDrugs.includes(drug.id)
-                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/30'
-                      : 'border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] hover:border-purple-300 dark:hover:border-purple-700'
+                      ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                      : 'border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50'
                   } ${isSubmitted ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <div className="font-semibold text-data-neutral dark:text-data-neutral text-sm">
@@ -616,11 +616,11 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
       <div className="space-y-6">
         {/* Drug/Scenario Card */}
         {currentDrill.drug && (
-          <div className="bg-data-neutral/50 backdrop-blur rounded-xl p-6 border border-purple-800/30">
-            <h3 className="text-lg font-semibold mb-2 text-purple-400">Drug Focus</h3>
+          <div className="bg-data-neutral/50 backdrop-blur rounded-xl p-6 border border-[var(--color-accent)]/30">
+            <h3 className="text-lg font-semibold mb-2 text-[var(--color-accent)]">Drug Focus</h3>
             <div className="bg-data-neutral/50 rounded-lg p-4">
               <h4 className="text-xl font-bold text-white mb-2">{currentDrill.drug.name}</h4>
-              <span className="px-3 py-1 bg-purple-900/40 rounded-full text-purple-300 text-sm border border-purple-700/30">
+              <span className="px-3 py-1 bg-[var(--color-accent)]/20 rounded-full text-[var(--color-accent)] text-sm border border-[var(--color-accent)]/40">
                 {toTitleCase(currentDrill.drug.class)}
               </span>
             </div>
@@ -629,7 +629,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
 
         {/* Question */}
         <div className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md">
-          <h3 className="text-lg font-semibold mb-4 text-purple-600 dark:text-purple-400">
+          <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">
             Question
           </h3>
           <p className="text-data-neutral dark:text-data-neutral mb-6 leading-relaxed font-medium">
@@ -645,15 +645,15 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                 disabled={isSubmitted}
                 className={`w-full p-4 rounded-lg border-2 transition-all text-left shadow-sm ${
                   selectedAnswer === index
-                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/30'
-                    : 'border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] hover:border-purple-300 dark:hover:border-purple-700'
+                    ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                    : 'border-data-neutral dark:border-data-neutral bg-[var(--color-bg-primary)] hover:border-[var(--color-accent)]/50'
                 } ${isSubmitted ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <div className="flex items-start gap-3">
                   <div
                     className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                       selectedAnswer === index
-                        ? 'border-purple-500 bg-purple-500'
+                        ? 'border-[var(--color-accent)] bg-[var(--color-accent)]'
                         : 'border-data-neutral dark:border-data-neutral'
                     }`}
                   >
@@ -686,7 +686,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
-                <Pill className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <Pill className="w-6 h-6 text-[var(--color-accent)]" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Bug-Drug Mastery</h1>
@@ -756,7 +756,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                     className="bg-data-neutral dark:bg-data-neutral rounded-xl p-4 border border-data-neutral dark:border-data-neutral"
                   >
                     <div className="flex items-center gap-3 mb-2">
-                      <drill.Icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                      <drill.Icon className="w-6 h-6 text-[var(--color-accent)]" />
                       <h4 className="font-semibold text-data-neutral dark:text-data-neutral">
                         {drill.title}
                       </h4>
@@ -766,30 +766,30 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                 ))}
               </div>
 
-              <div className="bg-purple-50 dark:bg-purple-950/30 rounded-xl p-6 border border-purple-200 dark:border-purple-900">
-                <p className="text-sm text-purple-600 dark:text-purple-400 font-semibold mb-3 flex items-center gap-2">
+              <div className="bg-[var(--color-accent)]/10 rounded-xl p-6 border border-[var(--color-accent)]/30">
+                <p className="text-sm text-[var(--color-accent)] font-semibold mb-3 flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
                   Key Features
                 </p>
                 <ul className="text-sm text-data-neutral dark:text-data-neutral space-y-2">
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-600 dark:text-purple-400 mt-0.5">•</span>
+                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Rotating drill types keep practice fresh</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-600 dark:text-purple-400 mt-0.5">•</span>
+                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Clinical pearls with every question</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-600 dark:text-purple-400 mt-0.5">•</span>
+                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Real-world clinical scenarios</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-600 dark:text-purple-400 mt-0.5">•</span>
+                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Comprehensive antibiotic database</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-purple-600 dark:text-purple-400 mt-0.5">•</span>
+                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Immediate feedback and explanations</span>
                   </li>
                 </ul>
@@ -831,7 +831,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral dark:text-data-neutral flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-purple-200 dark:border-purple-900 border-t-purple-600 dark:border-t-purple-400 rounded-full animate-spin mx-auto" />
+          <div className="w-16 h-16 border-4 border-[var(--color-accent)]/30 border-t-[var(--color-accent)] rounded-full animate-spin mx-auto" />
           <p className="text-lg font-medium text-data-neutral dark:text-data-neutral">Loading drill...</p>
         </div>
       </div>
@@ -847,7 +847,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
-                <Pill className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <Pill className="w-6 h-6 text-[var(--color-accent)]" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Bug-Drug Mastery</h1>
@@ -884,7 +884,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             <div className="flex gap-4 justify-center">
               <button
                 onClick={handleStart}
-                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors"
+                className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white rounded-lg font-semibold transition-colors"
               >
                 Try Again
               </button>
@@ -914,7 +914,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-data-neutral dark:bg-data-neutral flex items-center justify-center shadow-sm">
-              <Pill className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              <Pill className="w-6 h-6 text-[var(--color-accent)]" />
             </div>
             <div>
               <h1 className="text-xl font-bold">Bug-Drug Mastery</h1>
@@ -929,7 +929,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
               <p className="text-xl font-bold text-data-neutral dark:text-data-neutral">
                 {score.correct}/{score.total}
                 {score.total > 0 && (
-                  <span className="text-sm ml-2 text-purple-600 dark:text-purple-400">
+                  <span className="text-sm ml-2 text-[var(--color-accent)]">
                     ({Math.round((score.correct / score.total) * 100)}%)
                   </span>
                 )}
@@ -962,7 +962,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-semibold border border-purple-200 dark:border-purple-900 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-semibold border border-[var(--color-accent)]/30 shadow-sm">
             <Shuffle className="w-4 h-4" />
             {getDrillTypeLabel()}
           </div>
@@ -983,7 +983,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
               <button
                 onClick={handleSubmit}
                 disabled={!canSubmit()}
-                className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-data-neutral dark:disabled:bg-data-neutral 
+                className="flex-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 disabled:bg-data-neutral dark:disabled:bg-data-neutral 
                          disabled:cursor-not-allowed py-4 rounded-lg font-semibold text-lg text-white
                          transition-colors flex items-center justify-center gap-2 shadow-md"
               >
@@ -1023,7 +1023,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                   )}
                   <div className="flex-1">
                     <p
-                      className={`font-semibold mb-2 text-lg ${isCorrect ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}
+                      className={`font-semibold mb-2 text-lg ${isCorrect ? 'text-[var(--color-data-pass)] dark:text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)] dark:text-[var(--color-data-fail)]'}`}
                     >
                       {isCorrect ? 'Correct!' : 'Incorrect'}
                     </p>
@@ -1033,7 +1033,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
 
                     {currentDrill.pearls && currentDrill.pearls.length > 0 && (
                       <div className="mt-4 space-y-2">
-                        <p className="font-semibold text-purple-600 dark:text-purple-400">
+                        <p className="font-semibold text-[var(--color-accent)]">
                           Clinical Pearls:
                         </p>
                         <ul className="list-disc list-inside space-y-1 text-sm text-data-neutral dark:text-data-neutral">
@@ -1049,7 +1049,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                       currentDrill.type === 'coverage' &&
                       currentDrill.correctDrugs && (
                         <div className="mt-4">
-                          <p className="font-semibold text-purple-400 mb-2">Correct Antibiotics:</p>
+                          <p className="font-semibold text-[var(--color-accent)] mb-2">Correct Antibiotics:</p>
                           <div className="flex flex-wrap gap-2">
                             {currentDrill.correctDrugs.map((drugId) => {
                               const drug = ANTIBIOTICS.find((d) => d.id === drugId);

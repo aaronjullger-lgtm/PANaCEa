@@ -32,7 +32,7 @@ const PADDING = { top: 20, right: 20, bottom: 40, left: 50 };
 
 const URGENCY_COLORS = {
   critical: { bg: 'bg-data-fail/10', border: 'border-data-fail', text: 'text-data-fail' },
-  high: { bg: 'bg-orange-500/10', border: 'border-orange-500', text: 'text-orange-500' },
+  high: { bg: 'bg-[var(--color-data-provisional)]/10', border: 'border-[var(--color-data-provisional)]', text: 'text-[var(--color-data-provisional)]' },
   medium: { bg: 'bg-data-provisional/10', border: 'border-data-provisional', text: 'text-data-provisional' },
   low: { bg: 'bg-data-pass/10', border: 'border-data-pass', text: 'text-data-pass' },
 };
@@ -345,7 +345,7 @@ export function DriftVectorChart({ drift, className, showDetails = true }: Drift
           drift.urgency === 'critical'
             ? 'bg-data-fail dark:bg-data-fail/30 text-data-fail dark:text-data-fail'
             : drift.urgency === 'high'
-              ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+              ? 'bg-[var(--color-data-provisional)]/20 dark:bg-[var(--color-data-provisional)]/30 text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]'
               : 'bg-data-neutral dark:bg-data-neutral text-data-neutral dark:text-data-neutral'
         )}
       >

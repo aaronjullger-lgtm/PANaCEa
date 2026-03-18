@@ -154,7 +154,7 @@ const SubcategoryDrillSession: React.FC<SubcategoryDrillSessionProps> = ({ onExi
         {categoryBreakdown.length > 0 && (
           <div className="mt-6 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+              <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
               <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
                 Category Progress
               </h3>
@@ -233,7 +233,7 @@ const SubcategoryDrillSession: React.FC<SubcategoryDrillSessionProps> = ({ onExi
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => handleSubcategorySelect(subcategory.id)}
-                className="relative p-6 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-violet-300 hover:shadow-md transition-all text-left group"
+                className="relative p-6 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-md transition-all text-left group"
               >
                 <div className="flex items-start gap-4">
                   <div

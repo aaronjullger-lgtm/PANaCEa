@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/config/routes';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import {
   ComposedChart,
@@ -257,7 +258,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
     if (onStudySystem) {
       onStudySystem(systemName);
     } else {
-      navigate('/');
+      navigate(ROUTES.STUDY);
     }
   };
 
@@ -295,7 +296,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
                 Retry
               </button>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate(ROUTES.STUDY)}
                 className="px-4 py-2 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/80 text-[var(--color-text-primary)] font-semibold rounded-lg transition-colors"
               >
                 Go Home

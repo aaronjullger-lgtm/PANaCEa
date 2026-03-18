@@ -167,7 +167,7 @@ const ComparisonRow: React.FC<{
 
   return (
     <div
-      className={`grid grid-cols-[1fr_auto_1fr] gap-4 p-3 rounded-lg ${isDifferent ? 'bg-amber-500/5 border border-amber-500/20' : 'bg-[var(--color-bg-secondary)]/30'}`}
+      className={`grid grid-cols-[1fr_auto_1fr] gap-4 p-3 rounded-lg ${isDifferent ? 'bg-[var(--color-data-provisional)]/100/5 border border-[var(--color-data-provisional)]/20' : 'bg-[var(--color-bg-secondary)]/30'}`}
     >
       {/* Left value */}
       <div className="min-w-0">

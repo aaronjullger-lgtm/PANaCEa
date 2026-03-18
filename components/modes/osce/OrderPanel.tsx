@@ -62,8 +62,8 @@ const CATEGORY_LABELS: Record<OrderCategory, string> = {
 
 const COST_COLORS: Record<string, string> = {
   $: 'text-data-pass dark:text-data-pass',
-  $$: 'text-yellow-600 dark:text-yellow-400',
-  $$$: 'text-orange-600 dark:text-orange-400',
+  $$: 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]',
+  $$$: 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]',
   $$$$: 'text-data-fail dark:text-data-fail',
 };
 

@@ -137,7 +137,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   return (
     <div
       className={`
-        bg-slate-800 dark:bg-slate-700
+        bg-[var(--color-bg-tertiary)]
         animate-pulse
         relative
         overflow-hidden
@@ -283,7 +283,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
   variant = 'question',
 }) => {
   const SkeletonLine = ({ width = 'w-full', height = 'h-4' }) => (
-    <div className={`${width} ${height} bg-slate-800 dark:bg-slate-700 rounded animate-pulse`} />
+    <div className={`${width} ${height} bg-[var(--color-bg-tertiary)] rounded animate-pulse`} />
   );
 
   return (
@@ -297,22 +297,22 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
         {/* Header skeleton */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-800 dark:bg-slate-700 animate-pulse" />
+            <div className="w-10 h-10 rounded-xl bg-[var(--color-bg-tertiary)] animate-pulse" />
             <div>
-              <div className="w-32 h-5 bg-slate-800 dark:bg-slate-700 rounded animate-pulse mb-1" />
-              <div className="w-24 h-4 bg-slate-800 dark:bg-slate-700 rounded animate-pulse" />
+              <div className="w-32 h-5 bg-[var(--color-bg-tertiary)] rounded animate-pulse mb-1" />
+              <div className="w-24 h-4 bg-[var(--color-bg-tertiary)] rounded animate-pulse" />
             </div>
           </div>
 
           {showTimer && (
             <div className="flex items-center gap-2">
-              <div className="w-12 h-12 rounded-lg bg-slate-800 dark:bg-slate-700 animate-pulse" />
+              <div className="w-12 h-12 rounded-lg bg-[var(--color-bg-tertiary)] animate-pulse" />
             </div>
           )}
         </div>
 
         {showProgress && (
-          <div className="mb-6 h-1 bg-slate-800 dark:bg-slate-700 rounded-full animate-pulse" />
+          <div className="mb-6 h-1 bg-[var(--color-bg-tertiary)] rounded-full animate-pulse" />
         )}
 
         {/* Question skeleton */}
@@ -329,7 +329,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
               key={i}
               className="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card-bg)] flex items-center gap-3"
             >
-              <div className="w-6 h-6 rounded-full bg-slate-800 dark:bg-slate-700 animate-pulse flex-shrink-0" />
+              <div className="w-6 h-6 rounded-full bg-[var(--color-bg-tertiary)] animate-pulse flex-shrink-0" />
               <SkeletonLine width="w-3/4" height="h-4" />
             </div>
           ))}
@@ -402,10 +402,10 @@ export const CommandCenterSkeleton: React.FC<{ message?: string }> = ({
   message = 'Loading dashboard...',
 }) => (
   <div className="p-6 space-y-4">
-    <div className="h-12 bg-slate-800 dark:bg-slate-700 rounded-xl animate-pulse" />
+    <div className="h-12 bg-[var(--color-bg-tertiary)] rounded-xl animate-pulse" />
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="h-40 bg-slate-800 dark:bg-slate-700 rounded-xl animate-pulse" />
+        <div key={i} className="h-40 bg-[var(--color-bg-tertiary)] rounded-xl animate-pulse" />
       ))}
     </div>
     <p className="text-sm text-[var(--color-text-muted)]">{message}</p>
@@ -418,7 +418,7 @@ export const CommandCenterSkeleton: React.FC<{ message?: string }> = ({
 export const QuickStatsBarSkeleton: React.FC = () => (
   <div className="flex gap-3">
     {Array.from({ length: 4 }).map((_, i) => (
-      <div key={i} className="flex-1 h-20 bg-slate-800 dark:bg-slate-700 rounded-lg animate-pulse" />
+      <div key={i} className="flex-1 h-20 bg-[var(--color-bg-tertiary)] rounded-lg animate-pulse" />
     ))}
   </div>
 );
@@ -432,14 +432,14 @@ export const QuickStatsBarSkeleton: React.FC = () => (
  */
 export const QuestionSkeleton: React.FC<{ className?: string }> = ({ className = '' }) => (
   <div className={`space-y-4 ${className}`}>
-    <div className="h-6 bg-slate-800 dark:bg-slate-700 rounded-lg w-3/4 animate-pulse" />
+    <div className="h-6 bg-[var(--color-bg-tertiary)] rounded-lg w-3/4 animate-pulse" />
     <div className="space-y-2">
-      <div className="h-4 bg-slate-800 dark:bg-slate-700 rounded w-full animate-pulse" />
-      <div className="h-4 bg-slate-800 dark:bg-slate-700 rounded w-5/6 animate-pulse" />
+      <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-full animate-pulse" />
+      <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-5/6 animate-pulse" />
     </div>
     <div className="space-y-2 pt-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="h-10 bg-slate-800 dark:bg-slate-700 rounded-lg animate-pulse" />
+        <div key={i} className="h-10 bg-[var(--color-bg-tertiary)] rounded-lg animate-pulse" />
       ))}
     </div>
   </div>
@@ -455,12 +455,12 @@ export const ChatSkeleton: React.FC<{
   <div className={`space-y-3 ${className}`}>
     {Array.from({ length: messageCount }).map((_, i) => (
       <div key={i} className="flex gap-3">
-        <div className="w-8 h-8 bg-slate-800 dark:bg-slate-700 rounded-full flex-shrink-0 animate-pulse" />
+        <div className="w-8 h-8 bg-[var(--color-bg-tertiary)] rounded-full flex-shrink-0 animate-pulse" />
         <div className="flex-1 space-y-2">
-          <div className="h-4 bg-slate-800 dark:bg-slate-700 rounded w-1/3 animate-pulse" />
+          <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-1/3 animate-pulse" />
           <div className="space-y-1">
-            <div className="h-3 bg-slate-800 dark:bg-slate-700 rounded w-full animate-pulse" />
-            <div className="h-3 bg-slate-800 dark:bg-slate-700 rounded w-5/6 animate-pulse" />
+            <div className="h-3 bg-[var(--color-bg-tertiary)] rounded w-full animate-pulse" />
+            <div className="h-3 bg-[var(--color-bg-tertiary)] rounded w-5/6 animate-pulse" />
           </div>
         </div>
       </div>

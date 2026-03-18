@@ -280,7 +280,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
             <Flame className="w-4 h-4" />
             Total Streak
           </div>
-          <div className="text-2xl font-bold text-orange-600">{stats.totalStreak}</div>
+          <div className="text-2xl font-bold text-[var(--color-data-provisional)]">{stats.totalStreak}</div>
         </div>
 
         <div className="bg-[var(--color-bg-primary)] p-4 rounded-xl border border-data-neutral dark:border-data-neutral">
@@ -288,7 +288,7 @@ export const GoalsDashboard: React.FC<GoalsDashboardProps> = ({ className = '' }
             <Trophy className="w-4 h-4" />
             Best Streak
           </div>
-          <div className="text-2xl font-bold text-yellow-600">{stats.bestStreak}</div>
+          <div className="text-2xl font-bold text-[var(--color-data-provisional)]">{stats.bestStreak}</div>
         </div>
       </div>
 

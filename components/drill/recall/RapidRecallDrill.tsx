@@ -367,12 +367,12 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
           <div className="flex items-center gap-1.5">
             <Flame
               className={`w-5 h-5 ${
-                streak > 0 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'
+                streak > 0 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-text-muted)]'
               }`}
             />
             <span
               className={`text-sm font-bold ${
-                streak > 0 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'
+                streak > 0 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-text-muted)]'
               }`}
             >
               {streak}

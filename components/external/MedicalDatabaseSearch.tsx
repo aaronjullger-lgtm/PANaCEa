@@ -140,7 +140,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
       case 'healthy':
         return <CheckCircle className="w-4 h-4 text-data-pass" />;
       case 'degraded':
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+        return <AlertTriangle className="w-4 h-4 text-[var(--color-data-provisional)]" />;
       case 'unavailable':
         return <X className="w-4 h-4 text-data-fail" />;
       default:
@@ -474,7 +474,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                         db.status === 'healthy'
                           ? 'bg-data-pass/20 text-data-pass'
                           : db.status === 'degraded'
-                            ? 'bg-yellow-500/20 text-yellow-600'
+                            ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
                             : 'bg-data-fail/20 text-data-fail'
                       }`}
                     >
@@ -497,14 +497,14 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
               className={`p-4 rounded-lg border ${
                 areDatabasesHealthy()
                   ? 'bg-data-pass/10 border-data-pass/30'
-                  : 'bg-yellow-500/10 border-yellow-500/30'
+                  : 'bg-[var(--color-data-provisional)]/10 border-[var(--color-data-provisional)]/30'
               }`}
             >
               <div className="flex items-center gap-2 mb-1">
                 {areDatabasesHealthy() ? (
                   <CheckCircle className="w-5 h-5 text-data-pass" />
                 ) : (
-                  <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                  <AlertTriangle className="w-5 h-5 text-[var(--color-data-provisional)]" />
                 )}
                 <span className="font-medium text-[var(--color-text-primary)]">
                   {areDatabasesHealthy() ? 'All Systems Operational' : 'Some Systems Degraded'}

@@ -35,14 +35,14 @@ export function PhantomPatientCard({ patient, className = '' }: PhantomPatientCa
     if (health >= 80) return 'text-data-pass';
     if (health >= 60) return 'text-[var(--color-category-practice)]';
     if (health >= 40) return 'text-data-provisional';
-    return 'text-rose-500';
+    return 'text-[var(--color-data-fail)]';
   };
 
   const getHealthBgColor = (health: number) => {
     if (health >= 80) return 'bg-data-pass';
     if (health >= 60) return 'bg-[var(--color-category-practice)]';
     if (health >= 40) return 'bg-data-provisional';
-    return 'bg-rose-500';
+    return 'bg-[var(--color-data-fail)]/100';
   };
 
   const getStatusMessage = (status: PhantomPatient['status']) => {
@@ -138,7 +138,7 @@ export function PhantomPatientCard({ patient, className = '' }: PhantomPatientCa
           {healthTrend === 'up' ? (
             <TrendingUp className="w-3 h-3 text-data-pass" />
           ) : (
-            <TrendingDown className="w-3 h-3 text-rose-500" />
+            <TrendingDown className="w-3 h-3 text-[var(--color-data-fail)]" />
           )}
           <span>{healthTrend === 'up' ? 'Improving' : 'Declining'}</span>
         </div>

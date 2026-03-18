@@ -298,7 +298,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/admin"
         element={
           <Suspense fallback={<Loader message="Loading admin…" />}>
-            <AdminDashboard onClose={() => navigate('/')} />
+            <AdminDashboard onClose={() => navigate(ROUTES.STUDY)} />
           </Suspense>
         }
       />
@@ -306,7 +306,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/admin/refinery"
         element={
           <Suspense fallback={<Loader message="Loading refinery…" />}>
-            <RefineryPage onClose={() => navigate('/')} />
+            <RefineryPage onClose={() => navigate(ROUTES.STUDY)} />
           </Suspense>
         }
       />
@@ -338,7 +338,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/clinical-eye"
         element={
           <Suspense fallback={<Loader message="Loading Clinical Eye…" />}>
-            <ClinicalEyePage onBack={() => navigate('/')} />
+            <ClinicalEyePage onBack={() => navigate(ROUTES.STUDY)} />
           </Suspense>
         }
       />
@@ -346,7 +346,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/visualizer"
         element={
           <Suspense fallback={<Loader message="Loading visualizer…" />}>
-            <VisualizerPage onBack={() => navigate('/')} />
+            <VisualizerPage onBack={() => navigate(ROUTES.STUDY)} />
           </Suspense>
         }
       />
@@ -389,7 +389,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                       <OfflineSyncIndicator />
                       <Link
                         to={ROUTES.ADMIN}
-                        className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-700 hover:text-slate-900 bg-[var(--color-bg-secondary)] hover:bg-slate-100 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
+                        className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-primary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/70 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
                         aria-label="Admin Dashboard"
                       >
                         <Shield className="w-5 h-5" />
@@ -397,7 +397,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                       <motion.button
                         ref={settingsButtonRef}
                         onClick={() => setIsSettingsModalOpen(true)}
-                        className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-700 hover:text-slate-900 bg-[var(--color-bg-secondary)] hover:bg-slate-100 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
+                        className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-primary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/70 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
                         aria-label="Settings and Stats"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -408,7 +408,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                       <button
                         type="button"
                         onClick={() => setIsHelpModalOpen(true)}
-                        className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-700 hover:text-slate-900 bg-[var(--color-bg-secondary)] hover:bg-slate-100 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
+                        className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-primary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/70 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
                         aria-label="Help and getting started"
                       >
                         <HelpCircle className="w-5 h-5" />

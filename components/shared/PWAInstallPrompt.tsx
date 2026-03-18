@@ -212,8 +212,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg mt-0.5">
-                        <Bell className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      <div className="p-2 bg-[var(--color-accent)]/20 dark:bg-[var(--color-accent)]/30 rounded-lg mt-0.5">
+                        <Bell className="w-4 h-4 text-[var(--color-accent)] dark:text-[var(--color-accent)]" />
                       </div>
                       <div>
                         <h5 className="font-medium text-sm">Smart Reminders</h5>

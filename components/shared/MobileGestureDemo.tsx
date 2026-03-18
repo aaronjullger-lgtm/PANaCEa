@@ -326,7 +326,7 @@ export const MobileGestureDemo: React.FC<MobileGestureDemoProps> = ({
                                   ? 'bg-data-provisional/10 text-data-provisional'
                                   : log.type === 'doubletap'
                                     ? 'bg-data-pass/10 text-data-pass'
-                                    : 'bg-purple-500/10 text-purple-500'
+                                    : 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
                             }`}
                           >
                             {log.type === 'swipe'
@@ -401,8 +401,8 @@ export const MobileGestureDemo: React.FC<MobileGestureDemoProps> = ({
 
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded bg-purple-500/10 flex items-center justify-center">
-                    <span className="text-purple-500">↓</span>
+                  <div className="w-6 h-6 rounded bg-[var(--color-accent)]/10 flex items-center justify-center">
+                    <span className="text-[var(--color-accent)]">↓</span>
                   </div>
                   <span className="text-sm font-medium text-[var(--color-text-primary)]">
                     Pull Down

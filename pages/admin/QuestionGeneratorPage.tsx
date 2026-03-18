@@ -174,7 +174,7 @@ export function QuestionGeneratorPage() {
   if (error && error.includes('Admin access required')) {
     return (
       <div className="max-w-4xl mx-auto p-8 text-center">
-        <Shield className="w-16 h-16 mx-auto text-red-500 mb-4" />
+        <Shield className="w-16 h-16 mx-auto text-[var(--color-data-fail)] mb-4" />
         <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
         <p className="text-[var(--color-text-secondary)] mb-6">You must be an administrator to view this page.</p>
         <button
@@ -215,7 +215,7 @@ export function QuestionGeneratorPage() {
       </div>
 
       {error && !error.includes('Admin access required') && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+        <div className="mb-6 p-4 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-lg text-[var(--color-data-fail)]">
           <div className="flex items-center gap-2">
             <XCircle className="w-5 h-5" />
             <span>{error}</span>
@@ -330,14 +330,14 @@ export function QuestionGeneratorPage() {
           </div>
 
           {generatedQuestions.length > 0 && (
-            <div className="mt-6 bg-emerald-50 border border-emerald-200 rounded-xl p-5">
+            <div className="mt-6 bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/20 rounded-xl p-5">
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="w-5 h-5 text-emerald-600" />
-                <span className="font-semibold text-emerald-800">
+                <CheckCircle className="w-5 h-5 text-[var(--color-data-pass)]00" />
+                <span className="font-semibold text-[var(--color-data-pass)]00">
                   {generatedQuestions.length} question{generatedQuestions.length > 1 ? 's' : ''} generated
                 </span>
               </div>
-              <p className="text-sm text-emerald-700">
+              <p className="text-sm text-[var(--color-data-pass)]00">
                 Questions are ready for preview. You can save them to the database as draft content.
               </p>
             </div>
@@ -409,7 +409,7 @@ export function QuestionGeneratorPage() {
                     </div>
                     <button
                       onClick={() => handleSaveQuestion(q)}
-                      className="px-4 py-2 bg-emerald-500 text-white rounded-lg flex items-center gap-2 hover:bg-emerald-600"
+                      className="px-4 py-2 bg-[var(--color-data-pass)] text-white rounded-lg flex items-center gap-2 hover:bg-[var(--color-data-pass)]"
                     >
                       <Save className="w-4 h-4" /> Save as Draft
                     </button>
@@ -426,13 +426,13 @@ export function QuestionGeneratorPage() {
                         {q.options.map((opt, optIdx) => (
                           <div
                             key={optIdx}
-                            className={`p-3 border rounded-lg ${opt === q.correctAnswer ? 'border-emerald-500 bg-emerald-50' : 'border-[var(--color-border)]'}`}
+                            className={`p-3 border rounded-lg ${opt === q.correctAnswer ? 'border-[var(--color-data-pass)] bg-[var(--color-data-pass)]/10' : 'border-[var(--color-border)]'}`}
                           >
                             <div className="flex items-center gap-2">
                               <span className="font-mono font-bold">{String.fromCharCode(65 + optIdx)}.</span>
                               <span>{opt}</span>
                               {opt === q.correctAnswer && (
-                                <CheckCircle className="w-4 h-4 text-emerald-500 ml-auto" />
+                                <CheckCircle className="w-4 h-4 text-[var(--color-data-pass)] ml-auto" />
                               )}
                             </div>
                           </div>
@@ -479,7 +479,7 @@ export function QuestionGeneratorPage() {
                       </button>
                       <button
                         onClick={() => setGeneratedQuestions(prev => prev.filter((_, i) => i !== idx))}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-[var(--color-data-fail)] hover:text-[var(--color-data-fail)]/80"
                       >
                         Discard
                       </button>

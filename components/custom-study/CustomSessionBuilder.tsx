@@ -403,8 +403,8 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
             onClick={() => onToggleFocusArea(area)}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               config.focusAreas.includes(area)
-                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                : 'border-data-neutral dark:border-data-neutral hover:border-purple-300'
+                ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5 dark:bg-[var(--color-accent)]/20'
+                : 'border-data-neutral dark:border-data-neutral hover:border-[var(--color-accent)]/30'
             }`}
           >
             <div className="flex items-start gap-3">
@@ -414,7 +414,7 @@ function FocusStep({ config, onToggleFocusArea }: FocusStepProps) {
                 <div className="text-sm text-data-neutral dark:text-data-neutral">{meta.description}</div>
               </div>
               {config.focusAreas.includes(area) && (
-                <Check className="w-5 h-5 text-purple-500 ml-auto" />
+                <Check className="w-5 h-5 text-[var(--color-accent)] ml-auto" />
               )}
             </div>
           </button>
@@ -552,7 +552,7 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
             {config.focusAreas.map((area) => (
               <span
                 key={area}
-                className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm"
+                className="px-2 py-1 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/30 text-[var(--color-accent)] rounded-full text-sm"
               >
                 {FOCUS_AREA_META[area].icon} {FOCUS_AREA_META[area].label}
               </span>

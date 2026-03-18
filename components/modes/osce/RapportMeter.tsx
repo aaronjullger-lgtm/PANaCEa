@@ -34,7 +34,7 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
     if (score >= 50)
       return { bg: 'bg-data-provisional', text: 'text-data-provisional', ring: 'ring-data-provisional/30' };
     if (score >= 30)
-      return { bg: 'bg-orange-500', text: 'text-orange-500', ring: 'ring-orange-500/30' };
+      return { bg: 'bg-[var(--color-data-provisional)]/100', text: 'text-[var(--color-data-provisional)]', ring: 'ring-orange-500/30' };
     return { bg: 'bg-data-fail', text: 'text-data-fail', ring: 'ring-data-fail/30' };
   };
 
@@ -212,7 +212,7 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
             </span>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            <span className="px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
+            <span className="px-2 py-0.5 text-xs bg-[var(--color-accent)]/20 dark:bg-[var(--color-accent)]/30 text-[var(--color-accent)] dark:text-[var(--color-accent)] rounded-full">
               {personality.communicationStyle}
             </span>
             <span className="px-2 py-0.5 text-xs bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)] rounded-full">

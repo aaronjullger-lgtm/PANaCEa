@@ -142,7 +142,7 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
             )}
 
             {error && (
-              <p className="text-sm text-red-500" role="alert">
+              <p className="text-sm text-[var(--color-data-fail)]" role="alert">
                 {error}
               </p>
             )}

@@ -250,7 +250,7 @@ const AccessibilitySettings: React.FC = () => {
           <div
             className={`w-10 h-10 rounded-xl flex items-center justify-center ${
               isCommuterMode
-                ? 'bg-sage-500 text-white'
+                ? 'bg-[var(--color-data-neutral)] text-white'
                 : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
             }`}
           >
@@ -269,13 +269,13 @@ const AccessibilitySettings: React.FC = () => {
           type="checkbox"
           checked={isCommuterMode}
           onChange={toggleCommuterMode}
-          className="w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-sage-600 focus:ring-sage-500"
+          className="w-5 h-5 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-data-neutral)] focus:ring-[var(--color-data-neutral)]"
         />
       </label>
 
       {/* Sub-settings when enabled */}
       {isCommuterMode && (
-        <div className="space-y-2 pl-2 border-l-2 border-sage-300 dark:border-sage-700">
+        <div className="space-y-2 pl-2 border-l-2 border-[var(--color-data-neutral)]/20 dark:border-[var(--color-data-neutral)]/40">
           {/* Auto-read questions */}
           <label className="flex items-center justify-between p-2 rounded-lg hover:bg-[var(--color-bg-primary)] transition-colors cursor-pointer">
             <div className="flex items-center gap-2">
@@ -286,7 +286,7 @@ const AccessibilitySettings: React.FC = () => {
               type="checkbox"
               checked={settings.autoReadQuestions}
               onChange={() => updateSettings({ autoReadQuestions: !settings.autoReadQuestions })}
-              className="w-4 h-4 rounded border-[var(--color-text-[var(--color-text-muted)])] text-sage-600 focus:ring-sage-500"
+              className="w-4 h-4 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-data-neutral)] focus:ring-[var(--color-data-neutral)]"
             />
           </label>
 
@@ -300,7 +300,7 @@ const AccessibilitySettings: React.FC = () => {
               type="checkbox"
               checked={settings.voiceEnabled}
               onChange={() => updateSettings({ voiceEnabled: !settings.voiceEnabled })}
-              className="w-4 h-4 rounded border-[var(--color-text-[var(--color-text-muted)])] text-sage-600 focus:ring-sage-500"
+              className="w-4 h-4 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-data-neutral)] focus:ring-[var(--color-data-neutral)]"
             />
           </label>
 
@@ -314,7 +314,7 @@ const AccessibilitySettings: React.FC = () => {
               type="checkbox"
               checked={settings.highContrastMode}
               onChange={() => updateSettings({ highContrastMode: !settings.highContrastMode })}
-              className="w-4 h-4 rounded border-[var(--color-text-[var(--color-text-muted)])] text-sage-600 focus:ring-sage-500"
+              className="w-4 h-4 rounded border-[var(--color-text-[var(--color-text-muted)])] text-[var(--color-data-neutral)] focus:ring-[var(--color-data-neutral)]"
             />
           </label>
 
@@ -335,8 +335,8 @@ const AccessibilitySettings: React.FC = () => {
         </div>
       )}
 
-      <div className="mt-3 p-3 bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg">
-        <p className="text-xs text-sage-900 dark:text-sage-300">
+      <div className="mt-3 p-3 bg-[var(--color-data-neutral)]/10 dark:bg-[var(--color-data-neutral)]/20 border border-[var(--color-data-neutral)]/20 dark:border-[var(--color-data-neutral)]/40 rounded-lg">
+        <p className="text-xs text-[var(--color-data-neutral)] dark:text-[var(--color-data-neutral)]">
           Voice mode works with Main Session and Patient Encounter modes. Say "A", "B", "C", or "D"
           to select answers.
         </p>
@@ -1175,7 +1175,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD && (
-                          <TrendingUp className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                          <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
                         )}
                         <span className="text-sm font-medium text-[var(--color-text-muted)]">
                           {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD
@@ -1184,7 +1184,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         </span>
                       </div>
                       <div
-                        className={`text-xl font-bold min-h-[1.75rem] flex items-center ${!hasNoStatsData && stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-teal-700 dark:text-teal-300' : !hasNoStatsData && stats.recentTrend >= 0 ? 'text-data-pass' : !hasNoStatsData ? 'text-data-provisional' : ''}`}
+                        className={`text-xl font-bold min-h-[1.75rem] flex items-center ${!hasNoStatsData && stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-[var(--color-accent)]' : !hasNoStatsData && stats.recentTrend >= 0 ? 'text-data-pass' : !hasNoStatsData ? 'text-data-provisional' : ''}`}
                       >
                         {hasNoStatsData ? (
                           <Skeleton height={28} width={56} variant="wave" radius="md" />
@@ -1222,14 +1222,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     className={`rounded-xl p-4 text-center ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'clinical-achievement relative' : 'bg-[var(--color-bg-secondary)]'}`}
                   >
                     {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD && (
-                      <Award className="absolute top-2 right-2 w-4 h-4 text-teal-600 dark:text-teal-400" />
+                      <Award className="absolute top-2 right-2 w-4 h-4 text-[var(--color-accent)]" />
                     )}
                     <div className="flex items-center justify-center gap-1 mb-2">
                       <Zap
-                        className={`w-5 h-5 ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-teal-600 dark:text-teal-400' : 'text-teal-500'}`}
+                        className={`w-5 h-5 ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-[var(--color-accent)]' : 'text-[var(--color-accent)]'}`}
                       />
                       <span
-                        className={`text-xs font-medium ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-teal-700 dark:text-teal-300' : 'text-[var(--color-text-muted)]'}`}
+                        className={`text-xs font-medium ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}
                       >
                         {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD
                           ? 'Strong consistency'
@@ -1237,7 +1237,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       </span>
                     </div>
                     <div
-                      className={`text-3xl font-bold min-h-[2.25rem] flex items-center justify-center ${!hasNoStatsData && stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-teal-700 dark:text-teal-300' : !hasNoStatsData ? 'text-teal-600 dark:text-teal-400' : ''}`}
+                      className={`text-3xl font-bold min-h-[2.25rem] flex items-center justify-center ${!hasNoStatsData && stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-[var(--color-accent)]' : !hasNoStatsData ? 'text-[var(--color-accent)]' : ''}`}
                     >
                       {hasNoStatsData ? (
                         <Skeleton height={36} width={40} variant="wave" radius="md" />
@@ -2628,8 +2628,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     {/* Program Director Dashboard */}
                     <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
                       <div className="flex items-start gap-2">
-                        <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded">
-                          <BarChart3 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        <div className="p-1.5 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 rounded">
+                          <BarChart3 className="w-4 h-4 text-[var(--color-accent)]" />
                         </div>
                         <div className="flex-1">
                           <div className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -2678,8 +2678,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                    <p className="text-xs text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
+                  <div className="mt-3 p-3 bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/20 dark:border-[var(--color-accent)]/40 rounded-lg">
+                    <p className="text-xs text-[var(--color-accent)] dark:text-[var(--color-accent)] flex items-center gap-1.5">
                       <Building2 className="w-4 h-4" /> <strong>For Institutions:</strong> Contact
                       us to enable these features for your PA program.
                     </p>

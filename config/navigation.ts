@@ -1,4 +1,5 @@
 import { LucideIcon } from 'lucide-react';
+import { isKnownPath as checkKnownPath } from './routeRegistry';
 import {
   LayoutDashboard,
   LineChart,
@@ -143,6 +144,9 @@ export const NAV_RAIL_ITEMS: NavRailItem[] = [
 /**
  * Paths that map to app views or explicit routes. Used for 404 detection in App.tsx.
  * Add new routes here so unknown paths show the 404 page.
+ *
+ * CANONICAL_PATHS is the source of truth for all canonical app routes.
+ * Use getKnownPaths() below to include mode routes dynamically.
  */
 export const CANONICAL_PATHS: string[] = [
   '/',
@@ -159,13 +163,21 @@ export const CANONICAL_PATHS: string[] = [
   '/study/toolkit',
   '/study/path',
   '/admin',
+  '/admin/curation',
+  '/admin/refinery',
+  '/admin/taxonomies',
+  '/admin/system-mappings',
+  '/admin/question-generator',
   '/clinical-eye',
   '/visualizer',
+  '/gap-analysis',
+  '/clinical-profile',
   '/medical-database',
   '/live-collaboration',
   '/explorer',
   '/daily-challenges',
   '/core-adaptive',
+  '/session/', // Prefix: session-runner routes
 ];
 /**
  * Universal Medical Companion - Main Navigation Configuration
@@ -235,3 +247,38 @@ export const getNavigationWithIcons = (): NavigationCategory[] => {
     })),
   }));
 };
+
+/**
+ * Get all known paths in the application.
+ * SINGLE SOURCE OF TRUTH for route validation.
+ *
+ * Combines:
+ * - CANONICAL_PATHS (static app routes)
+ * - TRAINING_MODES routes (dynamic drill/mode routes)
+ *
+ * Used by useAppNavigation for 404 detection.
+ */
+export const getKnownPaths = (): string[] => {
+  // Import here to avoid circular dependency at module load time
+  // (navigation.ts is imported early, training-modes may import from navigation)
+  const { TRAINING_MODES } = require('./training-modes');
+
+  const paths = new Set<string>(CANONICAL_PATHS);
+
+  // Add all training mode routes
+  for (const mode of TRAINING_MODES) {
+    paths.add(mode.route);
+  }
+
+  return Array.from(paths);
+};
+
+/**
+ * Check if a path is a known, valid application route.
+ * Delegates to config/routeRegistry.ts for the unified validation logic.
+ *
+ * Used by useAppNavigation for 404 detection.
+ *
+ * @deprecated Use lib/constants/routes.ts or config/routeRegistry.ts instead
+ */
+export const isKnownPath = checkKnownPath;

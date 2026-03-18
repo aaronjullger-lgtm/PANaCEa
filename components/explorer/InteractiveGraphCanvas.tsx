@@ -578,13 +578,13 @@ export const InteractiveGraphCanvas: React.FC<InteractiveGraphCanvasProps> = ({
       {/* Loading overlay */}
       {(loading || isLoading) && (
         <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-overlay)] rounded-lg">
-          <div className="text-white bg-gray-800 px-4 py-2 rounded-lg">Loading graph…</div>
+          <div className="text-white bg-[var(--color-bg-secondary)] px-4 py-2 rounded-lg">Loading graph…</div>
         </div>
       )}
 
       {/* Error message */}
       {error && (
-        <div className="absolute top-4 left-4 right-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+        <div className="absolute top-4 left-4 right-4 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] px-4 py-3 rounded-lg">
           <strong>Error loading graph:</strong> {error}
         </div>
       )}

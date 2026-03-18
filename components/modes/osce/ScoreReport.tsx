@@ -312,7 +312,7 @@ const CriticalActionsList: React.FC<{ actions: CriticalAction[] }> = ({ actions 
               : action.category === 'diagnosis'
                 ? 'bg-[var(--color-category-practice)] text-[var(--color-category-practice)]'
                 : action.category === 'communication'
-                  ? 'bg-purple-100 text-purple-700'
+                  ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]'
                   : 'bg-data-neutral text-data-neutral'
           }`}
         >

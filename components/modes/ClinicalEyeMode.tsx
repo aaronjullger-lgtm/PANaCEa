@@ -336,7 +336,7 @@ export function ClinicalEyeMode({ onExit }: ClinicalEyeModeProps) {
                     className={`mt-4 p-4 rounded-lg border ${
                       feedback.correct
                         ? 'bg-data-pass/10 border-data-pass/30 text-data-pass'
-                        : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
+                        : 'bg-[var(--color-data-fail)]/100/10 border-[var(--color-data-fail)]/30 text-[var(--color-data-fail)]'
                     }`}
                   >
                     <div className="flex items-center gap-2">

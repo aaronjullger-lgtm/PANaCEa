@@ -63,7 +63,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               {user?.publicMetadata?.role === 'admin' && (
                 <Link
                   to={ROUTES.ADMIN}
-                  className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-700 hover:text-slate-900 bg-[var(--color-bg-secondary)] hover:bg-slate-100 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
+                  className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] transition-colors duration-200 shadow-sm"
                   aria-label="Admin Dashboard"
                 >
                   <Shield className="w-5 h-5" />
@@ -73,7 +73,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <motion.button
                   ref={settingsButtonRef}
                   onClick={onSettingsClick}
-                  className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-700 hover:text-slate-900 bg-[var(--color-bg-secondary)] hover:bg-slate-100 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
+                  className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] transition-colors duration-200 shadow-sm"
                   aria-label="Settings and Stats"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -86,7 +86,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 <button
                   type="button"
                   onClick={onHelpClick}
-                  className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-700 hover:text-slate-900 bg-[var(--color-bg-secondary)] hover:bg-slate-100 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-tertiary)] dark:hover:text-[var(--color-text-primary)] border border-[var(--color-border)] dark:border-transparent dark:hover:border-[var(--color-border)] transition-colors duration-200 shadow-sm"
+                  className="p-2.5 rounded-xl min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] transition-colors duration-200 shadow-sm"
                   aria-label="Help and getting started"
                 >
                   <HelpCircle className="w-5 h-5" />

@@ -52,9 +52,9 @@ export const ContentFieldRenderer: React.FC<ContentFieldRendererProps> = ({
             <div
               className={`prose prose-sm dark:prose-invert max-w-none animate-pulse ${className}`}
             >
-              <div className="h-4 bg-data-neutral/50 rounded w-full mb-2" />
-              <div className="h-4 bg-data-neutral/50 rounded w-5/6 mb-2" />
-              <div className="h-4 bg-data-neutral/50 rounded w-4/6" />
+              <div className="h-4 bg-[var(--color-data-neutral)]/50 rounded w-full mb-2" />
+              <div className="h-4 bg-[var(--color-data-neutral)]/50 rounded w-5/6 mb-2" />
+              <div className="h-4 bg-[var(--color-data-neutral)]/50 rounded w-4/6" />
             </div>
           }
         >
@@ -152,7 +152,7 @@ export const ClassicTriadRenderer: React.FC<{
   if (items.length === 0) return null;
 
   return (
-    <div className={`bg-amber-950/20 border border-amber-800/30 rounded-xl p-4 ${className}`}>
+    <div className={`bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/30 rounded-xl p-4 ${className}`}>
       <div className="flex items-center gap-2 mb-3">
         <span className="text-data-provisional font-semibold">Classic Triad</span>
         <span className="text-xs text-data-provisional/70">({items.length} features)</span>

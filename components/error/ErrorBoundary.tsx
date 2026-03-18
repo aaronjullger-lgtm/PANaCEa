@@ -148,9 +148,9 @@ function getAiErrorIcon(type: GeminiErrorInfo['type']) {
   switch (type) {
     case 'rate_limit':
     case 'timeout':
-      return <Clock className="w-10 h-10 text-yellow-500" />;
+      return <Clock className="w-10 h-10 text-[var(--color-data-provisional)]" />;
     case 'network':
-      return <Wifi className="w-10 h-10 text-orange-500" />;
+      return <Wifi className="w-10 h-10 text-[var(--color-accent)]" />;
     case 'server_error':
       return <Server className="w-10 h-10 text-[var(--color-data-fail)]" />;
     default:

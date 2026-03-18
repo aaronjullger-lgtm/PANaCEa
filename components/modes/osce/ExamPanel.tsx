@@ -174,7 +174,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                 <span className="text-data-neutral">Normal</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded bg-orange-500" />
+                <div className="w-3 h-3 rounded bg-[var(--color-data-provisional)]/100" />
                 <span className="text-data-neutral">Abnormal</span>
               </div>
             </div>
@@ -209,7 +209,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                         className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition ${
                           isCompleted
                             ? finding?.isAbnormal
-                              ? 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800'
+                              ? 'bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/20 dark:border-[var(--color-data-provisional)]'
                               : 'bg-data-pass dark:bg-data-pass/20 border border-data-pass dark:border-data-pass'
                             : 'bg-data-neutral dark:bg-data-neutral/50 hover:bg-data-neutral dark:hover:bg-data-neutral border border-data-neutral dark:border-data-neutral'
                         }`}
@@ -218,7 +218,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                           className={`${
                             isCompleted
                               ? finding?.isAbnormal
-                                ? 'text-orange-500'
+                                ? 'text-[var(--color-data-provisional)]'
                                 : 'text-data-pass'
                               : 'text-data-neutral'
                           }`}
@@ -230,7 +230,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                             className={`text-sm font-medium ${
                               isCompleted
                                 ? finding?.isAbnormal
-                                  ? 'text-orange-700 dark:text-orange-300'
+                                  ? 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]'
                                   : 'text-data-pass dark:text-data-pass'
                                 : 'text-data-neutral dark:text-data-neutral'
                             }`}
@@ -241,7 +241,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                             <div
                               className={`text-xs mt-0.5 truncate ${
                                 finding.isAbnormal
-                                  ? 'text-orange-600 dark:text-orange-400'
+                                  ? 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]'
                                   : 'text-data-pass dark:text-data-pass'
                               }`}
                             >
@@ -252,7 +252,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
                         {isCompleted ? (
                           <Check
                             className={`w-4 h-4 ${
-                              finding?.isAbnormal ? 'text-orange-500' : 'text-data-pass'
+                              finding?.isAbnormal ? 'text-[var(--color-data-provisional)]' : 'text-data-pass'
                             }`}
                           />
                         ) : (
@@ -282,7 +282,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               className={`absolute bottom-4 left-4 right-4 p-3 rounded-lg shadow-lg ${
-                recentFinding.isAbnormal ? 'bg-orange-500 text-white' : 'bg-data-pass text-white'
+                recentFinding.isAbnormal ? 'bg-[var(--color-data-provisional)]/100 text-white' : 'bg-data-pass text-white'
               }`}
             >
               <div className="flex items-start gap-2">
@@ -322,7 +322,7 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
               <span className="text-data-pass">
                 {completedExams.filter((e) => !e.isAbnormal).length} normal
               </span>
-              <span className="text-orange-500">
+              <span className="text-[var(--color-data-provisional)]">
                 {completedExams.filter((e) => e.isAbnormal).length} abnormal
               </span>
             </div>

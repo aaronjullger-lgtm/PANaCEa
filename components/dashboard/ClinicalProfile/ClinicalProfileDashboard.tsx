@@ -22,11 +22,11 @@ const ClinicalProfileDashboard: React.FC = () => {
 
   if (error || !data) {
     return (
-      <div className="rounded-xl border border-rose-200 bg-rose-50 text-rose-700 p-4 flex items-center justify-between">
+      <div className="rounded-xl border border-[var(--color-data-fail)]/20 bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)] p-4 flex items-center justify-between">
         <span>{error || 'Unable to load profile'}</span>
         <button
           onClick={refetch}
-          className="px-3 py-1.5 text-sm font-medium bg-rose-600 text-white rounded-lg shadow hover:bg-rose-700"
+          className="px-3 py-1.5 text-sm font-medium bg-[var(--color-data-fail)] text-white rounded-lg shadow hover:bg-[var(--color-data-fail)]"
         >
           Retry
         </button>

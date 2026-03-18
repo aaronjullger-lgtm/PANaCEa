@@ -33,13 +33,13 @@ export function SafeChart({
 
   if (validData.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 bg-slate-900/50 border border-slate-800 rounded-lg">
-        <TrendingUp className="w-12 h-12 text-slate-700 mb-3" />
-        <p className="text-slate-400 text-sm mb-4">{emptyMessage}</p>
+      <div className="flex flex-col items-center justify-center h-64 bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-lg">
+        <TrendingUp className="w-12 h-12 text-[var(--color-text-muted)] mb-3" />
+        <p className="text-[var(--color-text-muted)] text-sm mb-4">{emptyMessage}</p>
         {onStartSession && (
           <button
             onClick={onStartSession}
-            className="px-4 py-2 bg-slate-100 text-slate-900 rounded-lg font-medium hover:bg-slate-200 transition"
+            className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg font-medium hover:bg-[var(--color-accent)]/80 transition"
           >
             Start First Session
           </button>

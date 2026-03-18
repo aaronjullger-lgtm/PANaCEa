@@ -310,7 +310,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                         currentCase.abg.pH < 7.35
                           ? 'text-data-fail dark:text-data-fail'
                           : currentCase.abg.pH > 7.45
-                            ? 'text-orange-600 dark:text-orange-400'
+                            ? 'text-[var(--color-data-provisional)]'
                             : 'text-data-pass dark:text-data-pass'
                       }`}
                     >
@@ -322,7 +322,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                     <span
                       className={`text-sm font-semibold ${
                         currentCase.abg.paCO2 < 35
-                          ? 'text-orange-600 dark:text-orange-400'
+                          ? 'text-[var(--color-data-provisional)]'
                           : currentCase.abg.paCO2 > 45
                             ? 'text-data-fail dark:text-data-fail'
                             : 'text-data-pass dark:text-data-pass'
@@ -338,7 +338,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                         currentCase.abg.paO2 < 60
                           ? 'text-data-fail dark:text-data-fail'
                           : currentCase.abg.paO2 < 80
-                            ? 'text-orange-600 dark:text-orange-400'
+                            ? 'text-[var(--color-data-provisional)]'
                             : 'text-data-pass dark:text-data-pass'
                       }`}
                     >
@@ -358,7 +358,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
                         currentCase.abg.sao2 < 90
                           ? 'text-data-fail dark:text-data-fail'
                           : currentCase.abg.sao2 < 95
-                            ? 'text-orange-600 dark:text-orange-400'
+                            ? 'text-[var(--color-data-provisional)]'
                             : 'text-data-pass dark:text-data-pass'
                       }`}
                     >

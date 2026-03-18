@@ -357,7 +357,7 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
       case 'moderate':
         return 'text-data-provisional';
       case 'minor':
-        return 'text-yellow-500';
+        return 'text-[var(--color-data-provisional)]';
     }
   };
 

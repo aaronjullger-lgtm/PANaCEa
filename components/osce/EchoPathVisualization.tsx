@@ -68,7 +68,7 @@ export function EchoPathVisualization({ echoPath, className = '' }: EchoPathVisu
                   isOptimal
                     ? 'border-data-pass/30 bg-data-pass/5'
                     : isRabbitHole
-                      ? 'border-rose-500/30 bg-rose-500/5'
+                      ? 'border-[var(--color-data-fail)]/30 bg-[var(--color-data-fail)]/5'
                       : 'border-[var(--color-border)] bg-[var(--color-bg-tertiary)]'
                 }`}
                 style={{ marginLeft: `${level * 24}px` }}

@@ -23,6 +23,8 @@ import {
   Sparkles,
   MoreHorizontal,
   RotateCcw,
+  AlertCircle,
+  X,
 } from 'lucide-react';
 import { StorageKeys } from '@/lib/storage/storageRegistry';
 import type { PerformanceRecord, Question, SessionSettings, SystemCode } from '@/types';
@@ -35,6 +37,7 @@ import { TO_REVIEW_LABEL } from '@/config/labels';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useRolling360Stats } from '@/hooks/useRolling360Stats';
 import { useUnifiedStats } from '@/hooks/useUnifiedStats';
+import { useUserStats } from '@/hooks/useUserStats';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { calculateDayStreak } from '@/lib/dashboardUtils';
 import { QuickStatsBarSkeleton } from '@/components/loading';
@@ -314,6 +317,10 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   const { showPANREContent, careerStage } = useUserContext();
   const { stats: rolling360Stats } = useRolling360Stats();
   const { stats: unifiedStats, isLoading: unifiedStatsLoading } = useUnifiedStats();
+  const { syncError } = useUserStats();
+
+  // Track which sync errors have been dismissed by the user
+  const [dismissedSyncError, setDismissedSyncError] = useState<string | null>(null);
 
   // Quick Wins: Last session and welcome back state
   const [lastSession] = useState<LastSessionData | null>(() => getLastSession());
@@ -606,7 +613,35 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           </motion.div>
         )}
 
-        {/* Header */}
+        {/* Sync Error Banner */}
+        {syncError && dismissedSyncError !== syncError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-4 flex items-start gap-3 p-4 rounded-lg border border-data-provisional/50 bg-data-provisional/10"
+          >
+            <AlertCircle className="w-5 h-5 flex-shrink-0 text-data-provisional mt-0.5" />
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
+                Sync Error
+              </h3>
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                {syncError}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDismissedSyncError(syncError)}
+              className="flex-shrink-0 p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors rounded-md hover:bg-[var(--color-bg-tertiary)]"
+              aria-label="Dismiss error"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+
+        {/* Header with Status Chips */}
         <motion.div
           initial={sectionEnter}
           animate={sectionAnimate}
@@ -616,7 +651,42 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] truncate max-w-full">
             {greeting}, {user?.firstName || 'Student'}
           </h1>
-          <p className="text-[var(--color-text-muted)] mt-1">
+
+          {/* Status chips row */}
+          <div className="flex flex-wrap gap-2 mt-3">
+            {/* Due Count Chip */}
+            {(propDueCount ?? 0) > 0 && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-data-fail/10 border border-data-fail/30 text-sm font-medium">
+                <span className="text-data-fail">{propDueCount}</span>
+                <span className="text-[var(--color-text-secondary)]">due</span>
+              </div>
+            )}
+
+            {/* Flagged Count Chip */}
+            {flaggedQuestions.length > 0 && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-data-provisional/10 border border-data-provisional/30 text-sm font-medium">
+                <span className="text-data-provisional">{flaggedQuestions.length}</span>
+                <span className="text-[var(--color-text-secondary)]">flagged</span>
+              </div>
+            )}
+
+            {/* Growth Areas Chips */}
+            {growthAreas.length > 0 && (
+              <>
+                <span className="text-[var(--color-text-muted)] text-sm font-medium">Focus on:</span>
+                {growthAreas.slice(0, 3).map((area) => (
+                  <div
+                    key={area}
+                    className="inline-flex items-center px-3 py-1.5 rounded-full bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 text-sm font-medium text-[var(--color-accent)]"
+                  >
+                    {area}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+
+          <p className="text-[var(--color-text-muted)] mt-3">
             Ready to advance your clinical knowledge?
           </p>
         </motion.div>
@@ -684,6 +754,45 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               onResume={handleResumeLastSession}
               onDismiss={handleDismissWelcomeBack}
             />
+          </motion.div>
+        )}
+
+        {/* Daily Challenge Card - Grand Rounds once-daily challenge */}
+        {!hasActiveSession && (
+          <motion.div
+            initial={sectionEnter}
+            animate={sectionAnimate}
+            transition={sectionTransition(0)}
+            className="mb-6"
+          >
+            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 md:p-5 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h2 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
+                      <Trophy className="w-5 h-5 text-[var(--color-accent)]" aria-hidden />
+                      Daily Challenge
+                    </h2>
+                    {performanceData.length > 0 && performanceData[performanceData.length - 1].timestamp >= Date.now() - 86400000 && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-data-success/20 text-data-success">
+                        Completed today
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[var(--color-text-secondary)] text-sm">
+                    Try today&apos;s Grand Rounds challenge to expand your clinical knowledge.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onNavigateToDrillMode('grand_rounds')}
+                  className="shrink-0 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-primary)] min-h-[44px]"
+                >
+                  <Play className="w-4 h-4" aria-hidden />
+                  {performanceData.length > 0 && performanceData[performanceData.length - 1].timestamp >= Date.now() - 86400000 ? 'View Results' : 'Start Challenge'}
+                </button>
+              </div>
+            </div>
           </motion.div>
         )}
 

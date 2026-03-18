@@ -1439,18 +1439,46 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
     if (shouldEndlesslyReplenish) {
       // If we've already exceeded max attempts, show error
       if (replenishAttempts >= MAX_REPLENISH_ATTEMPTS) {
+        // Determine the error type based on session settings
+        const isDueMode = sessionSettings.mode === 'due';
+        const isVariantMode = sessionSettings.mode === 'variant';
+
+        let errorTitle = 'Unable to Load Questions';
+        let errorMessage = replenishmentError || 'The question service is currently unavailable. Please try again later.';
+        let secondaryActionLabel = 'Retry';
+
+        if (isDueMode) {
+          errorTitle = 'No Questions Due';
+          errorMessage = 'Great job! You\'ve completed all your due questions. Come back when more questions are ready for review, or explore other study modes to continue learning.';
+          secondaryActionLabel = 'Explore Other Modes';
+        } else if (isVariantMode) {
+          errorTitle = 'No Variant Questions Available';
+          errorMessage = 'You\'ve completed all available variants for this topic. Try another topic or mode to continue your practice session.';
+          secondaryActionLabel = 'Try Another Mode';
+        }
+
         return (
           <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
-            <h2 className="text-2xl font-bold mb-2">Unable to Load Questions</h2>
-            <p className="text-[var(--color-text-secondary)]">
-              {replenishmentError || 'The question service is currently unavailable. Please try again later.'}
+            <h2 className="text-2xl font-bold mb-2">{errorTitle}</h2>
+            <p className="text-[var(--color-text-secondary)] max-w-md">
+              {errorMessage}
             </p>
-            <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
+            <div className="flex flex-col sm:flex-row gap-2 justify-center mt-4">
               <button type="button" onClick={onShowMenu} className="btn-glass px-6 py-2">
-                Back to Dashboard
+                {isDueMode || isVariantMode ? 'Back to Practice' : 'Back to Dashboard'}
               </button>
-              <button type="button" onClick={() => setReplenishAttempts(0)} className="btn-secondary px-6 py-2">
-                Retry
+              <button
+                type="button"
+                onClick={() => {
+                  if (isDueMode || isVariantMode) {
+                    onShowMenu();
+                  } else {
+                    setReplenishAttempts(0);
+                  }
+                }}
+                className="btn-secondary px-6 py-2"
+              >
+                {secondaryActionLabel}
               </button>
             </div>
           </div>

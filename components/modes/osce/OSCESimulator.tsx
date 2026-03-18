@@ -302,11 +302,11 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
               <div className="flex items-center gap-3">
                 <button
                   onClick={toggleListening}
-                  className={`p-3 rounded-full ${isListening ? 'bg-red-500/20' : 'bg-[var(--color-accent)]/20'}`}
+                  className={`p-3 rounded-full ${isListening ? 'bg-[var(--color-data-fail)]/20' : 'bg-[var(--color-accent)]/20'}`}
                   disabled={!speechRecognitionSupported}
                 >
                   {isListening ? (
-                    <MicOff className="w-5 h-5 text-red-500" />
+                    <MicOff className="w-5 h-5 text-[var(--color-data-fail)]" />
                   ) : (
                     <Mic className="w-5 h-5 text-[var(--color-accent)]" />
                   )}

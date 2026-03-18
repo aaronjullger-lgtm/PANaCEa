@@ -127,7 +127,7 @@ export const QuickQuizButton: React.FC<QuickQuizButtonProps> = ({
               }}
               className="w-full px-3 py-2 text-left hover:bg-[var(--color-bg-secondary)]/80 flex items-center gap-2 transition-colors"
             >
-              <Brain className="w-3.5 h-3.5 text-purple-400" />
+              <Brain className="w-3.5 h-3.5 text-[var(--color-accent)]" />
               <div>
                 <p className="text-xs font-medium text-[var(--color-text-primary)]">Deep Dive</p>
                 <p className="text-[10px] text-[var(--color-text-muted)]">Clinical scenarios</p>

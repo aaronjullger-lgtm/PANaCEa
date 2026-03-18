@@ -219,7 +219,7 @@ export function LectureConverter({
       </div>
 
       {status === 'error' && errorMessage && (
-        <div className="rounded-lg border border-rose-500/40 bg-rose-500/5 px-3 py-2 text-sm text-rose-400">
+        <div className="rounded-lg border border-[var(--color-data-fail)]/40 bg-[var(--color-data-fail)]/5 px-3 py-2 text-sm text-[var(--color-data-fail)]">
           {errorMessage}
         </div>
       )}

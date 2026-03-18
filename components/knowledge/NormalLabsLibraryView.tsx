@@ -108,7 +108,7 @@ export const NormalLabsLibraryView: React.FC = () => {
       {/* Content */}
       {labs.length === 0 ? (
         <p className="text-sm text-[var(--color-text-muted)] py-12 text-center">
-          No normal lab values found. Run the seed script to populate reference data.
+          No normal lab values available for this category. Try selecting a different category or check back later.
         </p>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
@@ -143,7 +143,7 @@ export const NormalLabsLibraryView: React.FC = () => {
                 </p>
               )}
               {entry.commonCauses && entry.commonCauses.length > 0 && (
-                <p className="mt-1 text-xs text-slate-400">{entry.commonCauses.slice(0, 3).join('; ')}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{entry.commonCauses.slice(0, 3).join('; ')}</p>
               )}
             </li>
           ))}

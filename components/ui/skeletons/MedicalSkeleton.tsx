@@ -49,7 +49,7 @@ export const SkeletonText: React.FC<{
  * Question card skeleton - matches question display dimensions
  */
 export const QuestionCardSkeleton: React.FC<SkeletonProps> = ({ className = '' }) => (
-  <div className={`p-6 border border-slate-700 rounded-xl bg-slate-900/50 ${className}`}>
+  <div className={`p-6 border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-secondary)] ${className}`}>
     {/* Question stem */}
     <div className="space-y-2 mb-6">
       <SkeletonBase className="h-5 w-3/4" />
@@ -58,14 +58,14 @@ export const QuestionCardSkeleton: React.FC<SkeletonProps> = ({ className = '' }
     </div>
 
     {/* Divider */}
-    <div className="h-px bg-data-neutral my-4" />
+    <div className="h-px bg-[var(--color-data-neutral)] my-4" />
 
     {/* Answer choices */}
     <div className="space-y-3">
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="flex items-center gap-3 p-4 border border-data-neutral rounded-lg bg-data-neutral/30"
+          className="flex items-center gap-3 p-4 border border-[var(--color-data-neutral)] rounded-lg bg-[var(--color-data-neutral)]/30"
         >
           <SkeletonBase className="w-8 h-8 rounded-full flex-shrink-0" />
           <SkeletonBase className="h-4 flex-1" style={{ width: `${60 + (i % 3) * 10}%` }} />
@@ -79,7 +79,7 @@ export const QuestionCardSkeleton: React.FC<SkeletonProps> = ({ className = '' }
  * Condition card skeleton - matches library condition card dimensions
  */
 export const ConditionCardSkeleton: React.FC<SkeletonProps> = ({ className = '' }) => (
-  <div className={`p-4 border border-slate-700 rounded-xl bg-slate-900/50 ${className}`}>
+  <div className={`p-4 border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-secondary)] ${className}`}>
     {/* Header with title and yield badge */}
     <div className="flex items-start justify-between gap-2 mb-3">
       <SkeletonBase className="h-6 w-2/3" />
@@ -90,7 +90,7 @@ export const ConditionCardSkeleton: React.FC<SkeletonProps> = ({ className = '' 
     <SkeletonBase className="h-3 w-1/3 mb-3" />
 
     {/* Divider */}
-    <div className="h-px bg-data-neutral my-3" />
+    <div className="h-px bg-[var(--color-data-neutral)] my-3" />
 
     {/* Classic patient snippet */}
     <div className="flex items-start gap-2 mb-3">
@@ -138,7 +138,7 @@ export const DetailPanelSkeleton: React.FC<SkeletonProps> = ({ className = '' })
         </div>
 
         {/* Section content */}
-        <div className="p-4 border border-data-neutral rounded-xl bg-data-neutral/30">
+        <div className="p-4 border border-[var(--color-data-neutral)] rounded-xl bg-[var(--color-data-neutral)]/30">
           <SkeletonText lines={4} widths={['100%', '90%', '95%', '70%']} />
         </div>
       </div>
@@ -150,7 +150,7 @@ export const DetailPanelSkeleton: React.FC<SkeletonProps> = ({ className = '' })
  * Feedback panel skeleton - matches expanded feedback panel
  */
 export const FeedbackPanelSkeleton: React.FC<SkeletonProps> = ({ className = '' }) => (
-  <div className={`p-6 border border-slate-700 rounded-xl bg-slate-900/50 ${className}`}>
+  <div className={`p-6 border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-secondary)] ${className}`}>
     {/* Result badge */}
     <div className="flex items-center justify-center mb-4">
       <SkeletonBase className="h-12 w-40 rounded-full" />
@@ -181,7 +181,7 @@ export const FeedbackPanelSkeleton: React.FC<SkeletonProps> = ({ className = '' 
  * Drill hub skeleton - matches diagnostic drill hub layout
  */
 export const DrillHubSkeleton: React.FC<SkeletonProps> = ({ className = '' }) => (
-  <div className={`min-h-screen bg-slate-950 p-6 ${className}`}>
+  <div className={`min-h-screen bg-[var(--color-bg-primary)] p-6 ${className}`}>
     {/* Header */}
     <div className="flex items-center justify-between mb-6">
       <div>
@@ -215,7 +215,7 @@ export const AnalyticsSkeleton: React.FC<SkeletonProps> = ({ className = '' }) =
     {/* Stats row */}
     <div className="grid grid-cols-4 gap-4 mb-6">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="p-4 border border-data-neutral rounded-xl bg-data-neutral/50">
+        <div key={i} className="p-4 border border-[var(--color-data-neutral)] rounded-xl bg-[var(--color-data-neutral)]/50">
           <SkeletonBase className="h-4 w-20 mb-2" />
           <SkeletonBase className="h-8 w-16" />
         </div>
@@ -223,18 +223,18 @@ export const AnalyticsSkeleton: React.FC<SkeletonProps> = ({ className = '' }) =
     </div>
 
     {/* Chart area */}
-    <div className="p-4 border border-data-neutral rounded-xl bg-data-neutral/50 mb-6">
+    <div className="p-4 border border-[var(--color-data-neutral)] rounded-xl bg-[var(--color-data-neutral)]/50 mb-6">
       <SkeletonBase className="h-4 w-32 mb-4" />
       <SkeletonBase className="h-64 w-full" />
     </div>
 
     {/* Performance grid */}
     <div className="grid grid-cols-2 gap-4">
-      <div className="p-4 border border-data-neutral rounded-xl bg-data-neutral/50">
+      <div className="p-4 border border-[var(--color-data-neutral)] rounded-xl bg-[var(--color-data-neutral)]/50">
         <SkeletonBase className="h-4 w-32 mb-4" />
         <SkeletonText lines={6} />
       </div>
-      <div className="p-4 border border-data-neutral rounded-xl bg-data-neutral/50">
+      <div className="p-4 border border-[var(--color-data-neutral)] rounded-xl bg-[var(--color-data-neutral)]/50">
         <SkeletonBase className="h-4 w-32 mb-4" />
         <SkeletonText lines={6} />
       </div>
@@ -252,7 +252,7 @@ export const SessionSetupSkeleton: React.FC<SkeletonProps> = ({ className = '' }
     {/* Options grid */}
     <div className="grid grid-cols-3 gap-4 mb-6">
       {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="p-4 border border-data-neutral rounded-xl bg-data-neutral/50">
+        <div key={i} className="p-4 border border-[var(--color-data-neutral)] rounded-xl bg-[var(--color-data-neutral)]/50">
           <SkeletonBase className="w-8 h-8 rounded-lg mb-2" />
           <SkeletonBase className="h-4 w-20 mb-1" />
           <SkeletonBase className="h-3 w-full" />
@@ -269,7 +269,7 @@ export const SessionSetupSkeleton: React.FC<SkeletonProps> = ({ className = '' }
  * Library sidebar skeleton
  */
 export const SidebarSkeleton: React.FC<SkeletonProps> = ({ className = '' }) => (
-  <div className={`w-64 p-4 border-r border-slate-700 bg-slate-900/50 ${className}`}>
+  <div className={`w-64 p-4 border-r border-[var(--color-border)] bg-[var(--color-bg-secondary)] ${className}`}>
     {/* Search */}
     <SkeletonBase className="h-10 w-full rounded-lg mb-4" />
 

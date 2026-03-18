@@ -350,7 +350,7 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
           )}
           <button
             className="w-full p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] 
-            hover:border-indigo-400 transition-colors text-left"
+            hover:border-[var(--color-accent)] transition-colors text-left"
           >
             <div className="flex items-center gap-3">
               <Bell className="w-5 h-5 text-[var(--color-accent)]" />

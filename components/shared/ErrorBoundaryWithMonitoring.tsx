@@ -61,7 +61,7 @@ export class ErrorBoundaryWithMonitoring extends Component<Props, State> {
       return (
         <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)] p-4">
           <div className="max-w-md w-full bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-6 text-center">
-            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <AlertTriangle className="w-12 h-12 text-[var(--color-data-fail)] mx-auto mb-4" />
             <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
               Something went wrong
             </h2>

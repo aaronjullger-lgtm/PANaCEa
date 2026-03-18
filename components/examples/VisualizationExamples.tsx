@@ -277,7 +277,7 @@ export const StatisticsTab = ({
               Recent Form
             </span>
             <span
-              className={`text-xl font-bold ${recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}
+              className={`text-xl font-bold ${recentTrend >= 0 ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'}`}
             >
               {recentTrend >= 0 ? '+' : ''}
               {recentTrend}%
@@ -300,7 +300,7 @@ export const StatisticsTab = ({
           <span className="text-sm font-medium text-[var(--color-text-secondary)]  block mb-2">
             Active Streak
           </span>
-          <div className="text-4xl font-bold text-orange-500">{currentStreak}</div>
+          <div className="text-4xl font-bold text-[var(--color-data-provisional)]">{currentStreak}</div>
           <span className="text-xs text-[var(--color-text-muted)]">questions in a row</span>
         </div>
 
@@ -352,7 +352,7 @@ export const MobileStatsCard = ({
 
       {/* Trend Badge */}
       <div className="text-center text-xs">
-        <span className={`font-medium ${trend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+        <span className={`font-medium ${trend >= 0 ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}>
           {trend >= 0 ? '↗' : '↘'} {Math.abs(trend)}% vs last week
         </span>
       </div>

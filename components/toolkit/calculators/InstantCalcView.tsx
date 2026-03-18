@@ -110,7 +110,7 @@ export const InstantCalcView: React.FC<InstantCalcViewProps> = ({ onBack }) => {
               Generate
             </button>
           </div>
-          {error && <p className="mt-2 text-sm text-red-500" role="alert">{error}</p>}
+          {error && <p className="mt-2 text-sm text-[var(--color-data-fail)]" role="alert">{error}</p>}
           {unavailable && (
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">
               Use the calculators below from the list.

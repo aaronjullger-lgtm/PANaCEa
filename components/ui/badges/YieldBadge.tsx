@@ -156,7 +156,7 @@ export const YieldStars: React.FC<{
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
           key={i}
-          className={`w-3 h-3 ${i < stars ? colorClass : 'text-slate-700'} ${i < stars ? 'fill-current' : ''}`}
+          className={`w-3 h-3 ${i < stars ? colorClass : 'text-[var(--color-text-muted)]'} ${i < stars ? 'fill-current' : ''}`}
         />
       ))}
     </div>

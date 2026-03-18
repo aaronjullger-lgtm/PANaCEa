@@ -315,7 +315,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
       case 'online':
         return 'bg-data-pass';
       case 'away':
-        return 'bg-yellow-500';
+        return 'bg-[var(--color-data-provisional)]';
       case 'busy':
         return 'bg-data-fail';
       case 'offline':
@@ -352,7 +352,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
         <div className="flex items-center gap-3">
-          <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+          <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]'}`} />
           <h2 className="text-lg font-semibold text-[var(--color-accent)]">
             Live Study Session
           </h2>
@@ -410,7 +410,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
             <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[var(--color-text-muted)]">Streak</span>
-                <Zap className="w-4 h-4 text-yellow-500" />
+                <Zap className="w-4 h-4 text-[var(--color-data-provisional)]" />
               </div>
               <div className="text-2xl font-bold text-[var(--color-accent)] mt-2">
                 {sessionStats.currentStreak}
@@ -713,7 +713,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center ${
                             entry.rank <= 3
-                              ? 'bg-yellow-500/20 text-yellow-600'
+                              ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
                               : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                           }`}
                         >

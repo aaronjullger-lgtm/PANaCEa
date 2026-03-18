@@ -144,7 +144,7 @@ export function PastMistakesSection({ conditionId, getToken }: PastMistakesSecti
                     <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
                       Your answer
                     </span>
-                    <p className="text-sm font-medium text-[var(--color-data-fail)] bg-[var(--color-bg-tertiary)]/50 rounded-lg px-3 py-2 mt-1 border border-slate-700/30">
+                    <p className="text-sm font-medium text-[var(--color-data-fail)] bg-[var(--color-bg-tertiary)]/50 rounded-lg px-3 py-2 mt-1 border border-[var(--color-border)]/30">
                       {item.userAnswer}
                     </p>
                   </div>

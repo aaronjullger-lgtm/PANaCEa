@@ -65,7 +65,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
       case 'good':
         return 'text-[var(--color-category-practice)] text-[var(--color-category-practice)]';
       case 'declining':
-        return 'text-yellow-600 dark:text-yellow-400';
+        return 'text-[var(--color-data-provisional)]';
       case 'critical':
         return 'text-data-fail dark:text-data-fail';
       default:
@@ -99,7 +99,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
   return (
     <div className="space-y-6">
       {/* Header Stats */}
-      <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6">
+      <div className="bg-gradient-to-br from-[var(--color-accent)]/5 to-[var(--color-accent)]/10 dark:from-[var(--color-accent)]/20 dark:to-[var(--color-accent)]/20 rounded-xl p-6">
         <div className="flex items-start justify-between mb-4">
           <div>
             <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
@@ -134,7 +134,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
           </div>
           <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
             <div className="text-sm text-[var(--color-text-secondary)] mb-1">Decay Rate</div>
-            <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+            <div className="text-3xl font-bold text-[var(--color-data-provisional)]">
               {proficiencyData.decayRate}%/wk
             </div>
           </div>
@@ -276,7 +276,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white"
+        className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]/80 rounded-xl p-6 text-white"
       >
         <h4 className="text-lg font-bold mb-2 flex items-center gap-2">
           <BarChart2 className="w-5 h-5" /> Recommendation

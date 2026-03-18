@@ -34,19 +34,19 @@ const variantStyles: Record<CardVariant, { bg: string; border: string; glow: str
     glow: 'bg-[var(--color-accent)]/10',
   },
   success: {
-    bg: 'bg-gradient-to-br from-sage-500/10 via-sage-400/5 to-sage-600/10',
-    border: 'border-sage-500/20 hover:border-sage-500/40',
-    glow: 'bg-sage-500/10',
+    bg: 'bg-gradient-to-br from-[var(--color-data-pass)]/10 via-[var(--color-data-pass)]/5 to-[var(--color-data-pass)]/10',
+    border: 'border-[var(--color-data-pass)]/20 hover:border-[var(--color-data-pass)]/40',
+    glow: 'bg-[var(--color-data-pass)]/10',
   },
   warning: {
-    bg: 'bg-gradient-to-br from-muted-amber/10 via-muted-amber/5 to-muted-amber/10',
-    border: 'border-muted-amber/20 hover:border-muted-amber/40',
-    glow: 'bg-muted-amber/10',
+    bg: 'bg-gradient-to-br from-[var(--color-data-provisional)]/10 via-[var(--color-data-provisional)]/5 to-[var(--color-data-provisional)]/10',
+    border: 'border-[var(--color-data-provisional)]/20 hover:border-[var(--color-data-provisional)]/40',
+    glow: 'bg-[var(--color-data-provisional)]/10',
   },
   info: {
-    bg: 'bg-gradient-to-br from-steel-blue-400/10 via-steel-blue-500/5 to-[var(--color-accent)]/10',
-    border: 'border-steel-blue-400/20 hover:border-steel-blue-400/40',
-    glow: 'bg-steel-blue-400/10',
+    bg: 'bg-gradient-to-br from-[var(--color-accent)]/10 via-[var(--color-accent)]/5 to-[var(--color-accent)]/10',
+    border: 'border-[var(--color-accent)]/20 hover:border-[var(--color-accent)]/40',
+    glow: 'bg-[var(--color-accent)]/10',
   },
   neutral: {
     bg: 'bg-[var(--color-bg-secondary)]',

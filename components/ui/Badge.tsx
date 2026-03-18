@@ -20,7 +20,7 @@ const VARIANT_CLASSES: Record<
   category:
     'bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-[var(--color-accent)]/30',
   mechanism:
-    'bg-sage-500/15 text-sage-400 dark:text-sage-300 border-sage-500/30',
+    'bg-[var(--color-data-neutral)]/15 text-[var(--color-data-neutral)] dark:text-[var(--color-data-neutral)] border-[var(--color-data-neutral)]/30',
   muted:
     'bg-[var(--color-bg-secondary)]/50 text-[var(--color-text-muted)] border-transparent',
 };

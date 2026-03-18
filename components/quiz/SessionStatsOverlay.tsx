@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import {
   getSessionSummary,
-  calculateDistributionDrift,
   normalizeSystemCode,
   PANCE_SYSTEM_PERCENTAGES,
 } from '@/services/domain';
@@ -118,7 +117,30 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
 
   if (!isVisible) return null;
 
-  const drifts = calculateDistributionDrift();
+  // Calculate drifts based on current performanceData to avoid stale closure
+  // This ensures CV count and distribution always reflects what's shown in systemBars
+  const drifts = useMemo(() => {
+    const allSystems = Object.keys(PANCE_SYSTEM_PERCENTAGES);
+    const total = performanceData.length;
+    
+    if (total < 5) return [];
+    
+    return allSystems.map((system) => {
+      const count = systemBars.find(b => b.system === system)?.count || 0;
+      const actualPercent = total > 0 ? (count / total) * 100 : 0;
+      const targetPercent = PANCE_SYSTEM_PERCENTAGES[system] || 0;
+      const driftPercent = actualPercent - targetPercent;
+      
+      return {
+        system,
+        expected: targetPercent,
+        actual: Math.round(actualPercent * 10) / 10,
+        driftPercent: Math.round(driftPercent * 10) / 10,
+        needsCorrection: Math.abs(driftPercent) > 5,
+      };
+    }).sort((a, b) => a.driftPercent - b.driftPercent);
+  }, [performanceData, systemBars]);
+  
   const needsCorrection = drifts.filter((d) => d.needsCorrection);
 
   return (
@@ -239,7 +261,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs text-action-muted">
                     <span>System Distribution</span>
-                    <span>Score: {summary.distributionScore}/100</span>
+                    <span>Accuracy: {performanceData.filter((p) => p.correct).length}/{performanceData.length}</span>
                   </div>
 
                   <div className="space-y-1">

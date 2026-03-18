@@ -7,12 +7,13 @@
 import React from 'react';
 import { CommuterMode } from '@/config/lazyComponents';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/config/routes';
 
 const CommuterModePage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleExit = () => {
-    navigate('/command-center');
+    navigate(ROUTES.STUDY);
   };
 
   return (

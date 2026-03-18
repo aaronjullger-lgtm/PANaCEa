@@ -113,7 +113,7 @@ export function FlagQuestionModal({
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
           <div className="flex items-center gap-3">
-            <Flag className="w-6 h-6 text-yellow-500" />
+            <Flag className="w-6 h-6 text-[var(--color-data-provisional)]" />
             <h2
               id="flag-modal-title"
               className="text-xl font-semibold text-[var(--color-text-primary)]"

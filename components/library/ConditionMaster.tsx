@@ -130,7 +130,7 @@ const PillListField: React.FC<{ label: string; value: unknown; color?: string }>
   const colorClasses = {
     accent:
       'bg-[var(--color-accent)]/15 text-[var(--color-accent)] border-[var(--color-accent)]/30',
-    rose: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+    rose: 'bg-[var(--color-data-fail)]/15 text-[var(--color-data-fail)]/60 border-[var(--color-data-fail)]/30',
     blue: 'bg-[color-mix(in_srgb,var(--color-category-practice)_15%,transparent)] text-[var(--color-category-practice)] border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]',
     amber: 'bg-data-provisional/15 text-data-provisional border-data-provisional/30',
   };
@@ -341,10 +341,10 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
 
             {/* Mnemonic */}
             {mnemonic && (
-              <div className="p-4 rounded-xl bg-gradient-to-br from-violet-500/15 to-purple-500/10 border border-violet-500/30">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-[var(--color-accent)]/15 to-[var(--color-accent)]/10 border border-[var(--color-accent)]/30">
                 <div className="flex items-center gap-2 mb-2">
                   <svg
-                    className="w-5 h-5 text-violet-400"
+                    className="w-5 h-5 text-[var(--color-accent)]"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -352,7 +352,7 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
                   >
                     <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
-                  <h4 className="text-sm font-semibold text-violet-400 uppercase tracking-wide">
+                  <h4 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide">
                     Memory Aid / Mnemonic
                   </h4>
                 </div>
@@ -364,10 +364,10 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
 
             {/* Classic Triad */}
             {classicTriad.length > 0 && (
-              <div className="p-4 rounded-xl bg-gradient-to-r from-rose-500/10 to-rose-600/5 border border-rose-500/30">
+              <div className="p-4 rounded-xl bg-gradient-to-r from-[var(--color-data-fail)]/10 to-[var(--color-data-fail)]/5 border border-[var(--color-data-fail)]/30">
                 <div className="flex items-center gap-2 mb-3">
-                  <AlertTriangle className="w-5 h-5 text-rose-400" />
-                  <h4 className="text-sm font-semibold text-rose-400 uppercase tracking-wide">
+                  <AlertTriangle className="w-5 h-5 text-[var(--color-data-fail)]" />
+                  <h4 className="text-sm font-semibold text-[var(--color-data-fail)] uppercase tracking-wide">
                     Classic Triad
                   </h4>
                 </div>
@@ -375,7 +375,7 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
                   {classicTriad.map((item, idx) => (
                     <span
                       key={idx}
-                      className="px-3 py-1.5 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30 text-sm font-medium"
+                      className="px-3 py-1.5 rounded-lg bg-[var(--color-data-fail)]/100/15 text-[var(--color-data-fail)] border border-[var(--color-data-fail)]/30 text-sm font-medium"
                     >
                       {idx + 1}. {item}
                     </span>
@@ -428,7 +428,7 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
               <Section
                 title="Outcomes & Prognosis"
                 icon={AlertTriangle}
-                accentColor="text-rose-400"
+                accentColor="text-[var(--color-data-fail)]"
               >
                 <TextField label="Complications" value={normalized.complications} />
                 <TextField label="Prognosis" value={normalized.prognosis} />
@@ -437,7 +437,7 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
               </Section>
 
               {/* Section 5: Background & Etiology */}
-              <Section title="Background & Etiology" icon={Info} accentColor="text-purple-400">
+              <Section title="Background & Etiology" icon={Info} accentColor="text-[var(--color-accent)]">
                 <TextField label="Epidemiology" value={normalized.epidemiology} />
                 <TextField label="Etiology" value={normalized.etiology} />
                 <TextField

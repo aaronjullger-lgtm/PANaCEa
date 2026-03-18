@@ -240,7 +240,7 @@ export function InteractiveDiagram({
   }
 
   return (
-    <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-slate-900 p-4' : ''}`}>
+    <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-[var(--color-bg-primary)] p-4' : ''}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>

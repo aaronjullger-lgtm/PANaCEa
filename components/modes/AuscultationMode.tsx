@@ -323,7 +323,7 @@ export function AuscultationMode({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Stethoscope className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+          <Stethoscope className="h-8 w-8 text-[var(--color-accent)]" />
           <div>
             <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
               Auscultation Training
@@ -337,7 +337,7 @@ export function AuscultationMode({
         {mode === 'quiz' && !quizState && (
           <button
             onClick={startQuiz}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+            className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]/80 flex items-center gap-2"
           >
             <Play className="h-4 w-4" />
             Start Quiz
@@ -423,7 +423,7 @@ export function AuscultationMode({
                 <span className="text-sm text-data-neutral">
                   Question {quizState.currentIndex + 1} of {quizSounds.length}
                 </span>
-                <span className="text-sm font-medium text-indigo-600">
+                <span className="text-sm font-medium text-[var(--color-accent)]">
                   {quizState.answers.filter((a) => a.isCorrect).length} correct
                 </span>
               </div>
@@ -452,7 +452,7 @@ export function AuscultationMode({
                               : isSelected
                                 ? 'border-data-fail bg-data-fail dark:bg-data-fail/20'
                                 : 'border-data-neutral dark:border-data-neutral'
-                            : 'border-data-neutral dark:border-data-neutral hover:border-indigo-400'
+                            : 'border-data-neutral dark:border-data-neutral hover:border-[var(--color-accent)]/50'
                         }
                       `}
                     >
@@ -476,7 +476,7 @@ export function AuscultationMode({
               {showAnswer && (
                 <button
                   onClick={nextQuestion}
-                  className="mt-4 w-full py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 flex items-center justify-center gap-2"
+                  className="mt-4 w-full py-3 bg-[var(--color-accent)] text-white rounded-xl hover:bg-[var(--color-accent)]/80 flex items-center justify-center gap-2"
                 >
                   {quizState.currentIndex + 1 < quizSounds.length ? (
                     <>
@@ -509,7 +509,7 @@ export function AuscultationMode({
                       w-full p-3 rounded-xl text-left transition-all
                       ${
                         selectedSound?.id === sound.id
-                          ? 'bg-indigo-100 dark:bg-indigo-900/30 border-2 border-indigo-400'
+                          ? 'bg-[var(--color-accent)]/10 border-2 border-[var(--color-accent)]'
                           : 'bg-data-neutral dark:bg-data-neutral/50 border-2 border-transparent hover:border-data-neutral'
                       }
                     `}
@@ -526,7 +526,7 @@ export function AuscultationMode({
                           sound.difficulty === 'basic'
                             ? 'bg-data-pass text-data-pass'
                             : sound.difficulty === 'intermediate'
-                              ? 'bg-yellow-100 text-yellow-700'
+                              ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
                               : 'bg-data-fail text-data-fail'
                         }
                       `}
@@ -605,7 +605,7 @@ export function AuscultationMode({
                     type="button"
                     onClick={() => setIsLooping(!isLooping)}
                     className={`p-2 rounded-full ${
-                      isLooping ? 'text-indigo-600 bg-indigo-100' : 'text-data-neutral'
+                      isLooping ? 'text-[var(--color-accent)] bg-[var(--color-accent)]/10' : 'text-data-neutral'
                     }`}
                     aria-label={isLooping ? 'Disable loop' : 'Loop track'}
                   >
@@ -624,7 +624,7 @@ export function AuscultationMode({
                   <button
                     type="button"
                     onClick={togglePlay}
-                    className="p-4 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
+                    className="p-4 rounded-full bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent)]/80"
                     aria-label={isPlaying ? 'Pause' : 'Play'}
                   >
                     {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
@@ -642,7 +642,7 @@ export function AuscultationMode({
                   <button
                     type="button"
                     onClick={() => setIsMuted(!isMuted)}
-                    className={`p-2 rounded-full ${isMuted ? 'text-red-500' : 'text-slate-400'}`}
+                    className={`p-2 rounded-full ${isMuted ? 'text-[var(--color-data-fail)]' : 'text-[var(--color-text-muted)]'}`}
                     aria-label={isMuted ? 'Unmute' : 'Mute'}
                   >
                     {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
@@ -660,7 +660,7 @@ export function AuscultationMode({
                         px-2 py-1 text-xs rounded
                         ${
                           playbackRate === rate
-                            ? 'bg-indigo-600 text-white'
+                            ? 'bg-[var(--color-accent)] text-white'
                             : 'bg-data-neutral dark:bg-data-neutral text-data-neutral'
                         }
                       `}

@@ -293,8 +293,8 @@ export const DisasterRecoveryDashboard: React.FC<DisasterRecoveryDashboardProps>
                                     scenario.severity === 'critical'
                                       ? 'bg-data-fail/20 text-data-fail'
                                       : scenario.severity === 'high'
-                                        ? 'bg-orange-500/20 text-orange-600'
-                                        : 'bg-yellow-500/20 text-yellow-600'
+                                        ? 'bg-[var(--color-data-provisional)]/100/20 text-[var(--color-data-provisional)]'
+                                        : 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
                                   }`}
                                 >
                                   {scenario.severity}
@@ -475,7 +475,7 @@ export const DisasterRecoveryDashboard: React.FC<DisasterRecoveryDashboardProps>
                                   className={`px-2 py-1 text-xs rounded-full ${
                                     backup.type === 'full'
                                       ? 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)]'
-                                      : 'bg-purple-500/20 text-purple-600'
+                                      : 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]'
                                   }`}
                                 >
                                   {backup.type}
@@ -585,8 +585,8 @@ export const DisasterRecoveryDashboard: React.FC<DisasterRecoveryDashboardProps>
                                   scenario.severity === 'critical'
                                     ? 'bg-data-fail/20 text-data-fail'
                                     : scenario.severity === 'high'
-                                      ? 'bg-orange-500/20 text-orange-600'
-                                      : 'bg-yellow-500/20 text-yellow-600'
+                                      ? 'bg-[var(--color-data-provisional)]/100/20 text-[var(--color-data-provisional)]'
+                                      : 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
                                 }`}
                               >
                                 {scenario.severity.toUpperCase()}

@@ -44,21 +44,21 @@ const COLOR_SCALES = {
     'bg-data-neutral dark:bg-data-neutral', // 1-5
     'bg-data-neutral dark:bg-data-neutral', // 6-10
     'bg-data-neutral dark:bg-data-neutral', // 11-20
-    'bg-slate-500 dark:bg-slate-400', // 21+
+    'bg-[var(--color-bg-tertiary)]', // 21+
   ],
   accuracy: [
     'bg-data-neutral dark:bg-data-neutral', // no data
     'bg-data-neutral dark:bg-data-neutral', // <50%
     'bg-data-neutral dark:bg-data-neutral', // 50-69%
     'bg-data-neutral dark:bg-data-neutral', // 70-84%
-    'bg-slate-500 dark:bg-slate-400', // 85%+
+    'bg-[var(--color-bg-tertiary)]', // 85%+
   ],
   streak: [
     'bg-data-neutral dark:bg-data-neutral border border-data-neutral dark:border-data-neutral', // 0 - empty
     'bg-data-neutral dark:bg-data-neutral', // 1-2
     'bg-data-neutral dark:bg-data-neutral', // 3-5
     'bg-data-neutral dark:bg-data-neutral', // 6-10
-    'bg-slate-500 dark:bg-slate-400', // 11+
+    'bg-[var(--color-bg-tertiary)]', // 11+
   ],
 };
 
@@ -302,7 +302,7 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           {DAY_NAMES.map((day, idx) => (
             <div
               key={idx}
-              className={`h-3 text-xs text-slate-600 dark:text-slate-400 flex items-center ${
+              className={`h-3 text-xs text-[var(--color-text-secondary)] flex items-center ${
                 idx === 1 || idx === 3 || idx === 5 ? 'visible' : 'invisible'
               }`}
             >

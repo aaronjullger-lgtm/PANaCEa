@@ -146,7 +146,7 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
             <span className="text-sm font-medium hidden sm:inline">Exit</span>
           </button>
           <div className="flex items-center gap-2">
-            <Pill className="w-5 h-5 text-cyan-400" />
+            <Pill className="w-5 h-5 text-[var(--color-accent)]" />
             <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">
               First Line Treatment
             </h1>

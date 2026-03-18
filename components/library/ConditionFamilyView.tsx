@@ -86,7 +86,7 @@ export function ConditionFamilyView({
 
   const getMasteryColor = (mastery: string | undefined) => {
     if (mastery === 'high') return 'bg-data-pass';
-    if (mastery === 'medium') return 'bg-yellow-500';
+    if (mastery === 'medium') return 'bg-[var(--color-data-provisional)]';
     return 'bg-data-fail';
   };
 
@@ -198,7 +198,7 @@ function MemberRow({
           <div
             className={cn('h-full rounded-full', {
               'bg-data-fail': member.mastery < 50,
-              'bg-yellow-500': member.mastery >= 50 && member.mastery < 80,
+              'bg-[var(--color-data-provisional)]': member.mastery >= 50 && member.mastery < 80,
               'bg-data-pass': member.mastery >= 80,
             })}
             style={{ width: `${member.mastery}%` }}

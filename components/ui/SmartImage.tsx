@@ -150,12 +150,12 @@ export const SmartImage: React.FC<SmartImageProps> = ({
           >
             {/* Skeleton / Blur-up effect */}
             {blurUp && (
-              <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800" />
+              <div className="absolute inset-0 animate-pulse bg-[var(--color-bg-tertiary)]" />
             )}
 
             {/* Loading spinner */}
             {showLoader && loadState === 'loading' && (
-              <Loader2 className="w-8 h-8 text-data-neutral dark:text-data-neutral animate-spin z-10" />
+              <Loader2 className="w-8 h-8 text-[var(--color-data-neutral)] animate-spin z-10" />
             )}
           </motion.div>
         )}
@@ -182,7 +182,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
             key="error"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-data-neutral dark:text-data-neutral"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[var(--color-data-neutral)]"
           >
             {fallback || (
               <>

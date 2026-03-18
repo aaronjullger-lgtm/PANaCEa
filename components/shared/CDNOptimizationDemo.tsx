@@ -85,8 +85,8 @@ export const CDNOptimizationDemo: React.FC<CDNOptimizationDemoProps> = ({
 
   const networkTypes = [
     { id: 'slow-2g', label: 'Slow 2G', speed: '50-100 Kbps', icon: WifiOff, color: 'text-data-fail' },
-    { id: '2g', label: '2G', speed: '100-300 Kbps', icon: Wifi, color: 'text-orange-500' },
-    { id: '3g', label: '3G', speed: '700 Kbps - 1.5 Mbps', icon: Wifi, color: 'text-yellow-500' },
+    { id: '2g', label: '2G', speed: '100-300 Kbps', icon: Wifi, color: 'text-[var(--color-data-provisional)]' },
+    { id: '3g', label: '3G', speed: '700 Kbps - 1.5 Mbps', icon: Wifi, color: 'text-[var(--color-data-provisional)]' },
     { id: '4g', label: '4G', speed: '5-50 Mbps', icon: Wifi, color: 'text-data-pass' },
     { id: '5g', label: '5G', speed: '100+ Mbps', icon: Zap, color: 'text-[var(--color-accent)]' },
   ];

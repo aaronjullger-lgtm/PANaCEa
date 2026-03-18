@@ -161,7 +161,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({ drug, onClose, onDril
             {/* Contraindications */}
             {drug.contraindications && drug.contraindications.length > 0 && (
               <section className="card-glass p-4 rounded-xl">
-                <h3 className="text-sm font-semibold text-orange-500 uppercase tracking-wide mb-3">
+                <h3 className="text-sm font-semibold text-[var(--color-data-provisional)] uppercase tracking-wide mb-3">
                   Contraindications
                 </h3>
                 <ul className="list-disc list-inside space-y-2">
@@ -180,7 +180,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({ drug, onClose, onDril
             {/* Drug Interactions */}
             {drug.interactions && drug.interactions.length > 0 && (
               <section className="card-glass p-4 rounded-xl">
-                <h3 className="text-sm font-semibold text-yellow-600 uppercase tracking-wide mb-3">
+                <h3 className="text-sm font-semibold text-[var(--color-data-provisional)] uppercase tracking-wide mb-3">
                   Drug Interactions
                 </h3>
                 <ul className="list-disc list-inside space-y-2">

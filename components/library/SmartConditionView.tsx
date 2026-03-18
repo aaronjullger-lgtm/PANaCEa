@@ -371,8 +371,8 @@ function HighYieldTab({ data }: Readonly<{ data: MedicalContent }>) {
         >
           <div className="space-y-3">
             {mnemonic && (
-              <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/30">
-                <h4 className="text-xs font-semibold text-violet-300 mb-2 uppercase tracking-wide">
+              <div className="p-4 rounded-xl bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30">
+                <h4 className="text-xs font-semibold text-[var(--color-accent)] mb-2 uppercase tracking-wide">
                   Mnemonic
                 </h4>
                 <p className="text-[var(--color-text-primary)] text-base leading-relaxed font-medium">
@@ -989,7 +989,7 @@ function ManagementTab({
         <CollapsibleSection
           title="Counseling Points"
           icon={Heart}
-          iconColor="text-rose-400"
+          iconColor="text-[var(--color-data-fail)]"
           defaultOpen={sectionIndex++ === 0}
         >
           <div className="space-y-3">

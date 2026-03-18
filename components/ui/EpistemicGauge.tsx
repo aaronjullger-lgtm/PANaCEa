@@ -163,7 +163,7 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
         <div className="flex items-center justify-between mb-1.5">
           {label && (
             <span
-              className={`font-medium text-slate-700 dark:text-slate-300 ${sizeClasses[size].label}`}
+              className={`font-medium text-[var(--color-text-primary)] ${sizeClasses[size].label}`}
             >
               {label}
             </span>
@@ -219,7 +219,7 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
         {/* Value display */}
         <div className="flex items-center justify-between mt-1">
           <span
-            className={`font-semibold text-slate-900 dark:text-slate-100 ${sizeClasses[size].text}`}
+            className={`font-semibold text-[var(--color-text-primary)] ${sizeClasses[size].text}`}
           >
             {showPercentage ? `${displayValue}%` : displayValue}
           </span>
@@ -410,7 +410,7 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 border border-data-neutral dark:border-data-neutral"
+      className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-data-neutral dark:border-data-neutral"
     >
       <div className="flex items-start gap-4">
         <div className="p-3 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-xl">
@@ -441,7 +441,7 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
                 initial={{ width: 0 }}
                 animate={{ width: `${progress * 100}%` }}
                 transition={{ duration: 0.5 }}
-                className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                className="h-full bg-[var(--color-accent)] rounded-full"
               />
             </div>
           </div>

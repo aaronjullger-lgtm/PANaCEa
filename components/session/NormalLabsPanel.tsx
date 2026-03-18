@@ -164,7 +164,7 @@ export const NormalLabsPanel: React.FC<NormalLabsPanelProps> = ({ isOpen, onClos
           )}
           {!loading && !error && labs.length === 0 && (
             <p className="text-sm text-[var(--color-text-muted)] py-8 text-center">
-              No normal lab values found. Run the seed script to populate reference data.
+              No normal lab values available for this category.
             </p>
           )}
           {!loading && !error && labs.length > 0 && (

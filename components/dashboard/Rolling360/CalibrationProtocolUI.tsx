@@ -221,7 +221,7 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
       transition={{ delay: step.step * 0.1 }}
       className={`relative p-4 rounded-xl border transition-all duration-300 ${
         isUnlocked
-          ? 'bg-teal-500/10 border-teal-500/30'
+          ? 'bg-[var(--color-accent)]/10 border-[var(--color-accent)]/30'
           : isActive
             ? 'bg-data-neutral/50 border-data-provisional/30'
             : 'bg-data-neutral/30 border-data-neutral/30 opacity-60'
@@ -230,7 +230,7 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
       {/* Lock/Unlock indicator */}
       <div className="absolute top-3 right-3">
         {isUnlocked ? (
-          <LockOpenIcon className="w-4 h-4 text-teal-400" />
+          <LockOpenIcon className="w-4 h-4 text-[var(--color-accent)]" />
         ) : (
           <LockClosedIcon className="w-4 h-4 text-data-neutral" />
         )}
@@ -238,11 +238,11 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
 
       {/* Step header */}
       <div className="flex items-center gap-3 mb-2">
-        <div className={`p-2 rounded-lg ${isUnlocked ? 'bg-teal-500/20' : 'bg-slate-700/50'}`}>
-          <Icon className={`w-5 h-5 ${isUnlocked ? 'text-teal-400' : 'text-slate-400'}`} />
+        <div className={`p-2 rounded-lg ${isUnlocked ? 'bg-[var(--color-accent)]/20' : 'bg-[var(--color-bg-tertiary)]'}`}>
+          <Icon className={`w-5 h-5 ${isUnlocked ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`} />
         </div>
         <div>
-          <h4 className={`text-sm font-medium ${isUnlocked ? 'text-teal-300' : 'text-slate-300'}`}>
+          <h4 className={`text-sm font-medium ${isUnlocked ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}>
             {step.name}
           </h4>
           <p className="text-xs text-data-neutral">{step.description}</p>
@@ -254,7 +254,7 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
         <div className="mt-3">
           <div className="h-1.5 bg-data-neutral rounded-full overflow-hidden">
             <motion.div
-              className={`h-full ${isActive ? 'bg-amber-500' : 'bg-slate-600'}`}
+              className={`h-full ${isActive ? 'bg-[var(--color-data-provisional)]' : 'bg-[var(--color-data-neutral)]'}`}
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.8 }}
@@ -269,7 +269,7 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
       {/* Unlocked metric display */}
       {isUnlocked && metricDisplay && (
         <div className="mt-3 text-center">
-          <span className="text-xl font-bold text-teal-400">{metricDisplay}</span>
+          <span className="text-xl font-bold text-[var(--color-accent)]">{metricDisplay}</span>
         </div>
       )}
     </motion.div>

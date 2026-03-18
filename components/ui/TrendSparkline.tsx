@@ -36,16 +36,16 @@ const COLOR_SCHEMES = {
     gradient: 'rgba(16, 185, 129, 0.2)',
     text: 'text-data-pass',
   },
-  /** Clinical: teal/green for success; avoids red/yellow (medical alarm semantics) */
+  /** Clinical: accent color for success; avoids red/yellow (medical alarm semantics) */
   clinical: {
-    line: '#14b8a6',
-    gradient: 'rgba(20, 184, 166, 0.2)',
-    text: 'text-teal-500',
+    line: 'var(--color-accent)',
+    gradient: 'var(--color-accent)',
+    text: 'text-[var(--color-accent)]',
   },
   warning: {
-    line: '#0d9488',
-    gradient: 'rgba(13, 148, 136, 0.2)',
-    text: 'text-teal-600',
+    line: 'var(--color-accent)',
+    gradient: 'var(--color-accent)',
+    text: 'text-[var(--color-accent)]',
   },
   danger: {
     line: '#ef4444',
@@ -264,7 +264,7 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
               <TrendIcon
                 className={`w-4 h-4 ${
                   trend === 'up'
-                    ? 'text-teal-500'
+                    ? 'text-[var(--color-accent)]'
                     : trend === 'down'
                       ? 'text-data-neutral'
                       : 'text-[var(--color-text-muted)]'

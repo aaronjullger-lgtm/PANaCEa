@@ -870,8 +870,8 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
             <h2 className="text-lg font-bold text-[var(--color-category-practice)]">{pair.conditionA}</h2>
             <p className="text-xs text-[var(--color-text-muted)] mt-1 hidden sm:block">← or A</p>
           </div>
-          <div className="p-4 text-center bg-rose-500/5">
-            <h2 className="text-lg font-bold text-rose-400">{pair.conditionB}</h2>
+          <div className="p-4 text-center bg-[var(--color-data-fail)]/5">
+            <h2 className="text-lg font-bold text-[var(--color-data-fail)]">{pair.conditionB}</h2>
             <p className="text-xs text-[var(--color-text-muted)] mt-1 hidden sm:block">→ or B</p>
           </div>
         </div>
@@ -892,7 +892,7 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
                 className="w-full max-w-lg"
               >
                 <div
-                  className={`p-6 rounded-2xl border-2 transition-colors ${status === 'playing' ? 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]' : isCorrect ? 'bg-emerald-500/10 border-emerald-500' : 'bg-red-500/10 border-red-500'}`}
+                  className={`p-6 rounded-2xl border-2 transition-colors ${status === 'playing' ? 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]' : isCorrect ? 'bg-[var(--color-data-pass)]/10 border-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]/10 border-[var(--color-data-fail)]'}`}
                 >
                   <p className="text-xl sm:text-2xl font-semibold text-center text-[var(--color-text-primary)] mb-4">
                     {currentCard.symptom}
@@ -910,7 +910,7 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
                           <XCircle className="w-6 h-6 text-data-fail" />
                         )}
                         <span
-                          className={`font-bold ${isCorrect ? 'text-emerald-500' : 'text-red-500'}`}
+                          className={`font-bold ${isCorrect ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}
                         >
                           {isCorrect
                             ? 'Correct!'
@@ -948,7 +948,7 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleChoice('B')}
-                className="py-4 px-6 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border-2 border-rose-500/30 hover:border-rose-500 text-rose-400 font-semibold transition-all flex items-center justify-center gap-2"
+                className="py-4 px-6 rounded-xl bg-[var(--color-data-fail)]/10 hover:bg-[var(--color-data-fail)]/20 border-2 border-[var(--color-data-fail)]/30 hover:border-[var(--color-data-fail)] text-[var(--color-data-fail)] font-semibold transition-all flex items-center justify-center gap-2"
               >
                 {pair.conditionB.split(' ')[0]}
                 <ChevronRight className="w-5 h-5" />

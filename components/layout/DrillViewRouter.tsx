@@ -7,8 +7,9 @@
  *
  * Owner: App.tsx passes all required props; this component is purely presentational.
  */
-import React, { Suspense } from 'react';
+import React, { Suspense, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/config/routes';
 import { Loader } from '@/components/loading';
 import { WithGeminiErrorBoundary } from '@/components/error/ErrorBoundary';
 import {
@@ -70,8 +71,6 @@ interface DrillViewRouterProps {
   missedQuestions: QuizQuestion[];
 }
 
-const onExit = (navigate: ReturnType<typeof useNavigate>) => () => navigate('/study');
-
 export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
   view,
   setView,
@@ -90,7 +89,24 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
   missedQuestions,
 }) => {
   const navigate = useNavigate();
-  const exit = onExit(navigate);
+
+  /**
+   * Unified exit handler for all drill modes.
+   * Always:
+   * 1. Navigate to the study dashboard (ROUTES.STUDY)
+   * 2. Reset the view to 'command_center' for UI consistency
+   *
+   * This ensures the URL and local view state are always synchronized
+   * when exiting any drill mode.
+   */
+  const handleExitDrill = useCallback(() => {
+    navigate(ROUTES.STUDY);
+    // Set view to command_center to ensure UI state matches URL
+    // (useAppNavigation will also set this, but doing it here ensures immediate consistency)
+    setView('command_center');
+  }, [navigate, setView]);
+
+  const exit = handleExitDrill;
 
   const sharedQuizProps = {
     addPerformanceRecord,
@@ -430,7 +446,7 @@ export const DrillViewRouter: React.FC<DrillViewRouterProps> = ({
           onRetry={() => setView('diagnostic_puzzle')}
         >
           <Suspense fallback={<Loader />}>
-            <DiagnosticPuzzleMode onExit={() => navigate('/study')} />
+            <DiagnosticPuzzleMode onExit={handleExitDrill} />
           </Suspense>
         </WithGeminiErrorBoundary>
       )}

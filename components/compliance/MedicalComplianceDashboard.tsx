@@ -86,9 +86,9 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
       case 'critical':
         return 'bg-data-fail/20 text-data-fail border-data-fail/30';
       case 'high':
-        return 'bg-orange-500/20 text-orange-600 border-orange-500/30';
+        return 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]/60 border-[var(--color-data-provisional)]/30';
       case 'medium':
-        return 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30';
+        return 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]/60 border-[var(--color-data-provisional)]/30';
       case 'low':
         return 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)] border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]';
       default:
@@ -103,7 +103,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
       case 'non_compliant':
         return 'bg-data-fail/20 text-data-fail border-data-fail/30';
       case 'partial':
-        return 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30';
+        return 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]/30';
       case 'pending':
         return 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] text-[var(--color-category-practice)] border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]';
       default:
@@ -262,10 +262,10 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
 
                     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-5 border border-[var(--color-border)]">
                       <div className="flex items-center justify-between mb-3">
-                        <div className="p-2 bg-purple-500/10 rounded-lg">
-                          <Calendar className="w-6 h-6 text-purple-500" />
+                        <div className="p-2 bg-[var(--color-accent)]/10 rounded-lg">
+                          <Calendar className="w-6 h-6 text-[var(--color-accent)]" />
                         </div>
-                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-purple-500/20 text-purple-600">
+                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
                           {dashboardData.upcomingReviews.length}
                         </span>
                       </div>
@@ -341,14 +341,14 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
                                 standard.status === 'compliant'
                                   ? 'bg-data-pass/10'
                                   : standard.status === 'partial'
-                                    ? 'bg-yellow-500/10'
+                                    ? 'bg-[var(--color-data-provisional)]/10'
                                     : 'bg-data-fail/10'
                               }`}
                             >
                               {standard.status === 'compliant' ? (
                                 <CheckCircle className="w-5 h-5 text-data-pass" />
                               ) : (
-                                <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                                <AlertTriangle className="w-5 h-5 text-[var(--color-data-provisional)]" />
                               )}
                             </div>
                             <div>

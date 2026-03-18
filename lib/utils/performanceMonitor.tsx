@@ -718,9 +718,9 @@ export const PerformanceDashboard: React.FC = () => {
                   opt.severity === 'critical'
                     ? 'border-data-fail/20 bg-data-fail/5'
                     : opt.severity === 'high'
-                      ? 'border-orange-500/20 bg-orange-500/5'
+                      ? 'border-[var(--color-data-provisional)]/20 bg-[var(--color-data-provisional)]/5'
                       : opt.severity === 'medium'
-                        ? 'border-yellow-500/20 bg-yellow-500/5'
+                        ? 'border-[var(--color-data-provisional)]/20 bg-[var(--color-data-provisional)]/5'
                         : 'border-data-pass/20 bg-data-pass/5'
                 }`}
               >

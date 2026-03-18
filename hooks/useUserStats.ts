@@ -1,6 +1,12 @@
 /**
  * User statistics hook
  * Abstracts localStorage vs cloud storage based on authentication state
+ *
+ * Data Integrity Features (Session 2 improvements):
+ * - Timestamp-based conflict resolution for saved questions
+ * - Local deletion tracking to prevent deletions being overwritten by cloud sync
+ * - Stale closure prevention in debounced sync
+ * - Exponential backoff for sync failures
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -15,6 +21,32 @@ import { getSyncCircuitBreaker } from '../lib/utils/circuitBreaker';
 const PERFORMANCE_KEY = 'panceai_performance_v2';
 const MISSED_KEY = 'panceai_missed_v2';
 const FLAGGED_KEY = 'panceai_flagged_v2';
+const DELETIONS_KEY = 'panceai_deletions_v2';
+
+// Retry configuration
+const MAX_SYNC_RETRIES = 3;
+const BASE_RETRY_DELAY = 2000;
+
+/**
+ * Get a unique, consistent key for a question
+ * Handles both question.questionId and question.id formats
+ */
+function getQuestionKey(question: Question): string {
+  return question.questionId || question.id || '';
+}
+
+/**
+ * Get timestamp from question, prioritizing updatedAt over lastReviewedAt
+ */
+function getQuestionTimestamp(question: Question): number {
+  if (question.updatedAt) {
+    return new Date(question.updatedAt).getTime();
+  }
+  if (question.lastReviewedAt) {
+    return new Date(question.lastReviewedAt).getTime();
+  }
+  return 0;
+}
 
 interface UserStatsState {
   performanceData: PerformanceRecord[];
@@ -62,12 +94,61 @@ function separateSavedQuestions(savedQuestions: SavedQuestionWithType[]): {
 }
 
 /**
+ * Helper to merge questions with timestamp-based conflict resolution
+ */
+function mergeQuestionsWithTimestamps(
+  local: Question[],
+  remote: Question[]
+): Question[] {
+  const merged = new Map<string, Question>();
+
+  // Add local questions first
+  local.forEach((q) => {
+    const id = getQuestionKey(q);
+    if (id) {
+      merged.set(id, q);
+    }
+  });
+
+  // Merge remote questions, keeping newer version
+  remote.forEach((q) => {
+    const id = getQuestionKey(q);
+    if (!id) return;
+
+    const existing = merged.get(id);
+    if (!existing) {
+      // No local version, add remote
+      merged.set(id, q);
+    } else {
+      // Compare timestamps, keep newer
+      const existingTime = getQuestionTimestamp(existing);
+      const remoteTime = getQuestionTimestamp(q);
+
+      if (remoteTime > existingTime) {
+        merged.set(id, q);
+      }
+      // Otherwise keep existing (local is newer or equal)
+    }
+  });
+
+  return Array.from(merged.values());
+}
+
+/**
  * Hook for managing user statistics with automatic cloud sync
  */
 export function useUserStats(): UseUserStatsResult {
   const { isSignedIn, user, getToken } = useAuth();
 
   const persistenceEnabledRef = useRef(false);
+
+  // Track local deletions to prevent cloud sync from restoring deleted questions
+  const localDeletionsRef = useRef<Map<string, number>>(new Map(
+    safeParse<Array<[string, number]>>(localStorage.getItem(DELETIONS_KEY), [])
+  ));
+
+  // Track sync retry attempts for exponential backoff
+  const syncRetryCountRef = useRef(0);
 
   const [performanceData, setPerformanceDataState] = useState<PerformanceRecord[]>(() =>
     safeParse<PerformanceRecord[]>(localStorage.getItem(PERFORMANCE_KEY), [])
@@ -112,6 +193,13 @@ export function useUserStats(): UseUserStatsResult {
   const initialSyncDoneRef = useRef(false);
 
   /**
+   * Calculate exponential backoff delay
+   */
+  const calculateBackoffDelay = useCallback((): number => {
+    return BASE_RETRY_DELAY * Math.pow(2, syncRetryCountRef.current);
+  }, []);
+
+  /**
    * Upload local data to cloud
    */
   const syncToCloud = useCallback(async () => {
@@ -136,7 +224,7 @@ export function useUserStats(): UseUserStatsResult {
       const currentFlaggedQuestions = flaggedQuestions;
 
       // Create Set for O(1) lookup instead of O(n) array.includes()
-      const missedQuestionIds = new Set(currentMissedQuestions.map((q) => q.questionId || q.id || ''));
+      const missedQuestionIds = new Set(currentMissedQuestions.map(getQuestionKey));
 
       // Get SRS items from srsService
       const srsItems = getAllSRSItems(user.clerkId);
@@ -155,14 +243,21 @@ export function useUserStats(): UseUserStatsResult {
             performanceRecords: currentPerformanceData,
             srsItems,
             savedQuestions: [...currentMissedQuestions, ...currentFlaggedQuestions].map((q) => {
-              const questionId = q.questionId || q.id || '';
+              const questionId = getQuestionKey(q);
               return {
                 ...q,
                 type: missedQuestionIds.has(questionId) ? 'missed' : 'flagged',
                 // Ensure updatedAt is present for conflict resolution
-                updatedAt: q.lastReviewedAt ? new Date(q.lastReviewedAt) : new Date(),
+                updatedAt: q.updatedAt || q.lastReviewedAt || new Date().toISOString(),
               };
             }),
+            // Send local deletions (as Record<questionId, ISO timestamp>) so server can honor them
+            localDeletions: Object.fromEntries(
+              Array.from(localDeletionsRef.current.entries()).map(([id, timestamp]) => [
+                id,
+                new Date(timestamp).toISOString(),
+              ])
+            ),
           }),
         })
       );
@@ -173,6 +268,7 @@ export function useUserStats(): UseUserStatsResult {
         setSyncError('Authentication failed. Please sign in again.');
         setIsSyncing(false);
         setIsLoading(false);
+        syncRetryCountRef.current = 0;
         return; // Exit early, do not throw or retry
       }
 
@@ -198,10 +294,10 @@ export function useUserStats(): UseUserStatsResult {
       // Process server response and update local state with merged data
       if (result.success && result.data) {
         const d = result.data;
-        // Merge instead of replace: preserve in-flight local changes
+        
+        // Merge performance records by ID, keeping newer records
         if (d.performanceRecords?.length) {
           setPerformanceDataState((prev) => {
-            // Merge by ID, keeping newer records
             const merged = new Map<string, PerformanceRecord>();
             prev.forEach((r) => merged.set(r.id || '', r));
             d.performanceRecords.forEach((r) => {
@@ -213,49 +309,72 @@ export function useUserStats(): UseUserStatsResult {
             return Array.from(merged.values());
           });
         }
+        
         if (d.srsItems?.length) {
           loadSRSItemsFromCloud(d.srsItems);
         }
+        
+        // Merge saved questions with timestamp-based conflict resolution
         if (d.savedQuestions?.length) {
           const { missed, flagged } = separateSavedQuestions(d.savedQuestions);
-          // Merge saved questions by questionId
+          
           setMissedQuestionsState((prev) => {
-            const merged = new Map<string, Question>();
-            prev.forEach((q) => {
-              const id = q.questionId || q.id || '';
-              if (id) merged.set(id, q);
+            // Filter out locally deleted questions before merging
+            const prevFiltered = prev.filter((q) => {
+              const id = getQuestionKey(q);
+              return !localDeletionsRef.current.has(id);
             });
-            missed.forEach((q) => {
-              const id = q.questionId || q.id || '';
-              if (id) merged.set(id, q);
-            });
-            return Array.from(merged.values());
+            return mergeQuestionsWithTimestamps(prevFiltered, missed);
           });
+          
           setFlaggedQuestionsState((prev) => {
-            const merged = new Map<string, Question>();
-            prev.forEach((q) => {
-              const id = q.questionId || q.id || '';
-              if (id) merged.set(id, q);
+            const prevFiltered = prev.filter((q) => {
+              const id = getQuestionKey(q);
+              return !localDeletionsRef.current.has(id);
             });
-            flagged.forEach((q) => {
-              const id = q.questionId || q.id || '';
-              if (id) merged.set(id, q);
-            });
-            return Array.from(merged.values());
+            return mergeQuestionsWithTimestamps(prevFiltered, flagged);
           });
         }
+
+        // Clear deletions after successful sync
+        localDeletionsRef.current.clear();
+        localStorage.removeItem(DELETIONS_KEY);
       }
 
       setLastSyncTime(Date.now());
+      syncRetryCountRef.current = 0; // Reset retry counter on success
       console.log('Sync to cloud successful:', result);
     } catch (error) {
       logger.warn('useUserStats', 'Sync to cloud failed', error);
-      setSyncError(error instanceof Error ? error.message : 'Unknown error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setSyncError(errorMessage);
+
+      // Implement exponential backoff for retries
+      if (syncRetryCountRef.current < MAX_SYNC_RETRIES) {
+        syncRetryCountRef.current++;
+        const delay = calculateBackoffDelay();
+        
+        logger.warn(
+          'useUserStats',
+          `Scheduling retry ${syncRetryCountRef.current}/${MAX_SYNC_RETRIES} after ${delay}ms`
+        );
+        
+        // Schedule retry with exponential backoff
+        setTimeout(() => {
+          if (debouncedSyncRef.current) {
+            debouncedSyncRef.current.debounced();
+          }
+        }, delay);
+      } else {
+        // Max retries reached
+        setSyncError(`Sync failed after ${MAX_SYNC_RETRIES} retries. Please check your connection.`);
+        syncRetryCountRef.current = 0;
+      }
     } finally {
       setIsSyncing(false);
       setIsLoading(false);
     }
-  }, [isSignedIn, user, getToken]);
+  }, [isSignedIn, user, getToken, performanceData, missedQuestions, flaggedQuestions, calculateBackoffDelay]);
 
   /**
    * Download data from cloud
@@ -292,6 +411,7 @@ export function useUserStats(): UseUserStatsResult {
         setSyncError('Authentication failed. Please sign in again.');
         setIsSyncing(false);
         setIsLoading(false);
+        syncRetryCountRef.current = 0;
         return; // Exit early, do not throw or retry
       }
 
@@ -315,10 +435,10 @@ export function useUserStats(): UseUserStatsResult {
 
       if (result.success && result.data) {
         const d = result.data;
-        // Merge instead of replace: preserve in-flight local changes
+        
+        // Merge performance records by ID, keeping newer records
         if (d.performanceRecords?.length) {
           setPerformanceDataState((prev) => {
-            // Merge by ID, keeping newer records
             const merged = new Map<string, PerformanceRecord>();
             prev.forEach((r) => merged.set(r.id || '', r));
             d.performanceRecords.forEach((r) => {
@@ -330,73 +450,93 @@ export function useUserStats(): UseUserStatsResult {
             return Array.from(merged.values());
           });
         }
+        
         if (d.srsItems?.length) {
           loadSRSItemsFromCloud(d.srsItems);
         }
+        
+        // Merge saved questions with timestamp-based conflict resolution
         if (d.savedQuestions?.length) {
           const { missed, flagged } = separateSavedQuestions(d.savedQuestions);
-          // Merge saved questions by questionId
+          
           setMissedQuestionsState((prev) => {
-            const merged = new Map<string, Question>();
-            prev.forEach((q) => {
-              const id = q.questionId || q.id || '';
-              if (id) merged.set(id, q);
+            // Filter out locally deleted questions before merging
+            const prevFiltered = prev.filter((q) => {
+              const id = getQuestionKey(q);
+              return !localDeletionsRef.current.has(id);
             });
-            missed.forEach((q) => {
-              const id = q.questionId || q.id || '';
-              if (id) merged.set(id, q);
-            });
-            return Array.from(merged.values());
+            return mergeQuestionsWithTimestamps(prevFiltered, missed);
           });
+          
           setFlaggedQuestionsState((prev) => {
-            const merged = new Map<string, Question>();
-            prev.forEach((q) => {
-              const id = q.questionId || q.id || '';
-              if (id) merged.set(id, q);
+            const prevFiltered = prev.filter((q) => {
+              const id = getQuestionKey(q);
+              return !localDeletionsRef.current.has(id);
             });
-            flagged.forEach((q) => {
-              const id = q.questionId || q.id || '';
-              if (id) merged.set(id, q);
-            });
-            return Array.from(merged.values());
+            return mergeQuestionsWithTimestamps(prevFiltered, flagged);
           });
         }
 
         setLastSyncTime(Date.now());
+        syncRetryCountRef.current = 0; // Reset retry counter on success
         logger.debug('useUserStats', 'Sync from cloud successful');
       }
     } catch (error) {
       logger.warn('useUserStats', 'Sync from cloud failed', error);
-      setSyncError(error instanceof Error ? error.message : 'Unknown error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setSyncError(errorMessage);
+
+      // Implement exponential backoff for retries
+      if (syncRetryCountRef.current < MAX_SYNC_RETRIES) {
+        syncRetryCountRef.current++;
+        const delay = calculateBackoffDelay();
+        
+        logger.warn(
+          'useUserStats',
+          `Scheduling retry ${syncRetryCountRef.current}/${MAX_SYNC_RETRIES} after ${delay}ms`
+        );
+        
+        // Schedule retry with exponential backoff
+        setTimeout(() => {
+          if (debouncedSyncRef.current) {
+            debouncedSyncRef.current.debounced();
+          }
+        }, delay);
+      } else {
+        setSyncError(`Sync failed after ${MAX_SYNC_RETRIES} retries. Please check your connection.`);
+        syncRetryCountRef.current = 0;
+      }
     } finally {
       setIsSyncing(false);
       setIsLoading(false);
     }
-  }, [isSignedIn, user, getToken]);
+  }, [isSignedIn, user, getToken, calculateBackoffDelay]);
 
-  // Initialize debounced sync function
+  // Initialize debounced sync function with proper dependency tracking
+  // Recreate when syncToCloud or syncFromCloud dependencies change
   useEffect(() => {
     debouncedSyncRef.current = createDebouncedFunction(syncToCloud, 2000);
 
-    // Cleanup on unmount
+    // Cleanup on unmount or when sync function changes
     return () => {
       if (debouncedSyncRef.current) {
         debouncedSyncRef.current.cancel();
       }
     };
-  }, [syncToCloud]);
+  }, [syncToCloud, syncFromCloud, getToken, user, isSignedIn]); // Include all auth dependencies
 
-  // Clear loading and sync state when user signs out (handles sign-out before sync completes)
+  // Clear loading and sync state when user signs out
   useEffect(() => {
     if (!isSignedIn || !user) {
       initialSyncDoneRef.current = false;
       setIsLoading(false);
       setIsSyncing(false);
       setSyncError(null);
+      syncRetryCountRef.current = 0;
     }
   }, [isSignedIn, user]);
 
-  // Auto-sync when user signs in (only once per session). Show loading until first sync completes.
+  // Auto-sync when user signs in (only once per session)
   useEffect(() => {
     if (!isSignedIn || !user) {
       return;
@@ -407,8 +547,6 @@ export function useUserStats(): UseUserStatsResult {
     initialSyncDoneRef.current = true;
 
     // Prefer the in-memory state (initialized from localStorage during render).
-    // This avoids edge cases where some other test/code clears localStorage between
-    // `renderHook()` and this effect running.
     let hasLocalData =
       performanceData.length > 0 || missedQuestions.length > 0 || flaggedQuestions.length > 0;
 
@@ -426,7 +564,7 @@ export function useUserStats(): UseUserStatsResult {
     }
 
     setIsLoading(true);
-    
+
     // Use refs to capture latest sync functions to avoid stale closures
     const performSync = async () => {
       if (hasLocalData) {
@@ -435,7 +573,7 @@ export function useUserStats(): UseUserStatsResult {
         await syncFromCloud();
       }
     };
-    
+
     performSync().catch((error) => {
       logger.warn('useUserStats', 'Initial sync failed', error);
       setIsLoading(false);
@@ -454,6 +592,7 @@ export function useUserStats(): UseUserStatsResult {
   }, []);
 
   // Wrapper setters that also trigger cloud sync with proper debouncing
+  // Now with local deletion tracking for missed questions
   const setPerformanceData = useCallback(
     (data: PerformanceRecord[] | ((prev: PerformanceRecord[]) => PerformanceRecord[])) => {
       setPerformanceDataState(data);
@@ -467,7 +606,27 @@ export function useUserStats(): UseUserStatsResult {
 
   const setMissedQuestions = useCallback(
     (data: Question[] | ((prev: Question[]) => Question[])) => {
-      setMissedQuestionsState(data);
+      setMissedQuestionsState((prev) => {
+        const newData = typeof data === 'function' ? data(prev) : data;
+
+        // Track which questions were deleted locally
+        const newIds = new Set(newData.map(getQuestionKey));
+        prev.forEach((q) => {
+          const id = getQuestionKey(q);
+          if (id && !newIds.has(id)) {
+            // Mark this question as deleted locally
+            localDeletionsRef.current.set(id, Date.now());
+            // Persist deletions to localStorage
+            localStorage.setItem(
+              DELETIONS_KEY,
+              JSON.stringify(Array.from(localDeletionsRef.current.entries()))
+            );
+          }
+        });
+
+        return newData;
+      });
+      
       if (isSignedIn && debouncedSyncRef.current) {
         debouncedSyncRef.current.debounced();
       }
@@ -477,7 +636,27 @@ export function useUserStats(): UseUserStatsResult {
 
   const setFlaggedQuestions = useCallback(
     (data: Question[] | ((prev: Question[]) => Question[])) => {
-      setFlaggedQuestionsState(data);
+      setFlaggedQuestionsState((prev) => {
+        const newData = typeof data === 'function' ? data(prev) : data;
+
+        // Track which questions were deleted locally
+        const newIds = new Set(newData.map(getQuestionKey));
+        prev.forEach((q) => {
+          const id = getQuestionKey(q);
+          if (id && !newIds.has(id)) {
+            // Mark this question as deleted locally
+            localDeletionsRef.current.set(id, Date.now());
+            // Persist deletions to localStorage
+            localStorage.setItem(
+              DELETIONS_KEY,
+              JSON.stringify(Array.from(localDeletionsRef.current.entries()))
+            );
+          }
+        });
+
+        return newData;
+      });
+      
       if (isSignedIn && debouncedSyncRef.current) {
         debouncedSyncRef.current.debounced();
       }

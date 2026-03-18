@@ -92,7 +92,7 @@ function TypeBadge({ type }: { type: RefineryItemType }) {
     question: {
       label: 'Question',
       icon: HelpCircle,
-      className: 'bg-violet-500/20 text-violet-400 border-violet-500/40',
+      className: 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-[var(--color-accent)]/40',
     },
   }[type];
   const Icon = config.icon;

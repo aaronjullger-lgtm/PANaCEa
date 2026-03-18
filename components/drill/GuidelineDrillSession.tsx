@@ -189,7 +189,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             <span className="text-sm font-medium hidden sm:inline">Exit</span>
           </button>
           <div className="flex items-center gap-2">
-            <FileCheck className="w-5 h-5 text-teal-400" />
+            <FileCheck className="w-5 h-5 text-[var(--color-accent)]" />
             <h1 className="text-base sm:text-lg font-semibold">Guideline Mode</h1>
           </div>
           <div className="w-12 sm:w-16" />
@@ -262,11 +262,11 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <span className="text-sm text-[var(--color-text-secondary)]">Your Score:</span>
-            <span className="text-2xl font-bold text-teal-400">{calculatedScore}</span>
+            <span className="text-2xl font-bold text-[var(--color-accent)]">{calculatedScore}</span>
           </div>
           <button
             onClick={handleSubmitScore}
-            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-semibold rounded-lg transition-colors"
+            className="px-5 py-2.5 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white font-semibold rounded-lg transition-colors"
           >
             Submit Score
           </button>
@@ -324,14 +324,14 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                   onClick={() => toggleCriterion(criterion.id, criterion.pointValue)}
                   className={`w-full p-3 rounded-lg text-left transition-all flex items-center gap-3 ${
                     selectedCriteria.has(criterion.id)
-                      ? 'bg-teal-900/50 border border-teal-600'
+                      ? 'bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/50'
                       : 'bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:bg-[var(--color-border)]'
                   }`}
                 >
                   <div
                     className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${
                       selectedCriteria.has(criterion.id)
-                        ? 'bg-teal-500 border-teal-500'
+                        ? 'bg-[var(--color-accent)] border-[var(--color-accent)]'
                         : 'border-[var(--color-text-[var(--color-text-muted)])]'
                     }`}
                   >
@@ -351,7 +351,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                   </div>
                   <span
                     className={`text-sm font-bold flex-shrink-0 ${
-                      criterion.pointValue >= 0 ? 'text-teal-400' : 'text-data-fail'
+                      criterion.pointValue >= 0 ? 'text-[var(--color-accent)]' : 'text-data-fail'
                     }`}
                   >
                     {criterion.pointValue >= 0 ? '+' : ''}
@@ -385,7 +385,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div
-              className={`text-lg font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}
+              className={`text-lg font-bold ${isCorrect ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}
             >
               {isCorrect ? 'Correct!' : 'Incorrect'}
             </div>
@@ -444,7 +444,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
               )}
               <div>
                 <h2
-                  className={`text-xl font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}
+                  className={`text-xl font-bold ${isCorrect ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}
                 >
                   {isCorrect ? 'Correct!' : 'Incorrect'}
                 </h2>
@@ -560,9 +560,9 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             animate={{ opacity: 1, scale: 1 }}
             className="text-center"
           >
-            <Award className="w-16 h-16 text-teal-400 mx-auto mb-4" />
+            <Award className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4" />
             <h2 className="text-2xl sm:text-3xl font-bold mb-2">{sessionResult.guidelineName}</h2>
-            <p className="text-4xl font-bold text-teal-400 mb-2">
+            <p className="text-4xl font-bold text-[var(--color-accent)] mb-2">
               {sessionResult.totalCorrect}/{sessionResult.totalAttempts}
             </p>
             <p className="text-[var(--color-text-secondary)] mb-6">{percentage}% Accuracy</p>
@@ -576,7 +576,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
               </button>
               <button
                 onClick={backToSelection}
-                className="px-6 py-3 bg-teal-600 hover:bg-teal-500 rounded-lg font-medium transition-colors"
+                className="px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 rounded-lg font-medium transition-colors"
               >
                 Choose Another Guideline
               </button>

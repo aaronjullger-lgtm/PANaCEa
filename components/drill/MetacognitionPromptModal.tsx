@@ -50,7 +50,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
       case 'consecutive_misses':
         return <AlertTriangle className="w-6 h-6 text-data-provisional" />;
       case 'confusion_pair':
-        return <Brain className="w-6 h-6 text-purple-500" />;
+        return <Brain className="w-6 h-6 text-[var(--color-accent)]" />;
       case 'high_yield_miss':
         return <Target className="w-6 h-6 text-data-fail" />;
       default:
@@ -74,13 +74,13 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
   const getTriggerColor = () => {
     switch (prompt.triggerReason) {
       case 'consecutive_misses':
-        return 'from-amber-500 to-orange-500';
+        return 'from-[var(--color-data-provisional)] to-[var(--color-data-provisional)]/80';
       case 'confusion_pair':
-        return 'from-purple-500 to-indigo-500';
+        return 'from-[var(--color-accent)] to-[var(--color-accent)]/80';
       case 'high_yield_miss':
-        return 'from-red-500 to-pink-500';
+        return 'from-[var(--color-data-fail)] to-[var(--color-data-fail)]/80';
       default:
-        return 'from-blue-500 to-cyan-500';
+        return 'from-[var(--color-accent)] to-[var(--color-accent)]/60';
     }
   };
 
@@ -123,17 +123,17 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
 
           {/* Confusion Pair Info (if applicable) */}
           {prompt.confusionPairInfo && (
-            <div className="mx-5 mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+            <div className="mx-5 mt-4 p-4 bg-[var(--color-accent)]/10 rounded-xl border border-[var(--color-accent)]/30">
               <div className="flex items-start gap-3">
-                <Brain className="w-5 h-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
+                <Brain className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-1">
+                  <p className="text-sm font-semibold text-[var(--color-accent)] mb-1">
                     Often confused with: {prompt.confusionPairInfo.pairedCondition}
                   </p>
-                  <p className="text-sm text-purple-700 dark:text-purple-300 mb-2">
+                  <p className="text-sm text-[var(--color-accent)]/80 mb-2">
                     {prompt.confusionPairInfo.distinguishingFeature}
                   </p>
-                  <p className="text-xs text-purple-600 dark:text-purple-400 italic flex items-start gap-2">
+                  <p className="text-xs text-[var(--color-accent)]/70 italic flex items-start gap-2">
                     <Lightbulb className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                     {prompt.confusionPairInfo.clinicalPearl}
                   </p>

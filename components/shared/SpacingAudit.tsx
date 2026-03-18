@@ -483,9 +483,9 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                       </p>
                     </div>
 
-                    <div className="p-3 rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20">
+                    <div className="p-3 rounded-lg border border-[var(--color-data-provisional)]/20 dark:border-[var(--color-data-provisional)] bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/20">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 rounded bg-orange-500"></div>
+                        <div className="w-3 h-3 rounded bg-[var(--color-data-provisional)]/100"></div>
                         <span className="text-sm font-medium text-[var(--color-text-muted)] dark:text-white">
                           Margin
                         </span>
@@ -495,9 +495,9 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                       </p>
                     </div>
 
-                    <div className="p-3 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20">
+                    <div className="p-3 rounded-lg border border-[var(--color-accent)]/20 dark:border-[var(--color-accent)] bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 rounded bg-purple-500"></div>
+                        <div className="w-3 h-3 rounded bg-[var(--color-accent)]"></div>
                         <span className="text-sm font-medium text-[var(--color-text-muted)] dark:text-white">
                           Gap
                         </span>
@@ -507,9 +507,9 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                       </p>
                     </div>
 
-                    <div className="p-3 rounded-lg border border-pink-200 dark:border-pink-800 bg-pink-50 dark:bg-pink-900/20">
+                    <div className="p-3 rounded-lg border border-[var(--color-data-fail)]/20 dark:border-[var(--color-data-fail)] bg-[var(--color-data-fail)]/10 dark:bg-[var(--color-data-fail)]/20">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 rounded bg-pink-500"></div>
+                        <div className="w-3 h-3 rounded bg-[var(--color-data-fail)]/100"></div>
                         <span className="text-sm font-medium text-[var(--color-text-muted)] dark:text-white">
                           Space
                         </span>

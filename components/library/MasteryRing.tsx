@@ -58,7 +58,7 @@ export function MasteryRing({
       </svg>
       {/* Center percentage */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-semibold text-slate-100">
+        <span className="text-xs font-semibold text-[var(--color-text-primary)]">
           {Math.round(progress * 100)}%
         </span>
       </div>

@@ -186,7 +186,7 @@ export function TaxonomiesPage() {
   if (error && error.includes('Admin access required')) {
     return (
       <div className="max-w-4xl mx-auto p-8 text-center">
-        <Shield className="w-16 h-16 mx-auto text-red-500 mb-4" />
+        <Shield className="w-16 h-16 mx-auto text-[var(--color-data-fail)] mb-4" />
         <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
         <p className="text-[var(--color-text-secondary)] mb-6">You must be an administrator to view this page.</p>
         <button
@@ -224,7 +224,7 @@ export function TaxonomiesPage() {
       </div>
 
       {error && !error.includes('Admin access required') && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+        <div className="mb-6 p-4 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 rounded-lg text-[var(--color-data-fail)]">
           <div className="flex items-center gap-2">
             <XCircle className="w-5 h-5" />
             <span>{error}</span>
@@ -271,8 +271,8 @@ export function TaxonomiesPage() {
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                         tax.isActive
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)]'
+                          : 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)]'
                       }`}
                     >
                       {tax.isActive ? (
@@ -297,7 +297,7 @@ export function TaxonomiesPage() {
                       </button>
                       <button
                         onClick={() => handleDelete(tax.code, false)}
-                        className="p-1.5 text-[var(--color-text-secondary)] hover:text-red-600 hover:bg-red-50 rounded"
+                        className="p-1.5 text-[var(--color-text-secondary)] hover:text-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/10 rounded"
                         aria-label="Delete"
                       >
                         <Trash2 className="w-4 h-4" />

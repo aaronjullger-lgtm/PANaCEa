@@ -140,13 +140,13 @@ export function ExamHistoryList({
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="p-4 rounded-xl bg-data-neutral dark:bg-data-neutral animate-pulse">
+          <div key={i} className="p-4 rounded-xl bg-[var(--color-data-neutral)] animate-pulse">
             <div className="flex justify-between items-start">
               <div className="space-y-2">
-                <div className="h-4 w-24 bg-data-neutral dark:bg-data-neutral rounded" />
-                <div className="h-3 w-32 bg-data-neutral dark:bg-data-neutral rounded" />
+                <div className="h-4 w-24 bg-[var(--color-data-neutral)] rounded" />
+                <div className="h-3 w-32 bg-[var(--color-data-neutral)] rounded" />
               </div>
-              <div className="h-12 w-16 bg-data-neutral dark:bg-data-neutral rounded-lg" />
+              <div className="h-12 w-16 bg-[var(--color-data-neutral)] rounded-lg" />
             </div>
           </div>
         ))}
@@ -157,11 +157,11 @@ export function ExamHistoryList({
   if (attempts.length === 0) {
     return (
       <div className="text-center py-12">
-        <Target className="h-12 w-12 mx-auto text-data-neutral dark:text-data-neutral mb-4" />
-        <h3 className="text-lg font-medium text-data-neutral dark:text-data-neutral mb-2">
+        <Target className="h-12 w-12 mx-auto text-[var(--color-data-neutral)] mb-4" />
+        <h3 className="text-lg font-medium text-[var(--color-data-neutral)] mb-2">
           No Exam History
         </h3>
-        <p className="text-sm text-data-neutral dark:text-data-neutral">
+        <p className="text-sm text-[var(--color-data-neutral)]">
           Start your first practice exam to track your progress.
         </p>
       </div>
@@ -173,24 +173,24 @@ export function ExamHistoryList({
       {/* Summary Stats */}
       {showTrends && (
         <div className="grid grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-data-neutral dark:bg-data-neutral/50">
-            <p className="text-xs text-data-neutral dark:text-data-neutral mb-1">Total Exams</p>
+          <div className="p-4 rounded-xl bg-[var(--color-data-neutral)]/50">
+            <p className="text-xs text-[var(--color-data-neutral)] mb-1">Total Exams</p>
             <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.total}</p>
           </div>
-          <div className="p-4 rounded-xl bg-data-neutral dark:bg-data-neutral/50">
-            <p className="text-xs text-data-neutral dark:text-data-neutral mb-1">Completed</p>
+          <div className="p-4 rounded-xl bg-[var(--color-data-neutral)]/50">
+            <p className="text-xs text-[var(--color-data-neutral)] mb-1">Completed</p>
             <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.completed}</p>
           </div>
-          <div className="p-4 rounded-xl bg-data-neutral dark:bg-data-neutral/50">
-            <p className="text-xs text-data-neutral dark:text-data-neutral mb-1">Pass Rate</p>
+          <div className="p-4 rounded-xl bg-[var(--color-data-neutral)]/50">
+            <p className="text-xs text-[var(--color-data-neutral)] mb-1">Pass Rate</p>
             <p
-              className={`text-2xl font-bold ${stats.passRate >= 70 ? 'text-emerald-600' : 'text-amber-600'}`}
+              className={`text-2xl font-bold ${stats.passRate >= 70 ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-provisional)]'}`}
             >
               {stats.passRate}%
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-data-neutral dark:bg-data-neutral/50 relative">
-            <p className="text-xs text-data-neutral dark:text-data-neutral mb-1">Avg Score</p>
+          <div className="p-4 rounded-xl bg-[var(--color-data-neutral)]/50 relative">
+            <p className="text-xs text-[var(--color-data-neutral)] mb-1">Avg Score</p>
             <p className={`text-2xl font-bold ${getScoreColor(stats.avgScore)}`}>
               {stats.avgScore}
             </p>
@@ -226,9 +226,9 @@ export function ExamHistoryList({
               ${
                 attempt.status === 'completed'
                   ? 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
-                  : 'bg-data-provisional dark:bg-data-provisional/20 border-data-provisional dark:border-data-provisional'
+                  : 'bg-[var(--color-data-provisional)]/20 border-[var(--color-data-provisional)]'
               }
-              ${onSelectAttempt ? 'cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-600' : ''}
+              ${onSelectAttempt ? 'cursor-pointer hover:border-[var(--color-accent)]' : ''}
             `}
           >
             <div className="flex items-start justify-between">
@@ -257,7 +257,7 @@ export function ExamHistoryList({
                   )}
                 </div>
 
-                <div className="flex items-center gap-4 text-sm text-data-neutral dark:text-data-neutral">
+                <div className="flex items-center gap-4 text-sm text-[var(--color-data-neutral)]">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
                     <span>{formatDate(attempt.startedAt)}</span>
@@ -286,7 +286,7 @@ export function ExamHistoryList({
                   <span className={`text-2xl font-bold ${getScoreColor(attempt.score)}`}>
                     {attempt.score}
                   </span>
-                  <span className="text-xs text-data-neutral dark:text-data-neutral">
+                  <span className="text-xs text-[var(--color-data-neutral)]">
                     {attempt.percentCorrect}%
                   </span>
                 </div>
@@ -296,7 +296,7 @@ export function ExamHistoryList({
                     e.stopPropagation();
                     onResumeAttempt(attempt.id);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 text-white rounded-lg text-sm font-medium transition-colors"
                 >
                   <RefreshCcw className="h-4 w-4" />
                   Resume
@@ -344,7 +344,7 @@ export function ExamHistoryList({
         <div className="text-center">
           <button
             onClick={() => onSelectAttempt?.('view-all')}
-            className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+            className="text-sm text-[var(--color-accent)] hover:underline"
           >
             View all {attempts.length} attempts →
           </button>

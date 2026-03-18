@@ -30,7 +30,7 @@ export const StrengthsWeaknesses: React.FC<Props> = ({ strengths, weaknesses }) 
           <ul className="space-y-1 text-sm text-data-neutral dark:text-data-neutral">
             {weaknesses.map((item) => (
               <li key={item} className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                <span className="w-2 h-2 rounded-full bg-[var(--color-data-fail)]" />
                 {item}
               </li>
             ))}

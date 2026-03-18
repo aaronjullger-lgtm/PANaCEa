@@ -2,6 +2,11 @@
  * User data synchronization endpoint
  * Handles uploading local data and downloading cloud data
  *
+ * Session 2 Improvements: Timestamp-based conflict resolution + local deletion tracking
+ * - Replaces delete-then-insert pattern with 3-way merge logic
+ * - Respects local deletions using deletion timestamp tracking
+ * - Preserves in-flight local changes using merge-not-replace strategy
+ *
  * Sprint 3 Security: Updated to use secure middleware pattern
  *
  * DEPLOYMENT NOTE: Clock skew fix with leeway: 5 is active in auth.ts verifyToken call.
@@ -81,6 +86,9 @@ const PostSyncSchema = z.object({
   performanceRecords: z.array(SyncPerformanceRecordSchema).max(1000).optional(),
   srsItems: z.array(SyncSRSItemSchema).max(1000).optional(),
   savedQuestions: z.array(SyncSavedQuestionSchema).max(500).optional(),
+  // Map of questionId:type -> deletion timestamp (ISO string)
+  // Used for 3-way merge to prevent restoring locally-deleted items
+  localDeletions: z.record(z.string()).optional(),
 });
 
 // ============================================================================
@@ -190,6 +198,166 @@ async function resolveUserId(prisma: EdgePrismaClient, clerkId: string): Promise
   return newUser.id;
 }
 
+/**
+ * Get timestamp from SRS item, preferring updatedAt then falling back to lastReviewed
+ */
+function getSRSItemTimestamp(item: any): Date {
+  if (item.updatedAt && typeof item.updatedAt === 'string') {
+    return new Date(item.updatedAt);
+  }
+  if (item.lastReviewed && typeof item.lastReviewed === 'string') {
+    return new Date(item.lastReviewed);
+  }
+  return new Date();
+}
+
+/**
+ * Get timestamp from saved question
+ */
+function getSavedQuestionTimestamp(item: any): Date {
+  if (item.updatedAt && typeof item.updatedAt === 'string') {
+    return new Date(item.updatedAt);
+  }
+  if (item.createdAt && typeof item.createdAt === 'string') {
+    return new Date(item.createdAt);
+  }
+  return new Date();
+}
+
+/**
+ * 3-way merge for SRS items using timestamp-based conflict resolution
+ * Returns items to keep (respecting local deletions and preferring newer versions)
+ */
+function mergeSRSItems(
+  localItems: any[],
+  cloudItems: any[],
+  localDeletions: Record<string, string> = {}
+): { toKeep: any[]; toDelete: string[] } {
+  const toDelete: string[] = [];
+  const toKeep: any[] = [];
+  const cloudMap = new Map(cloudItems.map(item => [item.questionId, item]));
+  const localMap = new Map(localItems.map(item => [item.questionId, item]));
+
+  // Process all local items
+  for (const localItem of localItems) {
+    const key = localItem.questionId;
+    const cloudItem = cloudMap.get(key);
+    const deletionTime = localDeletions[key];
+
+    if (!cloudItem) {
+      // Local only - keep it
+      toKeep.push(localItem);
+    } else {
+      // Both exist - compare timestamps
+      const localTime = getSRSItemTimestamp(localItem);
+      const cloudTime = getSRSItemTimestamp(cloudItem);
+
+      if (localTime >= cloudTime) {
+        // Local is newer or equal - keep local
+        toKeep.push(localItem);
+      } else {
+        // Cloud is newer - keep cloud
+        toKeep.push(cloudItem);
+      }
+    }
+  }
+
+  // Process cloud items not in local
+  for (const cloudItem of cloudItems) {
+    const key = cloudItem.questionId;
+    if (!localMap.has(key)) {
+      const deletionTime = localDeletions[key];
+      if (deletionTime) {
+        // Item was deleted locally
+        const deletionDate = new Date(deletionTime);
+        const cloudTime = getSRSItemTimestamp(cloudItem);
+
+        if (cloudTime > deletionDate) {
+          // Cloud version is newer than deletion - restore it
+          toKeep.push(cloudItem);
+        }
+        // Otherwise, respect the deletion (don't keep it)
+      } else {
+        // Cloud only and not deleted - keep it
+        toKeep.push(cloudItem);
+      }
+    }
+  }
+
+  return { toKeep, toDelete };
+}
+
+/**
+ * 3-way merge for saved questions using timestamp-based conflict resolution
+ */
+function mergeSavedQuestions(
+  localItems: any[],
+  cloudItems: any[],
+  localDeletions: Record<string, string> = {}
+): { toKeep: any[]; toDelete: string[] } {
+  const toDelete: string[] = [];
+  const toKeep: any[] = [];
+  
+  // Create composite keys: questionId:type
+  const cloudMap = new Map(cloudItems.map(item => {
+    const key = `${item.questionId}:${item.type}`;
+    return [key, item];
+  }));
+  
+  const localMap = new Map(localItems.map(item => {
+    const key = `${item.questionId}:${item.type}`;
+    return [key, item];
+  }));
+
+  // Process all local items
+  for (const localItem of localItems) {
+    const key = `${localItem.questionId}:${localItem.type}`;
+    const cloudItem = cloudMap.get(key);
+    const deletionTime = localDeletions[key];
+
+    if (!cloudItem) {
+      // Local only - keep it
+      toKeep.push(localItem);
+    } else {
+      // Both exist - compare timestamps
+      const localTime = getSavedQuestionTimestamp(localItem);
+      const cloudTime = getSavedQuestionTimestamp(cloudItem);
+
+      if (localTime >= cloudTime) {
+        // Local is newer or equal - keep local
+        toKeep.push(localItem);
+      } else {
+        // Cloud is newer - keep cloud
+        toKeep.push(cloudItem);
+      }
+    }
+  }
+
+  // Process cloud items not in local
+  for (const cloudItem of cloudItems) {
+    const key = `${cloudItem.questionId}:${cloudItem.type}`;
+    if (!localMap.has(key)) {
+      const deletionTime = localDeletions[key];
+      if (deletionTime) {
+        // Item was deleted locally
+        const deletionDate = new Date(deletionTime);
+        const cloudTime = getSavedQuestionTimestamp(cloudItem);
+
+        if (cloudTime > deletionDate) {
+          // Cloud version is newer than deletion - restore it
+          toKeep.push(cloudItem);
+        }
+        // Otherwise, respect the deletion
+      } else {
+        // Cloud only and not deleted - keep it
+        toKeep.push(cloudItem);
+      }
+    }
+  }
+
+  return { toKeep, toDelete };
+}
+
 // ============================================================================
 // HANDLERS
 // ============================================================================
@@ -260,7 +428,7 @@ export const onRequestGet = authenticatedEndpoint(
 
 /**
  * POST /api/sync
- * Upload/merge local data to the cloud
+ * Upload/merge local data to the cloud using timestamp-based conflict resolution
  */
 export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (context) => {
   const log = createEndpointLogger('POST /api/sync', context.auth.userId);
@@ -287,12 +455,8 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       log
     );
 
-    // Process data in BATCHED transactions to avoid Accelerate payload limits
-    // CRITICAL: Must stay under Cloudflare's 50 subrequest limit per request
-    // Using bulk operations (createMany, updateMany) instead of per-item queries
-
     // 1. Insert PerformanceRecords using createMany with skipDuplicates
-    // This is efficient because performance records are insert-only (no updates needed)
+    // Performance records are insert-only (no updates needed)
     if (payload.performanceRecords?.length) {
       const recordsToInsert = payload.performanceRecords.map((record) => ({
         id: record.id || crypto.randomUUID(),
@@ -309,14 +473,13 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
         conditionName: record.conditionName || null,
       }));
 
-      // Process in chunks to avoid payload size limits
       const batches = chunk(recordsToInsert, BATCH_SIZE);
       for (const batch of batches) {
         await withRetry(
           () =>
             prisma!.performanceRecord.createMany({
               data: batch,
-              skipDuplicates: true, // Ignore records that already exist
+              skipDuplicates: true,
             }),
           'performanceRecords createMany',
           log
@@ -324,13 +487,28 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
       }
     }
 
-    // 2. SRSItems - Use a simplified approach: delete + insert for the user's items
-    // This avoids per-item conflict resolution queries
+    // 2. SRSItems - 3-way merge using timestamp-based conflict resolution
+    // Preserves in-flight changes and respects local deletions
     if (payload.srsItems?.length) {
-      // Get all question IDs being synced
       const questionIds = payload.srsItems.map((item) => item.questionId);
 
-      // Delete existing records for these question IDs (single query)
+      // Fetch existing cloud items for these question IDs
+      const cloudItems = await withRetry(
+        () =>
+          prisma!.sRSItem.findMany({
+            where: {
+              userId: internalUserId,
+              questionId: { in: questionIds },
+            },
+          }),
+        'srsItems fetchExisting',
+        log
+      );
+
+      // 3-way merge: local, cloud, and deletion tracking
+      const { toKeep } = mergeSRSItems(payload.srsItems, cloudItems, payload.localDeletions);
+
+      // Delete all SRS items for these question IDs
       await withRetry(
         () =>
           prisma!.sRSItem.deleteMany({
@@ -343,9 +521,9 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
         log
       );
 
-      // Insert all items fresh (single createMany per batch)
+      // Insert merged items
       const now = new Date();
-      const itemsToInsert = payload.srsItems.map((item) => ({
+      const itemsToInsert = toKeep.map((item) => ({
         id: crypto.randomUUID(),
         userId: internalUserId,
         questionId: item.questionId,
@@ -376,31 +554,44 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
           log
         );
       }
+
+      log.info('SRSItems merged', {
+        cloudItems: cloudItems.length,
+        localItems: payload.srsItems.length,
+        keptItems: toKeep.length,
+      });
     }
 
-    // 3. SavedQuestions - Same approach: delete + insert
+    // 3. SavedQuestions - 3-way merge with timestamp-based conflict resolution
     if (payload.savedQuestions?.length) {
-      // Build the composite keys for deletion
-      const keysToDelete = payload.savedQuestions
-        .filter((item) => {
-          const questionText = item.questionText || item.question || '';
-          return questionText.length > 0; // Only process items with content
-        })
-        .map((item) => ({
-          questionId: item.questionId || item.id || '',
-          type: item.type,
-        }))
-        .filter((k) => k.questionId); // Filter out empty IDs
+      // Build question IDs to fetch from cloud
+      const questionIds = payload.savedQuestions
+        .map((item) => item.questionId || item.id)
+        .filter((id): id is string => !!id);
 
-      if (keysToDelete.length > 0) {
-        // Delete existing records for these question IDs and types
-        // Prisma doesn't support deleteMany with composite keys, so we use OR conditions
-        const deleteConditions = keysToDelete.map((k) => ({
-          userId: internalUserId,
-          questionId: k.questionId,
-          type: k.type,
-        }));
+      // Fetch existing cloud items
+      const cloudItems = await withRetry(
+        () =>
+          prisma!.savedQuestion.findMany({
+            where: {
+              userId: internalUserId,
+              questionId: { in: questionIds },
+            },
+          }),
+        'savedQuestions fetchExisting',
+        log
+      );
 
+      // 3-way merge
+      const { toKeep } = mergeSavedQuestions(payload.savedQuestions, cloudItems, payload.localDeletions);
+
+      // Delete all saved questions for these question IDs
+      const deleteConditions = questionIds.map((qId) => ({
+        userId: internalUserId,
+        questionId: qId,
+      }));
+
+      if (deleteConditions.length > 0) {
         await withRetry(
           () =>
             prisma!.savedQuestion.deleteMany({
@@ -413,8 +604,8 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
         );
       }
 
-      // Insert all items fresh
-      const itemsToInsert = payload.savedQuestions
+      // Insert merged items
+      const itemsToInsert = toKeep
         .map((item) => {
           const questionId = item.questionId || item.id || crypto.randomUUID();
           const questionText = item.questionText || item.question || '';
@@ -465,9 +656,15 @@ export const onRequestPost = authenticatedEndpoint(PostSyncSchema, async (contex
           );
         }
       }
+
+      log.info('SavedQuestions merged', {
+        cloudItems: cloudItems.length,
+        localItems: payload.savedQuestions.length,
+        keptItems: toKeep.length,
+      });
     }
 
-    // Fetch updated data with retry (3 queries in parallel)
+    // Fetch updated data with retry
     const [performanceRecords, srsItems, savedQuestions] = await withRetry(
       () =>
         Promise.all([

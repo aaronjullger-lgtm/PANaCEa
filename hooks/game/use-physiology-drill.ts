@@ -71,7 +71,7 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
       const data = (await response.json()) as { questions?: Array<Record<string, unknown>> };
 
       if (!data.questions || data.questions.length === 0) {
-        throw new Error('No physiology questions available. Please run seed script.');
+        throw new Error('No physiology questions available. Please check back later or contact support.');
       }
 
       // Transform database questions

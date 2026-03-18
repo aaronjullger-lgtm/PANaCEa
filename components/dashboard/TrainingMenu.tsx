@@ -233,7 +233,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       slate: 'bg-data-neutral',
       amber: 'bg-data-provisional',
       blue: 'bg-[var(--color-category-practice)]',
-      teal: 'bg-teal-100',
+      teal: 'bg-[var(--color-accent)]/10',
       red: 'bg-data-fail',
       emerald: 'bg-data-pass',
     };

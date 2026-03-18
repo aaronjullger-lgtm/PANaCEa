@@ -69,9 +69,9 @@ const TOAST_ICONS: Record<ToastVariant, React.ComponentType<{ className?: string
 
 const TOAST_STYLES: Record<ToastVariant, string> = {
   success:
-    'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700/50 text-emerald-800 dark:text-emerald-200',
+    'bg-[var(--color-data-pass)]/10 dark:bg-emerald-900/30 border-[var(--color-data-pass)]/20 dark:border-emerald-700/50 text-emerald-800 dark:text-emerald-200',
   error:
-    'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700/50 text-red-800 dark:text-red-200',
+    'bg-[var(--color-data-fail)]/10 dark:bg-[var(--color-data-fail)]/30 border-[var(--color-data-fail)]/20 dark:border-red-700/50 text-[var(--color-data-fail)] dark:text-red-200',
   warning:
     'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700/50 text-amber-800 dark:text-amber-200',
   info: 'bg-[var(--color-bg-secondary)] dark:bg-[var(--color-bg-tertiary)] border-[var(--color-accent)]/30 text-[var(--color-text-primary)]',

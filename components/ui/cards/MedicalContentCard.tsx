@@ -278,13 +278,13 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
           <CollapsibleSection title="Treatment">
             <ContentFieldRenderer value={content.treatment} />
             {content.first_line_rx && (
-              <div className="mt-4 p-3 bg-purple-950/30 border border-purple-800/40 rounded-lg">
-                <div className="text-xs font-semibold text-purple-300 mb-1">
+              <div className="mt-4 p-3 bg-[var(--color-accent)]/30 border border-[var(--color-accent)]/40 rounded-lg">
+                <div className="text-xs font-semibold text-[var(--color-accent)] mb-1">
                   First Line Treatment
                 </div>
                 <div className="text-sm text-data-neutral mb-2">{content.first_line_rx}</div>
                 {content.rx_mechanism && (
-                  <div className="text-xs text-data-neutral border-t border-purple-800/30 pt-2">
+                  <div className="text-xs text-data-neutral border-t border-[var(--color-accent)]/30 pt-2">
                     <span className="font-medium">Mechanism:</span> {content.rx_mechanism}
                   </div>
                 )}

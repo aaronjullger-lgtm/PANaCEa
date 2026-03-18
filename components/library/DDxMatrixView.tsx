@@ -62,11 +62,11 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<any>> = {
 
 const CATEGORY_COLORS: Record<string, string> = {
   presentation: 'border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-category-practice)_5%,transparent)]',
-  demographics: 'border-purple-500/30 bg-purple-500/5',
+  demographics: 'border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5',
   pathophysiology: 'border-data-provisional/30 bg-data-provisional/5',
   diagnosis: 'border-data-pass/30 bg-data-pass/5',
-  treatment: 'border-rose-500/30 bg-rose-500/5',
-  prognosis: 'border-cyan-500/30 bg-cyan-500/5',
+  treatment: 'border-[var(--color-data-fail)]/30 bg-[var(--color-data-fail)]/100/5',
+  prognosis: 'border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5',
 };
 
 export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({

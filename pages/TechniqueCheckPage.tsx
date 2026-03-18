@@ -132,7 +132,7 @@ export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack })
               />
             </label>
 
-            {error && <p className="text-sm text-red-500" role="alert">{error}</p>}
+            {error && <p className="text-sm text-[var(--color-data-fail)]" role="alert">{error}</p>}
 
             <button
               type="button"

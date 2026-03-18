@@ -46,7 +46,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return 'text-data-pass';
-    if (score >= 70) return 'text-yellow-500';
+    if (score >= 70) return 'text-[var(--color-data-provisional)]';
     return 'text-data-fail';
   };
 
@@ -81,7 +81,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
         status === 'good'
           ? 'border-data-pass bg-data-pass dark:border-data-pass dark:bg-data-pass/20'
           : status === 'warning'
-            ? 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20'
+            ? 'border-[var(--color-data-provisional)]/20 bg-[var(--color-data-provisional)]/10 dark:border-[var(--color-data-provisional)] dark:bg-[var(--color-data-provisional)]/20'
             : 'border-data-fail bg-data-fail dark:border-data-fail dark:bg-data-fail/20'
       }`}
     >
@@ -95,7 +95,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
             status === 'good'
               ? 'text-data-pass dark:text-data-pass'
               : status === 'warning'
-                ? 'text-yellow-600 dark:text-yellow-400'
+                ? 'text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)]'
                 : 'text-data-fail dark:text-data-fail'
           }`}
         >
@@ -132,7 +132,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
           report.score >= 70
             ? 'bg-data-pass hover:bg-data-pass'
             : report.score >= 50
-              ? 'bg-yellow-500 hover:bg-yellow-600'
+              ? 'bg-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]'
               : 'bg-data-fail hover:bg-data-fail'
         } text-white transition-colors`}
         aria-label="Performance Monitor"
@@ -224,7 +224,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                     report.score >= 70
                       ? 'bg-data-pass'
                       : report.score >= 50
-                        ? 'bg-yellow-500'
+                        ? 'bg-[var(--color-data-provisional)]'
                         : 'bg-data-fail'
                   }`}
                 />
@@ -323,7 +323,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               {report.recommendations.length > 0 && (
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                    <AlertTriangle className="w-5 h-5 text-[var(--color-data-provisional)]" />
                     <h4 className="font-semibold">Recommendations</h4>
                   </div>
                   <div className="space-y-2">
@@ -333,9 +333,9 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="flex items-start gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg"
+                        className="flex items-start gap-3 p-3 bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/20 dark:border-[var(--color-data-provisional)] rounded-lg"
                       >
-                        <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                        <AlertTriangle className="w-4 h-4 text-[var(--color-data-provisional)] dark:text-[var(--color-data-provisional)] mt-0.5 flex-shrink-0" />
                         <span className="text-sm">{rec}</span>
                       </motion.div>
                     ))}
@@ -412,7 +412,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                       report.score >= 70
                         ? 'bg-data-pass'
                         : report.score >= 50
-                          ? 'bg-yellow-500'
+                          ? 'bg-[var(--color-data-provisional)]'
                           : 'bg-data-fail'
                     }`}
                   />

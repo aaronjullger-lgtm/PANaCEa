@@ -226,7 +226,7 @@ export function BodyMapWidget({
             <span className="w-2 h-2 rounded-full bg-data-provisional" /> Passing
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-rose-500" /> Weak
+            <span className="w-2 h-2 rounded-full bg-[var(--color-data-fail)]/100" /> Weak
           </span>
         </div>
       </div>

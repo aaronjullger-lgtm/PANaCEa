@@ -182,7 +182,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
           {/* Clinical Focus */}
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <Stethoscope className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <Stethoscope className="w-5 h-5 text-[var(--color-accent)]" />
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 Clinical Focus
               </h3>
@@ -239,7 +239,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   type="checkbox"
                   checked={settings.includeRedHerrings}
                   onChange={(e) => updateSetting('includeRedHerrings', e.target.checked)}
-                  className="w-5 h-5 rounded border-[var(--color-border)] text-purple-600 focus:ring-[var(--color-focus-ring)]"
+                  className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-focus-ring)]"
                 />
                 <span className="text-sm text-data-neutral dark:text-data-neutral">
                   Include red herrings (distractors in history)
@@ -251,7 +251,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                   type="checkbox"
                   checked={settings.requireDifferential}
                   onChange={(e) => updateSetting('requireDifferential', e.target.checked)}
-                  className="w-5 h-5 rounded border-[var(--color-border)] text-purple-600 focus:ring-[var(--color-focus-ring)]"
+                  className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-focus-ring)]"
                 />
                 <span className="text-sm text-data-neutral dark:text-data-neutral">
                   Require differential diagnosis (3-5 diagnoses)
@@ -311,7 +311,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
           {/* Communication */}
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <Globe className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              <Globe className="w-5 h-5 text-[var(--color-data-provisional)]" />
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 Communication
               </h3>

@@ -215,7 +215,7 @@ export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({ userExamDa
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <BookOpen className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />
+            <BookOpen className="w-3.5 h-3.5 text-[var(--color-accent)] flex-shrink-0" />
             <span>
               <span className="font-semibold">To Do:</span> Upcoming study weeks
             </span>
@@ -239,7 +239,7 @@ export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({ userExamDa
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Book className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
+            <Book className="w-3.5 h-3.5 text-[var(--color-accent)] flex-shrink-0" />
             <span>
               <span className="font-semibold">Resources:</span> Study materials
             </span>

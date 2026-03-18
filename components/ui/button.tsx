@@ -1,10 +1,11 @@
 /**
- * Stormy Slate Button System
- * 
- * Strict design system enforcement:
- * - Primary: bg-slate-100 text-slate-900 (high contrast)
- * - Secondary: bg-slate-800 text-slate-300 (muted)
- * - Danger: bg-red-900/30 text-red-300 border-red-800
+ * Semantic Button System
+ *
+ * Uses CSS custom properties for consistent theming:
+ * - Primary: --color-accent text-white (high contrast)
+ * - Secondary: --color-bg-secondary text-primary (muted)
+ * - Danger: --color-data-fail (error state)
+ * - Warning: --color-data-provisional (warning state)
  */
 
 import React from 'react';
@@ -25,10 +26,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const variantClasses: Record<ButtonVariant, string> = {
   primary: 'bg-[var(--color-accent)] text-white hover:opacity-90 active:opacity-80',
   secondary: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]',
-  danger: 'bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/40 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
+  danger: 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)] hover:bg-[var(--color-data-fail)]/30 border border-[var(--color-data-fail)]/40',
   ghost: 'bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
   outline: 'bg-transparent text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)]',
-  warning: 'bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 border border-yellow-500/40 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
+  warning: 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/30 border border-[var(--color-data-provisional)]/40',
   accent: 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/30 border border-[var(--color-accent)]/30',
 };
 

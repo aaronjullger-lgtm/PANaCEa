@@ -303,7 +303,7 @@ export const ABGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
                   ? 'bg-data-pass/40 border-data-pass'
                   : interpretation.acidBaseStatus === 'acidosis'
                     ? 'bg-data-fail/40 border-data-fail'
-                    : 'bg-cyan-950/40 border-cyan-700'
+                    : 'bg-[var(--color-accent)]/40 border-[var(--color-accent)]'
               }`}
             >
               <div className="flex items-start gap-4">
@@ -313,7 +313,7 @@ export const ABGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
                       ? 'text-data-pass'
                       : interpretation.acidBaseStatus === 'acidosis'
                         ? 'text-data-fail'
-                        : 'text-cyan-400'
+                        : 'text-[var(--color-accent)]'
                   }`}
                 />
                 <div className="flex-1 space-y-3">

@@ -183,7 +183,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
       case 'OVERDUE':
         return { Icon: AlertCircle, label: 'Memory Critical', color: 'bg-data-fail text-white' };
       case 'WEAK_SPOT':
-        return { Icon: AlertTriangle, label: 'Weak Area', color: 'bg-orange-500 text-white' };
+        return { Icon: AlertTriangle, label: 'Weak Area', color: 'bg-[var(--color-data-provisional)] text-white' };
       case 'NEW':
         return { Icon: Sparkles, label: 'New Concept', color: 'bg-[var(--color-category-practice)] text-white' };
       default:
@@ -277,7 +277,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
 
           <button
             onClick={onExit}
-            className="px-8 py-3 bg-white text-purple-700 rounded-xl font-semibold hover:bg-white/90 transition-colors"
+            className="px-8 py-3 bg-white text-[var(--color-accent)] rounded-xl font-semibold hover:bg-white/90 transition-colors"
           >
             Back to Dashboard
           </button>

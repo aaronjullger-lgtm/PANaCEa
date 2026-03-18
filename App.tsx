@@ -855,14 +855,20 @@ const App: React.FC = () => {
 
   // Handler for navigating to drill modes with dedicated routes
   // Memoized to prevent unnecessary child re-renders
+  //
+  // Strategy:
+  // 1. First, prefer dedicated route navigation (e.g., /modes/ecg-drill)
+  //    This ensures users always see the URL update when launching modes from Practice page
+  // 2. Fallback to view-based navigation if no route exists (legacy or special modes)
   const handleNavigateToDrillMode = useCallback((modeId: string) => {
-    // First, try dedicated route navigation so /practice cards actually change page
+    // Look up mode config and navigate to dedicated route if available
     const modeConfig = TRAINING_MODES.find((m) => m.id === modeId);
     if (modeConfig?.route && modeConfig.route.startsWith('/')) {
       navigate(modeConfig.route);
       return;
     }
 
+    // Fallback: view-based navigation (maps mode ID → internal view state)
     setInitialDrillSystem(null);
     const modeViewMap: Record<string, View> = {
       [DRILL_MODE_PHOTO]: 'photo_drill',
@@ -899,7 +905,7 @@ const App: React.FC = () => {
     };
     const targetView = modeViewMap[modeId];
     if (targetView) setView(targetView);
-  }, []);
+  }, [navigate, setView]);
 
   const handleNavigateToModeRoute = useCallback(
     (route: string, modeId: string) => {

@@ -124,9 +124,9 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({ onExit,
       rightAction={
         <div className="flex items-center gap-3">
           {/* Streak Display */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/20 border border-orange-500/30">
-            <Flame className={`w-4 h-4 ${streak > 0 ? 'text-orange-500' : 'text-gray-500'}`} />
-            <span className="text-sm font-semibold text-orange-500">{streak}</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/30">
+            <Flame className={`w-4 h-4 ${streak > 0 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-text-muted)]'}`} />
+            <span className="text-sm font-semibold text-[var(--color-data-provisional)]">{streak}</span>
           </div>
 
           {/* Score Display */}

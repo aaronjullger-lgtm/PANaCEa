@@ -126,7 +126,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
             </div>
           ) : availableSets.length === 0 ? (
             <div className="text-center text-data-neutral py-8">
-              No contrastive sets available. Run the seed script to populate sets.
+              No contrastive sets available. Check back later or contact support.
             </div>
           ) : (
             <div className="grid gap-3">
@@ -134,10 +134,10 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
                 <button
                   key={set.id}
                   onClick={() => handleSelectSet(set)}
-                  className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:border-violet-400 dark:hover:border-violet-500 transition-all group text-left"
+                  className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:border-[var(--color-accent)] dark:hover:border-[var(--color-accent)] transition-all group text-left"
                 >
                   <div>
-                    <h3 className="font-semibold text-[var(--color-text-primary)] group-hover:text-violet-600 dark:group-hover:text-violet-400">
+                    <h3 className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)]">
                       {set.symptom}
                     </h3>
                     <p className="text-sm text-data-neutral dark:text-data-neutral">
@@ -150,7 +150,7 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
                       )}
                     </p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-data-neutral group-hover:text-violet-500 transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-data-neutral group-hover:text-[var(--color-accent)] transition-colors" />
                 </button>
               ))}
             </div>

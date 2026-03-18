@@ -190,7 +190,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
               {/* Vignette Card */}
               <div className="bg-data-neutral rounded-xl p-6 border border-data-neutral">
                 <div className="flex items-start gap-3 mb-4">
-                  <AlertCircle className="w-5 h-5 text-sky-400 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="w-5 h-5 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
                   <h2 className="text-lg font-semibold text-data-neutral">Clinical Vignette</h2>
                 </div>
                 <div className="prose prose-invert prose-sm max-w-none">
@@ -215,7 +215,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                         onClick={() => handleScoreClick(i)}
                         className={`w-12 h-12 rounded-lg font-bold text-lg transition-all ${
                           userScoreInput === i
-                            ? 'bg-sky-600 text-white ring-2 ring-sky-400'
+                            ? 'bg-[var(--color-accent)] text-white ring-2 ring-[var(--color-accent)]/50'
                             : 'bg-data-neutral text-data-neutral hover:bg-data-neutral'
                         }`}
                       >
@@ -228,7 +228,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                   <button
                     onClick={handleSubmit}
                     disabled={userScoreInput === null}
-                    className="w-full py-3 bg-sky-600 hover:bg-sky-500 disabled:bg-data-neutral disabled:text-data-neutral text-white font-medium rounded-lg transition-colors"
+                    className="w-full py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/80 disabled:bg-data-neutral disabled:text-data-neutral text-white font-medium rounded-lg transition-colors"
                   >
                     Submit Score
                   </button>
@@ -258,7 +258,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                       )}
                       <div>
                         <div
-                          className={`text-xl font-bold ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}
+                          className={`text-xl font-bold ${isCorrect ? 'text-[var(--color-data-pass)]' : 'text-[var(--color-data-fail)]'}`}
                         >
                           {isCorrect ? 'Correct!' : 'Incorrect'}
                         </div>
@@ -319,7 +319,7 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
                               </div>
                               {component.description && (
                                 <div
-                                  className={`text-sm mt-1 ${isMet ? 'text-slate-400' : 'text-slate-600'}`}
+                                  className={`text-sm mt-1 text-[var(--color-text-muted)]`}
                                 >
                                   {component.description}
                                 </div>

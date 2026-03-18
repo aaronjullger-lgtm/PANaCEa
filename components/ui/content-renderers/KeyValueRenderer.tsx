@@ -149,7 +149,7 @@ export const TreatmentProtocolRenderer: React.FC<{
 }> = ({ protocol, className }) => (
   <KeyValueRenderer
     data={protocol}
-    className={`bg-emerald-950/20 border border-emerald-800/30 rounded-xl p-4 ${className}`}
+    className={`bg-[var(--color-data-pass)]/20 border border-[var(--color-data-pass)]/30 rounded-xl p-4 ${className}`}
     keyClassName="text-data-pass"
   />
 );

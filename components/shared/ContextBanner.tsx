@@ -49,11 +49,11 @@ export function ContextBanner({
     if (typeof value !== 'number') return '';
 
     if (vital === 'o2') {
-      if (value < 88) return 'text-rose-500 font-semibold';
+      if (value < 88) return 'text-[var(--color-data-fail)] font-semibold';
       if (value < 92) return 'text-data-provisional';
     }
     if (vital === 'hr') {
-      if (value < 50 || value > 120) return 'text-rose-500 font-semibold';
+      if (value < 50 || value > 120) return 'text-[var(--color-data-fail)] font-semibold';
       if (value < 60 || value > 100) return 'text-data-provisional';
     }
 

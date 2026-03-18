@@ -315,7 +315,7 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
         {categoryBreakdown.length > 0 && (
           <div className="mt-6 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
               <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
                 System Progress
               </h3>

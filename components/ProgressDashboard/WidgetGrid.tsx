@@ -205,8 +205,8 @@ const StatCard: React.FC<StatCardProps> = ({
 }) => {
   const isHighlight = isGoldAchievement || isClinicalAchievement;
   const highlightClass = isClinicalAchievement ? 'clinical-achievement' : 'gold-achievement';
-  const highlightTextClass = isClinicalAchievement ? 'text-teal-700' : 'text-data-provisional';
-  const highlightIconClass = isClinicalAchievement ? 'text-teal-500' : 'text-data-provisional';
+  const highlightTextClass = isClinicalAchievement ? 'text-[var(--color-accent)]' : 'text-data-provisional';
+  const highlightIconClass = isClinicalAchievement ? 'text-[var(--color-accent)]' : 'text-data-provisional';
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -236,7 +236,7 @@ const StatCard: React.FC<StatCardProps> = ({
         {trend !== undefined && (
           <span
             className={`flex items-center gap-0.5 text-xs font-medium ${
-              trend > 0 ? 'text-teal-500' : trend < 0 ? 'text-data-neutral' : 'text-data-neutral'
+              trend > 0 ? 'text-[var(--color-accent)]' : trend < 0 ? 'text-data-neutral' : 'text-data-neutral'
             }`}
           >
             {trend > 0 ? (
@@ -296,7 +296,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
             label={isStrongConsistency ? 'Study Continuity' : 'Consecutive Correct'}
             value={data.currentStreak}
             subtext={isStrongConsistency ? 'Strong consistency' : 'Questions in a row'}
-            colorClass="text-teal-500"
+            colorClass="text-[var(--color-accent)]"
             isClinicalAchievement={isStrongConsistency}
             delay={delay}
           />
@@ -365,7 +365,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
                   : `${Math.round((data.todayCorrect / data.todayQuestions) * 100)}% accuracy`
                 : 'Ready to start'
             }
-            colorClass="text-teal-500"
+            colorClass="text-[var(--color-accent)]"
             isClinicalAchievement={isStrongSession}
             delay={delay}
           />
@@ -384,7 +384,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
                 ? `${Math.round((data.weekCorrect / data.weekQuestions) * 100)}% accuracy`
                 : 'No questions yet'
             }
-            colorClass="text-indigo-500"
+            colorClass="text-[var(--color-accent)]"
             delay={delay}
           />
         );
@@ -404,7 +404,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
             label="Recent Form"
             value={`${data.recentTrend >= 0 ? '+' : ''}${data.recentTrend}%`}
             subtext="Last 50 questions"
-            colorClass={data.recentTrend >= 0 ? 'text-teal-500' : 'text-data-neutral'}
+            colorClass={data.recentTrend >= 0 ? 'text-[var(--color-accent)]' : 'text-data-neutral'}
             delay={delay}
           />
         );
@@ -416,7 +416,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
             icon={<Flame className="w-5 h-5" />}
             label="Study Days"
             value={data.studyDays}
-            colorClass="text-purple-500"
+            colorClass="text-[var(--color-accent)]"
             delay={delay}
           />
         );
@@ -444,7 +444,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
             title={diffText}
           >
             <div className="flex items-center gap-2 mb-3">
-              <FileText className="w-5 h-5 text-indigo-500" />
+              <FileText className="w-5 h-5 text-[var(--color-accent)]" />
               <span className="stat-label-sm">Case Endurance</span>
             </div>
             <div className="flex items-center gap-4">
@@ -455,7 +455,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
                 <div className="stat-label-sm mb-1">{`Short (<${SHORT_THRESHOLD} words)`}</div>
                 <div className="h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-indigo-400 rounded-full"
+                    className="h-full bg-[var(--color-accent)]/60 rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${data.shortQuestionAccuracy ?? 0}%` }}
                     transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -472,7 +472,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
                 <div className="stat-label-sm mb-1">{`Long (>${LONG_THRESHOLD} words)`}</div>
                 <div className="h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-purple-500 rounded-full"
+                    className="h-full bg-[var(--color-accent)] rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${data.longQuestionAccuracy ?? 0}%` }}
                     transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
@@ -573,7 +573,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
             className="widget-premium-glass widget-noise-texture p-4 col-span-2"
           >
             <div className="flex items-center gap-2 mb-3">
-              <BarChart3 className="w-5 h-5 text-violet-500" />
+              <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
               <span className="stat-label-sm">Topic Split</span>
             </div>
             <div className="flex items-center gap-2 mb-2">
@@ -586,7 +586,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
                 </div>
                 <div className="h-3 bg-[var(--color-bg-tertiary)] rounded-l-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-sky-500 rounded-l-full"
+                    className="h-full bg-[var(--color-accent)] rounded-l-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${data.diagnosisAccuracy ?? 0}%` }}
                     transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -603,7 +603,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
                 </div>
                 <div className="h-3 bg-[var(--color-bg-tertiary)] rounded-r-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-violet-500 rounded-r-full"
+                    className="h-full bg-[var(--color-accent)] rounded-r-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${data.managementAccuracy ?? 0}%` }}
                     transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}

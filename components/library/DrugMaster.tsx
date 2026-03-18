@@ -143,7 +143,7 @@ const ListField: React.FC<{ label: string; value: string[]; color?: string }> = 
 
   const colorClasses = {
     blue: 'bg-[var(--color-accent)]/15 text-[var(--color-accent)] border-[var(--color-accent)]/30',
-    emerald: 'bg-sage-500/15 text-sage-400 border-sage-500/30',
+    emerald: 'bg-[var(--color-data-neutral)]/15 text-[var(--color-data-neutral)] border-[var(--color-data-neutral)]/30',
     rose: 'bg-dusty-rose/15 text-dusty-rose border-dusty-rose/30',
     amber: 'bg-muted-amber/15 text-muted-amber border-muted-amber/30',
     purple: 'bg-deep-plum-400/15 text-deep-plum-300 border-deep-plum-400/30',
@@ -285,7 +285,7 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                     </span>
                   )}
                   {drug.isFirstLine && (
-                    <span className="px-3 py-1 rounded-full bg-sage-500/20 text-sage-400 text-xs font-semibold border border-sage-500/30 flex items-center gap-1">
+                    <span className="px-3 py-1 rounded-full bg-[var(--color-data-neutral)]/20 text-[var(--color-data-neutral)] text-xs font-semibold border border-[var(--color-data-neutral)]/30 flex items-center gap-1">
                       <Award className="w-3.5 h-3.5 shrink-0" />
                       First-Line
                     </span>
@@ -327,10 +327,10 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                 </div>
               )}
               {drug.dosing && (
-                <div className="p-4 rounded-xl bg-gradient-to-br from-sage-500/20 to-sage-600/10 border border-sage-500/30">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-[var(--color-data-neutral)]/20 to-[var(--color-data-neutral)]/10 border border-[var(--color-data-neutral)]/30">
                   <div className="flex items-center gap-2 mb-2">
-                    <Droplet className="w-4 h-4 text-sage-400" />
-                    <span className="text-xs font-semibold text-sage-400 uppercase tracking-wide">
+                    <Droplet className="w-4 h-4 text-[var(--color-data-neutral)]" />
+                    <span className="text-xs font-semibold text-[var(--color-data-neutral)] uppercase tracking-wide">
                       Dosing
                     </span>
                   </div>
@@ -349,17 +349,17 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
             {/* Related Conditions */}
             {firstLineConditions.length > 0 && (
               <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)]">
-                <h5 className="text-xs font-semibold text-sage-400 uppercase tracking-wide mb-3">
+                <h5 className="text-xs font-semibold text-[var(--color-data-neutral)] uppercase tracking-wide mb-3">
                   First-Line for Conditions
                 </h5>
                 <div className="flex flex-wrap gap-2">
                   {firstLineConditions.map((link) => (
                     <span
                       key={link.Condition.id}
-                      className="px-3 py-1.5 rounded-lg bg-sage-500/15 text-sage-400 border border-sage-500/30 text-xs font-medium"
+                      className="px-3 py-1.5 rounded-lg bg-[var(--color-data-neutral)]/15 text-[var(--color-data-neutral)] border border-[var(--color-data-neutral)]/30 text-xs font-medium"
                     >
                       {link.Condition.condition}
-                      <span className="text-sage-400/60 ml-1">({link.Condition.system})</span>
+                      <span className="text-[var(--color-data-neutral)]/60 ml-1">({link.Condition.system})</span>
                     </span>
                   ))}
                 </div>
@@ -475,7 +475,7 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
               </Section>
 
               {/* Section 2: Administration */}
-              <Section title="Administration & Dosing" icon={Droplet} accentColor="text-sage-400">
+              <Section title="Administration & Dosing" icon={Droplet} accentColor="text-[var(--color-data-neutral)]">
                 <ListField
                   label="Routes of Administration"
                   value={drug.routesOfAdmin}
@@ -557,10 +557,10 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
 
                   {/* Pediatric */}
                   {(drug.pediatricDosing || drug.pediatricNotes) && (
-                    <div className="p-3 rounded-lg bg-sage-500/10 border border-sage-500/30">
+                    <div className="p-3 rounded-lg bg-[var(--color-data-neutral)]/10 border border-[var(--color-data-neutral)]/30">
                       <div className="flex items-center gap-2 mb-2">
-                        <Baby className="w-4 h-4 text-sage-400" />
-                        <h5 className="text-xs font-semibold text-sage-400 uppercase">Pediatric</h5>
+                        <Baby className="w-4 h-4 text-[var(--color-data-neutral)]" />
+                        <h5 className="text-xs font-semibold text-[var(--color-data-neutral)] uppercase">Pediatric</h5>
                       </div>
                       <TextField label="Dosing" value={drug.pediatricDosing} />
                       <TextField label="Notes" value={drug.pediatricNotes} />
@@ -642,7 +642,7 @@ const DrugMaster: React.FC<DrugMasterProps> = ({ drug, onClose }) => {
                 <TextField label="Clinical Notes" value={drug.clinicalNotes} />
                 <ListField label="Alternative Names / Aliases" value={drug.aliases} color="blue" />
                 {drug.genericAvailable && (
-                  <p className="text-sm text-sage-400">✓ Generic available</p>
+                  <p className="text-sm text-[var(--color-data-neutral)]">✓ Generic available</p>
                 )}
                 <TextField label="Typical Cost" value={drug.typicalCost} />
                 <TextField label="Storage Requirements" value={drug.storageRequirements} />
