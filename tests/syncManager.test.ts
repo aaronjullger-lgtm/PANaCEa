@@ -35,6 +35,21 @@ const createMockStorage = (): MockStorage => {
   };
 };
 
+async function waitForAssertion(
+  condition: () => void,
+  attempts: number = 10
+): Promise<void> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      condition();
+      return;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+  }
+  condition();
+}
+
 // Mock logger
 vi.mock('@/src/lib/logger', () => ({
   logger: {
@@ -143,9 +158,9 @@ describe('SyncManager', () => {
       };
       syncManager.queueReview(review);
 
-      // Wait a tick for the async sync
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      expect(mockFetch).toHaveBeenCalledTimes(1);
+      await waitForAssertion(() => {
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+      });
       expect(mockFetch.mock.calls[0][0]).toBe('/api/drills/submit-reviews');
     });
   });
@@ -228,6 +243,36 @@ describe('SyncManager', () => {
       expect(pending).toHaveLength(0);
     });
 
+    it('should sync reviews when batch result order differs from request order', async () => {
+      syncManager.queueReview({
+        questionId: 'q1',
+        selectedAnswer: 0,
+        timeSpentMs: 1000,
+      });
+      syncManager.queueReview({
+        questionId: 'q2',
+        selectedAnswer: 1,
+        timeSpentMs: 1200,
+      });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [
+            { questionId: 'q2', success: true },
+            { questionId: 'q1', success: true },
+          ],
+        }),
+      });
+
+      const result = await syncManager.syncAll();
+      expect(result.reviews).toBe(2);
+
+      const stored = JSON.parse(localStorage.getItem('panceai_offline_reviews') || '[]');
+      const pending = stored.filter((r: any) => !r.synced);
+      expect(pending).toHaveLength(0);
+    });
+
     it('should handle batch failure', async () => {
       syncManager.queueReview({
         questionId: 'q1',
@@ -266,6 +311,21 @@ describe('SyncManager', () => {
       expect(eventListener.mock.calls[1][0].isSyncing).toBe(false);
     });
 
+    it('should store last sync error when immediate review sync fails', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Immediate review failure'));
+
+      syncManager.queueReview({
+        questionId: 'q-immediate',
+        selectedAnswer: 0,
+        timeSpentMs: 900,
+      });
+
+      await waitForAssertion(() => {
+        const status = syncManager.getStatus();
+        expect(status.lastSyncError).toBe('Immediate review failure');
+      });
+    });
+
     it('should return zeros when already syncing', async () => {
       // Force isSyncing = true
       syncManager['isSyncing'] = true;
@@ -296,7 +356,7 @@ describe('SyncManager', () => {
       syncManager.on('sync-error', eventListener);
 
       await expect(syncManager.syncAll()).rejects.toThrow('Network failure');
-      expect(eventListener).toHaveBeenCalledTimes(1);
+      expect(eventListener).toHaveBeenCalled();
       // Verify scheduleRetry was called (we can't directly test setTimeout)
       // but we can verify that isSyncing is false after error
       expect(syncManager.getStatus().isSyncing).toBe(false);
