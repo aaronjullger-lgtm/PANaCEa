@@ -111,7 +111,7 @@ export default function DrillHub(): JSX.Element {
                 .filter((a) => a.drillType === 'photo_drill')
                 .reduce((sum, a) => sum + a.accuracy, 0) /
                 overview.recentActivity.filter((a) => a.drillType === 'photo_drill').length || 0,
-            avgTimeMs: 3200, // TODO: Calculate from actual data
+            avgTimeMs: 0, // Not available from API yet
           }
         : undefined,
     },
@@ -134,7 +134,7 @@ export default function DrillHub(): JSX.Element {
                 .reduce((sum, a) => sum + a.accuracy, 0) /
                 overview.recentActivity.filter((a) => a.drillType === 'contrastive_drill').length ||
               0,
-            avgTimeMs: 45000, // TODO: Calculate from actual data
+            avgTimeMs: 0, // Not available from API yet
           }
         : undefined,
     },
@@ -298,14 +298,16 @@ export default function DrillHub(): JSX.Element {
                     <span>Accuracy</span>
                     <span className="font-bold">{(mode.stats.accuracy * 100).toFixed(1)}%</span>
                   </div>
-                  <div className="flex items-center justify-between text-[var(--color-text-inverse)]/80 text-sm">
-                    <span>Avg Time</span>
-                    <span className="font-bold">
-                      {mode.stats.avgTimeMs >= 60000
-                        ? `${(mode.stats.avgTimeMs / 60000).toFixed(1)}m`
-                        : `${(mode.stats.avgTimeMs / 1000).toFixed(1)}s`}
-                    </span>
-                  </div>
+                  {mode.stats.avgTimeMs > 0 && (
+                    <div className="flex items-center justify-between text-[var(--color-text-inverse)]/80 text-sm">
+                      <span>Avg Time</span>
+                      <span className="font-bold">
+                        {mode.stats.avgTimeMs >= 60000
+                          ? `${(mode.stats.avgTimeMs / 60000).toFixed(1)}m`
+                          : `${(mode.stats.avgTimeMs / 1000).toFixed(1)}s`}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
