@@ -47,6 +47,7 @@ import {
   PracticePage,
   ProgressPage,
   DailyChallengesHub,
+  StudyPathDashboard,
 } from './lazyComponents';
 import { BehavioralTrackerProvider } from '@/components/quiz/Tracker';
 import { Loader, CommandCenterSkeleton, DrillLoadingState } from '../components/loading';
