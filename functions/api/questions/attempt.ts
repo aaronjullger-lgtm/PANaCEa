@@ -15,10 +15,55 @@ import { createEndpointLogger } from '../_shared/secureLogger';
 import { scheduleConceptReview } from '../intelligence/profile';
 import { getRolling360Service } from '../../../lib/services/rolling360Service';
 import { FSRS, topicProgressToCard } from '../../../lib/fsrs';
+import { deriveContinuousRating } from '../../../lib/implicit-metrics';
+import { applyHonestRating } from '../../../lib/srs/ghostGrader';
 import { getEorRotationEnd, applyEorClampIfNeeded } from '../../../lib/fsrs/eorScheduler';
 import { getTaskTypeFromContent } from '../../../lib/taskTypes';
 
 const LETTERS = ['A', 'B', 'C', 'D'] as const;
+const DEFAULT_PAR_TIME_MS = 30000;
+
+function normalizeDeprecatedRating(rawRating: number | undefined): number | undefined {
+  if (rawRating == null) return undefined;
+  if (rawRating === 2) return 1;
+  if (rawRating === 4) return 3;
+  return rawRating;
+}
+
+function normalizeTelemetryMetrics(params: {
+  telemetryJson?: Record<string, unknown>;
+  timeSpentMillis: number | null;
+  durationMs?: number;
+  answerChangedCount?: number;
+}) {
+  const { telemetryJson, timeSpentMillis, durationMs, answerChangedCount } = params;
+  const telemetry = telemetryJson ?? {};
+  const fallbackFirstInteraction = Math.min(
+    timeSpentMillis ?? durationMs ?? DEFAULT_PAR_TIME_MS,
+    Math.round(DEFAULT_PAR_TIME_MS * 0.85)
+  );
+  const timeToFirstInteraction =
+    typeof telemetry.time_to_first_interaction_ms === 'number'
+      ? telemetry.time_to_first_interaction_ms
+      : fallbackFirstInteraction;
+  const answerChanges =
+    typeof telemetry.answer_change_count === 'number'
+      ? telemetry.answer_change_count
+      : typeof telemetry.answer_changes === 'number'
+        ? telemetry.answer_changes
+        : answerChangedCount ?? 0;
+  return {
+    timeToFirstInteraction,
+    answerChanges,
+    selectionDriftMs:
+      typeof telemetry.selection_drift_ms === 'number' ? telemetry.selection_drift_ms : null,
+    tremorScore: typeof telemetry.tremor_score === 'number' ? telemetry.tremor_score : 0,
+    oscillations: typeof telemetry.hover_oscillations === 'number' ? telemetry.hover_oscillations : 0,
+    vignetteRegressions:
+      typeof telemetry.vignette_regressions === 'number' ? telemetry.vignette_regressions : 0,
+    cursorEntropy: typeof telemetry.cursor_entropy === 'number' ? telemetry.cursor_entropy : undefined,
+  };
+}
 
 const AttemptSchema = z.object({
   body: z.object({
@@ -243,10 +288,49 @@ export const onRequestPost = authenticatedEndpoint(AttemptSchema, async (context
     // FSRS v6: Apply spaced repetition scheduling via UserTopicProgress
     // This is the primary scheduling mechanism - Leitner above is kept as legacy fallback
     let nextReviewDate: Date | null = null;
-    if (typeof correctness === 'boolean' && fsrsRatingRaw != null) {
+    const hasManualFsrsRating = fsrsRatingRaw != null;
+    const hasBehaviorSignals = telemetryJson != null || timeSpentMillis != null || durationMs != null;
+    if (typeof correctness === 'boolean' && (hasManualFsrsRating || hasBehaviorSignals)) {
       try {
-        // Normalize deprecated ratings: Hard(2)→Again(1), Easy(4)→Good(3)
-        const fsrsRating = fsrsRatingRaw === 2 ? 1 : fsrsRatingRaw === 4 ? 3 : fsrsRatingRaw;
+        // Prefer backend-derived implicit rating (Ghost Grader pipeline) when telemetry is available.
+        const {
+          timeToFirstInteraction,
+          answerChanges,
+          selectionDriftMs,
+          tremorScore,
+          oscillations,
+          vignetteRegressions,
+          cursorEntropy,
+        } = normalizeTelemetryMetrics({
+          telemetryJson,
+          timeSpentMillis,
+          durationMs,
+          answerChangedCount,
+        });
+
+        const implicit = deriveContinuousRating({
+          timeToFirstClick: Math.max(1, timeToFirstInteraction),
+          answerSwitches: Math.max(0, answerChanges),
+          totalDwellTime: timeSpentMillis ?? durationMs ?? 0,
+          isCorrect: correctness,
+          parTimeMs: DEFAULT_PAR_TIME_MS,
+          commitmentGapMs: selectionDriftMs ?? undefined,
+          cursorEntropy,
+          hoverOscillationCount: oscillations,
+        });
+
+        // Normalize deprecated manual ratings if provided, then apply honest-history cap.
+        const normalizedManualRating = normalizeDeprecatedRating(fsrsRatingRaw ?? undefined);
+        const baseRating = normalizedManualRating ?? implicit.discreteRating;
+        const fsrsRating = applyHonestRating({
+          userRating: baseRating,
+          isCorrect: correctness,
+          oscillations,
+          vignetteRegressions,
+          selectionDriftMs,
+          tremorScore,
+        });
+
         const fsrs = new FSRS();
         const now = new Date();
 

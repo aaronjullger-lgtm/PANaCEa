@@ -6,6 +6,7 @@ import { getEorRotationEnd } from '../../../lib/fsrs/eorScheduler';
 import { scheduleConceptReview } from '../intelligence/profile';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
 import { DrillSubmitReviewSchema } from './submit-review';
+import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';
 import { z } from 'zod';
 
 const BatchDrillSubmitReviewSchema = z.array(DrillSubmitReviewSchema);
@@ -74,21 +75,16 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
       } = review;
 
       try {
-        const question = await prisma.preGeneratedQuestion.findUnique({
-          where: { id: questionId },
-          select: {
-            id: true,
-            questionData: true,
-            conditionId: true,
-            medicalContentId: true,
-            system: true,
-            difficulty: true,
-            questionType: true,
-          },
+        const normalizedSelectedAnswer =
+          typeof selectedAnswer === 'string' ? selectedAnswer : String(selectedAnswer);
+        const { question, source } = await resolveReviewQuestion(prisma, {
+          userId: user.id,
+          questionId,
+          selectedAnswer: normalizedSelectedAnswer,
         });
 
         if (!question) {
-          results.push({ questionId, error: 'Question not found', success: false });
+          results.push({ questionId, error: 'Question not found', success: false, source: 'missing' });
           continue;
         }
 
@@ -141,7 +137,7 @@ export const onRequestPost = authenticatedEndpoint(BatchDrillSubmitReviewSchema,
           }
         }
 
-        results.push({ questionId, success: true, data: result });
+        results.push({ questionId, success: true, data: result, source });
       } catch (error) {
         logger.error(`Failed to process review for question ${questionId}`, error);
         results.push({

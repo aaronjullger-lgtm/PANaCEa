@@ -5,7 +5,7 @@ import { submitDrillReview } from '../../../lib/services/drillReviewService';
 import { getEorRotationEnd } from '../../../lib/fsrs/eorScheduler';
 import { scheduleConceptReview } from '../intelligence/profile';
 import { ensureDueVariant } from '../../../lib/ensureDueVariant';
-import { uuidSchema } from '../_shared/zodSchemas';
+import { resolveReviewQuestion } from './_shared/reviewQuestionResolver';
 import { z } from 'zod';
 
 // Zod schema for TelemetryData (Phase 3: Telemetry Injection)
@@ -66,9 +66,9 @@ const TelemetrySchema = z
   .strict();
 
 // Request validation schema
-// questionId must be a PreGeneratedQuestion id (submit-review looks up via prisma.preGeneratedQuestion)
 export const DrillSubmitReviewSchema = z.object({
-  questionId: uuidSchema,
+  // Accept UUID and ephemeral/generated IDs so resolver can handle pool/main/attempt-backed questions.
+  questionId: z.string().min(1),
   selectedAnswer: z.union([z.string(), z.number()]),
   timeSpentMs: z.number().int().min(0).max(3600000),
   timeToFirstClick: z.number().int().min(0).optional(),
@@ -135,17 +135,12 @@ export const onRequestPost = authenticatedEndpoint(DrillSubmitReviewSchema, asyn
       };
     }
 
-    const question = await prisma.preGeneratedQuestion.findUnique({
-      where: { id: questionId },
-      select: {
-        id: true,
-        questionData: true,
-        conditionId: true,
-        medicalContentId: true,
-        system: true,
-        difficulty: true,
-        questionType: true,
-      },
+    const normalizedSelectedAnswer =
+      typeof selectedAnswer === 'string' ? selectedAnswer : String(selectedAnswer);
+    const { question } = await resolveReviewQuestion(prisma, {
+      userId: user.id,
+      questionId,
+      selectedAnswer: normalizedSelectedAnswer,
     });
 
     if (!question) {
