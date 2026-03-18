@@ -933,7 +933,11 @@ function ManagementTab({
     ...treatments.filter((t) => !t.isFirstLine),
   ];
 
-  if (detailsLoadFailed) {
+  // Even when details fail to load, drug/treatment links come from the basic query
+  // and may still be available. Show partial content instead of a blank slate.
+  const hasBasicContent = firstLine || firstLineFromLinks || alternatives.length > 0;
+
+  if (detailsLoadFailed && !hasBasicContent) {
     return (
       <div className="text-center py-12">
         <p className="text-[var(--color-text-muted)] italic">
@@ -968,6 +972,13 @@ function ManagementTab({
 
   return (
     <div className="space-y-6">
+      {/* Degraded state banner when details failed but drug links are available */}
+      {detailsLoadFailed && hasBasicContent && (
+        <div className="p-3 rounded-lg bg-data-provisional/10 border border-data-provisional/30 text-sm text-[var(--color-text-muted)]">
+          Some details couldn&apos;t be loaded. Showing available treatment information.
+        </div>
+      )}
+
       {/* Pharmacotherapy - First Line Rx — always open first */}
       {(firstLine || firstLineFromLinks) && (
         <CollapsibleSection

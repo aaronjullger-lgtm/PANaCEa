@@ -37,6 +37,7 @@ import {
   SystemMappingsPage,
   QuestionGeneratorPage,
   RefineryPage,
+  QuestionCurationPanel,
   MyPearlsPanel,
   ClinicalEyePage,
   VisualizerPage,
@@ -299,6 +300,14 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         element={
           <Suspense fallback={<Loader message="Loading admin…" />}>
             <AdminDashboard onClose={() => navigate(ROUTES.STUDY)} />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/admin/curation"
+        element={
+          <Suspense fallback={<Loader message="Loading curation…" />}>
+            <QuestionCurationPanel />
           </Suspense>
         }
       />

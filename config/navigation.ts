@@ -1,5 +1,5 @@
 import { LucideIcon } from 'lucide-react';
-import { isKnownPath as checkKnownPath } from './routeRegistry';
+import { isKnownPath as checkKnownPath, CANONICAL_PATHS as REGISTRY_CANONICAL_PATHS } from './routeRegistry';
 import {
   LayoutDashboard,
   LineChart,
@@ -143,42 +143,14 @@ export const NAV_RAIL_ITEMS: NavRailItem[] = [
 
 /**
  * Paths that map to app views or explicit routes. Used for 404 detection in App.tsx.
- * Add new routes here so unknown paths show the 404 page.
  *
- * CANONICAL_PATHS is the source of truth for all canonical app routes.
- * Use getKnownPaths() below to include mode routes dynamically.
+ * DERIVED FROM routeRegistry.ts — the single source of truth.
+ * Do NOT add routes here; add them to ROUTE_REGISTRY in config/routeRegistry.ts instead.
+ *
+ * The extra trailing-slash variants (/study/, /study/main-session/) are kept for
+ * backward-compat 404 detection; routeRegistry handles prefix matching for those.
  */
-export const CANONICAL_PATHS: string[] = [
-  '/',
-  '/study',
-  '/study/',
-  '/menu',
-  '/practice',
-  '/progress',
-  '/study/main-session',
-  '/study/main-session/',
-  '/study/knowledge',
-  '/study/utilities',
-  '/study/reference',
-  '/study/toolkit',
-  '/study/path',
-  '/admin',
-  '/admin/curation',
-  '/admin/refinery',
-  '/admin/taxonomies',
-  '/admin/system-mappings',
-  '/admin/question-generator',
-  '/clinical-eye',
-  '/visualizer',
-  '/gap-analysis',
-  '/clinical-profile',
-  '/medical-database',
-  '/live-collaboration',
-  '/explorer',
-  '/daily-challenges',
-  '/core-adaptive',
-  '/session/', // Prefix: session-runner routes
-];
+export const CANONICAL_PATHS: string[] = REGISTRY_CANONICAL_PATHS;
 /**
  * Universal Medical Companion - Main Navigation Configuration
  *

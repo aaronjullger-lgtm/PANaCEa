@@ -35,6 +35,10 @@ export const ROUTE_REGISTRY: RouteDefinition[] = [
   { path: '/daily-challenges', view: null, label: 'Daily Challenges', isRouterRoute: true, includeIn404Check: true },
   { path: '/admin', view: null, label: 'Admin', isRouterRoute: true, includeIn404Check: true },
   { path: '/admin/curation', view: null, label: 'Admin Curation', isRouterRoute: true, includeIn404Check: true },
+  { path: '/admin/refinery', view: null, label: 'Admin Refinery', isRouterRoute: true, includeIn404Check: true },
+  { path: '/admin/taxonomies', view: null, label: 'Admin Taxonomies', isRouterRoute: true, includeIn404Check: true },
+  { path: '/admin/system-mappings', view: null, label: 'Admin System Mappings', isRouterRoute: true, includeIn404Check: true },
+  { path: '/admin/question-generator', view: null, label: 'Admin Question Generator', isRouterRoute: true, includeIn404Check: true },
   { path: '/clinical-eye', view: null, label: 'Clinical Eye', isRouterRoute: true, includeIn404Check: true },
   { path: '/visualizer', view: null, label: 'Visualizer', isRouterRoute: true, includeIn404Check: true },
   
