@@ -23,7 +23,7 @@
 - **Schema:** `prisma/schema.prisma` is the source of truth. Core models include `User`, `Question`, `QuestionAttempt`, `Condition`, `MedicalContent`, `UserTopicProgress`, etc.
 - **Edge usage:** All Functions use `createEdgePrismaClient(env.DATABASE_URL)` from `functions/api/_shared/prisma-edge.ts` (singleton pattern). Handlers call `safePrismaDisconnect(prisma)` in `finally` blocks. No `new PrismaClient()` in route handlers.
 - **Health check:** `GET /api/health` uses Prisma `$queryRaw\`SELECT 1 as health_check\`` to verify connectivity; reports `database.status: pass/fail`.
-- **Gap:** None. Use `DATABASE_URL` (Prisma Accelerate `prisma://` or direct `postgresql://`) in env.
+- **Gap:** None. Use edge-compatible `DATABASE_URL` (Prisma Accelerate `prisma://` / `prisma+postgres://`) in env.
 
 ---
 
@@ -44,7 +44,7 @@
 - **Session init:** `initializeSession()` from `services/core/mainSessionService.ts` (exported via `services/core/index.ts`). Used in `App.tsx` when starting a session.
 - **Fetch questions:** `fetchSessionQuestions(settings, token, count)` in `mainSessionService.ts` calls `GET /api/questions/session?count=...&system=...&mode=...` with `Authorization: Bearer <token>`. On failure, falls back to `fallbackQuestionFetch` (client-side `getQuestionBatch`).
 - **API:** `GET /api/questions/session` and `POST /api/questions/session` in `functions/api/questions/session.ts` use `authenticatedEndpoint`, resolve user by `auth.userId` (Clerk), call `SessionService.getSessionQuestions`, return `questions` (+ analytics/poolStatus). `SessionService` uses Prisma and pool logic.
-- **Attempts:** `POST /api/questions/attempt` in `functions/api/questions/attempt.ts` accepts `questionId`, `isCorrect`/`wasCorrect`, `selectedAnswer`, `telemetryJson`, `answerChangedCount`, etc.; updates `QuestionAttempt`, `UserQuestionSeen`, and related. QuizView and sync manager send attempts here.
+- **Attempts:** `POST /api/questions/attempt` in `functions/api/questions/attempt.ts` accepts `questionId`, `isCorrect`/`wasCorrect`, `selectedAnswer` (`0..3` or `A..D`), `telemetryJson`, `answerChangedCount`, `isMainSession`, and FSRS `rating` (`1..4`); updates `QuestionAttempt`, `UserQuestionSeen`, FSRS topic progress, and related aggregates.
 - **Client:** `getQuestionBatch` in `services/questionService.ts` uses `fetchFromPool` → `GET /api/questions/pool?...` when token is present; otherwise local/fallback behavior.
 - **Gap:** None. Ensure `GEMINI_API_KEY` and pool/DB are populated for full experience.
 

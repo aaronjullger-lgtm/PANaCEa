@@ -13,9 +13,19 @@ There is no client-side filtering by search text; search is entirely server-side
 ## Implementation
 
 - **Client:** [components/library/ClinicalReferenceLibrary.tsx](components/library/ClinicalReferenceLibrary.tsx) — `fetchContent` includes `search: searchQuery.trim()` in the library request when the user has typed a query. `displayContent` is always `filteredContent` (from the library API). The semantic answer is rendered when `semanticAnswer && askedForAnswer && !semanticLoading`.
-- **API list endpoint:** `functions/api/content/library.ts` — accepts `search`, `system`, `subcategory`, `highYield` query params; runs `search_vector @@ websearch_to_tsquery('english', search)` and returns ranked results, with LIKE fallback if FTS fails or returns no rows.
+- **API list endpoint:** `functions/api/content/library.ts` — accepts `search`, `system`, `subcategory`, `highYield` (and currently schema-accepted `page`/`pageSize`) query params. `search` is trimmed and capped at 200 chars. Server flow: `search_vector @@ websearch_to_tsquery('english', search)` ranking first, then case-insensitive fallback on `condition`, `overview`, and `classic_patient` if FTS fails or returns no rows.
 - **API systems endpoint:** `functions/api/content/systems.ts` — returns distinct systems + counts for filters.
 - **API condition endpoints:** `functions/api/content/condition/[conditionId]/summary.ts` and `.../details.ts`.
+
+## Runtime behavior notes
+
+- Auth is required (`Authorization: Bearer <token>`).
+- Successful list responses set `Cache-Control: public, max-age=3600`.
+- KV response caching (TTL 1 hour) is used only when `search` is absent.
+- On runtime failure, the endpoint returns `503` with:
+  - `error: "failed_to_load_library"`
+  - `error_code: "failed_to_load_library"`
+  - `content: []`, `count: 0`
 
 ## Prerequisites
 

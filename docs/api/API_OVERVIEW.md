@@ -1,154 +1,158 @@
 # API Overview
 
-This document tracks the request/response contracts for the most recently changed API routes.
+This document tracks request/response contracts for the most recently changed API surface.
 
 ## Changed Routes
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/admin/check-access` | Verifies whether the authenticated user currently has admin access. |
-| GET | `/api/admin/stats` | Returns admin dashboard platform metrics (users, activity, flags, top systems). |
-| POST | `/api/osce/complete` | Marks an OSCE session complete (idempotent) and optionally persists analytics to `CaseFile`. |
-| GET | `/api/osce/stats` | Returns OSCE-only performance metrics and trend data from completed sessions with scores. |
+| GET | `/api/content/library` | Returns filtered clinical library cards with optional full-text search ranking. |
+| POST | `/api/questions/attempt` | Records a question attempt and updates user/question analytics and review scheduling. |
 
-## Endpoint Contracts
+## Shared Behavior (Both Routes)
 
-### `GET /api/admin/check-access`
-
-**Auth:** Required (authenticated endpoint)
-
-**Request body:** None
-
-**Success response (`200 OK`)**
-
-```json
-{
-  "success": true,
-  "hasAccess": true,
-  "role": "admin",
-  "userId": "string",
-  "email": "optional-string"
-}
-```
-
-`role` can be `admin` or `superadmin`.
-
-**Error responses**
-
-- `403` → `{ "success": false, "hasAccess": false, "message": "Forbidden - Admin access required" }`
-- `500` → `{ "error": "Internal server error", "hasAccess": false }`
-
-**Notes**
-
-- Access is resolved in this order: `SUPERADMIN_USER_IDS`/`ADMIN_USER_IDS` env values first, then database role lookup.
+- **Auth required** via `Authorization: Bearer <Clerk session token>`.
+- **Middleware stack** enforces:
+  - `DATABASE_URL` + `CLERK_SECRET_KEY` present
+  - request validation via Zod
+  - rate limit (default `300` requests/minute per authenticated identity)
+  - CORS + `OPTIONS` preflight handling
+- **Common error envelopes**:
+  - Middleware validation/auth/rate-limit errors return top-level JSON:
+    - `{"error":"Validation failed: ..."}`
+    - `{"error":"Authentication required"}`
+    - `{"error":"Too many requests. Please try again later."}`
+  - Missing env configuration returns:
+    - `{"success":false,"error":{"code":"MISSING_ENVIRONMENT_CONFIG","message":"Server configuration error. Required environment variables are missing."}}`
 
 ---
 
-### `GET /api/admin/stats`
+## `GET /api/content/library`
 
-**Auth:** Required (admin-authenticated endpoint)
+**Auth:** Required  
+**Body:** None (query-string endpoint)
 
-**Request body:** None
+### Query parameters
 
-**Success response (`200 OK`)**
+| Param | Type | Required | Notes |
+|---|---|---|---|
+| `system` | string | No | When omitted or `all`, no system filter is applied. |
+| `subcategory` | string | No | Exact subcategory filter. |
+| `search` | string | No | Trimmed and capped to 200 chars server-side. |
+| `highYield` | string | No | `true` filters to `pance_yield >= 3`. |
+| `page` | string | No | Accepted by schema (currently no pagination logic). |
+| `pageSize` | string | No | Accepted by schema (currently no pagination logic). |
+
+### Success response (`200 OK`)
 
 ```json
 {
-  "success": true,
-  "data": {
-    "totalUsers": 0,
-    "activeUsersToday": 0,
-    "totalStudySessions": 0,
-    "averageAccuracy": 0,
-    "popularSystems": [
-      {
-        "system": "string",
-        "count": 0
-      }
-    ],
-    "pendingFlags": 0
-  }
+  "content": [
+    {
+      "id": "string",
+      "condition": "Atrial Fibrillation",
+      "conditionId": "atrial-fibrillation",
+      "system": "CARDIOVASCULAR",
+      "subcategory": "Arrhythmias",
+      "pance_yield": 4,
+      "classic_patient": "string-or-array",
+      "buzzwords": ["string"],
+      "overview": "string"
+    }
+  ],
+  "count": 1
 }
 ```
 
-**Error responses**
+### Error responses
 
-- `403` → `{ "error": "Admin access required" }`
-- `500` → `{ "error": "Failed to fetch admin stats" }`
+- `401` → `{"error":"Authentication required"}`
+- `503` (DB not configured) → `{"error":"Library unavailable","message":"Database is not configured."}`
+- `503` (runtime/query failure) →  
+  `{"error":"failed_to_load_library","message":"Clinical content temporarily unavailable. Please try again later.","error_code":"failed_to_load_library","content":[],"count":0}`
 
-**Notes**
+### Notes
 
-- If `DATABASE_URL` is missing, returns zeroed stats with `note: "Database not configured"`.
+- Full-text search uses `search_vector @@ websearch_to_tsquery('english', search)`.
+- If FTS errors or yields no rows, endpoint falls back to case-insensitive `contains` matching across `condition`, `overview`, and `classic_patient`.
+- Successful responses include `Cache-Control: public, max-age=3600`.
+- KV cache (TTL 1 hour) is used only when `search` is not present.
 
 ---
 
-### `POST /api/osce/complete`
+## `POST /api/questions/attempt`
 
-**Auth:** Required (authenticated endpoint)
+**Auth:** Required
 
-**Request body**
+### Request body
+
+> This handler validates a `body` envelope.
 
 ```json
 {
   "body": {
-    "sessionId": "string",
-    "diagnosis": "string (optional)",
-    "treatmentPlan": "string (optional)",
-    "soapComparison": {},
-    "timingAnalytics": {},
-    "infographics": ["string"]
+    "questionId": "string",
+    "isCorrect": true,
+    "wasCorrect": true,
+    "system": "CARDIOVASCULAR",
+    "conditionId": "atrial-fibrillation",
+    "medicalContentId": "string",
+    "questionType": "diagnosis",
+    "mode": "session",
+    "timeSpent": 21000,
+    "timeSpentMs": 21000,
+    "answerChangedCount": 1,
+    "isRankedAttempt": false,
+    "selectedAnswer": 2,
+    "telemetryJson": {},
+    "durationMs": 21000,
+    "isMainSession": true,
+    "rating": 3
   }
 }
 ```
 
-**Success responses**
+### Field notes
 
-- `200 OK` → `{ "success": true }`
-- `200 OK` (idempotent repeat) → `{ "success": true, "alreadyCompleted": true }`
+- `isCorrect` and `wasCorrect` are both accepted; endpoint uses whichever is provided.
+- `selectedAnswer` accepts either numeric index `0..3` or `"A" | "B" | "C" | "D"`.
+- `rating` accepts integers `1..4` (FSRS scale).
 
-**Error responses**
-
-- `404` → `{ "error": "User not found" }` or `{ "error": "Session not found" }`
-- `500` → `{ "error": "Internal server error" }`
-
-**Notes**
-
-- Creates `CaseFile` on a best-effort basis when `soapComparison` or `timingAnalytics` is provided.
-- `CaseFile` creation failure is logged but does not fail completion.
-
----
-
-### `GET /api/osce/stats`
-
-**Auth:** Required (authenticated endpoint)
-
-**Request body:** None
-
-**Success response (`200 OK`)**
+### Success response (`200 OK`)
 
 ```json
 {
-  "totalEncounters": 0,
-  "passRate": 0,
-  "averageScore": 0,
-  "averageClinicalReasoningScore": 0,
-  "trend": [
-    {
-      "sessionId": "string",
-      "date": "2026-01-01T00:00:00.000Z",
-      "score": 0,
-      "clinicalReasoningScore": 0
-    }
-  ]
+  "success": true,
+  "attemptId": "attempt-user-question-timestamp",
+  "stats": {
+    "totalQuestionsAnswered": 120,
+    "correctAnswers": 89,
+    "overallAccuracy": 74
+  },
+  "systemStats": {
+    "system": "CARDIOVASCULAR",
+    "totalAttempts": 25,
+    "correctAttempts": 18,
+    "accuracy": 72,
+    "recentTrend": "improving"
+  },
+  "nextReviewDate": "2026-03-18T18:23:11.000Z"
 }
 ```
 
-**Error responses**
+`nextReviewDate` is returned when FSRS scheduling runs for the attempt.
 
-- `404` → `{ "error": "User not found" }`
-- `500` → `{ "error": "Failed to load OSCE stats" }`
+### Error responses
 
-**Notes**
+- `400` → `{"error":"Validation failed: ..."}`
+- `401` → `{"error":"Authentication required"}`
+- `404` → `{"error":"User not found","message":"Account not synced yet."}`
+- `500` → `{"error":"Internal server error"}`
 
-- Metrics are computed from completed `PatientEncounterSession` rows that have an `OsceResult`.
-- Pass threshold is score `>= 70`.
+### Side effects
+
+- Writes `QuestionAttempt`.
+- Upserts `UserQuestionSeen` and updates per-user aggregates.
+- Best-effort updates of question-level counters.
+- Best-effort SRS scheduling (`scheduleConceptReview`, FSRS `UserTopicProgress` updates).
+- Best-effort Rolling 360 update when `isMainSession=true`.

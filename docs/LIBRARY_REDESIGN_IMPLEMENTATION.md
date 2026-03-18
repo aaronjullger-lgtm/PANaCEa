@@ -165,6 +165,7 @@ Persists user preferences to `localStorage`.
 - `subcategory`
 - `search`
 - `highYield=true` → filters to `pance_yield >= 3`
+- `page` / `pageSize` are schema-accepted but currently not applied for pagination
 
 **Response shape:**
 
@@ -174,6 +175,15 @@ Persists user preferences to `localStorage`.
   "count": 0
 }
 ```
+
+**Current behavior details (2026 update):**
+
+- Endpoint requires auth (`Authorization: Bearer <token>`).
+- Search uses full-text ranking first, then case-insensitive fallback on `condition`, `overview`, and `classic_patient`.
+- `search` is trimmed and capped to 200 chars.
+- Successful responses include `Cache-Control: public, max-age=3600`.
+- Non-search requests are cached in KV for 1 hour.
+- Failure mode returns `503` with fallback payload (`failed_to_load_library`, empty `content` array).
 
 ### `GET /api/content/systems`
 

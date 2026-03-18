@@ -92,6 +92,24 @@ Now automatically updates:
 3. User's accuracy for that condition
 4. Session analytics
 
+**Current request contract (2026 update):**
+
+- Auth required (`Authorization: Bearer <token>`)
+- Request body is validated with a `body` envelope:
+  - required: `questionId`
+  - correctness: `isCorrect` or `wasCorrect`
+  - answer details: `selectedAnswer` (`0..3` or `A..D`)
+  - timing: `timeSpent` / `timeSpentMs` / `durationMs`
+  - optional analytics: `telemetryJson`, `answerChangedCount`, `isMainSession`, `isRankedAttempt`
+  - FSRS input: `rating` (`1..4`)
+
+**Current success response:**
+
+- `success`, `attemptId`
+- aggregate `stats` (`totalQuestionsAnswered`, `correctAnswers`, `overallAccuracy`)
+- `systemStats` trend object when `system` is present
+- optional `nextReviewDate` when FSRS scheduling is applied
+
 ## Generation Pipeline Improvements
 
 ### 1. Strict Validation
