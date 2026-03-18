@@ -5,6 +5,7 @@
  */
 
 import { getCorsHeaders, getCorsConfig } from '../_shared/cors';
+import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { generateSuggestions } from '@/services/domain/mappingEnrichment/suggestionEngine';
 
@@ -20,6 +21,15 @@ export const onRequestPost = async (context: any) => {
   const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
   const cors = getCorsHeaders(context?.request, corsConfig) ?? {};
   const jsonHeaders = { ...cors, 'Content-Type': 'application/json' };
+
+  // Require authentication — this endpoint triggers Gemini API calls
+  const auth = await authenticateRequest(context.request, context.env ?? {});
+  if (!auth) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: jsonHeaders }
+    );
+  }
 
   let prisma = null;
   try {

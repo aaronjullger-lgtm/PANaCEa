@@ -4,6 +4,7 @@
  */
 
 import { getCorsHeaders, getCorsConfig } from '../_shared/cors';
+import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { detectGaps } from '@/services/domain/mappingEnrichment/gapDetector';
 
@@ -19,6 +20,15 @@ export const onRequestGet = async (context: any) => {
   const corsConfig = context?.env ? getCorsConfig(context.env) : undefined;
   const cors = getCorsHeaders(context?.request, corsConfig) ?? {};
   const jsonHeaders = { ...cors, 'Content-Type': 'application/json' };
+
+  // Require authentication — admin endpoint
+  const auth = await authenticateRequest(context.request, context.env ?? {});
+  if (!auth) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: jsonHeaders }
+    );
+  }
 
   let prisma = null;
   try {
