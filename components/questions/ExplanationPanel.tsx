@@ -423,10 +423,10 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             {rationale.clinicalPearl && (
               <motion.section variants={itemVariants}>
                 <h3 className="font-bold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-muted-amber-500" />
+                  <Sparkles className="w-4 h-4 text-[var(--color-data-provisional)]" />
                   Clinical Pearl
                 </h3>
-                <div className="bg-muted-amber-50 dark:bg-muted-amber-900/20 border border-muted-amber-200 dark:border-muted-amber-800 rounded-lg px-4 py-3">
+                <div className="bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/30 rounded-lg px-4 py-3">
                   <p className="text-[var(--color-text-secondary)] leading-relaxed">
                     {renderFormattedText(rationale.clinicalPearl)}
                   </p>
@@ -462,30 +462,26 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
         {/* Buzzwords / Key Clues Section */}
         <motion.section variants={itemVariants}>
           <h3 className="font-bold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
-            <Lightbulb className="w-4 h-4 text-muted-amber-500" />
+            <Lightbulb className="w-4 h-4 text-[var(--color-data-provisional)]" />
             Buzzwords / Key Clues
           </h3>
-          <p className="text-[var(--color-text-secondary)] bg-muted-amber-50 dark:bg-muted-amber-900/20 px-3 py-2 rounded-lg border border-muted-amber-200 dark:border-muted-amber-800">
+          <p className="text-[var(--color-text-secondary)] bg-[var(--color-data-provisional)]/20 px-3 py-2 rounded-lg border border-[var(--color-data-provisional)]/30">
             {renderFormattedText(buzzwords)}
           </p>
         </motion.section>
 
-        {/* Memory Hook / Mnemonic Section */}
-        <motion.section variants={itemVariants}>
-          <h3 className="font-bold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
-            <GraduationCap className="w-4 h-4 text-deep-plum-500" />
-            Memory Hook / Mnemonic
-          </h3>
-          <p
-            className={`px-3 py-2 rounded-lg border ${
-              mnemonic === '[Mnemonic not available]'
-                ? 'text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
-                : 'text-[var(--color-text-secondary)] bg-deep-plum-50 dark:bg-deep-plum-900/20 border-deep-plum-200 dark:border-deep-plum-800'
-            }`}
-          >
-            {mnemonic}
-          </p>
-        </motion.section>
+        {/* Memory Hook / Mnemonic Section - Only show when mnemonic is available */}
+        {mnemonic && mnemonic !== '[Mnemonic not available]' && (
+          <motion.section variants={itemVariants}>
+            <h3 className="font-bold text-base mb-2 text-[var(--color-text-primary)] flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-deep-plum-500" />
+              Memory Hook / Mnemonic
+            </h3>
+            <p className="px-3 py-2 rounded-lg border text-[var(--color-text-secondary)] bg-deep-plum-50 dark:bg-deep-plum-900/20 border-deep-plum-200 dark:border-deep-plum-800">
+              {mnemonic}
+            </p>
+          </motion.section>
+        )}
 
         {/* Key Differentials Section */}
         {differentials.length > 0 && differentials[0] !== '[No differentials specified]' && (
