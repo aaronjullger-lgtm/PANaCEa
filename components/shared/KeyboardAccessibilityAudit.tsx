@@ -128,13 +128,13 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
     },
     {
       key: 'F6',
-      description: 'Cycle through main regions (not implemented)',
+      description: 'Cycle through main regions (planned)',
       category: 'accessibility',
       implemented: false,
     },
     {
       key: 'Shift + F6',
-      description: 'Cycle backward through regions (not implemented)',
+      description: 'Cycle backward through regions (planned)',
       category: 'accessibility',
       implemented: false,
     },
@@ -557,7 +557,7 @@ export const KeyboardAccessibilityAudit: React.FC<KeyboardAccessibilityAuditProp
                                 {shortcut.key}
                               </kbd>
                               <span
-                                className={`text-xs px-2 py-1 rounded ${shortcut.category === 'navigation' ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]' : shortcut.category === 'quiz' ? 'bg-purple-500/20 text-purple-500' : 'bg-gray-500/20 text-gray-500'}`}
+                                className={`text-xs px-2 py-1 rounded ${shortcut.category === 'navigation' ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]' : shortcut.category === 'quiz' ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]' : 'bg-[var(--color-bg-secondary)]/20 text-[var(--color-text-muted)]'}`}
                               >
                                 {shortcut.category}
                               </span>

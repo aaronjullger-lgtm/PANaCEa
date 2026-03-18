@@ -221,7 +221,7 @@ export const QuickReferenceDrawer: React.FC<QuickReferenceDrawerProps> = ({ isOp
         )}
         {activeTab === 'guidelines' && (
           <div className="p-4 text-center text-[var(--color-text-muted)] py-12">
-            Guidelines feature coming soon
+            <p className="text-sm">Clinical guidelines reference will be available here. Access guidelines through the main Knowledge Base for now.</p>
           </div>
         )}
       </div>

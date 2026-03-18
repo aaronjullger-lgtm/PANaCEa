@@ -119,8 +119,8 @@ export function BlueprintComplianceAuditorMode() {
   };
 
   const handleExport = () => {
-    // In a real implementation, generate CSV/JSON export
-    toast.info('Export feature coming soon');
+    // Export functionality will be enabled in an upcoming release
+    toast.info('Export to CSV is not yet available. Your compliance data is automatically saved.');
   };
 
   const handleExecuteAction = async (action: CorrectiveAction) => {
@@ -181,10 +181,10 @@ export function BlueprintComplianceAuditorMode() {
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
               sys.status === 'met'
-                ? 'bg-green-100 text-green-800'
+                ? 'bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)]'
                 : sys.status === 'under'
-                ? 'bg-yellow-100 text-yellow-800'
-                : 'bg-red-100 text-red-800'
+                ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
+                : 'bg-[var(--color-data-fail)]/20 text-[var(--color-data-fail)]'
             }`}
           >
             {sys.status === 'met' && <CheckCircle className="w-3 h-3 mr-1" />}
@@ -234,9 +234,9 @@ export function BlueprintComplianceAuditorMode() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-            <AlertTriangle className="w-5 h-5 text-red-500" />
-            <span className="text-red-700">{error}</span>
+          <div className="mb-6 p-4 bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/20 rounded-lg flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-[var(--color-data-fail)]" />
+            <span className="text-[var(--color-data-fail)]">{error}</span>
           </div>
         )}
 
@@ -283,7 +283,7 @@ export function BlueprintComplianceAuditorMode() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-4xl font-bold text-green-600">
+                      <div className="text-4xl font-bold text-[var(--color-data-pass)]">
                         {currentData.systemsMet}
                       </div>
                       <p className="text-sm text-[var(--color-text-muted)] mt-1">out of {currentData.systems.length}</p>
@@ -296,7 +296,7 @@ export function BlueprintComplianceAuditorMode() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-4xl font-bold text-yellow-600">
+                      <div className="text-4xl font-bold text-[var(--color-data-provisional)]">
                         {currentData.systemsUnder}
                       </div>
                       <p className="text-sm text-[var(--color-text-muted)] mt-1">need more content</p>
@@ -309,7 +309,7 @@ export function BlueprintComplianceAuditorMode() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-4xl font-bold text-red-600">
+                      <div className="text-4xl font-bold text-[var(--color-data-fail)]">
                         {currentData.systemsOver}
                       </div>
                       <p className="text-sm text-[var(--color-text-muted)] mt-1">reduce focus</p>

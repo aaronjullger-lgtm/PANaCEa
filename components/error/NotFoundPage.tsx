@@ -40,10 +40,10 @@ export const NotFoundPage: React.FC<NotFoundPageProps> = ({
           {showStudyPathMessage ? (
             <>
               <h2 className="text-2xl font-semibold text-[var(--color-text-primary)] mb-2">
-                Study Path is coming soon
+                Page Not Found
               </h2>
               <p className="text-[var(--color-text-muted)] mb-6">
-                In the meantime, explore Practice & Training or Knowledge Base.
+                This section is not currently available. Explore Practice & Training or Knowledge Base instead.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 {onNavigateToPractice && (

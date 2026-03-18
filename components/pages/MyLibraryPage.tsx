@@ -233,7 +233,7 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
       const data = (await res.json()) as { videoUrl?: string; jobId?: string; error?: string; hint?: string };
       if (!res.ok) {
         if (res.status === 501) {
-          setVeoError('Video generation coming soon. Configure Veo (Vertex AI) to enable.');
+          setVeoError('Video generation is not currently available. Please try again later.');
         } else {
           setVeoError(data.error || data.hint || 'Generation failed');
         }

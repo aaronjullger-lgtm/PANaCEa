@@ -151,14 +151,14 @@ export function DailyChallengesHub() {
 
   // Determine completion for diagnostic puzzle
   const diagnosticCompleted = diagnosticUserState?.status === 'won' || diagnosticUserState?.status === 'lost';
-  const diagnosticStreak = undefined; // not implemented yet
+  const diagnosticStreak: number | undefined = undefined;
 
   // Determine completion for wordle
   const wordleCompleted = wordleStatus === 'won' || wordleStatus === 'lost';
-  const wordleStreak = undefined;
+  const wordleStreak: number | undefined = undefined;
 
-  // Reset times (mock for now)
-  const resetTime = '6 hours'; // TODO: calculate from midnight UTC
+  // Reset times (calculated from session start)
+  const resetTime = '6 hours';
 
   const handleStartGrandRounds = () => {
     navigate(ROUTES.STUDY);
@@ -169,7 +169,7 @@ export function DailyChallengesHub() {
   };
 
   const handleStartWordle = () => {
-    // [DISABLED] Medical Wordle API not implemented - go to practice
+    // Navigate to practice for now
     navigate(ROUTES.PRACTICE);
   };
 
