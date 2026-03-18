@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
 import { API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import type { SystemCode } from '@/src/types';
@@ -233,7 +234,7 @@ export function SuggestionTable({
       onSuggestionUpdated?.(id, newStatus);
     } catch (err) {
       console.error('Error updating suggestion:', err);
-      alert(`Failed to update suggestion: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error(`Failed to update suggestion: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 

@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useCallback, useRef } from 'react';
+import { toast } from 'sonner';
 import { X, Wrench, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import type {
   ProceduralWorkflow,
@@ -154,7 +155,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
     const missing = required.filter((id) => !selectedEquipment.includes(id));
 
     if (missing.length > 0) {
-      alert(`Missing required items: ${missing.join(', ')}`);
+      toast.warning(`Missing required items: ${missing.join(', ')}`);
       return;
     }
 
@@ -178,7 +179,7 @@ export function SimLabMode({ onExit }: SimLabModeProps) {
         // Breach detected!
         setSterileBreaches((b) => b + 1);
         setIsInSterileZone(false);
-        alert('CONTAMINATION! Sterile field breached.');
+        toast.error('CONTAMINATION! Sterile field breached.');
 
         integration.emit({
           type: 'MODULE_ENTERED',

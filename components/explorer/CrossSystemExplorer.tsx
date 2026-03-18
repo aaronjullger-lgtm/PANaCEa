@@ -11,6 +11,7 @@ import { GraphSearchBar } from './GraphSearchBar';
 import { GraphFilter } from '@/lib/types/graph';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 import { createDebouncedFunction } from '@/lib/utils/debounce';
+import { toast } from 'sonner';
 
 const DEFAULT_FILTER: GraphFilter = {
   systemCodes: [],
@@ -82,7 +83,7 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
 
   const handleFindPath = useCallback(async () => {
     if (!startNodeId || !endNodeId) {
-      alert('Please select both start and end nodes.');
+      toast.warning('Please select both start and end nodes.');
       return;
     }
     setPathFinding(true);
@@ -105,7 +106,7 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
       setHighlightedPath(path.map((node: any) => node.id));
     } catch (error) {
       console.error('Failed to find path', error);
-      alert('Could not find a path between the selected nodes.');
+      toast.info('Could not find a path between the selected nodes.');
     } finally {
       setPathFinding(false);
     }

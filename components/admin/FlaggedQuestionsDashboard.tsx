@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 interface QuestionFlag {
   id: string;
@@ -173,7 +174,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
 
   const resolveFlag = async (flagId: string) => {
     if (!resolutionNote.trim()) {
-      alert('Please provide a resolution note');
+      toast.warning('Please provide a resolution note.');
       return;
     }
 
@@ -208,7 +209,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
       });
     } catch (err) {
       console.error('Error resolving flag:', err);
-      alert('Failed to resolve flag. Please try again.');
+      toast.error('Failed to resolve flag. Please try again.');
     } finally {
       setResolving(null);
     }

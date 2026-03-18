@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMedicalCompliance } from '@/hooks/useMedicalCompliance';
 import { StandardButton } from '@/components/shared/StandardButton';
+import { toast } from 'sonner';
 import {
   CheckCircle,
   AlertTriangle,
@@ -65,7 +66,7 @@ export const MedicalComplianceDashboard: React.FC<ComplianceDashboardProps> = ({
 
   const handleResolveIssue = async (issueId: string) => {
     if (!resolutionText.trim()) {
-      alert('Please provide a resolution description');
+      toast.warning('Please provide a resolution description.');
       return;
     }
 

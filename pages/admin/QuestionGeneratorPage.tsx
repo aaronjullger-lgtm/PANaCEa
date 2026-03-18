@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -149,7 +150,7 @@ export function QuestionGeneratorPage() {
 
   const handleSaveQuestion = async (question: GeneratedQuestion) => {
     // TODO: integrate with Question/MedicalContent storage
-    alert('Saving question to database is not yet implemented. This would store the question as a draft.');
+    toast.info('Question saving is not yet available. This feature is coming soon.');
   };
 
   const handleRegenerate = () => {
@@ -472,7 +473,7 @@ export function QuestionGeneratorPage() {
                         Save
                       </button>
                       <button
-                        onClick={() => alert('Edit functionality not yet implemented')}
+                        onClick={() => toast.info('Edit functionality is coming soon.')}
                         className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                       >
                         Edit

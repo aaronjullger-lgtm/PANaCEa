@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useAuth } from '@clerk/clerk-react';
 import {
   AlertTriangle,
@@ -144,7 +145,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
       await fetchDashboardData();
     } catch (err) {
       console.error('Error detecting gaps:', err);
-      alert('Failed to detect gaps. Please try again.');
+      toast.error('Failed to detect gaps. Please try again.');
     } finally {
       setDetectingGaps(false);
     }
@@ -169,7 +170,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
       await fetchDashboardData();
     } catch (err) {
       console.error('Error generating suggestions:', err);
-      alert('Failed to generate suggestions. Please try again.');
+      toast.error('Failed to generate suggestions. Please try again.');
     } finally {
       setGeneratingSuggestions(false);
     }
@@ -416,7 +417,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
               {gaps.length > 5 && (
                 <div className="text-center pt-2">
                   <button
-                    onClick={() => alert('Full gap list will be implemented in Phase 6.3')}
+                    onClick={() => toast.info('Full gap list is coming in a future update.')}
                     className="text-sm text-[var(--color-action-primary)] hover:underline"
                   >
                     View all {gaps.length} gaps →

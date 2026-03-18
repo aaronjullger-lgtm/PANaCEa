@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import {
   CheckCircle2,
   XCircle,
@@ -124,7 +125,7 @@ export function BulkApprovalPanel({
     // Typically parent would have a function to select all filtered items
     // We'll emit an event or call a prop if provided.
     // For now, we'll just show a message.
-    alert('Select all filtered functionality must be implemented in parent component.');
+    toast.info('Select all filtered is not yet available.');
   };
 
   const isLoading = externalLoading || loading;
@@ -215,7 +216,7 @@ export function BulkApprovalPanel({
                 <button
                   className="w-full px-3 py-2 bg-data-provisional/20 text-data-provisional rounded-lg hover:bg-data-provisional/30 transition-colors text-sm font-medium"
                   disabled={isLoading}
-                  onClick={() => alert('High-confidence approve not yet implemented')}
+                  onClick={() => toast.info('High-confidence approve is coming soon.')}
                 >
                   Run auto-approval
                 </button>
@@ -231,7 +232,7 @@ export function BulkApprovalPanel({
                 <button
                   className="w-full px-3 py-2 bg-data-fail/20 text-data-fail rounded-lg hover:bg-data-fail/30 transition-colors text-sm font-medium"
                   disabled={isLoading}
-                  onClick={() => alert('Batch reject not yet implemented')}
+                  onClick={() => toast.info('Batch reject is coming soon.')}
                 >
                   Reject low confidence
                 </button>
@@ -247,7 +248,7 @@ export function BulkApprovalPanel({
                 <button
                   className="w-full px-3 py-2 bg-bg-tertiary text-text-[var(--color-text-muted)] rounded-lg hover:bg-bg-tertiary/80 transition-colors text-sm font-medium"
                   disabled={isLoading}
-                  onClick={() => alert('Ignore duplicates not yet implemented')}
+                  onClick={() => toast.info('Ignore duplicates is coming soon.')}
                 >
                   Ignore duplicates
                 </button>

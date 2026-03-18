@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Check, Clock, Target, TrendingUp, Zap, Calendar } from 'lucide-react';
+import { toast } from 'sonner';
 import type { StudyPlan } from '@/types';
 
 // ============================================================================
@@ -23,7 +24,7 @@ const PlanAlternativesModal: React.FC<PlanAlternativesModalProps> = ({
 
   const handleSelectAlternative = (planId: string) => {
     // TODO: call accept endpoint with planId
-    alert(`Selected alternative plan ${planId} (implementation pending)`);
+    toast.info('Plan selection is coming soon.');
     onClose();
   };
 
