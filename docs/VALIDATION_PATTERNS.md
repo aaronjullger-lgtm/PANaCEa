@@ -69,14 +69,15 @@ export async function onRequestPost(context: any) {
 
 ## Available Validators
 
-| Validator                    | Schema                     | Use Case                      |
-| ---------------------------- | -------------------------- | ----------------------------- |
-| `validateQuestionGeneration` | `questionGenerationSchema` | `/api/questions/generate`     |
-| `validateReviewSubmission`   | `reviewSubmissionSchema`   | `/api/drills/submit-review`   |
-| `validateSessionGeneration`  | `sessionGenerationSchema`  | `/api/study/session/generate` |
-| `validatePerformanceMetrics` | `performanceMetricsSchema` | `/api/analytics/*`            |
-| `validateContentEnrichment`  | `contentEnrichmentSchema`  | `/api/admin/enrich-condition` |
-| `validateQuestionFlag`       | `questionFlagSchema`       | `/api/questions/flag`         |
+| Validator / Schema | Schema | Use Case |
+| ------------------ | ------ | -------- |
+| `validateQuestionGeneration` | `questionGenerationSchema` | `/api/questions/generate` |
+| `validateReviewSubmission` *(legacy)* | `reviewSubmissionSchema` | Legacy review routes only (not canonical drill submit endpoints) |
+| `DrillSubmitReviewSchema` *(route-level schema in `functions/api/drills/submit-review.ts`)* | Inline Zod schema + `TelemetrySchema` | `/api/drills/submit-review` and `/api/drills/submit-reviews` |
+| `validateSessionGeneration` | `sessionGenerationSchema` | `/api/study/session/generate` |
+| `validatePerformanceMetrics` | `performanceMetricsSchema` | `/api/analytics/*` |
+| `validateContentEnrichment` | `contentEnrichmentSchema` | `/api/admin/enrich-condition` |
+| `validateQuestionFlag` | `questionFlagSchema` | `/api/questions/flag` |
 
 ---
 
@@ -180,19 +181,36 @@ export async function onRequestPost(context: any) {
 
 ```typescript
 {
-  questionId: "550e8400-e29b-41d4-a716-446655440000", // UUID
-  userAnswer: "C",                                     // 1-5000 chars
-  rating: 3,                                           // 1, 2, 3, or 4 (FSRS)
+  questionId: "seed-abc-123",                          // non-empty string (UUID or ephemeral ID)
+  selectedAnswer: "C",                                 // string or number
   timeSpentMs: 45000,                                  // 0-3600000 (1 hour max)
-  confidence: 85                                       // optional: 0-100
+  timeToFirstClick: 12000,                             // optional
+  answerSwitches: 1,                                   // optional
+  totalDwellTime: 47000,                               // optional
+  timezone: "America/New_York",                        // optional
+  wakeTimeHHMM: "07:30",                               // optional
+  sessionType: "main",                                 // optional: "main" | "cram" | "rapid_recall"
+  telemetry: {                                         // optional (strict object when present)
+    duration_ms: 45000,
+    time_to_first_interaction_ms: 12000,
+    rapid_guess: false,
+    question_type: "vignette",
+    mvrt_threshold_ms: 2000,
+    question_displayed_at: "2026-03-19T10:00:00.000Z",
+    answer_submitted_at: "2026-03-19T10:00:45.000Z",
+    answer_changes: 1,
+    hint_viewed: false,
+    hint_view_duration_ms: null
+  }
 }
 ```
 
 **Constraints:**
 
-- `rating`: Must be exactly 1, 2, 3, or 4 (not 0 or 5)
+- `questionId`: Non-empty string (supports generated/ephemeral IDs)
+- `selectedAnswer`: String or number
 - `timeSpentMs`: Max 1 hour to prevent bogus data
-- `userAnswer`: Cannot be empty
+- `telemetry` (when provided) is strict and must include required timing fields
 
 ### Session Generation
 
