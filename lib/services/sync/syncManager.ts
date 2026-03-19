@@ -95,6 +95,17 @@ const STORAGE_KEYS = {
   SYNC_ERROR: 'panceai_sync_error',
 } as const;
 
+async function parseSyncErrorMessage(response: Response): Promise<string> {
+  try {
+    const payload = (await response.json()) as { error?: string; message?: string; details?: string };
+    const message = payload?.error || payload?.message || payload?.details;
+    if (message) return message;
+  } catch {
+    // Non-JSON error payloads (e.g., proxy HTML) fall back to HTTP status.
+  }
+  return `HTTP ${response.status}`;
+}
+
 // ============================================================================
 // SYNC MANAGER CLASS
 // ============================================================================
@@ -192,7 +203,13 @@ class SyncManager {
 
     // Try immediate sync if online
     if (this.isOnline()) {
-      this.syncAnswers().catch((err) => logger.error(SCOPE, 'Immediate sync failed', err));
+      this.syncAnswers().catch((err) => {
+        const message = err instanceof Error ? err.message : 'Immediate answer sync failed';
+        this.setLastSyncError(message);
+        this.emit('sync-error', this.getStatus());
+        this.scheduleRetry();
+        logger.error(SCOPE, 'Immediate sync failed', err);
+      });
     }
 
     return id;
@@ -287,9 +304,13 @@ class SyncManager {
 
     // Try immediate sync if online
     if (this.isOnline()) {
-      this.syncReviews().catch((err) =>
-        logger.error(SCOPE, 'Immediate sync failed (reviews)', err)
-      );
+      this.syncReviews().catch((err) => {
+        const message = err instanceof Error ? err.message : 'Immediate review sync failed';
+        this.setLastSyncError(message);
+        this.emit('sync-error', this.getStatus());
+        this.scheduleRetry();
+        logger.error(SCOPE, 'Immediate sync failed (reviews)', err);
+      });
     }
 
     return id;
@@ -404,13 +425,17 @@ class SyncManager {
           if (payload?.attemptId) answer.attemptId = payload.attemptId;
           synced++;
         } else {
+          const message = await parseSyncErrorMessage(response);
           answer.syncAttempts++;
-          answer.lastSyncError = `HTTP ${response.status}`;
+          answer.lastSyncError = message;
+          this.setLastSyncError(message);
           this.scheduleRetry();
         }
       } catch (error) {
+        const message = error instanceof Error ? error.message : 'Network error';
         answer.syncAttempts++;
-        answer.lastSyncError = error instanceof Error ? error.message : 'Network error';
+        answer.lastSyncError = message;
+        this.setLastSyncError(message);
         this.scheduleRetry();
       }
     }
@@ -518,33 +543,66 @@ class SyncManager {
 
       if (response.ok) {
         const data = (await response.json().catch(() => ({}))) as {
-          data?: Array<{ questionId: string; success: boolean }>;
+          data?: Array<{ questionId: string; success: boolean; error?: string }>;
         };
         const results = data?.data ?? [];
-        // Mark each review as synced based on success
-        pending.forEach((review, index) => {
-          const result = results[index];
-          if (result?.success) {
-            review.synced = true;
-            synced++;
-          } else {
+
+        if (!Array.isArray(results) || results.length === 0) {
+          const message = 'Review sync did not return per-item status';
+          pending.forEach((review) => {
             review.syncAttempts++;
-            review.lastSyncError = result?.error || 'Batch failure';
+            review.lastSyncError = message;
+          });
+          this.setLastSyncError(message);
+          this.scheduleRetry();
+        } else {
+          const questionIdBuckets = new Map<
+            string,
+            { results: Array<{ questionId: string; success: boolean; error?: string }>; cursor: number }
+          >();
+          for (const result of results) {
+            const bucket = questionIdBuckets.get(result.questionId) ?? { results: [], cursor: 0 };
+            bucket.results.push(result);
+            questionIdBuckets.set(result.questionId, bucket);
           }
-        });
+
+          pending.forEach((review, index) => {
+            const positionalResult = results[index];
+            const bucket = questionIdBuckets.get(review.questionId);
+            const fallback =
+              bucket && bucket.cursor < bucket.results.length
+                ? bucket.results[bucket.cursor++]
+                : undefined;
+            const result =
+              positionalResult?.questionId === review.questionId
+                ? positionalResult
+                : fallback;
+            if (result?.success) {
+              review.synced = true;
+              synced++;
+            } else {
+              review.syncAttempts++;
+              review.lastSyncError = result?.error || 'Batch failure';
+            }
+          });
+        }
       } else {
+        const message = await parseSyncErrorMessage(response);
         // If batch fails, increment attempts for all pending reviews
         pending.forEach((review) => {
           review.syncAttempts++;
-          review.lastSyncError = `HTTP ${response.status}`;
+          review.lastSyncError = message;
         });
+        this.setLastSyncError(message);
         this.scheduleRetry();
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Network error';
       pending.forEach((review) => {
         review.syncAttempts++;
-        review.lastSyncError = error instanceof Error ? error.message : 'Network error';
+        review.lastSyncError = message;
       });
+      this.setLastSyncError(message);
       this.scheduleRetry();
       // Save incremented attempts before rethrowing
       this.saveOfflineReviews(reviews);
