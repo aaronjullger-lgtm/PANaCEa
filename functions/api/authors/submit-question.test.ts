@@ -17,7 +17,15 @@ import * as prismaModule from '../_shared/prisma-edge';
 // Mock modules
 vi.mock('../_shared/auth');
 vi.mock('../_shared/aiQuestionService');
-vi.mock('../_shared/prisma-edge');
+vi.mock('../_shared/prisma-edge', () => ({
+  prisma: {
+    contentAuthor: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
+    condition: { findUnique: vi.fn() },
+    questionSubmission: { create: vi.fn() },
+  },
+  createEdgePrismaClient: vi.fn(),
+  safePrismaDisconnect: vi.fn(),
+}));
 
 describe('POST /api/authors/submit-question', () => {
   const mockUserId = 'user_test_001';
@@ -52,7 +60,9 @@ describe('POST /api/authors/submit-question', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      vi.mocked(authModule.requireAuth).mockRejectedValueOnce(new Error('Unauthorized'));
+      vi.mocked(authModule.requireAuth).mockRejectedValueOnce(
+        Object.assign(new Error('Unauthorized'), { status: 401 })
+      );
 
       const response = await onRequestPost(mockRequest);
 

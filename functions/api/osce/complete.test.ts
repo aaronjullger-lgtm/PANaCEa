@@ -5,6 +5,7 @@ import { resolveUserByClerkId } from '../_shared/resolveUser';
 const mockPrisma = {
   patientEncounterSession: {
     findUnique: vi.fn(),
+    update: vi.fn(),
     updateMany: vi.fn(),
   },
   caseFile: {
@@ -72,7 +73,7 @@ describe('POST /api/osce/complete', () => {
 
   it('creates CaseFile when analytics payload is present', async () => {
     mockPrisma.patientEncounterSession.findUnique.mockResolvedValue({ status: 'active' });
-    mockPrisma.patientEncounterSession.updateMany.mockResolvedValue({ count: 1 });
+    mockPrisma.patientEncounterSession.update.mockResolvedValue({ id: 'session_2', status: 'completed' });
 
     const response = await onRequestPost({
       ...baseContext,
@@ -90,13 +91,13 @@ describe('POST /api/osce/complete', () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ success: true });
-    expect(mockPrisma.patientEncounterSession.updateMany).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.patientEncounterSession.update).toHaveBeenCalledTimes(1);
     expect(mockPrisma.caseFile.create).toHaveBeenCalledTimes(1);
   });
 
   it('does not fail completion if CaseFile create throws', async () => {
     mockPrisma.patientEncounterSession.findUnique.mockResolvedValue({ status: 'active' });
-    mockPrisma.patientEncounterSession.updateMany.mockResolvedValue({ count: 1 });
+    mockPrisma.patientEncounterSession.update.mockResolvedValue({ id: 'session_3', status: 'completed' });
     mockPrisma.caseFile.create.mockRejectedValue(new Error('casefile write failed'));
 
     const response = await onRequestPost({

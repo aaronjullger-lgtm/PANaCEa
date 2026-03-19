@@ -10,17 +10,13 @@ import {
   type StabilityTrendPoint,
 } from './learningCurveService';
 
-// Mock the fetch functions
-vi.mock('./learningCurveService', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    fetchDailyPerformance: vi.fn(),
-    fetchStabilityTrend: vi.fn(),
-  };
-});
-
-const { fetchDailyPerformance, fetchStabilityTrend } = await import('./learningCurveService');
+// Mock getApiEndpoint to return absolute URLs (jsdom needs valid URLs for fetch)
+vi.mock('@/lib/utils/apiConfig', () => ({
+  getApiEndpoint: (path: string) => `http://localhost${path}`,
+  API_ENDPOINTS: {
+    USER_STABILITY_TREND: '/api/user/stability-trend',
+  },
+}));
 
 describe('mergeLearningCurveData', () => {
   it('should merge daily performance and stability points by date', () => {
@@ -104,59 +100,91 @@ describe('fetchLearningCurveData', () => {
 
   it('should merge data from both endpoints', async () => {
     const mockToken = 'test-token';
-    const mockDailyResult = {
+    const mockDailyResponse = {
       dailyPerformance: [
         { date: '2025-01-01', attempts: 10, correct: 8, accuracy: 80 },
       ],
       period: '30 days',
     };
-    const mockStabilityResult = {
-      trendData: [
+    const mockStabilityResponse = {
+      data: [
         { date: '2025-01-01', avgStability: 5.2, totalReviews: 12, conditions: [] },
       ],
     };
 
-    vi.mocked(fetchDailyPerformance).mockResolvedValue(mockDailyResult);
-    vi.mocked(fetchStabilityTrend).mockResolvedValue(mockStabilityResult);
+    // Mock global fetch to return different responses based on URL
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('daily-performance')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve(mockDailyResponse),
+        });
+      }
+      if (url.includes('stability-trend')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve(mockStabilityResponse),
+        });
+      }
+      return Promise.reject(new Error(`Unexpected URL: ${url}`));
+    });
+    vi.stubGlobal('fetch', fetchMock);
 
     const result = await fetchLearningCurveData(mockToken, 30);
 
-    expect(fetchDailyPerformance).toHaveBeenCalledWith(mockToken, 30);
-    expect(fetchStabilityTrend).toHaveBeenCalledWith(mockToken, 30);
-    expect(result).toEqual({
-      points: [
-        { date: '2025-01-01', accuracy: 80, attempts: 10, correct: 8, avgStability: 5.2, totalReviews: 12 },
-      ],
-      summary: expect.any(Object),
-    });
-    // summary should have startDate, endDate, totalAttempts, totalCorrect, avgAccuracy
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result.points).toEqual([
+      { date: '2025-01-01', accuracy: 80, attempts: 10, correct: 8, avgStability: 5.2, totalReviews: 12 },
+    ]);
     expect(result.summary?.startDate).toBe('2025-01-01');
     expect(result.summary?.endDate).toBe('2025-01-01');
     expect(result.summary?.totalAttempts).toBe(10);
     expect(result.summary?.totalCorrect).toBe(8);
     expect(result.summary?.avgAccuracy).toBe(80);
     expect(result.summary?.avgStability).toBe(5.2);
+
+    vi.unstubAllGlobals();
   });
 
   it('should handle missing stability data', async () => {
     const mockToken = 'test-token';
-    const mockDailyResult = {
+    const mockDailyResponse = {
       dailyPerformance: [
         { date: '2025-01-01', attempts: 5, correct: 4, accuracy: 80 },
       ],
       period: '30 days',
     };
-    const mockStabilityResult = {
-      trendData: [],
+    const mockStabilityResponse = {
+      data: [],
     };
 
-    vi.mocked(fetchDailyPerformance).mockResolvedValue(mockDailyResult);
-    vi.mocked(fetchStabilityTrend).mockResolvedValue(mockStabilityResult);
+    const fetchMock = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('daily-performance')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve(mockDailyResponse),
+        });
+      }
+      if (url.includes('stability-trend')) {
+        return Promise.resolve({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve(mockStabilityResponse),
+        });
+      }
+      return Promise.reject(new Error(`Unexpected URL: ${url}`));
+    });
+    vi.stubGlobal('fetch', fetchMock);
 
     const result = await fetchLearningCurveData(mockToken, 30);
 
     expect(result.points).toHaveLength(1);
     expect(result.points[0].avgStability).toBeUndefined();
     expect(result.summary?.avgStability).toBeUndefined();
+
+    vi.unstubAllGlobals();
   });
 });

@@ -8,6 +8,9 @@ vi.mock('@/lib/prisma', () => ({
     medicalContent: {
       findMany: vi.fn(),
     },
+    systemMapping: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
     anatomyStructure: {
       findMany: vi.fn(),
     },
@@ -31,13 +34,14 @@ vi.mock('@/lib/prisma', () => ({
     },
     graphNode: {
       deleteMany: vi.fn(),
-      upsert: vi.fn(),
+      upsert: vi.fn().mockResolvedValue({}),
     },
     graphEdge: {
       deleteMany: vi.fn(),
-      upsert: vi.fn(),
+      upsert: vi.fn().mockResolvedValue({}),
     },
-    $transaction: vi.fn((ops) => Promise.all(ops.map((op: any) => op()))),
+    // $transaction receives an array of promises (from upsert calls), not functions
+    $transaction: vi.fn((ops) => Promise.all(ops)),
   },
 }));
 
@@ -84,6 +88,7 @@ describe('GraphBuilder', () => {
         },
       ];
       (prisma.medicalContent.findMany as Mock).mockResolvedValue(mockConditions);
+      (prisma.systemMapping.findMany as Mock).mockResolvedValue([]);
       (prisma.graphNode.upsert as Mock).mockResolvedValue({});
 
       await (builder as any).buildConditionNodes();

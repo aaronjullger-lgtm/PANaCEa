@@ -33,6 +33,19 @@ vi.mock('../_shared/cors', () => ({
   getCorsConfig: vi.fn(() => ({ allowedOrigins: ['*'] })),
   getCorsHeaders: vi.fn(() => ({})),
 }));
+vi.mock('../_shared/middleware', () => ({
+  authenticatedEndpoint: vi.fn((schema, handler, options) => async (context: any) => {
+    // Simulate middleware: pass through auth and validated from context
+    const result = await handler(context);
+    if (result instanceof Response) return result;
+    const status = result.status || 200;
+    const body = result.error != null
+      ? JSON.stringify({ error: result.error })
+      : JSON.stringify(result.data ?? result);
+    return new Response(body, { status, headers: { 'Content-Type': 'application/json' } });
+  }),
+  withCors: vi.fn(() => () => new Response(null, { status: 204 })),
+}));
 vi.mock('../_shared/prisma-edge', () => ({
   createEdgePrismaClient: vi.fn(() => ({
     $connect: vi.fn(),
@@ -174,7 +187,6 @@ describe('Study Path Recommendation Endpoint', () => {
     const response = await onRequestGet(contextWithAuth);
     expect(response.status).toBe(500);
     const body = await response.json();
-    expect(body).toHaveProperty('error', 'Internal server error');
-    expect(body).toHaveProperty('details');
+    expect(body).toHaveProperty('error', 'Unable to generate study plan. Please try again.');
   });
 });

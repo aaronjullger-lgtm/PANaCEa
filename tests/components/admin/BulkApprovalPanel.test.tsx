@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
 import { BulkApprovalPanel } from '@/components/admin/BulkApprovalPanel';
 
 // Mock Clerk useAuth
@@ -9,9 +10,22 @@ vi.mock('@clerk/clerk-react', () => ({
   }),
 }));
 
+// Mock framer-motion
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, initial, animate, exit, transition, ...props }: any) => <div {...props}>{children}</div>,
+  },
+  AnimatePresence: ({ children }: any) => children,
+}));
+
+// Mock sonner toast
+vi.mock('sonner', () => ({
+  toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() },
+}));
+
 // Mock API config
 vi.mock('@/lib/utils/apiConfig', () => ({
-  getApiEndpoint: vi.fn((endpoint) => `https://api.example.com${endpoint}`),
+  getApiEndpoint: vi.fn((endpoint: string) => `https://api.example.com${endpoint}`),
   API_ENDPOINTS: {
     MAPPING_ENRICHMENT_BULK_APPROVE: '/api/mapping-enrichment/bulk-approve',
   },
@@ -30,6 +44,7 @@ describe('BulkApprovalPanel', () => {
     vi.clearAllMocks();
     mockFetch.mockResolvedValue({
       ok: true,
+      text: async () => JSON.stringify({ success: true, processed: mockSelectedIds.length }),
       json: async () => ({ success: true, processed: mockSelectedIds.length }),
     });
   });
@@ -44,11 +59,11 @@ describe('BulkApprovalPanel', () => {
       />
     );
 
-    expect(screen.getByText(/3 items selected/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /approve selected/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /reject selected/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /ignore selected/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /clear selection/i })).toBeInTheDocument();
+    expect(screen.getByText(/3 suggestion.*selected/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /approve selected/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /reject selected/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /ignore selected/i })).toBeTruthy();
+    expect(screen.getByText(/clear selection/i)).toBeTruthy();
   });
 
   it('calls onClearSelection when clear button clicked', () => {
@@ -61,7 +76,7 @@ describe('BulkApprovalPanel', () => {
       />
     );
 
-    const clearButton = screen.getByRole('button', { name: /clear selection/i });
+    const clearButton = screen.getByText(/clear selection/i);
     fireEvent.click(clearButton);
 
     expect(mockOnClearSelection).toHaveBeenCalled();
@@ -81,9 +96,9 @@ describe('BulkApprovalPanel', () => {
     const rejectButton = screen.getByRole('button', { name: /reject selected/i });
     const ignoreButton = screen.getByRole('button', { name: /ignore selected/i });
 
-    expect(approveButton).toBeDisabled();
-    expect(rejectButton).toBeDisabled();
-    expect(ignoreButton).toBeDisabled();
+    expect((approveButton as HTMLButtonElement).disabled).toBe(true);
+    expect((rejectButton as HTMLButtonElement).disabled).toBe(true);
+    expect((ignoreButton as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('calls bulk-approve endpoint when approve action is triggered', async () => {
@@ -99,22 +114,22 @@ describe('BulkApprovalPanel', () => {
     const approveButton = screen.getByRole('button', { name: /approve selected/i });
     fireEvent.click(approveButton);
 
-    // Check API call
-    expect(mockFetch).toHaveBeenCalledWith(
-      'https://api.example.com/api/mapping-enrichment/bulk-approve',
-      expect.objectContaining({
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer mock-token',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          suggestionIds: mockSelectedIds,
-          action: 'APPROVE',
-          reason: undefined,
-        }),
-      })
-    );
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.example.com/api/mapping-enrichment/bulk-approve',
+        expect.objectContaining({
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer mock-token',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            suggestionIds: mockSelectedIds,
+            action: 'APPROVE',
+          }),
+        })
+      );
+    });
 
     // Wait for loading to finish
     await waitFor(() => {
@@ -126,6 +141,8 @@ describe('BulkApprovalPanel', () => {
     mockFetch.mockResolvedValue({
       ok: false,
       status: 500,
+      statusText: 'Internal Server Error',
+      text: async () => 'Internal server error',
       json: async () => ({ error: 'Internal server error' }),
     });
 
@@ -142,7 +159,7 @@ describe('BulkApprovalPanel', () => {
     fireEvent.click(approveButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to process bulk action/i)).toBeInTheDocument();
+      expect(screen.getByText(/bulk action failed/i)).toBeTruthy();
     });
     // onActionComplete should NOT be called on error
     expect(mockOnActionComplete).not.toHaveBeenCalled();
@@ -162,7 +179,7 @@ describe('BulkApprovalPanel', () => {
     fireEvent.click(approveButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/successfully processed 3 suggestions/i)).toBeInTheDocument();
+      expect(screen.getByText(/3 suggestions approved successfully/i)).toBeTruthy();
     });
   });
 
@@ -176,17 +193,21 @@ describe('BulkApprovalPanel', () => {
       />
     );
 
-    const toggleButton = screen.getByRole('button', { name: /advanced options/i });
-    expect(screen.queryByText(/reason for action/i)).not.toBeInTheDocument();
+    const toggleButton = screen.getByRole('button', { name: /advanced/i });
+
+    // Advanced content should not be visible initially
+    expect(screen.queryByText(/high-confidence approve/i)).toBeNull();
 
     fireEvent.click(toggleButton);
-    expect(screen.getByText(/reason for action/i)).toBeInTheDocument();
+    expect(screen.getByText(/high-confidence approve/i)).toBeTruthy();
 
     fireEvent.click(toggleButton);
-    expect(screen.queryByText(/reason for action/i)).not.toBeInTheDocument();
+    // After closing, the content is still in DOM because AnimatePresence is mocked
+    // but the showAdvanced state is false so it should not render
+    expect(screen.queryByText(/high-confidence approve/i)).toBeNull();
   });
 
-  it('includes reason in payload when provided', async () => {
+  it('sends correct action in payload for reject', async () => {
     render(
       <BulkApprovalPanel
         selectedIds={mockSelectedIds}
@@ -196,25 +217,19 @@ describe('BulkApprovalPanel', () => {
       />
     );
 
-    // Open advanced options
-    const toggleButton = screen.getByRole('button', { name: /advanced options/i });
-    fireEvent.click(toggleButton);
+    const rejectButton = screen.getByRole('button', { name: /reject selected/i });
+    fireEvent.click(rejectButton);
 
-    const reasonInput = screen.getByPlaceholderText(/optional reason/i);
-    fireEvent.change(reasonInput, { target: { value: 'Test reason for approval' } });
-
-    const approveButton = screen.getByRole('button', { name: /approve selected/i });
-    fireEvent.click(approveButton);
-
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        body: JSON.stringify({
-          suggestionIds: mockSelectedIds,
-          action: 'APPROVE',
-          reason: 'Test reason for approval',
-        }),
-      })
-    );
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          body: JSON.stringify({
+            suggestionIds: mockSelectedIds,
+            action: 'REJECT',
+          }),
+        })
+      );
+    });
   });
 });

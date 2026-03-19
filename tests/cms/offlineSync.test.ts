@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { StorageKeys } from '../../../lib/storage/storageRegistry';
+import { StorageKeys } from '../../lib/storage/storageRegistry';
 
 describe('Offline Sync', () => {
   // Mock localStorage with proper typing

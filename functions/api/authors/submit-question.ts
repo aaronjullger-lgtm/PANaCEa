@@ -49,7 +49,7 @@ export async function onRequestPost(request: Request): Promise<Response> {
 
     // Only CONTRIBUTOR role and above can submit
     const roleHierarchy = { CONTRIBUTOR: 0, REVIEWER: 1, EDITOR: 2, ADMIN: 3 };
-    if (!roleHierarchy[author.role] !== undefined) {
+    if (roleHierarchy[author.role as keyof typeof roleHierarchy] === undefined) {
       return new Response(
         JSON.stringify({ error: 'Invalid author role' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }

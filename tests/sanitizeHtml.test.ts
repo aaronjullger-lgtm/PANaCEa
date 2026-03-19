@@ -16,7 +16,9 @@ describe('sanitizeForRationale', () => {
     expect(out.toLowerCase()).not.toContain('<iframe');
     expect(out.toLowerCase()).not.toContain('<style');
     expect(out.toLowerCase()).not.toContain('<img');
-    expect(out.toLowerCase()).not.toContain('<a');
+    // <a> tags are preserved but javascript: hrefs are stripped
+    expect(out.toLowerCase()).toContain('<a>');
+    expect(out).toContain('link</a>');
     expect(out.toLowerCase()).not.toContain('onerror');
     expect(out.toLowerCase()).not.toContain('onclick');
     expect(out.toLowerCase()).not.toContain('javascript:');

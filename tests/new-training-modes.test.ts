@@ -16,9 +16,10 @@ import {
 // Note: Polypharmacy mode is database-driven (not yet implemented)
 
 describe('New Training Modes Configuration', () => {
-  it('should have medical_wordle in MODE_REGISTRY (legacy)', () => {
-    const wordleMode = MODE_REGISTRY.find((m) => m.id === ('medical_wordle' as any));
-    expect(wordleMode).toBeDefined();
+  it('should have diagnostic_puzzle in MODE_REGISTRY (replaced medical_wordle)', () => {
+    const puzzleMode = MODE_REGISTRY.find((m) => m.id === 'diagnostic_puzzle');
+    expect(puzzleMode).toBeDefined();
+    expect(puzzleMode?.category).toBe('specialty_drills');
   });
 
   it('should have ventilator_hero in MODE_REGISTRY', () => {

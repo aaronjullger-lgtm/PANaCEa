@@ -39,34 +39,33 @@ describe('TrainingMenu Component Logic', () => {
   describe('Icon Mapping', () => {
     // Icon names used in MODE_REGISTRY (expanded for new modes including Phase 7, 8, 38, 40)
     const expectedIconNames = [
+      'Activity',
+      'AlertTriangle',
+      'BarChart',
+      'Beaker',
       'Brain',
-      'Image',
-      'Zap',
-      'GitCompare',
+      'ClipboardList',
+      'Droplets',
+      'FileCheck',
       'FileText',
       'Flame',
-      'ClipboardList',
-      'Activity',
-      'Scan',
-      'FileCheck',
-      'Layers',
-      'Pill',
-      'Beaker',
-      'Droplets',
-      'MessageSquare',
-      'Siren',
-      'Calendar',
-      'Trophy',
-      'Clock',
-      'Headphones',
+      'GitCompare',
       'GraduationCap',
       'Hash',
-      'Wind',
-      'AlertTriangle',
-      'PillBottle',
-      'Target',
-      'Grid3x3',
+      'Headphones',
+      'Image',
+      'Layers',
+      'MessageSquare',
       'Monitor',
+      'Pill',
+      'PillBottle',
+      'Scan',
+      'Search',
+      'Siren',
+      'Target',
+      'Trophy',
+      'Wind',
+      'Zap',
     ];
 
     it('should have valid icon names for all modes', () => {
@@ -100,6 +99,7 @@ describe('TrainingMenu Component Logic', () => {
       'orange',
       'indigo',
       'green',
+      'gold',
     ];
 
     it('should have valid theme values for all modes', () => {
@@ -125,6 +125,7 @@ describe('TrainingMenu Component Logic', () => {
         orange: 'bg-[var(--color-bg-secondary)]',
         indigo: 'bg-[var(--color-bg-secondary)]',
         green: 'bg-[var(--color-bg-secondary)]',
+        gold: 'bg-[var(--color-bg-secondary)]',
       };
 
       MODE_REGISTRY.forEach((mode) => {
