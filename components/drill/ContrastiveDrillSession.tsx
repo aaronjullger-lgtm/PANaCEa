@@ -99,7 +99,6 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
   };
 
   const handleComplete = (stats: any) => {
-    console.log('Drill complete', stats);
     setIsPlaying(false);
     setSelectedSet(null);
     setDrillId(null);

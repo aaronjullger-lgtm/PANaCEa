@@ -153,7 +153,7 @@ export const onRequestPut = authenticatedEndpoint(
     } catch (error) {
       logger.error('Failed to update mapping suggestion', { error, suggestionId: id, userId: auth.userId });
       return {
-        data: { error: 'Internal server error', details: (error as Error).message },
+        data: { error: 'Internal server error' },
         status: 500,
       };
     } finally {

@@ -54,7 +54,6 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
     filterDebounceRef.current?.debounced(newFilter);
     // In a real implementation, you would re‑fetch graph data with the filter
     // or apply client‑side filtering to the existing graph.
-    console.log('Filter changed (debounced):', newFilter);
   }, []);
 
   useEffect(() => {

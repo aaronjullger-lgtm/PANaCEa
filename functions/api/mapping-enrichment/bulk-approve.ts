@@ -166,7 +166,7 @@ export const onRequestPost = authenticatedEndpoint(
         suggestionIds,
       });
       return {
-        data: { error: 'Internal server error', details: (error as Error).message },
+        data: { error: 'Internal server error' },
         status: 500,
       };
     } finally {

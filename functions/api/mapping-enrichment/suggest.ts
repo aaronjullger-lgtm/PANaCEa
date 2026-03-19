@@ -98,7 +98,7 @@ export const onRequestPost = async (context: any) => {
   } catch (error) {
     console.error('[MappingEnrichmentSuggest]', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: (error as Error).message }),
+      JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: jsonHeaders }
     );
   } finally {

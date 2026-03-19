@@ -107,9 +107,8 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
     isLoading,
   } = useFirstLineDrill();
 
-  const handleDeepDive = useCallback((topic: string) => {
-    console.log('Deep dive into:', topic);
-    // Could open a modal, navigate to reference library, etc.
+  const handleDeepDive = useCallback((_topic: string) => {
+    // TODO: wire to reference library navigation
   }, []);
 
   if (isLoading) {

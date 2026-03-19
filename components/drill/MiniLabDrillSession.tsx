@@ -216,9 +216,8 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     setShowOrderTestMenu(false);
   };
 
-  const handleDeepDive = useCallback((topic: string) => {
-    console.log('Deep dive into:', topic);
-    // Could open a modal, navigate to reference library, etc.
+  const handleDeepDive = useCallback((_topic: string) => {
+    // TODO: wire to reference library navigation
   }, []);
 
   // Animation variants

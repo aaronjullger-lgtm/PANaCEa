@@ -37,9 +37,6 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
 
   // Handle drill start from setup
   const handleDrillStart = (drillConfig: DrillConfiguration) => {
-    console.log('Starting drill with config:', drillConfig);
-    console.log('Available conditions:', drillConfig.availableConditions.length);
-
     setConfig(drillConfig);
     setPhase('active');
 

@@ -32,8 +32,6 @@ const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({
     (type: string, id: string) => {
       if (onNavigateToReference) {
         onNavigateToReference(type, id);
-      } else {
-        console.log('Deep dive requested:', type, id);
       }
     },
     [onNavigateToReference]

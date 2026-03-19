@@ -30,9 +30,6 @@ const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({
     (type: string, id: string) => {
       if (onNavigateToReference) {
         onNavigateToReference(type, id);
-      } else {
-        // Fallback: log for debugging
-        console.log('Deep dive requested:', type, id);
       }
     },
     [onNavigateToReference]

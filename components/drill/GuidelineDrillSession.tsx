@@ -56,9 +56,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
   const [showDeepDive, setShowDeepDive] = useState(false);
   const { getToken } = useAuth();
 
-  const handleDeepDive = useCallback((topic: string) => {
-    console.log('Deep dive into:', topic);
-    // Could open a modal, navigate to reference library, etc.
+  const handleDeepDive = useCallback((_topic: string) => {
+    // TODO: wire to reference library navigation
   }, []);
 
   const handleExit = () => {

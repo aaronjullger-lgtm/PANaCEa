@@ -171,17 +171,17 @@ export function useUserStats(): UseUserStatsResult {
   // Save to localStorage whenever data changes (for offline support)
   useEffect(() => {
     if (!persistenceEnabledRef.current) return;
-    localStorage.setItem(PERFORMANCE_KEY, JSON.stringify(performanceData));
+    try { localStorage.setItem(PERFORMANCE_KEY, JSON.stringify(performanceData)); } catch { /* quota exceeded — non-fatal */ }
   }, [performanceData]);
 
   useEffect(() => {
     if (!persistenceEnabledRef.current) return;
-    localStorage.setItem(MISSED_KEY, JSON.stringify(missedQuestions));
+    try { localStorage.setItem(MISSED_KEY, JSON.stringify(missedQuestions)); } catch { /* quota exceeded — non-fatal */ }
   }, [missedQuestions]);
 
   useEffect(() => {
     if (!persistenceEnabledRef.current) return;
-    localStorage.setItem(FLAGGED_KEY, JSON.stringify(flaggedQuestions));
+    try { localStorage.setItem(FLAGGED_KEY, JSON.stringify(flaggedQuestions)); } catch { /* quota exceeded — non-fatal */ }
   }, [flaggedQuestions]);
 
   // Enable persistence after initial mount to avoid overwriting pre-seeded localStorage
@@ -617,10 +617,10 @@ export function useUserStats(): UseUserStatsResult {
             // Mark this question as deleted locally
             localDeletionsRef.current.set(id, Date.now());
             // Persist deletions to localStorage
-            localStorage.setItem(
+            try { localStorage.setItem(
               DELETIONS_KEY,
               JSON.stringify(Array.from(localDeletionsRef.current.entries()))
-            );
+            ); } catch { /* quota exceeded — non-fatal */ }
           }
         });
 
@@ -647,10 +647,10 @@ export function useUserStats(): UseUserStatsResult {
             // Mark this question as deleted locally
             localDeletionsRef.current.set(id, Date.now());
             // Persist deletions to localStorage
-            localStorage.setItem(
+            try { localStorage.setItem(
               DELETIONS_KEY,
               JSON.stringify(Array.from(localDeletionsRef.current.entries()))
-            );
+            ); } catch { /* quota exceeded — non-fatal */ }
           }
         });
 

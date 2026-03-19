@@ -143,8 +143,8 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
     userId,
     token,
     autoConnect: true,
-    onConnected: () => console.log('Connected to real-time collaboration'),
-    onDisconnected: (code, reason) => console.log('Disconnected:', code, reason),
+    onConnected: () => { /* connected */ },
+    onDisconnected: (_code, _reason) => { /* disconnected */ },
     onError: (error) => console.error('Real-time error:', error),
   });
 

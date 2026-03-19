@@ -51,9 +51,8 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
   const stats = getDrillLandingStats('ddx_drill' as DrillType);
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
 
-  const handleDeepDive = useCallback((topic: string) => {
-    console.log('Deep dive into:', topic);
-    // Could open a modal, navigate to reference library, etc.
+  const handleDeepDive = useCallback((_topic: string) => {
+    // TODO: wire to reference library navigation
   }, []);
 
   // Landing page

@@ -95,9 +95,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) =
               if (data.pearls && data.pearls.length > 0) {
                 setPearlQuestions(data.pearls);
                 setUsePearls(true);
-                console.log(
-                  `[RapidRecallDrill] Loaded ${data.pearls.length} pearl questions for ${system}`
-                );
+                // Pearl questions loaded successfully
               } else {
                 // No pearls available, fall back to buzzwords
                 setUsePearls(false);

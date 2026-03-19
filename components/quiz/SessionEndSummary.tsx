@@ -803,7 +803,6 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             difficulty: 'medium', // PANCE-level is always medium
           }}
           onComplete={async (reflection) => {
-            console.log('[SessionEndSummary] Reflection submitted:', reflection);
             try {
               const token = await getToken();
               const response = await fetch(getApiEndpoint(API_ENDPOINTS.REFLECTION), {
@@ -817,8 +816,6 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               if (!response.ok) {
                 const errorText = await response.text();
                 console.error('[SessionEndSummary] Failed to save reflection:', response.status, errorText);
-              } else {
-                console.log('[SessionEndSummary] Reflection saved successfully');
               }
             } catch (error) {
               console.error('[SessionEndSummary] Error saving reflection:', error);

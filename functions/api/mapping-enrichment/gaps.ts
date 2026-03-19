@@ -55,7 +55,7 @@ export const onRequestGet = async (context: any) => {
   } catch (error) {
     console.error('[MappingEnrichmentGaps]', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: (error as Error).message }),
+      JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: jsonHeaders }
     );
   } finally {

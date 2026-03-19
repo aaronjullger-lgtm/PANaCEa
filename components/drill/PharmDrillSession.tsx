@@ -114,9 +114,8 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
     onExit?.();
   };
 
-  const handleDeepDive = useCallback((topic: string) => {
-    console.log('Deep dive into:', topic);
-    // Could open a modal, navigate to reference library, etc.
+  const handleDeepDive = useCallback((_topic: string) => {
+    // TODO: wire to reference library navigation
   }, []);
 
   if (isDataLoading) {
