@@ -131,7 +131,7 @@ import { inferQuestionType } from '@/hooks/useTelemetryCollector';
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
 import { syncManager } from '@/lib/services/sync/syncManager';
-import { deriveFsrsRating, deriveFsrsRatingFromBehavior } from '@/lib/utils/fsrsImplicitRating';
+import { deriveFsrsRatingFromBehavior } from '@/lib/utils/fsrsImplicitRating';
 import { logger } from '@/src/lib/logger';
 
 /** Regex to strip HTML tags (defined outside JSX to avoid TS1382 parse errors) */
@@ -958,7 +958,13 @@ const QuizView: React.FC<QuizViewProps> = ({
           selectionDriftMs: microMetrics.selectionDriftMs,
           tremorScore: microMetrics.tremorScore,
         })
-      : deriveFsrsRating(isCorrect, timeToAnswer);
+      : deriveFsrsRatingFromBehavior({
+          isCorrect,
+          timeToFirstClickMs: null,
+          totalDwellTimeMs: timeToAnswer,
+          parTimeMs: parTimeForRating,
+          answerSwitches: 0,
+        });
 
     syncManager.queueAnswer({
       questionId,
