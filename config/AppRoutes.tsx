@@ -649,7 +649,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                                   onNavigateToStudyCompanion={() =>
                                     setView('study_companion')
                                   }
-                                  // Canonical FSRS flow is main session (QuizView) MC only; due = variants in same session. SRS Flashcards view hidden.
+                                  // FSRS variant review: presents due variant PANCE MCQ questions; rating is fully implicit.
+                                  onNavigateToSrsReview={() => setView('srs_review')}
                                   onNavigateToPearlDeck={() => setView('pearl_deck')}
                                   onNavigateToStudyPathDashboard={handleNavigateToStudyPathDashboard}
                                   growthAreas={growthAreas}
@@ -978,7 +979,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                                     onNavigateToStudyCompanion={() =>
                                       setView('study_companion')
                                     }
-                                    // Canonical FSRS flow is main session (QuizView) MC only; due = variants in same session. SRS Flashcards view hidden.
+                                    onNavigateToSrsReview={() => setView('srs_review')}
                                     onBack={() => setView('command_center')}
                                   />
                                 </Suspense>
@@ -1070,9 +1071,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                             </motion.div>
                           )}
 
-                          {view === 'srs_flashcards' && (
+                          {view === 'srs_review' && (
                             <motion.div
-                              key="srs_flashcards"
+                              key="srs_review"
                               variants={pageVariants}
                               initial="initial"
                               animate="animate"

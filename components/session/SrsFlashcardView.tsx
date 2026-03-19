@@ -1,47 +1,100 @@
 /**
- * SRS Flashcard View (Pillar 4: FSRS Generative Mnemonics)
+ * SRS Review View — Spaced Repetition via Variant PANCE Questions
  *
- * Uses GET /api/srs/next and POST /api/srs/submit. Implicit behavioral model:
- * User flips card, then marks Correct or Incorrect. FSRS rating (1–4) is derived
- * from correctness + time spent—no self-evaluation of difficulty.
- * When user marks Incorrect, backend may return triggerVisualRegeneration; we
- * request an exaggerated mnemonic image and show it with a flip animation.
+ * Replaces the old flashcard flip-card UI. FSRS scheduling is fully implicit:
+ * no Correct/Incorrect buttons, no self-evaluation. The system presents a
+ * variant PANCE-style MCQ question (from GET /api/srs/next), the learner
+ * selects an answer and submits, and the FSRS rating is derived entirely from
+ * behavioral signals (time-to-first-click, answer switches, dwell time, etc.).
+ *
+ * Flow: GET /api/srs/next → render MCQ → select answer → Submit →
+ *   deriveFsrsRatingFromBehavior → POST /api/srs/submit → show explanation →
+ *   Next question
  */
 
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, ChevronLeft, Loader2, RotateCcw, ImagePlus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import {
   fetchNextVariantCard,
   submitVariantReview,
-  requestMnemonicImage,
   type VariantNextResponse,
 } from '@/lib/services/srsService';
-import { deriveFsrsRating } from '@/lib/utils/fsrsImplicitRating';
+import { deriveFsrsRatingFromBehavior } from '@/lib/utils/fsrsImplicitRating';
 import { toast } from '@/lib/toast';
 
-interface SrsFlashcardViewProps {
+interface SrsReviewViewProps {
   onExit: () => void;
 }
 
-type CardData = VariantNextResponse & { questionId: string; front: string; back: string };
+const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E'] as const;
 
-function getCardPayload(data: VariantNextResponse | null | undefined): CardData | null {
-  const q = data?.question as Record<string, unknown> | undefined;
-  if (!data || !q) return null;
-  const questionId = (q.id ?? q.baseQuestionId) as string;
-  const front = (q.question ?? q.stem ?? '') as string;
-  const back = (q.rationale ?? q.correctOption ?? '') as string;
-  if (!questionId || !front.trim()) return null;
-  const backText = back && (typeof back === 'object' ? JSON.stringify(back) : String(back)).trim();
+/** Normalised question data extracted from Question or QuestionVariant payloads. */
+interface ReviewQuestion {
+  questionId: string;
+  srsItemId: string | null;
+  topicProgressId?: string;
+  variantId?: string;
+  isVariant: boolean;
+  /** Optional vignette / case stem to display above the question. */
+  vignette: string;
+  stem: string;
+  options: string[];
+  /** Index (0-based) of the correct option in the `options` array. */
+  correctIndex: number;
+  explanation: string;
+  conditionId?: string;
+  /** Par (expected) time for behavioral scoring (ms). Defaults to 90 s. */
+  parTimeMs: number;
+}
+
+function parseQuestion(raw: VariantNextResponse): ReviewQuestion | null {
+  const q = raw.question as Record<string, unknown> | null | undefined;
+  if (!q) return null;
+
+  const questionId = ((q.id ?? q.baseQuestionId) as string | undefined)?.trim();
+  if (!questionId) return null;
+
+  const stem = ((q.question ?? q.stem ?? '') as string).trim();
+  if (!stem) return null;
+
+  // options can be a string array or JSON-stored array
+  const rawOptions = (q.options ?? []) as unknown[];
+  const options: string[] = Array.isArray(rawOptions)
+    ? rawOptions.map((o) => String(o))
+    : [];
+  if (options.length === 0) return null;
+
+  // Determine correct index: prefer correctAnswerIndex, fall back to indexOf(correctAnswer)
+  let correctIndex = -1;
+  if (typeof q.correctAnswerIndex === 'number') {
+    correctIndex = q.correctAnswerIndex;
+  } else if (typeof q.correctAnswer === 'string') {
+    correctIndex = options.findIndex(
+      (o) => o.trim().toLowerCase() === (q.correctAnswer as string).trim().toLowerCase()
+    );
+  }
+  if (correctIndex < 0 || correctIndex >= options.length) correctIndex = 0;
+
+  const explanation = ((q.explanation ?? q.rationale ?? '') as string).trim();
+  const vignette = ((q.vignette ?? '') as string).trim();
+
   return {
-    ...data,
     questionId,
-    front: front.trim(),
-    back: backText || front.trim(),
+    srsItemId: raw.srsItemId,
+    topicProgressId: raw.topicProgressId,
+    variantId: raw.isVariant ? questionId : undefined,
+    isVariant: raw.isVariant,
+    vignette,
+    stem,
+    options,
+    correctIndex,
+    explanation,
+    conditionId: (q.conditionId as string | undefined) ?? undefined,
+    parTimeMs: 90_000,
   };
 }
 
@@ -51,53 +104,72 @@ function formatNextReview(date: Date | string | undefined): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
+export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
   const { getToken } = useAuth();
-  const [card, setCard] = useState<CardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [flipped, setFlipped] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [mnemonicImage, setMnemonicImage] = useState<string | null>(null);
-  const [mnemonicLoading, setMnemonicLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const startTimeRef = React.useRef<number>(0);
   const srsAuth = useCallback(() => ({ getToken }), [getToken]);
+
+  const [question, setQuestion] = useState<ReviewQuestion | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Answer state
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  // Behavioral signal tracking
+  const displayTimeRef = useRef<number>(0);
+  const firstClickTimeRef = useRef<number | null>(null);
+  const answerSwitchesRef = useRef<number>(0);
+  const lastSelectionTimeRef = useRef<number | null>(null);
+
+  const resetBehavior = () => {
+    displayTimeRef.current = Date.now();
+    firstClickTimeRef.current = null;
+    answerSwitchesRef.current = 0;
+    lastSelectionTimeRef.current = null;
+  };
 
   const loadNext = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setCard(null);
-    setFlipped(false);
-    setMnemonicImage(null);
+    setQuestion(null);
+    setSelectedIndex(null);
+    setSubmitted(false);
+    resetBehavior();
+
     try {
       const raw = await fetchNextVariantCard(srsAuth());
-      const data = (raw && 'data' in raw ? (raw as { data: VariantNextResponse }).data : raw) as
-        | VariantNextResponse
-        | null
-        | undefined;
+      const data = (
+        raw && typeof raw === 'object' && 'data' in raw
+          ? (raw as { data: VariantNextResponse }).data
+          : raw
+      ) as VariantNextResponse | null | undefined;
+
       if (!data) {
-        setError('Could not load next card.');
+        setError('Could not load next question.');
         setLoading(false);
         return;
       }
-      const noQuestion = 'message' in data && data.message && !data.question;
-      if (noQuestion) {
+      if ('message' in data && data.message && !data.question) {
         const msg =
-          data.message === 'No items due' ? 'No cards due right now.' : String(data.message);
+          data.message === 'No items due'
+            ? 'All caught up — no questions due right now.'
+            : String(data.message);
         setError(msg);
         setLoading(false);
         return;
       }
-      const payload = getCardPayload(data);
-      if (!payload) {
-        setError('Invalid card data.');
+
+      const parsed = parseQuestion(data);
+      if (!parsed) {
+        setError('Could not parse question data.');
         setLoading(false);
         return;
       }
-      setCard(payload);
-      startTimeRef.current = Date.now();
+      setQuestion(parsed);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load card.');
+      setError(e instanceof Error ? e.message : 'Failed to load question.');
     } finally {
       setLoading(false);
     }
@@ -107,89 +179,98 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
     void loadNext();
   }, [loadNext]);
 
-  const handleMarkCorrect = useCallback(() => {
-    void handleBinarySubmit(true);
-  }, []);
+  const handleSelectOption = useCallback((index: number) => {
+    if (submitted || submitting) return;
 
-  const handleMarkIncorrect = useCallback(() => {
-    void handleBinarySubmit(false);
-  }, []);
+    // Record first click
+    if (firstClickTimeRef.current === null) {
+      firstClickTimeRef.current = Date.now();
+    }
+    // Count switches (only after the first selection)
+    if (lastSelectionTimeRef.current !== null) {
+      answerSwitchesRef.current += 1;
+    }
+    lastSelectionTimeRef.current = Date.now();
+    setSelectedIndex(index);
+  }, [submitted, submitting]);
 
-  const handleBinarySubmit = useCallback(
-    async (isCorrect: boolean) => {
-      if (!card || submitting) return;
-      setSubmitting(true);
-      const timeSpentMs = Date.now() - startTimeRef.current;
-      const rating = deriveFsrsRating(isCorrect, timeSpentMs);
-      try {
-        const result = await submitVariantReview(
-          {
-            srsItemId: card.srsItemId ?? undefined,
-            topicProgressId: card.topicProgressId,
-            questionId: card.questionId,
-            rating,
-            isCorrect,
-            timeSpent: Math.round(timeSpentMs),
-            variantId: card.isVariant ? (card.question as { id?: string })?.id : undefined,
-          },
-          srsAuth()
-        );
-        setSubmitting(false);
-        if (!result) return;
+  const handleSubmit = useCallback(async () => {
+    if (selectedIndex === null || !question || submitting || submitted) return;
+    setSubmitting(true);
 
-        const nextDate = result.nextReviewDate;
-        const nextStr = formatNextReview(nextDate);
+    const now = Date.now();
+    const totalDwellTimeMs = now - displayTimeRef.current;
+    const timeToFirstClickMs = firstClickTimeRef.current !== null
+      ? firstClickTimeRef.current - displayTimeRef.current
+      : null;
+    const selectionDriftMs = lastSelectionTimeRef.current !== null
+      ? now - lastSelectionTimeRef.current
+      : null;
+    const isCorrect = selectedIndex === question.correctIndex;
+
+    const rating = deriveFsrsRatingFromBehavior({
+      isCorrect,
+      timeToFirstClickMs,
+      totalDwellTimeMs,
+      parTimeMs: question.parTimeMs,
+      answerSwitches: answerSwitchesRef.current,
+      selectionDriftMs,
+    });
+
+    try {
+      const result = await submitVariantReview(
+        {
+          srsItemId: question.srsItemId ?? undefined,
+          topicProgressId: question.topicProgressId,
+          questionId: question.questionId,
+          variantId: question.variantId,
+          rating,
+          isCorrect,
+          timeSpent: Math.round(totalDwellTimeMs),
+        },
+        srsAuth()
+      );
+
+      setSubmitted(true);
+      setSubmitting(false);
+
+      if (result?.nextReviewDate) {
+        const nextStr = formatNextReview(result.nextReviewDate);
         if (nextStr) {
           toast.info(`Next review: ${nextStr}`, { duration: 2500 });
-        } else {
-          toast.info('Interval updated based on performance', { duration: 2000 });
         }
-
-        if (result.triggerVisualRegeneration) {
-          setMnemonicLoading(true);
-          const visual = await requestMnemonicImage(card.front, card.back, {
-            style: 'exaggerated',
-            questionId: card.questionId,
-            conditionId: (card.question as { conditionId?: string })?.conditionId,
-            getToken,
-          });
-          setMnemonicLoading(false);
-          if (visual?.data?.imageBase64) {
-            setMnemonicImage(`data:${visual.data.imageMime};base64,${visual.data.imageBase64}`);
-          }
-          setFlipped(true);
-        } else {
-          void loadNext();
-        }
-      } catch {
-        setSubmitting(false);
       }
-    },
-    [card, submitting, loadNext, srsAuth, getToken]
-  );
+    } catch {
+      setSubmitting(false);
+    }
+  }, [selectedIndex, question, submitting, submitted, srsAuth]);
 
-  const handleContinueAfterMnemonic = useCallback(() => {
-    setMnemonicImage(null);
-    void loadNext();
-  }, [loadNext]);
+  // ─── Render: Loading ─────────────────────────────────────────────────────────
 
-  if (loading && !card) {
+  if (loading && !question) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[320px] p-6">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)] mb-4" />
-        <p className="text-sm text-[var(--color-text-muted)]">Loading next card…</p>
+        <p className="text-sm text-[var(--color-text-muted)]">Loading next question…</p>
       </div>
     );
   }
 
-  if (error && !card) {
+  // ─── Render: Empty / Error ────────────────────────────────────────────────────
+
+  if (error && !question) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[320px] p-6 text-center">
-        <p className="text-sm text-[var(--color-text-secondary)] mb-4">{error}</p>
+      <div className="flex flex-col items-center justify-center min-h-[320px] p-6 text-center gap-4">
+        <p
+          className="text-sm text-[var(--color-text-secondary)]"
+          data-testid="srs-review-message"
+        >
+          {error}
+        </p>
         <button
           type="button"
           onClick={onExit}
-          className="inline-flex items-center gap-2 min-h-[44px] min-w-[44px] px-4 py-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] cursor-pointer"
+          className="inline-flex items-center gap-2 min-h-[44px] px-4 py-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] cursor-pointer"
         >
           <ChevronLeft className="w-4 h-4" />
           Back
@@ -198,11 +279,16 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
     );
   }
 
-  if (!card) return null;
+  if (!question) return null;
+
+  const isCorrect = submitted && selectedIndex === question.correctIndex;
+
+  // ─── Render: MCQ Question ─────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col h-full max-w-lg mx-auto p-4">
-      <div className="flex items-center gap-2 mb-4">
+    <div className="flex flex-col h-full max-w-2xl mx-auto p-4 gap-4">
+      {/* Header */}
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={onExit}
@@ -212,121 +298,148 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsFlashcardViewProps>) {
           <ChevronLeft className="w-5 h-5" />
         </button>
         <h1
-          className="text-lg font-semibold text-[var(--color-text-primary)]"
-          data-testid="srs-flashcards-heading"
+          className="text-base font-semibold text-[var(--color-text-primary)]"
+          data-testid="srs-review-heading"
         >
-          SRS Flashcards
+          Due Review
         </h1>
+        {question.isVariant && (
+          <span className="ml-auto text-xs font-medium px-2 py-0.5 rounded-full bg-[var(--color-accent)]/15 text-[var(--color-accent)]">
+            Variant
+          </span>
+        )}
       </div>
 
-      <div className="flex-1 flex flex-col justify-center">
-        <motion.div
-          className="relative w-full aspect-[4/3] max-h-[320px] rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] overflow-hidden cursor-pointer select-none min-h-[120px]"
-          style={{ perspective: 1000 }}
-          onClick={() => setFlipped((f) => !f)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setFlipped((f) => !f);
-            }
-          }}
-          aria-label={flipped ? 'Show question (front of card)' : 'Show answer (back of card)'}
-        >
-          <AnimatePresence mode="wait">
-            {flipped ? (
-              <motion.div
-                key="back"
-                initial={{ opacity: 0, rotateY: 90 }}
-                animate={{ opacity: 1, rotateY: 0 }}
-                exit={{ opacity: 0, rotateY: -90 }}
-                transition={{ duration: 0.25 }}
-                className="absolute inset-0 flex flex-col items-center justify-center p-6 overflow-auto"
-              >
-                {mnemonicLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-bg-secondary)]/90 z-10">
-                    <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
-                  </div>
-                )}
-                {mnemonicImage && (
-                  <img
-                    src={mnemonicImage}
-                    alt="Mnemonic"
-                    className="w-full h-auto max-h-48 object-contain rounded-lg mb-3"
-                  />
-                )}
-                <p className="text-[var(--color-text-secondary)] text-center text-sm leading-relaxed">
-                  {card.back}
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="front"
-                initial={{ opacity: 0, rotateY: -90 }}
-                animate={{ opacity: 1, rotateY: 0 }}
-                exit={{ opacity: 0, rotateY: 90 }}
-                transition={{ duration: 0.25 }}
-                className="absolute inset-0 flex flex-col items-center justify-center p-6"
-              >
-                <p className="text-[var(--color-text-primary)] text-center text-lg leading-relaxed">
-                  {card.front}
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        <div className="flex items-center justify-center gap-2 mt-4">
-          <button
-            type="button"
-            onClick={() => setFlipped((f) => !f)}
-            className="min-h-[44px] min-w-[44px] p-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-pointer inline-flex items-center justify-center"
-            title="Flip card"
-          >
-            <RotateCcw className="w-5 h-5" />
-          </button>
+      {/* Vignette */}
+      {question.vignette && (
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+          <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+            {question.vignette}
+          </p>
         </div>
+      )}
 
-        {flipped && !mnemonicImage && (
-          <div
-            className="flex flex-wrap justify-center gap-3 mt-6"
-            data-testid="srs-binary-buttons"
-          >
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={handleMarkIncorrect}
-              className="min-h-[44px] min-w-[44px] px-5 py-3 rounded-lg border border-[var(--color-data-provisional)] bg-[var(--color-bg-secondary)] text-[var(--color-data-provisional)] text-sm font-medium disabled:opacity-50 hover:bg-[var(--color-bg-tertiary)] cursor-pointer inline-flex items-center gap-2"
-            >
-              <X className="w-5 h-5" />
-              Incorrect
-            </button>
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={handleMarkCorrect}
-              className="min-h-[44px] min-w-[44px] px-5 py-3 rounded-lg border border-[var(--color-data-pass)] bg-[var(--color-bg-secondary)] text-[var(--color-data-pass)] text-sm font-medium disabled:opacity-50 hover:bg-[var(--color-bg-tertiary)] cursor-pointer inline-flex items-center gap-2"
-            >
-              <Check className="w-5 h-5" />
-              Correct
-            </button>
-          </div>
-        )}
-
-        {mnemonicImage && (
-          <div className="mt-4 flex justify-center">
-            <button
-              type="button"
-              onClick={handleContinueAfterMnemonic}
-              className="inline-flex items-center gap-2 min-h-[44px] px-4 py-3 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium cursor-pointer"
-            >
-              <ImagePlus className="w-4 h-4" />
-              Next card
-            </button>
-          </div>
-        )}
+      {/* Stem */}
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+        <p className="text-[var(--color-text-primary)] leading-relaxed font-medium">
+          {question.stem}
+        </p>
       </div>
+
+      {/* Options */}
+      <div className="flex flex-col gap-2" data-testid="srs-review-options">
+        {question.options.map((option, index) => {
+          const label = OPTION_LABELS[index] ?? String.fromCharCode(65 + index);
+          const isSelected = selectedIndex === index;
+          const isCorrectOption = index === question.correctIndex;
+
+          let borderClass = 'border-[var(--color-border)]';
+          let bgClass = 'bg-[var(--color-bg-secondary)]';
+          let textClass = 'text-[var(--color-text-primary)]';
+
+          if (submitted) {
+            if (isCorrectOption) {
+              borderClass = 'border-[var(--color-data-pass)]';
+              bgClass = 'bg-[var(--color-data-pass)]/10';
+              textClass = 'text-[var(--color-data-pass)]';
+            } else if (isSelected && !isCorrectOption) {
+              borderClass = 'border-[var(--color-data-provisional)]';
+              bgClass = 'bg-[var(--color-data-provisional)]/10';
+              textClass = 'text-[var(--color-data-provisional)]';
+            }
+          } else if (isSelected) {
+            borderClass = 'border-[var(--color-accent)]';
+            bgClass = 'bg-[var(--color-accent)]/10';
+          }
+
+          return (
+            <button
+              key={index}
+              type="button"
+              disabled={submitted || submitting}
+              onClick={() => handleSelectOption(index)}
+              className={`w-full flex items-start gap-3 min-h-[44px] px-4 py-3 rounded-lg border ${borderClass} ${bgClass} ${textClass} text-sm text-left cursor-pointer disabled:cursor-default transition-colors duration-150 hover:enabled:bg-[var(--color-bg-tertiary)]`}
+            >
+              <span className="font-bold shrink-0 w-5">{label}.</span>
+              <span className="leading-relaxed">{option}</span>
+              {submitted && isCorrectOption && (
+                <CheckCircle2 className="w-4 h-4 ml-auto shrink-0 mt-0.5" />
+              )}
+              {submitted && isSelected && !isCorrectOption && (
+                <XCircle className="w-4 h-4 ml-auto shrink-0 mt-0.5" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Submit / Next */}
+      {!submitted ? (
+        <button
+          type="button"
+          disabled={selectedIndex === null || submitting}
+          onClick={() => void handleSubmit()}
+          className="min-h-[44px] px-6 py-3 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold text-sm disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 self-end"
+          data-testid="srs-review-submit"
+        >
+          {submitting ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              Submit
+              <ChevronRight className="w-4 h-4" />
+            </>
+          )}
+        </button>
+      ) : (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="explanation"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="flex flex-col gap-3"
+          >
+            {/* Result banner */}
+            <div
+              className={`flex items-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm ${
+                isCorrect
+                  ? 'bg-[var(--color-data-pass)]/15 text-[var(--color-data-pass)]'
+                  : 'bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)]'
+              }`}
+            >
+              {isCorrect ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              ) : (
+                <XCircle className="w-4 h-4 shrink-0" />
+              )}
+              {isCorrect ? 'Correct' : 'Incorrect'}
+            </div>
+
+            {/* Explanation */}
+            {question.explanation && (
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+                  Explanation
+                </p>
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                  {question.explanation}
+                </p>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => void loadNext()}
+              className="min-h-[44px] px-6 py-3 rounded-lg bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-semibold text-sm cursor-pointer inline-flex items-center justify-center gap-2 self-end"
+              data-testid="srs-review-next"
+            >
+              Next question
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </motion.div>
+        </AnimatePresence>
+      )}
     </div>
   );
 }

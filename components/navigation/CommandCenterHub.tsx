@@ -86,8 +86,8 @@ interface CommandCenterHubProps {
   onNavigateToMyLibrary?: () => void;
   /** Study Companion: PDF + citations + chat with textbook */
   onNavigateToStudyCompanion?: () => void;
-  /** SRS Flashcards: variant-aware cards + generative mnemonics (Hard → exaggerated image) */
-  onNavigateToSrsFlashcards?: () => void;
+  /** Due Review: variant PANCE MCQ questions scheduled by implicit FSRS */
+  onNavigateToSrsReview?: () => void;
   onNavigateToCustomStudy?: () => void;
   /** Dynamic Study Path Optimizer dashboard */
   onNavigateToStudyPathDashboard?: () => void;
@@ -299,7 +299,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   onNavigateToReference,
   onNavigateToMyLibrary,
   onNavigateToStudyCompanion,
-  onNavigateToSrsFlashcards,
+  onNavigateToSrsReview,
   onNavigateToCustomStudy,
   onNavigateToPearlDeck,
   onNavigateToStudyPathDashboard,
@@ -656,10 +656,15 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           <div className="flex flex-wrap gap-2 mt-3">
             {/* Due Count Chip */}
             {(propDueCount ?? 0) > 0 && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-data-fail/10 border border-data-fail/30 text-sm font-medium">
+              <button
+                type="button"
+                onClick={onNavigateToSrsReview}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-data-fail/10 border border-data-fail/30 text-sm font-medium hover:bg-data-fail/20 transition-colors cursor-pointer"
+                title="Open Due Review — variant PANCE questions"
+              >
                 <span className="text-data-fail">{propDueCount}</span>
                 <span className="text-[var(--color-text-secondary)]">due</span>
-              </div>
+              </button>
             )}
 
             {/* Flagged Count Chip */}

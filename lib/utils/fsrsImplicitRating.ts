@@ -1,31 +1,18 @@
 /**
  * Implicit FSRS Rating Mapping
  *
- * Two entry points:
- *
- * 1. `deriveFsrsRatingFromBehavior` — for PANCE-style MCQ questions.
- *    Uses the full behavioral-signal pipeline (deriveContinuousRating +
- *    Ghost Grader applyHonestRating) to produce a 1–4 rating from
- *    time-to-first-click, answer switches, cursor entropy, oscillations,
- *    etc.  Matches the server-side computation so the sync-queue estimate
- *    is accurate.  No self-rating buttons are ever shown.
- *
- * 2. `deriveFsrsRating` — legacy binary helper for flashcard self-eval
- *    (SrsFlashcardView).  The user explicitly marks a card Correct or
- *    Incorrect; Hard/Easy are deprecated and never produced.
+ * Single entry point: `deriveFsrsRatingFromBehavior` — for PANCE-style MCQ questions.
+ * Uses the full behavioral-signal pipeline (deriveContinuousRating +
+ * Ghost Grader applyHonestRating) to produce a 1–4 rating from
+ * time-to-first-click, answer switches, cursor entropy, oscillations, etc.
+ * Matches the server-side computation so the sync-queue estimate is accurate.
+ * No self-rating buttons are ever shown — all scheduling is fully implicit.
  */
 
 import { deriveContinuousRating, type ImplicitBehaviorMetrics } from '../implicit-metrics';
 import { applyHonestRating } from '../srs/ghostGrader';
 
 export type FsrsRating = 1 | 2 | 3 | 4;
-
-const RATING_AGAIN = 1;
-const RATING_GOOD = 3;
-
-// ---------------------------------------------------------------------------
-// PANCE-question behavioral rating
-// ---------------------------------------------------------------------------
 
 /**
  * Behavioral signals captured during a PANCE-style MCQ interaction.
@@ -100,22 +87,4 @@ export function deriveFsrsRatingFromBehavior(behavior: PanceQuestionBehavior): F
   });
 
   return honestRating as FsrsRating;
-}
-
-// ---------------------------------------------------------------------------
-// Flashcard binary rating (SrsFlashcardView only)
-// ---------------------------------------------------------------------------
-
-/**
- * Derive FSRS rating from explicit flashcard self-evaluation.
- *
- * Used by `SrsFlashcardView` where the user presses "Correct" or "Incorrect"
- * after reviewing the back of the card.  For PANCE MCQ questions use
- * `deriveFsrsRatingFromBehavior` instead — no self-rating buttons are shown.
- *
- * Mapping: Correct → Good (3), Incorrect → Again (1).
- * Hard (2) and Easy (4) are deprecated and never produced here.
- */
-export function deriveFsrsRating(isCorrect: boolean, _timeSpentMs: number): FsrsRating {
-  return isCorrect ? RATING_GOOD : RATING_AGAIN;
 }
