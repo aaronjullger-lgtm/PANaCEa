@@ -14,6 +14,13 @@
  * ```
  */
 
+// Import locally so helper functions below can reference them
+import {
+  ROUTE_REGISTRY,
+  isKnownPath,
+} from '../../config/routeRegistry';
+import { TRAINING_MODES } from '../../config/training-modes';
+
 // Re-export all route utilities from config/routeRegistry.ts
 export type { RouteDefinition } from '../../config/routeRegistry';
 export {
