@@ -71,11 +71,13 @@ export function useUnifiedStats(
     refetch: refetchSRSItems,
   } = useSRSItems();
 
-  // Determine overall loading state
-  const isLoading = rolling360Loading || databaseLoading || srsItemsLoading;
+  // Determine overall loading state — SRS items are a soft dependency and do not
+  // block the primary stats from being computed.
+  const primaryLoading = rolling360Loading || databaseLoading;
 
-  // Combine errors
-  const error = rolling360Error?.message || rolling360Error?.toString() || databaseError || srsItemsError || null;
+  // Only treat errors from primary sources as blocking; SRS items error degrades
+  // gracefully (dueCount falls back to 0) so the rest of the dashboard still works.
+  const error = rolling360Error?.message || rolling360Error?.toString() || databaseError || null;
 
   // Last fetched timestamp (most recent among sources)
   const lastFetched = useMemo(() => {
@@ -83,15 +85,19 @@ export function useUnifiedStats(
     return timestamps.length > 0 ? Math.max(...timestamps) : null;
   }, [rolling360Fetched, databaseFetched]);
 
-  // Compute unified stats when all sources are ready
+  // When SRS items fail to load, use 0 so stats can still be computed.
+  const effectiveDueCount = srsItemsError ? 0 : dueCount;
+
+  // Compute unified stats when primary sources are ready; SRS items loading state
+  // is NOT a hard blocker — render stats with effectiveDueCount=0 while they load.
   const stats = useMemo(() => {
-    if (isLoading || error) return null;
+    if (primaryLoading || error) return null;
     if (!rolling360Stats && !databaseStats) return null;
 
     const rawSources = {
       rolling360: rolling360Stats,
       database: databaseStats,
-      dueCount,
+      dueCount: effectiveDueCount,
     };
 
     const unified = computeUnifiedStats(rawSources);
@@ -102,7 +108,7 @@ export function useUnifiedStats(
     }
 
     return unified;
-  }, [rolling360Stats, databaseStats, dueCount, isLoading, error, includeRaw]);
+  }, [rolling360Stats, databaseStats, effectiveDueCount, primaryLoading, error, includeRaw]);
 
   // Combined refetch function
   const refetch = useCallback(async () => {
@@ -115,7 +121,7 @@ export function useUnifiedStats(
 
   return {
     stats,
-    isLoading,
+    isLoading: primaryLoading || srsItemsLoading,
     error,
     refetch,
     lastFetched,

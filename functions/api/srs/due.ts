@@ -107,7 +107,15 @@ export const onRequestGet = authenticatedEndpoint(SRSDueSchema, async (context) 
       error: error instanceof Error ? error.message : String(error),
       userId: auth.userId.substring(0, 10),
     });
-    throw new Error('Failed to fetch due items');
+    // Return empty items rather than a 500 so the frontend can degrade gracefully.
+    // The error is still logged for monitoring; callers receive an empty queue.
+    return {
+      data: {
+        items: [],
+        totalDue: 0,
+        timestamp: new Date().toISOString(),
+      },
+    };
   } finally {
     await safePrismaDisconnect(prisma);
   }
