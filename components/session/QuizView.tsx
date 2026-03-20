@@ -131,7 +131,7 @@ import { inferQuestionType } from '@/hooks/useTelemetryCollector';
 // Other services (non-barrel)
 import { feedback } from '@/services/core/feedbackService';
 import { syncManager } from '@/lib/services/sync/syncManager';
-import { deriveFsrsRating } from '@/lib/utils/fsrsImplicitRating';
+import { deriveFsrsRatingFromBehavior } from '@/lib/utils/fsrsImplicitRating';
 import { logger } from '@/src/lib/logger';
 
 /** Regex to strip HTML tags (defined outside JSX to avoid TS1382 parse errors) */
@@ -940,8 +940,31 @@ const QuizView: React.FC<QuizViewProps> = ({
           )
         : undefined;
 
-    // Derive FSRS rating from binary correctness (Again=1 for wrong, Good=3 for correct)
-    const fsrsRating = deriveFsrsRating(isCorrect, timeToAnswer);
+    // Derive FSRS rating from behavioral signals — fully implicit, no self-rating buttons.
+    // When behavioral data is available, use the full pipeline (deriveContinuousRating +
+    // Ghost Grader) that matches the server-side computation in drillReviewService.
+    // Falls back to binary correct/incorrect only if the tracker was inactive.
+    const parTimeForRating = calculateParTime(currentQuestion);
+    const fsrsRating = behavioralPayload
+      ? deriveFsrsRatingFromBehavior({
+          isCorrect,
+          timeToFirstClickMs: behavioralPayload.time_to_first_interaction_ms,
+          totalDwellTimeMs: behavioralPayload.duration_ms,
+          parTimeMs: parTimeForRating,
+          answerSwitches: behavioralPayload.answer_change_count,
+          cursorEntropy: microMetrics.cursorEntropy,
+          hoverOscillations: microMetrics.oscillations,
+          vignetteRegressions: microMetrics.vignetteRegressions,
+          selectionDriftMs: microMetrics.selectionDriftMs,
+          tremorScore: microMetrics.tremorScore,
+        })
+      : deriveFsrsRatingFromBehavior({
+          isCorrect,
+          timeToFirstClickMs: null,
+          totalDwellTimeMs: timeToAnswer,
+          parTimeMs: parTimeForRating,
+          answerSwitches: 0,
+        });
 
     syncManager.queueAnswer({
       questionId,

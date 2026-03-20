@@ -53,7 +53,7 @@ export type View =
   | 'my_library'
   | 'tutor_chat'
   | 'study_companion'
-  | 'srs_flashcards'
+  | 'srs_review'
   | 'medical_database'
   | 'commuter_mode'
   | 'study_path_dashboard'
