@@ -18,6 +18,7 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useRef,
   ReactNode,
 } from 'react';
 import { registerToast } from '@/lib/toast';
@@ -87,7 +88,18 @@ const ICON_STYLES: Record<ToastVariant, string> = {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  // Map of toast id → pending auto-dismiss timer. Lets us cancel the timer
+  // when a toast is manually dismissed so there's no orphaned timeout
+  // (and no attempt to call removeToast after the toast is already gone).
+  const timerMapRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
   const removeToast = useCallback((id: string) => {
+    // Cancel the auto-dismiss timer if it hasn't fired yet.
+    const pending = timerMapRef.current.get(id);
+    if (pending !== undefined) {
+      clearTimeout(pending);
+      timerMapRef.current.delete(id);
+    }
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
@@ -97,9 +109,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       const newToast: Toast = { ...toast, id };
 
       setToasts((prev) => {
-        // Remove oldest toasts if we exceed max
+        // When MAX_TOASTS is exceeded, evict the oldest toasts and cancel
+        // their pending timers so we don't get ghost dismissals later.
         const updated = [...prev, newToast];
         if (updated.length > MAX_TOASTS) {
+          const evicted = updated.slice(0, updated.length - MAX_TOASTS);
+          evicted.forEach((t) => {
+            const evictTimer = timerMapRef.current.get(t.id);
+            if (evictTimer !== undefined) {
+              clearTimeout(evictTimer);
+              timerMapRef.current.delete(t.id);
+            }
+          });
           return updated.slice(-MAX_TOASTS);
         }
         return updated;
@@ -108,14 +129,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       // Auto-dismiss
       const duration = toast.duration ?? DEFAULT_DURATION;
       if (duration > 0) {
-        setTimeout(() => {
-          removeToast(id);
+        const timer = setTimeout(() => {
+          timerMapRef.current.delete(id);
+          setToasts((prev) => prev.filter((t) => t.id !== id));
         }, duration);
+        timerMapRef.current.set(id, timer);
       }
 
       return id;
     },
-    [removeToast]
+    []
   );
 
   const clearAllToasts = useCallback(() => {

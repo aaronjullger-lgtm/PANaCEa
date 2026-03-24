@@ -261,6 +261,10 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!isSignedIn || !authLoaded) return;
     let cancelled = false;
+    // Track the deferred onboarding timer so we can cancel it if the effect
+    // re-runs (e.g. sign-out) before the 500 ms delay fires.
+    let onboardingTimer: ReturnType<typeof setTimeout> | undefined;
+
     getToken()
       .then((token) => {
         if (!token || cancelled) return null;
@@ -280,7 +284,9 @@ const App: React.FC = () => {
         if (cancelled) return;
         const completed = hasCompletedOnboarding();
         if (!completed) {
-          setTimeout(() => {
+          onboardingTimer = setTimeout(() => {
+            // Re-check cancelled: the promise may resolve just as auth changes.
+            if (cancelled) return;
             setIsOnboardingModalOpen(true);
             setOnboardingStep('profile');
             setOnboardingWeakestSystems([]);
@@ -290,6 +296,7 @@ const App: React.FC = () => {
       });
     return () => {
       cancelled = true;
+      clearTimeout(onboardingTimer);
     };
   }, [isSignedIn, authLoaded, getToken]);
 
