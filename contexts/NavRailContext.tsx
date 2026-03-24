@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useCallback, useMemo, ReactNode } from 'react';
 import { LucideIcon } from 'lucide-react';
 
 export interface NavRailContextType {
@@ -24,10 +24,10 @@ export const NavRailProvider = ({ children }: { children: ReactNode }) => {
   const [currentContext, setCurrentContext] = useState<NavRailContextType['currentContext']>(null);
   const [relatedModules, setRelatedModules] = useState<NavRailContextType['relatedModules']>([]);
 
-  const setContext = (context: NavRailContextType['currentContext']) => {
+  // useCallback keeps function references stable so context consumers that
+  // spread these as deps (e.g. useEffect([setContext])) don't re-run needlessly.
+  const setContext = useCallback((context: NavRailContextType['currentContext']) => {
     setCurrentContext(context);
-    // In a real application, you would fetch related modules here
-    // For now, we'll use mock data
     if (context) {
       setRelatedModules([
         { type: 'drug', id: '1', label: 'Aspirin', icon: {} as LucideIcon, href: '/d/aspirin' },
@@ -36,15 +36,23 @@ export const NavRailProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setRelatedModules([]);
     }
-  };
+  }, []);
 
-  const clearContext = () => {
+  const clearContext = useCallback(() => {
     setCurrentContext(null);
     setRelatedModules([]);
-  };
+  }, []);
+
+  // useMemo prevents a new object reference on every render of NavRailProvider.
+  // Without this, every consumer of useNavRail() re-renders even when none of
+  // the values have changed (React compares context value by reference).
+  const value = useMemo(
+    () => ({ currentContext, relatedModules, setContext, clearContext }),
+    [currentContext, relatedModules, setContext, clearContext]
+  );
 
   return (
-    <NavRailContext.Provider value={{ currentContext, relatedModules, setContext, clearContext }}>
+    <NavRailContext.Provider value={value}>
       {children}
     </NavRailContext.Provider>
   );

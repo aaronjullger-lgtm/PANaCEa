@@ -12,7 +12,7 @@
  * 5. Daily session default
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Brain,
@@ -177,14 +177,21 @@ export const RecommendedActionCard: React.FC<RecommendedActionCardProps> = ({
   onStartCramMode,
   className = '',
 }) => {
-  const recommendation = getRecommendedAction(
-    dueCount,
-    systemStats,
-    daysUntilExam,
-    currentHour,
-    onStartSession,
-    onStartSystemDrill,
-    onStartCramMode
+  // Memoised: getRecommendedAction runs filter/sort/reduce over systemStats,
+  // so we only recompute when the inputs actually change rather than on
+  // every parent render (which is frequent on the dashboard).
+  const recommendation = useMemo(
+    () =>
+      getRecommendedAction(
+        dueCount,
+        systemStats,
+        daysUntilExam,
+        currentHour,
+        onStartSession,
+        onStartSystemDrill,
+        onStartCramMode
+      ),
+    [dueCount, systemStats, daysUntilExam, currentHour, onStartSession, onStartSystemDrill, onStartCramMode]
   );
 
   const Icon = recommendation.icon;
