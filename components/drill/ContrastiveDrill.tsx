@@ -1,11 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useContrastiveDrill, ContrastiveSet } from '../../hooks/game/use-contrastive-drill';
 import { ContrastiveComparisonTable } from './ContrastiveComparisonTable';
+
+/** Matches the stats shape returned by useContrastiveDrill */
+interface DrillStats {
+  correct: number;
+  total: number;
+}
+
+/** Matches the response shape of submitAnswer */
+interface SubmitResult {
+  isCorrect?: boolean;
+}
 
 interface ContrastiveDrillProps {
   set: ContrastiveSet;
   drillId: string;
-  onComplete: (stats: any) => void;
+  onComplete: (stats: DrillStats) => void;
 }
 
 export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillProps) {
@@ -20,13 +31,24 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
   } = useContrastiveDrill(drillId, set);
 
   const [hasAnswered, setHasAnswered] = useState(false);
-  const [lastResult, setLastResult] = useState<any>(null);
+  const [lastResult, setLastResult] = useState<SubmitResult | null>(null);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
-  // Initial load
+  // Track when the current question was first shown so we can pass accurate
+  // time-spent data to the FSRS algorithm via submitAnswer.
+  const questionStartTimeRef = useRef<number>(Date.now());
+
+  // Reset the timer whenever a new question loads.
+  useEffect(() => {
+    if (currentQuestion) {
+      questionStartTimeRef.current = Date.now();
+    }
+  }, [currentQuestion]);
+
+  // Initial load — generateQuestion is stable (memoised with [set] deps).
   useEffect(() => {
     generateQuestion(0);
-  }, []);
+  }, [generateQuestion]);
 
   useEffect(() => {
     if (isDrillComplete) {
@@ -42,7 +64,8 @@ export function ContrastiveDrill({ set, drillId, onComplete }: ContrastiveDrillP
   const handleSubmit = async () => {
     if (!selectedOption || hasAnswered) return;
 
-    const result = await submitAnswer(selectedOption, 0); // TODO: track time
+    const timeSpentMs = Date.now() - questionStartTimeRef.current;
+    const result = await submitAnswer(selectedOption, timeSpentMs);
     setLastResult(result);
     setHasAnswered(true);
   };
