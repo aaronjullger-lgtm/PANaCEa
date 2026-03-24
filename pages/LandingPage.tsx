@@ -4,8 +4,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { SignIn, SignUp } from '@clerk/clerk-react';
+import { useReducedMotion } from '../hooks/useReducedMotion';
 import {
   BookOpen,
   TrendingUp,
@@ -30,6 +31,7 @@ const FEATURE_PILLS = [
 export function LandingPage() {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up'>('sign-in');
+  const prefersReducedMotion = useReducedMotion();
 
   // Disable body scroll when modal is open
   useEffect(() => {
@@ -91,6 +93,10 @@ export function LandingPage() {
   ];
 
   return (
+    // MotionConfig reducedMotion="user" automatically respects the OS-level
+    // "prefers-reduced-motion: reduce" setting, disabling all framer-motion
+    // animations for users who have requested reduced motion.
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
       <SkipNavigation mainContentId="landing-main" />
       {/* Header */}
@@ -107,8 +113,8 @@ export function LandingPage() {
                 setShowAuth(true);
               }}
               className="px-6 py-2.5 bg-transparent border-2 border-[var(--color-navy,#0F172A)] dark:border-[var(--color-text-secondary)] text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-primary)] rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--color-bg-secondary)] min-h-[44px] min-w-[44px]"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
               aria-label="Sign in to your account"
             >
               Sign In
@@ -164,8 +170,8 @@ export function LandingPage() {
                 setShowAuth(true);
               }}
               className="group px-8 py-4 bg-[var(--color-accent-button)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] rounded-xl font-bold text-lg shadow-[0_10px_40px_-10px_var(--color-shadow-soft)] hover:shadow-lg transition-all duration-300 flex items-center gap-2 min-h-[48px]"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
               aria-label="Get started with a free account"
             >
               Get Started
@@ -277,8 +283,8 @@ export function LandingPage() {
                   setShowAuth(true);
                 }}
                 className="px-8 py-4 bg-transparent border-2 border-[var(--color-accent)] text-[var(--color-accent)] rounded-xl font-bold text-lg hover:bg-[var(--color-accent)]/10 transition-all duration-300 min-h-[48px]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                 aria-label="Start studying with a free account"
               >
                 Start Studying
@@ -337,8 +343,8 @@ export function LandingPage() {
               setShowAuth(true);
             }}
             className="px-10 py-5 bg-transparent border-2 border-[var(--color-accent)] text-[var(--color-accent)] rounded-xl font-bold text-xl hover:bg-[var(--color-accent)]/10 transition-all duration-300 flex items-center gap-3 mx-auto min-h-[48px]"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+            whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
             aria-label="Sign up for free"
           >
             Sign Up Free
@@ -457,5 +463,6 @@ export function LandingPage() {
         )}
       </AnimatePresence>
     </div>
+    </MotionConfig>
   );
 }

@@ -117,7 +117,7 @@ function prismaExcludePlugin(): Plugin {
   };
 }
 
-// Build cache buster: 2026-01-06-v10-force-esm-exclude
+// Build cache buster: 2026-03-24-v12-reduced-motion-deterministic-skeleton
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   const isDevelopment = mode === 'development';
@@ -177,7 +177,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          maximumFileSizeToCacheInBytes: 35 * 1024 * 1024, // 35MB to accommodate large condition data
+          maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // 8MB — covers 6MB+ clinical training images; JS vendor is ~1.8MB after bundle splitting
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
           // AGGRESSIVE UPDATE STRATEGY - Force new SW to take control immediately
           skipWaiting: true, // Don't wait for old SW to stop
@@ -185,7 +185,7 @@ export default defineConfig(({ mode }) => {
           // Clean old caches on activation
           cleanupOutdatedCaches: true,
           // New cache namespace - "compat" strategy with interop mode
-          cacheId: 'panacea-v11-offline-first',
+          cacheId: 'panacea-v12-offline-first',
           // Runtime caching strategies for offline-first experience
           runtimeCaching: [
             // =================================================================

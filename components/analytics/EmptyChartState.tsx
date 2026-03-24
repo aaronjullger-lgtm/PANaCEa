@@ -134,7 +134,11 @@ const chartPlaceholders: Record<ChartType, React.ReactNode> = {
             height="35"
             rx="4"
             fill="currentColor"
-            opacity={Math.random() * 0.5 + 0.1}
+            // Deterministic pseudo-random opacity based on position.
+            // Avoids Math.random() which produces different values each
+            // module load — causing SSR/client mismatches and visual
+            // inconsistency between navigations.
+            opacity={(((col * 5 + row) * 37) % 91) / 182 + 0.1}
           />
         ))
       )}
@@ -158,7 +162,10 @@ const chartPlaceholders: Record<ChartType, React.ReactNode> = {
   ),
 };
 
-export const EmptyChartState: React.FC<EmptyChartStateProps> = ({
+// React.memo: EmptyChartState is a pure display component. Memoizing it
+// prevents dashboard panels from re-rendering the placeholder SVG every
+// time an unrelated parent state change occurs.
+export const EmptyChartState: React.FC<EmptyChartStateProps> = React.memo(({
   chartType = 'generic',
   height = 320,
   message = 'Not yet assessed',
@@ -200,7 +207,8 @@ export const EmptyChartState: React.FC<EmptyChartStateProps> = ({
       </div>
     </motion.div>
   );
-};
+});
+EmptyChartState.displayName = 'EmptyChartState';
 
 /**
  * Specific empty state variants for common use cases.

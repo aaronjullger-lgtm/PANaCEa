@@ -185,17 +185,24 @@ const pulseAnimation = {
  * Used for AI content streaming, medical question display.
  * Follows ui-design-system.mdc skeleton rules with slate colors.
  */
-export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
+// React.memo prevents re-rendering when a parent re-renders with the same props.
+// ClinicalSkeleton is a pure display component — wrapping it avoids thrashing
+// the shimmer animation every time the parent state changes (e.g. streaming text).
+export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = React.memo(({
   variant = 'default',
   lines = 3,
   className = '',
 }) => {
   const isCompact = variant === 'compact';
 
-  // Generate varied line widths for natural appearance
+  // Generate varied line widths for natural appearance.
+  // Deterministic values based on index avoid non-deterministic Math.random()
+  // which causes layout shifts and React hydration warnings on each render.
+  const SKELETON_WIDTHS = [85, 92, 78, 88, 75, 90, 82, 95, 70, 87] as const;
   const lineWidths = Array.from({ length: lines }, (_, i) => {
-    if (i === lines - 1) return 65 + Math.random() * 15;
-    return 80 + Math.random() * 15;
+    const base = SKELETON_WIDTHS[i % SKELETON_WIDTHS.length];
+    // Last line is intentionally shorter (mimics real text)
+    return i === lines - 1 ? Math.round(base * 0.75) : base;
   });
 
   return (
@@ -233,7 +240,8 @@ export const ClinicalSkeleton: React.FC<ClinicalSkeletonProps> = ({
       </div>
     </div>
   );
-};
+});
+ClinicalSkeleton.displayName = 'ClinicalSkeleton';
 
 /**
  * StreamingSkeleton - Skeleton that fades out as content streams in
