@@ -8,7 +8,7 @@ import { useUser, useAuth } from '@clerk/clerk-react';
 import {
   isGuestModeActive,
   enableGuestMode,
-  exitGuestMode,
+  exitGuestMode as exitGuestModeService,
   shouldOfferGuestMode as checkShouldOfferGuestMode,
   recordAuthFailure,
   clearAuthFailures,
@@ -209,18 +209,11 @@ export function shouldOfferGuestMode(): boolean {
  * Utility function to exit guest mode
  */
 export function exitGuestMode(): void {
-  // Call the imported exitGuestMode function from guestAuth service
-  import('@/services/auth/guestAuth')
-    .then(({ exitGuestMode: guestAuthExit }) => {
-      guestAuthExit();
-      window.location.reload();
-    })
-    .catch(() => {
-      // Fallback if import fails
-      localStorage.removeItem('pance-guest-mode');
-      localStorage.removeItem('pance-guest-expiry');
-      window.location.reload();
-    });
+  // The static import is aliased as exitGuestModeService to avoid shadowing
+  // this export — and to eliminate the Rollup warning about guestAuth being
+  // both statically and dynamically imported in the same chunk.
+  exitGuestModeService();
+  window.location.reload();
 }
 
 /**

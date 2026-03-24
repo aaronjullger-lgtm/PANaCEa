@@ -8,6 +8,7 @@
 import React from 'react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { enableGuestMode } from '@/services/auth/guestAuth';
 import {
   AlertTriangle,
   AlertCircle,
@@ -199,11 +200,11 @@ const getDefaultActions = (
         {
           label: 'Continue as Guest',
           action: () => {
-            // Enable guest mode
-            import('@/services/auth/guestAuth').then(({ enableGuestMode }) => {
-              enableGuestMode();
-              window.location.reload();
-            });
+            // Use the statically-imported enableGuestMode to avoid the
+            // Rollup warning about guestAuth being both statically and
+            // dynamically imported in the same bundle.
+            enableGuestMode();
+            window.location.reload();
           },
           variant: 'secondary',
         }
