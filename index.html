@@ -75,18 +75,12 @@
     <link rel="preload" as="image" href="/Favicon.svg" />
 
     <!--
-      Google Fonts: load asynchronously to eliminate render-blocking.
-      - Playfair Display removed (unused in components).
-      - Critical inline CSS already sets Inter as the system-font fallback so
-        text renders immediately; display=swap handles the font-face swap.
-      - <noscript> fallback keeps fonts working without JS.
+      Google Fonts: load asynchronously via JS-inserted <link> to eliminate
+      render-blocking without an inline event handler (which fires a
+      CSP-Report-Only violation when sha256 hashes are present in script-src).
+      Dynamically-inserted stylesheet <link>s are non-blocking in all modern
+      browsers. The <noscript> fallback handles JS-disabled environments.
     -->
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700&family=Teko:wght@400;500;600;700&display=swap"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
     <noscript>
       <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700&family=Teko:wght@400;500;600;700&display=swap"
@@ -101,6 +95,20 @@
       if (typeof globalThis.module === 'undefined') {
         globalThis.module = { exports: globalThis.exports };
       }
+      // Load Google Fonts without a render-blocking <link> or an inline
+      // event handler (inline handlers trigger CSP-Report-Only violations
+      // when sha256 hashes are present in script-src, because hashes
+      // suppress unsafe-inline per the CSP Level 3 spec).
+      // Dynamically-inserted <link rel="stylesheet"> elements are
+      // non-blocking in all modern browsers — identical perf benefit.
+      (function () {
+        var l = document.createElement('link');
+        l.rel = 'stylesheet';
+        l.href =
+          'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700' +
+          '&family=Poppins:wght@700&family=Teko:wght@400;500;600;700&display=swap';
+        document.head.appendChild(l);
+      })();
     </script>
     <style>
       /* CSS Custom Properties - unified colorway (matches index.css). Same gold + slate family in both modes. */
