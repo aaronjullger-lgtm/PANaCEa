@@ -1945,3 +1945,62 @@ a,
 .dark [class*='cl-formFieldAction'] {
   color: var(--color-accent) !important;
 }
+
+/* ===============================================
+   CONDITION MARKDOWN — FormattedSection heading classes
+   (h1→h4, h2→h5, h3→h6 remapping in FormattedSection.tsx)
+   =============================================== */
+
+.condition-heading-1 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 1.25rem 0 0.5rem;
+  line-height: 1.4;
+}
+
+.condition-heading-2 {
+  font-size: 0.975rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 1rem 0 0.4rem;
+  line-height: 1.4;
+}
+
+.condition-heading-3 {
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin: 0.85rem 0 0.35rem;
+  line-height: 1.4;
+}
+
+/* Condition table: responsive overflow scroll on mobile */
+.condition-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0.75rem 0 1rem;
+  border-radius: 8px;
+}
+
+.condition-table-wrap table {
+  min-width: 480px;
+}
+
+/* Pearl / callout blockquotes — more distinctive in dark mode */
+.condition-callout,
+.condition-pearl {
+  position: relative;
+}
+
+.condition-callout::before,
+.condition-pearl::before {
+  content: '★';
+  position: absolute;
+  left: -0.1rem;
+  top: 0.65rem;
+  font-size: 0.6rem;
+  color: var(--color-accent);
+  transform: translateX(-110%);
+  opacity: 0.6;
+}

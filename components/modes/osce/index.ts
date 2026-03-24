@@ -7,3 +7,5 @@ export { ExamPanel } from './ExamPanel';
 export { ScoreReport } from './ScoreReport';
 export { RapportMeter, RapportChangeNotification, RapportIndicator } from './RapportMeter';
 export { OSCELiveSession } from './OSCELiveSession';
+export { OSCEResultsView } from './OSCEResultsView';
+export type { OSCEResultsViewProps, OSCEScore } from './OSCEResultsView';

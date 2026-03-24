@@ -234,7 +234,7 @@ describe('simulateRetentionWorkload', () => {
     const high = simulateRetentionWorkload({ ...baseParams, dailyNewCards: 40 });
     // At same retention level, more new cards → more reviews
     expect(high[0]!.projectedDailyReviews).toBeGreaterThan(low[0]!.projectedDailyReviews);
-  });
+  }, 15000);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -166,7 +166,7 @@ const CategorySection: React.FC<{
           <Icon className="w-5 h-5 text-[var(--color-text-secondary)]" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-[var(--color-text-primary)]">{info.label}</h3>
+          <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{info.label}</h3>
           <p className="text-sm text-[var(--color-text-muted)]">{info.description}</p>
         </div>
       </div>
@@ -335,7 +335,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
       {/* Start here — recommended modes when not searching */}
       {!searchQuery && recommendedModes.length > 0 && (
         <section className="mb-8">
-          <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-[var(--color-accent)]" />
             Start here
           </h2>
@@ -350,7 +350,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
       {/* Recently used — same storage as Command Palette */}
       {!searchQuery && recentModes.length > 0 && (
         <section className="mb-8">
-          <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
             <Clock className="w-5 h-5 text-[var(--color-text-muted)]" />
             Recently used
           </h2>
@@ -404,7 +404,7 @@ export const PracticePage: React.FC<PracticePageProps> = ({
       {/* Residency Cockpit */}
       {!isLoading && onNavigateToDrillWithSystem && (
         <section className="mb-6">
-          <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
             <Target className="w-5 h-5 text-[var(--color-text-muted)]" />
             Residency Cockpit
           </h3>

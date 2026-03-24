@@ -13,7 +13,7 @@ import { Search, Beaker, AlertTriangle, TrendingUp, TrendingDown, RefreshCw } fr
 import { LoadingOverlay } from '@/components/ui/layouts';
 import { Card } from '@/components/ui/card';
 import { CardGrid } from '@/components/ui/layouts/CardGrid';
-import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface LabTest {
   id: string;
@@ -104,7 +104,7 @@ export const LabReferenceView: React.FC = () => {
   }
 
   if (error) {
-    return <ErrorState title="Failed to load lab reference" message={error} onRetry={fetchLabs} />;
+    return <EmptyState title="Failed to load lab reference" description={error} action={{ label: 'Try Again', onClick: fetchLabs }} />;
   }
 
   return (

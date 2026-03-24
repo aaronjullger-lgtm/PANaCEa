@@ -159,7 +159,7 @@ describe('BulkApprovalPanel', () => {
     fireEvent.click(approveButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/bulk action failed/i)).toBeTruthy();
+      expect(screen.getAllByText(/bulk action failed/i).length).toBeGreaterThan(0);
     });
     // onActionComplete should NOT be called on error
     expect(mockOnActionComplete).not.toHaveBeenCalled();

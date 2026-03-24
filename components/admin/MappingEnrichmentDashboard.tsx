@@ -201,7 +201,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
 
   if (loading && !stats) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div role="status" className="flex items-center justify-center h-64">
         <div className="text-[var(--color-text-muted)]">Loading mapping enrichment dashboard...</div>
       </div>
     );
@@ -234,6 +234,17 @@ export const MappingEnrichmentDashboard: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Error Banner – shown immediately below header when present */}
+      {error && (
+        <div className="p-4 bg-[var(--color-bg-error)] border border-[var(--color-border)] rounded-xl">
+          <div className="flex items-center gap-2 text-[var(--color-data-fail)]">
+            <AlertTriangle className="w-5 h-5" />
+            <span className="font-medium">Error loading dashboard:</span>
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -500,16 +511,6 @@ export const MappingEnrichmentDashboard: React.FC = () => {
           SystemMapping records; rejected/ignored suggestions are logged for audit.
         </p>
       </div>
-
-      {error && (
-        <div className="p-4 bg-[var(--color-bg-error)] border border-[var(--color-border)] rounded-xl">
-          <div className="flex items-center gap-2 text-[var(--color-data-fail)]">
-            <AlertTriangle className="w-5 h-5" />
-            <span className="font-medium">Error loading dashboard:</span>
-            <span>{error}</span>
-          </div>
-        </div>
-      )}
 
       <ChangePreviewModal
         open={showPreviewModal}

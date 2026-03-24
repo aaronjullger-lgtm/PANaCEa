@@ -327,7 +327,7 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
   const exitToMenu = useCallback(() => {
     // Log session metacognition summary before exiting
     const summary = getSessionMetacognitionSummary(metacognitionTrackerRef.current);
-    console.log('[Metacognition] Session Summary:', summary);
+    if (import.meta.env.DEV) console.debug('[Metacognition] Session Summary:', summary);
 
     setStatus('landing');
     setQueue([]);
@@ -532,7 +532,7 @@ export function useConditionDrill(options: UseConditionDrillOptions = {}): UseCo
         // Log implicit metrics result for debugging
         const im = result.implicitMetrics;
         if (im) {
-          console.log('[FSRS] Implicit rating:', im.rating, 'confidence:', im.confidence);
+          if (import.meta.env.DEV) console.debug('[FSRS] Implicit rating:', im.rating, 'confidence:', im.confidence);
         }
 
         // Record JOL calibration observation for metacognitive tracking

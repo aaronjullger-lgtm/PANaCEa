@@ -209,7 +209,10 @@ export const NAVIGATION_STRUCTURE: NavigationCategory[] = [
   },
 ];
 
-// Add icon components to navigation items
+/**
+ * @deprecated Uses NAVIGATION_STRUCTURE which contains dead links.
+ * No active component calls this function. Use NAV_RAIL_ITEMS instead.
+ */
 export const getNavigationWithIcons = (): NavigationCategory[] => {
   return NAVIGATION_STRUCTURE.map((category) => ({
     ...category,

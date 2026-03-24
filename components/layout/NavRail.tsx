@@ -58,9 +58,11 @@ const RAIL_WIDTH_EXPANDED = 208;
 function isPathActive(href: string, pathname: string, search: string): boolean {
   const fullPath = pathname + search;
   if (href.includes('?')) return fullPath === href;
-  // Normalize / and /study to both match /study
+  // Normalize root / to /study so the Home rail item highlights correctly on launch.
   const normalizedPath = pathname === '/' || pathname === '' ? '/study' : pathname;
   if (href === '/study') {
+    // Special case: only match the exact /study path (not /study/knowledge, /study/utilities, etc.)
+    // so sub-sections like Knowledge and Tools highlight their own rail item, not Home.
     return (normalizedPath === '/study' || normalizedPath === '/study/') && !search;
   }
   return normalizedPath === href || normalizedPath.startsWith(href + '/');

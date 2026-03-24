@@ -402,6 +402,18 @@ export default defineConfig(({ mode }) => {
               if (id.includes('zod')) {
                 return 'vendor-validation';
               }
+              // Heavy libraries used ONLY by specific lazy-loaded routes.
+              // Returning undefined lets Rollup co-locate them with their
+              // consumer chunk so they are NOT included in the initial vendor.js.
+              // Without this, the catch-all below pulls them into vendor.js even
+              // though they are never needed for the first render, bloating it by
+              // 200-500 KB per package.
+              if (
+                id.includes('/cytoscape/') ||  // ~200 KB – CrossSystemExplorer only
+                id.includes('/jspdf/')          // ~250 KB – DataExport (Settings) only
+              ) {
+                return undefined;
+              }
               // Default vendor chunk for everything else
               return 'vendor';
             }

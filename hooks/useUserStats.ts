@@ -343,7 +343,7 @@ export function useUserStats(): UseUserStatsResult {
 
       setLastSyncTime(Date.now());
       syncRetryCountRef.current = 0; // Reset retry counter on success
-      console.log('Sync to cloud successful:', result);
+      logger.info('useUserStats', 'Sync to cloud successful', { sessionId: result?.sessionId });
     } catch (error) {
       logger.warn('useUserStats', 'Sync to cloud failed', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

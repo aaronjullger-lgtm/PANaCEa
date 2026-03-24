@@ -62,7 +62,7 @@ export function useTrainingActions(
       const mode = getModeById(modeId);
 
       // Debug logging to help troubleshoot routing issues
-      console.log('[useTrainingActions] navigateToMode called:', {
+      if (import.meta.env.DEV) console.debug('[useTrainingActions] navigateToMode called:', {
         modeId,
         focus,
         mode: mode ? { id: mode.id, route: mode.route, label: mode.label } : null,
@@ -83,11 +83,11 @@ export function useTrainingActions(
       }
 
       // Log the route we're attempting to navigate to (for debugging)
-      console.log('Attempting nav to:', mode.route);
+      if (import.meta.env.DEV) console.debug('Attempting nav to:', mode.route);
 
       // Check if this mode has a dedicated route
       if (hasDedicatedRoute(modeId)) {
-        console.log(`[useTrainingActions] Navigating to dedicated route: ${mode.route}`);
+        if (import.meta.env.DEV) console.debug(`[useTrainingActions] Navigating to dedicated route: ${mode.route}`);
         if (onNavigate) {
           onNavigate(mode.route, mode);
         } else {
@@ -99,7 +99,7 @@ export function useTrainingActions(
       }
 
       // Fall back to core session for modes without dedicated pages
-      console.log(`[useTrainingActions] Starting core session for mode: ${modeId}`);
+      if (import.meta.env.DEV) console.debug(`[useTrainingActions] Starting core session for mode: ${modeId}`);
       if (onStartCoreSession) {
         onStartCoreSession(focus);
       } else {

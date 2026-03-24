@@ -6,7 +6,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ABBREVIATION_TO_TOPIC_MAP, getSystemDisplayFullName } from '@/src/constants';
-import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import { SkeletonLoader } from '@/components/loading';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { SystemCode } from '@/types';
 

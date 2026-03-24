@@ -57,8 +57,12 @@ export function useEnhancedAuth(): EnhancedAuthResult {
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [guestTimeRemaining, setGuestTimeRemaining] = useState(0);
   const [retryCount, setRetryCount] = useState(() => {
-    const stored = localStorage.getItem(AUTH_RETRY_COUNT_KEY);
-    return stored ? parseInt(stored, 10) : 0;
+    try {
+      const stored = localStorage.getItem(AUTH_RETRY_COUNT_KEY);
+      return stored ? parseInt(stored, 10) : 0;
+    } catch {
+      return 0;
+    }
   });
 
   // Check for existing guest mode on mount
@@ -67,11 +71,7 @@ export function useEnhancedAuth(): EnhancedAuthResult {
     setIsGuestMode(guestActive);
     if (guestActive) {
       setGuestTimeRemaining(getGuestModeTimeRemaining());
-      console.log(
-        '[Auth] Guest mode restored, time remaining:',
-        getGuestModeTimeRemaining(),
-        'minutes'
-      );
+      if (import.meta.env.DEV) console.debug('[Auth] Guest mode restored, time remaining:', getGuestModeTimeRemaining(), 'minutes');
     }
   }, []);
 
@@ -164,7 +164,7 @@ export function useEnhancedAuth(): EnhancedAuthResult {
       );
     } else {
       // Force Clerk to retry by reloading the page (simplest approach)
-      console.log(`[Auth] Retry attempt ${newRetryCount}/${MAX_RETRIES}`);
+      if (import.meta.env.DEV) console.debug(`[Auth] Retry attempt ${newRetryCount}/${MAX_RETRIES}`);
       window.location.reload();
     }
   }, [retryCount]);
@@ -176,7 +176,7 @@ export function useEnhancedAuth(): EnhancedAuthResult {
     setHasTimedOut(false);
     setGuestTimeRemaining(getGuestModeTimeRemaining());
     clearAuthFailures(); // Clear failures since user chose guest mode
-    console.log('[Auth] Entered guest mode');
+    if (import.meta.env.DEV) console.debug('[Auth] Entered guest mode');
   }, []);
 
   // Combined loading state

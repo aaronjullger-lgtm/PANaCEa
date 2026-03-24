@@ -21,7 +21,7 @@ const projectRoot = path.join(__dirname, '..');
 const CRITICAL_RESOURCES = [
   // Fonts
   {
-    href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Poppins:wght@700&family=Teko:wght@400;500;600;700&display=swap',
+    href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700&family=Teko:wght@400;500;600;700&display=swap',
     as: 'style',
     crossorigin: true,
     type: 'preload',

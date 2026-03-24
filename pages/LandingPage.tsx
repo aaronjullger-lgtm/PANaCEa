@@ -126,10 +126,17 @@ export function LandingPage() {
         aria-label="Introduction"
       >
         <div className="text-center space-y-8">
+          {/*
+           * LCP optimisation: the h1 is the Largest Contentful Paint element.
+           * Animating opacity from 0 → 1 delays the LCP measurement until the
+           * transition completes (~600ms after JS execution).  Using only a
+           * transform (y) keeps the entrance effect while letting the browser
+           * paint — and measure LCP — as soon as React renders the element.
+           */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.5 }}
           >
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
               <span className="text-[var(--color-text-primary)]">Your Complete </span>
@@ -179,13 +186,20 @@ export function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-wrap gap-3 justify-center mt-12"
           >
-            {FEATURE_PILLS.map((pill) => (
-              <span
-                key={pill}
-                className="px-4 py-2 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)]"
-              >
-                {pill}
-              </span>
+            {FEATURE_PILLS.map((pill, idx) => (
+              <React.Fragment key={pill}>
+                {idx > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="text-[var(--color-text-muted)] self-center select-none"
+                  >
+                    ·
+                  </span>
+                )}
+                <span className="px-4 py-2 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)]">
+                  {pill}
+                </span>
+              </React.Fragment>
             ))}
           </motion.div>
         </div>
@@ -196,8 +210,8 @@ export function LandingPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          viewport={{ once: true, amount: 0.1 }}
+          transition={{ duration: 0.5 }}
           className="text-center mb-16"
         >
           <h2 className="text-4xl font-bold text-[var(--color-text-primary)] mb-4">Key Features</h2>
@@ -206,14 +220,19 @@ export function LandingPage() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        {/* Inline style is belt-and-suspenders: the CSS utility class may be
+            purged or not apply if the bundle is partially stale. */}
+        <div
+          className="grid md:grid-cols-2 gap-8"
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '2rem' }}
+        >
           {features.map((feature, idx) => (
             <motion.article
               key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: idx * 0.1 }}
+              viewport={{ once: true, amount: 0.1 }}
+              transition={{ duration: 0.5, delay: idx * 0.08 }}
               className="group p-8 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-2xl border border-[var(--color-border)] hover:shadow-[0_18px_42px_var(--color-shadow-soft)] hover:scale-[1.02] transition-all duration-300"
             >
               <div
@@ -236,12 +255,15 @@ export function LandingPage() {
       {/* Benefits Section */}
       <PageContainer as="section" maxWidth="7xl" className="py-20">
         <div className="bg-[var(--color-bg-secondary)] rounded-3xl p-12 text-[var(--color-text-primary)] shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div
+            className="grid lg:grid-cols-2 gap-12 items-center"
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '3rem', alignItems: 'center' }}
+          >
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
+              viewport={{ once: true, amount: 0.1 }}
+              transition={{ duration: 0.5 }}
             >
               <h2 className="text-4xl font-bold mb-6">Comprehensive Study Tools</h2>
               <p className="text-xl text-[var(--color-text-secondary)] mb-8">
@@ -266,8 +288,8 @@ export function LandingPage() {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
+              viewport={{ once: true, amount: 0.1 }}
+              transition={{ duration: 0.5 }}
               className="space-y-4"
             >
               {benefits.map((benefit, idx) => (
@@ -275,8 +297,8 @@ export function LandingPage() {
                   key={benefit}
                   initial={{ opacity: 0, x: 20 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: idx * 0.05 }}
+                  viewport={{ once: true, amount: 0.1 }}
+                  transition={{ duration: 0.35, delay: idx * 0.04 }}
                   className="flex items-start gap-3 bg-[var(--color-bg-tertiary)]/60 backdrop-blur-sm rounded-xl p-4"
                 >
                   <CheckCircle2
@@ -298,8 +320,8 @@ export function LandingPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          viewport={{ once: true, amount: 0.1 }}
+          transition={{ duration: 0.5 }}
           className="space-y-8"
         >
           <h2 className="text-4xl sm:text-5xl font-bold text-[var(--color-text-primary)]">

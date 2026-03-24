@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { Beaker, ChevronDown, RefreshCw } from 'lucide-react';
-import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 import type { NormalLabEntry } from '@/components/session/NormalLabsPanel';
 
 const CATEGORIES = [
@@ -75,7 +75,7 @@ export const NormalLabsLibraryView: React.FC = () => {
   }
 
   if (error) {
-    return <ErrorState title="Failed to load normal labs" message={error} onRetry={fetchLabs} />;
+    return <EmptyState title="Failed to load normal labs" description={error} action={{ label: 'Try Again', onClick: fetchLabs }} />;
   }
 
   return (

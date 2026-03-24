@@ -7,8 +7,9 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Users, RefreshCw, AlertCircle } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint } from '@/lib/utils/apiConfig';
-import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import { SkeletonLoader } from '@/components/loading';
 
 interface GodModeResponse {
   ok: boolean;
@@ -31,6 +32,7 @@ function formatTimestamp(iso: string | undefined): string {
 }
 
 export function UserCountCard() {
+  const { getToken } = useAuth();
   const [data, setData] = useState<GodModeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +41,11 @@ export function UserCountCard() {
     setError(null);
     setLoading(true);
     try {
+      const token = await getToken();
       const url = getApiEndpoint('/api/debug/god-mode');
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       const json: GodModeResponse = await res.json();
 
       if (!res.ok) {
@@ -57,7 +62,7 @@ export function UserCountCard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getToken]);
 
   useEffect(() => {
     fetchCount();

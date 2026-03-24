@@ -543,3 +543,13 @@ export const SkeletonLoader: React.FC<{ height?: string; width?: string; classNa
 export const SkeletonCard: React.FC<{ className?: string }> = ({ className = '' }) => (
   <Skeleton className={`h-32 w-full rounded-xl ${className}`.trim()} />
 );
+
+/**
+ * SkeletonText — multi-line text placeholder.
+ * Thin alias for ClinicalSkeleton with variant="compact" so the padding
+ * matches inline text blocks rather than standalone cards.
+ */
+export const SkeletonText: React.FC<{ lines?: number; className?: string }> = ({
+  lines = 3,
+  className = '',
+}) => <ClinicalSkeleton variant="compact" lines={lines} className={className} />;

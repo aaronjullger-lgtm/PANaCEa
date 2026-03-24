@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { exportUserAnalytics } from '@/lib/analyticsExport';
 import { useAuth } from '@clerk/clerk-react';
-import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
+import { SkeletonLoader, SkeletonCard } from '@/components/loading';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { CalibrationProgress } from '@/components/analytics/CalibrationProgress';
 import { EmptyLineChart } from '@/components/analytics/EmptyChartState';

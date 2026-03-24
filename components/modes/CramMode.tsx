@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { geminiService } from '@/services/ai';
 import { GEMINI_FLASH_MODEL } from '@/src/constants';
-import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 /**
  * HighYieldCondition interface - matches database API response
@@ -307,11 +307,10 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   if (loadError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)] p-4">
-        <ErrorState
+        <EmptyState
           title="Failed to Load"
-          message={loadError}
-          onRetry={handleRestart}
-          secondaryAction={{ label: 'Exit', onClick: onExit }}
+          description={loadError}
+          action={{ label: 'Try Again', onClick: handleRestart }}
         />
       </div>
     );

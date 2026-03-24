@@ -12,7 +12,7 @@ import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { QuestionSkeleton } from '@/components/loading';
 import { getDrillLandingStats } from '@/services/analytics';
-import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 // Action options for ventilator adjustments
 const ACTION_OPTIONS = [
@@ -115,11 +115,10 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
   if (status === 'error') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)] p-4">
-        <ErrorState
+        <EmptyState
           title="Failed to Load Questions"
-          message={error || 'An unexpected error occurred'}
-          onRetry={handleReset}
-          secondaryAction={{ label: 'Exit', onClick: handleExit }}
+          description={error || 'An unexpected error occurred'}
+          action={{ label: 'Try Again', onClick: handleReset }}
         />
       </div>
     );

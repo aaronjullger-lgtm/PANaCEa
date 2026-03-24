@@ -25,7 +25,7 @@ import {
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import type { Question } from '@/types';
-import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface GrandRoundsModeProps {
   onExit?: () => void;
@@ -574,11 +574,10 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   if (viewState === 'error') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-muted-amber-500/10 via-[var(--color-bg-primary)] to-muted-amber-600/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
-        <ErrorState
+        <EmptyState
           title="Error"
-          message={error || `Something went wrong loading ${modeLabel}.`}
-          onRetry={fetchTodaysChallenge}
-          secondaryAction={{ label: 'Exit', onClick: onExit ?? (() => {}) }}
+          description={error || `Something went wrong loading ${modeLabel}.`}
+          action={{ label: 'Try Again', onClick: fetchTodaysChallenge }}
         />
       </div>
     );

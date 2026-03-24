@@ -110,7 +110,7 @@ export function usePreferences(): UsePreferencesReturn {
           const syncedPrefs = await fullPreferencesSync(getToken);
           if (syncedPrefs) {
             setPreferences({ ...DEFAULT_PREFERENCES, ...syncedPrefs });
-            console.log('[usePreferences] Synced from DB');
+            if (import.meta.env.DEV) console.debug('[usePreferences] Synced from DB');
           } else {
             // Fallback to localStorage
             const localPrefs = extractLocalStoragePreferences();
@@ -219,7 +219,7 @@ export function usePreferences(): UsePreferencesReturn {
       const syncedPrefs = await fullPreferencesSync(getToken);
       if (syncedPrefs) {
         setPreferences({ ...DEFAULT_PREFERENCES, ...syncedPrefs });
-        console.log('[usePreferences] Manual sync complete');
+        if (import.meta.env.DEV) console.debug('[usePreferences] Manual sync complete');
       }
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to sync');

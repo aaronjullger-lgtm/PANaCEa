@@ -11,6 +11,8 @@
  * @version 6.0.0
  */
 
+import { logger } from './logger';
+
 export enum FSRSState {
   New = 0,
   Learning = 1,
@@ -124,7 +126,10 @@ const S_MIN = 0.01;
  * Ensure a value is a Date object (handles ISO strings from DB/JSON)
  */
 function ensureDate(value: Date | string | null | undefined): Date {
-  if (!value) return new Date();
+  if (!value) {
+    logger.warn('fsrs.ensureDate', 'last_review is null/undefined — substituting now()', { value });
+    return new Date();
+  }
   return value instanceof Date ? value : new Date(value);
 }
 
@@ -482,12 +487,14 @@ export class FSRS {
 
   /**
    * Calculate next review interval from stability
-   * Uses the target retention to determine optimal interval
+   * Uses the target retention to determine optimal interval.
+   *
+   * FSRS v6 formula: I = (S / factor) * (R^(1/decay) - 1)
+   * where factor = w[19] and decay = -w[20] (from this.decayFactor).
    */
   private next_interval(s: number): number {
-    // FSRS v6: Use w[19] instead of hardcoded 9
-    const factor = this.p.w[19] ?? 9;
-    const new_interval = (s / factor) * (Math.pow(this.p.request_retention, 1 / this.DECAY) - 1);
+    const { decay, factor } = this.decayFactor; // decay = -w[20], factor = w[19]
+    const new_interval = (s / factor) * (Math.pow(this.p.request_retention, 1 / decay) - 1);
     return Math.min(Math.max(new_interval, 1), this.p.maximum_interval);
   }
 

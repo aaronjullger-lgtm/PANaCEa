@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -12,8 +12,8 @@ import {
 import { useAuth } from '@clerk/clerk-react';
 import { toast } from 'sonner';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
-import { SkeletonLoader, SkeletonText } from '@/components/ui/SkeletonLoader';
-import { useSession } from '@/contexts/SessionContext';
+import { SkeletonLoader, SkeletonText } from '@/components/loading';
+import SessionContext from '@/contexts/SessionContext';
 import type { SubmitReviewResponse } from '@/services/analytics';
 
 interface ReviewItem {
@@ -44,15 +44,8 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   const { getToken } = useAuth();
 
   // Safely get calibration tracking from SessionContext (may not be available if used standalone)
-  let recordCalibrationObservation:
-    | ((questionId: string, response: SubmitReviewResponse, organSystem?: string) => void)
-    | null = null;
-  try {
-    const session = useSession();
-    recordCalibrationObservation = session.recordCalibrationObservation;
-  } catch {
-    // SessionProvider not available - calibration tracking disabled for standalone usage
-  }
+  const session = useContext(SessionContext);
+  const recordCalibrationObservation = session?.recordCalibrationObservation ?? null;
 
   const [viewState, setViewState] = useState<ViewState>('loading');
   const [reviewQueue, setReviewQueue] = useState<ReviewItem[]>([]);
@@ -72,6 +65,9 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
       const response = await fetch('/api/drills/smart-review', {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+      if (!response.ok) {
+        throw new Error(`Failed to load review items: ${response.status}`);
+      }
       const data = (await response.json()) as { success?: boolean; items?: unknown[] };
 
       if (data.success && data.items && data.items.length > 0) {

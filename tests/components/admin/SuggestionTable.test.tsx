@@ -3,10 +3,13 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { SuggestionTable } from '@/components/admin/SuggestionTable';
 import type { MappingSuggestion } from '@/components/admin/SuggestionTable';
 
+// Stable getToken reference — must be declared before vi.mock hoisting
+const mockGetToken = vi.hoisted(() => vi.fn().mockResolvedValue('mock-token'));
+
 // Mock Clerk useAuth
 vi.mock('@clerk/clerk-react', () => ({
   useAuth: () => ({
-    getToken: vi.fn().mockResolvedValue('mock-token'),
+    getToken: mockGetToken,
   }),
 }));
 
@@ -97,49 +100,70 @@ describe('SuggestionTable', () => {
     vi.clearAllMocks();
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ suggestions: mockSuggestions, total: mockSuggestions.length }),
+      json: async () => ({
+        suggestions: mockSuggestions,
+        total: mockSuggestions.length,
+        pagination: { total: mockSuggestions.length, totalPages: 1 },
+      }),
     });
   });
 
   it('renders loading state initially', () => {
     render(<SuggestionTable />);
-    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeTruthy();
   });
 
   it('renders suggestions after loading', async () => {
     render(<SuggestionTable />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).toBeNull();
     });
 
     // Check that suggestion rows are present
-    expect(screen.getByText('Cardiovascular')).toBeInTheDocument();
-    expect(screen.getByText('Pulmonary')).toBeInTheDocument();
-    expect(screen.getByText('Gastrointestinal')).toBeInTheDocument();
+    expect(screen.getByText('Cardiovascular')).toBeTruthy();
+    expect(screen.getByText('Pulmonary')).toBeTruthy();
+    expect(screen.getByText('Gastrointestinal')).toBeTruthy();
 
-    // Check status badges
-    expect(screen.getByText('Pending')).toBeInTheDocument();
-    expect(screen.getByText('Approved')).toBeInTheDocument();
-    expect(screen.getByText('Rejected')).toBeInTheDocument();
+    // Check status badges (use getAllByText because the filter dropdown also contains these labels)
+    expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Approved').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Rejected').length).toBeGreaterThan(0);
 
-    // Check confidence displayed as percentage
-    expect(screen.getByText('95%')).toBeInTheDocument();
-    expect(screen.getByText('87%')).toBeInTheDocument();
-    expect(screen.getByText('65%')).toBeInTheDocument();
+    // Check confidence displayed as percentage (formatConfidence uses one decimal: 0.95 → "95.0%")
+    expect(screen.getByText('95.0%')).toBeTruthy();
+    expect(screen.getByText('87.0%')).toBeTruthy();
+    expect(screen.getByText('65.0%')).toBeTruthy();
   });
 
   it('applies status filter', async () => {
+    // Override default mock to respect the status query param
+    mockFetch.mockImplementation((url: string) => {
+      const parsedUrl = new URL(url);
+      const statusFilter = parsedUrl.searchParams.get('status');
+      const filtered = statusFilter
+        ? mockSuggestions.filter((s) => s.status === statusFilter)
+        : mockSuggestions;
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          suggestions: filtered,
+          total: filtered.length,
+          pagination: { total: filtered.length, totalPages: 1 },
+        }),
+      });
+    });
+
     render(<SuggestionTable initialStatus="PENDING" />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).toBeNull();
     });
 
     // Only pending suggestion should be visible
-    expect(screen.getByText('Cardiovascular')).toBeInTheDocument();
-    expect(screen.queryByText('Pulmonary')).not.toBeInTheDocument();
-    expect(screen.queryByText('Gastrointestinal')).not.toBeInTheDocument();
+    expect(screen.getByText('Cardiovascular')).toBeTruthy();
+    expect(screen.queryByText('Pulmonary')).toBeNull();
+    expect(screen.queryByText('Gastrointestinal')).toBeNull();
   });
 
   it('handles selection when selectable is true', async () => {
@@ -147,7 +171,7 @@ describe('SuggestionTable', () => {
     render(<SuggestionTable selectable onSelectionChange={onSelectionChange} />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).toBeNull();
     });
 
     const checkboxes = screen.getAllByRole('checkbox');
@@ -169,7 +193,11 @@ describe('SuggestionTable', () => {
       // Default for GET suggestions
       return Promise.resolve({
         ok: true,
-        json: async () => ({ suggestions: mockSuggestions, total: mockSuggestions.length }),
+        json: async () => ({
+          suggestions: mockSuggestions,
+          total: mockSuggestions.length,
+          pagination: { total: mockSuggestions.length, totalPages: 1 },
+        }),
       });
     });
 
@@ -177,7 +205,7 @@ describe('SuggestionTable', () => {
     render(<SuggestionTable onSuggestionUpdated={onSuggestionUpdated} />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).toBeNull();
     });
 
     // Find the approve button for the first suggestion (pending row)
@@ -209,7 +237,7 @@ describe('SuggestionTable', () => {
     render(<SuggestionTable />);
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to load suggestions/i)).toBeInTheDocument();
+      expect(screen.getByText(/failed to load suggestions/i)).toBeTruthy();
     });
   });
 });

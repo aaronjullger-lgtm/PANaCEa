@@ -2,6 +2,8 @@
  * Utility functions for normalizing question data formats
  */
 
+import { logger } from '@/lib/logger';
+
 /**
  * Normalize question options to a string array format.
  * Handles multiple formats:
@@ -32,7 +34,11 @@ export function normalizeOptionsToArray(options: unknown): string[] {
     try {
       const parsed = JSON.parse(options);
       return normalizeOptionsToArray(parsed);
-    } catch {
+    } catch (err) {
+      logger.warn('questionDataNormalizer', 'Failed to parse options string as JSON — returning empty array', {
+        options: options.slice(0, 200),
+        err,
+      });
       return [];
     }
   }

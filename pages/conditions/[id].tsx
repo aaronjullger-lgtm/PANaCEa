@@ -37,6 +37,7 @@ import type { ConditionMeta } from '../../src/types/conditions';
 import { findConditionMetaById } from '../../src/lib/conditionSearch';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { useAuth } from '../../hooks/useAuth';
+import { logger } from '../../lib/logger';
 
 const getConditionIdFromPath = (): string => {
   if (typeof window === 'undefined') return '';
@@ -103,6 +104,79 @@ const ConditionPage: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
   const { getToken } = useAuth();
   const navigate = useNavigate();
+
+  // Derived state — declared BEFORE the useEffect blocks that depend on them
+  const sections: ContentSection[] = useMemo(() => {
+    if (!conditionContent?.sections) return [];
+
+    const secs = conditionContent.sections;
+    return CONDITION_SECTION_CONFIG.map((config) => {
+      const content = mergeConditionContent(config.conditionEntryKeys.map((key) => secs[key]));
+      return {
+        ...config,
+        Icon: SECTION_ICONS[config.id],
+        content,
+      };
+    }).filter((section) => isMeaningfulContent(section.content));
+  }, [conditionContent?.sections]);
+
+  const sectionIds = useMemo(() => sections.map((s) => s.id), [sections]);
+
+  // Determine if condition has subtypes (e.g., AKI, PKD)
+  const subtypes: SubtypeTab[] = useMemo(() => {
+    const tabs: SubtypeTab[] = [{ id: 'general', label: 'General' }];
+
+    if (!conditionContent?.condition) return tabs;
+
+    const conditionName = conditionContent.condition.toLowerCase();
+
+    // AKI has prerenal, intrinsic, postrenal variants
+    if (conditionName.includes('acute kidney injury') || conditionName.includes('aki')) {
+      tabs.push(
+        { id: 'prerenal', label: 'Prerenal', description: 'Before the kidney' },
+        { id: 'intrinsic', label: 'Intrinsic', description: 'Within the kidney' },
+        { id: 'postrenal', label: 'Postrenal', description: 'After the kidney' }
+      );
+    }
+
+    // PKD has autosomal dominant and recessive variants
+    if (conditionName.includes('polycystic kidney')) {
+      tabs.push(
+        { id: 'adpkd', label: 'Autosomal Dominant', description: 'Adult-onset (ADPKD)' },
+        { id: 'arpkd', label: 'Autosomal Recessive', description: 'Infantile (ARPKD)' }
+      );
+    }
+
+    return tabs.length > 1 ? tabs : [];
+  }, [conditionContent?.condition]);
+
+  const toggleSection = (id: string) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Clean display name (remove parentheses)
+  const displayName = useMemo(() => {
+    if (!conditionContent?.condition) return 'Condition not found';
+    return conditionContent.condition.replace(/\s*\([^)]*\)/g, '').trim();
+  }, [conditionContent?.condition]);
+
+  const heroValues = useMemo(() => {
+    const sec = conditionContent?.sections ?? {};
+    return {
+      goldStandard: getHeroValue(sec, ['gold_standard_dx', 'gold_standard']),
+      bestInitialTest: getHeroValue(sec, ['best_initial_test']),
+      firstLineRx: getHeroValue(sec, ['first_line_rx']),
+      classicPatient: getHeroValue(sec, ['classic_patient']),
+    };
+  }, [conditionContent?.sections]);
 
   // IntersectionObserver: highlight TOC item for section in view (runs when sectionIds/sections exist)
   useEffect(() => {
@@ -185,7 +259,7 @@ const ConditionPage: React.FC = () => {
 
         if (mounted) setConditionContent(entry);
       } catch (err) {
-        console.error('Failed to load condition:', err);
+        logger.error('ConditionPage', 'Failed to load condition content', { conditionId, err });
         setError('Failed to load condition content. Please try again later.');
       } finally {
         if (mounted) setLoading(false);
@@ -198,78 +272,6 @@ const ConditionPage: React.FC = () => {
       mounted = false;
     };
   }, [conditionId, retryCount]);
-
-  const sections: ContentSection[] = useMemo(() => {
-    if (!conditionContent?.sections) return [];
-
-    const secs = conditionContent.sections;
-    return CONDITION_SECTION_CONFIG.map((config) => {
-      const content = mergeConditionContent(config.conditionEntryKeys.map((key) => secs[key]));
-      return {
-        ...config,
-        Icon: SECTION_ICONS[config.id],
-        content,
-      };
-    }).filter((section) => isMeaningfulContent(section.content));
-  }, [conditionContent?.sections]);
-
-  const sectionIds = useMemo(() => sections.map((s) => s.id), [sections]);
-
-  // Determine if condition has subtypes (e.g., AKI, PKD)
-  const subtypes: SubtypeTab[] = useMemo(() => {
-    const tabs: SubtypeTab[] = [{ id: 'general', label: 'General' }];
-
-    if (!conditionContent?.condition) return tabs;
-
-    const conditionName = conditionContent.condition.toLowerCase();
-
-    // AKI has prerenal, intrinsic, postrenal variants
-    if (conditionName.includes('acute kidney injury') || conditionName.includes('aki')) {
-      tabs.push(
-        { id: 'prerenal', label: 'Prerenal', description: 'Before the kidney' },
-        { id: 'intrinsic', label: 'Intrinsic', description: 'Within the kidney' },
-        { id: 'postrenal', label: 'Postrenal', description: 'After the kidney' }
-      );
-    }
-
-    // PKD has autosomal dominant and recessive variants
-    if (conditionName.includes('polycystic kidney')) {
-      tabs.push(
-        { id: 'adpkd', label: 'Autosomal Dominant', description: 'Adult-onset (ADPKD)' },
-        { id: 'arpkd', label: 'Autosomal Recessive', description: 'Infantile (ARPKD)' }
-      );
-    }
-
-    return tabs.length > 1 ? tabs : [];
-  }, [conditionContent?.condition]);
-
-  const toggleSection = (id: string) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  // Clean display name (remove parentheses)
-  const displayName = useMemo(() => {
-    if (!conditionContent?.condition) return 'Condition not found';
-    return conditionContent.condition.replace(/\s*\([^)]*\)/g, '').trim();
-  }, [conditionContent?.condition]);
-
-  const heroValues = useMemo(() => {
-    const sec = conditionContent?.sections ?? {};
-    return {
-      goldStandard: getHeroValue(sec, ['gold_standard_dx', 'gold_standard']),
-      bestInitialTest: getHeroValue(sec, ['best_initial_test']),
-      firstLineRx: getHeroValue(sec, ['first_line_rx']),
-      classicPatient: getHeroValue(sec, ['classic_patient']),
-    };
-  }, [conditionContent?.sections]);
 
   return (
     <main
@@ -561,13 +563,21 @@ const ConditionPage: React.FC = () => {
               )}
 
               {/* Content sections: Expand all / Collapse all */}
+              {sections.length === 0 && conditionContent && (
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-8 text-center">
+                  <p className="text-[var(--color-text-muted)] text-sm">
+                    Detailed section content is not yet available for this condition. Check back
+                    soon as our clinical library is continuously updated.
+                  </p>
+                </div>
+              )}
               {sections.length > 0 && (
                 <>
                   <div className="flex gap-2 mb-3">
                     <button
                       type="button"
                       onClick={() => setExpandedSections(new Set(sections.map((s) => s.id)))}
-                      className="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                      className="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 rounded"
                     >
                       Expand all
                     </button>
@@ -575,19 +585,12 @@ const ConditionPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setExpandedSections(new Set())}
-                      className="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                      className="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 rounded"
                     >
                       Collapse all
                     </button>
                   </div>
                   <div className="condition-sections space-y-4">
-                    {sections.length === 0 && (
-                      <div className="text-center py-12">
-                        <p className="text-[var(--color-text-muted)]">
-                          Condition content isn&apos;t available for this entry.
-                        </p>
-                      </div>
-                    )}
 
                     {sections.map((section, index) => (
                       <motion.section

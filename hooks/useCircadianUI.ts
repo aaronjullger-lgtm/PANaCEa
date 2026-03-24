@@ -38,7 +38,7 @@ export function useCircadianUI(userProfile?: UserCircadianProfile) {
     const theme = service.getThemeConfig(mode);
     service.applyTheme(theme);
 
-    console.log(`[Circadian UI] Switched to ${mode} mode`);
+    if (import.meta.env.DEV) console.debug(`[Circadian UI] Switched to ${mode} mode`);
   }, [service, profile]);
 
   // Initialize and update every 15 minutes

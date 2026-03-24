@@ -17,7 +17,7 @@ import {
 } from 'recharts';
 import { ChartContainer } from '@/components/shared/ChartContainer';
 import { useLearningCurveData } from '@/hooks/useLearningCurveData';
-import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import { SkeletonLoader } from '@/components/loading';
 import { EmptyChartState } from '@/components/analytics/EmptyChartState';
 import { Calendar, TrendingUp, Brain, Clock } from 'lucide-react';
 
@@ -31,6 +31,26 @@ const TIME_RANGES: TimeRangeOption[] = [
   { label: '30 days', days: 30 },
   { label: 'All time', days: 90 }, // max supported by API
 ];
+
+/**
+ * Custom tooltip for the learning curve chart.
+ * Defined outside the component so Recharts doesn't remount it on every render.
+ */
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg p-3 shadow-lg">
+        <p className="font-medium text-text-primary">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} className="text-sm" style={{ color: entry.color }}>
+            {entry.name}: {entry.value} {entry.unit || ''}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 export const LearningCurveChart: React.FC = () => {
   const [selectedRange, setSelectedRange] = useState<TimeRangeOption>(TIME_RANGES[1]); // default 30 days
@@ -85,23 +105,6 @@ export const LearningCurveChart: React.FC = () => {
   const hasAccuracy = chartData.some((d) => d.accuracy != null);
   const hasStability = chartData.some((d) => d.stability != null);
   const hasDuration = chartData.some((d) => d.duration != null);
-
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg p-3 shadow-lg">
-          <p className="font-medium text-text-primary">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}: {entry.value} {entry.unit || ''}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="space-y-4">

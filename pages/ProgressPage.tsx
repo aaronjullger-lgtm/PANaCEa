@@ -57,7 +57,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       {/* Research-Backed User-Friendly Stats */}
       <section className="mb-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h3 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+          <h3 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
             Your Learning Analytics
           </h3>
@@ -85,7 +85,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       {/* Learning Profile */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+          <h3 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
             <User className="w-5 h-5 text-[var(--color-text-muted)]" />
             Detailed Learning Profile
           </h3>

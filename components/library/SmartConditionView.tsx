@@ -35,7 +35,7 @@ import { YieldBadge } from '@/components/ui/badges/YieldBadge';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
 import { useSmartCondition } from './hooks/useSmartCondition';
 import { Skeleton } from '@/components/loading';
-import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { ImageGallery } from './SmartImage';
 
@@ -1403,7 +1403,7 @@ export const SmartConditionView: React.FC<SmartConditionViewProps> = ({
   if (!conditionId) {
     return (
       <div className="p-6">
-        <ErrorState message="No condition data or conditionId provided" onRetry={onClose} />
+        <EmptyState title="Error" description="No condition data or conditionId provided" action={{ label: 'Try Again', onClick: onClose }} />
       </div>
     );
   }
@@ -1427,13 +1427,10 @@ export const SmartConditionView: React.FC<SmartConditionViewProps> = ({
   if (errorSummary || !summary) {
     return (
       <div className="p-6">
-        <ErrorState
+        <EmptyState
           title="Condition not found"
-          message={errorSummary ?? 'We couldn’t load this condition.'}
-          onRetry={refetchSummary}
-          secondaryAction={
-            onClose ? { label: 'Close', onClick: onClose } : undefined
-          }
+          description={errorSummary ?? "We couldn't load this condition."}
+          action={{ label: 'Try Again', onClick: refetchSummary }}
         />
       </div>
     );

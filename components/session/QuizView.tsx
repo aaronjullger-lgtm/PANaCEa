@@ -468,11 +468,12 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (text.trim()) {
       commuter.speak(text);
       // Start listening for voice answers after a short delay
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         if (commuter.settings.voiceEnabled) {
           commuter.startListening();
         }
       }, 2000);
+      return () => clearTimeout(timer);
     }
   }, [commuter, currentQuestion]);
   const [behavioralRefreshKey, setBehavioralRefreshKey] = useState(0);
@@ -909,6 +910,15 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     setIsAnswered(true);
     microKinetics.onAnswersRevealed();
+
+    // Guard: correctAnswerIndex must be present — DB schema is Int (non-nullable) but TS type allows undefined
+    if (currentQuestion.correctAnswerIndex == null) {
+      logger.error(LOG_SCOPE, 'Question missing correctAnswerIndex — cannot score answer', {
+        id: currentQuestion.id,
+      });
+      setIsSubmitting(false);
+      return;
+    }
 
     // Sprint 4: Calculate correctness IMMEDIATELY
     const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;

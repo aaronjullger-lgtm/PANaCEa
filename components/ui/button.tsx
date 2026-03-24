@@ -36,8 +36,8 @@ const variantClasses: Record<ButtonVariant, string> = {
 const sizeClasses: Record<ButtonSize, string> = {
   xs: 'px-2 py-1 text-xs',
   sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-base',
-  lg: 'px-6 py-3 text-lg',
+  md: 'px-4 py-2 text-base min-h-[44px]',
+  lg: 'px-6 py-3 text-lg min-h-[44px]',
 };
 
 export function Button({
@@ -72,6 +72,7 @@ export function Button({
       className={`
         rounded-lg font-medium transition-colors
         disabled:opacity-50 disabled:cursor-not-allowed
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2
         ${variantClasses[variant]}
         ${sizeClasses[size]}
         ${className}

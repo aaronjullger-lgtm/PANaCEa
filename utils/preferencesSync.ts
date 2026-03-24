@@ -203,7 +203,7 @@ export async function syncPreferencesToDb(
       return null;
     }
 
-    console.log('[preferencesSync] Migrating preferences to DB:', Object.keys(localPrefs));
+    if (import.meta.env.DEV) console.debug('[preferencesSync] Migrating preferences to DB:', Object.keys(localPrefs));
 
     // Get auth token
     const token = await getToken();
@@ -230,7 +230,7 @@ export async function syncPreferencesToDb(
     }
 
     const result = (await response.json()) as { preferences?: UserPreferencesPayload };
-    console.log('[preferencesSync] Successfully synced to DB');
+    if (import.meta.env.DEV) console.debug('[preferencesSync] Successfully synced to DB');
 
     // Mark as synced
     markAsSynced();
@@ -331,7 +331,7 @@ export async function fullPreferencesSync(
     if (dbPrefs) {
       // Step 3: Write to localStorage for offline access
       writeToLocalStorage(dbPrefs);
-      console.log('[preferencesSync] Full sync complete');
+      if (import.meta.env.DEV) console.debug('[preferencesSync] Full sync complete');
       return dbPrefs;
     }
 

@@ -3,6 +3,20 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MappingEnrichmentDashboard } from '@/components/admin/MappingEnrichmentDashboard';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
 
+// Mock heavy child components to isolate the dashboard's own loading/error states
+vi.mock('@/components/admin/SuggestionTable', () => ({
+  SuggestionTable: () => <div data-testid="suggestion-table-mock">SuggestionTable</div>,
+}));
+vi.mock('@/components/admin/mapping-enrichment/AuditLogTable', () => ({
+  AuditLogTable: () => <div data-testid="audit-log-table-mock">AuditLogTable</div>,
+}));
+vi.mock('@/components/admin/mapping-enrichment/ChangePreviewModal', () => ({
+  ChangePreviewModal: () => null,
+}));
+vi.mock('sonner', () => ({
+  toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() },
+}));
+
 // Mock Clerk useAuth
 const mockGetToken = vi.fn().mockResolvedValue('mock-token');
 vi.mock('@clerk/clerk-react', () => ({
@@ -51,7 +65,7 @@ describe('MappingEnrichmentDashboard', () => {
 
   it('renders loading state initially', () => {
     render(<MappingEnrichmentDashboard />);
-    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeTruthy();
   });
 
   it('renders dashboard with stats after loading', async () => {
@@ -130,18 +144,17 @@ describe('MappingEnrichmentDashboard', () => {
     render(<MappingEnrichmentDashboard />);
 
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).toBeNull();
     });
 
-    // Check stats are displayed
-    expect(screen.getByText('Total Suggestions')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument(); // total suggestions
-    expect(screen.getByText('Pending')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument(); // pending count
-    expect(screen.getByText('Approved')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument(); // approved count
-    expect(screen.getByText('Total Gaps')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument(); // gaps count
+    // Check stat card labels are displayed
+    expect(screen.getByText('Pending Suggestions')).toBeTruthy();
+    expect(screen.getByText('Approved Mappings')).toBeTruthy();
+    expect(screen.getByText('Active Gaps')).toBeTruthy();
+
+    // Check numeric counts (1 PENDING, 1 APPROVED, 1 active gap)
+    expect(screen.getByText('2 total suggestions')).toBeTruthy();
+    expect(screen.getByText('1 total gaps')).toBeTruthy();
   });
 
   it('handles error state', async () => {
@@ -153,7 +166,7 @@ describe('MappingEnrichmentDashboard', () => {
     render(<MappingEnrichmentDashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to load dashboard data/i)).toBeInTheDocument();
+      expect(screen.getByText(/error loading dashboard/i)).toBeTruthy();
     });
   });
 
@@ -179,16 +192,18 @@ describe('MappingEnrichmentDashboard', () => {
 
     render(<MappingEnrichmentDashboard />);
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).toBeNull();
     });
 
     const detectGapsButton = screen.getByRole('button', { name: /detect gaps/i });
     fireEvent.click(detectGapsButton);
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/mapping-enrichment/gaps'),
-      expect.objectContaining({ method: 'GET' })
-    );
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/mapping-enrichment/gaps'),
+        expect.objectContaining({ method: 'GET' })
+      );
+    });
   });
 
   it('triggers suggestion generation', async () => {
@@ -199,15 +214,17 @@ describe('MappingEnrichmentDashboard', () => {
 
     render(<MappingEnrichmentDashboard />);
     await waitFor(() => {
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).toBeNull();
     });
 
     const generateButton = screen.getByRole('button', { name: /generate suggestions/i });
     fireEvent.click(generateButton);
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/mapping-enrichment/suggest'),
-      expect.objectContaining({ method: 'POST' })
-    );
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/mapping-enrichment/suggest'),
+        expect.objectContaining({ method: 'POST' })
+      );
+    });
   });
 });

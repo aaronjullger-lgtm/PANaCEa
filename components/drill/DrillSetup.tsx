@@ -8,10 +8,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Filter, Zap, TrendingUp, Loader2 } from 'lucide-react';
-import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import { SkeletonLoader } from '@/components/loading';
 import { SliderWithInput } from '@/components/ui/SliderWithInput';
 import type { SystemCode, SessionSettings } from '../../types';
-import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 interface ConditionMetadata {
   id: string;
@@ -165,10 +165,9 @@ export function DrillSetup({
   if (error) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
-        <ErrorState
+        <EmptyState
           title="Error Loading Drill"
-          message={error}
-          secondaryAction={onBack ? { label: 'Go Back', onClick: onBack } : undefined}
+          description={error}
         />
       </div>
     );

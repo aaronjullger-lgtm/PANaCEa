@@ -27,7 +27,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import type { PerformanceRecord } from '@/types';
-import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
+import { SkeletonLoader, SkeletonCard } from '@/components/loading';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 
 type AnalyticsTier = 'quick' | 'dashboard' | 'deep';
@@ -381,7 +381,7 @@ export const TieredAnalytics: React.FC<TieredAnalyticsProps> = ({
     return {
       readinessScore: accuracy,
       recentAccuracy,
-      questionsDue: Math.round(Math.random() * 30 + 10), // Placeholder
+      questionsDue: 0, // Placeholder – fetched separately via SRS queue
       weeklyStreak: 3, // Placeholder
       weakestSystems,
       strongestSystems,

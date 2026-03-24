@@ -43,7 +43,7 @@ import { defaultParameters } from '@/lib/fsrs';
 import { LoadingOverlay } from '@/components/ui/layouts';
 import { Skeleton } from '@/components/loading';
 import { Badge } from '@/components/ui/Badge';
-import { ErrorState } from '@/components/ui/ErrorState';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { toast } from '@/lib/toast';
 import { useSemanticSearch } from '@/hooks/useSemanticSearch';
 import { useConditionBookmarks } from './hooks/useConditionBookmarks';
@@ -639,25 +639,25 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
         {/* Content Grid */}
         <div ref={contentRef} className="flex-1 overflow-y-auto p-6">
           {systemsError && systems.length === 0 ? (
-            <ErrorState
+            <EmptyState
               title="Failed to load systems"
-              message={systemsError}
-              onRetry={fetchSystems}
+              description={systemsError}
+              action={{ label: 'Try Again', onClick: fetchSystems }}
             />
           ) : systemsLoading && systems.length === 0 ? (
             <LoadingOverlay message="Loading systems..." />
           ) : systems.length === 0 ? (
-            <ErrorState
+            <EmptyState
               title="No systems available"
-              message="We couldn't find any medical systems in the database. Please try again or contact support."
-              onRetry={fetchSystems}
+              description="We couldn't find any medical systems in the database. Please try again or contact support."
+              action={{ label: 'Try Again', onClick: fetchSystems }}
             />
           ) : isSearchMode ? (
             // Hybrid search: list from FTS (library API), answer snippet from semantic search
             loading ? (
               <LoadingOverlay message="Searching reference library..." />
             ) : semanticError ? (
-              <ErrorState title="Search failed" message={semanticError} onRetry={() => {}} />
+              <EmptyState title="Search failed" description={semanticError} />
             ) : displayContent.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <AlertCircle className="w-12 h-12 text-[var(--color-text-muted)] mb-4" />
@@ -736,7 +736,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
               </div>
             )
           ) : error ? (
-            <ErrorState title="Failed to load content" message={error} onRetry={fetchContent} />
+            <EmptyState title="Failed to load content" description={error} action={{ label: 'Try Again', onClick: fetchContent }} />
           ) : loading ? (
             <LoadingOverlay message="Loading clinical content..." />
           ) : filteredContent.length === 0 ? (

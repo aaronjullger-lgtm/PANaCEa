@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 const LOGO_LIGHT = '/Favicon.svg';
 const LOGO_DARK = '/favicondarkmodeTP.svg';
@@ -42,11 +43,20 @@ export const AppBrand: React.FC<AppBrandProps> = ({
   animate = false,
 }) => {
   const { wrapper: logoClass, text: textClass } = sizeClasses[size];
+  // Use theme context for reliable dark/light logo swap — avoids dependence on
+  // Tailwind's `hidden` / `dark:block` utilities which can be unreliable if the
+  // CSS bundle is partially cached or utilities are purged unexpectedly.
+  const { theme } = useThemeContext();
+  const isDark = theme === 'dark';
 
   const brandContent = (
     <>
-      <img key="logo-light" src={LOGO_LIGHT} alt={BRAND_ALT} className={`${logoClass} w-auto dark:hidden`} />
-      <img key="logo-dark" src={LOGO_DARK} alt={BRAND_ALT} className={`${logoClass} w-auto hidden dark:block`} />
+      <img
+        key="logo"
+        src={isDark ? LOGO_DARK : LOGO_LIGHT}
+        alt={BRAND_ALT}
+        className={`${logoClass} w-auto`}
+      />
       <span key="brand-text" className={`font-bold text-[var(--color-text-primary)] font-poppins ${textClass}`}>
         PANaCEa
       </span>

@@ -176,11 +176,11 @@ export function SuggestionTable({
       }
       const data = await response.json();
       setSuggestions(data.suggestions);
-      setPagination({
-        ...pagination,
+      setPagination((prev) => ({
+        ...prev,
         total: data.pagination.total,
         totalPages: data.pagination.totalPages,
-      });
+      }));
     } catch (err) {
       console.error('Error fetching suggestions:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -268,7 +268,7 @@ export function SuggestionTable({
 
   if (loading && suggestions.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-[400px] bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)]">
+      <div role="status" className="flex items-center justify-center min-h-[400px] bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)]">
         <div className="text-center">
           <RefreshCw className="w-8 h-8 animate-spin text-action-muted mx-auto mb-4" />
           <p className="text-text-secondary">Loading mapping suggestions...</p>
@@ -419,7 +419,7 @@ export function SuggestionTable({
           <tbody className="divide-y divide-border-subtle">
             {suggestions.length === 0 ? (
               <tr>
-                <td colSpan={selectable ? 7 : 6} className="py-12 text-center">
+                <td colSpan={selectable ? 6 : 5} className="py-12 text-center">
                   <div className="text-text-secondary">
                     <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <p className="text-lg font-medium">No mapping suggestions found</p>

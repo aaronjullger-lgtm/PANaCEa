@@ -11,6 +11,23 @@ interface FormattedSectionProps {
   content?: ConditionContent;
 }
 
+/** Type guard for legacy structured content objects (steps/grid renderers) */
+interface StructuredContent {
+  type: 'steps' | 'grid';
+  items: unknown[];
+}
+
+function isStructuredContent(c: unknown): c is StructuredContent {
+  return (
+    typeof c === 'object' &&
+    c !== null &&
+    !Array.isArray(c) &&
+    'type' in c &&
+    'items' in c &&
+    Array.isArray((c as StructuredContent).items)
+  );
+}
+
 /**
  * FormattedSection - Renders medical condition content from the database.
  *
@@ -23,15 +40,12 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
   if (!content) return null;
 
   // Handle Structured Data (Steps/Grid) - legacy renderers
-  if (typeof content === 'object' && !Array.isArray(content) && content !== null) {
-    const typedContent = content as any;
-
-    if (typedContent.type === 'steps') {
-      return <TreatmentRenderer items={typedContent.items} />;
+  if (isStructuredContent(content)) {
+    if (content.type === 'steps') {
+      return <TreatmentRenderer items={content.items} />;
     }
-
-    if (typedContent.type === 'grid') {
-      return <DiagnosticsRenderer items={typedContent.items} />;
+    if (content.type === 'grid') {
+      return <DiagnosticsRenderer items={content.items} />;
     }
   }
 

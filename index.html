@@ -64,12 +64,35 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
 
+    <!-- Preconnect to font CDNs and Clerk auth CDN to reduce RTT -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://clerk.com" />
+    <link rel="preconnect" href="https://clerk.com" crossorigin />
+    <link rel="dns-prefetch" href="https://img.clerk.com" />
+
+    <!-- Preload brand logo (LCP candidate on landing page) -->
+    <link rel="preload" as="image" href="/Favicon.svg" />
+
+    <!--
+      Google Fonts: load asynchronously to eliminate render-blocking.
+      - Playfair Display removed (unused in components).
+      - Critical inline CSS already sets Inter as the system-font fallback so
+        text renders immediately; display=swap handles the font-face swap.
+      - <noscript> fallback keeps fonts working without JS.
+    -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Poppins:wght@700&family=Teko:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700&family=Teko:wght@400;500;600;700&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700&family=Teko:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <script>
       // Guard CommonJS globals before any modulepreload/import execution.
       if (typeof globalThis.exports === 'undefined') {

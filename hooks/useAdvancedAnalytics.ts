@@ -206,7 +206,7 @@ export function useAdvancedAnalytics(
     // Initialize FSRS with current mastery
     getAdaptiveFSRS(systemMastery);
 
-    console.log('[Analytics] Session tracking started');
+    if (import.meta.env.DEV) console.debug('[Analytics] Session tracking started');
   }, [systemMastery]);
 
   // Stop tracking
@@ -225,7 +225,7 @@ export function useAdvancedAnalytics(
         sessionDurationMs: sessionDuration,
       });
 
-      console.log('[Analytics] Session tracking stopped', {
+      if (import.meta.env.DEV) console.debug('[Analytics] Session tracking stopped', {
         duration: sessionDuration / 60000,
         questions: total,
         accuracy: total > 0 ? (correct / total) * 100 : 0,
