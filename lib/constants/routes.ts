@@ -41,7 +41,6 @@ export { ROUTES } from '../../config/routes';
 export {
   TRAINING_MODES,
   MODE_REGISTRY,
-  TrainingModeId,
   STUDY_PRESETS,
   CATEGORY_INFO,
   getAvailableModes,
@@ -49,6 +48,7 @@ export {
   getModesForUserContext,
   getModesByCategory,
 } from '../../config/training-modes';
+export type { TrainingModeId } from '../../config/training-modes';
 
 // Re-export navigation items
 export { NAV_RAIL_ITEMS, CANONICAL_PATHS as NAVIGATION_CANONICAL_PATHS } from '../../config/navigation';
