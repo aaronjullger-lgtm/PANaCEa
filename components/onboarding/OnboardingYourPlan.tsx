@@ -66,8 +66,8 @@ export function OnboardingYourPlan({
   return (
     <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
         className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-lg w-full p-8 border border-[var(--color-border)]"
       >
         <div className="flex justify-center mb-6">

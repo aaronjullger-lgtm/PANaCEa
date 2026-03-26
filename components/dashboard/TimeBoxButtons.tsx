@@ -78,8 +78,8 @@ export const TimeBoxButtons: React.FC<TimeBoxButtonsProps> = ({
             <motion.button
               key={preset.minutes}
               onClick={() => handleTimeBox(preset.minutes, preset.questionEstimate)}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 10 }}
+              animate={{ y: 0 }}
               transition={{ delay: index * 0.05 }}
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}

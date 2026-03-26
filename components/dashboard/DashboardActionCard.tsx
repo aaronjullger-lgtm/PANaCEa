@@ -98,8 +98,8 @@ export function DashboardActionCard(props: Readonly<DashboardActionCardProps>) {
   };
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 8 }}
+      animate={{ y: 0 }}
       transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.995 }}

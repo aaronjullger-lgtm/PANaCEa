@@ -131,8 +131,8 @@ export const ExamCountdownCard: React.FC<ExamCountdownCardProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 10 }}
+      animate={{ y: 0 }}
       transition={{ duration: 0.3 }}
       className={`
         relative overflow-hidden rounded-xl
@@ -204,8 +204,6 @@ export const ExamCountdownCard: React.FC<ExamCountdownCardProps> = ({
       {/* Urgency message for < 14 days */}
       {daysRemaining <= 14 && daysRemaining > 0 && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
           className="mt-4 p-3 bg-muted-amber-500/10 rounded-lg"
         >
           <p className="text-xs text-[var(--color-text-secondary)]">

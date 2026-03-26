@@ -106,8 +106,8 @@ const QuickStat: React.FC<QuickStatProps> = ({
   delay = 0,
 }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
+    initial={{ y: 20 }}
+    animate={{ y: 0 }}
     transition={{ duration: 0.4, delay, ease: 'easeOut' }}
     className="group relative bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300"
   >
@@ -255,8 +255,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] flex items-center justify-center px-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 20 }}
+          animate={{ y: 0 }}
           className="text-center bg-[var(--color-bg-secondary)] rounded-xl p-8 shadow-sm max-w-md"
         >
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-data-fail)]/20 flex items-center justify-center">
@@ -292,8 +292,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* ===== HEADER SECTION - Enhanced with gradient text ===== */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
           className="pt-2"
         >
@@ -343,9 +343,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           {view === 'pilot' && (
             <motion.div
               key="pilot"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
+              initial={{ y: 8 }}
+              animate={{ y: 0 }}
+              exit={{ y: -8 }}
               transition={{ duration: 0.2 }}
               className="space-y-6"
             >
@@ -444,9 +444,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           {view === 'data' && (
             <motion.div
               key="data"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
+              initial={{ y: 8 }}
+              animate={{ y: 0 }}
+              exit={{ y: -8 }}
               transition={{ duration: 0.2 }}
               className="space-y-6"
             >

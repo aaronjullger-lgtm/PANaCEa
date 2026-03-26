@@ -115,8 +115,8 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
   if (isMinimized) {
     return (
       <motion.button
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: -10 }}
+        animate={{ y: 0 }}
         onClick={onExpand}
         className="w-full bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)] rounded-xl p-3 mb-4 flex items-center justify-between hover:border-[var(--color-border)] transition-all group"
       >
@@ -143,8 +143,8 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: -20 }}
+      animate={{ y: 0 }}
       className="relative w-full mb-6"
     >
       {/* Main Hero Card */}

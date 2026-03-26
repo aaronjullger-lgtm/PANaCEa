@@ -48,8 +48,8 @@ function TriadSkeleton() {
 function ErrorCard({ onRetry }: { onRetry: () => void }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 10 }}
+      animate={{ y: 0 }}
       className="bg-gradient-to-br from-[var(--color-data-fail)]/40 to-[var(--color-data-fail)]/30 rounded-2xl p-5 border border-[var(--color-data-fail)]/30 shadow-xl text-[var(--color-text-primary)]"
     >
       <div className="flex items-start justify-between">
@@ -106,8 +106,8 @@ export default function DailyTriadCard() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 12 }}
+      animate={{ y: 0 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
       whileHover={{ y: -4, scale: 1.01 }}
       className="bg-gradient-to-br from-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] rounded-2xl p-5 border border-[var(--color-border)] shadow-xl text-[var(--color-text-primary)]"
