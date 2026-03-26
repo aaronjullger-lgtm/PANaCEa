@@ -172,7 +172,7 @@ export function FlagQuestionModal({
                     className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                       flagType === type.value
                         ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-                        : 'border-[var(--color-border)] bg-[var(--color-bg-tertiary)] hover:border-[var(--color-text-[var(--color-text-muted)])]'
+                        : 'border-[var(--color-border)] bg-[var(--color-bg-tertiary)] hover:border-[var(--color-border)]'
                     }`}
                   >
                     <div className="font-medium text-[var(--color-text-primary)] mb-1">
@@ -194,7 +194,7 @@ export function FlagQuestionModal({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Example: The correct answer should be X because..."
                 rows={4}
-                className="w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:border-transparent"
+                className="w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:border-transparent"
                 required
               />
               <p className="mt-2 text-xs text-[var(--color-text-muted)]">

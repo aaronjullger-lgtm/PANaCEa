@@ -485,8 +485,8 @@ export const SpacingExample: React.FC = () => {
             <h3 className="text-lg font-semibold">HStack (Horizontal)</h3>
             <HStack spacing="sm">
               <button className="px-4 py-2 bg-[var(--color-category-practice)] text-white rounded">Button 1</button>
-              <button className="px-4 py-2 bg-[var(--color-text-[var(--color-text-muted)])] rounded">Button 2</button>
-              <button className="px-4 py-2 bg-[var(--color-text-[var(--color-text-muted)])] rounded">Button 3</button>
+              <button className="px-4 py-2 bg-[var(--color-bg-secondary)] rounded">Button 2</button>
+              <button className="px-4 py-2 bg-[var(--color-bg-secondary)] rounded">Button 3</button>
             </HStack>
           </Stack>
         </Card>

@@ -139,7 +139,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           colorPrimary: 'var(--color-accent)',
           colorPrimaryForeground: 'var(--color-text-inverse)',
           colorMuted: 'var(--color-bg-secondary)',
-          colorMutedForeground: 'var(--color-text-[var(--color-text-muted)])',
+          colorMutedForeground: 'var(--color-text-muted)',
           colorInput: 'var(--color-bg-secondary)',
           colorInputForeground: 'var(--color-text-primary)',
           colorBorder: 'var(--color-border)',
@@ -158,7 +158,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           formButtonPrimary:
             'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-text-inverse)]',
           formFieldInput:
-            'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])]',
+            'border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)]',
           formFieldLabel: 'text-[var(--color-text-primary)]',
           formFieldInputShowPasswordButton:
             'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',

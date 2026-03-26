@@ -113,7 +113,7 @@ export function LandingPage() {
                 setShowAuth(true);
               }}
               className="px-6 py-2.5 bg-transparent border-2 border-[var(--color-navy,#0F172A)] dark:border-[var(--color-text-secondary)] text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-primary)] rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--color-bg-secondary)] min-h-[44px] min-w-[44px]"
-              style={{ padding: '0.625rem 1.5rem', border: '2px solid var(--color-text-primary, #e2e8f0)', borderRadius: '0.5rem', minHeight: '44px', whiteSpace: 'nowrap' }}
+              style={{ padding: '0.625rem 1.5rem', border: '2px solid var(--color-text-primary, #e2e8f0)', color: 'var(--color-text-primary, #e2e8f0)', borderRadius: '0.5rem', minHeight: '44px', whiteSpace: 'nowrap' }}
               whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
               aria-label="Sign in to your account"
@@ -124,10 +124,12 @@ export function LandingPage() {
         </PageContainer>
       </header>
 
+      {/* Main content — required for WCAG landmark navigation */}
+      <main id="landing-main">
+
       {/* Hero Section */}
       <PageContainer
         as="section"
-        id="landing-main"
         maxWidth="7xl"
         className="pt-20 pb-16"
         aria-label="Introduction"
@@ -357,6 +359,8 @@ export function LandingPage() {
           </motion.button>
         </motion.div>
       </PageContainer>
+
+      </main>{/* end #landing-main */}
 
       {/* Footer */}
       <SiteFooter />

@@ -198,7 +198,7 @@ export function MediaApprovalDashboard() {
   };
 
   const getQualityBadgeColor = (score?: number) => {
-    if (!score) return 'bg-[var(--color-text-[var(--color-text-muted)])]';
+    if (!score) return 'bg-[var(--color-bg-secondary)]';
     if (score >= 80) return 'bg-[var(--color-data-pass)]';
     if (score >= 60) return 'bg-[var(--color-data-provisional)]';
     return 'bg-[var(--color-data-fail)]';

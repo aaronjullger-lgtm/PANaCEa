@@ -336,7 +336,7 @@ export function ClinicalMotionFlashcards({
           onChange={(e) => setCustomPrompt(e.target.value)}
           placeholder="Or enter a custom prompt..."
           aria-label="Custom pathology prompt"
-          className="w-full px-4 py-2 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+          className="w-full px-4 py-2 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
         />
       </div>
 

@@ -199,6 +199,7 @@ heapdump-*.heapsnapshot
 *.sh
 *.cjs
 *.txt
+!public/robots.txt
 *.backup*
 *_backup*
 .roomodes.*

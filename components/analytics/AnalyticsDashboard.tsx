@@ -727,13 +727,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       <XAxis
                         type="number"
                         domain={[0, 100]}
-                        tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 11 }}
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                       />
                       <YAxis
                         type="category"
                         dataKey="system"
                         width={100}
-                        tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 11 }}
+                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                       />
                       <Tooltip
                         formatter={(value?: number) => [
@@ -861,7 +861,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                           value: 'Stability',
                           angle: -90,
                           position: 'insideLeft',
-                          style: { fill: 'var(--color-text-[var(--color-text-muted)])' },
+                          style: { fill: 'var(--color-text-muted)' },
                         }}
                       />
                       <Tooltip
@@ -949,12 +949,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     <CartesianGrid {...chartTheme.gridBar} stroke="var(--chart-grid-stroke)" />
                     <XAxis
                       dataKey="system"
-                      tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 11 }}
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                       interval={0}
                       angle={-20}
                       height={60}
                     />
-                    <YAxis tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 11 }} />
+                    <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
                     <Tooltip
                       formatter={(
                         value: number | string | undefined,

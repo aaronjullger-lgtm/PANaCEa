@@ -446,11 +446,11 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
                     type="number"
                     domain={[0, 100]}
                     stroke="var(--color-border)"
-                    tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 11 }}
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                     label={{
                       value: 'Accuracy (%)',
                       position: 'bottom',
-                      fill: 'var(--color-text-[var(--color-text-muted)])',
+                      fill: 'var(--color-text-muted)',
                       fontSize: 12,
                     }}
                   />
@@ -459,7 +459,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
                     type="category"
                     dataKey="name"
                     stroke="var(--color-border)"
-                    tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 11 }}
+                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
                     width={90}
                   />
 
@@ -502,7 +502,7 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
                 <span>Your Score</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-0.5 bg-[var(--color-text-[var(--color-text-muted)])]" />
+                <div className="w-3 h-0.5 bg-[var(--color-bg-secondary)]" />
                 <span>Average</span>
               </div>
               <div className="flex items-center gap-2">

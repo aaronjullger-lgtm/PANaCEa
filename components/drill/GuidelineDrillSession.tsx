@@ -223,7 +223,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         onClick={() => handleSelectGuideline(g.id)}
-                        className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-left hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-text-[var(--color-text-muted)])] transition-all group"
+                        className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-left hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-border)] transition-all group"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
@@ -331,7 +331,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                     className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${
                       selectedCriteria.has(criterion.id)
                         ? 'bg-[var(--color-accent)] border-[var(--color-accent)]'
-                        : 'border-[var(--color-text-[var(--color-text-muted)])]'
+                        : 'border-[var(--color-border)]'
                     }`}
                   >
                     {selectedCriteria.has(criterion.id) && (

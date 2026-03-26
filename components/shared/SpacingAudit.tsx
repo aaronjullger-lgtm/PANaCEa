@@ -284,10 +284,10 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-20 right-4 w-96 max-h-[80vh] bg-white bg-[var(--color-text-[var(--color-text-muted)])] rounded-xl shadow-2xl border border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])] overflow-hidden z-50"
+            className="fixed bottom-20 right-4 w-96 max-h-[80vh] bg-white bg-[var(--color-bg-secondary)] rounded-xl shadow-2xl border border-[var(--color-border)] border-[var(--color-border)] overflow-hidden z-50"
           >
             {/* Header */}
-            <div className="p-4 border-b border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])] bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800">
+            <div className="p-4 border-b border-[var(--color-border)] border-[var(--color-border)] bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg">
@@ -307,7 +307,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])]">
+            <div className="flex border-b border-[var(--color-border)] border-[var(--color-border)]">
               <button
                 onClick={() => setActiveTab('issues')}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${
@@ -393,7 +393,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                           key={issue.id}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
-                          className="p-3 rounded-lg border border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])] bg-[var(--color-text-[var(--color-text-muted)])] bg-[color-mix(in_srgb,var(--color-text-[var(--color-text-muted)])_50%,transparent)]"
+                          className="p-3 rounded-lg border border-[var(--color-border)] border-[var(--color-border)] bg-[var(--color-bg-secondary)] bg-[color-mix(in_srgb,var(--color-text-muted)_50%,transparent)]"
                         >
                           <div className="flex items-start justify-between gap-2 mb-2">
                             <div className="flex items-center gap-2">
@@ -527,57 +527,57 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                   <h4 className="font-semibold text-[var(--color-text-muted)] dark:text-white">Spacing Patterns</h4>
 
                   <div className="space-y-3">
-                    <div className="p-3 rounded-lg border border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])]">
+                    <div className="p-3 rounded-lg border border-[var(--color-border)] border-[var(--color-border)]">
                       <h5 className="font-medium text-[var(--color-text-muted)] dark:text-white mb-2">
                         Card Layout
                       </h5>
                       <div className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)] space-y-1">
-                        <code className="block bg-[var(--color-text-[var(--color-text-muted)])] bg-[var(--color-text-[var(--color-text-muted)])] p-1 rounded">
+                        <code className="block bg-[var(--color-bg-secondary)] bg-[var(--color-bg-secondary)] p-1 rounded">
                           p-6 space-y-4
                         </code>
                         <p>Standard card with consistent internal spacing</p>
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-lg border border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])]">
+                    <div className="p-3 rounded-lg border border-[var(--color-border)] border-[var(--color-border)]">
                       <h5 className="font-medium text-[var(--color-text-muted)] dark:text-white mb-2">
                         Form Layout
                       </h5>
                       <div className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)] space-y-1">
-                        <code className="block bg-[var(--color-text-[var(--color-text-muted)])] bg-[var(--color-text-[var(--color-text-muted)])] p-1 rounded">
+                        <code className="block bg-[var(--color-bg-secondary)] bg-[var(--color-bg-secondary)] p-1 rounded">
                           space-y-4
                         </code>
-                        <code className="block bg-[var(--color-text-[var(--color-text-muted)])] bg-[var(--color-text-[var(--color-text-muted)])] p-1 rounded">
+                        <code className="block bg-[var(--color-bg-secondary)] bg-[var(--color-bg-secondary)] p-1 rounded">
                           space-y-2 (for label + input)
                         </code>
                         <p>Consistent vertical rhythm for forms</p>
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-lg border border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])]">
+                    <div className="p-3 rounded-lg border border-[var(--color-border)] border-[var(--color-border)]">
                       <h5 className="font-medium text-[var(--color-text-muted)] dark:text-white mb-2">
                         Button Groups
                       </h5>
                       <div className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)] space-y-1">
-                        <code className="block bg-[var(--color-text-[var(--color-text-muted)])] bg-[var(--color-text-[var(--color-text-muted)])] p-1 rounded">
+                        <code className="block bg-[var(--color-bg-secondary)] bg-[var(--color-bg-secondary)] p-1 rounded">
                           flex gap-2
                         </code>
-                        <code className="block bg-[var(--color-text-[var(--color-text-muted)])] bg-[var(--color-text-[var(--color-text-muted)])] p-1 rounded">
+                        <code className="block bg-[var(--color-bg-secondary)] bg-[var(--color-bg-secondary)] p-1 rounded">
                           flex gap-3 (for larger buttons)
                         </code>
                         <p>Use gap instead of margin for button spacing</p>
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-lg border border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])]">
+                    <div className="p-3 rounded-lg border border-[var(--color-border)] border-[var(--color-border)]">
                       <h5 className="font-medium text-[var(--color-text-muted)] dark:text-white mb-2">
                         Grid Layouts
                       </h5>
                       <div className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)] space-y-1">
-                        <code className="block bg-[var(--color-text-[var(--color-text-muted)])] bg-[var(--color-text-[var(--color-text-muted)])] p-1 rounded">
+                        <code className="block bg-[var(--color-bg-secondary)] bg-[var(--color-bg-secondary)] p-1 rounded">
                           grid gap-4
                         </code>
-                        <code className="block bg-[var(--color-text-[var(--color-text-muted)])] bg-[var(--color-text-[var(--color-text-muted)])] p-1 rounded">
+                        <code className="block bg-[var(--color-bg-secondary)] bg-[var(--color-bg-secondary)] p-1 rounded">
                           grid gap-6 (for larger cards)
                         </code>
                         <p>Consistent grid spacing</p>
@@ -589,7 +589,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="p-3 border-t border-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])] bg-[var(--color-text-[var(--color-text-muted)])] bg-[color-mix(in_srgb,var(--color-text-[var(--color-text-muted)])_50%,transparent)]">
+            <div className="p-3 border-t border-[var(--color-border)] border-[var(--color-border)] bg-[var(--color-bg-secondary)] bg-[color-mix(in_srgb,var(--color-text-muted)_50%,transparent)]">
               <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] text-[var(--color-text-muted)]">
                 <div className="flex items-center gap-2">
                   <AlignCenter className="w-3 h-3" />

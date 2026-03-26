@@ -91,19 +91,22 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
       }),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       }
     );
   } catch (error) {
     console.error('Failed to update FSRS parameters:', error);
     return new Response(
-      JSON.stringify({
-        error: 'Failed to update parameters',
-        details: error instanceof Error ? error.message : String(error),
-      }),
+      JSON.stringify({ error: 'Failed to update parameters' }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       }
     );
   } finally {
@@ -112,3 +115,13 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
     }
   }
 };
+
+export const onRequestOptions = async () =>
+  new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    },
+  });

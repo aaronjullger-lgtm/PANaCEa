@@ -190,7 +190,7 @@ export default function DrillHub(): JSX.Element {
             High-intensity active recall training modes
           </p>
           <p className="text-sm text-[var(--color-text-muted)] mt-2">
-            ⚠️ Drill stats are isolated from FSRS optimization (isMainSession = false)
+            Active recall across all training modes
           </p>
         </motion.div>
 

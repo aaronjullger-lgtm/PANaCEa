@@ -384,7 +384,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-3 h-3 rounded-full ${gap.isActive ? 'bg-[var(--color-data-fail)]' : 'bg-[var(--color-text-[var(--color-text-muted)])]'}`}
+                        className={`w-3 h-3 rounded-full ${gap.isActive ? 'bg-[var(--color-data-fail)]' : 'bg-[var(--color-bg-secondary)]'}`}
                       />
                       <div>
                         <div className="font-medium text-[var(--color-text-primary)]">

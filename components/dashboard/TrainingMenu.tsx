@@ -644,7 +644,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
                 type="checkbox"
                 checked={adaptiveMode}
                 onChange={(e) => setAdaptiveMode(e.target.checked)}
-                className="w-4 h-4 rounded text-[var(--color-category-practice)] bg-[var(--color-text-[var(--color-text-muted)])] border-[var(--color-text-[var(--color-text-muted)])] focus:ring-[var(--color-category-practice)] ring-offset-gray-800 focus:ring-2"
+                className="w-4 h-4 rounded text-[var(--color-category-practice)] bg-[var(--color-bg-secondary)] border-[var(--color-border)] focus:ring-[var(--color-category-practice)] ring-offset-gray-800 focus:ring-2"
               />
               <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                 Adaptive Difficulty

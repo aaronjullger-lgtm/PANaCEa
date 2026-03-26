@@ -229,7 +229,7 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
     }
   } else {
     buttonClasses +=
-      ' bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-text-[var(--color-text-muted)])] cursor-pointer';
+      ' bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-border)] cursor-pointer';
   }
 
   return (

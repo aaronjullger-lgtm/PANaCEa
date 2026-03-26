@@ -30,6 +30,16 @@ export const onRequestPost = authenticatedEndpoint(UnlockAchievementSchema, asyn
 
     const { achievementId, progress } = validated.body;
 
+    // Verify the achievement exists in the database before awarding it.
+    // This prevents clients from self-awarding arbitrary UUIDs.
+    const achievementDef = await prisma.achievement.findUnique({
+      where: { id: achievementId },
+      select: { id: true },
+    });
+    if (!achievementDef) {
+      return { data: { error: 'Achievement not found' }, status: 404 };
+    }
+
     const achievement = await prisma.userAchievement.upsert({
       where: {
         userId_achievementId: {

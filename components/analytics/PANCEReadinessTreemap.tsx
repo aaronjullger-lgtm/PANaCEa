@@ -81,7 +81,7 @@ function renderTreemapContent(props: {
           y={y + height / 2}
           textAnchor="middle"
           dominantBaseline="middle"
-          fill={isNotStudied ? 'var(--color-text-[var(--color-text-muted)])' : 'var(--color-text-primary)'}
+          fill={isNotStudied ? 'var(--color-text-muted)' : 'var(--color-text-primary)'}
           fontSize={Math.min(12, width / 8)}
           fontWeight={600}
         >

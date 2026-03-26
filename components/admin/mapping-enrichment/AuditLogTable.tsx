@@ -159,7 +159,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
                 value={taxonomyCodeFilter}
                 onChange={(e) => setTaxonomyCodeFilter(e.target.value)}
                 placeholder="e.g., CV.1"
-                className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])] focus:outline-none focus:ring-2 focus:ring-[var(--color-action-primary)]"
+                className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-action-primary)]"
               />
             </div>
             <div>
@@ -171,7 +171,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
                 value={systemCodeFilter}
                 onChange={(e) => setSystemCodeFilter(e.target.value)}
                 placeholder="e.g., Cardiovascular"
-                className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])] focus:outline-none focus:ring-2 focus:ring-[var(--color-action-primary)]"
+                className="w-full px-3 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-action-primary)]"
               />
             </div>
             <div>

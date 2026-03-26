@@ -71,7 +71,7 @@ const STATE_COLORS: Record<StudyRecommendation['cognitiveState'], string> = {
   trough: 'bg-[var(--color-data-provisional)]',
   recovery: 'bg-[var(--color-accent)]',
   late_night: 'bg-[var(--color-accent)]',
-  rest: 'bg-[var(--color-text-[var(--color-text-muted)])]',
+  rest: 'bg-[var(--color-bg-secondary)]',
 };
 
 export const WakeTimeSettings: React.FC<WakeTimeSettingsProps> = ({

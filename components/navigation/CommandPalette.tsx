@@ -325,7 +325,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search modes, conditions, drugs..."
-              className="flex-1 bg-transparent text-[var(--color-text-primary)] placeholder-[var(--color-text-[var(--color-text-muted)])] outline-none text-lg"
+              className="flex-1 bg-transparent text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none text-lg"
             />
             <button
               onClick={onClose}

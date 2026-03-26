@@ -72,19 +72,22 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
       }),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       }
     );
   } catch (error) {
     console.error('Failed to fetch review history:', error);
     return new Response(
-      JSON.stringify({
-        error: 'Failed to fetch review history',
-        details: error instanceof Error ? error.message : String(error),
-      }),
+      JSON.stringify({ error: 'Failed to fetch review history' }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       }
     );
   } finally {
@@ -93,3 +96,13 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
     }
   }
 };
+
+export const onRequestOptions = async () =>
+  new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    },
+  });

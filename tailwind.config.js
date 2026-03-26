@@ -111,6 +111,18 @@ export default {
     'bg-gradient-to-r',
     'bg-gradient-to-br',
     'bg-opacity-10',
+    // Purple/indigo gradient classes used in SmartReviewMode, AdvancedFeaturesPanel, etc.
+    'from-purple-400', 'from-purple-50', 'from-purple-500', 'from-purple-600', 'from-purple-900',
+    'from-indigo-500', 'from-indigo-600',
+    'to-purple-500', 'to-purple-600',
+    'to-indigo-50', 'to-indigo-500', 'to-indigo-600', 'to-indigo-700', 'to-indigo-900',
+    'via-purple-500',
+    'bg-purple-50', 'bg-purple-100', 'bg-purple-500', 'bg-purple-600', 'bg-purple-900',
+    'bg-indigo-50', 'bg-indigo-500', 'bg-indigo-600',
+    'text-purple-600', 'text-purple-700', 'text-purple-400', 'text-purple-300',
+    'text-indigo-600', 'text-indigo-400',
+    'border-purple-200', 'border-purple-500', 'border-indigo-200',
+    'ring-purple-500', 'ring-indigo-500',
   ],
   darkMode: 'class',
   theme: {

@@ -155,14 +155,14 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
               <XAxis
                 dataKey="day"
-                stroke="var(--color-text-[var(--color-text-muted)])"
-                tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 10 }}
+                stroke="var(--color-text-muted)"
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                 tickLine={{ stroke: 'var(--color-border)' }}
                 ticks={[0, 5, 10, 15, 20, 25, 30]}
               />
               <YAxis
-                stroke="var(--color-text-[var(--color-text-muted)])"
-                tick={{ fill: 'var(--color-text-[var(--color-text-muted)])', fontSize: 10 }}
+                stroke="var(--color-text-muted)"
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                 tickLine={{ stroke: 'var(--color-border)' }}
                 domain={[0, 100]}
                 width={28}

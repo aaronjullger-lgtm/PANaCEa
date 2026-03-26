@@ -95,8 +95,8 @@ export async function onRequestGet(context: EventContext<Env, string, unknown>):
       }
     }
 
-    // Update view count if pearl found
-    if (pearl) {
+    // Update view count only for authenticated users to prevent anonymous abuse
+    if (pearl && userId) {
       await prisma.clinicalPearl.update({
         where: { id: pearl.id },
         data: { viewCount: { increment: 1 } },

@@ -123,6 +123,7 @@ export const onRequestOptions = withCors();
 export const onRequestGet = authenticatedEndpoint(
   GenerateDdxSchema,
   async (context) => {
+    // AI cost endpoint: rate limit enforced at 10 req/min via options below
     const { env, auth, validated } = context;
     const logger = createEndpointLogger('/api/ddx/generate');
     let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
@@ -160,5 +161,5 @@ export const onRequestGet = authenticatedEndpoint(
       await safePrismaDisconnect(prisma);
     }
   },
-  { source: 'query' }
+  { source: 'query', requestsPerMinute: 10 }
 );

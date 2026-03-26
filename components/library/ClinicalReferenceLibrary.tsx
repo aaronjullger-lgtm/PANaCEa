@@ -437,7 +437,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     addRecentCondition(condition);
   };
 
-  const handleNextCondition = () => {
+  const handleNextCondition = useCallback(() => {
     if (selectedIndex < displayContent.length - 1) {
       const nextIndex = selectedIndex + 1;
       const nextItem = displayContent[nextIndex];
@@ -446,9 +446,9 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
         setSelectedIndex(nextIndex);
       }
     }
-  };
+  }, [selectedIndex, displayContent]);
 
-  const handlePrevCondition = () => {
+  const handlePrevCondition = useCallback(() => {
     if (selectedIndex > 0) {
       const prevIndex = selectedIndex - 1;
       const prevItem = displayContent[prevIndex];
@@ -457,7 +457,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
         setSelectedIndex(prevIndex);
       }
     }
-  };
+  }, [selectedIndex, displayContent]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -507,7 +507,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
     globalThis.addEventListener('keydown', handleKeyDown);
     return () => globalThis.removeEventListener('keydown', handleKeyDown);
-  }, [selected, selectedIndex, displayContent, isShortcutsOpen]);
+  }, [selected, isShortcutsOpen, handleNextCondition, handlePrevCondition]);
 
   // Focus management: when detail panel opens, focus close button; when it closes, focus search
   useEffect(() => {
