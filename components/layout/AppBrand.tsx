@@ -65,17 +65,20 @@ export const AppBrand: React.FC<AppBrandProps> = ({
 
   const Wrapper = asLink ? motion.button : motion.div;
   const baseClass = `flex items-center gap-3 ${className}`.trim();
+  const brandFlexStyle = { display: 'flex', alignItems: 'center', gap: '0.75rem' };
   const wrapperProps = asLink
     ? {
         onClick,
         type: 'button' as const,
         className: `${baseClass} hover:opacity-80 transition-opacity cursor-pointer`,
+        style: brandFlexStyle,
         whileHover: { scale: 1.02 },
         whileTap: { scale: 0.98 },
         'aria-label': 'Return to Dashboard' as const,
       }
     : {
         className: baseClass,
+        style: brandFlexStyle,
         ...(animate && {
           initial: { opacity: 0, x: -20 },
           animate: { opacity: 1, x: 0 },
@@ -84,9 +87,9 @@ export const AppBrand: React.FC<AppBrandProps> = ({
       };
 
   return (
-    <div className="flex items-center justify-between w-full">
+    <div className="flex items-center justify-between w-full" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
       <Wrapper {...(wrapperProps as object)}>{brandContent}</Wrapper>
-      {children != null && <div className="flex items-center gap-2">{children}</div>}
+      {children != null && <div className="flex items-center gap-2" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>{children}</div>}
     </div>
   );
 };

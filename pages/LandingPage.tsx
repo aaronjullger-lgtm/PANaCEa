@@ -113,6 +113,7 @@ export function LandingPage() {
                 setShowAuth(true);
               }}
               className="px-6 py-2.5 bg-transparent border-2 border-[var(--color-navy,#0F172A)] dark:border-[var(--color-text-secondary)] text-[var(--color-navy,#0F172A)] dark:text-[var(--color-text-primary)] rounded-lg font-semibold transition-all duration-200 hover:bg-[var(--color-bg-secondary)] min-h-[44px] min-w-[44px]"
+              style={{ padding: '0.625rem 1.5rem', border: '2px solid var(--color-text-primary, #e2e8f0)', borderRadius: '0.5rem', minHeight: '44px', whiteSpace: 'nowrap' }}
               whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
               aria-label="Sign in to your account"
@@ -170,6 +171,7 @@ export function LandingPage() {
                 setShowAuth(true);
               }}
               className="group px-8 py-4 bg-[var(--color-accent-button)] hover:bg-[var(--color-accent-hover)] text-[var(--color-text-inverse)] rounded-xl font-bold text-lg shadow-[0_10px_40px_-10px_var(--color-shadow-soft)] hover:shadow-lg transition-all duration-300 flex items-center gap-2 min-h-[48px]"
+              style={{ backgroundColor: 'var(--color-accent-button, #7a6f52)', color: 'var(--color-text-inverse, #f8fafc)', borderRadius: '0.75rem', padding: '1rem 2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
               whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
               whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
               aria-label="Get started with a free account"
@@ -202,7 +204,7 @@ export function LandingPage() {
                     ·
                   </span>
                 )}
-                <span className="px-4 py-2 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)]">
+                <span className="px-4 py-2 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)]" style={{ backgroundColor: 'var(--color-bg-secondary)', borderRadius: '9999px', border: '1px solid var(--color-border)', padding: '0.5rem 1rem' }}>
                   {pill}
                 </span>
               </React.Fragment>
@@ -240,9 +242,11 @@ export function LandingPage() {
               viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.5, delay: idx * 0.08 }}
               className="group p-8 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-2xl border border-[var(--color-border)] hover:shadow-[0_18px_42px_var(--color-shadow-soft)] hover:scale-[1.02] transition-all duration-300"
+              style={{ padding: '2rem', borderRadius: '1rem', backgroundColor: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)' }}
             >
               <div
                 className="w-14 h-14 bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-lg border border-[var(--color-border)]"
+                style={{ width: '3.5rem', height: '3.5rem', flexShrink: 0 }}
                 aria-hidden
               >
                 <feature.icon className="w-7 h-7 text-[var(--color-accent)]" />
@@ -260,7 +264,7 @@ export function LandingPage() {
 
       {/* Benefits Section */}
       <PageContainer as="section" maxWidth="7xl" className="py-20">
-        <div className="bg-[var(--color-bg-secondary)] rounded-3xl p-12 text-[var(--color-text-primary)] shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]">
+        <div className="bg-[var(--color-bg-secondary)] rounded-3xl p-12 text-[var(--color-text-primary)] shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]" style={{ backgroundColor: 'var(--color-bg-secondary)', borderRadius: '1.5rem', padding: '3rem', border: '1px solid var(--color-border)' }}>
           <div
             className="grid lg:grid-cols-2 gap-12 items-center"
             style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '3rem', alignItems: 'center' }}
@@ -306,6 +310,7 @@ export function LandingPage() {
                   viewport={{ once: true, amount: 0.1 }}
                   transition={{ duration: 0.35, delay: idx * 0.04 }}
                   className="flex items-start gap-3 bg-[var(--color-bg-tertiary)]/60 backdrop-blur-sm rounded-xl p-4"
+                  style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', borderRadius: '0.75rem', padding: '1rem', backgroundColor: 'var(--color-bg-tertiary)' }}
                 >
                   <CheckCircle2
                     className="w-6 h-6 text-[var(--color-accent)] flex-shrink-0 mt-0.5"

@@ -5,7 +5,7 @@
  * Implements cache-first strategy for static assets and network-first for API calls.
  */
 
-const CACHE_VERSION = 'panacea-v1';
+const CACHE_VERSION = 'panacea-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 const API_CACHE = `${CACHE_VERSION}-api`;
