@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
+import { motion, MotionConfig } from 'framer-motion';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import {
@@ -106,8 +106,8 @@ export function LandingPage() {
             <ThemeToggleButton />
             <motion.button
               type="button"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ x: 20 }}
+              animate={{ x: 0 }}
               onClick={() => {
                 setAuthMode('sign-in');
                 setShowAuth(true);
@@ -161,8 +161,8 @@ export function LandingPage() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
@@ -191,8 +191,8 @@ export function LandingPage() {
 
           {/* Feature Pills */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-wrap gap-3 justify-center mt-12"
           >
@@ -218,8 +218,8 @@ export function LandingPage() {
       {/* Features Grid */}
       <PageContainer as="section" maxWidth="7xl" className="py-20">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ y: 20 }}
+          whileInView={{ y: 0 }}
           viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.5 }}
           className="text-center mb-16"
@@ -239,8 +239,8 @@ export function LandingPage() {
           {features.map((feature, idx) => (
             <motion.article
               key={feature.title}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ y: 16 }}
+              whileInView={{ y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.5, delay: idx * 0.08 }}
               className="group p-8 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-2xl border border-[var(--color-border)] hover:shadow-[0_18px_42px_var(--color-shadow-soft)] hover:scale-[1.02] transition-all duration-300"
@@ -272,8 +272,8 @@ export function LandingPage() {
             style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '3rem', alignItems: 'center' }}
           >
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ x: -20 }}
+              whileInView={{ x: 0 }}
               viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.5 }}
             >
@@ -298,8 +298,8 @@ export function LandingPage() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ x: 20 }}
+              whileInView={{ x: 0 }}
               viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.5 }}
               className="space-y-4"
@@ -331,8 +331,8 @@ export function LandingPage() {
       {/* CTA Section */}
       <PageContainer as="section" maxWidth="7xl" className="py-20 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ y: 20 }}
+          whileInView={{ y: 0 }}
           viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.5 }}
           className="space-y-8"
@@ -365,13 +365,10 @@ export function LandingPage() {
       {/* Footer */}
       <SiteFooter />
 
-      {/* Auth Modal */}
-      <AnimatePresence>
-        {showAuth && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+      {/* Auth Modal — uses CSS transitions instead of framer-motion to avoid
+           reduced-motion bugs where AnimatePresence leaves elements at opacity:0 */}
+      {showAuth && (
+          <div
             className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto"
             style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, backgroundColor: 'rgba(15,23,42,0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}
             onClick={() => setShowAuth(false)}
@@ -379,10 +376,7 @@ export function LandingPage() {
             aria-modal="true"
             aria-labelledby="auth-modal-title"
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            <div
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md my-8"
               style={{ width: '100%', maxWidth: '28rem', margin: '2rem 0' }}
@@ -470,10 +464,9 @@ export function LandingPage() {
                   )}
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          </div>
+      )}
     </div>
     </MotionConfig>
   );
