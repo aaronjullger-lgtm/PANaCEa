@@ -193,8 +193,8 @@ export function PredictedScoreCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 20 }}
+      animate={{ y: 0 }}
       className={`
         rounded-2xl border-2 ${readinessConfig.borderColor}
         ${readinessConfig.bgColor}

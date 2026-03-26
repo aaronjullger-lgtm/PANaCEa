@@ -126,8 +126,8 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
             return (
               <motion.div
                 key={date}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 className="flex flex-col items-center"
               >
@@ -158,8 +158,8 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
       {/* Study Today CTA */}
       {!studiedToday && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 10 }}
+          animate={{ y: 0 }}
           className="mt-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
         >
           <p className="text-sm text-[var(--color-text-primary)] text-center">
@@ -173,7 +173,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
       {/* Studied Today Badge */}
       {studiedToday && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="mt-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
         >

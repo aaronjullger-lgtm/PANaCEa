@@ -611,8 +611,8 @@ const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onPractice }) =>
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 10 }}
+      animate={{ y: 0 }}
       className="flex items-center justify-between p-4 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:shadow-md transition-all"
     >
       <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -769,8 +769,8 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
         {drilldownLevel === 'system' && (
           <motion.div
             key="system-grid"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ x: -20 }}
+            animate={{ x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
           >
@@ -793,8 +793,8 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
         {drilldownLevel === 'category' && selectedSystem && (
           <motion.div
             key="category-grid"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ x: -20 }}
+            animate={{ x: 0 }}
             exit={{ opacity: 0, x: 20 }}
           >
             {selectedSystem.categories.length > 0 ? (
@@ -831,16 +831,16 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
         {drilldownLevel === 'condition' && selectedCategory && (
           <motion.div
             key="condition-list"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ x: -20 }}
+            animate={{ x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             className="space-y-3"
           >
             {selectedCategory.conditions.map((condition, index) => (
               <motion.div
                 key={condition.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
                 <ConditionRow

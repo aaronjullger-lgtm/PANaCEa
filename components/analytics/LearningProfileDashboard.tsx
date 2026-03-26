@@ -212,8 +212,8 @@ export const LearningProfileDashboard: React.FC = () => {
       {/* PANCE Readiness Score */}
       {profile.estimatedScore && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 20 }}
+          animate={{ y: 0 }}
           className="bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-2xl p-6 border border-[var(--color-border)]"
         >
           <div className="flex items-center justify-between">
