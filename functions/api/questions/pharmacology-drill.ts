@@ -35,9 +35,6 @@ export const onRequestPost = authenticatedEndpoint(PharmacologyDrillSchema, asyn
         { topic: 'Pharmacotherapy' },
         { tags: { hasSome: ['pharmacology', 'medications', 'drugs'] } },
       ],
-      question: { not: null },
-      options: { not: null },
-      explanation: { not: null },
     };
 
     if (drugClass) {

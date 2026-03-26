@@ -29,13 +29,8 @@ export const onRequestPost = authenticatedEndpoint(SystemDrillSchema, async (con
     const { system, difficulty, subcategory } = validated.body;
 
     // Build where clause for question query
-    const where: any = {
-      system,
-      // Exclude questions without proper structure
-      question: { not: null },
-      options: { not: null },
-      explanation: { not: null },
-    };
+    // Note: question/options/explanation are required fields — no null checks needed
+    const where: any = { system };
 
     if (difficulty) {
       where.difficulty = difficulty;

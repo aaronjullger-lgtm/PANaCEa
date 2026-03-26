@@ -30,12 +30,7 @@ export const onRequestPost = authenticatedEndpoint(ConditionDrillSchema, async (
     const { system, subcategory, difficulty, count } = validated.body;
 
     // Build where clause for question query
-    const where: any = {
-      // Exclude questions without proper structure
-      question: { not: null },
-      options: { not: null },
-      explanation: { not: null },
-    };
+    const where: any = {};
 
     // Apply filters if provided
     if (system) {
