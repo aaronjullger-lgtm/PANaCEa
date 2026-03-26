@@ -80,8 +80,8 @@ export const AppBrand: React.FC<AppBrandProps> = ({
         className: baseClass,
         style: brandFlexStyle,
         ...(animate && {
-          initial: { opacity: 0, x: -20 },
-          animate: { opacity: 1, x: 0 },
+          initial: { x: -20 },
+          animate: { x: 0 },
           transition: { duration: 0.2 },
         }),
       };

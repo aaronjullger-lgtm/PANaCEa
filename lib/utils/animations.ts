@@ -42,39 +42,39 @@ export const EASING = {
  * Standard animation variants for common patterns
  */
 export const ANIMATION_VARIANTS = {
-  /** Fade in from below */
+  /** Slide in from below (no opacity — prevents ghost UI on animation failure) */
   fadeInUp: {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
+    initial: { y: 20 },
+    animate: { y: 0 },
+    exit: { y: -20 },
   },
 
-  /** Fade in from above */
+  /** Slide in from above */
   fadeInDown: {
-    initial: { opacity: 0, y: -20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: 20 },
+    initial: { y: -20 },
+    animate: { y: 0 },
+    exit: { y: 20 },
   },
 
-  /** Fade in from left */
+  /** Slide in from left */
   fadeInLeft: {
-    initial: { opacity: 0, x: -20 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: 20 },
+    initial: { x: -20 },
+    animate: { x: 0 },
+    exit: { x: 20 },
   },
 
-  /** Fade in from right */
+  /** Slide in from right */
   fadeInRight: {
-    initial: { opacity: 0, x: 20 },
-    animate: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -20 },
+    initial: { x: 20 },
+    animate: { x: 0 },
+    exit: { x: -20 },
   },
 
   /** Scale in from center */
   scaleIn: {
-    initial: { opacity: 0, scale: 0.95 },
-    animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.95 },
+    initial: { scale: 0.95 },
+    animate: { scale: 1 },
+    exit: { scale: 0.95 },
   },
 
   /** Scale in with slight bounce */

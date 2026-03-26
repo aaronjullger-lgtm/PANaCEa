@@ -53,8 +53,7 @@ export const Loader: React.FC<LoaderProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      initial={false}
       className={`fixed inset-0 ${bgClass} flex flex-col items-center justify-center z-50`}
     >
       {/* Spinner variant (default) */}

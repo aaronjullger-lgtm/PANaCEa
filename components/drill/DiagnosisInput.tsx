@@ -111,9 +111,9 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
 
   // Animation variants for dropdown
   const dropdownVariants = {
-    initial: { opacity: 0, y: -8 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -8 },
+    initial: { y: -8 },
+    animate: { y: 0 },
+    exit: { y: -8 },
   };
 
   return (
