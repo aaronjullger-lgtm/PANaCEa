@@ -411,8 +411,16 @@ export function withValidation<T>(
         }
       }
 
-      // Validate
-      const result = validateSchema(schema, data, 'API');
+      // Validate — try flat first, then fall back to body-wrapped pattern.
+      // Many endpoints define schemas as z.object({ body: z.object({...}) })
+      // while others use flat schemas. Both patterns are supported.
+      let result = validateSchema(schema, data, 'API');
+      if (!result.success && options.source !== 'query' && options.source !== 'params') {
+        const wrappedResult = validateSchema(schema, { body: data }, 'API');
+        if (wrappedResult.success) {
+          result = wrappedResult;
+        }
+      }
       if (!result.success) {
         // Type assertion: when success is false, errors property exists
         const failedResult = result as { success: false; errors: string[] };
