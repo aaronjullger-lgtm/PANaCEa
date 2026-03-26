@@ -101,9 +101,10 @@ function BottomTabBar({
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-md safe-area-bottom"
+      style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, backgroundColor: 'var(--color-bg-primary)', borderTop: '1px solid var(--color-border)' }}
       aria-label="Main navigation"
     >
-      <ul className="flex items-stretch justify-evenly h-14 max-w-lg mx-auto">
+      <ul className="flex items-stretch justify-evenly h-14 max-w-lg mx-auto" style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'space-evenly', height: '3.5rem', maxWidth: '32rem', margin: '0 auto', listStyle: 'none', padding: 0 }}>
         {tabs.map((item) => {
           const Icon = item.icon;
           const isActive = item.href ? isPathActive(item.href, pathname, search) : false;
@@ -348,8 +349,17 @@ export const NavRail: React.FC<NavRailProps> = ({
         ${className}
       `}
       style={{
+        position: 'fixed',
+        left: 0,
+        zIndex: 40,
+        display: 'flex',
+        flexDirection: 'column',
         top: 'var(--header-height, 4rem)',
         height: 'calc(100vh - var(--header-height, 4rem))',
+        backgroundColor: 'var(--color-bg-primary)',
+        borderRight: '1px solid var(--color-border)',
+        overflowY: 'auto',
+        overflowX: 'hidden',
       }}
       aria-label="Main navigation"
     >

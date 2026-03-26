@@ -156,12 +156,14 @@ export const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onCom
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] pointer-events-none"
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100, pointerEvents: 'none' }}
         aria-live="polite"
         aria-label="Product tour"
       >
         {/* Backdrop - clickable to advance */}
         <div
           className="absolute inset-0 bg-[var(--color-overlay)] backdrop-blur-sm pointer-events-auto cursor-pointer"
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', pointerEvents: 'auto', cursor: 'pointer' }}
           onClick={handleNext}
           aria-hidden
         />
@@ -177,8 +179,9 @@ export const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onCom
           exit={{ opacity: 0, y: -10 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4 pointer-events-auto"
+          style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '100%', maxWidth: '28rem', margin: '0 1rem', pointerEvents: 'auto', zIndex: 101 }}
         >
-          <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)] overflow-hidden">
+          <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)] overflow-hidden" style={{ backgroundColor: 'var(--color-bg-secondary)', borderRadius: '1rem', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
             <div className="p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">

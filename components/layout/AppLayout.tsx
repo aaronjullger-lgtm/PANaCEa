@@ -49,9 +49,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       {showHeader && (
         <header
           className="sticky top-0 z-50 h-16 shrink-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] transition-all duration-300 shadow-sm backdrop-blur-md bg-opacity-95 dark:bg-opacity-95"
-          style={{ height: 'var(--header-height, 4rem)' }}
+          style={{ position: 'sticky', top: 0, zIndex: 50, height: 'var(--header-height, 4rem)', backgroundColor: 'var(--color-bg-primary)', borderBottom: '1px solid var(--color-border)' }}
         >
-          <div className="h-full w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between max-w-[100vw]">
+          <div className="h-full w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between max-w-[100vw]" style={{ height: '100%', width: '100%', padding: '0 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <AppBrand
               size="sm"
               asLink
