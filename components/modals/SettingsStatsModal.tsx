@@ -1018,8 +1018,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={false}
+        animate={{}}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4"
         onClick={onClose}

@@ -544,8 +544,8 @@ const MenuView: React.FC<MenuViewProps> = ({
 
       <div className={`flex flex-col max-w-5xl mx-auto px-4 ${isMobile ? 'pb-20' : ''}`}>
         <motion.h1
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: -10 }}
+          animate={{ y: 0 }}
           className="text-3xl font-bold text-[var(--color-accent)] mb-3 text-center sr-only"
         >
           PANaCEa
@@ -553,8 +553,8 @@ const MenuView: React.FC<MenuViewProps> = ({
 
         {/* Premium Glass Search Bar */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 10 }}
+          animate={{ y: 0 }}
           transition={{ delay: 0.1 }}
           className="w-full max-w-2xl mx-auto mb-10 relative"
         >
@@ -573,8 +573,8 @@ const MenuView: React.FC<MenuViewProps> = ({
           <AnimatePresence>
             {hasSearchResults && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: -10 }}
+                animate={{ y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute z-30 mt-2 w-full bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-xl shadow-lg max-h-80 overflow-y-auto"
               >
@@ -630,8 +630,8 @@ const MenuView: React.FC<MenuViewProps> = ({
             <>
               {/* Welcome Card - Prioritized at Top */}
               <motion.section
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-[var(--color-border)] shadow-sm"
               >
                 <h2 className="text-3xl font-light tracking-tight text-[var(--color-text-primary)] mb-2">
@@ -654,8 +654,8 @@ const MenuView: React.FC<MenuViewProps> = ({
 
               {/* Daily Prescription - Smart Action Card */}
               <motion.section
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.15 }}
               >
                 <DailyPrescription
@@ -666,8 +666,8 @@ const MenuView: React.FC<MenuViewProps> = ({
 
               {/* Micro-study chips - 5–15 min sessions for clinical students */}
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.18 }}
                 className="flex flex-wrap gap-2 justify-center"
               >
@@ -689,8 +689,8 @@ const MenuView: React.FC<MenuViewProps> = ({
 
               {/* Session controls */}
               <motion.section
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.2 }}
                 className="text-center space-y-3"
               >
@@ -721,8 +721,8 @@ const MenuView: React.FC<MenuViewProps> = ({
             <>
               {/* Quick Actions - New Feature Shortcuts */}
               <motion.section
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.23 }}
                 className="pt-2"
               >
@@ -864,8 +864,8 @@ const MenuView: React.FC<MenuViewProps> = ({
             <>
               {/* Streak Tracker */}
               <motion.section
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.24 }}
               >
                 <StreakTracker
@@ -882,8 +882,8 @@ const MenuView: React.FC<MenuViewProps> = ({
 
               {/* Analytics Dashboard */}
               <motion.section
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.25 }}
                 className="pt-2"
               >
@@ -915,8 +915,8 @@ const MenuView: React.FC<MenuViewProps> = ({
               {/* Study Activity Heatmap */}
               {stats.heatmapData.length > 0 && (
                 <motion.section
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ y: 10 }}
+                  animate={{ y: 0 }}
                   transition={{ delay: 0.25 }}
                 >
                   <HeatmapCalendar records={stats.heatmapData} metric="attempts" weeks={12} />
@@ -926,8 +926,8 @@ const MenuView: React.FC<MenuViewProps> = ({
               {/* System Comparison */}
               {stats.systemComparisonData.length > 0 && (
                 <motion.section
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ y: 10 }}
+                  animate={{ y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
                   <SystemComparison
@@ -939,8 +939,8 @@ const MenuView: React.FC<MenuViewProps> = ({
 
               {/* System Mastery Grid – now by PANCE system */}
               <motion.section
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.35 }}
               >
                 <h2 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)] mb-2">
@@ -965,8 +965,8 @@ const MenuView: React.FC<MenuViewProps> = ({
           {/* Settings Tab Content (Mobile only) */}
           {isMobile && activeTab === 'settings' && (
             <motion.section
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 10 }}
+              animate={{ y: 0 }}
               className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-[var(--color-border)] shadow-sm"
             >
               <h2 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)] mb-6">
@@ -1051,8 +1051,8 @@ const MenuView: React.FC<MenuViewProps> = ({
 
       {showLeaderboard && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={false}
+          animate={{}}
           className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4"
           onClick={() => setShowLeaderboard(false)}
         >

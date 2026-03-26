@@ -127,8 +127,8 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
 
   return (
     <motion.button
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 20 }}
+      animate={{ y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05, ease: 'easeOut' }}
       whileHover={{
         y: -4,
@@ -186,8 +186,8 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
             {pills.map((item, idx) => (
               <motion.div
                 key={`pill-${idx}`}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
                 transition={{ delay: index * 0.05 + idx * 0.05 }}
                 className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[var(--color-bg-primary)] border border-[var(--color-border)] shadow-sm"
               >
@@ -205,8 +205,8 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
             {blocks.map((item, idx) => (
               <motion.div
                 key={`block-${idx}`}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ x: -10 }}
+                animate={{ x: 0 }}
                 transition={{ delay: index * 0.05 + idx * 0.05 + 0.1 }}
                 className="p-3 rounded-lg bg-gradient-to-br from-[var(--color-bg-primary)] to-[var(--color-bg-tertiary)] border border-[var(--color-border)]"
               >

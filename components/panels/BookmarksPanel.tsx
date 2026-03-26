@@ -85,8 +85,8 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      initial={false}
+      animate={{}}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm"
       onClick={onClose}
@@ -203,8 +203,8 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                 {sortedBookmarks.map((question, index) => (
                   <motion.div
                     key={`${question.conditionId}-${index}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ y: 20 }}
+                    animate={{ y: 0 }}
                     exit={{ opacity: 0, x: -100 }}
                     transition={{ delay: index * 0.05 }}
                     className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-4 hover:shadow-md transition-shadow"

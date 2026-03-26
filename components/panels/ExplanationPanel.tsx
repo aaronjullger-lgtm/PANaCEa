@@ -456,8 +456,8 @@ Keep your response concise (3-5 sentences max) and supportive.`;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 20 }}
+      animate={{ y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="space-y-4"
     >

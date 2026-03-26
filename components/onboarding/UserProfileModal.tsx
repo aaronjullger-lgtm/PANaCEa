@@ -66,8 +66,8 @@ export function UserProfileModal({
     <AnimatePresence>
       <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ scale: 0.95 }}
+          animate={{ scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
         >
@@ -112,8 +112,8 @@ export function UserProfileModal({
             {step === 1 && (
               <motion.div
                 key="step1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ x: 20 }}
+                animate={{ x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
@@ -186,8 +186,8 @@ export function UserProfileModal({
             {step === 2 && (
               <motion.div
                 key="step2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ x: 20 }}
+                animate={{ x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >

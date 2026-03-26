@@ -257,8 +257,8 @@ export function MyLibraryPage({ onExit }: Readonly<MyLibraryPageProps>) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 8 }}
+      animate={{ y: 0 }}
       className="max-w-2xl mx-auto"
     >
       <div className="flex items-center gap-3 mb-6">

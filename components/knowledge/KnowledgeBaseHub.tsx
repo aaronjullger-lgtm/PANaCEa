@@ -194,8 +194,8 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={false}
+            animate={{}}
             exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden fixed inset-0 bg-[var(--color-overlay)] z-40"
@@ -236,7 +236,7 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
       {/* Main Content */}
       <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden relative">
         <div className="p-6 max-w-7xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div initial={{ y: 20 }} animate={{ y: 0 }}>
             <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
               {currentTab.label}
             </h1>
@@ -247,8 +247,8 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
             {activeTab === 'conditions' && (
               <motion.div
                 key="conditions"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
                 <ClinicalReferenceLibrary onExit={onClose} />
@@ -258,8 +258,8 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
             {activeTab === 'pharmacopeia' && (
               <motion.div
                 key="pharmacopeia"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
                 <PharmacopeiaView />
@@ -269,8 +269,8 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
             {activeTab === 'labs' && (
               <motion.div
                 key="labs"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-6"
               >

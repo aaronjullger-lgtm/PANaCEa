@@ -152,8 +152,8 @@ export const ProductTour: React.FC<ProductTourProps> = ({ isOpen, onClose, onCom
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={false}
+        animate={{}}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] pointer-events-none"
         style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100, pointerEvents: 'none' }}

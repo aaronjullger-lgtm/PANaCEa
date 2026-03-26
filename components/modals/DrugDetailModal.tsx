@@ -34,8 +34,8 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({ drug, onClose, onDril
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={false}
+        animate={{}}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-50 p-4"
         onClick={onClose}

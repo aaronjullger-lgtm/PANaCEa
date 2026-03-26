@@ -136,8 +136,8 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
       <AnimatePresence>
         {successMessage && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -10 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="flex items-center gap-2 mb-4 px-4 py-3 bg-data-pass/10 border border-data-pass/30 rounded-lg"
           >
@@ -150,8 +150,8 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({ onUpdate, cl
       <AnimatePresence>
         {conflictWarning && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -10 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="flex items-center gap-2 mb-4 px-4 py-3 bg-data-fail/10 border border-data-fail/30 rounded-lg"
           >

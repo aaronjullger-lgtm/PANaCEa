@@ -153,8 +153,8 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
     return (
       <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ scale: 0.95 }}
+          animate={{ scale: 1 }}
           className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full p-8"
         >
           <div className="flex justify-center mb-6">
@@ -232,8 +232,8 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
     return (
       <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={false}
+          animate={{}}
           className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-md w-full p-8 text-center border border-[var(--color-border)]"
         >
           <Loader2 className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
@@ -253,8 +253,8 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
     return (
       <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ scale: 0.95 }}
+          animate={{ scale: 1 }}
           className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-3xl w-full p-8 max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
         >
           <div className="mb-6">
@@ -301,8 +301,8 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
     return (
       <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={false}
+          animate={{}}
           className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-md w-full p-8 text-center border border-[var(--color-border)]"
         >
           <Loader2 className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
@@ -318,8 +318,8 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
     return (
       <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ scale: 0.95 }}
+          animate={{ scale: 1 }}
           className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full p-8"
         >
           <motion.div

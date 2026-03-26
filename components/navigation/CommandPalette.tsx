@@ -297,8 +297,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4">
         {/* Backdrop */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={false}
+          animate={{}}
           exit={{ opacity: 0 }}
           onClick={onClose}
           className="absolute inset-0 bg-[var(--color-overlay)] backdrop-blur-sm"

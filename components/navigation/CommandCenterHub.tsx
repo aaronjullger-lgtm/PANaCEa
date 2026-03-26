@@ -597,8 +597,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         {/* Refresh indicator */}
         {isRefreshing && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -20 }}
+            animate={{ y: 0 }}
             className="flex items-center justify-center py-4"
           >
             <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 rounded-full">
@@ -616,8 +616,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         {/* Sync Error Banner */}
         {syncError && dismissedSyncError !== syncError && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -20 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className="mb-4 flex items-start gap-3 p-4 rounded-lg border border-data-provisional/50 bg-data-provisional/10"
           >
@@ -1029,8 +1029,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         {/* Clinical Student: Current Rotation dropdown (presets systems) + EOR Test Date */}
         {isClinicalStudent && (
           <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 4 }}
+            animate={{ y: 0 }}
             className="mb-6 p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
           >
             <h3 className="font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
@@ -1151,8 +1151,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         {/* PANRE-LA (Only for practicing PAs) */}
         {showPANREContent && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-category-simulation)]/10 to-[var(--color-category-simulation)]/10 border border-[var(--color-category-simulation)]/30 p-5 mb-6"
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

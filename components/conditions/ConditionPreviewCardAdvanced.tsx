@@ -82,8 +82,8 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 20 }}
+      animate={{ y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05, ease: 'easeOut' }}
       whileHover={{
         y: -2,
@@ -152,8 +152,8 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
             {snippets.map((snippet, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
                 transition={{ delay: index * 0.05 + idx * 0.05 }}
                 className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/60 dark:bg-data-neutral/60 border border-data-neutral dark:border-data-neutral"
               >

@@ -52,8 +52,8 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
     <AnimatePresence>
       <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ scale: 0.95 }}
+          animate={{ scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-2xl w-full max-h-[80vh] overflow-hidden border border-[var(--color-border)]"
         >
