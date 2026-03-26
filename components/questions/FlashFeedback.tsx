@@ -17,8 +17,8 @@ export const FlashFeedback: React.FC<FlashFeedbackProps> = ({
 }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: -20 }}
+      animate={{ y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.3 }}
       className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md p-6 rounded-2xl shadow-2xl z-50

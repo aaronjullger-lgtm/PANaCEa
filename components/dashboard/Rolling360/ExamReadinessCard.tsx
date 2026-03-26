@@ -539,8 +539,8 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
         {isCalibrating && (
           <motion.div
             key="calibrating"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 10 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
             <CalibrationProtocolUI
@@ -555,8 +555,8 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
         {!isCalibrating && stats.scoreConfidence === 'provisional' && (
           <motion.div
             key="provisional"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 10 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
             <ProvisionalState
@@ -571,8 +571,8 @@ export function ExamReadinessCard({ className = '' }: ExamReadinessCardProps) {
         {stats.scoreConfidence === 'confident' && (
           <motion.div
             key="confident"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 10 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
             <ConfidentState

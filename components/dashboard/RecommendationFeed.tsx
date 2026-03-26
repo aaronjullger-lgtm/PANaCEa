@@ -279,8 +279,8 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
             <motion.div
               key={rec.id || `rec-${index}-${rec.topic}-${rec.type}`}
               layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               className="relative p-5 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm group transition-all duration-200"
             >

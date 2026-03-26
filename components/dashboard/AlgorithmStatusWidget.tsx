@@ -32,8 +32,8 @@ const AlgorithmStatusWidget: React.FC<AlgorithmStatusWidgetProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 20 }}
+      animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
       className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm h-full"
     >

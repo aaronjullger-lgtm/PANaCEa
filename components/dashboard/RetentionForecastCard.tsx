@@ -89,8 +89,8 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
   if (dueCount === 0) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 8 }}
+        animate={{ y: 0 }}
         className={`group bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300 ${className}`}
       >
         <div className="flex items-center gap-3 mb-4">
@@ -118,8 +118,8 @@ export const RetentionForecastCard: React.FC<RetentionForecastCardProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ x: -20 }}
+      animate={{ x: 0 }}
       transition={{ duration: 0.4 }}
       className={`group bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-xl p-6 shadow-sm transition-all duration-300 ${className}`}
     >

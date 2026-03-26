@@ -97,8 +97,8 @@ const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudy
         {topSystems.map((system, index) => (
           <motion.div
             key={system.name}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ x: 20 }}
+            animate={{ x: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
             className="p-4 bg-gradient-to-r from-[var(--color-data-provisional)]/10 to-[var(--color-data-provisional)]/5 rounded-xl border border-[var(--color-data-provisional)]/30"
           >
@@ -344,8 +344,8 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
           transition={{ duration: 0.4 }}
         >
           <div className="flex items-center gap-3 mb-2">
@@ -361,8 +361,8 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
         {/* Stats Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
             className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4"
           >
@@ -376,8 +376,8 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
             className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4"
           >
@@ -391,8 +391,8 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.4, delay: 0.3 }}
             className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-4"
           >
@@ -415,8 +415,8 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Chart Section */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
             className="lg:col-span-2 bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] p-6"
           >
@@ -514,8 +514,8 @@ export const GapAnalysisDashboard: React.FC<GapAnalysisDashboardProps> = ({ onSt
 
           {/* High Yield Sidebar */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.4, delay: 0.5 }}
           >
             <HighYieldSidebar topSystems={topSystems} onStudyClick={handleStudyClick} />

@@ -64,8 +64,8 @@ export default function DrugCardRenderer({
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ scale: 0.95 }}
+      animate={{ scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       className="rounded-xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden bg-[var(--color-bg-primary)] border border-[var(--color-border)]"
       style={{ maxWidth: '800px', maxHeight: '90vh' }}

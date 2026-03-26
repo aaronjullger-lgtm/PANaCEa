@@ -59,8 +59,8 @@ export const ProgressRingWidget: React.FC<ProgressRingWidgetProps> = ({
     <>
       {/* Floating ring button */}
       <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsExpanded(true)}

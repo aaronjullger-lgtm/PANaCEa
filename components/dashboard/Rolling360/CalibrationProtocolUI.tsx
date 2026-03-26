@@ -216,8 +216,8 @@ function StepCard({ step, currentQuestions, metrics }: StepCardProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 10 }}
+      animate={{ y: 0 }}
       transition={{ delay: step.step * 0.1 }}
       className={`relative p-4 rounded-xl border transition-all duration-300 ${
         isUnlocked

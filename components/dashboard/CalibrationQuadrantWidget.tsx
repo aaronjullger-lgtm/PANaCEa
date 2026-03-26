@@ -140,8 +140,8 @@ export function CalibrationQuadrantWidget({ className = '' }: Readonly<{ classNa
   if (!cal || total === 0) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 8 }}
+        animate={{ y: 0 }}
         className={`rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-6 ${className}`}
       >
         <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
@@ -165,8 +165,8 @@ export function CalibrationQuadrantWidget({ className = '' }: Readonly<{ classNa
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 8 }}
+      animate={{ y: 0 }}
       className={`rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] p-6 ${className}`}
     >
       <div className="flex items-center justify-between mb-4">

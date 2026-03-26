@@ -88,8 +88,8 @@ export const FatigueAlertBanner: React.FC<FatigueAlertBannerProps> = ({
   if (compact) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: -10 }}
+        animate={{ y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         className="flex items-center gap-2 px-3 py-2 rounded-lg border"
         style={{
@@ -161,8 +161,8 @@ export const FatigueAlertBanner: React.FC<FatigueAlertBannerProps> = ({
       {/* Recommendations (expandable) */}
       {isExpanded && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={false}
+          animate={{}}
           exit={{ opacity: 0 }}
           className="px-4 py-3 border-t border-[var(--color-border)]/50 bg-[var(--color-bg-primary)]/30"
         >

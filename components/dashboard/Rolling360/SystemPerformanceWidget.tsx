@@ -70,8 +70,8 @@ function SystemRow({ system, stats, totalQuestions, index }: SystemRowProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ x: -20 }}
+      animate={{ x: 0 }}
       transition={{ delay: index * 0.05 }}
       className={`p-3 rounded-xl transition-colors ${
         isUnderStudied

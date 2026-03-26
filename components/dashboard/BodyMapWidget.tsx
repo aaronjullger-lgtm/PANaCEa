@@ -162,8 +162,8 @@ export function BodyMapWidget({
             return (
               <motion.g
                 key={system}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
                 transition={{ duration: 0.3 }}
                 onMouseEnter={() => setHoveredSystem(system)}
                 onMouseLeave={() => setHoveredSystem(null)}

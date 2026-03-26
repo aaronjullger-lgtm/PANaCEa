@@ -338,8 +338,8 @@ export function DriftVectorChart({ drift, className, showDetails = true }: Drift
 
       {/* Alert Message */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 10 }}
+        animate={{ y: 0 }}
         className={cn(
           'mt-3 p-2 rounded-lg text-sm',
           drift.urgency === 'critical'
