@@ -238,8 +238,8 @@ export function CohortLeaderboard({
           return (
             <motion.div
               key={entry.userId}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ x: -20 }}
+              animate={{ x: 0 }}
               transition={{ delay: index * 0.05 }}
               className={`
                 relative rounded-xl border-2 transition-all cursor-pointer

@@ -211,8 +211,8 @@ export default function StudyGroupDashboard() {
         {activeTab === 'groups' ? (
           <motion.div
             key="groups"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 10 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
             <div className="grid gap-6 md:grid-cols-2 mb-8">
@@ -337,8 +337,8 @@ export default function StudyGroupDashboard() {
         ) : (
           <motion.div
             key="leaderboard"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 10 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
             <div className="bg-[var(--color-bg-primary)] rounded-xl shadow-sm border border-[var(--color-border)] overflow-hidden">

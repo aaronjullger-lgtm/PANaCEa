@@ -265,7 +265,7 @@ export function AchievementBadges({
           return (
             <motion.div
               key={achievement.id}
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.02 }}
               onClick={() => {
@@ -362,8 +362,8 @@ export function AchievementBadges({
       <AnimatePresence>
         {selectedAchievement && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={false}
+            animate={{}}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)]"
             onClick={() => setSelectedAchievement(null)}
