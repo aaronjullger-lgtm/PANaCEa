@@ -92,7 +92,25 @@ export const onRequestPost = authenticatedEndpoint(ConditionDrillSchema, async (
       });
 
       if (question) {
-        questions.push(question);
+        // Normalize options: DB stores as {"A":"...", "B":"..."} — convert to array for client
+        const rawOpts = question.options;
+        const opts: string[] = Array.isArray(rawOpts)
+          ? (rawOpts as string[])
+          : rawOpts && typeof rawOpts === 'object'
+            ? Object.values(rawOpts as Record<string, string>)
+            : [];
+
+        const correctIdx =
+          typeof question.correctAnswer === 'string' && /^[A-E]$/.test(question.correctAnswer)
+            ? question.correctAnswer.charCodeAt(0) - 65
+            : opts.findIndex((o) => o === question.correctAnswer);
+
+        questions.push({
+          ...question,
+          options: opts,
+          rationale: question.explanation,
+          correctAnswerIndex: Math.max(0, correctIdx),
+        });
       }
     }
 

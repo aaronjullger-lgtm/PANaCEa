@@ -92,8 +92,27 @@ export const onRequestPost = authenticatedEndpoint(SystemDrillSchema, async (con
       system: question.system,
     });
 
+    // Normalize options: DB stores as {"A":"...", "B":"..."} — convert to array for client
+    const rawOpts = question.options;
+    const opts: string[] = Array.isArray(rawOpts)
+      ? (rawOpts as string[])
+      : rawOpts && typeof rawOpts === 'object'
+        ? Object.values(rawOpts as Record<string, string>)
+        : [];
+
+    // Derive correctAnswerIndex from letter key (A=0, B=1, ...) or string match
+    const correctIdx =
+      typeof question.correctAnswer === 'string' && /^[A-E]$/.test(question.correctAnswer)
+        ? question.correctAnswer.charCodeAt(0) - 65
+        : opts.findIndex((o) => o === question.correctAnswer);
+
     return {
-      data: question,
+      data: {
+        ...question,
+        options: opts,
+        rationale: question.explanation,
+        correctAnswerIndex: Math.max(0, correctIdx),
+      },
     };
   } catch (error) {
     logger.error('Error generating system drill question', {
