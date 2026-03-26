@@ -213,8 +213,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     return (
       <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ scale: 0.95 }}
+          animate={{ scale: 1 }}
           className="bg-[var(--color-bg-tertiary)] rounded-2xl p-8 shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-md text-center"
         >
           <AlertCircle className="w-16 h-16 text-data-fail mx-auto mb-4" />
@@ -244,8 +244,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   return (
     <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
         className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-6xl w-full my-8"
       >
         {/* Header */}
@@ -378,8 +378,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             <div className="p-6">
               {statsError && (
                 <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ y: -8 }}
+                  animate={{ y: 0 }}
                   className="mb-4 flex items-center justify-between gap-3 p-4 rounded-xl bg-data-fail/10 border border-data-fail/30 text-data-fail"
                 >
                   <span className="text-sm">{statsError}</span>
