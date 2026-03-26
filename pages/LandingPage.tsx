@@ -373,6 +373,7 @@ export function LandingPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto"
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 50, backgroundColor: 'rgba(15,23,42,0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}
             onClick={() => setShowAuth(false)}
             role="dialog"
             aria-modal="true"
@@ -384,11 +385,12 @@ export function LandingPage() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md my-8"
+              style={{ width: '100%', maxWidth: '28rem', margin: '2rem 0' }}
             >
-              <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)]">
+              <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)]" style={{ backgroundColor: 'var(--color-bg-secondary)', borderRadius: '1rem', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
                 {/* Modal Header */}
-                <div className="bg-[var(--color-bg-tertiary)] px-6 py-5 text-[var(--color-text-primary)]">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="bg-[var(--color-bg-tertiary)] px-6 py-5 text-[var(--color-text-primary)]" style={{ backgroundColor: 'var(--color-bg-tertiary)', padding: '1.25rem 1.5rem' }}>
+                  <div className="flex items-center justify-between mb-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                     <h3 id="auth-modal-title" className="text-2xl font-bold">
                       {authMode === 'sign-up' ? 'Join PANaCEa' : 'Welcome Back'}
                     </h3>
@@ -396,6 +398,7 @@ export function LandingPage() {
                       type="button"
                       onClick={() => setShowAuth(false)}
                       className="p-2 hover:bg-[var(--color-bg-secondary)]/60 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      style={{ padding: '0.5rem', borderRadius: '0.5rem', minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                       aria-label="Close sign in"
                     >
                       <svg
