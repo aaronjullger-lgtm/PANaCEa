@@ -109,7 +109,7 @@ export const CalibrationProgress: React.FC<CalibrationProgressProps> = ({
       className={`p-4 rounded-xl border-2 transition-colors ${
         isCalibrated
           ? 'bg-data-pass/10 border-data-pass/30'
-          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] cursor-pointer hover:border-[var(--color-accent)]/50 hover:bg-action-muted/10'
+          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] cursor-pointer hover:border-[var(--color-accent)]/50 hover:bg-[var(--color-accent)]/15/10'
       }`}
       role={!isCalibrated ? 'button' : undefined}
       tabIndex={!isCalibrated ? 0 : undefined}

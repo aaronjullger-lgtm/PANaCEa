@@ -140,7 +140,7 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
           placeholder={placeholder}
-          className="w-full pl-10 pr-10 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-text-primary placeholder-text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-action-primary focus:border-transparent"
+          className="w-full pl-10 pr-10 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] placeholder-text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-action-primary focus:border-transparent"
           aria-label="Search graph nodes"
         />
         {loading && (
@@ -161,13 +161,13 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
               onMouseEnter={() => setSelectedIndex(index)}
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-text-primary">{suggestion.label}</span>
-                <span className="text-xs px-2 py-1 rounded-full bg-action-muted text-text-secondary">
+                <span className="font-medium text-[var(--color-text-primary)]">{suggestion.label}</span>
+                <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-accent)]/15 text-[var(--color-text-secondary)]">
                   {suggestion.nodeType.toLowerCase()}
                 </span>
               </div>
               {suggestion.description && (
-                <p className="text-sm text-text-secondary mt-1 truncate">{suggestion.description}</p>
+                <p className="text-sm text-[var(--color-text-secondary)] mt-1 truncate">{suggestion.description}</p>
               )}
             </button>
           ))}
@@ -176,7 +176,7 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
 
       {/* No results */}
       {showDropdown && query.trim() && !loading && suggestions.length === 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 px-4 py-3 text-text-secondary">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-lg z-50 px-4 py-3 text-[var(--color-text-secondary)]">
           No matching nodes found.
         </div>
       )}

@@ -141,7 +141,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
                 </div>
               </div>
               {edge.evidenceCount && (
-                <div className="text-xs px-2 py-1 bg-action-muted rounded">
+                <div className="text-xs px-2 py-1 bg-[var(--color-accent)]/15 rounded">
                   {edge.evidenceCount} evidence
                 </div>
               )}
@@ -247,7 +247,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
           <section>
             <h3 className="text-lg font-semibold text-foreground mb-2">Taxonomy</h3>
             <div className="bg-[var(--color-bg-secondary)] p-4 rounded-lg border border-[var(--color-border)]">
-              <code className="font-mono text-sm bg-action-muted px-2 py-1 rounded">
+              <code className="font-mono text-sm bg-[var(--color-accent)]/15 px-2 py-1 rounded">
                 {taxonomyCode}
               </code>
               {metadata?.taxonomyName && (
@@ -288,7 +288,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
 
         {/* Footer note */}
         <div className="pt-4 border-t border-[var(--color-border)] text-xs text-muted-foreground">
-          Node ID: <code className="bg-action-muted px-1 py-0.5 rounded">{nodeData.id}</code>
+          Node ID: <code className="bg-[var(--color-accent)]/15 px-1 py-0.5 rounded">{nodeData.id}</code>
           <span className="mx-2">•</span>
           Last updated: {new Date().toLocaleDateString()}
         </div>

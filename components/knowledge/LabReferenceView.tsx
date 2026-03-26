@@ -169,7 +169,7 @@ export const LabReferenceView: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <Beaker className="w-5 h-5 text-accent flex-shrink-0" />
-                      <h3 className="font-bold text-text-primary truncate">
+                      <h3 className="font-bold text-[var(--color-text-primary)] truncate">
                         {lab.name}
                       </h3>
                       {lab.isHighYield && (
@@ -178,7 +178,7 @@ export const LabReferenceView: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-text-secondary">
+                    <div className="text-sm text-[var(--color-text-secondary)]">
                       {lab.conventionalRange || lab.siRange || 'Normal range varies'}
                       {lab.siUnits && ` ${lab.siUnits}`}
                     </div>
@@ -195,7 +195,7 @@ export const LabReferenceView: React.FC = () => {
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           <TrendingUp className="w-4 h-4 text-data-fail" />
-                          <h4 className="text-sm font-semibold text-text-primary">
+                          <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
                             Increased In
                           </h4>
                         </div>
@@ -203,7 +203,7 @@ export const LabReferenceView: React.FC = () => {
                           {lab.increaseIndicates.map((cause, idx) => (
                             <li
                               key={idx}
-                              className="text-sm text-text-secondary ml-4"
+                              className="text-sm text-[var(--color-text-secondary)] ml-4"
                             >
                               • {cause}
                             </li>
@@ -216,7 +216,7 @@ export const LabReferenceView: React.FC = () => {
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           <TrendingDown className="w-4 h-4 text-data-pass" />
-                          <h4 className="text-sm font-semibold text-text-primary">
+                          <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
                             Decreased In
                           </h4>
                         </div>
@@ -224,7 +224,7 @@ export const LabReferenceView: React.FC = () => {
                           {lab.decreaseIndicates.map((cause, idx) => (
                             <li
                               key={idx}
-                              className="text-sm text-text-secondary ml-4"
+                              className="text-sm text-[var(--color-text-secondary)] ml-4"
                             >
                               • {cause}
                             </li>
@@ -237,7 +237,7 @@ export const LabReferenceView: React.FC = () => {
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           <AlertTriangle className="w-4 h-4 text-data-provisional" />
-                          <h4 className="text-sm font-semibold text-text-primary">
+                          <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
                             Common Findings
                           </h4>
                         </div>
@@ -245,7 +245,7 @@ export const LabReferenceView: React.FC = () => {
                           {lab.commonAbnormalities.map((finding, idx) => (
                             <li
                               key={idx}
-                              className="text-sm text-text-secondary ml-4"
+                              className="text-sm text-[var(--color-text-secondary)] ml-4"
                             >
                               • {finding}
                             </li>
@@ -256,12 +256,12 @@ export const LabReferenceView: React.FC = () => {
 
                     {lab.clinicalPearls.length > 0 && (
                       <div className="bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg p-3">
-                        <h4 className="text-sm font-semibold text-text-primary mb-2">
+                        <h4 className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">
                           Clinical Pearls
                         </h4>
                         <ul className="space-y-1">
                           {lab.clinicalPearls.map((pearl, idx) => (
-                            <li key={idx} className="text-sm text-text-secondary">
+                            <li key={idx} className="text-sm text-[var(--color-text-secondary)]">
                               • {pearl}
                             </li>
                           ))}
@@ -274,7 +274,7 @@ export const LabReferenceView: React.FC = () => {
                         <h4 className="text-sm font-semibold text-data-fail mb-1">
                           Critical Values
                         </h4>
-                        <div className="text-sm text-text-secondary">
+                        <div className="text-sm text-[var(--color-text-secondary)]">
                           {typeof lab.criticalValues === 'string'
                             ? lab.criticalValues
                             : JSON.stringify(lab.criticalValues)}

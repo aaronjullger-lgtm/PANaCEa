@@ -27,7 +27,7 @@ const PresetCard = ({ preset, onClick }: { preset: StudyPreset; onClick: () => v
   return (
     <button
       onClick={onClick}
-      className="w-full text-left p-4 rounded-lg border bg-[var(--color-bg-secondary)] hover:bg-action-muted dark:border-data-neutral transition-colors"
+      className="w-full text-left p-4 rounded-lg border bg-[var(--color-bg-secondary)] hover:bg-[var(--color-accent)]/15 dark:border-data-neutral transition-colors"
     >
       <div className="flex items-center gap-4">
         <Icon className="w-6 h-6 text-[var(--color-accent)]" />

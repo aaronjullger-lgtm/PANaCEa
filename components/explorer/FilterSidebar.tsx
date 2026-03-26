@@ -162,13 +162,13 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           <div className="flex gap-2">
             <button
               onClick={() => selectAll('systems')}
-              className="text-xs px-2 py-1 bg-action-muted rounded hover:bg-action-muted-hover transition-colors"
+              className="text-xs px-2 py-1 bg-[var(--color-accent)]/15 rounded hover:bg-[var(--color-accent)]/15-hover transition-colors"
             >
               Select All
             </button>
             <button
               onClick={() => clearAll('systems')}
-              className="text-xs px-2 py-1 bg-action-muted rounded hover:bg-action-muted-hover transition-colors"
+              className="text-xs px-2 py-1 bg-[var(--color-accent)]/15 rounded hover:bg-[var(--color-accent)]/15-hover transition-colors"
             >
               Clear
             </button>
@@ -205,13 +205,13 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           <div className="flex gap-2">
             <button
               onClick={() => selectAll('edgeTypes')}
-              className="text-xs px-2 py-1 bg-action-muted rounded hover:bg-action-muted-hover transition-colors"
+              className="text-xs px-2 py-1 bg-[var(--color-accent)]/15 rounded hover:bg-[var(--color-accent)]/15-hover transition-colors"
             >
               Select All
             </button>
             <button
               onClick={() => clearAll('edgeTypes')}
-              className="text-xs px-2 py-1 bg-action-muted rounded hover:bg-action-muted-hover transition-colors"
+              className="text-xs px-2 py-1 bg-[var(--color-accent)]/15 rounded hover:bg-[var(--color-accent)]/15-hover transition-colors"
             >
               Clear
             </button>
@@ -248,13 +248,13 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           <div className="flex gap-2">
             <button
               onClick={() => selectAll('nodeTypes')}
-              className="text-xs px-2 py-1 bg-action-muted rounded hover:bg-action-muted-hover transition-colors"
+              className="text-xs px-2 py-1 bg-[var(--color-accent)]/15 rounded hover:bg-[var(--color-accent)]/15-hover transition-colors"
             >
               Select All
             </button>
             <button
               onClick={() => clearAll('nodeTypes')}
-              className="text-xs px-2 py-1 bg-action-muted rounded hover:bg-action-muted-hover transition-colors"
+              className="text-xs px-2 py-1 bg-[var(--color-accent)]/15 rounded hover:bg-[var(--color-accent)]/15-hover transition-colors"
             >
               Clear
             </button>
@@ -293,7 +293,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             step="0.01"
             value={filter.minWeight}
             onChange={(e) => handleWeightChange(parseFloat(e.target.value), 1)}
-            className="w-full h-2 bg-action-muted rounded-lg appearance-none cursor-pointer"
+            className="w-full h-2 bg-[var(--color-accent)]/15 rounded-lg appearance-none cursor-pointer"
           />
           <div className="text-xs text-muted-foreground">
             Show edges with weight ≥ {filter.minWeight.toFixed(2)}
@@ -316,7 +316,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             step="1"
             value={filter.maxDepth}
             onChange={(e) => handleDepthChange(parseInt(e.target.value, 10))}
-            className="w-full h-2 bg-action-muted rounded-lg appearance-none cursor-pointer"
+            className="w-full h-2 bg-[var(--color-accent)]/15 rounded-lg appearance-none cursor-pointer"
           />
           <div className="text-xs text-muted-foreground">
             Limit graph expansion to {filter.maxDepth} hop{filter.maxDepth !== 1 ? 's' : ''}

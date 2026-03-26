@@ -123,7 +123,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
                 <span className="text-sm font-bold text-data-provisional">{idx + 1}</span>
               </div>
               <div className="flex-1">
-                <p className="text-text-primary whitespace-pre-line">{clue}</p>
+                <p className="text-[var(--color-text-primary)] whitespace-pre-line">{clue}</p>
               </div>
             </div>
           </motion.div>
@@ -147,15 +147,15 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
     if (!userState || userState.guesses.length === 0) return null;
     return (
       <div className="mt-6 max-w-2xl mx-auto">
-        <h3 className="text-sm font-semibold text-text-secondary mb-2">Your Guesses</h3>
+        <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Your Guesses</h3>
         <div className="space-y-2">
           {userState.guesses.map((guess, idx) => (
             <div key={idx} className="flex items-center gap-3 p-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg">
               <div className="w-8 h-8 rounded-full bg-data-neutral/30 flex items-center justify-center">
-                <span className="text-sm font-bold text-text-primary">{idx + 1}</span>
+                <span className="text-sm font-bold text-[var(--color-text-primary)]">{idx + 1}</span>
               </div>
               <div className="flex-1">
-                <p className="font-medium text-text-primary">{guess}</p>
+                <p className="font-medium text-[var(--color-text-primary)]">{guess}</p>
               </div>
               <div className={`px-2 py-1 rounded text-xs font-semibold ${guess.toLowerCase() === puzzle?.conditionName.toLowerCase() ? 'bg-data-pass/20 text-data-pass' : 'bg-data-fail/20 text-data-fail'}`}>
                 {guess.toLowerCase() === puzzle?.conditionName.toLowerCase() ? 'Correct' : 'Incorrect'}
@@ -173,7 +173,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
     return (
       <div className="max-w-2xl mx-auto mt-8 relative">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-secondary" />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[var(--color-text-secondary)]" />
           <input
             ref={inputRef}
             type="text"
@@ -181,7 +181,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
             onChange={(e) => setGuessInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Enter diagnosis (e.g., 'Pneumonia')..."
-            className="w-full pl-12 pr-4 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-data-provisional"
+            className="w-full pl-12 pr-4 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-data-provisional"
             disabled={isSubmitting}
             autoComplete="off"
             spellCheck={false}
@@ -189,7 +189,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
           {guessInput && (
             <button
               onClick={() => setGuessInput('')}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-text-secondary hover:text-text-primary"
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
               title="Clear input"
               aria-label="Clear input"
             >
@@ -214,14 +214,14 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
                 title={`Select ${suggestion.condition}`}
                 aria-label={`Select ${suggestion.condition}`}
               >
-                <div className="font-medium text-text-primary">{suggestion.condition}</div>
-                <div className="text-xs text-text-secondary">{suggestion.system} • {suggestion.subcategory || 'Unknown'}</div>
+                <div className="font-medium text-[var(--color-text-primary)]">{suggestion.condition}</div>
+                <div className="text-xs text-[var(--color-text-secondary)]">{suggestion.system} • {suggestion.subcategory || 'Unknown'}</div>
               </button>
             ))}
           </motion.div>
         )}
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-text-secondary">
+          <div className="text-sm text-[var(--color-text-secondary)]">
             Attempts left: <span className="font-bold">{userState?.attemptsLeft ?? 0}</span> / {MAX_ATTEMPTS}
           </div>
           <button
@@ -241,31 +241,31 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
     if (!stats) return null;
     return (
       <div className="max-w-2xl mx-auto mt-8 p-6 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl">
-        <h3 className="text-lg font-bold text-text-primary mb-4">Your Diagnostic Puzzle Stats</h3>
+        <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4">Your Diagnostic Puzzle Stats</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-text-primary">{stats.total}</div>
-            <div className="text-sm text-text-secondary">Played</div>
+            <div className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.total}</div>
+            <div className="text-sm text-[var(--color-text-secondary)]">Played</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-data-pass">{stats.wins}</div>
-            <div className="text-sm text-text-secondary">Wins</div>
+            <div className="text-sm text-[var(--color-text-secondary)]">Wins</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-text-primary">{Math.round(stats.winRate)}%</div>
-            <div className="text-sm text-text-secondary">Win Rate</div>
+            <div className="text-2xl font-bold text-[var(--color-text-primary)]">{Math.round(stats.winRate)}%</div>
+            <div className="text-sm text-[var(--color-text-secondary)]">Win Rate</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-data-provisional">{stats.streak}</div>
-            <div className="text-sm text-text-secondary">Streak</div>
+            <div className="text-sm text-[var(--color-text-secondary)]">Streak</div>
           </div>
         </div>
         <div className="mt-6">
-          <h4 className="text-sm font-semibold text-text-secondary mb-2">Guess Distribution</h4>
+          <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Guess Distribution</h4>
           <div className="space-y-2">
             {Object.entries(stats.guessDistribution).map(([guesses, count]) => (
               <div key={guesses} className="flex items-center gap-3">
-                <div className="w-8 text-sm font-medium text-text-primary">{guesses}</div>
+                <div className="w-8 text-sm font-medium text-[var(--color-text-primary)]">{guesses}</div>
                 <div className="flex-1 h-6 bg-data-neutral/30 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
@@ -274,7 +274,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
                     className="h-full bg-data-provisional"
                   />
                 </div>
-                <div className="text-sm text-text-primary">{count}</div>
+                <div className="text-sm text-[var(--color-text-primary)]">{count}</div>
               </div>
             ))}
           </div>
@@ -300,7 +300,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
               <>
                 <Trophy className="w-12 h-12 text-data-provisional mx-auto" />
                 <h2 className="text-2xl font-bold text-data-pass">Excellent Diagnosis!</h2>
-                <p className="text-text-primary">
+                <p className="text-[var(--color-text-primary)]">
                   You identified <span className="font-bold text-data-provisional">{puzzle.conditionName}</span> in {userState.guesses.length}/{MAX_ATTEMPTS} clues.
                 </p>
               </>
@@ -308,7 +308,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
               <>
                 <X className="w-12 h-12 text-data-fail mx-auto" />
                 <h2 className="text-2xl font-bold text-data-fail">Better Luck Tomorrow</h2>
-                <p className="text-text-primary">
+                <p className="text-[var(--color-text-primary)]">
                   The diagnosis was:{' '}
                   <span className="font-bold text-data-provisional">{puzzle.conditionName}</span>
                 </p>

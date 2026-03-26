@@ -256,7 +256,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         ref={containerRef}
         id="question-container"
         tabIndex={-1}
-        className="text-xl md:text-2xl leading-relaxed text-text-primary bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm space-y-4"
+        className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm space-y-4"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
         {/* Text before the table */}
@@ -290,7 +290,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
         ref={containerRef}
         id="question-container"
         tabIndex={-1}
-        className="text-xl md:text-2xl font-semibold text-text-primary whitespace-pre-wrap bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm"
+        className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
         {normalizedText}
@@ -307,7 +307,7 @@ const QuestionDisplay: React.FC<{ text: string }> = React.memo(({ text }) => {
       ref={containerRef}
       id="question-container"
       tabIndex={-1}
-      className="text-xl md:text-2xl leading-relaxed text-text-primary bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm"
+      className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm"
       style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
     >
       <p className="whitespace-pre-wrap">{vignette}</p>
@@ -1591,8 +1591,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               {/* Quick Wins: Time-box session timer — hidden in Commuter Mode */}
               {!commuter?.isCommuterMode && timeRemainingMs !== null && timeRemainingMs > 0 && (
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20">
-                  <Clock className="w-3.5 h-3.5 text-text-primary" />
-                  <span className="text-xs font-semibold text-text-primary">
+                  <Clock className="w-3.5 h-3.5 text-[var(--color-text-primary)]" />
+                  <span className="text-xs font-semibold text-[var(--color-text-primary)]">
                     {Math.ceil(timeRemainingMs / 60000)} min
                   </span>
                 </div>
@@ -1609,8 +1609,8 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               title="Toggle session stats (S)"
               className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                 showStatsOverlay
-                  ? 'bg-[var(--color-accent)]/10 text-text-primary border-[var(--color-accent)]'
-                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-accent)]/10 hover:text-text-primary hover:border-[var(--color-accent)]'
+                  ? 'bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] border-[var(--color-accent)]'
+                  : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-text-primary)] hover:border-[var(--color-accent)]'
               }`}
             >
               <BarChart3 className="w-5 h-5" />
@@ -1635,7 +1635,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               title="Normal Labs reference"
               className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                 showNormalLabsPanel
-                  ? 'bg-[var(--color-accent)]/10 text-text-primary border-[var(--color-accent)]'
+                  ? 'bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] border-[var(--color-accent)]'
                   : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
               }`}
               aria-label="Toggle Normal Labs reference"
@@ -1650,7 +1650,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 title="More actions"
                 className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                   showOverflowMenu
-                    ? 'bg-[var(--color-accent)]/10 text-text-primary border-[var(--color-accent)]'
+                    ? 'bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] border-[var(--color-accent)]'
                     : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-accent)]'
                 }`}
               >
@@ -1698,7 +1698,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
                   >
-                    <Calculator className="w-4 h-4 text-text-primary" />
+                    <Calculator className="w-4 h-4 text-[var(--color-text-primary)]" />
                     Lab Calculators
                   </button>
                   {/* Font size controls */}
@@ -1757,7 +1757,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 setError(null);
                 void replenishQueue();
               }}
-              className="flex-shrink-0 rounded-md px-3 py-1 font-medium text-text-primary hover:bg-[var(--color-accent)]/10"
+              className="flex-shrink-0 rounded-md px-3 py-1 font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-accent)]/10"
             >
               Retry
             </button>
@@ -1993,7 +1993,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                     <button
                       type="button"
                       onClick={() => setShowSocraticTutor(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)]/10 text-text-primary font-medium text-sm hover:bg-[var(--color-accent)]/20 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] font-medium text-sm hover:bg-[var(--color-accent)]/20 transition-colors"
                     >
                       <MessageCircle className="h-4 w-4" aria-hidden />
                       Tutor Me
@@ -2018,7 +2018,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
 
                 {alternateRationale && !isExplainerLoading && (
                   <div className="mt-4 pt-4 border-t border-[var(--color-border)] animate-fade-in">
-                    <h4 className="font-bold text-md mb-2 text-text-primary">
+                    <h4 className="font-bold text-md mb-2 text-[var(--color-text-primary)]">
                       Alternate Explanation
                     </h4>
                     <p className="text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
@@ -2030,7 +2030,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                 {/* Clinical Pearls Section */}
                 {currentQuestion.pearls && currentQuestion.pearls.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
-                    <h3 className="font-bold text-lg mb-2 text-text-primary">
+                    <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
                       Key Pearls: {currentQuestion.condition}
                     </h3>
                     <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
@@ -2048,21 +2048,21 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                   {!showNotes && !localNote ? (
                     <button
                       onClick={() => setShowNotes(true)}
-                      className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-text-primary transition-colors py-1"
+                      className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors py-1"
                     >
                       <PenLine className="w-4 h-4" />
                       Add Note
                     </button>
                   ) : (
                     <>
-                      <h3 className="font-bold text-lg mb-2 text-text-primary">
+                      <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
                         My Notes
                       </h3>
                       <textarea
                         value={localNote}
                         onChange={handleNoteChange}
                         placeholder="Type your notes here... They will be saved automatically."
-                        className="w-full p-2 border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-text-primary rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
+                        className="w-full p-2 border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
                         rows={3}
                         autoFocus={showNotes && !localNote}
                       />

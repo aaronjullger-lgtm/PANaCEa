@@ -178,7 +178,7 @@ export function DailyChallengesHub() {
       <div className="mb-10">
         <BackLink to={ROUTES.STUDY} className="mb-4" />
         <h1 className="text-3xl font-bold text-[var(--color-accent)] mb-2">Daily Challenges</h1>
-        <p className="text-text-secondary">
+        <p className="text-[var(--color-text-secondary)]">
           Engage with daily challenges to test your knowledge, compete with peers, and maintain your streak.
         </p>
       </div>
@@ -228,11 +228,11 @@ export function DailyChallengesHub() {
       {/* Optional aggregated streak */}
       <div className="mt-12 p-6 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl">
         <h2 className="text-xl font-semibold text-[var(--color-accent)] mb-2">Daily Completion Streak</h2>
-        <p className="text-text-secondary mb-4">
+        <p className="text-[var(--color-text-secondary)] mb-4">
           Complete all three challenges each day to maximize your streak. Coming soon.
         </p>
-        <div className="h-2 bg-action-muted rounded-full overflow-hidden">
-          <div className="h-full bg-success" style={{ width: '0%' }} />
+        <div className="h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
+          <div className="h-full bg-[var(--color-data-pass)]" style={{ width: '0%' }} />
         </div>
       </div>
     </div>

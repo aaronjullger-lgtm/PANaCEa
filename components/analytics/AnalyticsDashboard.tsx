@@ -406,7 +406,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {/* Empty State - With CTA to prevent dead ends */}
       {!hasData && (
         <div className="flex flex-col items-center justify-center py-12 px-6 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
-          <div className="mb-4 p-4 rounded-full bg-action-muted">
+          <div className="mb-4 p-4 rounded-full bg-[var(--color-accent)]/15">
             <BarChart3 className="w-12 h-12 text-action-muted" />
           </div>
           <h3 className="text-xl font-semibold text-[var(--color-accent)] mb-2">
