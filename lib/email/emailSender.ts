@@ -89,7 +89,7 @@ export async function sendPasswordResetEmail(
   resetToken: string,
   firstName?: string
 ): Promise<boolean> {
-  const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || 'https://studypanacea.com';
   const resetUrl = `${appUrl}/reset-password/${resetToken}`;
 
   const subject = 'PANaCEa - Password Reset Request';
@@ -169,7 +169,7 @@ export async function sendVerificationEmail(
   verifyToken: string,
   firstName?: string
 ): Promise<boolean> {
-  const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || 'https://studypanacea.com';
   const verifyUrl = `${appUrl}/verify/${verifyToken}`;
 
   const subject = 'PANaCEa - Verify Your Email Address';

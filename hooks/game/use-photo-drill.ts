@@ -247,7 +247,7 @@ async function fetchPhotoCases(
     const baseUrl =
       typeof window !== 'undefined' && window.location
         ? window.location.origin
-        : 'http://localhost';
+        : 'https://studypanacea.com';
     const url = `${baseUrl}/api/drills/media?${params.toString()}`;
 
     // Fetch from API

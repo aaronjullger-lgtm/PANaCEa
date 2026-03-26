@@ -43,7 +43,7 @@ export async function fetchLabCases(
   params.set('shuffle', 'true');
 
   const baseUrl =
-    typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost';
+    typeof window !== 'undefined' && window.location ? window.location.origin : 'https://studypanacea.com';
 
   const response = await fetch(`${baseUrl}/api/drills/lab-cases?${params.toString()}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -74,7 +74,7 @@ export async function fetchValidDiagnoses(token?: string | null): Promise<string
   }
 
   const baseUrl =
-    typeof window !== 'undefined' && window.location ? window.location.origin : 'http://localhost';
+    typeof window !== 'undefined' && window.location ? window.location.origin : 'https://studypanacea.com';
 
   const response = await fetch(`${baseUrl}/api/drills/lab-cases`, {
     method: 'POST',

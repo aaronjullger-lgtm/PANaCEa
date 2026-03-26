@@ -24,7 +24,7 @@ export async function sendFlagResolvedNotification(
   const { userEmail, userFirstName, questionId, questionText, flagType, resolutionNote } =
     notification;
 
-  const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || 'https://studypanacea.com';
 
   // Truncate question text if too long for email
   const truncatedQuestion =
@@ -162,7 +162,7 @@ export async function sendAdminFlagNotification(
     userFirstName?: string;
   }
 ): Promise<boolean> {
-  const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.VITE_APP_URL || process.env.APP_URL || 'https://studypanacea.com';
   const adminUrl = `${appUrl}/admin/flags/${questionFlag.id}`;
 
   const truncatedQuestion =
