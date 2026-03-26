@@ -178,8 +178,8 @@ export default function DrillHub(): JSX.Element {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
           className="text-center mb-12"
         >
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -197,8 +197,8 @@ export default function DrillHub(): JSX.Element {
         {/* Overview Stats */}
         {overview && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ delay: 0.1 }}
             className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12"
           >
@@ -249,8 +249,8 @@ export default function DrillHub(): JSX.Element {
           {drillModes.map((mode, index) => (
             <motion.div
               key={mode.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
               transition={{ delay: 0.2 + index * 0.1 }}
               whileHover={{ scale: mode.isAvailable ? 1.02 : 1 }}
               className={`
@@ -340,8 +340,8 @@ export default function DrillHub(): JSX.Element {
         {/* Recent Activity */}
         {overview && overview.recentActivity.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ delay: 0.5 }}
             className="bg-[var(--color-bg-secondary)] rounded-xl p-8 border border-[var(--color-border)]"
           >
@@ -385,8 +385,8 @@ export default function DrillHub(): JSX.Element {
 
         {/* Info Footer */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={false}
+          animate={{}}
           transition={{ delay: 0.7 }}
           className="mt-12 p-6 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-xl"
         >

@@ -53,8 +53,8 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
       <div className="mx-auto" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
           className="mb-6"
         >
           <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
@@ -67,8 +67,8 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
 
         {/* Command Center Hub */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 20 }}
+          animate={{ y: 0 }}
           transition={{ delay: 0.1 }}
         >
           <CommandCenterHub

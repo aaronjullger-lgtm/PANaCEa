@@ -84,8 +84,8 @@ export const TechniqueCheckPage: React.FC<{ onBack: () => void }> = ({ onBack })
         </button>
 
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 10 }}
+          animate={{ y: 0 }}
           className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6"
         >
           <h1 className="text-xl font-bold text-[var(--color-text-primary)] flex items-center gap-2 mb-2">

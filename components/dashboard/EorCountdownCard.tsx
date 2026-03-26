@@ -43,8 +43,8 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 10 }}
+      animate={{ y: 0 }}
       transition={{ duration: 0.3 }}
       className={`eor-accent relative overflow-hidden rounded-xl bg-[var(--color-bg-secondary)] p-6 shadow-sm ${className}`}
     >
@@ -83,8 +83,6 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
       {/* Contextual: Final stretch */}
       {daysRemaining <= 14 && daysRemaining > 0 && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
           className="p-3 bg-[var(--color-accent)]/10 rounded-lg"
         >
           <p className="text-xs text-[var(--color-text-secondary)]">

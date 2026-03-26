@@ -307,8 +307,8 @@ export function LandingPage() {
               {benefits.map((benefit, idx) => (
                 <motion.div
                   key={benefit}
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={{ x: 20 }}
+                  whileInView={{ x: 0 }}
                   viewport={{ once: true, amount: 0.1 }}
                   transition={{ duration: 0.35, delay: idx * 0.04 }}
                   className="flex items-start gap-3 bg-[var(--color-bg-tertiary)]/60 backdrop-blur-sm rounded-xl p-4"

@@ -76,8 +76,8 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
         </button>
 
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 10 }}
+          animate={{ y: 0 }}
           className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6"
         >
           <h1 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">
@@ -169,8 +169,8 @@ export const LectureConverterPage: React.FC<{ onBack: () => void }> = ({ onBack 
 
         {result?.script && result.script.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 10 }}
+            animate={{ y: 0 }}
             className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6"
           >
             <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">

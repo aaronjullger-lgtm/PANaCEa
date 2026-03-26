@@ -104,7 +104,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
       <div className="max-w-4xl mx-auto">
         <BackLink to={ROUTES.STUDY} className="mb-6" />
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <motion.div initial={{ y: 10 }} animate={{ y: 0 }} className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
             <ImageIcon className="w-8 h-8" />
             Anatomy Visualizer
@@ -138,7 +138,7 @@ export const VisualizerPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
             </p>
           )}
           {result && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
+            <motion.div initial={false} animate={{}} className="mt-4">
               <div className="relative inline-block max-w-full">
                 <img
                   ref={imgRef}
