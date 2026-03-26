@@ -46,48 +46,48 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
     <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-action-muted rounded-lg text-[var(--color-accent)]">
+          <div className="p-2 bg-[var(--color-accent)]/15 rounded-lg text-[var(--color-accent)]">
             {icon}
           </div>
           <div>
             <h3 className="text-lg font-semibold text-[var(--color-accent)]">{title}</h3>
-            <p className="text-sm text-text-[var(--color-text-muted)]">{subtitle}</p>
+            <p className="text-sm text-[var(--color-text-muted)]">{subtitle}</p>
           </div>
         </div>
         {completed && (
-          <span className="px-3 py-1 text-xs font-semibold bg-success/20 text-success rounded-full border border-success/30">
+          <span className="px-3 py-1 text-xs font-semibold bg-[var(--color-data-pass)]/20 text-[var(--color-data-pass)] rounded-full border border-[var(--color-data-pass)]/30">
             Completed
           </span>
         )}
       </div>
 
-      <p className="text-text-secondary mb-4">{description}</p>
+      <p className="text-[var(--color-text-secondary)] mb-4">{description}</p>
 
       <div className="flex items-center justify-between mb-6">
         <div className="space-y-1">
           {streak !== undefined && (
             <div className="flex items-center space-x-2">
-              <Calendar className="w-4 h-4 text-text-tertiary" />
+              <Calendar className="w-4 h-4 text-[var(--color-text-muted)]" />
               <span className="text-sm font-medium text-[var(--color-accent)]">{streak} day streak</span>
             </div>
           )}
           {resetTime && (
-            <div className="text-xs text-text-tertiary">
+            <div className="text-xs text-[var(--color-text-muted)]">
               Resets in {resetTime}
             </div>
           )}
         </div>
         {loading && (
-          <div className="text-xs text-text-tertiary">Loading...</div>
+          <div className="text-xs text-[var(--color-text-muted)]">Loading...</div>
         )}
         {error && (
-          <div className="text-xs text-error">{error}</div>
+          <div className="text-xs text-[var(--color-data-fail)]">Unable to load — try again later</div>
         )}
       </div>
 
       <button
         onClick={onAction}
-        className="w-full py-2.5 px-4 bg-[var(--color-accent)] text-surface-primary font-medium rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full py-2.5 px-4 bg-[var(--color-accent)] text-[var(--color-text-inverse)] font-medium rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={loading}
       >
         {buttonText}
