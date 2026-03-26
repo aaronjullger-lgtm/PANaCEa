@@ -242,8 +242,8 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
 
         <div className="max-w-5xl mx-auto px-4 py-12">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             className="space-y-8"
           >
             {/* Hero Section */}
@@ -400,8 +400,8 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
         {/* Error Display */}
         <div className="max-w-2xl mx-auto px-4 py-16">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             className="bg-data-fail dark:bg-data-fail/30 rounded-2xl p-8 border border-data-fail dark:border-data-fail text-center"
           >
             <AlertCircle className="w-16 h-16 text-data-fail dark:text-data-fail mx-auto mb-4" />
@@ -489,8 +489,8 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
         <div className="grid md:grid-cols-2 gap-6">
           {/* Left Side: Clinical Vignette + Labs */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ x: -20 }}
+            animate={{ x: 0 }}
             className="space-y-4"
           >
             {/* Clinical Vignette */}
@@ -659,8 +659,8 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             <AnimatePresence>
               {isSubmitted && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ y: -10 }}
+                  animate={{ y: 0 }}
                   exit={{ opacity: 0 }}
                   className={`rounded-xl p-6 border shadow-md ${
                     isCorrect
@@ -692,8 +692,8 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
 
           {/* Right Side: Urine Chemistry Reference */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ x: 20 }}
+            animate={{ x: 0 }}
             className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-data-neutral dark:border-data-neutral shadow-md"
           >
             <h3 className="text-xl font-semibold mb-4 text-[var(--color-accent)]">

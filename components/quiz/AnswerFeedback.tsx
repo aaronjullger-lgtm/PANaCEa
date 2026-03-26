@@ -146,8 +146,8 @@ export const AnswerFeedback: React.FC<AnswerFeedbackProps> = ({
             <motion.div
               className="absolute"
               style={{ top: 'calc(50% + 50px)' }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={false}
+              animate={{}}
               transition={{ delay: 0.15 }}
             >
               <StreakIndicator streak={streak} />

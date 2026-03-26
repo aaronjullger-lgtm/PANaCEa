@@ -179,8 +179,8 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 10 }}
+      animate={{ y: 0 }}
       className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
     >
       <div className="flex items-center justify-between mb-4">

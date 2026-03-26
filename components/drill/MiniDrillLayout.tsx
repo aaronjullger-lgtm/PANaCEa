@@ -170,8 +170,8 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 20 }}
+      animate={{ y: 0 }}
       className="bg-[var(--color-bg-secondary)] rounded-xl sm:rounded-2xl border border-[var(--color-border)] p-4 sm:p-6 mb-4 sm:mb-6"
     >
       {(category || subcategory) && (
@@ -234,8 +234,8 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
 
   return (
     <motion.button
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ x: -20 }}
+      animate={{ x: 0 }}
       transition={{ delay: index * 0.05 }}
       onClick={() => !isAnswered && onSelect(index)}
       disabled={isAnswered}
@@ -356,8 +356,8 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
         {/* DEV-003 Item 5: Rapid Guess Indicator */}
         {isRapidGuess && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -10 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.2 }}
             className="flex items-center gap-2 p-2.5 mt-2 bg-data-provisional/10 border border-data-provisional/30 rounded-lg text-sm"
           >
@@ -371,8 +371,8 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
         {/* DEV-003 Item 5: Next Review Information */}
         {nextReview && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -10 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.2, delay: 0.1 }}
             className="flex items-start gap-3 p-3 mt-2 bg-data-pass/5 border border-data-pass/30 rounded-lg"
           >

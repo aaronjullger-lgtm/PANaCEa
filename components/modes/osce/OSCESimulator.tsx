@@ -252,8 +252,8 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 10 }}
+      animate={{ y: 0 }}
       className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6"
     >
       {/* Header */}

@@ -456,8 +456,8 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
       {/* Main content */}
       <main className="flex-1 overflow-y-auto p-6">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
           className="text-center mb-10"
         >
           <h2 className="text-4xl font-bold mb-3">Select Organ System</h2>
@@ -473,8 +473,8 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
             return (
               <motion.button
                 key={system.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => handleSystemSelect(system.id)}
                 className="relative p-8 rounded-xl bg-[var(--color-bg-secondary)]/50 backdrop-blur-sm border-2 border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-[0_18px_42px_var(--color-shadow-soft)] hover:bg-[var(--color-bg-secondary)]/80 transition-all text-left group hover:scale-[1.03]"

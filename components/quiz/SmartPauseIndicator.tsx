@@ -77,8 +77,8 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({ refres
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: -10 }}
+        animate={{ y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         className={`rounded-xl border p-3 mb-4 ${getBannerStyle()}`}
       >

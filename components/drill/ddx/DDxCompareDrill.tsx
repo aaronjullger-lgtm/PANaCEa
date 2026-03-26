@@ -781,8 +781,8 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
     return (
       <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
           className="max-w-md w-full p-8 rounded-3xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-center"
         >
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
@@ -899,8 +899,8 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
                   </p>
                   {status === 'feedback' && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ y: 10 }}
+                      animate={{ y: 0 }}
                       className="pt-4 border-t border-[var(--color-border)]"
                     >
                       <div className="flex items-center justify-center gap-2 mb-3">

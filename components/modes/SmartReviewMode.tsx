@@ -241,8 +241,8 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center z-50">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 20 }}
+          animate={{ y: 0 }}
           className="text-center max-w-md mx-auto p-8"
         >
           <motion.div
@@ -318,8 +318,8 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentItem.id}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ x: 20 }}
+            animate={{ x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
@@ -374,8 +374,8 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
             {/* Feedback */}
             {isSubmitted && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 className={`border-2 rounded-2xl p-6 ${
                   isCorrect
                     ? 'bg-data-pass dark:bg-data-pass/20 border-data-pass'

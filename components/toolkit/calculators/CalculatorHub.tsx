@@ -240,8 +240,8 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeCategory + searchQuery}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
@@ -267,8 +267,8 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
                 return (
                   <motion.button
                     key={calc.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
                     transition={{ delay: idx * 0.05 }}
                     onClick={() => setSelectedCalculator(calc.id)}
                     className="group text-left bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 hover:border-[var(--color-accent)] hover:shadow-xl hover:shadow-[var(--color-accent)]/20 transition-all"

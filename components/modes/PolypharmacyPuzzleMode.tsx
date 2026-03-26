@@ -545,8 +545,8 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
           <AnimatePresence>
             {showResults && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]"
               >
                 <div className="flex items-center justify-between mb-4">

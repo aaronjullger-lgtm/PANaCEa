@@ -1106,8 +1106,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
         <div className="max-w-5xl mx-auto px-4 py-12">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             className="space-y-8"
           >
             {/* Hero Section */}
@@ -1290,8 +1290,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               {/* Error Message */}
               {loadError && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ y: -10 }}
+                  animate={{ y: 0 }}
                   className="max-w-md mx-auto p-4 bg-dusty-rose-50 dark:bg-dusty-rose-950/30 border border-dusty-rose-200 dark:border-dusty-rose-800 rounded-xl"
                 >
                   <p className="text-sm text-dusty-rose-700 dark:text-dusty-rose-300">
@@ -1641,8 +1641,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             <div className="md:col-span-8 space-y-4">
               {/* Patient Card (Collapsible) */}
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ x: -20 }}
+                animate={{ x: 0 }}
                 className="bg-data-neutral-bg rounded-xl border border-data-neutral shadow-md overflow-hidden"
               >
                 <div
@@ -1963,8 +1963,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               {/* HISTORY PHASE */}
               {phase === 'history' && (
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ x: -20 }}
+                  animate={{ x: 0 }}
                   transition={{ delay: 0.1 }}
                   className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md"
                 >
@@ -2005,8 +2005,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               {/* PHYSICAL EXAM PHASE */}
               {phase === 'physical' && (
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ x: -20 }}
+                  animate={{ x: 0 }}
                   transition={{ delay: 0.1 }}
                   className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md"
                 >
@@ -2057,8 +2057,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               {/* DIAGNOSTIC PHASE */}
               {phase === 'diagnostic' && (
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ x: -20 }}
+                  animate={{ x: 0 }}
                   transition={{ delay: 0.1 }}
                   className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md"
                 >
@@ -2106,8 +2106,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               {/* DIAGNOSIS PHASE */}
               {phase === 'diagnosis' && (
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ x: -20 }}
+                  animate={{ x: 0 }}
                   transition={{ delay: 0.2 }}
                   className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md"
                 >
@@ -2144,8 +2144,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               {/* TREATMENT PHASE */}
               {phase === 'treatment' && (
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ x: -20 }}
+                  animate={{ x: 0 }}
                   transition={{ delay: 0.2 }}
                   className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md space-y-4"
                 >
@@ -2221,7 +2221,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             <div className="space-y-4">
               {/* Rapport Meter (when enabled) */}
               {showRapportMeter && enhancedOSCE.state.isSessionActive && (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+                <motion.div initial={{ y: -10 }} animate={{ y: 0 }}>
                   <RapportMeter
                     meter={enhancedOSCE.state.rapportMeter}
                     emotionalState={enhancedOSCE.state.emotionalState ?? undefined}
@@ -2232,8 +2232,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               )}
 
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ x: 20 }}
+                animate={{ x: 0 }}
                 className="bg-data-neutral-bg rounded-xl p-4 md:p-6 border border-data-neutral shadow-md h-[600px] flex flex-col min-w-[250px] break-words"
               >
                 <h3 className="text-lg font-semibold mb-4 text-data-neutral">Encounter Log</h3>
@@ -2369,8 +2369,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         <AnimatePresence>
           {showOrderPanel && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={false}
+              animate={{}}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md z-50 flex items-center justify-center p-4"
               onClick={() => setShowOrderPanel(false)}
@@ -2411,8 +2411,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         <AnimatePresence>
           {showExamPanel && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={false}
+              animate={{}}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md z-50 flex items-center justify-center p-4"
               onClick={() => setShowExamPanel(false)}
@@ -2524,8 +2524,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
             {/* Overall Score Hero */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
               className="bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent)]/80 rounded-2xl p-8 text-white shadow-xl text-center"
             >
               <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm mb-4">
@@ -2537,8 +2537,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* Clinical Reasoning Breakdown */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
               transition={{ delay: 0.1 }}
               className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-md"
             >
@@ -2601,8 +2601,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* Preceptor Narrative Feedback */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
               transition={{ delay: 0.2 }}
               className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-md"
             >
@@ -2624,8 +2624,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             <div className="grid md:grid-cols-2 gap-6">
               {preceptorFeedback.strengths.length > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ y: 20 }}
+                  animate={{ y: 0 }}
                   transition={{ delay: 0.3 }}
                   className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
                 >
@@ -2645,8 +2645,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
               {preceptorFeedback.areasForImprovement.length > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ y: 20 }}
+                  animate={{ y: 0 }}
                   transition={{ delay: 0.4 }}
                   className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
                 >
@@ -2668,8 +2668,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             {/* Missed Critical Cues */}
             {preceptorFeedback.missedCriticalCues.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.5 }}
                 className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
               >
@@ -2696,8 +2696,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             {/* Dangerous or inappropriate actions */}
             {preceptorFeedback.dangerousActions?.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.51 }}
                 className="bg-data-neutral-bg rounded-xl p-6 border border-data-fail/50"
               >
@@ -2724,8 +2724,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* Rubric Checklist (from grade API) – always show section: loading, unavailable, or checklist */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
               transition={{ delay: 0.52 }}
               className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
             >
@@ -2829,8 +2829,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             {/* Bedside Manner (from Ghost Listener / soft skills analysis) */}
             {gradeResult?.softSkillsReport && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.53 }}
                 className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
               >
@@ -2875,8 +2875,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             {/* Differential Diagnoses to Consider */}
             {preceptorFeedback.differentialDiagnosis.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.6 }}
                 className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral"
               >
@@ -2898,8 +2898,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* Correct Diagnosis Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
               transition={{ delay: 0.7 }}
               className="bg-[var(--color-accent)]/10 dark:bg-[var(--color-accent)]/20 rounded-xl p-6 border border-[var(--color-accent)]/30 dark:border-[var(--color-accent)]/40"
             >
@@ -2932,8 +2932,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             {/* Legacy AAR (if available) */}
             {aar && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.8 }}
                 className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-md"
               >

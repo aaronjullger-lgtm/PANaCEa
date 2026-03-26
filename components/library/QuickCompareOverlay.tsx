@@ -35,8 +35,8 @@ export const QuickCompareOverlay: React.FC<QuickCompareOverlayProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 10 }}
+      animate={{ y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       className="absolute bottom-full mb-2 w-full max-w-sm p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-lg z-10"
     >

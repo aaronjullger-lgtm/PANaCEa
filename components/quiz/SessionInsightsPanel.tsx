@@ -104,8 +104,8 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
                   {activeTab === 'momentum' && (
                     <motion.div
                       key="momentum"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
+                      initial={{ x: -10 }}
+                      animate={{ x: 0 }}
                       exit={{ opacity: 0, x: 10 }}
                     >
                       <MomentumIndicator refreshKey={refreshKey} />
@@ -115,8 +115,8 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
                   {activeTab === 'calibration' && (
                     <motion.div
                       key="calibration"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
+                      initial={{ x: -10 }}
+                      animate={{ x: 0 }}
                       exit={{ opacity: 0, x: 10 }}
                     >
                       <BehavioralCalibration refreshKey={refreshKey} isExpanded={true} />
@@ -126,8 +126,8 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
                   {activeTab === 'distribution' && (
                     <motion.div
                       key="distribution"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
+                      initial={{ x: -10 }}
+                      animate={{ x: 0 }}
                       exit={{ opacity: 0, x: 10 }}
                     >
                       <DistributionPreview summary={distributionSummary} />

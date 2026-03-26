@@ -445,8 +445,8 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
       {/* Main content */}
       <main className="flex-1 overflow-y-auto p-6">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
           className="text-center mb-8"
         >
           <h2 className="text-3xl font-bold mb-2">Select Drug Class</h2>
@@ -456,8 +456,8 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
         {/* "All Drug Classes" option */}
         <div className="max-w-6xl mx-auto mb-6">
           <motion.button
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             onClick={() => handleDrugClassSelect('all')}
             className="w-full p-6 rounded-xl bg-gradient-to-r from-green-600 to-emerald-700 text-white hover:shadow-lg transition-all group"
           >
@@ -483,8 +483,8 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
             return (
               <motion.button
                 key={drugClass.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 transition={{ delay: (index + 1) * 0.05 }}
                 onClick={() => handleDrugClassSelect(drugClass.id)}
                 className="relative p-6 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-data-pass hover:shadow-md transition-all text-left group"

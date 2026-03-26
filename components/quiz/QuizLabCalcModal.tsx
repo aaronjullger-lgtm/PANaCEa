@@ -34,8 +34,8 @@ export const QuizLabCalcModal: React.FC<QuizLabCalcModalProps> = ({ onClose }) =
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-sm">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden"
       >
@@ -54,8 +54,8 @@ export const QuizLabCalcModal: React.FC<QuizLabCalcModalProps> = ({ onClose }) =
           {selectedTab === null ? (
             <motion.div
               key="tabs"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={false}
+              animate={{}}
               exit={{ opacity: 0 }}
               className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3"
             >
@@ -79,8 +79,8 @@ export const QuizLabCalcModal: React.FC<QuizLabCalcModalProps> = ({ onClose }) =
           ) : (
             <motion.div
               key={selectedTab}
-              initial={{ opacity: 0, x: 8 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ x: 8 }}
+              animate={{ x: 0 }}
               exit={{ opacity: 0, x: -8 }}
               className="flex-1 overflow-y-auto p-4"
             >

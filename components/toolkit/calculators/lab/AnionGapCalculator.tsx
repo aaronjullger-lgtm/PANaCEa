@@ -187,8 +187,8 @@ export const AnionGapCalculator: React.FC<CalculatorProps> = ({ onBack }) => {
       <AnimatePresence>
         {displayAG && displayAG > 12 && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             className="bg-[var(--color-bg-primary)]/50 border border-[var(--color-border)] rounded-2xl p-6"
           >
             <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-4 font-teko">

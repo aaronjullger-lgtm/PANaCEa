@@ -50,8 +50,8 @@ export const QuickStatsMiniBar: React.FC<QuickStatsMiniBarProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 10 }}
+      animate={{ y: 0 }}
       className="flex items-center justify-center gap-4 py-2 px-4 bg-data-neutral dark:bg-data-neutral/50 border-t border-data-neutral dark:border-data-neutral text-xs"
     >
       {/* Accuracy */}

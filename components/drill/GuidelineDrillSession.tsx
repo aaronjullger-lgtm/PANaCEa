@@ -198,8 +198,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="max-w-4xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: -20 }}
+              animate={{ y: 0 }}
               className="text-center mb-6 sm:mb-8"
             >
               <h2 className="text-2xl sm:text-3xl font-bold mb-2">Clinical Scoring Guidelines</h2>
@@ -219,8 +219,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                     {guidelines.map((g, index) => (
                       <motion.button
                         key={g.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ y: 20 }}
+                        animate={{ y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         onClick={() => handleSelectGuideline(g.id)}
                         className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-left hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-border)] transition-all group"
@@ -293,8 +293,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
 
           {/* Vignette */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4 sm:p-6 mb-4"
           >
             <div className="flex items-center gap-2 mb-3">
@@ -317,8 +317,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
               {currentGuideline.components.map((criterion, index) => (
                 <motion.button
                   key={criterion.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ x: -20 }}
+                  animate={{ x: 0 }}
                   transition={{ delay: index * 0.03 }}
                   onClick={() => toggleCriterion(criterion.id, criterion.pointValue)}
                   className={`w-full p-3 rounded-lg text-left transition-all flex items-center gap-3 ${
@@ -371,8 +371,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
   if (status === 'feedback' && currentGuideline && currentVignette) {
     const feedbackFooter = (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 20 }}
+        animate={{ y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.2 }}
         className={`p-3 sm:p-4 ${
@@ -427,8 +427,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
 
           {/* Result Card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
             className={`p-6 rounded-xl border mb-4 ${
               isCorrect
                 ? 'bg-data-pass dark:bg-data-pass/30 border-data-pass dark:border-data-pass'
@@ -555,8 +555,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
 
         <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
             className="text-center"
           >
             <Award className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4" />

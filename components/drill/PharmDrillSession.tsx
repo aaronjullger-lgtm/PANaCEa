@@ -196,8 +196,8 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
         {/* Main Content */}
         <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -20 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.4 }}
             className="text-center mb-6 sm:mb-8"
           >

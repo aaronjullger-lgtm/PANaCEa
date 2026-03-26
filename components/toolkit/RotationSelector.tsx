@@ -138,8 +138,8 @@ export const RotationSelector: React.FC<RotationSelectorProps> = ({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -10 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
             className="absolute top-full mt-2 right-0 w-72 bg-[var(--color-bg-secondary)] rounded-lg shadow-xl border border-[var(--color-border)] overflow-hidden z-50"

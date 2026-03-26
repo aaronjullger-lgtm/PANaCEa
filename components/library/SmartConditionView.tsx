@@ -1274,8 +1274,8 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
           {activeTab === 'highyield' && (
             <motion.div
               key="highyield"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 8 }}
+              animate={{ y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
@@ -1287,8 +1287,8 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
           {activeTab === 'presentation' && (
             <motion.div
               key="presentation"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 8 }}
+              animate={{ y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
@@ -1308,8 +1308,8 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
           {activeTab === 'diagnostics' && (
             <motion.div
               key="diagnostics"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 8 }}
+              animate={{ y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
@@ -1329,8 +1329,8 @@ const SmartConditionViewCore: React.FC<SmartConditionViewCoreProps> = ({
           {activeTab === 'management' && (
             <motion.div
               key="management"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 8 }}
+              animate={{ y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >

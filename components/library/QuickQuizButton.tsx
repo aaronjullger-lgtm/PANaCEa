@@ -93,8 +93,8 @@ export const QuickQuizButton: React.FC<QuickQuizButtonProps> = ({
       {/* Dropdown menu */}
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: -5 }}
+          animate={{ y: 0 }}
           className="absolute top-full left-0 mt-1 z-50 min-w-[160px]"
         >
           <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-lg overflow-hidden">

@@ -251,7 +251,7 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
           <span>Back to Dashboard</span>
         </button>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.div initial={{ y: 20 }} animate={{ y: 0 }}>
           <h1 className="text-4xl font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-3">
             <Heart className="w-10 h-10 text-[var(--color-accent)]" />
             Diagnostic Drill Hub
@@ -322,8 +322,8 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
             // Show all categories with their drills
             <motion.div
               key="all-categories"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               className="space-y-12"
             >
@@ -377,8 +377,8 @@ const DiagnosticDrillHub: React.FC<DiagnosticDrillHubProps> = ({ onNavigateToDri
             // Show only selected category
             <motion.div
               key={selectedCategory}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               className="space-y-6"
             >

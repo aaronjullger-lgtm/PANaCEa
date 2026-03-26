@@ -322,8 +322,8 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
 
     return (
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={false}
+        animate={{}}
         className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-[var(--color-bg-primary)] dark:via-[var(--color-bg-secondary)] dark:to-[var(--color-bg-primary)] p-4"
       >
         <div className="max-w-2xl mx-auto py-12">
@@ -446,8 +446,8 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ x: 20 }}
+            animate={{ x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
             className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-xl p-8"
@@ -553,8 +553,8 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
             {/* Next Button */}
             {showExplanation && (
               <motion.button
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 onClick={handleNext}
                 className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl"
               >

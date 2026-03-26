@@ -222,8 +222,8 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
                   {messages.map((m) => (
                     <motion.div
                       key={m.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ y: 10 }}
+                      animate={{ y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       className={`flex ${
                         m.role === 'user' ? 'justify-end' : 'justify-start'

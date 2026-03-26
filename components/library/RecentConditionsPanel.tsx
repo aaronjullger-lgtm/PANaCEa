@@ -79,8 +79,8 @@ export const RecentConditionsPanel: React.FC<RecentConditionsPanelProps> = ({
         {conditions.map((condition, index) => (
           <motion.div
             key={condition.id}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ x: -10 }}
+            animate={{ x: 0 }}
             exit={{ opacity: 0, x: 10 }}
             transition={{ delay: index * 0.05 }}
             className="group"

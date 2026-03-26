@@ -708,8 +708,8 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
 
         <div className="max-w-5xl mx-auto px-4 py-12">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             className="space-y-8"
           >
             {/* Hero Section */}
@@ -870,8 +870,8 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
         {/* Error Display */}
         <div className="max-w-2xl mx-auto px-4 py-16">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             className="bg-data-fail dark:bg-data-fail/30 rounded-2xl p-8 border border-data-fail dark:border-data-fail text-center"
           >
             <AlertCircle className="w-16 h-16 text-data-fail dark:text-data-fail mx-auto mb-4" />
@@ -958,8 +958,8 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Drill Type Badge */}
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: -10 }}
+          animate={{ y: 0 }}
           className="mb-6"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-semibold border border-[var(--color-accent)]/30 shadow-sm">
@@ -971,8 +971,8 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
         {/* Drill Content */}
         <motion.div
           key={currentDrill.id}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ x: -20 }}
+          animate={{ x: 0 }}
           className="space-y-6"
         >
           {renderDrillContent()}
@@ -1006,8 +1006,8 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
           <AnimatePresence>
             {isSubmitted && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: -10 }}
+                animate={{ y: 0 }}
                 exit={{ opacity: 0 }}
                 className={`rounded-xl p-6 border shadow-md ${
                   isCorrect

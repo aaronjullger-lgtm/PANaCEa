@@ -66,8 +66,8 @@ const DrillShell: React.FC<DrillShellProps> = ({
       {/* Header with Breadcrumb */}
       {!hideBreadcrumb && (
         <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
           className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border-b border-[var(--color-border)]"
         >
           <div className="max-w-7xl mx-auto px-4 py-3">

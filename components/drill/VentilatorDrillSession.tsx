@@ -131,8 +131,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
         {status === 'playing' && (
           <motion.div
             key="playing-controls"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             className="p-6 bg-[var(--color-bg-secondary)]"
           >
             <div className="max-w-6xl mx-auto">
@@ -159,8 +159,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
         {status === 'feedback' && currentCase && (
           <motion.div
             key="feedback"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             className={`p-6 ${
               isCorrect
                 ? 'bg-data-pass dark:bg-data-pass/50 border-t-2 border-data-pass'
@@ -224,8 +224,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
       >
         {currentCase && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={false}
+            animate={{}}
             className="space-y-6 p-6 max-w-6xl mx-auto"
           >
             {/* Patient Info */}
@@ -387,8 +387,8 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
     return (
       <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-6">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
           className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
         >
           <Wind className="w-16 h-16 text-[var(--color-category-practice)] mx-auto mb-4" />

@@ -163,8 +163,8 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
     return (
       <AnimatePresence>
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={false}
+          animate={{}}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4"
           onClick={onClose}
@@ -208,8 +208,8 @@ export const ConditionMaster: React.FC<ConditionMasterProps> = ({ content, onClo
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={false}
+        animate={{}}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4"
         onClick={onClose}

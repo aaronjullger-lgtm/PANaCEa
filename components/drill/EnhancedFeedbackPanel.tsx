@@ -232,8 +232,8 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
         {/* Rapid Guess Indicator */}
         {isRapidGuess && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -10 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.2 }}
             className="flex items-center gap-2 p-2.5 mb-3 bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 rounded-lg text-sm"
           >
@@ -247,8 +247,8 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
         {/* Next Review Information */}
         {nextReview && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -10 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.2, delay: 0.1 }}
             className="flex items-start gap-3 p-3 mb-3 bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/30 rounded-lg"
           >

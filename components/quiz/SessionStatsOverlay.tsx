@@ -145,8 +145,8 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: -20 }}
+      animate={{ y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       className="fixed top-4 right-4 z-50 w-80"
     >

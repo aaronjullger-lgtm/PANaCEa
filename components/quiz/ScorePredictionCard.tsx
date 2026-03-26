@@ -170,8 +170,8 @@ export const ScorePredictionCard: React.FC<ScorePredictionCardProps> = ({
           {/* Score display */}
           <div className="absolute inset-0 flex flex-col items-center justify-end pb-1">
             <motion.span
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
               className={`text-3xl font-bold ${scoreColor}`}
             >
               {prediction.predictedScore}

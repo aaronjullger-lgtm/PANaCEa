@@ -119,8 +119,8 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
   if (compact) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: -10 }}
+        animate={{ y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${severityBg}`}
       >

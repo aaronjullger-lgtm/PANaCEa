@@ -95,15 +95,15 @@ export function DrillLandingPage({
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-8 px-4">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 20 }}
+        animate={{ y: 0 }}
         className="max-w-4xl mx-auto"
       >
         {/* Back Button */}
         {onExit && (
           <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ x: -20 }}
+            animate={{ x: 0 }}
             onClick={onExit}
             className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mb-4 transition-colors"
           >
@@ -170,8 +170,8 @@ export function DrillLandingPage({
         {/* Learning Objectives */}
         {objectives && objectives.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ delay: 0.1 }}
             className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 mb-6"
           >
@@ -201,8 +201,8 @@ export function DrillLandingPage({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             {stats.totalAttempts !== undefined && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.15 }}
                 className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
               >
@@ -218,8 +218,8 @@ export function DrillLandingPage({
 
             {stats.averageScore !== undefined && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.2 }}
                 className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
               >
@@ -235,8 +235,8 @@ export function DrillLandingPage({
 
             {stats.bestScore !== undefined && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.25 }}
                 className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
               >
@@ -252,8 +252,8 @@ export function DrillLandingPage({
 
             {stats.timeSpent !== undefined && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.3 }}
                 className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
               >
@@ -272,8 +272,8 @@ export function DrillLandingPage({
         {/* Instructions */}
         {instructions && instructions.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ delay: 0.35 }}
             className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 mb-6"
           >
@@ -295,8 +295,8 @@ export function DrillLandingPage({
         {/* Custom Content */}
         {children && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ delay: 0.4 }}
           >
             {children}
@@ -306,8 +306,8 @@ export function DrillLandingPage({
         {/* View History Button */}
         {onViewHistory && stats && stats.totalAttempts && stats.totalAttempts > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ delay: 0.45 }}
             className="text-center"
           >

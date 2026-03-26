@@ -176,8 +176,8 @@ export function DrillSetup({
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-8 px-4">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 20 }}
+        animate={{ y: 0 }}
         className="max-w-2xl mx-auto"
       >
         {/* Header */}

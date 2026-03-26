@@ -165,8 +165,8 @@ export const VirtualizedConditionList: React.FC<VirtualizedConditionListProps> =
               {row.map((condition) => (
                 <motion.div
                   key={condition.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={false}
+                  animate={{}}
                   transition={{ duration: 0.15 }}
                 >
                   <EnhancedConditionCard

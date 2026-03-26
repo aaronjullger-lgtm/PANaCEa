@@ -104,8 +104,8 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
         {status === 'playing' && (
           <motion.div
             key="playing-controls"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className="p-4"
           >
@@ -121,8 +121,8 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
         {status === 'feedback' && currentCase && (
           <motion.div
             key="feedback-controls"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             className={`p-4 ${isCorrect ? 'bg-[var(--color-data-pass)]/10 border-t-2 border-[var(--color-data-pass)]' : 'bg-[var(--color-data-fail)]/10 border-t-2 border-[var(--color-data-fail)]'}`}
           >
             <div className="max-w-4xl mx-auto">
@@ -177,8 +177,8 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
       >
         {currentCase && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={false}
+            animate={{}}
             className="flex flex-col items-center space-y-4"
           >
             {currentCase.clinicalContext && (
@@ -225,8 +225,8 @@ const DermDrillSession: React.FC<DermDrillSessionProps> = ({ onExit }) => {
     return (
       <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-6">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
           className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"
         >
           <Scan className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4" />

@@ -383,8 +383,8 @@ export function ClinicalMotionFlashcards({
       <AnimatePresence>
         {status === 'polling' && (
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -8 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0 }}
             className="flex items-start gap-3 p-4 rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5"
           >
@@ -409,8 +409,8 @@ export function ClinicalMotionFlashcards({
       <AnimatePresence>
         {status === 'error' && errorMessage && (
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -8 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0 }}
             className="p-3 rounded-lg bg-[var(--color-data-fail)]/10 border border-[var(--color-data-fail)]/30 text-[var(--color-data-fail)]"
           >
@@ -423,8 +423,8 @@ export function ClinicalMotionFlashcards({
       <AnimatePresence>
         {status === 'ready' && videoSrc && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ scale: 0.98 }}
+            animate={{ scale: 1 }}
             exit={{ opacity: 0 }}
             className="space-y-4"
           >

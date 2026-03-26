@@ -498,8 +498,8 @@ export const BodyMap: React.FC<BodyMapProps> = ({
       <AnimatePresence>
         {hoveredRegion && (
           <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 5 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: 5 }}
             className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full mb-2 px-3 py-1.5 bg-data-neutral text-white text-sm rounded-lg shadow-lg whitespace-nowrap"
           >

@@ -115,7 +115,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0.5 }}
-                  animate={{ opacity: 1 }}
+                  animate={{}}
                   transition={{
                     duration: 0.5,
                     delay: idx * 0.1,
@@ -148,7 +148,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
         <div className="text-center mt-6">
           <motion.p
             initial={{ opacity: 0.5 }}
-            animate={{ opacity: 1 }}
+            animate={{}}
             transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse' }}
             className="text-[var(--color-text-muted)] flex items-center justify-center gap-2"
           >
@@ -182,8 +182,8 @@ export const DrillEmptyState: React.FC<DrillEmptyStateProps> = ({
   return (
     <div className="min-h-[400px] flex items-center justify-center p-6">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 20 }}
+        animate={{ y: 0 }}
         className="max-w-md w-full text-center"
       >
         <div className="w-20 h-20 rounded-full bg-[var(--color-data-pass)]/10 flex items-center justify-center mx-auto mb-6">

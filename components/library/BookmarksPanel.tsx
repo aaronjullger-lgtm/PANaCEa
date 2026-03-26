@@ -182,8 +182,8 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
         {bookmarks.map((bookmark, index) => (
           <motion.div
             key={bookmark.id}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ x: -10 }}
+            animate={{ x: 0 }}
             exit={{ opacity: 0, x: 10 }}
             transition={{ delay: index * 0.05 }}
           >

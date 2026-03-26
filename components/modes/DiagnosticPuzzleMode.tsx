@@ -113,8 +113,8 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
         {clues.map((clue, idx) => (
           <motion.div
             key={idx}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 10 }}
+            animate={{ y: 0 }}
             transition={{ delay: idx * 0.1 }}
             className="p-4 bg-data-neutral/20 border border-data-neutral/30 rounded-xl"
           >
@@ -199,8 +199,8 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
         </div>
         {showSuggestions && suggestions.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -5 }}
+            animate={{ y: 0 }}
             className="absolute top-full left-0 right-0 mt-1 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl shadow-lg z-10 overflow-hidden"
           >
             {suggestions.map((suggestion, idx) => (
@@ -290,8 +290,8 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
     return (
       <AnimatePresence>
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 50 }}
+          animate={{ y: 0 }}
           exit={{ opacity: 0, y: 50 }}
           className="absolute inset-x-4 bottom-32 sm:bottom-40 mx-auto max-w-md bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
         >

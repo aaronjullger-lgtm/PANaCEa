@@ -73,8 +73,8 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         {/* Diagnosis Result */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 20 }}
+          animate={{ y: 0 }}
           className={`rounded-xl p-6 border ${
             isCorrectDiagnosis
               ? 'bg-[var(--color-data-neutral)]/10 dark:bg-[var(--color-data-neutral)]/20 border-[var(--color-data-neutral)]/20 dark:border-[var(--color-data-neutral)]/40'
@@ -117,8 +117,8 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
         {/* Score Cards */}
         <div className="grid md:grid-cols-3 gap-4">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ delay: 0.1 }}
             className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral text-center shadow-sm"
           >
@@ -130,8 +130,8 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ delay: 0.2 }}
             className="bg-card rounded-xl p-6 border border-[var(--color-border)] text-center shadow-sm"
           >
@@ -143,8 +143,8 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ delay: 0.3 }}
             className="bg-card rounded-xl p-6 border border-[var(--color-border)] text-center shadow-sm"
           >
@@ -159,8 +159,8 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
         {/* After Action Report */}
         {aar && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             transition={{ delay: 0.4 }}
             className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-sm"
           >
@@ -175,8 +175,8 @@ export const OSCEResultsView: React.FC<OSCEResultsViewProps> = ({
 
         {/* Ideal Workup */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 20 }}
+          animate={{ y: 0 }}
           transition={{ delay: 0.5 }}
           className="bg-data-neutral-bg rounded-xl p-6 border border-data-neutral shadow-sm"
         >

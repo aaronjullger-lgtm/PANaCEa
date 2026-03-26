@@ -292,8 +292,8 @@ export const ABGInterpreter: React.FC<CalculatorProps> = ({ onBack }) => {
       <AnimatePresence>
         {hasValidInput && interpretation && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-4"
           >

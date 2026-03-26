@@ -55,8 +55,8 @@ const ErrorTagger: React.FC<ErrorTaggerProps> = ({ onTagError, disabled = false 
     const selected = ERROR_TAG_OPTIONS.find((o) => o.tag === selectedTag);
     return (
       <motion.div
-        initial={{ opacity: 0, y: -5 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: -5 }}
+        animate={{ y: 0 }}
         className="flex items-center gap-2 text-xs text-action-muted"
       >
         <span>Tagged as</span>
@@ -72,8 +72,8 @@ const ErrorTagger: React.FC<ErrorTaggerProps> = ({ onTagError, disabled = false 
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -5 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: -5 }}
+      animate={{ y: 0 }}
       className="flex flex-wrap items-center gap-2"
     >
       <span className="text-xs text-action-muted">Why did you miss it?</span>

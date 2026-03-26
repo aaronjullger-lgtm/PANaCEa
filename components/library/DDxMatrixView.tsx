@@ -168,8 +168,8 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       {/* Backdrop */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={false}
+        animate={{}}
         exit={{ opacity: 0 }}
         className="absolute inset-0 bg-[var(--color-overlay)] backdrop-blur-sm"
         onClick={onClose}
@@ -177,8 +177,8 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
 
       {/* Modal */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         className="relative w-full max-w-[95vw] max-h-[95vh] bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden flex flex-col"
         role="dialog"
@@ -523,8 +523,8 @@ const ConditionAdder: React.FC<{
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -10 }}
+            animate={{ y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="absolute top-full left-0 mt-1 w-72 max-h-64 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg shadow-xl overflow-hidden z-50"
           >

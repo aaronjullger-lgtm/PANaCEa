@@ -432,8 +432,8 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={false}
+            animate={{}}
             exit={{ opacity: 0 }}
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden fixed inset-0 z-30 bg-[var(--color-overlay)] backdrop-blur-md"
@@ -483,7 +483,7 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
               <BackLink to={ROUTES.STUDY} />
             </div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <motion.div initial={{ y: 20 }} animate={{ y: 0 }}>
               <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
                 {tabMeta[activeTab].title}
               </h1>
@@ -531,8 +531,8 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
                   searchSuggestions.length > 0 &&
                   activeTab === 'calculators' && (
                     <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ y: -10 }}
+                      animate={{ y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg shadow-xl z-50 overflow-hidden"
                     >
@@ -576,8 +576,8 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
             {activeTab === 'calculators' && (
               <motion.div
                 key="calculators"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
                 {selectedCalculator ? (
@@ -674,8 +674,8 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
             {activeTab === 'interpreters' && (
               <motion.div
                 key="interpreters"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
                 {selectedInterpreter ? (
@@ -752,8 +752,8 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
             {activeTab === 'imaging' && (
               <motion.div
                 key="imaging"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
                 <div className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] p-6">
@@ -783,8 +783,8 @@ const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigateToItem, onClose }) =>
             {activeTab === 'generators' && (
               <motion.div
                 key="generators"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
                 {selectedGenerator ? (

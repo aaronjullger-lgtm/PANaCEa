@@ -230,8 +230,8 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         className={`${compact ? '' : 'fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] p-4'}`}
         onClick={(e) => {
@@ -290,8 +290,8 @@ export const MnemonicGenerator: React.FC<MnemonicGeneratorProps> = ({
             {/* Generated Mnemonic */}
             {mnemonic && !isGenerating && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 className="space-y-3"
               >
                 <div className="flex items-start justify-between gap-2">

@@ -193,7 +193,7 @@ export const MomentumIndicator: React.FC<MomentumIndicatorProps> = ({
         {fatigue.isFatigued && (
           <motion.div
             initial={noMotion ? false : { opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ y: 0 }}
             exit={noMotion ? undefined : { opacity: 0, y: -10 }}
             transition={noMotion ? { duration: 0 } : undefined}
             className="px-3 py-2 bg-[var(--color-data-provisional)]/10 dark:bg-[var(--color-data-provisional)]/20 border border-[var(--color-data-provisional)]/30 dark:border-[var(--color-data-provisional)]/80 rounded-lg"

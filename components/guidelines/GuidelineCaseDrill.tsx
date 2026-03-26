@@ -238,8 +238,8 @@ const GuidelineCaseDrill: React.FC<GuidelineCaseDrillProps> = ({
               {/* Feedback Section */}
               {status === 'feedback' && currentVignette && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ y: 20 }}
+                  animate={{ y: 0 }}
                   className="space-y-4"
                 >
                   {/* Result Banner */}

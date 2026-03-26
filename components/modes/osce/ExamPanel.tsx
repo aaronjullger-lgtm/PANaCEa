@@ -278,8 +278,8 @@ export const ExamPanel: React.FC<ExamPanelProps> = React.memo(
         <AnimatePresence>
           {recentFinding && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               className={`absolute bottom-4 left-4 right-4 p-3 rounded-lg shadow-lg ${
                 recentFinding.isAbnormal ? 'bg-[var(--color-data-provisional)]/100 text-white' : 'bg-data-pass text-white'

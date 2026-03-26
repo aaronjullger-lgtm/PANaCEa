@@ -146,8 +146,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
         {/* Main Content */}
         <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: -20 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.4 }}
             className="text-center mb-6 sm:mb-8"
           >
@@ -287,8 +287,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
               {/* Coach's Corner - Socratic Hint UI */}
               {status === 'coaching' && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ y: -10 }}
+                  animate={{ y: 0 }}
                   className="mb-6 rounded-xl border-2 border-[var(--color-data-provisional)]/50 bg-[var(--color-data-provisional)]/10 p-6 shadow-lg"
                 >
                   <div className="flex items-start gap-4">
@@ -385,8 +385,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({
         {/* Main Content */}
         <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ scale: 0.95 }}
+            animate={{ scale: 1 }}
             transition={{ duration: 0.4 }}
             className="text-center"
           >

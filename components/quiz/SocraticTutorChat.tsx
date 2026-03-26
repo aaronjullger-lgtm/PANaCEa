@@ -184,8 +184,8 @@ export function SocraticTutorChat({
           {messages.map((m, i) => (
             <motion.div
               key={`msg-${m.role}-${i}-${m.text.slice(0, 30)}`}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 8 }}
+              animate={{ y: 0 }}
               className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
@@ -203,8 +203,8 @@ export function SocraticTutorChat({
 
         {revealed && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={false}
+            animate={{}}
             className="rounded-xl border border-[var(--color-border)] bg-sage-50 dark:bg-sage-900/20 p-4 text-sm text-[var(--color-text-secondary)]"
           >
             <strong className="text-[var(--color-text-primary)]">Full explanation:</strong>

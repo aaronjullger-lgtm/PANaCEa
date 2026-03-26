@@ -212,8 +212,8 @@ export function DDxRankingStep({
                   ${!disabled && !isSubmitted ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}
                 `}
                 whileDrag={{ scale: 1.02, boxShadow: '0 8px 20px rgba(0,0,0,0.15)' }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
                 {/* Rank Number */}
@@ -306,8 +306,8 @@ export function DDxRankingStep({
       {/* Result Feedback */}
       {isSubmitted && result && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 20 }}
+          animate={{ y: 0 }}
           className={`
             mt-6 p-4 rounded-xl border-2
             ${

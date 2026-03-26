@@ -244,8 +244,8 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
     return (
       <AnimatePresence>
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={false}
+          animate={{}}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-[var(--color-overlay)] z-50 flex items-center justify-center p-4"
           onClick={onClose}

@@ -108,8 +108,8 @@ export const QuestionTimer: React.FC<QuestionTimerProps> = ({
 
         {status === 'overtime' && !isAnswered && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
             className="flex items-center gap-1 text-xs text-[var(--color-data-fail)]"
           >
             <AlertCircle className="w-3 h-3" />

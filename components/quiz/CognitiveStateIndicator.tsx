@@ -75,8 +75,8 @@ export const CognitiveStateIndicator: React.FC<CognitiveStateIndicatorProps> = (
   if (compact) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ scale: 0.9 }}
+        animate={{ scale: 1 }}
         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${state.bg} ${state.color} text-xs font-medium`}
       >
         {state.icon}
@@ -88,8 +88,8 @@ export const CognitiveStateIndicator: React.FC<CognitiveStateIndicatorProps> = (
   // Expanded view with all metrics
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: -10 }}
+      animate={{ y: 0 }}
       className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-4 space-y-3"
     >
       {/* Header */}

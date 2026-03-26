@@ -59,8 +59,8 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={false}
+            animate={{}}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-[var(--color-overlay)] backdrop-blur-sm"
             onClick={onClose}

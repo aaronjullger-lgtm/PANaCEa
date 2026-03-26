@@ -87,8 +87,8 @@ const DrugCard: React.FC<{
     <motion.button
       onClick={onClick}
       layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 10 }}
+      animate={{ y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       whileHover={{ x: 4 }}
       className={`w-full text-left p-4 rounded-xl border transition-all ${
