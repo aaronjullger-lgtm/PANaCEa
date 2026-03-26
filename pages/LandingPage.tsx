@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { motion, MotionConfig } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 import { useReducedMotion } from '../hooks/useReducedMotion';
 import {
@@ -93,10 +93,6 @@ export function LandingPage() {
   ];
 
   return (
-    // MotionConfig reducedMotion="user" automatically respects the OS-level
-    // "prefers-reduced-motion: reduce" setting, disabling all framer-motion
-    // animations for users who have requested reduced motion.
-    <MotionConfig reducedMotion="user">
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
       <SkipNavigation mainContentId="landing-main" />
       {/* Header */}
@@ -468,6 +464,5 @@ export function LandingPage() {
           </div>
       )}
     </div>
-    </MotionConfig>
   );
 }
