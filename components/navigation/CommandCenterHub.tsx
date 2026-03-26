@@ -883,10 +883,10 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             </motion.div>
           )}
 
-        {/* Time-Box Buttons only (for users without exam date) */}
-        {((!userProfile?.graduationDate &&
-          !(eorTestDate && currentRotation && isEorRotation(currentRotation))) ||
-          careerStage === 'practicing') && (
+        {/* Time-Box Buttons only (for users who didn't get them in the countdown section above) */}
+        {!(careerStage === 'student' &&
+          (userProfile?.graduationDate ||
+            (eorTestDate && currentRotation && isEorRotation(currentRotation)))) && (
           <motion.div
             initial={sectionEnter}
             animate={sectionAnimate}
