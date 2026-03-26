@@ -139,8 +139,8 @@ function ScoreDeltaHero({ delta, accuracy }: { delta: number; accuracy: number }
         Your PANCE Score {isPositive ? 'Increased' : isNeutral ? 'Held Steady' : 'Adjusted'}
       </motion.div>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={false}
+        animate={{}}
         transition={{ delay: 0.6 }}
         className="text-lg text-[var(--color-text-secondary)] mt-1"
       >
@@ -326,8 +326,8 @@ function StreakBadge({ streak, milestone }: { streak: number; milestone: string 
       </div>
       {milestone && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={false}
+          animate={{}}
           transition={{ delay: 1.1 }}
           className="text-sm text-[var(--color-text-muted)] mt-2"
         >
@@ -371,8 +371,8 @@ export function SessionPostMortem({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      initial={false}
+      animate={{}}
       exit={{ opacity: 0 }}
       className={cn(
         'max-w-lg mx-auto bg-[var(--color-bg-primary)] rounded-2xl shadow-xl overflow-hidden',

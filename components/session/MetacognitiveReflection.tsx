@@ -124,8 +124,8 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      initial={false}
+      animate={{}}
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-[var(--color-bg-primary)]/90 flex items-center justify-center z-50 p-4"
     >
@@ -170,7 +170,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
             {currentStep < REFLECTION_PROMPTS.length ? (
               <motion.div
                 key={currentStep}
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-4"
@@ -279,7 +279,7 @@ export const MetacognitiveReflection: React.FC<MetacognitiveReflectionProps> = (
             ) : (
               /* Topics to Review */
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="space-y-4"
               >

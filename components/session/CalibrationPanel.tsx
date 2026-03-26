@@ -284,8 +284,8 @@ export function CalibrationPanel({
     if (progress) {
       return (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 10 }}
+          animate={{ y: 0 }}
           className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
         >
           <InsufficientDataState progress={progress} />
@@ -302,8 +302,8 @@ export function CalibrationPanel({
   if (compact) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
         className={`rounded-lg border ${colors.border} ${colors.bg} p-3`}
       >
         <div className="flex items-center gap-2">
@@ -326,8 +326,8 @@ export function CalibrationPanel({
   // Full mode - detailed display
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ y: 20 }}
+      animate={{ y: 0 }}
       transition={{ duration: 0.3 }}
       className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] overflow-hidden"
     >
