@@ -34,7 +34,7 @@ export const onRequestPost = authenticatedEndpoint(SystemDrillSchema, async (con
       // Exclude questions without proper structure
       question: { not: null },
       options: { not: null },
-      rationale: { not: null },
+      explanation: { not: null },
     };
 
     if (difficulty) {
