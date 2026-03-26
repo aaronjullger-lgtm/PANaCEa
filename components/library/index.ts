@@ -43,7 +43,9 @@ export { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 // Detail Views
 export { ConditionMaster } from './ConditionMaster';
 export { ConditionDetailPanel } from './ConditionDetailPanel';
-export { SmartConditionView } from './SmartConditionView';
+// SmartConditionView intentionally omitted — must be lazy-loaded to avoid
+// circular dependency TDZ crash with ClinicalReferenceLibrary. Import
+// directly from './SmartConditionView' if needed.
 
 // Hooks
 export {
