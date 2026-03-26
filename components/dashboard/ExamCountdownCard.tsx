@@ -28,7 +28,7 @@ function getDaysRemaining(examDateStr: string): number {
   const now = new Date();
   const diffTime = examDate.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return Math.max(0, diffDays);
+  return diffDays; // Can be negative if exam date has passed
 }
 
 /**
@@ -110,6 +110,10 @@ export const ExamCountdownCard: React.FC<ExamCountdownCardProps> = ({
   className = '',
 }) => {
   const daysRemaining = getDaysRemaining(examDate);
+
+  // Don't render if the exam date is in the past
+  if (daysRemaining < 0) return null;
+
   const {
     targetQuestionsForPace: computedTarget,
     dailyTarget,

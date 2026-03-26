@@ -20,7 +20,7 @@ function getDaysRemaining(examDateStr: string): number {
   const now = new Date();
   const diffTime = examDate.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return Math.max(0, diffDays);
+  return diffDays; // Can be negative if exam date has passed
 }
 
 function getEorDailyTarget(daysRemaining: number): number {
@@ -34,6 +34,10 @@ export const EorCountdownCard: React.FC<EorCountdownCardProps> = ({
   className = '',
 }) => {
   const daysRemaining = getDaysRemaining(examDate);
+
+  // Don't render if the exam date is in the past
+  if (daysRemaining < 0) return null;
+
   let daysLabel: string;
   if (daysRemaining === 0) daysLabel = 'Today!';
   else if (daysRemaining === 1) daysLabel = '1 day';
