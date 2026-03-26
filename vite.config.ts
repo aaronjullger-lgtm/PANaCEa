@@ -456,6 +456,13 @@ export default defineConfig(({ mode }) => {
       minify: 'esbuild',
       target: 'esnext',
     },
+    // Strip console.log/warn/debug in production builds
+    // Preserves console.error for Sentry error tracking
+    ...(isProduction && {
+      esbuild: {
+        pure: ['console.log', 'console.warn', 'console.debug'],
+      },
+    }),
     worker: {
       format: 'es', // Use ES modules format for workers (required for WASM)
       rollupOptions: {
