@@ -7,7 +7,7 @@
  * Architecture: 3-tab hub with persistent sidebar navigation (desktop) and mobile menu.
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Pill, Beaker, Menu, X } from 'lucide-react';
@@ -15,10 +15,16 @@ import { BackLink } from '@/components/navigation/BackLink';
 import { ROUTES } from '@/config/routes';
 import { NavRailProvider } from '@/contexts/NavRailContext';
 import { ContextNavRail } from '@/components/layout/ContextNavRail';
-import { ClinicalReferenceLibrary } from '@/components/library/ClinicalReferenceLibrary';
 import { PharmacopeiaView } from './PharmacopeiaView';
 import { LabReferenceView } from './LabReferenceView';
 import { NormalLabsLibraryView } from './NormalLabsLibraryView';
+
+// Lazy-load ClinicalReferenceLibrary to break circular chunk initialization (TDZ crash)
+const ClinicalReferenceLibrary = lazy(() =>
+  import('@/components/library/ClinicalReferenceLibrary').then((m) => ({
+    default: m.ClinicalReferenceLibrary,
+  }))
+);
 
 interface KnowledgeBaseHubProps {
   onClose: () => void;
@@ -251,7 +257,9 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
                 animate={{ y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <ClinicalReferenceLibrary onExit={onClose} />
+                <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" /></div>}>
+                  <ClinicalReferenceLibrary onExit={onClose} />
+                </Suspense>
               </motion.div>
             )}
 
