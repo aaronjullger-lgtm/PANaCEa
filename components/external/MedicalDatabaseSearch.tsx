@@ -278,7 +278,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
             <AnimatePresence>
               {showFilters && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
+                  initial={{ height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden"
@@ -372,7 +372,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
                 {formatResultsForDisplay().map((result, index) => (
                   <motion.div
                     key={result.id}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                     className="bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:border-[var(--color-border-hover)] transition-colors"

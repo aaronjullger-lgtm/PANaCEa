@@ -135,7 +135,7 @@ export const EncouragementToast: React.FC<EncouragementToastProps> = ({ refreshK
     <AnimatePresence>
       {showToast && message && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 10 }}
+          initial={{ scale: 0.8, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 10 }}
           className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-40"

@@ -95,7 +95,7 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
   if (!prescription) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-800 p-6 shadow-xl border border-data-neutral dark:border-data-neutral"
       >
@@ -133,7 +133,7 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-800 p-6 shadow-xl cursor-pointer group border border-data-neutral dark:border-data-neutral"
       onClick={() => onStartFocusSession(focusSystem.system)}

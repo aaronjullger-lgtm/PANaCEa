@@ -199,7 +199,7 @@ export function BulkApprovalPanel({
       <AnimatePresence>
         {showAdvanced && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
+            initial={{ height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden mt-4 pt-4 border-t border-[var(--color-border)]"
@@ -262,7 +262,7 @@ export function BulkApprovalPanel({
       <AnimatePresence>
         {(error || success) && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="mt-4"

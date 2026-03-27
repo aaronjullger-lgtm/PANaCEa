@@ -201,7 +201,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-[var(--color-bg-secondary)] rounded-xl p-8 shadow-[0_18px_42px_var(--color-shadow-soft)] border border-[var(--color-border)]"
         >
@@ -429,7 +429,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
           <AnimatePresence>
             {showFeedback && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 className={`rounded-xl p-6 ${

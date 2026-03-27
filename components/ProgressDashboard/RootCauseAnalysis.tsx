@@ -143,7 +143,7 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({ errorCounts, tota
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="widget-premium-glass widget-noise-texture p-4"
     >

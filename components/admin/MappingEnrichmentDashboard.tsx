@@ -373,7 +373,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
               {gaps.slice(0, 5).map((gap, index) => (
                 <motion.div
                   key={gap.taxonomyCode}
-                  initial={{ opacity: 0, y: -10 }}
+                  initial={{ y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   className="border border-[var(--color-border)] rounded-lg p-4"
@@ -408,7 +408,7 @@ export const MappingEnrichmentDashboard: React.FC = () => {
                   </div>
                   {expandedGapIndex === index && (
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
+                      initial={{ height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       className="mt-4 pt-4 border-t border-[var(--color-border)]"

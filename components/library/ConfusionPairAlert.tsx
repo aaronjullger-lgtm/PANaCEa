@@ -143,7 +143,7 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, height: 0 }}
+        initial={{ height: 0 }}
         animate={{ opacity: 1, height: 'auto' }}
         exit={{ opacity: 0, height: 0 }}
         className={`rounded-xl border overflow-hidden ${severityBg}`}
@@ -206,7 +206,7 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
         <AnimatePresence>
           {isExpanded && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
+              initial={{ height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               className="border-t border-[var(--color-border)]/50"

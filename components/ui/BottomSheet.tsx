@@ -126,7 +126,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
           <>
             {/* Backdrop */}
             <motion.div
-              initial={{ opacity: 0 }}
+              initial={{}}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={onClose}
@@ -200,7 +200,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
         <>
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={{}}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
@@ -212,7 +212,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               role="dialog"
               aria-modal="true"
               aria-labelledby={title ? 'modal-title' : undefined}
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}

@@ -226,7 +226,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
               <motion.path
                 d={generateAreaPath(curveData)}
                 fill="url(#areaGradient)"
-                initial={{ opacity: 0 }}
+                initial={{}}
                 animate={{ opacity: 0.3 }}
                 transition={{ duration: 1, delay: 0.5 }}
               />
@@ -274,7 +274,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
 
       {/* Recommendation Card */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent)]/80 rounded-xl p-6 text-white"
       >
