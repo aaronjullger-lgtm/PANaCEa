@@ -148,7 +148,7 @@ const StatCard: React.FC<StatCardProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
     >
@@ -226,7 +226,7 @@ const InsightCard: React.FC<{
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -10 }}
+      initial={{ x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.1 }}
       className="flex flex-col gap-2 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
@@ -439,7 +439,7 @@ const RecommendationCard: React.FC<{ recommendation: string; index: number }> = 
 }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
       className="border border-[var(--color-border)] bg-[var(--color-bg-tertiary)] rounded-xl p-4"
@@ -725,7 +725,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
         {activeTab === 'overview' && (
           <motion.div
             key="overview"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
@@ -958,7 +958,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
         {activeTab === 'insights' && (
           <motion.div
             key="insights"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
@@ -1058,7 +1058,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
         {activeTab === 'systems' && (
           <motion.div
             key="systems"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"

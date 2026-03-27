@@ -165,7 +165,7 @@ export default function DecisionTimeAnalysis({
         {stats.map((stat, index) => (
           <motion.div
             key={stat.system}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
             className="rounded-lg p-4 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"

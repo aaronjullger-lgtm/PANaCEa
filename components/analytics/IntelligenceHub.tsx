@@ -389,7 +389,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
         {viewLevel === 'dashboard' && (
           <motion.div
             key="dashboard"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className="space-y-6"
@@ -560,7 +560,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
         {viewLevel === 'system' && currentSystemStats && (
           <motion.div
             key="system"
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
@@ -699,7 +699,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
         {viewLevel === 'subcategory' && currentSubcategoryStats && (
           <motion.div
             key="subcategory"
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
@@ -763,7 +763,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                 {!selectedCondition && (
                   <motion.div
                     key="list"
-                    initial={{ opacity: 0 }}
+                    initial={{}}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
@@ -817,7 +817,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                 {selectedCondition && (
                   <motion.div
                     key="detail"
-                    initial={{ opacity: 0, x: 20 }}
+                    initial={{ x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}

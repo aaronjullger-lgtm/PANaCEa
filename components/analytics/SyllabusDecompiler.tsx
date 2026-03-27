@@ -185,7 +185,7 @@ export default function SyllabusDecompiler({
 
           {uploadState === 'error' && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mt-4 p-3 rounded-lg bg-[var(--color-data-fail)]/10 text-[var(--color-data-fail)]"
             >
@@ -205,7 +205,7 @@ export default function SyllabusDecompiler({
           <p className="text-xs text-[var(--color-text-muted)]">{fileName}</p>
         </div>
       ) : (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.div initial={{ y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Success State */}
           <div className="rounded-lg p-6 mb-4 bg-[var(--color-data-pass)]/10 border border-[var(--color-data-pass)]/30">
             <div className="flex items-center gap-2 mb-2">
@@ -224,7 +224,7 @@ export default function SyllabusDecompiler({
             {extractedTags.map((tag, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
                 className="rounded-lg p-4 bg-[var(--color-bg-secondary)]"

@@ -380,7 +380,7 @@ export default function LongitudinalProgressDashboard({
                         cy={y}
                         r={4}
                         fill="var(--color-accent)"
-                        initial={{ opacity: 0, scale: 0 }}
+                        initial={{ scale: 0 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.5 + i * 0.05 }}
                         aria-hidden

@@ -171,7 +171,7 @@ const TrendIndicator: React.FC<{ trend: TrendAnalysis }> = ({ trend }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -10 }}
+      initial={{ x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${getColor()}`}
     >
@@ -229,7 +229,7 @@ const PANCEPredictionBadge: React.FC<{
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 1 }}
       className="mt-4 p-4 bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] rounded-xl border border-[var(--color-border)]"
@@ -273,7 +273,7 @@ const InsightsList: React.FC<{ insights: string[] }> = ({ insights }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={{}}
       animate={{ opacity: 1 }}
       transition={{ delay: 1.3 }}
       className="mt-4 space-y-2"
@@ -286,7 +286,7 @@ const InsightsList: React.FC<{ insights: string[] }> = ({ insights }) => {
         {insights.map((insight, i) => (
           <motion.li
             key={i}
-            initial={{ opacity: 0, x: -10 }}
+            initial={{ x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 1.4 + i * 0.1 }}
             className="flex items-start gap-2 text-sm text-[var(--color-text-muted)]"
@@ -342,7 +342,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
   if (compact) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className={`p-4 bg-[var(--color-bg-primary)] rounded-xl shadow-sm border border-[var(--color-border)] ${className}`}
       >
@@ -364,7 +364,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`p-6 bg-[var(--color-bg-primary)] rounded-2xl shadow-lg border border-[var(--color-border)] ${className}`}
     >
@@ -410,7 +410,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
       {/* Warning for low sample size */}
       {totalQuestions < 10 && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={{}}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           className="flex items-center gap-2 p-3 bg-[var(--color-warning)]/10 rounded-lg text-[var(--color-warning)] text-sm"

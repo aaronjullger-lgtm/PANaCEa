@@ -108,7 +108,7 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
             {lowestAccuracy.map((c, i) => (
               <motion.button
                 key={c.conditionId}
-                initial={{ opacity: 0, x: -10 }}
+                initial={{ x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
                 onClick={() => onSelectCondition?.(c.conditionId)}
@@ -147,7 +147,7 @@ export const ConditionPerformancePanel: React.FC<ConditionPerformancePanelProps>
             {highestAccuracy.map((c, i) => (
               <motion.button
                 key={c.conditionId}
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
                 onClick={() => onSelectCondition?.(c.conditionId)}

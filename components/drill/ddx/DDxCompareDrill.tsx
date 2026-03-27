@@ -881,7 +881,7 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
             {currentCard && (
               <motion.div
                 key={currentCard.id}
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                initial={{ y: 30, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{
                   opacity: 0,

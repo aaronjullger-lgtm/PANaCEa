@@ -102,7 +102,7 @@ export const SmartSchedulerGantt: React.FC<SmartSchedulerGanttProps> = ({
                   <motion.button
                     key={block.id}
                     type="button"
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    initial={{ scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="w-full text-left px-2 py-1.5 rounded text-xs font-medium bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/30 transition-colors line-clamp-2 break-words"
                     onClick={() => onBlockClick?.(block)}

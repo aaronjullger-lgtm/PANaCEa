@@ -1771,7 +1771,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentQuestion.id ?? `${currentQuestion.question}-${questionNumber}`}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.25, ease: 'easeOut' }}

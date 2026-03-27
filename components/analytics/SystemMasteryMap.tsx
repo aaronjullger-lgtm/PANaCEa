@@ -206,7 +206,7 @@ export function SystemMasteryMap({
           return (
             <motion.div
               key={system.system}
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.02 }}
               onHoverStart={() => setHoveredSystem(system.system)}
@@ -322,7 +322,7 @@ export function SystemMasteryMap({
       <AnimatePresence>
         {selectedSystem && (
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={{}}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-bg-tertiary)]/70"

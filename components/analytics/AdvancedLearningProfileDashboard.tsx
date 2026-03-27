@@ -274,7 +274,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
       <AnimatePresence>
         {breakSuggestion.suggest && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4 flex items-center gap-4"
@@ -322,7 +322,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
         {activeTab === 'overview' && (
           <motion.div
             key="overview"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
@@ -522,7 +522,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
         {activeTab === 'cognitive' && (
           <motion.div
             key="cognitive"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
@@ -710,7 +710,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
         {activeTab === 'systems' && (
           <motion.div
             key="systems"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
@@ -809,7 +809,7 @@ export const AdvancedLearningProfileDashboard: React.FC = () => {
         {activeTab === 'insights' && (
           <motion.div
             key="insights"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"

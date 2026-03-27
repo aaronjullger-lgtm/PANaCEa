@@ -56,7 +56,7 @@ const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }
         return (
           <motion.button
             key={abbr}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.02 }}
             onClick={() => {
