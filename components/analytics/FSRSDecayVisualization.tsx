@@ -192,7 +192,7 @@ const CardDecayCard: React.FC<{
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`p-4 rounded-xl border ${urgencyColors[urgency]} transition-all`}
     >
