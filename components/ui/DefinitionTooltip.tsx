@@ -71,7 +71,7 @@ const DefinitionTooltip: React.FC = () => {
               </div>
             </div>
             {/* Pointer arrow */}
-            <div className="absolute -top-2 left-4 w-4 h-4 bg-data-neutral border-l border-t border-[var(--color-border)] transform rotate-45" />
+            <div className="absolute -top-2 left-4 w-4 h-4 bg-[var(--color-bg-secondary)] border-l border-t border-[var(--color-border)] transform rotate-45" />
           </div>
         </motion.div>
       )}
