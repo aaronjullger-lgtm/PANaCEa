@@ -30,7 +30,7 @@ const UnlockNotification: React.FC<UnlockNotificationProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 50 }}
       className="fixed bottom-4 right-4 z-[60] max-w-sm"
@@ -57,7 +57,7 @@ const UnlockNotification: React.FC<UnlockNotificationProps> = ({
             return (
               <motion.div
                 key={variantId}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-[var(--color-bg-primary)]/20 backdrop-blur-sm rounded-lg p-3 flex items-center gap-3"
               >
@@ -79,7 +79,7 @@ const UnlockNotification: React.FC<UnlockNotificationProps> = ({
             return (
               <motion.div
                 key={accessoryId}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-[var(--color-bg-primary)]/20 backdrop-blur-sm rounded-lg p-3 flex items-center gap-3"
               >

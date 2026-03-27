@@ -228,7 +228,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
       <AnimatePresence mode="wait">
         <motion.div
           key={currentQuestion?.id}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-lg p-6"
@@ -295,7 +295,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
           {/* Next Button */}
           {phase === 'feedback' && (
             <motion.div
-              initial={{ opacity: 0 }}
+              initial={{}}
               animate={{ opacity: 1 }}
               className="mt-6 flex justify-end"
             >

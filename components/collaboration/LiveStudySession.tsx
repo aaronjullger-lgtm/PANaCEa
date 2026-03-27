@@ -517,7 +517,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
             {/* Explanation */}
             {isAnswerSubmitted && currentQuestion.explanation && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="p-4 bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg"
               >
@@ -635,7 +635,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
               {activeTab === 'session' && (
                 <motion.div
                   key="session"
-                  initial={{ opacity: 0, x: 20 }}
+                  initial={{ x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
@@ -692,7 +692,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
               {activeTab === 'leaderboard' && (
                 <motion.div
                   key="leaderboard"
-                  initial={{ opacity: 0, x: 20 }}
+                  initial={{ x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-3"
@@ -756,7 +756,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
               {activeTab === 'chat' && (
                 <motion.div
                   key="chat"
-                  initial={{ opacity: 0, x: 20 }}
+                  initial={{ x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="flex flex-col h-full"
@@ -874,7 +874,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
               {activeTab === 'benchmark' && peerBenchmark && (
                 <motion.div
                   key="benchmark"
-                  initial={{ opacity: 0, x: 20 }}
+                  initial={{ x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"

@@ -203,7 +203,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
                 {scoredResults.map((result) => (
                   <motion.div
                     key={result.id}
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={{ x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: result.userRank * 0.1 }}
                     className={`p-4 rounded-lg border-2 ${
@@ -285,7 +285,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
       <AnimatePresence>
         {isSubmitted && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             className="bg-[var(--color-bg-secondary)]
@@ -321,7 +321,7 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
       {/* Teaching Points */}
       {isSubmitted && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="bg-[var(--color-bg-secondary)] rounded-xl p-6 shadow-lg"

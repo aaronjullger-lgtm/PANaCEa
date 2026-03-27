@@ -267,7 +267,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
         {/* Main Content */}
         <main className="flex-1 flex flex-col items-center justify-center p-6">
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             className="text-center mb-12"
@@ -359,7 +359,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
         <main className="flex-1 flex items-center justify-center p-4 pt-16 pb-32 overflow-y-auto">
           {status === 'playing' && queue.length === 0 && (
             <motion.div
-              initial={{ opacity: 0 }}
+              initial={{}}
               animate={{ opacity: 1 }}
               className="w-full max-w-md rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 text-center shadow-lg"
             >
@@ -766,7 +766,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
     return (
       <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col items-center justify-center p-6">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
           className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] text-center border border-[var(--color-border)]"

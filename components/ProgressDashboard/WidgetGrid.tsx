@@ -209,7 +209,7 @@ const StatCard: React.FC<StatCardProps> = ({
   const highlightIconClass = isClinicalAchievement ? 'text-[var(--color-accent)]' : 'text-data-provisional';
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
       className={`${
@@ -437,7 +437,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
         return (
           <motion.div
             key={widgetId}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay }}
             className="widget-premium-glass widget-noise-texture p-4 col-span-2"
@@ -498,7 +498,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
         return (
           <motion.div
             key={widgetId}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay }}
             className="widget-premium-glass widget-noise-texture p-4 col-span-2"
@@ -567,7 +567,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
         return (
           <motion.div
             key={widgetId}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay }}
             className="widget-premium-glass widget-noise-texture p-4 col-span-2"

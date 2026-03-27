@@ -228,7 +228,7 @@ export const EnhancedOptimizedImage: React.FC<EnhancedOptimizedImageProps> = ({
           {hasError && (
             <motion.div
               className="absolute inset-0 flex flex-col items-center justify-center p-4"
-              initial={{ opacity: 0 }}
+              initial={{}}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
@@ -281,7 +281,7 @@ export const EnhancedOptimizedImage: React.FC<EnhancedOptimizedImageProps> = ({
               }`}
               onLoad={handleLoad}
               onError={handleError}
-              initial={{ opacity: 0 }}
+              initial={{}}
               animate={{ opacity: isLoaded ? 1 : 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: animationDuration / 1000 }}
@@ -303,7 +303,7 @@ export const EnhancedOptimizedImage: React.FC<EnhancedOptimizedImageProps> = ({
         {enableZoom && isZoomed && (
           <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-overlay)] backdrop-blur-xl p-4"
-            initial={{ opacity: 0 }}
+            initial={{}}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsZoomed(false)}

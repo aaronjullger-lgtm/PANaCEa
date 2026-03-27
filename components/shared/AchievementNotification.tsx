@@ -77,7 +77,7 @@ export function AchievementNotification({
     <AnimatePresence>
       {isVisible && badge && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={{}}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-md z-50 flex items-center justify-center p-4"
@@ -127,7 +127,7 @@ export function AchievementNotification({
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
@@ -144,7 +144,7 @@ export function AchievementNotification({
 
             {/* Badge Details */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
               className="space-y-4"
@@ -176,7 +176,7 @@ export function AchievementNotification({
 
             {/* Action Button */}
             <motion.button
-              initial={{ opacity: 0 }}
+              initial={{}}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
               onClick={() => {
