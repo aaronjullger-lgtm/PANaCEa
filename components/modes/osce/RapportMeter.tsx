@@ -243,7 +243,7 @@ export const RapportChangeNotification: React.FC<{
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: -20, scale: 0.9 }}
+        initial={{ y: -20, scale: 0.9 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20, scale: 0.9 }}
         className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg ${

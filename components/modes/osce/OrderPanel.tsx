@@ -251,7 +251,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
           onClick={onClose}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="bg-[var(--color-bg-primary)] rounded-xl shadow-[0_18px_42px_var(--color-shadow-soft)] w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden border border-[var(--color-border)]"

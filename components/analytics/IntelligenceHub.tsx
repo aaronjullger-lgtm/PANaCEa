@@ -763,7 +763,7 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                 {!selectedCondition && (
                   <motion.div
                     key="list"
-                    initial={{}}
+                   
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}

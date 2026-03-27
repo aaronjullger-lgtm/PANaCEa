@@ -273,7 +273,7 @@ const InsightsList: React.FC<{ insights: string[] }> = ({ insights }) => {
 
   return (
     <motion.div
-      initial={{}}
+     
       animate={{ opacity: 1 }}
       transition={{ delay: 1.3 }}
       className="mt-4 space-y-2"
@@ -410,7 +410,7 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
       {/* Warning for low sample size */}
       {totalQuestions < 10 && (
         <motion.div
-          initial={{}}
+         
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           className="flex items-center gap-2 p-3 bg-[var(--color-warning)]/10 rounded-lg text-[var(--color-warning)] text-sm"
