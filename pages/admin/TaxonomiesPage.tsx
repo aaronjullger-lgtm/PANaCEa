@@ -315,7 +315,7 @@ export function TaxonomiesPage() {
       {(showCreateModal || editingTaxonomy) && (
         <div className="fixed inset-0 bg-[var(--color-overlay)] flex items-center justify-center z-50 p-4">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-[var(--color-bg-primary)] rounded-2xl p-6 max-w-md w-full shadow-xl"
           >

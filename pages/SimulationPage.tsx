@@ -191,7 +191,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
       <div className="mx-auto" style={{ maxWidth: 'var(--content-max-width, 72rem)' }}>
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
@@ -214,7 +214,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
         {/* Stats Bar */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
@@ -262,7 +262,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
 
         {/* Focus Selection */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="bg-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)] p-6 mb-6"
@@ -347,7 +347,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
         {/* Start Button */}
         <motion.button
           type="button"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           onClick={handleStart}

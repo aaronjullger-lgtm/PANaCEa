@@ -93,7 +93,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
       <div className="max-w-4xl mx-auto">
         <BackLink to={ROUTES.STUDY} className="mb-6" />
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <motion.div initial={{ y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] flex items-center gap-2">
             <Eye className="w-8 h-8" />
             Clinical Eye
@@ -106,7 +106,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
 
         <div className="grid gap-6 md:grid-cols-2">
           <motion.section
-            initial={{ opacity: 0 }}
+            initial={{}}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.05 }}
             className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
@@ -153,7 +153,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
           </motion.section>
 
           <motion.section
-            initial={{ opacity: 0 }}
+            initial={{}}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
             className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
@@ -190,7 +190,7 @@ export const ClinicalEyePage: React.FC<{ onBack: () => void }> = ({ onBack }) =>
 
         {result && (
           <motion.section
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4"
           >

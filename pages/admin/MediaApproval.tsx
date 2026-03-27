@@ -456,7 +456,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
               {filteredMedia.map((media) => (
                 <motion.div
                   key={media.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
+                  initial={{ scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   className={`bg-[var(--color-bg-secondary)] rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow ${
@@ -573,7 +573,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
       {selectedMedia && !showRejectionModal && (
         <div className="fixed inset-0 bg-[var(--color-bg-tertiary)]/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-[var(--color-bg-secondary)] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto"
           >
@@ -770,7 +770,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
       {showRejectionModal && selectedMedia && (
         <div className="fixed inset-0 bg-[var(--color-bg-tertiary)]/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-[var(--color-bg-secondary)] rounded-lg max-w-md w-full p-6"
           >

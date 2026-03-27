@@ -392,7 +392,7 @@ export function QuestionGeneratorPage() {
               {generatedQuestions.map((q, idx) => (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ y: 10 }}
                   animate={{ opacity: idx === previewIndex ? 1 : 0, y: 0 }}
                   style={{ display: idx === previewIndex ? 'block' : 'none' }}
                   className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] shadow-sm p-6 mb-6"
