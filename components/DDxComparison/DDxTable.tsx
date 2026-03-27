@@ -47,9 +47,9 @@ const ComparisonSection: React.FC<ComparisonSectionProps> = ({
 }) => {
   const colorClasses = {
     blue: {
-      bg: 'bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]',
-      border: 'border-[var(--color-category-practice)] border-[var(--color-category-practice)]',
-      text: 'text-[var(--color-category-practice)] text-[var(--color-category-practice)]',
+      bg: 'bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]',
+      border: 'border-[var(--color-category-practice)]',
+      text: 'text-[var(--color-category-practice)]',
       bullet: 'text-[var(--color-category-practice)]',
     },
     emerald: {

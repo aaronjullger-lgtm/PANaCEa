@@ -413,8 +413,8 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
       className="bg-[var(--color-bg-secondary)] rounded-2xl p-6 border border-data-neutral dark:border-data-neutral"
     >
       <div className="flex items-start gap-4">
-        <div className="p-3 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-xl">
-          <Info className="w-6 h-6 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
+        <div className="p-3 bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-xl">
+          <Info className="w-6 h-6 text-[var(--color-category-practice)]" />
         </div>
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-data-neutral dark:text-data-neutral mb-1">
@@ -422,7 +422,7 @@ export const CalibrationCTA: React.FC<CalibrationCTAProps> = ({
           </h3>
           <p className="text-sm text-data-neutral dark:text-data-neutral mb-4">
             Complete{' '}
-            <span className="font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)]">{remaining}</span> more
+            <span className="font-semibold text-[var(--color-category-practice)]">{remaining}</span> more
             questions to unlock your personalized analytics dashboard.
           </p>
 

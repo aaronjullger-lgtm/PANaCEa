@@ -330,11 +330,11 @@ export default function TodoistExportModal({
 
           {/* Instructions for CSV */}
           {options.exportMethod === 'csv' && (
-            <div className="bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] rounded-lg p-4">
-              <h4 className="font-medium text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-2">
+            <div className="bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] rounded-lg p-4">
+              <h4 className="font-medium text-[var(--color-category-practice)] mb-2">
                 Import Instructions
               </h4>
-              <div className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)] whitespace-pre-line">
+              <div className="text-sm text-[var(--color-category-practice)] whitespace-pre-line">
                 {TODOIST_IMPORT_INSTRUCTIONS}
               </div>
             </div>

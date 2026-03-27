@@ -450,7 +450,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
                               </span>
                             )}
                             {isAlreadyOrdered && (
-                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)] rounded">
+                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] rounded">
                                 ORDERED
                               </span>
                             )}

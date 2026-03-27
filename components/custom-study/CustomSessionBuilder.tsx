@@ -183,7 +183,7 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
               onClick={() => setCurrentStep(step.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                 currentStep === step.id
-                  ? 'bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)]'
+                  ? 'bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)]'
                   : index < stepIndex
                     ? 'text-data-pass dark:text-data-pass'
                     : 'text-data-neutral'
@@ -308,7 +308,7 @@ function ContentStep({
         <div className="flex gap-2">
           <button
             onClick={onSelectAll}
-            className="text-sm text-[var(--color-category-practice)] hover:text-[var(--color-category-practice)] text-[var(--color-category-practice)]"
+            className="text-sm text-[var(--color-category-practice)] hover:text-[var(--color-category-practice)]"
           >
             Select All
           </button>
@@ -534,7 +534,7 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
             {config.systems.map((code) => (
               <span
                 key={code}
-                className="px-2 py-1 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)] rounded-full text-sm"
+                className="px-2 py-1 bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] rounded-full text-sm"
               >
                 {ABBREVIATION_TO_TOPIC_MAP[code] || code}
               </span>
@@ -602,7 +602,7 @@ function ReviewStep({ config, validation }: ReviewStepProps) {
         )}
 
         {/* Info Banner */}
-        <div className="p-4 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-xl text-[var(--color-category-practice)] text-[var(--color-category-practice)] text-sm">
+        <div className="p-4 bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-xl text-[var(--color-category-practice)] text-sm">
           <p>
             <strong>Note:</strong> This is a practice session. Progress is not saved to your spaced
             repetition schedule. Questions you miss will be repeated at the end of each round.

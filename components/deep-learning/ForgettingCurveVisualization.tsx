@@ -63,7 +63,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
       case 'excellent':
         return 'text-data-pass dark:text-data-pass';
       case 'good':
-        return 'text-[var(--color-category-practice)] text-[var(--color-category-practice)]';
+        return 'text-[var(--color-category-practice)]';
       case 'declining':
         return 'text-[var(--color-data-provisional)]';
       case 'critical':
@@ -128,7 +128,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
             <div className="text-sm text-[var(--color-text-secondary)] mb-1">
               Current Proficiency
             </div>
-            <div className="text-3xl font-bold text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
+            <div className="text-3xl font-bold text-[var(--color-category-practice)]">
               {proficiencyData.currentProficiency}%
             </div>
           </div>

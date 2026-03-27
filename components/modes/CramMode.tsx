@@ -347,11 +347,11 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
               </div>
 
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6">
-                <Clock className="w-8 h-8 mx-auto mb-2 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
-                <div className="text-3xl font-bold text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
+                <Clock className="w-8 h-8 mx-auto mb-2 text-[var(--color-category-practice)]" />
+                <div className="text-3xl font-bold text-[var(--color-category-practice)]">
                   {formatTime(elapsedTime)}
                 </div>
-                <div className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)]">Total Time</div>
+                <div className="text-sm text-[var(--color-category-practice)]">Total Time</div>
               </div>
             </div>
 
@@ -368,7 +368,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                 <span className="font-semibold text-[var(--color-text-secondary)]">
                   Avg Time/Question:
                 </span>{' '}
-                <span className="text-[var(--color-category-practice)] text-[var(--color-category-practice)] font-bold">
+                <span className="text-[var(--color-category-practice)] font-bold">
                   {avgTimePerQuestion.toFixed(1)}s
                 </span>
               </div>
@@ -527,8 +527,8 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-6 space-y-4"
                 >
-                  <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-[var(--color-category-practice)] border-[var(--color-category-practice)]">
-                    <h4 className="font-bold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-2 flex items-center gap-2">
+                  <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-[var(--color-category-practice)]">
+                    <h4 className="font-bold text-[var(--color-category-practice)] mb-2 flex items-center gap-2">
                       <BookOpen className="w-5 h-5" />
                       Explanation
                     </h4>

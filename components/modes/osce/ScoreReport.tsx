@@ -364,7 +364,7 @@ const LearningGapsList: React.FC<{ gaps: LearningGap[] }> = ({ gaps }) => (
             ? 'bg-data-fail dark:bg-data-fail/20 border-data-fail dark:border-data-fail'
             : gap.severity === 'moderate'
               ? 'bg-data-provisional dark:bg-data-provisional/20 border-data-provisional dark:border-data-provisional'
-              : 'bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border-[var(--color-category-practice)] border-[var(--color-category-practice)]'
+              : 'bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border-[var(--color-category-practice)]'
         }`}
       >
         <div className="flex items-center gap-2 mb-1">

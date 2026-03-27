@@ -367,7 +367,7 @@ export function AuscultationMode({
             flex-1 py-3 rounded-lg flex items-center justify-center gap-2 font-medium transition-colors
             ${
               activeTab === 'lung'
-                ? 'bg-[var(--color-bg-primary)] text-[var(--color-category-practice)] text-[var(--color-category-practice)] shadow-sm'
+                ? 'bg-[var(--color-bg-primary)] text-[var(--color-category-practice)] shadow-sm'
                 : 'text-data-neutral dark:text-data-neutral hover:text-data-neutral dark:hover:text-white'
             }
           `}

@@ -93,7 +93,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
         <div className="sticky top-0 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] p-6 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Settings className="w-8 h-8 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
+              <Settings className="w-8 h-8 text-[var(--color-category-practice)]" />
               <div>
                 <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
                   Customize Your Encounter
@@ -117,7 +117,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
           {/* Patient Demographics */}
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <User className="w-5 h-5 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
+              <User className="w-5 h-5 text-[var(--color-category-practice)]" />
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
                 Patient Demographics
               </h3>

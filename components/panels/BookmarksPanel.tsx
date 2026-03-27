@@ -215,7 +215,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                       <div className="flex-1 min-w-0">
                         {/* Condition and Topic */}
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="inline-block px-2 py-1 bg-[var(--color-category-practice)] bg-[var(--color-category-practice)] text-[var(--color-category-practice)] text-[var(--color-category-practice)] text-xs font-medium rounded">
+                          <span className="inline-block px-2 py-1 bg-[var(--color-category-practice)] bg-[var(--color-category-practice)] text-[var(--color-category-practice)] text-xs font-medium rounded">
                             {question.system || question.topic}
                           </span>
                           <span className="text-sm font-semibold text-[var(--color-text-primary)]">

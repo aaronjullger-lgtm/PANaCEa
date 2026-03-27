@@ -230,7 +230,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
           >
             {/* Patient Info */}
             <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
-              <h3 className="text-sm font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-2 flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-[var(--color-category-practice)] mb-2 flex items-center gap-2">
                 <Activity className="w-4 h-4" />
                 Patient Information
               </h3>
@@ -243,7 +243,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Current Ventilator Settings */}
               <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
-                <h3 className="text-sm font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-[var(--color-category-practice)] mb-3 flex items-center gap-2">
                   <Wind className="w-4 h-4" />
                   Current Ventilator Settings
                 </h3>
@@ -297,7 +297,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
 
               {/* ABG Results */}
               <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
-                <h3 className="text-sm font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-[var(--color-category-practice)] mb-3 flex items-center gap-2">
                   <Droplets className="w-4 h-4" />
                   Arterial Blood Gas
                 </h3>
@@ -370,7 +370,7 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
 
             {/* Physical Exam */}
             <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
-              <h3 className="text-sm font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-2 flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-[var(--color-category-practice)] mb-2 flex items-center gap-2">
                 <Gauge className="w-4 h-4" />
                 Physical Examination
               </h3>

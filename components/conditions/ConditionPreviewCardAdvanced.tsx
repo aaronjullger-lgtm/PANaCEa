@@ -179,7 +179,7 @@ export const ConditionPreviewCardAdvanced: React.FC<ConditionPreviewCardAdvanced
           {onDrill && (
             <button
               onClick={(e) => handleActionClick(e, onDrill)}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)] transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)] transition-colors"
             >
               <Target className="w-3.5 h-3.5" />
               <span>Drill</span>

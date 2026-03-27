@@ -215,7 +215,7 @@ export const RapportMeter: React.FC<RapportMeterProps> = ({
             <span className="px-2 py-0.5 text-xs bg-[var(--color-accent)]/20 dark:bg-[var(--color-accent)]/30 text-[var(--color-accent)] dark:text-[var(--color-accent)] rounded-full">
               {personality.communicationStyle}
             </span>
-            <span className="px-2 py-0.5 text-xs bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] text-[var(--color-category-practice)] rounded-full">
+            <span className="px-2 py-0.5 text-xs bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] text-[var(--color-category-practice)] rounded-full">
               {personality.healthLiteracy} literacy
             </span>
             <span className="px-2 py-0.5 text-xs bg-data-provisional dark:bg-data-provisional/30 text-data-provisional dark:text-data-provisional rounded-full">

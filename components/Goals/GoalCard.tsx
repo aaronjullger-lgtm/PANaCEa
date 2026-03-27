@@ -34,7 +34,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'text-[var(--color-category-practice)] bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]';
+        return 'text-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)]';
       case 'completed':
         return 'text-data-pass bg-data-pass dark:bg-data-pass/30';
       case 'paused':
@@ -123,7 +123,7 @@ export const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onUp
           )}
 
           {goal.motivationNotes && (
-            <p className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)] italic">
+            <p className="text-sm text-[var(--color-category-practice)] italic">
               💭 {goal.motivationNotes}
             </p>
           )}

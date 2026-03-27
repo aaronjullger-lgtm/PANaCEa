@@ -203,7 +203,7 @@ export default function CustomSessionSummary({ summary, onStartNew, onGoHome }: 
           )}
 
           {/* Info Banner */}
-          <div className="p-4 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-xl text-[var(--color-category-practice)] text-[var(--color-category-practice)] text-sm mb-6">
+          <div className="p-4 bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-xl text-[var(--color-category-practice)] text-sm mb-6">
             <div className="flex items-center gap-2 mb-1">
               <Zap className="w-4 h-4" />
               <span className="font-medium">Practice Session</span>
@@ -252,7 +252,7 @@ function StatCard({ icon, label, value, color }: StatCardProps) {
   const colorClasses = {
     green: 'text-data-pass dark:text-data-pass bg-data-pass dark:bg-data-pass/20',
     amber: 'text-data-provisional dark:text-data-provisional bg-data-provisional dark:bg-data-provisional/20',
-    blue: 'text-[var(--color-category-practice)] text-[var(--color-category-practice)] bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]',
+    blue: 'text-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]',
     purple: 'text-[var(--color-accent)] bg-[var(--color-accent)]/5 dark:bg-[var(--color-accent)]/20',
     red: 'text-data-fail dark:text-data-fail bg-data-fail dark:bg-data-fail/20',
   };

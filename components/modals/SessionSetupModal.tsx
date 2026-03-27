@@ -148,8 +148,8 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
             </div>
 
             {/* PANCE-Level Notice */}
-            <div className="bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg p-3 border border-[var(--color-category-practice)] border-[var(--color-category-practice)] mb-6">
-              <p className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
+            <div className="bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg p-3 border border-[var(--color-category-practice)] mb-6">
+              <p className="text-sm text-[var(--color-category-practice)]">
                 <strong>PANCE-Level Questions:</strong> All questions are calibrated to match real
                 PANCE exam difficulty for optimal preparation.
               </p>

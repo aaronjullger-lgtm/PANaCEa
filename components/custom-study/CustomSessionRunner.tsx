@@ -235,7 +235,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
         >
           {/* Question Text */}
           <div className="mb-6">
-            <p className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-2">
+            <p className="text-sm text-[var(--color-category-practice)] mb-2">
               {currentQuestion?.condition || currentQuestion?.topic}
             </p>
             <p className="text-lg text-[var(--color-text-primary)]">{currentQuestion?.question}</p>
@@ -256,7 +256,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
                         ? 'bg-[var(--color-data-fail)]/10 border-2 border-[var(--color-data-fail)]'
                         : 'bg-data-neutral dark:bg-data-neutral opacity-50'
                     : selectedAnswer === index
-                      ? 'bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] border-2 border-[var(--color-category-practice)]'
+                      ? 'bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] border-2 border-[var(--color-category-practice)]'
                       : 'bg-data-neutral dark:bg-data-neutral hover:bg-data-neutral dark:hover:bg-data-neutral border-2 border-transparent'
                 }`}
               >
@@ -344,7 +344,7 @@ function IncrementComplete({ stats, onContinue, onEnd }: IncrementCompleteProps)
             <div className="text-sm text-data-neutral dark:text-data-neutral">Correct</div>
           </div>
           <div className="p-4 bg-data-neutral dark:bg-data-neutral/50 rounded-xl">
-            <div className="text-2xl font-bold text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
+            <div className="text-2xl font-bold text-[var(--color-category-practice)]">
               {stats?.accuracy.toFixed(0)}%
             </div>
             <div className="text-sm text-data-neutral dark:text-data-neutral">Accuracy</div>

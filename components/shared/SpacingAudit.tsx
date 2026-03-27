@@ -290,12 +290,12 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
             <div className="p-4 border-b border-[var(--color-border)] border-[var(--color-border)] bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg">
-                    <Ruler className="w-5 h-5 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
+                  <div className="p-2 bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg">
+                    <Ruler className="w-5 h-5 text-[var(--color-category-practice)]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-[var(--color-text-muted)] dark:text-white">Spacing Audit</h3>
-                    <p className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)]">
+                    <p className="text-sm text-[var(--color-text-muted)]">
                       {issues.length} issue{issues.length !== 1 ? 's' : ''} found
                     </p>
                   </div>
@@ -312,8 +312,8 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                 onClick={() => setActiveTab('issues')}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   activeTab === 'issues'
-                    ? 'text-[var(--color-category-practice)] text-[var(--color-category-practice)] border-b-2 border-[var(--color-category-practice)]'
-                    : 'text-[var(--color-text-muted)] text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)] dark:hover:text-white'
+                    ? 'text-[var(--color-category-practice)] border-b-2 border-[var(--color-category-practice)]'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)] dark:hover:text-white'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
@@ -325,8 +325,8 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                 onClick={() => setActiveTab('guides')}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   activeTab === 'guides'
-                    ? 'text-[var(--color-category-practice)] text-[var(--color-category-practice)] border-b-2 border-[var(--color-category-practice)]'
-                    : 'text-[var(--color-text-muted)] text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)] dark:hover:text-white'
+                    ? 'text-[var(--color-category-practice)] border-b-2 border-[var(--color-category-practice)]'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)] dark:hover:text-white'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
@@ -338,8 +338,8 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                 onClick={() => setActiveTab('patterns')}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   activeTab === 'patterns'
-                    ? 'text-[var(--color-category-practice)] text-[var(--color-category-practice)] border-b-2 border-[var(--color-category-practice)]'
-                    : 'text-[var(--color-text-muted)] text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)] dark:hover:text-white'
+                    ? 'text-[var(--color-category-practice)] border-b-2 border-[var(--color-category-practice)]'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)] dark:hover:text-white'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
@@ -382,7 +382,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                       <h4 className="font-semibold text-[var(--color-text-muted)] dark:text-white mb-1">
                         No spacing issues found!
                       </h4>
-                      <p className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)]">
+                      <p className="text-sm text-[var(--color-text-muted)]">
                         Your spacing is consistent and follows guidelines.
                       </p>
                     </div>
@@ -411,7 +411,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                             </span>
                           </div>
 
-                          <p className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)] mb-3">
+                          <p className="text-sm text-[var(--color-text-muted)] mb-3">
                             {issue.recommendation}
                           </p>
 
@@ -428,7 +428,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                                   2000
                                 );
                               }}
-                              className="text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)] hover:underline"
+                              className="text-sm text-[var(--color-category-practice)] hover:underline"
                             >
                               View Element
                             </button>
@@ -478,7 +478,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                           Padding
                         </span>
                       </div>
-                      <p className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)]">
+                      <p className="text-sm text-[var(--color-text-muted)]">
                         Elements with padding classes (p-, px-, py-, pt-, etc.)
                       </p>
                     </div>
@@ -490,7 +490,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                           Margin
                         </span>
                       </div>
-                      <p className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)]">
+                      <p className="text-sm text-[var(--color-text-muted)]">
                         Elements with margin classes (m-, mx-, my-, mt-, etc.)
                       </p>
                     </div>
@@ -502,7 +502,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                           Gap
                         </span>
                       </div>
-                      <p className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)]">
+                      <p className="text-sm text-[var(--color-text-muted)]">
                         Elements with gap classes (gap-)
                       </p>
                     </div>
@@ -514,7 +514,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                           Space
                         </span>
                       </div>
-                      <p className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)]">
+                      <p className="text-sm text-[var(--color-text-muted)]">
                         Elements with space classes (space-x-, space-y-)
                       </p>
                     </div>
@@ -531,7 +531,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                       <h5 className="font-medium text-[var(--color-text-muted)] dark:text-white mb-2">
                         Card Layout
                       </h5>
-                      <div className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)] space-y-1">
+                      <div className="text-sm text-[var(--color-text-muted)] space-y-1">
                         <code className="block bg-[var(--color-bg-secondary)] bg-[var(--color-bg-secondary)] p-1 rounded">
                           p-6 space-y-4
                         </code>
@@ -543,7 +543,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                       <h5 className="font-medium text-[var(--color-text-muted)] dark:text-white mb-2">
                         Form Layout
                       </h5>
-                      <div className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)] space-y-1">
+                      <div className="text-sm text-[var(--color-text-muted)] space-y-1">
                         <code className="block bg-[var(--color-bg-secondary)] bg-[var(--color-bg-secondary)] p-1 rounded">
                           space-y-4
                         </code>
@@ -558,7 +558,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                       <h5 className="font-medium text-[var(--color-text-muted)] dark:text-white mb-2">
                         Button Groups
                       </h5>
-                      <div className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)] space-y-1">
+                      <div className="text-sm text-[var(--color-text-muted)] space-y-1">
                         <code className="block bg-[var(--color-bg-secondary)] bg-[var(--color-bg-secondary)] p-1 rounded">
                           flex gap-2
                         </code>
@@ -573,7 +573,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                       <h5 className="font-medium text-[var(--color-text-muted)] dark:text-white mb-2">
                         Grid Layouts
                       </h5>
-                      <div className="text-sm text-[var(--color-text-muted)] text-[var(--color-text-muted)] space-y-1">
+                      <div className="text-sm text-[var(--color-text-muted)] space-y-1">
                         <code className="block bg-[var(--color-bg-secondary)] bg-[var(--color-bg-secondary)] p-1 rounded">
                           grid gap-4
                         </code>
@@ -590,7 +590,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
 
             {/* Footer */}
             <div className="p-3 border-t border-[var(--color-border)] border-[var(--color-border)] bg-[var(--color-bg-secondary)] bg-[color-mix(in_srgb,var(--color-text-muted)_50%,transparent)]">
-              <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] text-[var(--color-text-muted)]">
+              <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
                 <div className="flex items-center gap-2">
                   <AlignCenter className="w-3 h-3" />
                   <span>Follow spacing guidelines for consistency</span>
@@ -598,7 +598,7 @@ export const SpacingAudit: React.FC<SpacingAuditProps> = ({
                 <a
                   href="/docs/SPACING_GUIDELINES.md"
                   target="_blank"
-                  className="text-[var(--color-category-practice)] text-[var(--color-category-practice)] hover:underline"
+                  className="text-[var(--color-category-practice)] hover:underline"
                 >
                   View Guidelines
                 </a>

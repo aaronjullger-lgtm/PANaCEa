@@ -2605,8 +2605,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </label>
                   </div>
 
-                  <div className="mt-3 p-3 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] rounded-lg">
-                    <p className="text-xs text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
+                  <div className="mt-3 p-3 bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] border border-[var(--color-category-practice)] rounded-lg">
+                    <p className="text-xs text-[var(--color-category-practice)]">
                       [i] <strong>Note:</strong> Clinical Fidelity features are optional
                       enhancements designed for advanced learners who want more realistic practice.
                     </p>
@@ -2646,8 +2646,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     {/* Assignment System */}
                     <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
                       <div className="flex items-start gap-2">
-                        <div className="p-1.5 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded">
-                          <Calendar className="w-4 h-4 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
+                        <div className="p-1.5 bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded">
+                          <Calendar className="w-4 h-4 text-[var(--color-category-practice)]" />
                         </div>
                         <div className="flex-1">
                           <div className="text-sm font-medium text-[var(--color-text-primary)]">

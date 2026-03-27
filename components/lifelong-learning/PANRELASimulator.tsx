@@ -221,12 +221,12 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
           </div>
 
           <div className="space-y-6 mb-8">
-            <div className="bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg p-6">
-              <h3 className="font-bold text-[var(--color-category-practice)] text-[var(--color-category-practice)] mb-4 flex items-center gap-2">
+            <div className="bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg p-6">
+              <h3 className="font-bold text-[var(--color-category-practice)] mb-4 flex items-center gap-2">
                 <BookOpen className="w-5 h-5" />
                 About PANRE-LA
               </h3>
-              <ul className="space-y-3 text-sm text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
+              <ul className="space-y-3 text-sm text-[var(--color-category-practice)]">
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <span>
@@ -348,7 +348,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                 </span>
                 <button
                   onClick={() => setIsResourcesOpen(!isResourcesOpen)}
-                  className="text-sm font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] hover:underline"
+                  className="text-sm font-semibold text-[var(--color-category-practice)] hover:underline"
                 >
                   {isResourcesOpen ? 'Hide' : 'Show'} References
                 </button>
@@ -373,7 +373,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                           ? 'border-data-fail bg-data-fail dark:bg-data-fail/20'
                           : 'border-[var(--color-border)] border-[var(--color-border)] opacity-50'
                       : selectedAnswer === index
-                        ? 'border-[var(--color-category-practice)] bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]'
+                        ? 'border-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]'
                         : 'border-[var(--color-border)] border-[var(--color-border)] hover:border-[var(--color-category-practice)]'
                   } disabled:cursor-not-allowed`}
                 >
@@ -486,13 +486,13 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
               <div className="space-y-3">
                 <a
                   href="#"
-                  className="block p-3 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg 
+                  className="block p-3 bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg 
                   hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] transition-colors"
                 >
-                  <div className="font-semibold text-[var(--color-category-practice)] text-[var(--color-category-practice)] text-sm">
+                  <div className="font-semibold text-[var(--color-category-practice)] text-sm">
                     UpToDate
                   </div>
-                  <div className="text-xs text-[var(--color-category-practice)] text-[var(--color-category-practice)]">
+                  <div className="text-xs text-[var(--color-category-practice)]">
                     Evidence-based clinical resource
                   </div>
                 </a>

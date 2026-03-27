@@ -191,8 +191,8 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
 
           {/* Wellness Tips */}
           <div className="space-y-4 mb-6">
-            <div className="flex items-start gap-3 p-3 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg">
-              <Coffee className="w-5 h-5 text-[var(--color-category-practice)] text-[var(--color-category-practice)] mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-3 p-3 bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg">
+              <Coffee className="w-5 h-5 text-[var(--color-category-practice)] mt-0.5 flex-shrink-0" />
               <p className="text-sm text-[var(--color-text-secondary)]">
                 Take a moment to drink water or grab a healthy snack
               </p>

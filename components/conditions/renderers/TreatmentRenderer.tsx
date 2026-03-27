@@ -22,11 +22,11 @@ const TreatmentRenderer: React.FC<TreatmentRendererProps> = ({ items }) => {
         <div key={idx} className="relative pl-8 pb-8 last:pb-0 group">
           {/* Vertical connector line */}
           {idx !== items.length - 1 && (
-            <div className="absolute left-3.5 top-8 bottom-0 w-0.5 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)]" />
+            <div className="absolute left-3.5 top-8 bottom-0 w-0.5 bg-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)]" />
           )}
 
           {/* Numbered Circle */}
-          <div className="absolute left-0 top-0 w-8 h-8 rounded-full bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] flex items-center justify-center text-sm font-bold text-[var(--color-category-practice)] text-[var(--color-category-practice)] z-10 shadow-sm">
+          <div className="absolute left-0 top-0 w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] border border-[var(--color-category-practice)] border-[var(--color-category-practice)] flex items-center justify-center text-sm font-bold text-[var(--color-category-practice)] z-10 shadow-sm">
             {idx + 1}
           </div>
 

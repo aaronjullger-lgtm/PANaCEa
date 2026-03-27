@@ -147,8 +147,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
             <div className="p-6 border-b border-[var(--color-border)]">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg">
-                    <Download className="w-6 h-6 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
+                  <div className="p-2 bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg">
+                    <Download className="w-6 h-6 text-[var(--color-category-practice)]" />
                   </div>
                   <div>
                     <h3 className="font-bold text-lg">Install PANaCEa App</h3>
@@ -226,8 +226,8 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-[var(--color-category-practice)] bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg mt-0.5">
-                        <HardDrive className="w-4 h-4 text-[var(--color-category-practice)] text-[var(--color-category-practice)]" />
+                      <div className="p-2 bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] rounded-lg mt-0.5">
+                        <HardDrive className="w-4 h-4 text-[var(--color-category-practice)]" />
                       </div>
                       <div>
                         <h5 className="font-medium text-sm">Fast Performance</h5>
