@@ -386,7 +386,7 @@ export const FlaggedQuestionsDashboard: React.FC = () => {
                 return (
                   <motion.div
                     key={flag.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden"

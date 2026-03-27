@@ -344,7 +344,7 @@ const VisualizationDemoPage: React.FC = () => {
 
         {/* Footer Info */}
         <motion.div
-          initial={{}}
+         
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           className="text-center space-y-2 pb-8"

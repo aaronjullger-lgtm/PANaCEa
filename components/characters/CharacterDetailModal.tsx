@@ -56,7 +56,7 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
   return (
     <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-[var(--color-border)]"
       >

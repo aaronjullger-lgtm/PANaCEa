@@ -226,7 +226,7 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
               <motion.path
                 d={generateAreaPath(curveData)}
                 fill="url(#areaGradient)"
-                initial={{}}
+               
                 animate={{ opacity: 0.3 }}
                 transition={{ duration: 1, delay: 0.5 }}
               />

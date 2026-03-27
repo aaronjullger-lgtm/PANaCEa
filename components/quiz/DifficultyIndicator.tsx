@@ -238,7 +238,7 @@ export const DifficultyIndicator: React.FC<DifficultyIndicatorProps> = ({
 
       {showBreakdown && reasoning.length > 0 && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
+          initial={{ height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           className="text-xs text-[var(--color-text-muted)] space-y-1"
         >

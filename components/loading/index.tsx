@@ -388,7 +388,7 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+     
       animate={{ opacity: isLoading || progress > 0 ? 1 : 0 }}
       exit={{ opacity: 0 }}
       className="fixed top-0 left-0 right-0 z-50 h-1 bg-transparent"

@@ -359,7 +359,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
         <main className="flex-1 flex items-center justify-center p-4 pt-16 pb-32 overflow-y-auto">
           {status === 'playing' && queue.length === 0 && (
             <motion.div
-              initial={{}}
+             
               animate={{ opacity: 1 }}
               className="w-full max-w-md rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] p-6 text-center shadow-lg"
             >

@@ -217,7 +217,7 @@ export function ExamHistoryList({
         {displayAttempts.map((attempt, index) => (
           <motion.div
             key={attempt.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
             onClick={() => onSelectAttempt?.(attempt.id)}

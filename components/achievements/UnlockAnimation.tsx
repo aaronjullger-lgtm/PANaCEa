@@ -60,7 +60,7 @@ export function UnlockAnimation({
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={{}}
+         
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
@@ -68,7 +68,7 @@ export function UnlockAnimation({
         >
           {/* Backdrop with subtle blur */}
           <motion.div
-            initial={{}}
+           
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-[var(--color-overlay)] backdrop-blur-sm"

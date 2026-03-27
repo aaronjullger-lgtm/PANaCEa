@@ -176,7 +176,7 @@ export const EmptyChartState: React.FC<EmptyChartStateProps> = React.memo(({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+     
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
       className="flex flex-col items-center justify-center text-[var(--color-text-muted)]"

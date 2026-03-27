@@ -295,7 +295,7 @@ export default function CustomSessionRunner({ config, onEnd }: Props) {
           {/* Next Button */}
           {phase === 'feedback' && (
             <motion.div
-              initial={{}}
+             
               animate={{ opacity: 1 }}
               className="mt-6 flex justify-end"
             >

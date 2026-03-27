@@ -409,7 +409,7 @@ export const LibraryEnrichmentDashboard: React.FC = () => {
                 <AnimatePresence>
                   {expandedLogIndex === idx && (
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
+                      initial={{ height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       className="mt-4 pt-4 border-t border-[var(--color-border)]"

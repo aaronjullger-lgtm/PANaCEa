@@ -172,7 +172,7 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
 
       {/* Backdrop */}
       <motion.div
-        initial={{}}
+       
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-[59]"

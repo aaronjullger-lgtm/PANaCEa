@@ -144,7 +144,7 @@ export const AuditLogTable: React.FC<AuditLogTableProps> = ({
       </div>
       {expandedFilter && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
+          initial={{ height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
           className="space-y-4"

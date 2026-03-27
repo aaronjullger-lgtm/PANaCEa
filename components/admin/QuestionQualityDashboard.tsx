@@ -410,7 +410,7 @@ function StatCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-[var(--color-bg-primary)] rounded-xl p-4 shadow-sm"
     >

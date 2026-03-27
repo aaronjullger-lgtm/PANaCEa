@@ -169,7 +169,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
     <div className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm z-50 overflow-y-auto">
       <div className="min-h-screen p-4 flex items-start justify-center">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-6xl w-full my-8 border border-[var(--color-border)]"
         >

@@ -126,7 +126,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
           <>
             {/* Backdrop */}
             <motion.div
-              initial={{}}
+             
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={onClose}
@@ -200,7 +200,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
         <>
           {/* Backdrop */}
           <motion.div
-            initial={{}}
+           
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}

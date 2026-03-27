@@ -211,7 +211,7 @@ export const TrendSparkline: React.FC<TrendSparklineProps> = ({
           <motion.path
             d={fillPathD}
             fill={`url(#${gradientId})`}
-            initial={{}}
+           
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           />
