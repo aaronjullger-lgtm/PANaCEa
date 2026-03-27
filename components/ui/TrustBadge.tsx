@@ -57,7 +57,7 @@ export const TrustBadge: React.FC<TrustBadgeProps> = ({
   if (fromStaging || source === 'staging') {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className={`
@@ -81,7 +81,7 @@ export const TrustBadge: React.FC<TrustBadgeProps> = ({
   if (source === 'database' || source === 'pool') {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className={`
@@ -105,7 +105,7 @@ export const TrustBadge: React.FC<TrustBadgeProps> = ({
   if (source === 'ai_fallback' || source === 'ai' || source === 'generated') {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className={`
@@ -128,7 +128,7 @@ export const TrustBadge: React.FC<TrustBadgeProps> = ({
   // Unknown or undefined source - show subtle indicator
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
+      initial={{ scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       className={`

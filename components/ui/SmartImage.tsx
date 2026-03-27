@@ -143,7 +143,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
         {(loadState === 'idle' || loadState === 'loading') && (
           <motion.div
             key="loader"
-            initial={{ opacity: 0 }}
+            initial={{}}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 flex items-center justify-center"
@@ -167,7 +167,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
             ref={imgRef}
             src={src}
             alt={alt}
-            initial={{ opacity: 0, scale: blurUp ? 1.05 : 1 }}
+            initial={{ scale: blurUp ? 1.05 : 1 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
             className={`w-full h-full object-cover ${className}`}
@@ -180,7 +180,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
         {loadState === 'error' && (
           <motion.div
             key="error"
-            initial={{ opacity: 0 }}
+            initial={{}}
             animate={{ opacity: 1 }}
             className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[var(--color-data-neutral)]"
           >
@@ -224,7 +224,7 @@ export const ZoomableImage: React.FC<SmartImageProps & { enableZoom?: boolean }>
       <AnimatePresence>
         {isZoomed && (
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={{}}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsZoomed(false)}

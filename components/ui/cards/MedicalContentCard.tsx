@@ -105,7 +105,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02, y: -4 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
@@ -189,7 +189,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
         {/* Classic Patient Presentation - Prominent callout */}
         {content.classic_patient && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="mt-4 p-4 bg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_40%,transparent)] rounded-xl"
