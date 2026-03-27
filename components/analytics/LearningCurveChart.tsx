@@ -40,7 +40,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg p-3 shadow-lg">
-        <p className="font-medium text-text-primary">{label}</p>
+        <p className="font-medium text-[var(--color-text-primary)]">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.name}: {entry.value} {entry.unit || ''}
@@ -82,7 +82,7 @@ export const LearningCurveChart: React.FC = () => {
     return (
       <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-6 text-center">
         <p className="text-error">Failed to load learning curve data.</p>
-        <p className="text-sm text-text-[var(--color-text-muted)] mt-1">{error.message}</p>
+        <p className="text-sm text-[var(--color-text-muted)] mt-1">{error.message}</p>
       </div>
     );
   }
@@ -94,7 +94,7 @@ export const LearningCurveChart: React.FC = () => {
   if (isEmpty) {
     return (
       <EmptyChartState
-        icon={<Calendar className="w-12 h-12 text-text-[var(--color-text-muted)]" />}
+        icon={<Calendar className="w-12 h-12 text-[var(--color-text-muted)]" />}
         title="No data yet"
         message="Complete some questions to see your learning curve."
       />
@@ -111,11 +111,11 @@ export const LearningCurveChart: React.FC = () => {
       {/* Header with title and range selector */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-accent" />
             Learning Curve
           </h3>
-          <p className="text-sm text-text-[var(--color-text-muted)]">
+          <p className="text-sm text-[var(--color-text-muted)]">
             Track your performance, memory stability, and response times over time.
           </p>
         </div>
@@ -126,7 +126,7 @@ export const LearningCurveChart: React.FC = () => {
               type="button"
               className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
                 selectedRange.days === range.days
-                  ? 'bg-[var(--color-accent)] text-white border-action-primary'
+                  ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
                   : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
               }`}
               onClick={() => handleRangeChange(range)}
@@ -244,26 +244,26 @@ export const LearningCurveChart: React.FC = () => {
       {data?.summary && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
-            <p className="text-xs text-text-[var(--color-text-muted)] font-medium">Total Questions</p>
-            <p className="text-xl font-bold text-text-primary">{data.summary.totalAttempts}</p>
+            <p className="text-xs text-[var(--color-text-muted)] font-medium">Total Questions</p>
+            <p className="text-xl font-bold text-[var(--color-text-primary)]">{data.summary.totalAttempts}</p>
           </div>
           <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
-            <p className="text-xs text-text-[var(--color-text-muted)] font-medium">Avg Accuracy</p>
-            <p className="text-xl font-bold text-text-primary">
+            <p className="text-xs text-[var(--color-text-muted)] font-medium">Avg Accuracy</p>
+            <p className="text-xl font-bold text-[var(--color-text-primary)]">
               {data.summary.avgAccuracy.toFixed(1)}%
             </p>
           </div>
           {data.summary.avgStability && (
             <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
-              <p className="text-xs text-text-[var(--color-text-muted)] font-medium">Avg Stability</p>
-              <p className="text-xl font-bold text-text-primary">
+              <p className="text-xs text-[var(--color-text-muted)] font-medium">Avg Stability</p>
+              <p className="text-xl font-bold text-[var(--color-text-primary)]">
                 {data.summary.avgStability.toFixed(1)}
               </p>
             </div>
           )}
           <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
-            <p className="text-xs text-text-[var(--color-text-muted)] font-medium">Active Days</p>
-            <p className="text-xl font-bold text-text-primary">{chartData.length}</p>
+            <p className="text-xs text-[var(--color-text-muted)] font-medium">Active Days</p>
+            <p className="text-xl font-bold text-[var(--color-text-primary)]">{chartData.length}</p>
           </div>
         </div>
       )}

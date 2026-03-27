@@ -64,7 +64,7 @@ const CommuterMode: React.FC<CommuterModeProps> = ({ onExit }) => {
         />
         <MiniModeCard>
           <div className="p-8 text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-action-primary border-t-transparent"></div>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-accent)] border-t-transparent"></div>
             <p className="mt-4 text-[var(--color-text-secondary)]">Preparing questions…</p>
           </div>
         </MiniModeCard>

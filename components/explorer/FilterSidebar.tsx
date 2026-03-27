@@ -121,7 +121,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
       <div className="h-full w-12 bg-[var(--color-bg-primary)] border-r border-[var(--color-border)] flex flex-col items-center py-4">
         <button
           onClick={onToggleCollapse}
-          className="p-2 rounded-md hover:bg-surface-hover transition-colors"
+          className="p-2 rounded-md hover:bg-[var(--color-bg-secondary)] transition-colors"
           aria-label="Expand filters"
         >
           ⚙️
@@ -146,7 +146,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           {onToggleCollapse && (
             <button
               onClick={onToggleCollapse}
-              className="p-2 rounded-md hover:bg-surface-hover transition-colors"
+              className="p-2 rounded-md hover:bg-[var(--color-bg-secondary)] transition-colors"
               aria-label="Collapse sidebar"
             >
               ↼
@@ -180,7 +180,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             return (
               <label
                 key={system}
-                className="flex items-center gap-3 p-2 rounded-md hover:bg-surface-hover transition-colors cursor-pointer"
+                className="flex items-center gap-3 p-2 rounded-md hover:bg-[var(--color-bg-secondary)] transition-colors cursor-pointer"
               >
                 <input
                   type="checkbox"
@@ -221,7 +221,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           {EDGE_TYPES.map(edgeType => (
             <label
               key={edgeType}
-              className="flex items-center gap-3 p-2 rounded-md hover:bg-surface-hover transition-colors cursor-pointer"
+              className="flex items-center gap-3 p-2 rounded-md hover:bg-[var(--color-bg-secondary)] transition-colors cursor-pointer"
             >
               <input
                 type="checkbox"
@@ -264,7 +264,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
           {NODE_TYPES.map(nodeType => (
             <label
               key={nodeType}
-              className="flex items-center gap-3 p-2 rounded-md hover:bg-surface-hover transition-colors cursor-pointer"
+              className="flex items-center gap-3 p-2 rounded-md hover:bg-[var(--color-bg-secondary)] transition-colors cursor-pointer"
             >
               <input
                 type="checkbox"
@@ -334,7 +334,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             minWeight: 0,
             maxDepth: 3,
           })}
-          className="w-full py-2 px-4 border border-[var(--color-border)] rounded-md text-foreground hover:bg-surface-hover transition-colors"
+          className="w-full py-2 px-4 border border-[var(--color-border)] rounded-md text-foreground hover:bg-[var(--color-bg-secondary)] transition-colors"
         >
           Reset All Filters
         </button>

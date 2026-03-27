@@ -828,7 +828,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               </div>
               {stabilityLoading && (
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border-2 border-action-primary border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-3 h-3 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin"></div>
                   <span className="text-xs text-action-muted">Fetching data...</span>
                 </div>
               )}

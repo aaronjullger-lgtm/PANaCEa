@@ -94,8 +94,8 @@ const STATUS_CONFIG = {
   },
   IGNORED: {
     label: 'Ignored',
-    color: 'text-text-[var(--color-text-muted)]',
-    bgColor: 'bg-bg-tertiary',
+    color: 'text-[var(--color-text-muted)]',
+    bgColor: 'bg-[var(--color-bg-tertiary)]',
     icon: EyeOff,
   },
 } as const;
@@ -259,7 +259,7 @@ export function SuggestionTable({
   };
 
   const getSystemColor = (systemCode: SystemCode) => {
-    return SYSTEM_COLORS[systemCode] || 'bg-[var(--color-bg-secondary)] text-text-primary';
+    return SYSTEM_COLORS[systemCode] || 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]';
   };
 
   const getStatusConfig = (status: MappingSuggestion['status']) => {
@@ -271,7 +271,7 @@ export function SuggestionTable({
       <div role="status" className="flex items-center justify-center min-h-[400px] bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)]">
         <div className="text-center">
           <RefreshCw className="w-8 h-8 animate-spin text-action-muted mx-auto mb-4" />
-          <p className="text-text-secondary">Loading mapping suggestions...</p>
+          <p className="text-[var(--color-text-secondary)]">Loading mapping suggestions...</p>
         </div>
       </div>
     );
@@ -281,8 +281,8 @@ export function SuggestionTable({
     return (
       <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] p-8 text-center">
         <AlertCircle className="w-12 h-12 text-data-fail mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-text-primary mb-2">Failed to load suggestions</h3>
-        <p className="text-text-secondary mb-4">{error}</p>
+        <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">Failed to load suggestions</h3>
+        <p className="text-[var(--color-text-secondary)] mb-4">{error}</p>
         <button
           onClick={fetchSuggestions}
           className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]-hover transition-colors"
@@ -300,11 +300,11 @@ export function SuggestionTable({
         <div className="p-4 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                 Status
               </label>
               <select
-                className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-text-primary"
+                className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-[var(--color-text-primary)]"
                 value={filters.status}
                 onChange={e => setFilters(prev => ({ ...prev, status: e.target.value as typeof filters.status }))}
               >
@@ -316,7 +316,7 @@ export function SuggestionTable({
               </select>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                 Min Confidence
               </label>
               <input
@@ -328,18 +328,18 @@ export function SuggestionTable({
                 onChange={e => setFilters(prev => ({ ...prev, confidenceMin: parseFloat(e.target.value) }))}
                 className="w-full"
               />
-              <div className="text-xs text-text-[var(--color-text-muted)] mt-1">{formatConfidence(filters.confidenceMin)}</div>
+              <div className="text-xs text-[var(--color-text-muted)] mt-1">{formatConfidence(filters.confidenceMin)}</div>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                 Search Taxonomy
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-[var(--color-text-muted)]" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
                 <input
                   type="text"
                   placeholder="Taxonomy code or name..."
-                  className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg pl-10 pr-3 py-2 text-text-primary"
+                  className="w-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg pl-10 pr-3 py-2 text-[var(--color-text-primary)]"
                   value={filters.taxonomySearch}
                   onChange={e => setFilters(prev => ({ ...prev, taxonomySearch: e.target.value }))}
                 />
@@ -420,7 +420,7 @@ export function SuggestionTable({
             {suggestions.length === 0 ? (
               <tr>
                 <td colSpan={selectable ? 6 : 5} className="py-12 text-center">
-                  <div className="text-text-secondary">
+                  <div className="text-[var(--color-text-secondary)]">
                     <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <p className="text-lg font-medium">No mapping suggestions found</p>
                     <p className="text-sm">Adjust filters or generate new suggestions.</p>
@@ -448,14 +448,14 @@ export function SuggestionTable({
                     )}
                     <td className="py-3 px-4">
                       <div className="flex flex-col">
-                        <span className="font-medium text-text-primary">
+                        <span className="font-medium text-[var(--color-text-primary)]">
                           {suggestion.taxonomyName}
                         </span>
-                        <span className="text-xs text-text-[var(--color-text-muted)]">
+                        <span className="text-xs text-[var(--color-text-muted)]">
                           {suggestion.taxonomyCode}
                         </span>
                         {suggestion.taxonomyDescription && (
-                          <p className="text-sm text-text-secondary mt-1 line-clamp-2">
+                          <p className="text-sm text-[var(--color-text-secondary)] mt-1 line-clamp-2">
                             {suggestion.taxonomyDescription}
                           </p>
                         )}
@@ -467,7 +467,7 @@ export function SuggestionTable({
                           {suggestion.suggestedSystemCode}
                         </span>
                         {suggestion.alternativeSystems.length > 0 && (
-                          <div className="text-xs text-text-[var(--color-text-muted)]">
+                          <div className="text-xs text-[var(--color-text-muted)]">
                             Alternatives: {suggestion.alternativeSystems.slice(0, 2).map(a => a.systemCode).join(', ')}
                             {suggestion.alternativeSystems.length > 2 && '...'}
                           </div>
@@ -511,14 +511,14 @@ export function SuggestionTable({
                             </button>
                             <button
                               onClick={() => handleUpdateStatus(suggestion.id, 'IGNORED')}
-                              className="px-3 py-1 bg-bg-tertiary text-text-[var(--color-text-muted)] rounded-lg hover:bg-bg-tertiary/80 transition-colors text-sm font-medium"
+                              className="px-3 py-1 bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] rounded-lg hover:bg-[var(--color-bg-tertiary)]/80 transition-colors text-sm font-medium"
                             >
                               Ignore
                             </button>
                           </>
                         )}
                         {suggestion.status !== 'PENDING' && (
-                          <span className="text-text-[var(--color-text-muted)] text-sm">Reviewed</span>
+                          <span className="text-[var(--color-text-muted)] text-sm">Reviewed</span>
                         )}
                         <button
                           className="p-1 hover:bg-[var(--color-bg-primary)] rounded"
@@ -539,7 +539,7 @@ export function SuggestionTable({
       {/* Pagination */}
       {pagination.totalPages > 1 && (
         <div className="p-4 border-t border-[var(--color-border)] flex items-center justify-between">
-          <div className="text-sm text-text-secondary">
+          <div className="text-sm text-[var(--color-text-secondary)]">
             Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span>–
             <span className="font-medium">
               {Math.min(pagination.page * pagination.limit, pagination.total)}
@@ -554,7 +554,7 @@ export function SuggestionTable({
             >
               Previous
             </button>
-            <span className="text-text-primary">
+            <span className="text-[var(--color-text-primary)]">
               Page {pagination.page} of {pagination.totalPages}
             </span>
             <button

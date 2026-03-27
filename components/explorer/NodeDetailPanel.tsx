@@ -122,7 +122,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
           {edges.slice(0, 10).map((edge) => (
             <li
               key={edge.id}
-              className="flex items-center justify-between p-2 rounded-md bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:bg-surface-hover transition-colors"
+              className="flex items-center justify-between p-2 rounded-md bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] transition-colors"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -175,7 +175,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
     return (
       <div className="h-full flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-action-primary"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-accent)]"></div>
           <p className="mt-4 text-muted-foreground">Loading node details…</p>
         </div>
       </div>
@@ -223,7 +223,7 @@ export const NodeDetailPanel: React.FC<NodeDetailPanelProps> = ({
         {onClose && (
           <button
             onClick={onClose}
-            className="p-2 rounded-md hover:bg-surface-hover transition-colors"
+            className="p-2 rounded-md hover:bg-[var(--color-bg-secondary)] transition-colors"
             aria-label="Close panel"
           >
             ✕

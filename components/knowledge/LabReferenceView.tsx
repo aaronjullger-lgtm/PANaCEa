@@ -183,7 +183,7 @@ export const LabReferenceView: React.FC = () => {
                       {lab.siUnits && ` ${lab.siUnits}`}
                     </div>
                   </div>
-                  <span className="text-xs px-2 py-1 bg-bg-tertiary rounded text-text-[var(--color-text-muted)] flex-shrink-0">
+                  <span className="text-xs px-2 py-1 bg-[var(--color-bg-tertiary)] rounded text-[var(--color-text-muted)] flex-shrink-0">
                     {lab.category}
                   </span>
                 </button>

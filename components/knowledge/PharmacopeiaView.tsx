@@ -57,15 +57,15 @@ export const PharmacopeiaView: React.FC = () => {
         {(category?.drugs ?? []).map((drug) => (
           <Card key={drug.genericName}>
             <CardContent className="flex justify-between items-baseline py-4">
-              <span className="font-medium text-text-primary">
+              <span className="font-medium text-[var(--color-text-primary)]">
                 {drug.genericName}
                 {drug.brandName && (
-                  <span className="text-text-[var(--color-text-muted)] font-normal ml-2">
+                  <span className="text-[var(--color-text-muted)] font-normal ml-2">
                     ({drug.brandName})
                   </span>
                 )}
               </span>
-              <span className="text-xs text-text-[var(--color-text-muted)]">
+              <span className="text-xs text-[var(--color-text-muted)]">
                 {drug.drugClass.slice(0, 2).join(', ')}
               </span>
             </CardContent>

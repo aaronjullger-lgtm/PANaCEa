@@ -474,7 +474,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                         : showIncorrect
                           ? 'border-data-fail bg-data-fail/10'
                           : isSelected
-                            ? 'border-action-primary bg-[var(--color-accent)]/10'
+                            ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
                             : 'border-[var(--color-border)] hover:border-[var(--color-accent)]/50'
                     } ${isAnswerSubmitted ? 'cursor-default' : 'cursor-pointer'}`}
                   >
@@ -617,7 +617,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   activeTab === tab
-                    ? 'text-[var(--color-accent)] border-b-2 border-action-primary'
+                    ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
                     : 'text-[var(--color-text-muted)] hover:text-[var(--color-accent)]'
                 }`}
               >
@@ -705,7 +705,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                       key={entry.userId}
                       className={`flex items-center justify-between p-3 rounded-lg border ${
                         entry.userId === userId
-                          ? 'border-action-primary bg-[var(--color-accent)]/5'
+                          ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5'
                           : 'border-[var(--color-border)]'
                       }`}
                     >
@@ -808,7 +808,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                           msg.userId === 'system'
                             ? 'bg-[color-mix(in_srgb,var(--color-category-practice)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)]'
                             : msg.userId === userId
-                              ? 'bg-[var(--color-accent)]/10 border border-action-primary/20 ml-8'
+                              ? 'bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/20 ml-8'
                               : 'bg-[var(--color-bg-secondary)] border border-[var(--color-border)] mr-8'
                         }`}
                       >
@@ -851,7 +851,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                       onChange={(e) => setChatMessage(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage()}
                       placeholder="Type a message..."
-                      className="flex-1 px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-accent)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-action-primary"
+                      className="flex-1 px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-accent)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)]"
                     />
                     <StandardButton
                       type="button"

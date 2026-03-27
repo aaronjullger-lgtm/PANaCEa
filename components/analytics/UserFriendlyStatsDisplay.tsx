@@ -139,11 +139,11 @@ const StatCard: React.FC<StatCardProps> = ({
   color = 'blue',
 }) => {
   const colorClasses = {
-    blue: 'bg-action-muted text-[var(--color-accent)] border-action-primary/20',
+    blue: 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] border-[var(--color-accent)]/20',
     green: 'bg-success-muted text-success-primary border-success-primary/20',
     amber: 'bg-warning-muted text-warning-primary border-warning-primary/20',
     red: 'bg-error-muted text-error-primary border-error-primary/20',
-    purple: 'bg-action-muted text-[var(--color-accent)] border-action-primary/20',
+    purple: 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] border-[var(--color-accent)]/20',
   };
 
   return (
@@ -181,7 +181,7 @@ const StatCard: React.FC<StatCardProps> = ({
       <div className="mt-3">
         <p className="text-xl sm:text-2xl font-bold text-[var(--color-accent)]">{value}</p>
         <p className="text-sm text-[var(--color-text-muted)]">{label}</p>
-        {subtext && <p className="text-xs text-text-secondary mt-1">{subtext}</p>}
+        {subtext && <p className="text-xs text-[var(--color-text-secondary)] mt-1">{subtext}</p>}
       </div>
     </motion.div>
   );
@@ -875,18 +875,18 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-text-secondary">Questions Completed</span>
+                      <span className="text-sm text-[var(--color-text-secondary)]">Questions Completed</span>
                       <span className="font-medium text-[var(--color-accent)]">
                         {displayData.totalQuestionsLifetime}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-text-secondary">Study Days</span>
+                      <span className="text-sm text-[var(--color-text-secondary)]">Study Days</span>
                       <span className="font-medium text-[var(--color-accent)]">
                         {userStats.stats.overall.totalStudyDays}
                       </span>
                     </div>
-                    <div className="p-3 rounded-lg bg-action-muted text-[var(--color-accent)] text-sm flex items-center gap-2">
+                    <div className="p-3 rounded-lg bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] text-sm flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 flex-shrink-0" />
                       <span>Great progress! Keep building your knowledge base.</span>
                     </div>
@@ -900,13 +900,13 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-text-secondary">Last 7 Days</span>
+                      <span className="text-sm text-[var(--color-text-secondary)]">Last 7 Days</span>
                       <span className="font-medium text-[var(--color-accent)]">
                         {displayData.last7DaysQuestions} questions
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-text-secondary">Recent Accuracy</span>
+                      <span className="text-sm text-[var(--color-text-secondary)]">Recent Accuracy</span>
                       <span className="font-medium text-[var(--color-accent)]">
                         {formatPercentForDisplay(
                           userStats.stats.recentPerformance.last7Days.accuracy ??
@@ -921,7 +921,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                             ? 'bg-success-muted text-success-primary'
                             : userStats.stats.recentPerformance.trend === 'declining'
                               ? 'bg-warning-muted text-warning-primary'
-                              : 'bg-action-muted text-[var(--color-accent)]'
+                              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)]'
                         }`}
                       >
                         <Activity className="w-4 h-4 flex-shrink-0" />
@@ -947,7 +947,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                   Complete at least 50 questions to unlock personalized insights about your
                   test-taking patterns, optimal study times, and break recommendations.
                 </p>
-                <p className="text-xs text-text-secondary mt-2">
+                <p className="text-xs text-[var(--color-text-secondary)] mt-2">
                   {displayData.totalQuestionsLifetime} / 50 questions completed
                 </p>
               </div>

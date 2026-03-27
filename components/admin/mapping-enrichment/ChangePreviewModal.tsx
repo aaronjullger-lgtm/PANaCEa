@@ -121,19 +121,19 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--color-border)]">
-                <th className="text-left py-2 font-medium text-text-secondary">System</th>
-                <th className="text-left py-2 font-medium text-text-secondary">Target</th>
-                <th className="text-left py-2 font-medium text-text-secondary">Actual</th>
-                <th className="text-left py-2 font-medium text-text-secondary">Deviation</th>
-                <th className="text-left py-2 font-medium text-text-secondary">Status</th>
+                <th className="text-left py-2 font-medium text-[var(--color-text-secondary)]">System</th>
+                <th className="text-left py-2 font-medium text-[var(--color-text-secondary)]">Target</th>
+                <th className="text-left py-2 font-medium text-[var(--color-text-secondary)]">Actual</th>
+                <th className="text-left py-2 font-medium text-[var(--color-text-secondary)]">Deviation</th>
+                <th className="text-left py-2 font-medium text-[var(--color-text-secondary)]">Status</th>
               </tr>
             </thead>
             <tbody>
               {systems.map((sys: any) => (
                 <tr key={sys.system} className="border-b border-[var(--color-border)] last:border-0">
-                  <td className="py-2 font-medium text-text-primary">{sys.system}</td>
-                  <td className="py-2 text-text-secondary">{sys.targetPercent?.toFixed(1) ?? '0.0'}%</td>
-                  <td className="py-2 text-text-secondary">{sys.actualPercent?.toFixed(1) ?? '0.0'}%</td>
+                  <td className="py-2 font-medium text-[var(--color-text-primary)]">{sys.system}</td>
+                  <td className="py-2 text-[var(--color-text-secondary)]">{sys.targetPercent?.toFixed(1) ?? '0.0'}%</td>
+                  <td className="py-2 text-[var(--color-text-secondary)]">{sys.actualPercent?.toFixed(1) ?? '0.0'}%</td>
                   <td className={`py-2 ${(sys.deviation ?? 0) >= 0 ? 'text-data-positive' : 'text-data-negative'}`}>
                     {(sys.deviation ?? 0) >= 0 ? '+' : ''}{sys.deviation?.toFixed(1) ?? '0.0'}%
                   </td>
@@ -156,7 +156,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
             </tbody>
           </table>
         </div>
-        <div className="mt-4 text-sm text-text-secondary">
+        <div className="mt-4 text-sm text-[var(--color-text-secondary)]">
           <p><strong>Compliance Score:</strong> {summary?.complianceScore?.toFixed(1) ?? '0.0'}%</p>
           <p><strong>Mapped Taxonomies:</strong> {summary?.totalMappedTaxonomies ?? 0}</p>
           <p><strong>Systems Met:</strong> {summary?.systemsMet ?? 0} | <strong>Under:</strong> {summary?.systemsUnder ?? 0} | <strong>Over:</strong> {summary?.systemsOver ?? 0}</p>
@@ -168,7 +168,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-action-muted/70 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-bg-tertiary)]/70 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -179,19 +179,19 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
             {/* Header */}
             <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] rounded-t-2xl">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-action-muted rounded-lg">
+                <div className="p-2 bg-[var(--color-bg-tertiary)] rounded-lg">
                   <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-text-primary">Mapping Change Preview</h2>
-                  <p className="text-sm text-text-secondary">
+                  <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Mapping Change Preview</h2>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
                     Preview blueprint coverage impact of {selectedSuggestions.length} mapping suggestion(s)
                   </p>
                 </div>
               </div>
               <button
                 onClick={handleClose}
-                className="p-2 hover:bg-action-muted rounded-lg transition-colors text-text-secondary hover:text-text-primary"
+                className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -203,7 +203,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
               {loading && (
                 <div className="flex items-center justify-center py-12" role="status" aria-label="Loading preview">
                   <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
-                  <span className="ml-3 text-text-secondary">Computing preview…</span>
+                  <span className="ml-3 text-[var(--color-text-secondary)]">Computing preview…</span>
                 </div>
               )}
 
@@ -213,7 +213,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                     <AlertTriangle className="w-5 h-5" />
                     <span className="font-medium">Preview failed</span>
                   </div>
-                  <p className="mt-2 text-sm text-text-secondary">{error}</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{error}</p>
                   <button
                     onClick={fetchPreview}
                     className="mt-3 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:bg-[var(--color-accent)]/90 transition-colors"
@@ -228,37 +228,37 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                   {/* Summary Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5">
-                      <h3 className="font-semibold text-lg text-text-primary mb-2">Before</h3>
-                      <p className="text-text-secondary mb-4">Current taxonomy mapping distribution</p>
+                      <h3 className="font-semibold text-lg text-[var(--color-text-primary)] mb-2">Before</h3>
+                      <p className="text-[var(--color-text-secondary)] mb-4">Current taxonomy mapping distribution</p>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-text-secondary">Compliance Score</span>
-                          <span className="font-bold text-text-primary">{previewResult?.before?.complianceScore?.toFixed(1) ?? '0.0'}%</span>
+                          <span className="text-[var(--color-text-secondary)]">Compliance Score</span>
+                          <span className="font-bold text-[var(--color-text-primary)]">{previewResult?.before?.complianceScore?.toFixed(1) ?? '0.0'}%</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-text-secondary">Mapped Taxonomies</span>
-                          <span className="font-bold text-text-primary">{previewResult?.before?.totalMappedTaxonomies ?? 0}</span>
+                          <span className="text-[var(--color-text-secondary)]">Mapped Taxonomies</span>
+                          <span className="font-bold text-[var(--color-text-primary)]">{previewResult?.before?.totalMappedTaxonomies ?? 0}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-text-secondary">Systems Met</span>
+                          <span className="text-[var(--color-text-secondary)]">Systems Met</span>
                           <span className="font-bold text-data-positive">{previewResult?.before?.systemsMet ?? 0}</span>
                         </div>
                       </div>
                     </div>
                     <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 border-l-4 border-l-data-positive">
-                      <h3 className="font-semibold text-lg text-text-primary mb-2">After</h3>
-                      <p className="text-text-secondary mb-4">Projected distribution after applying changes</p>
+                      <h3 className="font-semibold text-lg text-[var(--color-text-primary)] mb-2">After</h3>
+                      <p className="text-[var(--color-text-secondary)] mb-4">Projected distribution after applying changes</p>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-text-secondary">Compliance Score</span>
-                          <span className="font-bold text-text-primary">{previewResult?.after?.complianceScore?.toFixed(1) ?? '0.0'}%</span>
+                          <span className="text-[var(--color-text-secondary)]">Compliance Score</span>
+                          <span className="font-bold text-[var(--color-text-primary)]">{previewResult?.after?.complianceScore?.toFixed(1) ?? '0.0'}%</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-text-secondary">Mapped Taxonomies</span>
-                          <span className="font-bold text-text-primary">{previewResult?.after?.totalMappedTaxonomies ?? 0}</span>
+                          <span className="text-[var(--color-text-secondary)]">Mapped Taxonomies</span>
+                          <span className="font-bold text-[var(--color-text-primary)]">{previewResult?.after?.totalMappedTaxonomies ?? 0}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-text-secondary">Systems Met</span>
+                          <span className="text-[var(--color-text-secondary)]">Systems Met</span>
                           <span className="font-bold text-data-positive">{previewResult?.after?.systemsMet ?? 0}</span>
                         </div>
                       </div>
@@ -277,7 +277,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                       <h4 className="font-semibold text-[var(--color-accent)] mb-3">Recommendations</h4>
                       <ul className="space-y-2">
                         {previewResult.after.recommendations.map((rec, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-sm text-text-secondary">
+                          <li key={idx} className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
                             <CheckCircle2 className="w-4 h-4 text-data-positive shrink-0 mt-0.5" />
                             <span>{rec}</span>
                           </li>
@@ -293,21 +293,21 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-[var(--color-border)]">
-                            <th className="text-left py-2 font-medium text-text-secondary">Taxonomy</th>
-                            <th className="text-left py-2 font-medium text-text-secondary">Current System</th>
-                            <th className="text-left py-2 font-medium text-text-secondary">Proposed System</th>
-                            <th className="text-left py-2 font-medium text-text-secondary">Confidence</th>
+                            <th className="text-left py-2 font-medium text-[var(--color-text-secondary)]">Taxonomy</th>
+                            <th className="text-left py-2 font-medium text-[var(--color-text-secondary)]">Current System</th>
+                            <th className="text-left py-2 font-medium text-[var(--color-text-secondary)]">Proposed System</th>
+                            <th className="text-left py-2 font-medium text-[var(--color-text-secondary)]">Confidence</th>
                           </tr>
                         </thead>
                         <tbody>
                           {selectedSuggestions.map((s) => (
                             <tr key={s.id} className="border-b border-[var(--color-border)] last:border-0">
                               <td className="py-2">
-                                <div className="font-medium text-text-primary">{s.taxonomyName}</div>
-                                <div className="text-xs text-text-secondary">{s.taxonomyCode}</div>
+                                <div className="font-medium text-[var(--color-text-primary)]">{s.taxonomyName}</div>
+                                <div className="text-xs text-[var(--color-text-secondary)]">{s.taxonomyCode}</div>
                               </td>
-                              <td className="py-2 text-text-secondary">
-                                <span className="px-2 py-1 bg-action-muted rounded">Unmapped</span>
+                              <td className="py-2 text-[var(--color-text-secondary)]">
+                                <span className="px-2 py-1 bg-[var(--color-bg-tertiary)] rounded">Unmapped</span>
                               </td>
                               <td className="py-2">
                                 <span className="px-2 py-1 bg-data-positive/10 text-data-positive rounded">
@@ -316,13 +316,13 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                               </td>
                               <td className="py-2">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-24 bg-action-muted rounded-full h-2">
+                                  <div className="w-24 bg-[var(--color-bg-tertiary)] rounded-full h-2">
                                     <div
                                       className="bg-data-positive h-2 rounded-full"
                                       style={{ width: `${s.confidence * 100}%` }}
                                     />
                                   </div>
-                                  <span className="text-text-secondary text-sm">{(s.confidence * 100).toFixed(0)}%</span>
+                                  <span className="text-[var(--color-text-secondary)] text-sm">{(s.confidence * 100).toFixed(0)}%</span>
                                 </div>
                               </td>
                             </tr>
@@ -337,13 +337,13 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
 
             {/* Footer */}
             <div className="sticky bottom-0 border-t border-[var(--color-border)] bg-[var(--color-bg-primary)] p-6 rounded-b-2xl flex justify-between items-center">
-              <div className="text-sm text-text-secondary">
+              <div className="text-sm text-[var(--color-text-secondary)]">
                 This preview is for planning purposes only. No changes have been saved.
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={handleClose}
-                  className="px-5 py-2 border border-[var(--color-border)] text-text-secondary hover:bg-action-muted rounded-lg transition-colors"
+                  className="px-5 py-2 border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
                 >
                   Cancel
                 </button>

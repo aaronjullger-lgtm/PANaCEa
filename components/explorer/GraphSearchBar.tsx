@@ -131,7 +131,7 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-[var(--color-text-muted)]" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
         <input
           ref={inputRef}
           type="text"
@@ -144,7 +144,7 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
           aria-label="Search graph nodes"
         />
         {loading && (
-          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-[var(--color-text-muted)] animate-spin" />
+          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)] animate-spin" />
         )}
       </div>
 
@@ -154,8 +154,8 @@ export const GraphSearchBar: React.FC<GraphSearchBarProps> = ({
           {suggestions.map((suggestion, index) => (
             <button
               key={suggestion.id}
-              className={`w-full text-left px-4 py-3 hover:bg-surface-hover transition-colors ${
-                index === selectedIndex ? 'bg-surface-hover' : ''
+              className={`w-full text-left px-4 py-3 hover:bg-[var(--color-bg-secondary)] transition-colors ${
+                index === selectedIndex ? 'bg-[var(--color-bg-secondary)]' : ''
               } ${index > 0 ? 'border-t border-[var(--color-border)]' : ''}`}
               onClick={() => handleSuggestionClick(suggestion)}
               onMouseEnter={() => setSelectedIndex(index)}

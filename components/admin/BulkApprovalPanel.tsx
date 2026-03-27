@@ -57,8 +57,8 @@ const ACTION_CONFIG: Record<BulkAction, { label: string; icon: React.ElementType
   IGNORE: {
     label: 'Ignore Selected',
     icon: EyeOff,
-    color: 'text-text-[var(--color-text-muted)]',
-    bgColor: 'bg-bg-tertiary hover:bg-bg-tertiary/80',
+    color: 'text-[var(--color-text-muted)]',
+    bgColor: 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/80',
   },
 };
 
@@ -140,8 +140,8 @@ export function BulkApprovalPanel({
               <CheckSquare className="w-5 h-5 text-[var(--color-accent)]" />
             </div>
             <div>
-              <h3 className="font-semibold text-text-primary">Bulk Actions</h3>
-              <p className="text-sm text-text-secondary">
+              <h3 className="font-semibold text-[var(--color-text-primary)]">Bulk Actions</h3>
+              <p className="text-sm text-[var(--color-text-secondary)]">
                 {selectedIds.length} suggestion{selectedIds.length !== 1 ? 's' : ''} selected
                 {enableSelectAllFiltered && filteredCount && filteredCount > selectedIds.length && (
                   <span className="ml-2">
@@ -160,7 +160,7 @@ export function BulkApprovalPanel({
           {selectedIds.length > 0 && (
             <button
               onClick={onClearSelection}
-              className="text-sm text-text-[var(--color-text-muted)] hover:text-text-primary transition-colors"
+              className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
               disabled={isLoading}
             >
               Clear selection
@@ -187,7 +187,7 @@ export function BulkApprovalPanel({
 
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--color-border)] text-text-secondary hover:text-text-primary hover:bg-[var(--color-bg-primary)] transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-primary)] transition-colors"
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
             Advanced
@@ -208,9 +208,9 @@ export function BulkApprovalPanel({
               <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-4 h-4 text-data-provisional" />
-                  <h4 className="font-medium text-text-primary">High-confidence approve</h4>
+                  <h4 className="font-medium text-[var(--color-text-primary)]">High-confidence approve</h4>
                 </div>
-                <p className="text-sm text-text-secondary mb-3">
+                <p className="text-sm text-[var(--color-text-secondary)] mb-3">
                   Automatically approve suggestions with confidence {'>'} 85%
                 </p>
                 <button
@@ -224,9 +224,9 @@ export function BulkApprovalPanel({
               <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className="w-4 h-4 text-data-fail" />
-                  <h4 className="font-medium text-text-primary">Batch reject low confidence</h4>
+                  <h4 className="font-medium text-[var(--color-text-primary)]">Batch reject low confidence</h4>
                 </div>
-                <p className="text-sm text-text-secondary mb-3">
+                <p className="text-sm text-[var(--color-text-secondary)] mb-3">
                   Reject suggestions with confidence {'<'} 30% and send for manual review
                 </p>
                 <button
@@ -239,14 +239,14 @@ export function BulkApprovalPanel({
               </div>
               <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
                 <div className="flex items-center gap-2 mb-2">
-                  <EyeOff className="w-4 h-4 text-text-[var(--color-text-muted)]" />
-                  <h4 className="font-medium text-text-primary">Ignore duplicates</h4>
+                  <EyeOff className="w-4 h-4 text-[var(--color-text-muted)]" />
+                  <h4 className="font-medium text-[var(--color-text-primary)]">Ignore duplicates</h4>
                 </div>
-                <p className="text-sm text-text-secondary mb-3">
+                <p className="text-sm text-[var(--color-text-secondary)] mb-3">
                   Ignore suggestions where taxonomy already has a mapping
                 </p>
                 <button
-                  className="w-full px-3 py-2 bg-bg-tertiary text-text-[var(--color-text-muted)] rounded-lg hover:bg-bg-tertiary/80 transition-colors text-sm font-medium"
+                  className="w-full px-3 py-2 bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] rounded-lg hover:bg-[var(--color-bg-tertiary)]/80 transition-colors text-sm font-medium"
                   disabled={isLoading}
                   onClick={() => toast.info('Ignore duplicates is coming soon.')}
                 >
@@ -272,9 +272,9 @@ export function BulkApprovalPanel({
                 <AlertTriangle className="w-5 h-5 text-data-fail" />
                 <div className="flex-1">
                   <p className="font-medium text-data-fail">Bulk action failed</p>
-                  <p className="text-sm text-text-secondary">{error}</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">{error}</p>
                 </div>
-                <button onClick={() => setError(null)} className="text-text-[var(--color-text-muted)] hover:text-text-primary">
+                <button onClick={() => setError(null)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]">
                   ✕
                 </button>
               </div>
@@ -284,9 +284,9 @@ export function BulkApprovalPanel({
                 <CheckCircle2 className="w-5 h-5 text-data-pass" />
                 <div className="flex-1">
                   <p className="font-medium text-data-pass">Success</p>
-                  <p className="text-sm text-text-secondary">{success}</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">{success}</p>
                 </div>
-                <button onClick={() => setSuccess(null)} className="text-text-[var(--color-text-muted)] hover:text-text-primary">
+                <button onClick={() => setSuccess(null)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]">
                   ✕
                 </button>
               </div>

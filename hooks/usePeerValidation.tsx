@@ -61,9 +61,9 @@ export function PeerValidationBadge({
 
   return (
     <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-3 mt-4">
-      <p className="text-sm text-text-secondary">
-        <span className="font-semibold text-text-primary">{percentageMissed}%</span> of users also missed this question
-        <span className="text-xs text-text-muted ml-2">({totalAttempts} total attempts)</span>
+      <p className="text-sm text-[var(--color-text-secondary)]">
+        <span className="font-semibold text-[var(--color-text-primary)]">{percentageMissed}%</span> of users also missed this question
+        <span className="text-xs text-[var(--color-text-muted)] ml-2">({totalAttempts} total attempts)</span>
       </p>
     </div>
   );

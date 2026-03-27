@@ -131,7 +131,7 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header with title, search, and close button */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-          <h2 className="text-lg font-semibold text-text-primary">Cross‑System Integration Explorer</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Cross‑System Integration Explorer</h2>
           <div className="flex-1 max-w-xl mx-4">
             <GraphSearchBar onNodeSelect={handleSearchSelect} />
           </div>
@@ -139,8 +139,8 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
             onClick={() => setShowPerformanceOverlay(prev => !prev)}
             className={`px-3 py-1.5 rounded-md border transition-colors ${
               showPerformanceOverlay
-                ? 'bg-[var(--color-accent)] text-white border-action-primary'
-                : 'bg-[var(--color-bg-secondary)] text-text-primary border-[var(--color-border)] hover:bg-surface-hover'
+                ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)]'
             }`}
             aria-label={showPerformanceOverlay ? 'Hide performance overlay' : 'Show performance overlay'}
           >
@@ -149,10 +149,10 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
           {onClose && (
             <button
               onClick={onClose}
-              className="p-2 rounded-md hover:bg-surface-hover transition-colors"
+              className="p-2 rounded-md hover:bg-[var(--color-bg-secondary)] transition-colors"
               aria-label="Close explorer"
             >
-              <X className="w-5 h-5 text-text-[var(--color-text-muted)]" />
+              <X className="w-5 h-5 text-[var(--color-text-muted)]" />
             </button>
           )}
         </div>
@@ -179,12 +179,12 @@ export const CrossSystemExplorer: React.FC<CrossSystemExplorerProps> = ({ onClos
           </button>
           <button
             onClick={handleClearPath}
-            className="px-4 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-md hover:bg-surface-hover"
+            className="px-4 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-md hover:bg-[var(--color-bg-secondary)]"
           >
             Clear
           </button>
           {highlightedPath.length > 0 && (
-            <span className="text-sm text-text-[var(--color-text-muted)]">
+            <span className="text-sm text-[var(--color-text-muted)]">
               Path: {highlightedPath.length} nodes
             </span>
           )}
