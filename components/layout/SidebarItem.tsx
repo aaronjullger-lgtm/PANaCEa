@@ -91,7 +91,7 @@ function SidebarItemContent({
         >
           <Icon className="h-5 w-5" aria-hidden />
         </span>
-        <span className="text-[10px] leading-none font-medium text-center truncate max-w-[3rem] px-0.5">
+        <span className="text-[10px] leading-none font-medium text-center truncate max-w-full px-0.5">
           {label}
         </span>
       </span>
