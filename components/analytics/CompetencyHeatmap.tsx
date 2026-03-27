@@ -715,9 +715,9 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
   // Calculate summary stats
   const summaryStats = useMemo(() => {
     const total = systemData.reduce((acc, s) => acc + s.questionsAnswered, 0);
-    const avgAccuracy = Math.round(
-      systemData.reduce((acc, s) => acc + s.accuracy * s.questionsAnswered, 0) / total
-    );
+    const avgAccuracy = total > 0
+      ? Math.round(systemData.reduce((acc, s) => acc + s.accuracy * s.questionsAnswered, 0) / total)
+      : 0;
     const weakAreas = systemData.filter((s) => s.accuracy < 70).length;
     const strongAreas = systemData.filter((s) => s.accuracy >= 80).length;
     return { total, avgAccuracy, weakAreas, strongAreas };
