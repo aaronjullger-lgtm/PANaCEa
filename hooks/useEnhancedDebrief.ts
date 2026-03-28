@@ -22,6 +22,7 @@ export function useEnhancedDebrief({ sessionId, enabled }: UseEnhancedDebriefOpt
   const [timingAnalytics, setTimingAnalytics] = useState<SessionTimingAnalytics | null>(null);
   const [infographics, setInfographics] = useState<GeneratedInfographic[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [debriefError, setDebriefError] = useState<string | null>(null);
 
   /**
    * Generate complete debrief package.
@@ -100,6 +101,7 @@ export function useEnhancedDebrief({ sessionId, enabled }: UseEnhancedDebriefOpt
         setInfographics(generatedInfographics);
       } catch (error) {
         console.error('Error generating debrief:', error);
+        setDebriefError(error instanceof Error ? error.message : 'Failed to generate debrief');
       } finally {
         setIsGenerating(false);
       }
@@ -112,6 +114,7 @@ export function useEnhancedDebrief({ sessionId, enabled }: UseEnhancedDebriefOpt
     timingAnalytics,
     infographics,
     isGenerating,
+    debriefError,
     generateDebrief,
   };
 }
