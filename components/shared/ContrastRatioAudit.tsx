@@ -144,19 +144,7 @@ const meetsContrastStandard = (
   return { passesAA, passesAAA, level };
 };
 
-export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
-  className = '',
-  onIssuesFound,
-  initialColorPairs = [],
-  defaultOpen = false,
-}) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  const [issues, setIssues] = useState<ContrastIssue[]>([]);
-  const [activeTab, setActiveTab] = useState<'audit' | 'visual' | 'recommendations'>('audit');
-  const [isAuditing, setIsAuditing] = useState(false);
-  const [colorPairs, setColorPairs] = useState<ColorPair[]>(initialColorPairs);
-
-  const defaultColorPairs: ColorPair[] = [
+const DEFAULT_COLOR_PAIRS: ColorPair[] = [
     {
       foreground: 'var(--color-text-primary)',
       background: 'var(--color-bg-primary)',
@@ -192,14 +180,21 @@ export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
       backgroundName: 'Accent',
       description: 'Inverse text on accent background',
     },
-  ];
+];
 
-  // Initialize color pairs if none provided
-  useEffect(() => {
-    if (initialColorPairs.length === 0) {
-      setColorPairs(defaultColorPairs);
-    }
-  }, [initialColorPairs]);
+export const ContrastRatioAudit: React.FC<ContrastRatioAuditProps> = ({
+  className = '',
+  onIssuesFound,
+  initialColorPairs = [],
+  defaultOpen = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [issues, setIssues] = useState<ContrastIssue[]>([]);
+  const [activeTab, setActiveTab] = useState<'audit' | 'visual' | 'recommendations'>('audit');
+  const [isAuditing, setIsAuditing] = useState(false);
+  const [colorPairs] = useState<ColorPair[]>(
+    initialColorPairs.length > 0 ? initialColorPairs : DEFAULT_COLOR_PAIRS
+  );
 
   const runAudit = () => {
     setIsAuditing(true);
