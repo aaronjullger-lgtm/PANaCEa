@@ -385,7 +385,12 @@ export const LibraryEnrichmentDashboard: React.FC = () => {
                     : 'border-data-provisional/30 bg-data-provisional/5'
                 }`}
               >
-                <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleLogExpanded(idx)}>
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-between cursor-pointer text-left"
+                  onClick={() => toggleLogExpanded(idx)}
+                  aria-expanded={expandedLogIndex === idx}
+                >
                   <div className="flex items-center gap-3">
                     {log.status === 'success' && <CheckCircle2 className="w-5 h-5 text-data-pass" />}
                     {log.status === 'failure' && <XCircle className="w-5 h-5 text-data-fail" />}
@@ -405,7 +410,7 @@ export const LibraryEnrichmentDashboard: React.FC = () => {
                     )}
                     <ChevronDown className={`w-4 h-4 transition-transform ${expandedLogIndex === idx ? 'rotate-180' : ''}`} />
                   </div>
-                </div>
+                </button>
                 <AnimatePresence>
                   {expandedLogIndex === idx && (
                     <motion.div
