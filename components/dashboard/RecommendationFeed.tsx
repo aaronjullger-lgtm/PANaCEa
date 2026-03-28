@@ -241,11 +241,28 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
     // Let's dismiss it from feed so it doesn't clutter? No, keep it until action.
   };
 
-  if (loading) return null; // Or skeleton
+  if (loading) return (
+    <div className={`mb-8 ${className}`} aria-busy="true">
+      <div className="h-6 w-48 rounded bg-[var(--color-bg-secondary)] animate-pulse mb-4" />
+      <div className="grid gap-4 md:grid-cols-2">
+        {[0, 1].map((i) => (
+          <div key={i} className="h-32 rounded-xl bg-[var(--color-bg-secondary)] animate-pulse" />
+        ))}
+      </div>
+    </div>
+  );
 
-  // Only show if we have items or strict requirement?
-  // If empty and not generating, maybe return null.
-  if (recommendations.length === 0 && !generating) return null;
+  if (recommendations.length === 0 && !generating) return (
+    <div className={`mb-8 ${className}`}>
+      <h3 className="text-lg font-bold flex items-center gap-2 text-[var(--color-text-primary)] mb-3">
+        <Sparkles className="w-5 h-5 text-[var(--color-data-provisional)]" />
+        Smart Recommendations
+      </h3>
+      <p className="text-sm text-[var(--color-text-muted)]">
+        Complete a few more practice questions to unlock personalized study recommendations.
+      </p>
+    </div>
+  );
 
   return (
     <div className={`mb-8 ${className}`}>
@@ -263,7 +280,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
           <button
             onClick={generateRecommendations}
             disabled={generating}
-            className="p-2 rounded-full hover:bg-[var(--color-bg-secondary)] transition-colors"
+            className="p-2 rounded-full hover:bg-[var(--color-bg-secondary)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Refresh Analysis"
             aria-label="Refresh recommendations"
           >

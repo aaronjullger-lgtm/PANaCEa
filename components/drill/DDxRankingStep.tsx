@@ -282,7 +282,7 @@ export function DDxRankingStep({
                     <button
                       onClick={() => moveUp(index)}
                       disabled={index === 0}
-                      className="p-1 rounded hover:bg-data-neutral dark:hover:bg-data-neutral disabled:opacity-30"
+                      className="p-1 rounded hover:bg-data-neutral dark:hover:bg-data-neutral disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Move up"
                     >
                       <ChevronUp className="h-4 w-4" />
@@ -290,7 +290,7 @@ export function DDxRankingStep({
                     <button
                       onClick={() => moveDown(index)}
                       disabled={index === items.length - 1}
-                      className="p-1 rounded hover:bg-data-neutral dark:hover:bg-data-neutral disabled:opacity-30"
+                      className="p-1 rounded hover:bg-data-neutral dark:hover:bg-data-neutral disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Move down"
                     >
                       <ChevronDown className="h-4 w-4" />
