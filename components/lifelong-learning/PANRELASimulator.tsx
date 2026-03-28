@@ -484,42 +484,30 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
 
             {isResourcesOpen ? (
               <div className="space-y-3">
-                <a
-                  href="#"
-                  className="block p-3 bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg 
-                  hover:bg-[var(--color-category-practice)] hoverbg-[color-mix(in_srgb,var(--color-category-practice)_30%,transparent)] transition-colors"
-                >
+                <div className="block p-3 bg-[color-mix(in_srgb,var(--color-category-practice)_20%,transparent)] rounded-lg">
                   <div className="font-semibold text-[var(--color-category-practice)] text-sm">
                     UpToDate
                   </div>
                   <div className="text-xs text-[var(--color-category-practice)]">
                     Evidence-based clinical resource
                   </div>
-                </a>
-                <a
-                  href="#"
-                  className="block p-3 bg-data-pass dark:bg-data-pass/20 rounded-lg 
-                  hover:bg-data-pass dark:hover:bg-data-pass/30 transition-colors"
-                >
+                </div>
+                <div className="block p-3 bg-data-pass dark:bg-data-pass/20 rounded-lg">
                   <div className="font-semibold text-data-pass dark:text-data-pass text-sm">
                     Clinical Guidelines
                   </div>
                   <div className="text-xs text-data-pass dark:text-data-pass">
                     ACC/AHA, ADA, IDSA guidelines
                   </div>
-                </a>
-                <a
-                  href="#"
-                  className="block p-3 bg-[var(--color-accent)]/5 rounded-lg 
-                  hover:bg-[var(--color-accent)]/10 transition-colors"
-                >
+                </div>
+                <div className="block p-3 bg-[var(--color-accent)]/5 rounded-lg">
                   <div className="font-semibold text-[var(--color-text-primary)] text-sm">
                     Drug Reference
                   </div>
                   <div className="text-xs text-[var(--color-text-muted)]">
                     Epocrates, Lexicomp
                   </div>
-                </a>
+                </div>
               </div>
             ) : (
               <p className="text-sm text-[var(--color-text-muted)]">
