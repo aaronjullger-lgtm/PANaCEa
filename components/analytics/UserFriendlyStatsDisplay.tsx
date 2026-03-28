@@ -140,9 +140,9 @@ const StatCard: React.FC<StatCardProps> = ({
 }) => {
   const colorClasses = {
     blue: 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] border-[var(--color-accent)]/20',
-    green: 'bg-success-muted text-success-primary border-success-primary/20',
-    amber: 'bg-warning-muted text-warning-primary border-warning-primary/20',
-    red: 'bg-error-muted text-error-primary border-error-primary/20',
+    green: 'bg-[var(--color-data-pass)]/15 text-[var(--color-data-pass)] border-[var(--color-data-pass)]/20',
+    amber: 'bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)] border-[var(--color-data-provisional)]/20',
+    red: 'bg-[var(--color-data-fail)]/15 text-[var(--color-data-fail)] border-[var(--color-data-fail)]/20',
     purple: 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] border-[var(--color-accent)]/20',
   };
 
@@ -158,9 +158,9 @@ const StatCard: React.FC<StatCardProps> = ({
           <div
             className={`flex items-center gap-1 text-xs font-medium ${
               trend === 'up'
-                ? 'text-success-primary'
+                ? 'text-[var(--color-data-pass)]'
                 : trend === 'down'
-                  ? 'text-error-primary'
+                  ? 'text-[var(--color-data-fail)]'
                   : 'text-[var(--color-text-muted)]'
             }`}
           >
@@ -390,10 +390,10 @@ const SystemStrengthBar: React.FC<{
   isStrength: boolean;
 }> = ({ system, mastery, trend, isStrength }) => {
   const getBarColor = (m: number) => {
-    if (m >= 80) return 'bg-success-primary';
+    if (m >= 80) return 'bg-[var(--color-data-pass)]';
     if (m >= 60) return 'bg-[var(--color-accent)]';
-    if (m >= 40) return 'bg-warning-primary';
-    return 'bg-error-primary';
+    if (m >= 40) return 'bg-[var(--color-data-provisional)]';
+    return 'bg-[var(--color-data-fail)]';
   };
 
   return (
@@ -415,9 +415,9 @@ const SystemStrengthBar: React.FC<{
       <div
         className={`w-4 ${
           trend === 'improving'
-            ? 'text-success-primary'
+            ? 'text-[var(--color-data-pass)]'
             : trend === 'declining'
-              ? 'text-error-primary'
+              ? 'text-[var(--color-data-fail)]'
               : 'text-[var(--color-text-muted)]'
         }`}
       >
@@ -918,9 +918,9 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                       <div
                         className={`p-3 rounded-lg text-sm flex items-center gap-2 ${
                           userStats.stats.recentPerformance.trend === 'improving'
-                            ? 'bg-success-muted text-success-primary'
+                            ? 'bg-[var(--color-data-pass)]/15 text-[var(--color-data-pass)]'
                             : userStats.stats.recentPerformance.trend === 'declining'
-                              ? 'bg-warning-muted text-warning-primary'
+                              ? 'bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)]'
                               : 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)]'
                         }`}
                       >
@@ -1003,7 +1003,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                   {displayData.weakAreas.map((area) => (
                     <span
                       key={area}
-                      className="px-3 py-1.5 bg-warning-muted text-warning-primary rounded-full text-sm font-medium"
+                      className="px-3 py-1.5 bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)] rounded-full text-sm font-medium"
                     >
                       {area}
                     </span>
@@ -1023,7 +1023,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
                   {displayData.strongAreas.map((strength) => (
                     <span
                       key={strength}
-                      className="px-3 py-1.5 bg-success-muted text-success-primary rounded-full text-sm font-medium"
+                      className="px-3 py-1.5 bg-[var(--color-data-pass)]/15 text-[var(--color-data-pass)] rounded-full text-sm font-medium"
                     >
                       {strength}
                     </span>
