@@ -9,6 +9,25 @@
 import { toast } from 'sonner';
 import { captureError } from '@/lib/monitoring/sentry';
 
+/**
+ * Messages that indicate expected user-facing conditions (not bugs).
+ * These are shown to the user via toast but should NOT be sent to Sentry
+ * because they would create noise in the monitoring dashboard.
+ */
+const EXPECTED_ERROR_PATTERNS = [
+  'sign in',
+  'log in',
+  'logged in',
+  'please authenticate',
+  'session expired',
+  'unauthorized',
+];
+
+function isExpectedError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return EXPECTED_ERROR_PATTERNS.some((pattern) => lower.includes(pattern));
+}
+
 export function reportActionError(
   message: string,
   error?: unknown
@@ -16,13 +35,16 @@ export function reportActionError(
   if (error !== undefined && error !== null) {
     console.error('[Action error]', message, error);
 
-    // Send to Sentry so production errors are visible in the monitoring dashboard
-    const sentryError = error instanceof Error ? error : new Error(String(error));
-    captureError(sentryError, {
-      tags: { source: 'action_error' },
-      extra: { userMessage: message },
-      level: 'error',
-    });
+    // Only send unexpected errors to Sentry; expected user-facing conditions
+    // (e.g. "please sign in") are not bugs and would create noise.
+    if (!isExpectedError(message)) {
+      const sentryError = error instanceof Error ? error : new Error(String(error));
+      captureError(sentryError, {
+        tags: { source: 'action_error' },
+        extra: { userMessage: message },
+        level: 'error',
+      });
+    }
   }
   toast.error(message);
 }
