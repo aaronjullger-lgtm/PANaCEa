@@ -20,6 +20,7 @@ export const WorkloadProjector: React.FC = () => {
       {/* Header with Toggle */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
         className="w-full flex items-center justify-between group"
       >
         <div className="flex items-center gap-2">

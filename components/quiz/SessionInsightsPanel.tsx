@@ -47,6 +47,8 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
+        aria-label={isExpanded ? 'Collapse session insights' : 'Expand session insights'}
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-[var(--color-bg-secondary)] transition-colors"
       >
         <div className="flex items-center gap-2">

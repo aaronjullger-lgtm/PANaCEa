@@ -378,6 +378,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                   >
                     <button
                       onClick={() => setExpandedDrill(isExpanded ? null : (drillType as DrillType))}
+                      aria-expanded={isExpanded}
                       className="w-full p-5 flex items-center gap-4 hover:bg-[var(--color-bg-tertiary)] transition-colors"
                     >
                       <div className="p-3 rounded-lg bg-[var(--color-accent)]/10">

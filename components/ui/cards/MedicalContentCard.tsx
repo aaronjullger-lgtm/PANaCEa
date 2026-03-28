@@ -41,6 +41,7 @@ const CollapsibleSection: React.FC<SectionProps> = ({ title, children, defaultOp
     <div className="border-b border-[var(--color-border)] last:border-b-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
         className="w-full flex items-center justify-between p-4 hover:bg-[var(--color-bg-secondary)]/30 transition-colors group"
       >
         <h3 className="text-base font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] transition-colors">
