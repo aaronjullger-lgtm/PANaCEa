@@ -212,8 +212,8 @@ export const OSCELiveSession: React.FC<OSCELiveSessionProps> = ({
         </button>
       )}
       {status === 'connecting' && (
-        <div className="flex items-center justify-center gap-2 py-3 text-[var(--color-text-muted)]">
-          <Loader2 className="w-5 h-5 animate-spin" />
+        <div role="status" aria-live="polite" className="flex items-center justify-center gap-2 py-3 text-[var(--color-text-muted)]">
+          <Loader2 aria-hidden="true" className="w-5 h-5 animate-spin" />
           Connecting…
         </div>
       )}

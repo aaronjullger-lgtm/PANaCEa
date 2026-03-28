@@ -809,7 +809,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
               >
                 {(viewState as string) === 'loading' ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div aria-hidden="true" className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Loading Drill...
                   </>
                 ) : (
@@ -830,8 +830,8 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   if (viewState === 'loading') {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] text-data-neutral dark:text-data-neutral flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-[var(--color-accent)]/30 border-t-[var(--color-accent)] rounded-full animate-spin mx-auto" />
+        <div role="status" aria-label="Loading drill" className="text-center space-y-4">
+          <div aria-hidden="true" className="w-16 h-16 border-4 border-[var(--color-accent)]/30 border-t-[var(--color-accent)] rounded-full animate-spin mx-auto" />
           <p className="text-lg font-medium text-data-neutral dark:text-data-neutral">Loading drill...</p>
         </div>
       </div>

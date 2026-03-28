@@ -396,8 +396,8 @@ export const OrderPanel: React.FC<OrderPanelProps> = React.memo(
 
               {/* Items List */}
               {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="w-8 h-8 border-2 border-[var(--color-accent)]/30 border-t-[var(--color-accent)] rounded-full animate-spin" />
+                <div role="status" aria-label="Loading items" className="flex items-center justify-center py-12">
+                  <div aria-hidden="true" className="w-8 h-8 border-2 border-[var(--color-accent)]/30 border-t-[var(--color-accent)] rounded-full animate-spin" />
                 </div>
               ) : orderableItems.length === 0 ? (
                 <div className="text-center py-12 text-[var(--color-text-muted)]">

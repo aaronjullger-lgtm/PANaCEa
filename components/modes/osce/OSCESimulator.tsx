@@ -226,8 +226,8 @@ export const OSCESimulator: React.FC<OSCESimulatorProps> = ({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <div role="status" aria-label="Loading OSCE station" className="text-center">
+          <div aria-hidden="true" className="w-12 h-12 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-[var(--color-text-muted)]">Loading OSCE station…</p>
         </div>
       </div>
