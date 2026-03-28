@@ -186,7 +186,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                   type="checkbox"
                   checked={filter.systemCodes.includes(system)}
                   onChange={() => handleSystemToggle(system)}
-                  className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-action-primary"
+                  className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                 />
                 <span className="flex-1 text-foreground">{system}</span>
                 <span className="text-xs text-muted-foreground">
@@ -227,7 +227,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 type="checkbox"
                 checked={filter.edgeTypes.includes(edgeType)}
                 onChange={() => handleEdgeTypeToggle(edgeType)}
-                className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-action-primary"
+                className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
               />
               <span className="flex-1 text-foreground">{edgeType.replace(/_/g, ' ')}</span>
               <div
@@ -270,7 +270,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
                 type="checkbox"
                 checked={filter.nodeTypes.includes(nodeType)}
                 onChange={() => handleNodeTypeToggle(nodeType)}
-                className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-action-primary"
+                className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
               />
               <span className="flex-1 text-foreground">{nodeType.replace(/_/g, ' ')}</span>
             </label>

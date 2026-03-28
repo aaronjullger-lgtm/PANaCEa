@@ -87,7 +87,7 @@ const DrillShell: React.FC<DrillShellProps> = ({
               )}
               {breadcrumb.map((crumb, index) => (
                 <React.Fragment key={index}>
-                  <span className="text-border-subtle">/</span>
+                  <span className="text-[var(--color-border)]">/</span>
                   <span
                     className={
                       index === breadcrumb.length - 1

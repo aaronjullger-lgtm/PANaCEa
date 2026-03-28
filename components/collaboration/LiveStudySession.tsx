@@ -447,7 +447,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                 {[...Array(3)].map((_, i) => (
                   <div
                     key={i}
-                    className={`w-2 h-2 rounded-full ${i < currentQuestion.difficulty ? 'bg-[var(--color-accent)]' : 'bg-border-subtle'}`}
+                    className={`w-2 h-2 rounded-full ${i < currentQuestion.difficulty ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]'}`}
                   />
                 ))}
               </div>
@@ -600,7 +600,7 @@ export const LiveStudySession: React.FC<LiveStudySessionProps> = ({
                 {currentQuestionIndex + 1} / {mockQuestions.length}
               </span>
             </div>
-            <div className="h-2 bg-border-subtle rounded-full overflow-hidden">
+            <div className="h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-[var(--color-accent)]"
                 initial={{ width: 0 }}

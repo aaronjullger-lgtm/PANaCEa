@@ -137,7 +137,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
               <select
                 value={selectedSystem}
                 onChange={(e) => setSelectedSystem(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border bg-[var(--color-bg-secondary)] text-[var(--color-accent)] dark:border-data-neutral focus:ring-2 focus:ring-action-primary focus:border-transparent transition-all"
+                className="w-full px-4 py-2 rounded-lg border bg-[var(--color-bg-secondary)] text-[var(--color-accent)] dark:border-data-neutral focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent transition-all"
               >
                 <option value="">All Systems (NCCPA Blueprint Weights)</option>
                 {organSystems.map((system) => (

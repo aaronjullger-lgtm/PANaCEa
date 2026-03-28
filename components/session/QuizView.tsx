@@ -1755,7 +1755,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
                       >
                         A−
                       </button>
-                      <div className="w-px h-5 bg-border-subtle"></div>
+                      <div className="w-px h-5 bg-[var(--color-border)]"></div>
                       <button
                         onClick={() => setFontSizeAdjustment((prev) => prev + 1)}
                         className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-r-md text-sm font-medium"
