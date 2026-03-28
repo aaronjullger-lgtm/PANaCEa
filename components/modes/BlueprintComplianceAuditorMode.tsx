@@ -124,8 +124,7 @@ export function BlueprintComplianceAuditorMode() {
   };
 
   const handleExecuteAction = async (action: CorrectiveAction) => {
-    toast.info(`Executing ${action.action} for ${action.system}...`);
-    // TODO: Call API endpoint to generate content
+    toast.info(`Automated content generation for ${action.system} is coming soon.`);
   };
 
   const currentData = activeTab === 'medical' ? medicalData : activeTab === 'questions' ? questionsData : null;
