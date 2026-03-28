@@ -723,6 +723,16 @@ export const CompetencyHeatmap: React.FC<CompetencyHeatmapProps> = ({
     return { total, avgAccuracy, weakAreas, strongAreas };
   }, [systemData]);
 
+  if (systemData.length === 0) {
+    return (
+      <div className="text-center py-12 px-4">
+        <p className="text-[var(--color-text-muted)]">
+          Answer questions to populate your competency heatmap.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header with summary stats */}
