@@ -102,6 +102,7 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
   const [relatedData, setRelatedData] = useState<any>(null);
   const [isLoadingRelated, setIsLoadingRelated] = useState(false);
   const [relatedReferences, setRelatedReferences] = useState<RelatedReference[]>([]);
+  const [relatedError, setRelatedError] = useState(false);
 
   // Fetch related reference data when expanded using dedicated API
   useEffect(() => {
@@ -109,6 +110,7 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
 
     const fetchRelatedData = async () => {
       setIsLoadingRelated(true);
+      setRelatedError(false);
       try {
         const token = await getToken();
 
@@ -159,11 +161,12 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
             }
           }
         } else {
-          // Fallback: log error but don't crash
-          console.warn('Failed to fetch related content:', await response.text());
+          console.warn('Failed to fetch related content:', response.status);
+          setRelatedError(true);
         }
       } catch (err) {
         console.error('Error fetching related data:', err);
+        setRelatedError(true);
       } finally {
         setIsLoadingRelated(false);
       }
@@ -504,7 +507,9 @@ export const EnhancedFeedbackPanel: React.FC<EnhancedFeedbackPanelProps> = ({
 
                         {!relatedData && relatedReferences.length === 0 && (
                           <div className="text-center py-4 text-[var(--color-text-muted)] text-sm">
-                            No additional reference material found for this topic.
+                            {relatedError
+                              ? 'Unable to load reference material. Check your connection.'
+                              : 'No additional reference material found for this topic.'}
                           </div>
                         )}
                       </>

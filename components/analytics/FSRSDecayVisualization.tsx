@@ -399,7 +399,7 @@ export const FSRSDecayVisualization: React.FC<FSRSDecayVisualizationProps> = ({
           <Brain className="w-5 h-5 text-[var(--color-accent)]" />
           <h3 className="font-semibold text-[var(--color-text-primary)]">Memory Decay Curves</h3>
         </div>
-        <button className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors group">
+        <button aria-label="Learn more about memory decay curves" className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors group">
           <Info className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)]" />
         </button>
       </div>
