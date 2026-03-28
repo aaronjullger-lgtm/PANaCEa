@@ -157,7 +157,22 @@ export const EpistemicGauge: React.FC<EpistemicGaugeProps> = ({
       : 'Data confidence is high.');
 
   return (
-    <div className={`relative ${onClick ? 'cursor-pointer' : ''}`} onClick={onClick}>
+    <div
+      className={`relative ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={onClick}
+      {...(onClick
+        ? {
+            role: 'button',
+            tabIndex: 0,
+            onKeyDown: (e: React.KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+              }
+            },
+          }
+        : {})}
+    >
       {/* Label with confidence indicator */}
       {(label || showConfidenceIndicator) && (
         <div className="flex items-center justify-between mb-1.5">
@@ -292,6 +307,18 @@ export const EpistemicRadialGauge: React.FC<
       className={`relative inline-flex flex-col items-center ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
       style={{ opacity }}
+      {...(onClick
+        ? {
+            role: 'button',
+            tabIndex: 0,
+            onKeyDown: (e: React.KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+              }
+            },
+          }
+        : {})}
     >
       <svg
         width={(radius + strokeWidth) * 2}

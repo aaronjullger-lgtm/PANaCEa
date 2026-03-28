@@ -52,7 +52,16 @@ const DdxTrainer = () => {
   };
 
   if (isLoading) return <Loader />;
-  if (!problem) return <div>No problem loaded. Try refreshing.</div>;
+  if (!problem) return (
+    <div className="flex flex-col items-center justify-center min-h-[320px] p-8 text-center gap-4">
+      <p className="text-[var(--color-text-secondary)]">
+        Unable to load a diagnostic puzzle. Please try again.
+      </p>
+      <Button onClick={fetchProblem} variant="outline">
+        Retry
+      </Button>
+    </div>
+  );
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
