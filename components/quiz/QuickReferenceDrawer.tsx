@@ -189,13 +189,16 @@ export const QuickReferenceDrawer: React.FC<QuickReferenceDrawerProps> = ({ isOp
       enableSwipeDown
     >
       {/* Tabs */}
-      <div className="sticky top-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] px-4 py-3 flex gap-2">
+      <div role="tablist" aria-label="Reference sections" className="sticky top-0 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] px-4 py-3 flex gap-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`qrd-panel-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
               className={`
                 flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all
@@ -206,7 +209,7 @@ export const QuickReferenceDrawer: React.FC<QuickReferenceDrawerProps> = ({ isOp
                 }
               `}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4" aria-hidden="true" />
               <span>{tab.label}</span>
             </button>
           );
@@ -214,7 +217,7 @@ export const QuickReferenceDrawer: React.FC<QuickReferenceDrawerProps> = ({ isOp
       </div>
 
       {/* Content */}
-      <div className="min-h-[300px]">
+      <div id={`qrd-panel-${activeTab}`} role="tabpanel" className="min-h-[300px]">
         {activeTab === 'drugs' && <DrugSearchMini onNavigate={handleNavigate} onClose={onClose} />}
         {activeTab === 'labs' && <LabValuesMini onNavigate={handleNavigate} onClose={onClose} />}
         {activeTab === 'calculators' && (

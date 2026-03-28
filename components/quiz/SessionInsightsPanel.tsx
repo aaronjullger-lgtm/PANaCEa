@@ -83,10 +83,13 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
           >
             <div className="px-4 pb-4 border-t border-[var(--color-border)]">
               {/* Tabs */}
-              <div className="flex gap-1 py-3 border-b border-[var(--color-border)]">
+              <div role="tablist" aria-label="Session insights" className="flex gap-1 py-3 border-b border-[var(--color-border)]">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    aria-controls={`insights-panel-${tab.id}`}
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                       activeTab === tab.id
@@ -94,14 +97,14 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
                         : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]'
                     }`}
                   >
-                    <tab.icon className="w-3.5 h-3.5" />
+                    <tab.icon className="w-3.5 h-3.5" aria-hidden="true" />
                     {tab.label}
                   </button>
                 ))}
               </div>
 
               {/* Tab Content */}
-              <div className="pt-3">
+              <div id={`insights-panel-${activeTab}`} role="tabpanel" className="pt-3">
                 <AnimatePresence mode="wait">
                   {activeTab === 'momentum' && (
                     <motion.div
