@@ -2121,6 +2121,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     value={userDiagnosis}
                     onChange={(e) => setUserDiagnosis(e.target.value)}
                     placeholder="Enter your primary diagnosis..."
+                    aria-label="Enter your primary diagnosis"
                     className="w-full px-4 py-3 bg-data-neutral-bg border border-data-neutral rounded-lg mb-4
                              text-data-neutral placeholder-data-neutral 
                              focus:outline-none focus:ring-2 focus:ring-data-neutral focus:border-transparent shadow-sm"

@@ -719,6 +719,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-md"
             role="dialog"
+            aria-modal="true"
             aria-label="Review answers"
           >
             <motion.div
@@ -1208,6 +1209,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-overlay)] backdrop-blur-md"
             role="dialog"
+            aria-modal="true"
             aria-label="Review answers"
           >
             <motion.div

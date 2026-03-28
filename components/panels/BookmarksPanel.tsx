@@ -131,6 +131,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
             <input
               type="text"
               placeholder="Search bookmarks..."
+              aria-label="Search bookmarks"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] focus:ring-2 focus:ring-[var(--color-focus-ring)] focus:border-transparent outline-none"

@@ -545,6 +545,7 @@ const DrugReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> = ({ onExit 
                 ref={searchInputRef}
                 type="text"
                 placeholder="Search medications... (press /)"
+                aria-label="Search medications"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 focus:border-[var(--color-accent)]"

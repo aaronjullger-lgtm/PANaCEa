@@ -288,6 +288,7 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
             value=""
             onChange={() => {}}
             placeholder="Search conditions..."
+            aria-label="Search conditions"
             className="w-full pl-9 pr-3 py-2 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50"
           />
         </div>

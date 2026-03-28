@@ -181,6 +181,7 @@ const DiagnosticPuzzleMode: React.FC<DiagnosticPuzzleModeProps> = ({ onExit }) =
             onChange={(e) => setGuessInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Enter diagnosis (e.g., 'Pneumonia')..."
+            aria-label="Enter your diagnosis"
             className="w-full pl-12 pr-4 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-data-provisional"
             disabled={isSubmitting}
             autoComplete="off"

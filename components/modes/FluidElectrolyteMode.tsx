@@ -618,6 +618,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                   onChange={(e) => setUserAnswer(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !isSubmitted && handleSubmit()}
                   placeholder="Enter your answer"
+                  aria-label="Enter your answer"
                   disabled={isSubmitted}
                   autoComplete="off"
                   className="flex-1 px-4 py-3 bg-[var(--color-bg-primary)] border border-data-neutral dark:border-data-neutral rounded-lg 

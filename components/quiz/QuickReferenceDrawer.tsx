@@ -58,6 +58,7 @@ const DrugSearchMini: React.FC<{ onNavigate: (path: string) => void; onClose: ()
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search drugs..."
+          aria-label="Search drugs"
           className="w-full pl-10 pr-4 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
         />
       </div>

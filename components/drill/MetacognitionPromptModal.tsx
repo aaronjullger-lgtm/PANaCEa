@@ -172,6 +172,7 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
               value={currentResponse}
               onChange={(e) => setCurrentResponse(e.target.value)}
               placeholder="Type your thoughts here (optional)..."
+              aria-label="Reflection response"
               className="w-full h-24 p-3 text-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--color-category-practice)_50%,transparent)]"
             />
 
