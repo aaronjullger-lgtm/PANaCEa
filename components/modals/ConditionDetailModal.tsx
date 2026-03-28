@@ -331,8 +331,8 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           <div className="condition-content-panel">
             <div className="condition-scrollable condition-scrollable-padded" ref={contentRef}>
               {isLoading && sections.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                  <div className="w-12 h-12 border-4 border-[var(--color-category-practice)] border-t-blue-600 rounded-full animate-spin"></div>
+                <div role="status" aria-label="Loading condition details" className="flex flex-col items-center justify-center h-64 space-y-4">
+                  <div aria-hidden="true" className="w-12 h-12 border-4 border-[var(--color-category-practice)] border-t-blue-600 rounded-full animate-spin"></div>
                   <p className="text-[var(--color-text-muted)] font-medium">
                     Loading condition details...
                   </p>

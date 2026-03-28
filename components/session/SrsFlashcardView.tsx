@@ -249,8 +249,8 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
 
   if (loading && !question) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[320px] p-6">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)] mb-4" />
+      <div role="status" aria-label="Loading next question" className="flex flex-col items-center justify-center min-h-[320px] p-6">
+        <Loader2 aria-hidden="true" className="w-8 h-8 animate-spin text-[var(--color-accent)] mb-4" />
         <p className="text-sm text-[var(--color-text-muted)]">Loading next question…</p>
       </div>
     );

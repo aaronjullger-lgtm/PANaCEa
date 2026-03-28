@@ -250,8 +250,8 @@ export default function StudyGroupDashboard() {
 
             {/* Loading State */}
             {isLoadingGroups ? (
-              <div className="flex flex-col items-center justify-center py-16 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
-                <Loader2 className="w-10 h-10 animate-spin text-[var(--color-accent)] mb-4" />
+              <div role="status" aria-label="Loading study groups" className="flex flex-col items-center justify-center py-16 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
+                <Loader2 aria-hidden="true" className="w-10 h-10 animate-spin text-[var(--color-accent)] mb-4" />
                 <p className="text-[var(--color-text-secondary)] font-medium">
                   Loading study groups...
                 </p>
@@ -355,8 +355,8 @@ export default function StudyGroupDashboard() {
 
               {/* Loading State */}
               {isLoadingLeaderboard ? (
-                <div className="flex flex-col items-center justify-center py-16">
-                  <Loader2 className="w-10 h-10 animate-spin text-[var(--color-accent)] mb-4" />
+                <div role="status" aria-label="Loading leaderboard" className="flex flex-col items-center justify-center py-16">
+                  <Loader2 aria-hidden="true" className="w-10 h-10 animate-spin text-[var(--color-accent)] mb-4" />
                   <p className="text-[var(--color-text-secondary)] font-medium">
                     Loading leaderboard...
                   </p>

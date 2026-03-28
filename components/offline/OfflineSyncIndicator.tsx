@@ -12,6 +12,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { WifiOff, CloudOff, Cloud, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/lib/toast';
 import {
   getSyncStatus,
   syncPendingOperations,
@@ -110,6 +111,7 @@ export function OfflineSyncIndicator() {
       setOfflineStatus(getSyncStatus());
     } catch (error) {
       console.error('Manual sync failed:', error);
+      toast.error('Sync failed. Check your connection and try again.');
     } finally {
       setSyncing(false);
     }

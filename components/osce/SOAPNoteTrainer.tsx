@@ -10,6 +10,7 @@ import { FileText, CheckCircle, AlertCircle, Lightbulb, Award, Check } from 'luc
 import type { SOAPNote } from '@/services/ai';
 import { gradeSoapNote, type GradingResult } from '@/lib/services/soapGradingService';
 import { storeSoapGradingEvent } from '@/lib/services/soapAnalyticsService';
+import { toast } from '@/lib/toast';
 
 interface SOAPNoteTrainerProps {
   patientCase: PatientCase;
@@ -53,7 +54,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({ patientCase, o
       void storeSoapGradingEvent(patientCase.id, result);
     } catch (error) {
       console.error('Grading failed:', error);
-      // Handle error appropriately in UI
+      toast.error('Grading failed. Please check your connection and try again.');
     } finally {
       setIsGrading(false);
     }

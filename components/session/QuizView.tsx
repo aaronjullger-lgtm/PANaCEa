@@ -1663,6 +1663,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <button
               onClick={toggleFlag}
               title={isFlagged ? 'Unflag for review' : 'Flag for review'}
+              aria-label={isFlagged ? 'Unflag for review' : 'Flag for review'}
               className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                 isFlagged
                   ? 'bg-data-provisional/10 text-data-provisional border-data-provisional'
@@ -1676,6 +1677,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
             <button
               onClick={() => setShowNormalLabsPanel((prev) => !prev)}
               title="Normal Labs reference"
+              aria-label="Normal Labs reference"
               className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-colors border ${
                 showNormalLabsPanel
                   ? 'bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] border-[var(--color-accent)]'
@@ -1774,6 +1776,7 @@ Keep it concise (3-4 sentences max) and focus on helping them understand WHY the
               <button
                 onClick={handleEndSession}
                 title="End Session"
+                aria-label="End Session"
                 className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:bg-data-fail/10 hover:border-data-fail hover:text-data-fail transition-colors"
               >
                 <CloseIcon className="w-5 h-5" />

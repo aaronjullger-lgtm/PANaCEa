@@ -79,6 +79,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
       }
     } catch (error) {
       console.error('Failed to load review items:', error);
+      toast.error('Could not load review items. Check your connection and try again.');
       setViewState('complete');
     }
   };

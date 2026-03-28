@@ -1657,11 +1657,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <h2 className="text-xl font-bold text-data-neutral truncate">
                         {currentCase.patientName}
                       </h2>
-                      <button className="text-data-neutral p-1 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                      <button
+                        aria-label={isPatientInfoExpanded ? 'Collapse patient info' : 'Expand patient info'}
+                        aria-expanded={isPatientInfoExpanded}
+                        className="text-data-neutral p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      >
                         {isPatientInfoExpanded ? (
-                          <ChevronUp className="w-5 h-5" />
+                          <ChevronUp aria-hidden="true" className="w-5 h-5" />
                         ) : (
-                          <ChevronDown className="w-5 h-5" />
+                          <ChevronDown aria-hidden="true" className="w-5 h-5" />
                         )}
                       </button>
                     </div>

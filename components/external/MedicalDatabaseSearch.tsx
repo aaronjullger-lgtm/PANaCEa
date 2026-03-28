@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useExternalMedicalDatabases } from '@/hooks/useExternalMedicalDatabases';
 import { StandardButton } from '@/components/shared/StandardButton';
+import { toast } from '@/lib/toast';
 import {
   Search,
   Database,
@@ -77,6 +78,7 @@ export const MedicalDatabaseSearch: React.FC<MedicalDatabaseSearchProps> = ({
       setActiveTab('results');
     } catch (err) {
       console.error('Search failed:', err);
+      toast.error('Search failed. Check your connection and try again.');
     }
   };
 

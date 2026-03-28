@@ -136,9 +136,10 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
           <div className="absolute top-4 right-4 z-10">
             <button
               onClick={onExit}
+              aria-label="Exit drill"
               className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
         )}
@@ -536,9 +537,10 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
           <button
             onClick={handleExit}
+            aria-label="Exit session"
             className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
           <h1 className="text-base sm:text-lg font-semibold">Session Complete</h1>
           <div className="w-12" />
