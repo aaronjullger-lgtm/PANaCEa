@@ -265,6 +265,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
             disabled={generating}
             className="p-2 rounded-full hover:bg-[var(--color-bg-secondary)] transition-colors"
             title="Refresh Analysis"
+            aria-label="Refresh recommendations"
           >
             <RefreshCw
               className={`w-4 h-4 text-[var(--color-text-muted)] ${generating ? 'animate-spin' : ''}`}

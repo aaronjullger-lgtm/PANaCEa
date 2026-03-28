@@ -57,7 +57,7 @@ import ThemeToggleButton from '../components/ui/ThemeToggleButton';
 import { MasteryHeatmapToggle } from '../components/ui/MasteryHeatmapToggle';
 import { OfflineSyncIndicator } from '../components/offline/OfflineSyncIndicator';
 import { ProductTour } from '../components/onboarding/ProductTour';
-import { WithGeminiErrorBoundary } from '../components/error/ErrorBoundary';
+import { WithGeminiErrorBoundary, ErrorBoundary } from '../components/error/ErrorBoundary';
 import type {
   Question as QuizQuestion,
   PerformanceRecord,
@@ -270,10 +270,12 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/practice"
         element={
           <Suspense fallback={<Loader message="Loading practice modes..." />}>
-            <PracticePage
-              onNavigateToDrillMode={handleNavigateToDrillMode}
-              onNavigateToDrillWithSystem={_handleNavigateToDrillWithSystem}
-            />
+            <ErrorBoundary variant="page">
+              <PracticePage
+                onNavigateToDrillMode={handleNavigateToDrillMode}
+                onNavigateToDrillWithSystem={_handleNavigateToDrillWithSystem}
+              />
+            </ErrorBoundary>
           </Suspense>
         }
       />
@@ -281,10 +283,12 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/progress"
         element={
           <Suspense fallback={<Loader message="Loading analytics..." />}>
-            <ProgressPage
-              performanceData={heatmapPerformance}
-              dueCount={dueQuestionsCount}
-            />
+            <ErrorBoundary variant="page">
+              <ProgressPage
+                performanceData={heatmapPerformance}
+                dueCount={dueQuestionsCount}
+              />
+            </ErrorBoundary>
           </Suspense>
         }
       />
@@ -292,7 +296,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/daily-challenges"
         element={
           <Suspense fallback={<Loader message="Loading daily challenges..." />}>
-            <DailyChallengesHub />
+            <ErrorBoundary variant="page">
+              <DailyChallengesHub />
+            </ErrorBoundary>
           </Suspense>
         }
       />
