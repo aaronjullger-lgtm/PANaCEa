@@ -285,7 +285,7 @@ const ReadinessGauge: React.FC<{
           <button
             type="button"
             onClick={() => setShowInfo(v => !v)}
-            className="w-4 h-4 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none"
+            className="w-4 h-4 rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
             aria-label="About this score"
           >
             <Info className="w-4 h-4" />
