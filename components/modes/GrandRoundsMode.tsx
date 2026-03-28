@@ -351,6 +351,15 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     };
   }, [viewState, isTargeted, getToken]);
 
+  useEffect(() => {
+    if (!showReview) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowReview(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showReview]);
+
   // Timer for active quiz; auto-submit uses refs so latest answers are always submitted
   useEffect(() => {
     if (isTargeted) return;
