@@ -260,7 +260,11 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
 
   if (error && !question) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[320px] p-6 text-center gap-4">
+      <div
+        role="alert"
+        aria-live="polite"
+        className="flex flex-col items-center justify-center min-h-[320px] p-6 text-center gap-4"
+      >
         <p
           className="text-sm text-[var(--color-text-secondary)]"
           data-testid="srs-review-message"
@@ -402,6 +406,9 @@ export function SrsFlashcardView({ onExit }: Readonly<SrsReviewViewProps>) {
           >
             {/* Result banner */}
             <div
+              role="alert"
+              aria-live="assertive"
+              aria-atomic="true"
               className={`flex items-center gap-2 px-4 py-3 rounded-lg font-semibold text-sm ${
                 isCorrect
                   ? 'bg-[var(--color-data-pass)]/15 text-[var(--color-data-pass)]'

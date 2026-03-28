@@ -6,7 +6,7 @@
  * Helps develop proper pacing for the real PANCE.
  */
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, AlertCircle } from 'lucide-react';
 
@@ -41,16 +41,40 @@ export const QuestionTimer: React.FC<QuestionTimerProps> = ({
   compact = false,
 }) => {
   const [elapsed, setElapsed] = useState(0);
+  const [announcement, setAnnouncement] = useState('');
+  const announcedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (isAnswered) return;
 
     const interval = setInterval(() => {
-      setElapsed(Date.now() - startTime);
+      const now = Date.now();
+      setElapsed(now - startTime);
+
+      // Announce significant milestones to screen readers
+      const secondsElapsed = Math.floor((now - startTime) / 1000);
+      const secondsRemaining = Math.max(0, Math.round(parTimeMs / 1000) - secondsElapsed);
+
+      if (secondsRemaining === 30 && !announcedRef.current.has('30')) {
+        announcedRef.current.add('30');
+        setAnnouncement('30 seconds elapsed');
+      } else if (secondsRemaining === 10 && !announcedRef.current.has('10')) {
+        announcedRef.current.add('10');
+        setAnnouncement('10 seconds elapsed');
+      } else if (secondsElapsed >= Math.round(parTimeMs / 1000) * 1.5 && !announcedRef.current.has('overtime')) {
+        announcedRef.current.add('overtime');
+        setAnnouncement('Over time');
+      }
     }, 100);
 
     return () => clearInterval(interval);
-  }, [startTime, isAnswered]);
+  }, [startTime, isAnswered, parTimeMs]);
+
+  // Reset milestones when question changes
+  useEffect(() => {
+    announcedRef.current = new Set();
+    setAnnouncement('');
+  }, [startTime]);
 
   // Final elapsed time when answered
   const finalElapsed = isAnswered ? elapsed : Date.now() - startTime;
@@ -86,9 +110,21 @@ export const QuestionTimer: React.FC<QuestionTimerProps> = ({
 
   if (!isVisible) return null;
 
+  const liveRegion = (
+    <span
+      role="status"
+      aria-live="assertive"
+      aria-atomic="true"
+      className="sr-only"
+    >
+      {announcement}
+    </span>
+  );
+
   if (compact) {
     return (
       <div className={`flex items-center gap-1.5 text-sm font-medium ${statusColor.split(' ')[0]}`}>
+        {liveRegion}
         <Clock className="w-3.5 h-3.5" />
         <span>{formattedTime}</span>
       </div>
@@ -97,6 +133,7 @@ export const QuestionTimer: React.FC<QuestionTimerProps> = ({
 
   return (
     <div className="w-full max-w-xs">
+      {liveRegion}
       {/* Timer display */}
       <div className="flex items-center justify-between mb-1">
         <div
