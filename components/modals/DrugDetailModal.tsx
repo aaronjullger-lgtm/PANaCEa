@@ -1,7 +1,7 @@
 // components/DrugDetailModal.tsx
 // Modal component for displaying detailed drug/pharmacology information
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { DrugEntry, DrugInteraction } from '@/types/pharm';
 import { formatDrugName } from '@/lib/drugBrandNames';
@@ -28,6 +28,14 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({ drug, onClose, onDril
     return JSON.stringify(interaction);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   // Use the centralized formatting function
   const fullDisplayName = formatDrugName(drug.term);
 
@@ -45,6 +53,9 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({ drug, onClose, onDril
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.2 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Drug details: ${drug.term}`}
           className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
           onClick={(e) => e.stopPropagation()}
         >

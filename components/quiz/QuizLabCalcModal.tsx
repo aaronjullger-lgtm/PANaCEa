@@ -5,7 +5,7 @@
  * @see docs/IMMEDIATE_CONTENT_ACTION_PLAN.md
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Beaker, Droplet, Flame } from 'lucide-react';
 import {
   AnionGapCalculator,
@@ -29,6 +29,14 @@ const TABS: { id: CalcTab; label: string; icon: React.ElementType }[] = [
 export const QuizLabCalcModal: React.FC<QuizLabCalcModalProps> = ({ onClose }) => {
   const [selectedTab, setSelectedTab] = useState<CalcTab | null>(null);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const handleBack = () => setSelectedTab(null);
 
   return (
@@ -37,6 +45,9 @@ export const QuizLabCalcModal: React.FC<QuizLabCalcModalProps> = ({ onClose }) =
         initial={{ scale: 0.95 }}
         animate={{ scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Lab Calculators"
         className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden"
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
