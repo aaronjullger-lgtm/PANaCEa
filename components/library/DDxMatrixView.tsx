@@ -93,6 +93,14 @@ export const DDxMatrixView: React.FC<DDxMatrixViewProps> = ({
   const [highlightDifferences, setHighlightDifferences] = useState(true);
   const [showLinkedEntities, setShowLinkedEntities] = useState(true);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   // Fetch comparison data when selection changes
   useEffect(() => {
     if (selectedIds.length >= 2) {

@@ -159,6 +159,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         )
       ).filter((el) => !el.hasAttribute('disabled') && el.offsetParent !== null);
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { onClose(); return; }
       if (e.key !== 'Tab') return;
       const focusables = getFocusables();
       if (focusables.length === 0) return;

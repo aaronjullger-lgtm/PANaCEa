@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Lightbulb, ArrowRight, X, AlertTriangle, Target } from 'lucide-react';
 import type { MetacognitionPrompt } from '@/lib/metacognition';
@@ -26,6 +26,14 @@ const MetacognitionPromptModal: React.FC<MetacognitionPromptModalProps> = ({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [responses, setResponses] = useState<string[]>([]);
   const [currentResponse, setCurrentResponse] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onDismiss();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onDismiss]);
 
   const handleNextQuestion = () => {
     if (currentResponse.trim()) {
