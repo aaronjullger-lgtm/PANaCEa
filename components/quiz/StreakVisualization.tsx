@@ -91,7 +91,7 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1.5">
             <Flame className="w-4 h-4 text-[var(--color-data-provisional)]" />
-            <span className="text-action-muted">
+            <span className="text-[var(--color-text-muted)]">
               Best:{' '}
               <span className="font-semibold text-[var(--color-data-provisional)]">
                 {stats.maxStreak}
@@ -100,13 +100,13 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
           </div>
           <div className="flex items-center gap-1.5">
             <Zap className="w-4 h-4 text-[var(--color-data-provisional)]" />
-            <span className="text-action-muted">
+            <span className="text-[var(--color-text-muted)]">
               Avg: <span className="font-semibold">{stats.avgStreak}</span>
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <Target className="w-4 h-4 text-[var(--color-accent)]" />
-            <span className="text-action-muted">
+            <span className="text-[var(--color-text-muted)]">
               Streaks: <span className="font-semibold">{stats.totalStreaks}</span>
             </span>
           </div>
@@ -134,7 +134,7 @@ export const StreakVisualization: React.FC<StreakVisualizationProps> = ({
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-4 mt-2 text-xs text-action-muted">
+        <div className="flex items-center justify-center gap-4 mt-2 text-xs text-[var(--color-text-muted)]">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm bg-[var(--color-data-pass)]" />
             <span>Correct</span>
@@ -183,7 +183,7 @@ export const StreakBadge: React.FC<{
           ? 'bg-[var(--color-data-provisional)]/20 text-[var(--color-data-provisional)]'
           : streak >= 5
             ? 'bg-[var(--color-data-provisional)]/15 text-[var(--color-data-provisional)]'
-            : 'bg-[var(--color-bg-tertiary)] text-action-muted'
+            : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
       } ${isActive ? 'ring-2 ring-offset-1 ring-[var(--color-data-provisional)]' : ''}`}
     >
       <Flame className={`w-3 h-3 ${isActive ? 'animate-pulse' : ''}`} />

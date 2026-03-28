@@ -184,15 +184,15 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
                 <PieChart
                   className={`w-4 h-4 ${summary.distributionScore >= 80 ? 'text-[var(--color-data-pass)]' : summary.distributionScore >= 60 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
                 />
-                <span className="text-xs text-action-muted">{summary.distributionScore}</span>
+                <span className="text-xs text-[var(--color-text-muted)]">{summary.distributionScore}</span>
               </div>
             )}
           </div>
 
           {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-action-muted" />
+            <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-action-muted" />
+            <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
           )}
         </button>
 
@@ -210,11 +210,11 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
               <div className="p-3 space-y-3">
                 {/* Time & Pace */}
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-action-muted">
+                  <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
                     <Clock className="w-4 h-4" />
                     <span>{summary.sessionDuration} min</span>
                   </div>
-                  <div className="flex items-center gap-2 text-action-muted">
+                  <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
                     <Zap className="w-4 h-4" />
                     <span>{summary.questionsPerMinute} Q/min</span>
                   </div>
@@ -223,7 +223,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
                 {/* Accuracy Comparison */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-[var(--color-bg-secondary)] rounded-lg p-2 text-center">
-                    <div className="text-xs text-action-muted mb-1">Session</div>
+                    <div className="text-xs text-[var(--color-text-muted)] mb-1">Session</div>
                     <div
                       className={`text-lg font-bold ${sessionAccuracy >= 70 ? 'text-[var(--color-data-pass)]' : sessionAccuracy >= 50 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
                     >
@@ -231,7 +231,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
                     </div>
                   </div>
                   <div className="bg-[var(--color-bg-secondary)] rounded-lg p-2 text-center">
-                    <div className="text-xs text-action-muted mb-1">Last 10</div>
+                    <div className="text-xs text-[var(--color-text-muted)] mb-1">Last 10</div>
                     <div
                       className={`text-lg font-bold ${recentAccuracy >= 70 ? 'text-[var(--color-data-pass)]' : recentAccuracy >= 50 ? 'text-[var(--color-data-provisional)]' : 'text-[var(--color-data-fail)]'}`}
                     >
@@ -259,7 +259,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
 
                 {/* Mini Distribution Chart */}
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs text-action-muted">
+                  <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
                     <span>System Distribution</span>
                     <span>Accuracy: {performanceData.filter((p) => p.correct).length}/{performanceData.length}</span>
                   </div>
@@ -267,7 +267,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
                   <div className="space-y-1">
                     {systemBars.slice(0, 6).map((bar) => (
                       <div key={bar.system} className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-action-muted w-10">
+                        <span className="text-xs font-medium text-[var(--color-text-muted)] w-10">
                           {bar.system}
                         </span>
                         <div className="flex-1 h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
@@ -282,7 +282,7 @@ export const SessionStatsOverlay: React.FC<SessionStatsOverlayProps> = ({
                             style={{ width: `${Math.min(bar.percent, 100)}%` }}
                           />
                         </div>
-                        <span className="text-xs text-action-muted w-8 text-right">
+                        <span className="text-xs text-[var(--color-text-muted)] w-8 text-right">
                           {bar.count}
                         </span>
                       </div>

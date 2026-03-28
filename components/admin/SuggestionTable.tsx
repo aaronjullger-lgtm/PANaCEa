@@ -278,7 +278,7 @@ export function SuggestionTable({
     return (
       <div role="status" className="flex items-center justify-center min-h-[400px] bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)]">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin text-action-muted mx-auto mb-4" />
+          <RefreshCw className="w-8 h-8 animate-spin text-[var(--color-text-muted)] mx-auto mb-4" />
           <p className="text-[var(--color-text-secondary)]">Loading mapping suggestions...</p>
         </div>
       </div>

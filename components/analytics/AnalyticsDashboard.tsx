@@ -394,7 +394,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             <Sparkles className="w-5 h-5 text-[var(--color-accent)] mt-0.5" />
             <div>
               <h4 className="font-semibold text-[var(--color-accent)] mb-1">PANCE Readiness Overview</h4>
-              <p className="text-sm text-action-muted">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Track your progress across all organ systems. Focus on your weakest areas for
                 maximum improvement.
               </p>
@@ -407,19 +407,19 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {!hasData && (
         <div className="flex flex-col items-center justify-center py-12 px-6 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
           <div className="mb-4 p-4 rounded-full bg-[var(--color-accent)]/15">
-            <BarChart3 className="w-12 h-12 text-action-muted" />
+            <BarChart3 className="w-12 h-12 text-[var(--color-text-muted)]" />
           </div>
           <h3 className="text-xl font-semibold text-[var(--color-accent)] mb-2">
             Start Building Your Profile
           </h3>
-          <p className="text-sm text-action-muted text-center max-w-md mb-6">
+          <p className="text-sm text-[var(--color-text-muted)] text-center max-w-md mb-6">
             Complete your first 20-question session to unlock personalized analytics, track your
             progress across organ systems, and identify your focus areas.
           </p>
           <PrimaryButton size="md" icon={Play} onClick={handleStartSession}>
             Start Calibration Session
           </PrimaryButton>
-          <p className="text-xs text-action-muted mt-3">
+          <p className="text-xs text-[var(--color-text-muted)] mt-3">
             ~15 minutes • Interleaved across 3+ organ systems
           </p>
         </div>
@@ -430,7 +430,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <Gauge className="w-4 h-4" />
                 <span className="font-medium">Exam Readiness</span>
               </div>
@@ -440,14 +440,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 </div>
                 <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
               </div>
-              <p className="text-xs text-action-muted">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Based on accuracy ({formatPercentForDisplay(userStats.stats.overall.accuracy)}) +
                 coverage
               </p>
             </div>
 
             <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <TrendingUp className="w-4 h-4" />
                 <span className="font-medium">Recent Performance</span>
               </div>
@@ -457,13 +457,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 </div>
                 <Activity className="w-5 h-5 text-[var(--color-accent)]" />
               </div>
-              <p className="text-xs text-action-muted">
+              <p className="text-xs text-[var(--color-text-muted)]">
                 Last 7 days ({userStats.stats.recentPerformance.last7Days.attempts} questions)
               </p>
             </div>
 
             <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm transition-colors">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <Clock className="w-4 h-4" />
                 <span className="font-medium">Decision Speed</span>
               </div>
@@ -487,7 +487,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                         {primary}
                       </div>
                     </div>
-                    <p className="text-xs text-action-muted">
+                    <p className="text-xs text-[var(--color-text-muted)]">
                       {benchmark ? `${benchmark} · Avg per question` : 'Average per question'}
                     </p>
                   </>
@@ -499,11 +499,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {/* Confidence vs. Accuracy (Calibration) - Illusion of Competence */}
           {calibrationData?.calibration && calibrationData.calibration.total > 0 && (
             <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
                 <Brain className="w-4 h-4" />
                 <span className="font-medium">Confidence vs. Accuracy</span>
               </div>
-              <p className="text-xs text-action-muted mb-4">
+              <p className="text-xs text-[var(--color-text-muted)] mb-4">
                 How well your confidence (from behavior) matches correctness. Lucky guesses and
                 dangerous misconceptions need different follow-up.
               </p>
@@ -565,11 +565,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             (userStats.stats.speedByType.recall.count > 0 ||
               userStats.stats.speedByType.clinicalReasoning.count > 0) && (
               <div className="p-6 rounded-xl bg-[var(--color-bg-secondary)] shadow-sm">
-                <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
+                <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
                   <Clock className="w-4 h-4" />
                   <span className="font-medium">Speed by question type</span>
                 </div>
-                <p className="text-xs text-action-muted mb-4">
+                <p className="text-xs text-[var(--color-text-muted)] mb-4">
                   Recall (first-order) vs clinical reasoning (vignettes). Targets: recall &lt;60s,
                   clinical &lt;90s.
                 </p>
@@ -583,7 +583,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                         <span className="text-2xl font-bold text-[var(--color-accent)]">
                           {Math.round((userStats.stats.speedByType.recall.avgTimeMs ?? 0) / 1000)}s
                         </span>
-                        <span className="text-xs text-action-muted">
+                        <span className="text-xs text-[var(--color-text-muted)]">
                           (Target: &lt;{RECALL_TARGET_SEC}s)
                           {getSpeedBenchmarkStatus(
                             userStats.stats.speedByType.recall.avgTimeMs,
@@ -595,7 +595,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                           ) === 'above_target' && ' · Slow for recall'}
                         </span>
                       </div>
-                      <p className="text-xs text-action-muted mt-1">
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
                         {userStats.stats.speedByType.recall.count} rapid-recall question
                         {userStats.stats.speedByType.recall.count !== 1 ? 's' : ''}
                       </p>
@@ -613,7 +613,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                           )}
                           s
                         </span>
-                        <span className="text-xs text-action-muted">
+                        <span className="text-xs text-[var(--color-text-muted)]">
                           (Target: &lt;{CLINICAL_REASONING_TARGET_SEC}s)
                           {getSpeedBenchmarkStatus(
                             userStats.stats.speedByType.clinicalReasoning.avgTimeMs,
@@ -625,7 +625,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                           ) === 'above_target' && ' · Consider pacing'}
                         </span>
                       </div>
-                      <p className="text-xs text-action-muted mt-1">
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
                         {userStats.stats.speedByType.clinicalReasoning.count} vignette/clinical
                         question
                         {userStats.stats.speedByType.clinicalReasoning.count !== 1 ? 's' : ''}
@@ -671,7 +671,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                         <span className="text-2xl font-bold text-data-provisional">
                           {formatPercentForDisplay(area.accuracy)}
                         </span>
-                        <span className="text-xs text-action-muted">{area.attempts} Q's</span>
+                        <span className="text-xs text-[var(--color-text-muted)]">{area.attempts} Q's</span>
                       </div>
                     </div>
                   ))}
@@ -692,16 +692,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {/* System Performance: horizontal bar (best to worst), bottom 3 = red zone */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="p-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-2">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
                 <BarChart3 className="w-4 h-4" /> System Performance (Best → Worst)
               </div>
-              <p className="text-xs text-action-muted mb-3">
+              <p className="text-xs text-[var(--color-text-muted)] mb-3">
                 Bottom 3 bars = focus areas. What should I study today?
               </p>
               {systemPerformanceBarData.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-[320px] text-center px-4">
-                  <Activity className="w-10 h-10 text-action-muted/50 mb-2" />
-                  <p className="text-sm text-action-muted mb-4">Not yet assessed</p>
+                  <Activity className="w-10 h-10 text-[var(--color-text-muted)]/50 mb-2" />
+                  <p className="text-sm text-[var(--color-text-muted)] mb-4">Not yet assessed</p>
                   <button
                     type="button"
                     onClick={handleStartSession}
@@ -762,12 +762,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             </div>
 
             <div className="p-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-              <div className="flex items-center gap-2 text-action-muted text-sm mb-3">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
                 <TrendingUp className="w-4 h-4" /> Performance Trend
               </div>
               {userStats.stats.recentPerformance.trend === 'insufficient_data' ? (
                 <div className="flex flex-col items-center justify-center h-[320px] gap-4">
-                  <p className="text-sm text-action-muted">Not yet assessed</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Not yet assessed</p>
                   <button
                     type="button"
                     onClick={handleStartSession}
@@ -804,7 +804,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                         return deltaStr;
                       })()}
                   </p>
-                  <p className="text-sm text-action-muted text-center max-w-xs">
+                  <p className="text-sm text-[var(--color-text-muted)] text-center max-w-xs">
                     Last 7 days:{' '}
                     {formatPercentForDisplay(userStats.stats.recentPerformance.last7Days.accuracy)}{' '}
                     ({userStats.stats.recentPerformance.last7Days.attempts} questions)
@@ -823,13 +823,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {/* FSRS Stability Growth Trend */}
           <div className="p-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-action-muted text-sm">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
                 <Brain className="w-4 h-4" /> Memory Stability Growth (Last 30 Days)
               </div>
               {stabilityLoading && (
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 border-2 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-xs text-action-muted">Fetching data...</span>
+                  <span className="text-xs text-[var(--color-text-muted)]">Fetching data...</span>
                 </div>
               )}
             </div>
@@ -889,7 +889,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   </ResponsiveContainer>
                 </ChartContainer>
                 <div className="mt-3 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
-                  <p className="text-xs text-action-muted">
+                  <p className="text-xs text-[var(--color-text-muted)]">
                     <strong>What is Stability?</strong> Stability measures how long you'll remember
                     information. Higher stability means longer retention and fewer reviews needed.
                     {stabilityTrendData.length > 1 && (
@@ -918,7 +918,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {/* Learning Curve */}
           <div className="p-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-action-muted text-sm">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
                 <TrendingUp className="w-4 h-4" /> Learning Curve
               </div>
             </div>
@@ -928,18 +928,18 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {/* Decision Time by System */}
           <div className="p-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2 text-action-muted text-sm">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
                 <Clock className="w-4 h-4" /> Decision Time by System
               </div>
               {timeData.some((d) => d.count < MIN_SYSTEM_REVIEWS) && (
-                <div className="flex items-center gap-1 text-xs text-action-muted">
+                <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
                   <Info className="w-3 h-3" />
                   <span>Faded bars = &lt;{MIN_SYSTEM_REVIEWS} reviews</span>
                 </div>
               )}
             </div>
             {timeData.length === 0 ? (
-              <p className="text-sm text-action-muted">
+              <p className="text-sm text-[var(--color-text-muted)]">
                 Time tracking will appear once you complete timed sessions.
               </p>
             ) : (

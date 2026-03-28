@@ -57,7 +57,7 @@ const ErrorTagger: React.FC<ErrorTaggerProps> = ({ onTagError, disabled = false 
       <motion.div
         initial={{ y: -5 }}
         animate={{ y: 0 }}
-        className="flex items-center gap-2 text-xs text-action-muted"
+        className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]"
       >
         <span>Tagged as</span>
         <span
@@ -76,7 +76,7 @@ const ErrorTagger: React.FC<ErrorTaggerProps> = ({ onTagError, disabled = false 
       animate={{ y: 0 }}
       className="flex flex-wrap items-center gap-2"
     >
-      <span className="text-xs text-action-muted">Why did you miss it?</span>
+      <span className="text-xs text-[var(--color-text-muted)]">Why did you miss it?</span>
       {ERROR_TAG_OPTIONS.map((option) => (
         <button
           key={option.tag}

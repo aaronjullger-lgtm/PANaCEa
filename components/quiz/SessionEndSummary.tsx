@@ -474,7 +474,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-2xl max-h-[90vh] bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)] outline-none focus:outline-none"
+        className="w-full max-w-2xl max-h-[90vh] bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden border border-[var(--color-border)] outline-none"
       >
         {/* Header with Grade */}
         <div className={`${grade.bg} p-6 text-center border-b border-[var(--color-border)]`}>

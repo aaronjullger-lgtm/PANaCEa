@@ -82,7 +82,7 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
           {/* Content */}
           <div className="p-6 overflow-y-auto max-h-[calc(80vh-200px)]">
             {failedItems.length === 0 ? (
-              <div className="text-center py-8 text-action-muted">
+              <div className="text-center py-8 text-[var(--color-text-muted)]">
                 <p>No failed sync items</p>
               </div>
             ) : (
@@ -97,17 +97,17 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
                         <div className="font-semibold text-[var(--color-text-primary)]">
                           {item.operation.replace(/_/g, ' ').toUpperCase()}
                         </div>
-                        <div className="text-xs text-action-muted">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           Failed after {item.attempts} attempts
                         </div>
-                        <div className="text-xs text-action-muted">
+                        <div className="text-xs text-[var(--color-text-muted)]">
                           {new Date(item.timestamp).toLocaleString()}
                         </div>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleCopyItem(item)}
-                          className="p-2 text-action-muted hover:text-[var(--color-text-primary)] transition-colors relative"
+                          className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors relative"
                           title="Copy data to clipboard"
                         >
                           {copiedId === item.id ? (
@@ -159,7 +159,7 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
                 </div>
               ) : (
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-action-muted">
+                  <p className="text-sm text-[var(--color-text-muted)]">
                     You can copy the data manually or clear these items
                   </p>
                   <button

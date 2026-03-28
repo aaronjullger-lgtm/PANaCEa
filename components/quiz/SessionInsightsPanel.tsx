@@ -57,14 +57,14 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
         </div>
         <div className="flex items-center gap-2">
           {!isExpanded && (
-            <span className="text-xs text-action-muted">
+            <span className="text-xs text-[var(--color-text-muted)]">
               {distributionSummary.totalQuestions} Qs
             </span>
           )}
           {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-action-muted" />
+            <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-action-muted" />
+            <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
           )}
         </div>
       </button>
@@ -89,7 +89,7 @@ export const SessionInsightsPanel: React.FC<SessionInsightsPanelProps> = ({
                     className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                       activeTab === tab.id
                         ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'
-                        : 'text-action-muted hover:bg-[var(--color-bg-secondary)]'
+                        : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]'
                     }`}
                   >
                     <tab.icon className="w-3.5 h-3.5" />
@@ -149,7 +149,7 @@ const DistributionPreview: React.FC<{ summary: ReturnType<typeof getSessionSumma
 }) => {
   if (summary.totalQuestions === 0) {
     return (
-      <div className="text-center py-4 text-sm text-action-muted">
+      <div className="text-center py-4 text-sm text-[var(--color-text-muted)]">
         Answer questions to see PANCE distribution coverage
       </div>
     );
@@ -166,20 +166,20 @@ const DistributionPreview: React.FC<{ summary: ReturnType<typeof getSessionSumma
           <div className="text-lg font-bold text-[var(--color-text-primary)]">
             {summary.totalQuestions}
           </div>
-          <div className="text-xs text-action-muted">Questions</div>
+          <div className="text-xs text-[var(--color-text-muted)]">Questions</div>
         </div>
         <div className="px-2 py-2 bg-[var(--color-accent)]/10 rounded-lg">
           <div className="text-lg font-bold text-[var(--color-accent)]">
             {summary.questionsPerMinute}/min
           </div>
-          <div className="text-xs text-action-muted">Pace</div>
+          <div className="text-xs text-[var(--color-text-muted)]">Pace</div>
         </div>
       </div>
 
       {/* Top systems */}
       {topSystems.length > 0 && (
         <div className="space-y-2">
-          <div className="text-xs font-medium text-action-muted uppercase tracking-wider">
+          <div className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
             System Coverage
           </div>
           {topSystems.map((sys) => (
@@ -187,7 +187,7 @@ const DistributionPreview: React.FC<{ summary: ReturnType<typeof getSessionSumma
               <div className="flex-1">
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-[var(--color-text-secondary)] truncate">{sys.name}</span>
-                  <span className="text-action-muted">
+                  <span className="text-[var(--color-text-muted)]">
                     {sys.count} ({sys.percent}%)
                   </span>
                 </div>
@@ -205,7 +205,7 @@ const DistributionPreview: React.FC<{ summary: ReturnType<typeof getSessionSumma
                     }}
                   />
                 </div>
-                <div className="text-xs text-action-muted mt-0.5">Target: {sys.target}%</div>
+                <div className="text-xs text-[var(--color-text-muted)] mt-0.5">Target: {sys.target}%</div>
               </div>
             </div>
           ))}

@@ -118,7 +118,7 @@ export const QuestionTimer: React.FC<QuestionTimerProps> = ({
         )}
 
         {isAnswered && (
-          <span className="text-xs text-action-muted">Par: {Math.round(parTimeMs / 1000)}s</span>
+          <span className="text-xs text-[var(--color-text-muted)]">Par: {Math.round(parTimeMs / 1000)}s</span>
         )}
       </div>
 

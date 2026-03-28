@@ -88,14 +88,14 @@ export const SmartPauseIndicator: React.FC<SmartPauseIndicatorProps> = ({ refres
             <p className="text-sm font-medium text-[var(--color-text-primary)]">
               {pauseAnalysis.message}
             </p>
-            <p className="text-xs text-action-muted mt-1">{pauseAnalysis.encouragement}</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">{pauseAnalysis.encouragement}</p>
           </div>
           <button
             onClick={handleDismiss}
             className="flex-shrink-0 p-1 rounded-full hover:bg-[var(--color-bg-tertiary)] transition-colors"
             title="Dismiss"
           >
-            <X className="w-4 h-4 text-action-muted" />
+            <X className="w-4 h-4 text-[var(--color-text-muted)]" />
           </button>
         </div>
       </motion.div>
