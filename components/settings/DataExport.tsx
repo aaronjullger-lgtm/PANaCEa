@@ -366,8 +366,8 @@ export const DataExport: React.FC = () => {
 
       {/* Loading State */}
       {isExporting && (
-        <div className="flex items-center justify-center gap-3 p-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[var(--color-accent)]"></div>
+        <div role="status" aria-live="polite" className="flex items-center justify-center gap-3 p-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg">
+          <div aria-hidden="true" className="animate-spin rounded-full h-5 w-5 border-b-2 border-[var(--color-accent)]"></div>
           <p className="text-sm text-[var(--color-accent)]">Preparing export...</p>
         </div>
       )}

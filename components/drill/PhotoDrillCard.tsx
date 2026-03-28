@@ -115,8 +115,8 @@ export const PhotoDrillCard: React.FC<PhotoDrillCardProps> = ({
 
         {/* Loading Indicator */}
         {!imageLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-[var(--color-accent)] border-t-transparent" />
+          <div role="status" aria-label="Loading image" className="absolute inset-0 flex items-center justify-center">
+            <div aria-hidden="true" className="animate-spin rounded-full h-12 w-12 border-4 border-[var(--color-accent)] border-t-transparent" />
           </div>
         )}
 

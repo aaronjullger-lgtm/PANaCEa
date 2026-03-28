@@ -80,8 +80,8 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <span className="flex items-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin" />
+        <span className="flex items-center gap-2" role="status" aria-live="polite">
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
           {children}
         </span>
       ) : (
