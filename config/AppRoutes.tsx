@@ -366,7 +366,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/clinical-eye"
         element={
           <Suspense fallback={<Loader message="Loading Clinical Eye…" />}>
-            <ClinicalEyePage onBack={() => navigate(ROUTES.STUDY)} />
+            <ErrorBoundary variant="page">
+              <ClinicalEyePage onBack={() => navigate(ROUTES.STUDY)} />
+            </ErrorBoundary>
           </Suspense>
         }
       />
@@ -374,7 +376,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/visualizer"
         element={
           <Suspense fallback={<Loader message="Loading visualizer…" />}>
-            <VisualizerPage onBack={() => navigate(ROUTES.STUDY)} />
+            <ErrorBoundary variant="page">
+              <VisualizerPage onBack={() => navigate(ROUTES.STUDY)} />
+            </ErrorBoundary>
           </Suspense>
         }
       />
@@ -545,12 +549,14 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                     style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
                   >
                     <Suspense fallback={<Loader message="Loading knowledge base…" />}>
-                      <KnowledgeBaseHub
-                        onClose={() => {
-                          setView('command_center');
-                          navigate('/study');
-                        }}
-                      />
+                      <ErrorBoundary variant="inline">
+                        <KnowledgeBaseHub
+                          onClose={() => {
+                            setView('command_center');
+                            navigate('/study');
+                          }}
+                        />
+                      </ErrorBoundary>
                     </Suspense>
                   </div>
                 )}
@@ -561,7 +567,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                     style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
                   >
                     <Suspense fallback={<Loader message="Loading library…" />}>
-                      <MyLibraryPage onExit={() => setView('command_center')} />
+                      <ErrorBoundary variant="inline">
+                        <MyLibraryPage onExit={() => setView('command_center')} />
+                      </ErrorBoundary>
                     </Suspense>
                   </div>
                 )}
@@ -572,10 +580,12 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                     style={{ marginLeft: 'var(--nav-rail-width, 56px)' }}
                   >
                     <Suspense fallback={<Loader message="Loading pearl deck…" />}>
-                      <MyPearlsPanel
-                        onClose={() => setView('command_center')}
-                        initialFilter="saved"
-                      />
+                      <ErrorBoundary variant="inline">
+                        <MyPearlsPanel
+                          onClose={() => setView('command_center')}
+                          initialFilter="saved"
+                        />
+                      </ErrorBoundary>
                     </Suspense>
                   </div>
                 )}
@@ -636,6 +646,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                               transition={pageTransition}
                             >
                               <Suspense fallback={<CommandCenterSkeleton />}>
+                                <ErrorBoundary variant="page">
                                 <CommandCenterHub
                                   performanceData={heatmapPerformance}
                                   missedQuestions={missedQuestions}
@@ -691,6 +702,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
                                       : undefined
                                   }
                                 />
+                                </ErrorBoundary>
                               </Suspense>
                             </motion.div>
                           )}
