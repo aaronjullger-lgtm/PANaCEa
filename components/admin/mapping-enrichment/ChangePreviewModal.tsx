@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
 import { X, AlertTriangle, CheckCircle2, BarChart3, Loader2 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint, API_ENDPOINTS } from '@/lib/utils/apiConfig';
@@ -33,6 +34,10 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewResult, setPreviewResult] = useState<PreviewResult | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(modalRef as React.RefObject<HTMLElement>, open);
+  useKeyboardNavigation(onClose);
 
   // Fetch preview when selected suggestions change
   useEffect(() => {
@@ -174,6 +179,10 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="change-preview-title"
             className="bg-[var(--color-bg-primary)] w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-2xl border border-[var(--color-border)] shadow-2xl"
           >
             {/* Header */}
@@ -183,7 +192,7 @@ export const ChangePreviewModal: React.FC<ChangePreviewModalProps> = ({
                   <BarChart3 className="w-6 h-6 text-[var(--color-accent)]" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Mapping Change Preview</h2>
+                  <h2 id="change-preview-title" className="text-xl font-bold text-[var(--color-text-primary)]">Mapping Change Preview</h2>
                   <p className="text-sm text-[var(--color-text-secondary)]">
                     Preview blueprint coverage impact of {selectedSuggestions.length} mapping suggestion(s)
                   </p>
