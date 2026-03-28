@@ -198,9 +198,10 @@ const CalculatorCard: React.FC<CalculatorCardProps> = ({
             className={`p-1.5 rounded-lg transition-all ${
               isPinned
                 ? 'text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/10'
-                : 'text-[var(--color-text-muted)] hover:text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/10 opacity-0 group-hover:opacity-100'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-data-provisional)] hover:bg-[var(--color-data-provisional)]/10 opacity-0 group-hover:opacity-100 focus:opacity-100'
             }`}
             title={isPinned ? 'Unpin calculator' : 'Pin calculator'}
+            aria-label={isPinned ? 'Unpin calculator' : 'Pin calculator'}
           >
             {isPinned ? (
               <Star className="w-4 h-4 fill-[var(--color-data-provisional)]" />
