@@ -234,7 +234,7 @@ export function SuggestionTable({
       onSuggestionUpdated?.(id, newStatus);
     } catch (err) {
       console.error('Error updating suggestion:', err);
-      toast.error(`Failed to update suggestion: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error('Failed to update suggestion. Please try again.');
     }
   };
 

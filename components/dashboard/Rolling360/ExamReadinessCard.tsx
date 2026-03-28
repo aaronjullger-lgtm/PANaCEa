@@ -242,8 +242,8 @@ function ProvisionalState({
       {/* Score Display */}
       <div className="text-center py-2">
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
           className="inline-block"
         >
           <span className="text-6xl font-bold text-[var(--color-text-primary)]">
@@ -353,8 +353,8 @@ function ConfidentState({
       {/* Score Display */}
       <div className="text-center py-2">
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
           className="inline-block"
         >
           <span

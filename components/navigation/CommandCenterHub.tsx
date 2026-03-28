@@ -575,8 +575,10 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   }, []);
 
   const prefersReducedMotion = useReducedMotion();
-  const sectionEnter = prefersReducedMotion ? false : { opacity: 0, y: 16 };
-  const sectionAnimate = prefersReducedMotion ? false : { opacity: 1, y: 0 };
+  // NOTE: opacity removed from initial — Framer Motion animations can stall (especially
+  // in dev/StrictMode), leaving sections invisible. y-transform alone gives a smooth entrance.
+  const sectionEnter = prefersReducedMotion ? false : { y: 16 };
+  const sectionAnimate = prefersReducedMotion ? false : { y: 0 };
   const sectionTransition = (delay: number) =>
     prefersReducedMotion
       ? { duration: 0 }
@@ -613,21 +615,23 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           </motion.div>
         )}
 
-        {/* Sync Error Banner */}
+        {/* Sync Error Banner — show user-friendly message, hide raw HTTP codes */}
         {syncError && dismissedSyncError !== syncError && (
           <motion.div
             initial={{ y: -20 }}
             animate={{ y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            exit={{ y: -20 }}
             className="mb-4 flex items-start gap-3 p-4 rounded-lg border border-data-provisional/50 bg-data-provisional/10"
           >
             <AlertCircle className="w-5 h-5 flex-shrink-0 text-data-provisional mt-0.5" />
             <div className="flex-1">
               <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
-                Sync Error
+                Unable to sync
               </h3>
               <p className="text-sm text-[var(--color-text-secondary)]">
-                {syncError}
+                {syncError.includes('Authentication')
+                  ? syncError
+                  : 'Your progress is saved locally and will sync when the connection is restored.'}
               </p>
             </div>
             <button

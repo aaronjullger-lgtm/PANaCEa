@@ -117,7 +117,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Unknown error';
       logger.warn('RecommendationFeed', 'Failed to fetch recommendations', errorMsg);
-      toast.error('Failed to load recommendations. Please try again.');
+      toast.error('Failed to load recommendations. Please try again.', { id: 'recommendations-error' });
       setRecommendations([]); // Clear on error
     } finally {
       setLoading(false);
@@ -195,7 +195,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
     try {
       const token = await getToken();
       if (!token) {
-        toast.error('Authentication required');
+        toast.error('Please sign in to manage recommendations.', { id: 'recommendations-auth' });
         fetchRecommendations(); // Revert
         return;
       }
@@ -218,7 +218,7 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
         toast.success('Marked as complete!');
       }
     } catch (e) {
-      toast.error('Failed to update status');
+      toast.error('Failed to update status.', { id: 'recommendations-status-error' });
       fetchRecommendations(); // Revert
     }
   };

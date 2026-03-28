@@ -1,10 +1,13 @@
-# Deploy to Cloudflare Pages on push to main or manual trigger.
+# Deploy to Cloudflare Pages ONLY after CI passes.
+# Triggers: (a) when CI workflow succeeds on main, or (b) manual dispatch.
 # Requires secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 # Project name: panacea (Workers & Pages) — matches wrangler.toml
 name: Deploy to Cloudflare Pages
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -16,6 +19,8 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Only deploy if CI succeeded (or manual dispatch)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: read
       deployments: write
@@ -23,6 +28,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # For workflow_run events, checkout the commit that triggered CI
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -42,8 +50,13 @@ jobs:
       - name: Core type check
         run: npm run typecheck:ci
 
-      - name: Build
+      - name: Build (with Sentry source map upload)
         run: npm run build
+        env:
+          SENTRY_UPLOAD: 'true'
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Verify build output
         run: |

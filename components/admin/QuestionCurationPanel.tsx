@@ -80,9 +80,10 @@ const QuestionCurationPanel = () => {
         }))
       );
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : 'An unknown error occurred.';
+      console.error('[QuestionCurationPanel] fetch error:', err);
+      const errMsg = 'Failed to load questions for curation.';
       setError(errMsg);
-      toast.error(errMsg);
+      toast.error(errMsg, { id: 'curation-fetch-error' });
     } finally {
       setIsLoading(false);
     }
@@ -125,8 +126,8 @@ const QuestionCurationPanel = () => {
         );
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-      toast.error(errorMessage);
+      console.error('[QuestionCurationPanel] save error:', err);
+      toast.error('Failed to save changes. Please try again.');
     }
   };
 

@@ -69,7 +69,7 @@ const SrsDashboard = () => {
         setSummary(data);
       } catch (error) {
         console.error('SRS analytics fetch error:', error);
-        toast.error('Failed to load SRS analytics data.');
+        toast.error('Failed to load SRS analytics data.', { id: 'srs-analytics-error' });
       } finally {
         setIsLoading(false);
       }

@@ -705,7 +705,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   <button
                     type="button"
                     onClick={handleStartSession}
-                    className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-accent)] text-sm font-medium hover:opacity-90 transition-opacity"
+                    className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity"
                   >
                     Take a 10-question diagnostic quiz to unlock this graph
                   </button>
@@ -771,7 +771,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   <button
                     type="button"
                     onClick={handleStartSession}
-                    className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-accent)] text-sm font-medium hover:opacity-90 transition-opacity"
+                    className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity"
                   >
                     Take a 10-question diagnostic quiz to unlock this graph
                   </button>

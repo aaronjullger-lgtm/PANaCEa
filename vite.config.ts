@@ -156,7 +156,7 @@ export default defineConfig(({ mode }) => {
         jsxImportSource: 'react',
       }),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt', // Prompt user before updating — prevents mid-session disruption
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
           name: 'PANaCEa - PANCE Prep AI',
@@ -179,9 +179,9 @@ export default defineConfig(({ mode }) => {
         workbox: {
           maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // 8MB — covers 6MB+ clinical training images; JS vendor is ~1.8MB after bundle splitting
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
-          // AGGRESSIVE UPDATE STRATEGY - Force new SW to take control immediately
-          skipWaiting: true, // Don't wait for old SW to stop
-          clientsClaim: true, // Take control of page immediately after activation
+          // PROMPT UPDATE STRATEGY - Let user decide when to update (prevents mid-session disruption)
+          // skipWaiting and clientsClaim are handled by the SWUpdatePrompt component
+          // when the user clicks "Update now"
           // Clean old caches on activation
           cleanupOutdatedCaches: true,
           // New cache namespace - "compat" strategy with interop mode

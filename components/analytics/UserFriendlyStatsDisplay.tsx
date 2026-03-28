@@ -662,7 +662,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
         <p className="text-sm text-[var(--color-text-muted)] mt-1">{error}</p>
         <button
           onClick={loadData}
-          className="mt-4 px-4 py-2 rounded-lg font-medium bg-[var(--color-accent)] text-[var(--color-accent)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-action-primary focus-visible:ring-offset-2"
+          className="mt-4 px-4 py-2 rounded-lg font-medium bg-[var(--color-accent)] text-[var(--color-text-inverse)] hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-action-primary focus-visible:ring-offset-2"
         >
           Try Again
         </button>
@@ -681,7 +681,7 @@ export const UserFriendlyStatsDisplay: React.FC<UserFriendlyStatsDisplayProps> =
         <button
           type="button"
           onClick={() => window.location.assign('/study')}
-          className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-accent)] text-sm font-medium hover:opacity-90 transition-opacity"
+          className="px-4 py-2.5 rounded-xl bg-[var(--color-accent)] text-[var(--color-text-inverse)] text-sm font-medium hover:opacity-90 transition-opacity"
         >
           Take a 10-question diagnostic quiz to unlock your analytics
         </button>

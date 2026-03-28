@@ -1,11 +1,9 @@
-name: StudyPANaCEa CI/CD Pipeline
+name: "[DEPRECATED] StudyPANaCEa CI/CD Pipeline"
 
+# DEPRECATED: This workflow is superseded by ci.yml + deploy.yml.
+# Kept for reference only — disabled to save GitHub Actions minutes.
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-  workflow_dispatch:
+  workflow_dispatch: # Manual-only — no longer auto-triggers
 
 env:
   NODE_VERSION: 22

@@ -151,7 +151,8 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       });
       if (!res.ok) {
         const errorText = await res.text();
-        throw new Error(`Systems fetch failed: ${res.status} - ${errorText}`);
+        console.warn('[ClinicalReferenceLibrary] systems API error:', res.status, errorText);
+        throw new Error('Unable to load organ systems. Please check your connection and try again.');
       }
       const data = await res.json();
       if (Array.isArray(data)) {
@@ -164,7 +165,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       console.error('[ClinicalReferenceLibrary] systems fetch failed', err);
       const msg = err instanceof Error ? err.message : 'Failed to load systems';
       setSystemsError(msg);
-      toast.error(msg);
+      toast.error(msg, { id: 'systems-fetch-error' });
     } finally {
       setSystemsLoading(false);
     }
@@ -175,7 +176,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     if (!isSignedIn) {
       const msg = 'Please sign in to access clinical content';
       setError(msg);
-      toast.error(msg);
+      toast.error(msg, { id: 'content-auth-error' });
       setLoading(false);
       return;
     }
@@ -199,7 +200,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       if (!res.ok) {
         if (res.status === 401) {
           setError('Please sign in to access clinical content');
-          toast.error('Please sign in to access clinical content');
+          toast.error('Please sign in to access clinical content', { id: 'content-auth-error' });
           setLoading(false);
           return;
         }
@@ -210,17 +211,18 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
         } catch {
           // ignore parse errors
         }
+        console.warn('[ClinicalReferenceLibrary] content API error:', res.status);
         const message =
           body.message ||
           body.error ||
           (res.status >= 500
             ? 'Clinical content temporarily unavailable. Please try again.'
-            : `Failed to load content (${res.status}). Please try again.`);
+            : 'Unable to load content. Please try again.');
         if (body.error_code) {
           console.warn('[ClinicalReferenceLibrary] library error_code:', body.error_code, 'status:', res.status);
         }
         setError(message);
-        toast.error(message);
+        toast.error(message, { id: 'content-fetch-error' });
         setLoading(false);
         return;
       }
@@ -242,7 +244,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       console.error('[ClinicalReferenceLibrary] content fetch failed', err);
       const msg = err instanceof Error ? err.message : 'Failed to load clinical data';
       setError(msg);
-      toast.error(msg);
+      toast.error(msg, { id: 'content-fetch-error' });
     } finally {
       setLoading(false);
     }

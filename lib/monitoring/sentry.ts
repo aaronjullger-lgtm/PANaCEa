@@ -71,7 +71,7 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
       tracesSampleRate: finalConfig.tracesSampleRate,
       replaysSessionSampleRate: finalConfig.replaysSessionSampleRate,
       replaysOnErrorSampleRate: finalConfig.replaysOnErrorSampleRate,
-      sendDefaultPii: true, // Required for agent monitoring
+      sendDefaultPii: false, // Disabled — medical education platform should minimize PII sent to third parties
 
       // Custom transport to suppress tunnel errors
       transport: (options: Parameters<NonNullable<typeof Sentry>['makeFetchTransport']>[0]) => {

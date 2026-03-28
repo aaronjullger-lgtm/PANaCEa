@@ -288,7 +288,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         setSecretDiagnosis(persona.secretDiagnosis || null);
       } catch (error) {
         console.error('Failed to generate patient persona:', error);
-        toast.error('Could not load patient personality. Proceeding with default.');
+        toast.error('Could not load patient personality. Proceeding with default.', { id: 'patient-persona-error' });
       }
     };
 
@@ -358,7 +358,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       setCurrentAVState(engine.getCurrentAVState());
     } catch (error) {
       console.error('Failed to initialize state machine:', error);
-      toast.error('Voice interaction could not be initialized. Continuing without voice.');
+      toast.error('Voice interaction could not be initialized. Continuing without voice.', { id: 'voice-init-error' });
     }
 
     // Cleanup: unsubscribe stale engine listener when case/session changes

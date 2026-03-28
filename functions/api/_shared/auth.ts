@@ -157,7 +157,10 @@ export async function verifyAuthToken(
           exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'unknown',
           iat: payload.iat ? new Date(payload.iat * 1000).toISOString() : 'unknown',
         };
-        console.log('[AUTH] Token payload claims:', loggedPayload);
+        // Only log JWT claims in local dev to avoid leaking user sub/email to Cloudflare logs
+        if (typeof globalThis !== 'undefined' && (globalThis as any).process?.env?.NODE_ENV === 'development') {
+          console.log('[AUTH] Token payload claims:', loggedPayload);
+        }
         // Only log non-sensitive claims for diagnostics
         authLogger.success(payload.sub || 'unknown', 'jwt_verification');
 

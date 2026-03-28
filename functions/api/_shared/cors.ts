@@ -57,9 +57,9 @@ export function isOriginAllowed(origin: string | null, config: CorsConfig): bool
     return true;
   }
 
-  // Cloudflare Pages preview URLs: *.pages.dev (any project)
-  // e.g. https://2c6195e3.panacea-9ke.pages.dev or https://abc123.studypanacea.pages.dev
-  if (origin.match(/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.pages\.dev$/)) {
+  // Cloudflare Pages preview URLs — scoped to this project only
+  // Matches: https://<hash>.panacea-9ke.pages.dev or https://<hash>.panacea.pages.dev
+  if (origin.match(/^https:\/\/[a-z0-9-]+\.panacea(-9ke)?\.pages\.dev$/)) {
     return true;
   }
 

@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 import { CommuterProvider } from '../../contexts/CommuterContext';
 import { ToastProvider } from '../../contexts/ToastContext';
 import { SystemIntegrationProvider } from '../../contexts/SystemIntegrationContext';
+import { SWUpdatePrompt } from '../shared/SWUpdatePrompt';
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -30,6 +31,7 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
               className: 'sonner-toast',
             }}
           />
+          <SWUpdatePrompt />
           {children}
         </CommuterProvider>
       </ToastProvider>

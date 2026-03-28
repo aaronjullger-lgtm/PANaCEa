@@ -27,7 +27,8 @@ const DdxTrainer = () => {
       const data = (await response.json()) as DdxProblem;
       setProblem(data);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'An unknown error occurred.');
+      console.error('[DdxTrainer] fetch error:', error);
+      toast.error('Unable to load diagnostic puzzle. Please try again.', { id: 'ddx-fetch-error' });
     } finally {
       setIsLoading(false);
     }
