@@ -26,12 +26,15 @@ export function UnlockAnimation({
   useEffect(() => {
     const timer = setTimeout(() => {
       setShow(false);
-      setTimeout(() => {
-        onComplete?.();
-      }, 500);
     }, autoHideDuration);
+    const completeTimer = setTimeout(() => {
+      onComplete?.();
+    }, autoHideDuration + 500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(completeTimer);
+    };
   }, [autoHideDuration, onComplete]);
 
   if (!achievement) return null;
