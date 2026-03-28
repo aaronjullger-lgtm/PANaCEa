@@ -5,6 +5,7 @@ import { ContrastiveDrill } from './ContrastiveDrill';
 import { Target, Loader2, ChevronRight } from 'lucide-react';
 import DrillShell from './DrillShell';
 import { ROUTES } from '@/config/routes';
+import { toast } from '@/lib/toast';
 
 interface ContrastiveSetData {
   id: string;
@@ -89,10 +90,11 @@ export function ContrastiveDrillSession({ onExit }: { readonly onExit: () => voi
         setDrillId(data.data?.set?.id || selectedSet.id);
         setIsPlaying(true);
       } else {
-        console.error('Failed to start drill');
+        toast.error('Failed to start drill. Please try again.');
       }
     } catch (error) {
       console.error('Failed to start drill:', error);
+      toast.error('Failed to start drill. Check your connection.');
     } finally {
       setIsStarting(false);
     }
