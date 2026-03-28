@@ -259,8 +259,8 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
                   ))}
                 </AnimatePresence>
                 {isLoading && (
-                  <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  <div role="status" aria-live="polite" className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                    <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
                     Reasoning through your case&hellip;
                   </div>
                 )}
@@ -293,12 +293,13 @@ const ReasoningTutorMode: React.FC<ReasoningTutorModeProps> = ({ onExit }) => {
               type="button"
               onClick={handleSend}
               disabled={isLoading || !input.trim()}
+              aria-label={isLoading ? 'Sending...' : 'Send message'}
               className="mb-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-text-inverse)] disabled:opacity-50"
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
               ) : (
-                <Send className="h-4 w-4" />
+                <Send aria-hidden="true" className="h-4 w-4" />
               )}
             </button>
           </div>

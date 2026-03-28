@@ -63,8 +63,8 @@ const CommuterMode: React.FC<CommuterModeProps> = ({ onExit }) => {
           onExit={onExit}
         />
         <MiniModeCard>
-          <div className="p-8 text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-accent)] border-t-transparent"></div>
+          <div role="status" aria-label="Loading session" className="p-8 text-center">
+            <div aria-hidden="true" className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-accent)] border-t-transparent"></div>
             <p className="mt-4 text-[var(--color-text-secondary)]">Preparing questions…</p>
           </div>
         </MiniModeCard>

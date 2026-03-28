@@ -149,8 +149,8 @@ export default function CustomSessionBuilder({ onStartSession, onCancel }: Props
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
+      <div role="status" aria-label="Loading" className="flex items-center justify-center min-h-[400px]">
+        <Loader2 aria-hidden="true" className="w-8 h-8 animate-spin text-[var(--color-accent)]" />
       </div>
     );
   }

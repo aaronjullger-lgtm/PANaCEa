@@ -372,8 +372,8 @@ const PolypharmacyPuzzleMode: React.FC<PolypharmacyPuzzleModeProps> = ({ onExit 
   if (loading || !currentCase) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
+        <div role="status" aria-label="Loading medication case" className="text-center">
+          <Loader2 aria-hidden="true" className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
           <p className="text-[var(--color-text-muted)]">Loading medication case...</p>
         </div>
       </div>
