@@ -4,9 +4,10 @@
  * Phase 13: Requirement 54
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Coffee, Wind } from 'lucide-react';
+import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
 
 interface WellnessCheckModalProps {
   isOpen: boolean;
@@ -25,6 +26,10 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
   const [breathingPhase, setBreathingPhase] = useState<BreathingPhase>('idle');
   const [countdown, setCountdown] = useState(0);
   const breathingActiveRef = React.useRef(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(modalRef as React.RefObject<HTMLElement>, isOpen);
+  useKeyboardNavigation(onClose);
 
   const reasonMessages = {
     rapid_questions: "You've been answering questions rapidly. Great focus!",
@@ -168,6 +173,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: 'spring', damping: 20 }}
+          ref={modalRef}
           className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] max-w-md w-full p-8 border border-[var(--color-border)]"
           onClick={(e) => e.stopPropagation()}
         >

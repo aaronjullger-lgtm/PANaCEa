@@ -3,9 +3,10 @@
  * Part of Task 42: Feedback Loop Closure
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Flag, AlertCircle, CheckCircle } from 'lucide-react';
 import { useQuestionFlag } from '@/hooks/useQuestionFlag';
+import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
 
 interface FlagQuestionModalProps {
   isOpen: boolean;
@@ -38,6 +39,10 @@ export function FlagQuestionModal({
   const [description, setDescription] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const { flagQuestion, loading, error } = useQuestionFlag();
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(modalRef as React.RefObject<HTMLElement>, isOpen);
+  useKeyboardNavigation(onClose);
 
   const flagTypes: Array<{ value: FlagType; label: string; description: string }> = [
     {
@@ -109,7 +114,7 @@ export function FlagQuestionModal({
       aria-modal="true"
       aria-labelledby="flag-modal-title"
     >
-      <div className="relative w-full max-w-2xl bg-[var(--color-bg-secondary)] rounded-lg shadow-[0_18px_42px_var(--color-shadow-soft)] max-h-[90vh] overflow-y-auto border border-[var(--color-border)]">
+      <div ref={modalRef} className="relative w-full max-w-2xl bg-[var(--color-bg-secondary)] rounded-lg shadow-[0_18px_42px_var(--color-shadow-soft)] max-h-[90vh] overflow-y-auto border border-[var(--color-border)]">
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
           <div className="flex items-center gap-3">

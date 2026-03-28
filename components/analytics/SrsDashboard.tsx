@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   BarChart,
   Bar,
@@ -56,26 +56,31 @@ async function fetchSrsSummary(token: string): Promise<SRSAnalyticsSummary> {
 const SrsDashboard = () => {
   const [summary, setSummary] = useState<SRSAnalyticsSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const { userId, getToken } = useAuth();
 
-  useEffect(() => {
-    const loadData = async () => {
-      if (!userId) return;
-      setIsLoading(true);
-      try {
-        const token = await getToken();
-        if (!token) throw new Error('No auth token');
-        const data = await fetchSrsSummary(token);
-        setSummary(data);
-      } catch (error) {
-        console.error('SRS analytics fetch error:', error);
-        toast.error('Failed to load SRS analytics data.', { id: 'srs-analytics-error' });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadData();
+  const loadData = useCallback(async () => {
+    if (!userId) return;
+    setIsLoading(true);
+    setFetchError(null);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('No auth token');
+      const data = await fetchSrsSummary(token);
+      setSummary(data);
+    } catch (error) {
+      console.error('SRS analytics fetch error:', error);
+      const msg = error instanceof Error ? error.message : 'Failed to load SRS analytics';
+      setFetchError(msg);
+      toast.error('Failed to load SRS analytics data.', { id: 'srs-analytics-error' });
+    } finally {
+      setIsLoading(false);
+    }
   }, [userId, getToken]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Derive chart-friendly data from the API response
   const analytics = useMemo(() => {
@@ -113,6 +118,23 @@ const SrsDashboard = () => {
       topSystem: summary.systemBreakdown[0] ?? null,
     };
   }, [summary]);
+
+  if (fetchError && !summary) {
+    return (
+      <div className="p-6 bg-[var(--color-bg-secondary)] rounded-lg text-center py-12">
+        <h2 className="text-2xl font-bold mb-4 text-[var(--color-text-primary)]">
+          Spaced Repetition (SRS) Analytics
+        </h2>
+        <p className="text-[var(--color-text-muted)] mb-6">{fetchError}</p>
+        <button
+          onClick={loadData}
+          className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-text-inverse)] rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

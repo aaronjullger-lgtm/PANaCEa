@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { useFocusTrap, useKeyboardNavigation } from '@/lib/utils/accessibilityUtils';
 import type { SessionSettings } from '@/types';
 import { STUDY_PRESETS, type StudyPreset } from '@/config/training-modes';
 import { getAllSystems } from '@/lib/constants/blueprint';
@@ -52,6 +53,10 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
   });
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [selectedSystem, setSelectedSystem] = useState<string>('');
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(modalRef as React.RefObject<HTMLElement>, true);
+  useKeyboardNavigation(onClose);
 
   // Get official NCCPA organ systems from blueprint
   const organSystems = getAllSystems();
@@ -88,6 +93,7 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({
       aria-labelledby="session-setup-title"
     >
       <div
+        ref={modalRef}
         className="bg-[var(--color-bg-primary)] rounded-2xl shadow-[0_18px_42px_var(--color-shadow-soft)] p-8 w-full max-w-md max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
         onClick={(e) => e.stopPropagation()}
       >
