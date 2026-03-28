@@ -293,8 +293,13 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   }, [searchParams]);
 
   // Write URL when state changes (preserve tab and other params)
+  // searchParams read via ref to avoid re-triggering on every render
+  const searchParamsRef = useRef(searchParams);
+  searchParamsRef.current = searchParams;
+
   useEffect(() => {
-    const next = new URLSearchParams(searchParams);
+    const current = searchParamsRef.current;
+    const next = new URLSearchParams(current);
     if (activeSystem && activeSystem !== 'all') next.set('system', activeSystem);
     else next.delete('system');
     if (activeSubcategory) next.set('subcategory', activeSubcategory);
@@ -305,9 +310,32 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     else next.delete('condition');
 
     const str = next.toString();
-    const current = searchParams.toString();
-    if (str !== current) setSearchParams(next, { replace: true });
-  }, [activeSystem, activeSubcategory, highYieldOnly, selected?.id, searchParams, setSearchParams]);
+    if (str !== current.toString()) setSearchParams(next, { replace: true });
+  }, [activeSystem, activeSubcategory, highYieldOnly, selected?.id, setSearchParams]);
+
+  // Filter content for display (server does FTS when search param is sent; no client-side search filter)
+  const filteredContent = useMemo(() => {
+    let result = content;
+
+    // Filter by system only when a specific system is selected (when 'all', pass all items)
+    if (activeSystem && activeSystem !== 'all') {
+      result = result.filter((item) => item.system === activeSystem);
+    }
+
+    // Filter by subcategory if selected
+    if (activeSubcategory) {
+      result = result.filter((item) => item.subcategory === activeSubcategory);
+    }
+
+    // Filter by high yield
+    if (highYieldOnly) {
+      result = result.filter((item) => (item.pance_yield ?? 0) >= 3);
+    }
+
+    return result;
+  }, [content, activeSystem, activeSubcategory, highYieldOnly]);
+
+  const displayContent = filteredContent;
 
   // Restore selected condition from URL when content loads
   useEffect(() => {
@@ -375,30 +403,6 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     });
     return map;
   }, [progressMap]);
-
-  // Filter content for display (server does FTS when search param is sent; no client-side search filter)
-  const filteredContent = useMemo(() => {
-    let result = content;
-
-    // Filter by system only when a specific system is selected (when 'all', pass all items)
-    if (activeSystem && activeSystem !== 'all') {
-      result = result.filter((item) => item.system === activeSystem);
-    }
-
-    // Filter by subcategory if selected
-    if (activeSubcategory) {
-      result = result.filter((item) => item.subcategory === activeSubcategory);
-    }
-
-    // Filter by high yield
-    if (highYieldOnly) {
-      result = result.filter((item) => (item.pance_yield ?? 0) >= 3);
-    }
-
-    return result;
-  }, [content, activeSystem, activeSubcategory, highYieldOnly]);
-
-  const displayContent = filteredContent;
 
   // Group content by system + subcategory so headers always match the conditions (no ID/label mismatch).
   // When viewing "All Systems", subcategory names can repeat across systems; grouping by (system, subcategory) keeps e.g. ENT conditions under ENT headers only.

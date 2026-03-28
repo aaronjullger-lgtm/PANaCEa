@@ -5,7 +5,7 @@
  * This provides server-side analytics separate from localStorage-based stats.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { getUserStats } from '@/services/core';
 
@@ -79,12 +79,23 @@ interface UseDatabaseStatsResult {
 // Cache duration: 5 minutes
 const CACHE_DURATION = 5 * 60 * 1000;
 
+// Error cooldown: 30 seconds before retrying after a failure
+const ERROR_COOLDOWN = 30 * 1000;
+
 export function useDatabaseStats(): UseDatabaseStatsResult {
   const { isSignedIn, getToken } = useAuth();
   const [stats, setStats] = useState<DatabaseStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastFetched, setLastFetched] = useState<number | null>(null);
+
+  // Use refs for cache/cooldown checks so fetchStats has a stable identity
+  const statsRef = useRef(stats);
+  const lastFetchedRef = useRef(lastFetched);
+  const isLoadingRef = useRef(isLoading);
+  statsRef.current = stats;
+  lastFetchedRef.current = lastFetched;
+  isLoadingRef.current = isLoading;
 
   const fetchStats = useCallback(
     async (force = false) => {
@@ -93,9 +104,14 @@ export function useDatabaseStats(): UseDatabaseStatsResult {
         return;
       }
 
-      // Check cache
-      if (!force && lastFetched && Date.now() - lastFetched < CACHE_DURATION && stats) {
-        return;
+      // Prevent concurrent fetches
+      if (isLoadingRef.current) return;
+
+      // Check cache (success) or cooldown (error)
+      if (!force && lastFetchedRef.current) {
+        const elapsed = Date.now() - lastFetchedRef.current;
+        if (statsRef.current && elapsed < CACHE_DURATION) return;
+        if (!statsRef.current && elapsed < ERROR_COOLDOWN) return;
       }
 
       setIsLoading(true);
@@ -107,7 +123,6 @@ export function useDatabaseStats(): UseDatabaseStatsResult {
 
         if (result) {
           setStats(result as DatabaseStats);
-          setLastFetched(Date.now());
         } else {
           setError('Failed to fetch stats');
         }
@@ -115,18 +130,20 @@ export function useDatabaseStats(): UseDatabaseStatsResult {
         console.error('[useDatabaseStats] Error fetching stats:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
+        // Always set lastFetched — on success for cache, on error for cooldown
+        setLastFetched(Date.now());
         setIsLoading(false);
       }
     },
-    [isSignedIn, getToken, lastFetched, stats]
+    [isSignedIn, getToken]
   );
 
   // Initial fetch when user signs in
   useEffect(() => {
-    if (isSignedIn && !stats && !isLoading) {
+    if (isSignedIn && !statsRef.current && !isLoadingRef.current) {
       fetchStats();
     }
-  }, [isSignedIn, stats, isLoading, fetchStats]);
+  }, [isSignedIn, fetchStats]);
 
   // Refetch function for manual refresh
   const refetch = useCallback(async () => {

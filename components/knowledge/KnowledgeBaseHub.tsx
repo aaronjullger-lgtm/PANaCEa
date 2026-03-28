@@ -128,7 +128,20 @@ const KnowledgeBaseHubInternal: React.FC<KnowledgeBaseHubProps> = ({ onClose }) 
   const handleTabChange = useCallback((tabId: TabId) => {
     setActiveTab(tabId);
     setSidebarOpen(false);
-  }, []);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (tabId === 'conditions') {
+        next.delete('tab');
+      } else {
+        next.set('tab', tabId);
+      }
+      // Clear lab sub-tab when switching away from labs
+      if (tabId !== 'labs') {
+        next.delete('labSub');
+      }
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const handleLabSubTabChange = useCallback(
     (sub: LabSubTab) => {

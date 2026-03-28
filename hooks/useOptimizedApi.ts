@@ -70,6 +70,9 @@ export function useOptimizedApi<T = any>(
 
   const requestIdRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const loadingRef = useRef(false);
+  const dataRef = useRef<T | null>(null);
+  const errorRef = useRef<Error | null>(null);
 
   // Generate URL from endpoint or use provided URL
   const getUrl = useCallback((): string => {
@@ -95,32 +98,31 @@ export function useOptimizedApi<T = any>(
     [getUrl, method]
   );
 
-  // Main fetch function
+  // Main fetch function — uses refs for loading/data/error to keep callback identity stable
   const fetch = useCallback(
     async (overrideOptions: Partial<UseOptimizedApiOptions<T>> = {}): Promise<T> => {
-      const mergedOptions = { ...options, ...overrideOptions };
       const {
         body = initialBody,
         headers = initialHeaders,
         cacheKey = getCacheKey(),
         priority: reqPriority = priority,
         deduplicate: shouldDeduplicate = deduplicate,
-      } = mergedOptions;
+      } = overrideOptions;
 
       const url = getUrl();
       const requestId = getRequestId(body);
 
-      // Check for duplicate request
-      if (shouldDeduplicate && requestIdRef.current === requestId && loading) {
+      // Check for duplicate request (using refs to avoid stale closure)
+      if (shouldDeduplicate && requestIdRef.current === requestId && loadingRef.current) {
         // Wait for existing request to complete
         return new Promise((resolve, reject) => {
           const checkInterval = setInterval(() => {
-            if (!loading) {
+            if (!loadingRef.current) {
               clearInterval(checkInterval);
-              if (error) {
-                reject(error);
+              if (errorRef.current) {
+                reject(errorRef.current);
               } else {
-                resolve(data as T);
+                resolve(dataRef.current as T);
               }
             }
           }, 100);
@@ -137,8 +139,10 @@ export function useOptimizedApi<T = any>(
       abortControllerRef.current = abortController;
 
       requestIdRef.current = requestId;
+      loadingRef.current = true;
       setLoading(true);
       setError(null);
+      errorRef.current = null;
 
       try {
         const apiRequest: ApiRequest<T> = {
@@ -165,6 +169,7 @@ export function useOptimizedApi<T = any>(
         }
 
         setResponse(apiResponse);
+        dataRef.current = apiResponse.data;
         setData(apiResponse.data);
 
         if (onSuccess) {
@@ -173,27 +178,28 @@ export function useOptimizedApi<T = any>(
 
         return apiResponse.data;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Request failed');
+        const fetchError = err instanceof Error ? err : new Error('Request failed');
 
         // Don't set error if request was aborted
-        if (error.name !== 'AbortError') {
-          setError(error);
+        if (fetchError.name !== 'AbortError') {
+          errorRef.current = fetchError;
+          setError(fetchError);
 
           if (onError) {
-            onError(error);
+            onError(fetchError);
           }
         }
 
-        throw error;
+        throw fetchError;
       } finally {
         if (!abortController.signal.aborted) {
+          loadingRef.current = false;
           setLoading(false);
           abortControllerRef.current = null;
         }
       }
     },
     [
-      options,
       initialBody,
       initialHeaders,
       getUrl,
@@ -207,9 +213,6 @@ export function useOptimizedApi<T = any>(
       timeout,
       onSuccess,
       onError,
-      loading,
-      error,
-      data,
     ]
   );
 

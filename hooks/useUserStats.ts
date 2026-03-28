@@ -160,6 +160,14 @@ export function useUserStats(): UseUserStatsResult {
     safeParse<Question[]>(localStorage.getItem(FLAGGED_KEY), [])
   );
 
+  // Refs to hold latest state for sync callbacks (avoids recreating callbacks on state changes)
+  const performanceDataRef = useRef(performanceData);
+  const missedQuestionsRef = useRef(missedQuestions);
+  const flaggedQuestionsRef = useRef(flaggedQuestions);
+  performanceDataRef.current = performanceData;
+  missedQuestionsRef.current = missedQuestions;
+  flaggedQuestionsRef.current = flaggedQuestions;
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
@@ -218,10 +226,10 @@ export function useUserStats(): UseUserStatsResult {
         throw new Error('Failed to get authentication token. Please try signing in again.');
       }
 
-      // Capture current state at sync time to avoid stale closures
-      const currentPerformanceData = performanceData;
-      const currentMissedQuestions = missedQuestions;
-      const currentFlaggedQuestions = flaggedQuestions;
+      // Read latest state from refs (avoids stale closures and unstable callback deps)
+      const currentPerformanceData = performanceDataRef.current;
+      const currentMissedQuestions = missedQuestionsRef.current;
+      const currentFlaggedQuestions = flaggedQuestionsRef.current;
 
       // Create Set for O(1) lookup instead of O(n) array.includes()
       const missedQuestionIds = new Set(currentMissedQuestions.map(getQuestionKey));
@@ -374,7 +382,7 @@ export function useUserStats(): UseUserStatsResult {
       setIsSyncing(false);
       setIsLoading(false);
     }
-  }, [isSignedIn, user, getToken, performanceData, missedQuestions, flaggedQuestions, calculateBackoffDelay]);
+  }, [isSignedIn, user, getToken, calculateBackoffDelay]);
 
   /**
    * Download data from cloud
