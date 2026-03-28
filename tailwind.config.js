@@ -296,6 +296,7 @@ export default {
           pass: '#0a766c', // Teal 700 - success/passing (improved contrast for light mode)
           fail: '#ef4444', // Red 500 - failure/errors
           provisional: '#f59e0b', // Amber 500 - building/uncertain
+          warning: '#f97316', // Orange 500 - warning/caution (distinct from provisional)
           neutral: 'var(--color-data-neutral)', // Theme-aware: light #64748b, dark #94a3b8
           'neutral-bg': 'var(--color-data-neutral-bg)', // Theme-aware: light #f1f5f9, dark #334155
         },
