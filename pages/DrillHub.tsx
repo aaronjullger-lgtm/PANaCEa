@@ -13,6 +13,7 @@ import {
   Award,
   BarChart3,
   ArrowRight,
+  AlertCircle,
   Lock,
 } from 'lucide-react';
 import { useUser } from '@clerk/clerk-react';
@@ -68,6 +69,7 @@ export default function DrillHub(): JSX.Element {
   const navigate = useNavigate();
   const [overview, setOverview] = useState<DrillOverview | null>(null);
   const [loading, setLoading] = useState(true);
+  const [overviewError, setOverviewError] = useState(false);
   const [selectedMode, setSelectedMode] = useState<string | null>(null);
 
   // Fetch drill overview on mount
@@ -84,6 +86,7 @@ export default function DrillHub(): JSX.Element {
         setOverview(data);
       } catch (error) {
         console.error('Failed to fetch drill overview:', error);
+        setOverviewError(true);
       } finally {
         setLoading(false);
       }
@@ -176,6 +179,14 @@ export default function DrillHub(): JSX.Element {
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Stats fetch error warning */}
+        {overviewError && (
+          <div className="flex items-center gap-3 p-3 mb-6 rounded-lg bg-[var(--color-data-provisional)]/10 border border-[var(--color-data-provisional)]/30 text-sm text-[var(--color-data-provisional)]">
+            <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>Your drill stats could not be loaded. Drills are still available.</span>
+          </div>
+        )}
+
         {/* Header */}
         <motion.div
           initial={{ y: -20 }}

@@ -7,6 +7,7 @@
 import { useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { useQuery } from '@tanstack/react-query';
+import { toast } from '@/lib/toast';
 
 export interface SRSItem {
   id: string;
@@ -137,6 +138,7 @@ export function useSRSItems(): UseSRSItemsResult {
       }
     } catch (err) {
       console.error('[useSRSItems] Sync error:', err);
+      toast.error('SRS sync failed. Your progress is saved locally and will sync when reconnected.');
     }
   };
 
