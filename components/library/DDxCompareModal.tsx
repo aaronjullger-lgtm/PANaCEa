@@ -5,7 +5,7 @@
  * distinguishing features between similar conditions
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -213,6 +213,15 @@ export const DDxCompareModal: React.FC<DDxCompareModalProps> = ({
     return COMPARISON_FIELDS.filter((f) => f.category === activeCategory);
   }, [activeCategory]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const swapConditions = () => {
     const temp = left;
     setLeft(right);
@@ -237,6 +246,9 @@ export const DDxCompareModal: React.FC<DDxCompareModalProps> = ({
         initial={{ scale: 0.95 }}
         animate={{ scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="DDx Compare"
         className="relative w-full max-w-4xl max-h-[90vh] bg-[var(--color-bg-primary)] rounded-2xl border border-[var(--color-border)] shadow-[0_18px_42px_var(--color-shadow-soft)] overflow-hidden flex flex-col"
       >
         {/* Header */}
