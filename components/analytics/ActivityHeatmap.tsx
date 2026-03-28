@@ -7,6 +7,7 @@
  */
 
 import React, { useMemo, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { useLowPowerMode } from '@/hooks/useLowPowerMode';
@@ -136,14 +137,15 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
 }) => {
   const [selectedDay, setSelectedDay] = useState<DayActivityData | null>(null);
   const lowPower = useLowPowerMode();
+  const navigate = useNavigate();
 
   const handleStartFirstSession = useCallback(() => {
     if (onStartFirstSession) {
       onStartFirstSession();
     } else {
-      window.location.href = '/menu';
+      navigate('/menu');
     }
-  }, [onStartFirstSession]);
+  }, [onStartFirstSession, navigate]);
   const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number } | undefined>();
 
   // Process performance data into daily stats

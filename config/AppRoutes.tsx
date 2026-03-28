@@ -306,7 +306,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/admin"
         element={
           <Suspense fallback={<Loader message="Loading admin…" />}>
-            <AdminDashboard onClose={() => navigate(ROUTES.STUDY)} />
+            <ErrorBoundary variant="page">
+              <AdminDashboard onClose={() => navigate(ROUTES.STUDY)} />
+            </ErrorBoundary>
           </Suspense>
         }
       />
@@ -314,7 +316,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/admin/curation"
         element={
           <Suspense fallback={<Loader message="Loading curation…" />}>
-            <QuestionCurationPanel />
+            <ErrorBoundary variant="page">
+              <QuestionCurationPanel />
+            </ErrorBoundary>
           </Suspense>
         }
       />
@@ -322,7 +326,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/admin/refinery"
         element={
           <Suspense fallback={<Loader message="Loading refinery…" />}>
-            <RefineryPage onClose={() => navigate(ROUTES.STUDY)} />
+            <ErrorBoundary variant="page">
+              <RefineryPage onClose={() => navigate(ROUTES.STUDY)} />
+            </ErrorBoundary>
           </Suspense>
         }
       />
@@ -330,7 +336,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/admin/taxonomies"
         element={
           <Suspense fallback={<Loader message="Loading taxonomies…" />}>
-            <TaxonomiesPage />
+            <ErrorBoundary variant="page">
+              <TaxonomiesPage />
+            </ErrorBoundary>
           </Suspense>
         }
       />
@@ -338,7 +346,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/admin/system-mappings"
         element={
           <Suspense fallback={<Loader message="Loading system mappings…" />}>
-            <SystemMappingsPage />
+            <ErrorBoundary variant="page">
+              <SystemMappingsPage />
+            </ErrorBoundary>
           </Suspense>
         }
       />
@@ -346,7 +356,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         path="/admin/question-generator"
         element={
           <Suspense fallback={<Loader message="Loading question generator…" />}>
-            <QuestionGeneratorPage />
+            <ErrorBoundary variant="page">
+              <QuestionGeneratorPage />
+            </ErrorBoundary>
           </Suspense>
         }
       />
