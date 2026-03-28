@@ -313,10 +313,10 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({
                     <Lightbulb className="w-6 h-6" />
                   </div>
                   <div className="min-w-0">
-                    <h4 className="font-bold text-[var(--color-text-primary)] line-clamp-1">
+                    <h4 className="font-bold text-[var(--color-text-primary)] line-clamp-1" title={rec.topic}>
                       {rec.topic}
                     </h4>
-                    <p className="text-sm text-[var(--color-text-muted)] mt-0.5 line-clamp-2">
+                    <p className="text-sm text-[var(--color-text-muted)] mt-0.5 line-clamp-2" title={rec.reason}>
                       {rec.reason}
                     </p>
                   </div>

@@ -54,7 +54,9 @@ export const FSRSOptimizer: React.FC = () => {
 
       // WASM re-hydration: flush pending sync so optimizer trains on latest data (not stale)
       const token = await getToken();
-      await syncManager.syncAll(token).catch(() => {});
+      await syncManager.syncAll(token).catch((err: unknown) => {
+        console.warn('[FSRSOptimizer] Pre-optimization sync failed, continuing with local data:', err);
+      });
 
       // Run optimization with progress tracking
       const optimizationResult = await optimizeFSRSParameters(userId, setProgress);

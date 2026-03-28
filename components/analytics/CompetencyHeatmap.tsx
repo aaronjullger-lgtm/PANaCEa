@@ -548,7 +548,7 @@ const HeatmapCell: React.FC<HeatmapCellProps> = ({
       <div className="relative">
         {/* Header */}
         <div className="flex items-start justify-between mb-2">
-          <span className="font-semibold text-[var(--color-text-primary)] text-sm line-clamp-1">
+          <span className="font-semibold text-[var(--color-text-primary)] text-sm line-clamp-1" title={label}>
             {label}
           </span>
           <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
@@ -622,7 +622,7 @@ const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onPractice }) =>
         {/* Condition info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-[var(--color-text-primary)] truncate">
+            <span className="font-medium text-[var(--color-text-primary)] truncate" title={condition.name}>
               {condition.name}
             </span>
             <span

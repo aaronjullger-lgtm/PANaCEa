@@ -197,8 +197,8 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
       });
       setUserProfileState(localUpdated);
       if (isSignedIn) {
-        updateProfileApi({ yearInProgram: 'Graduated' }).catch(() => {
-          // Keep local state; API sync failed
+        updateProfileApi({ yearInProgram: 'Graduated' }).catch((err: unknown) => {
+          console.warn('[Settings] API sync failed for graduation status; local state retained:', err);
         });
       }
     }
@@ -247,8 +247,8 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
           apiUpdates.hasCompletedOnboarding = updates.hasCompletedOnboarding;
 
         if (Object.keys(apiUpdates).length > 0) {
-          updateProfileApi(apiUpdates).catch(() => {
-            // Local state already updated; API sync failed
+          updateProfileApi(apiUpdates).catch((err: unknown) => {
+            console.warn('[Settings] API sync failed for profile update; local state retained:', err);
           });
         }
       }
@@ -775,7 +775,10 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
                     <Mail className="w-5 h-5 text-[var(--color-text-muted)]" />
                     <div className="flex-1 min-w-0">
                       <div className="text-xs text-[var(--color-text-muted)]">Email</div>
-                      <div className="text-sm text-[var(--color-text-primary)] truncate">
+                      <div
+                        className="text-sm text-[var(--color-text-primary)] truncate"
+                        title={user?.emailAddresses[0]?.emailAddress || 'No email'}
+                      >
                         {user?.emailAddresses[0]?.emailAddress || 'No email'}
                       </div>
                     </div>
