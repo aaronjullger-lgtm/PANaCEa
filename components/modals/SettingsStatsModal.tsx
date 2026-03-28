@@ -2873,7 +2873,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         className="border-t border-[var(--color-border)]"
                       >
                         <div className="p-4 space-y-3">
-                          <button className="w-full flex items-center gap-3 p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors">
+                          <button
+                            type="button"
+                            onClick={handleExportJSON}
+                            disabled={performanceData.length === 0}
+                            className="w-full flex items-center gap-3 p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Export progress data as JSON"
+                          >
                             <Download className="w-5 h-5 text-[var(--color-text-muted)]" />
                             <div className="text-left">
                               <div className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -2884,17 +2890,17 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                               </div>
                             </div>
                           </button>
-                          <button className="w-full flex items-center gap-3 p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors">
+                          <div className="w-full flex items-center gap-3 p-3 bg-[var(--color-bg-primary)] rounded-lg opacity-50 cursor-not-allowed">
                             <Upload className="w-5 h-5 text-[var(--color-text-muted)]" />
                             <div className="text-left">
                               <div className="text-sm font-medium text-[var(--color-text-primary)]">
                                 Import Data
                               </div>
                               <div className="text-xs text-[var(--color-text-muted)]">
-                                Restore progress from a backup
+                                Coming soon
                               </div>
                             </div>
-                          </button>
+                          </div>
                         </div>
                       </motion.div>
                     )}

@@ -22,8 +22,8 @@ export const ContextNavRail = () => {
       <div className="p-4 border-b border-[var(--color-border)]">
         <div className="flex justify-between items-center">
           <h3 className="font-bold">{currentContext.name}</h3>
-          <button onClick={clearContext} className="p-1 rounded-full hover:bg-[var(--color-bg-secondary)]">
-            <X size={16} />
+          <button onClick={clearContext} aria-label="Clear context" className="p-1 rounded-full hover:bg-[var(--color-bg-secondary)]">
+            <X size={16} aria-hidden="true" />
           </button>
         </div>
         <p className="text-sm text-[var(--color-text-muted)] capitalize">{currentContext.type} Context</p>
